@@ -25,6 +25,15 @@ endif()
 add_subdirectory("${PINNED_MGBA_ROOT}" "${CMAKE_BINARY_DIR}/pinned-mgba")
 add_executable(xgba_mgba_bank_boundary "${CMAKE_CURRENT_SOURCE_DIR}/mgba_bank_boundary.c")
 target_link_libraries(xgba_mgba_bank_boundary PRIVATE mgba)
+# mGBA exposes layout-changing definitions such as ENABLE_VFS and
+# ENABLE_DEBUGGERS as private target definitions. Internal structs differ
+# between configurations; the test MUST inherit the same definitions
+# instead of guessing the host's feature toggles.
+get_target_property(_mgba_compile_defs mgba COMPILE_DEFINITIONS)
+if(NOT _mgba_compile_defs)
+  message(FATAL_ERROR "Pinned mGBA target has no compiler definitions; unsafe ABI")
+endif()
+target_compile_definitions(xgba_mgba_bank_boundary PRIVATE ${_mgba_compile_defs})
 target_include_directories(xgba_mgba_bank_boundary PRIVATE
   "${PINNED_MGBA_ROOT}/include" "${CMAKE_BINARY_DIR}/pinned-mgba/include")
 add_test(NAME xgba_mgba_bank_boundary COMMAND xgba_mgba_bank_boundary)
