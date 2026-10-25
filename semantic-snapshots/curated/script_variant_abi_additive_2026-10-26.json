@@ -1,0 +1,516 @@
+{
+  "schema": "xgba.phase1.script_variant_abi_additive.v1",
+  "date": "2026-10-26",
+  "pinned_revisions": {
+    "pret/pokefirered": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+    "huderlem/poryscript": "c32481161c767b25a3425fa9f1f8729927ff3d55"
+  },
+  "original_curated_count_preserved": 29,
+  "previous_candidates_pending": 38,
+  "additional_source_files": 2,
+  "independent_whole_file_approvals": 0,
+  "phase1_mapping_complete": false,
+  "candidates": [
+    {
+      "repository": "pret/pokefirered",
+      "path": "asm/macros/event.inc",
+      "git_blob_sha1": "142ad979d7d3093244087a247fa2b4883424f77f",
+      "source_lines": [
+        1,
+        1858
+      ],
+      "semantic_roles": [
+        "field_script_opcode_assembler_widths",
+        "Poryscript_label_and_control_flow_consumer",
+        "direct_runtime_script_pointer_abi"
+      ],
+      "unresolved": [
+        "whole_file_opcode_width_and_argument_semantics",
+        "compiled_script_pointer_relocation_bounds_and_executable_ranges",
+        "untrusted_bytecode_dispatch_validation_and_return_stack_safety"
+      ],
+      "independent_signoff": false
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "ld_script_modern.ld",
+      "git_blob_sha1": "e930243522bd21da40cc1a05de9a42b8ad409b46",
+      "source_lines": [
+        1,
+        101
+      ],
+      "semantic_roles": [
+        "modern_compiler_linker_section_layout",
+        "native_rom_region_vs_image_output_boundary",
+        "compiled_variant_relocation_identity"
+      ],
+      "unresolved": [
+        "original_vs_modern_section_symbol_and_relocation_differences",
+        "revision_10_linker_variant_not_in_this_packet",
+        "compiled_image_hash_and_editor_adapter_compatibility"
+      ],
+      "independent_signoff": false
+    }
+  ],
+  "source_blobs": {
+    "pret/pokefirered/Makefile": "8b454dbd18eb0069fa5851d788697190890a5b37",
+    "pret/pokefirered/ld_script.ld": "9a4b45031e93c1e1da8186d8c697332710526048",
+    "pret/pokefirered/ld_script_modern.ld": "e930243522bd21da40cc1a05de9a42b8ad409b46",
+    "pret/pokefirered/asm/macros/event.inc": "142ad979d7d3093244087a247fa2b4883424f77f",
+    "pret/pokefirered/src/scrcmd.c": "97b695ee2f6fca80a3b78f52f6a444f696fe5814",
+    "pret/pokefirered/src/script.c": "d0433bdda062b138e53d1a1d3184b4566ad7d9dc",
+    "huderlem/poryscript/emitter/chunk.go": "bb3a6514988eb2699022551d3dbfe2bdce260377"
+  },
+  "source_checks": [
+    {
+      "id": "MAKE_COMPILER_VARIANTS",
+      "repository": "pret/pokefirered",
+      "path": "Makefile",
+      "start": 80,
+      "end": 93,
+      "needles": [
+        "CC1 := tools/agbcc/bin/agbcc",
+        "MODERNCC := $(PREFIX)gcc",
+        "-mabi=apcs-gnu"
+      ]
+    },
+    {
+      "id": "MAKE_LINK_VARIANTS",
+      "repository": "pret/pokefirered",
+      "path": "Makefile",
+      "start": 370,
+      "end": 382,
+      "needles": [
+        "ifeq ($(MODERN),0)",
+        "LD_SCRIPT := ld_script.ld",
+        "LD_SCRIPT := ld_script_modern.ld"
+      ]
+    },
+    {
+      "id": "MAKE_IMAGE_PADDING",
+      "repository": "pret/pokefirered",
+      "path": "Makefile",
+      "start": 393,
+      "end": 395,
+      "needles": [
+        "$(OBJCOPY) -O binary",
+        "--pad-to 0x9000000"
+      ]
+    },
+    {
+      "id": "LINK_ORIGINAL_REGION",
+      "repository": "pret/pokefirered",
+      "path": "ld_script.ld",
+      "start": 4,
+      "end": 9,
+      "needles": [
+        "ROM    (rx) : ORIGIN = 0x8000000, LENGTH = 32M"
+      ]
+    },
+    {
+      "id": "LINK_MODERN_REGION",
+      "repository": "pret/pokefirered",
+      "path": "ld_script_modern.ld",
+      "start": 4,
+      "end": 9,
+      "needles": [
+        "ROM    (rx) : ORIGIN = 0x8000000, LENGTH = 32M"
+      ]
+    },
+    {
+      "id": "LINK_MODERN_WILDCARDS",
+      "repository": "pret/pokefirered",
+      "path": "ld_script_modern.ld",
+      "start": 40,
+      "end": 66,
+      "needles": [
+        "*(.text*)",
+        "*(script_data)",
+        "*(.rodata*)"
+      ]
+    },
+    {
+      "id": "EVENT_CALL_WORD",
+      "repository": "pret/pokefirered",
+      "path": "asm/macros/event.inc",
+      "start": 21,
+      "end": 25,
+      "needles": [
+        ".macro call destination:req",
+        ".byte 0x04",
+        ".4byte \\destination"
+      ]
+    },
+    {
+      "id": "EVENT_GOTO_WORD",
+      "repository": "pret/pokefirered",
+      "path": "asm/macros/event.inc",
+      "start": 27,
+      "end": 31,
+      "needles": [
+        ".macro goto destination:req",
+        ".byte 0x05",
+        ".4byte \\destination"
+      ]
+    },
+    {
+      "id": "EVENT_CONDITIONAL_WORD",
+      "repository": "pret/pokefirered",
+      "path": "asm/macros/event.inc",
+      "start": 33,
+      "end": 45,
+      "needles": [
+        ".macro goto_if condition:req",
+        ".macro call_if condition:req",
+        ".4byte \\destination"
+      ]
+    },
+    {
+      "id": "EVENT_TERMINATORS",
+      "repository": "pret/pokefirered",
+      "path": "asm/macros/event.inc",
+      "start": 11,
+      "end": 19,
+      "needles": [
+        ".macro end",
+        ".byte 0x02",
+        ".macro return",
+        ".byte 0x03"
+      ]
+    },
+    {
+      "id": "EVENT_LOADWORD",
+      "repository": "pret/pokefirered",
+      "path": "asm/macros/event.inc",
+      "start": 103,
+      "end": 108,
+      "needles": [
+        ".macro loadword destIndex:req, value:req",
+        ".4byte \\value"
+      ]
+    },
+    {
+      "id": "EVENT_SETVAR",
+      "repository": "pret/pokefirered",
+      "path": "asm/macros/event.inc",
+      "start": 152,
+      "end": 157,
+      "needles": [
+        ".macro setvar destination:req, value:req",
+        ".2byte \\destination",
+        ".2byte \\value"
+      ]
+    },
+    {
+      "id": "PSCRIPT_CHUNK_GOTO",
+      "repository": "huderlem/poryscript",
+      "path": "emitter/chunk.go",
+      "start": 67,
+      "end": 80,
+      "needles": [
+        "registerJumpChunk(c.returnID)",
+        "goto %s_%d"
+      ]
+    },
+    {
+      "id": "PSCRIPT_CHUNK_TERMINATOR",
+      "repository": "huderlem/poryscript",
+      "path": "emitter/chunk.go",
+      "start": 73,
+      "end": 92,
+      "needles": [
+        "return \"end\"",
+        "return \"return\""
+      ]
+    },
+    {
+      "id": "SCRCMD_CALL_CONSUMER",
+      "repository": "pret/pokefirered",
+      "path": "src/scrcmd.c",
+      "start": 146,
+      "end": 150,
+      "needles": [
+        "ScrCmd_call(",
+        "ScriptReadWord(ctx)",
+        "ScriptCall(ctx, scrptr)"
+      ]
+    },
+    {
+      "id": "SCRCMD_GOTO_CONSUMER",
+      "repository": "pret/pokefirered",
+      "path": "src/scrcmd.c",
+      "start": 133,
+      "end": 137,
+      "needles": [
+        "ScrCmd_goto(",
+        "ScriptReadWord(ctx)",
+        "ScriptJump(ctx, scrptr)"
+      ]
+    },
+    {
+      "id": "SCRCMD_CONDITIONAL_CONSUMER",
+      "repository": "pret/pokefirered",
+      "path": "src/scrcmd.c",
+      "start": 153,
+      "end": 168,
+      "needles": [
+        "ScrCmd_goto_if(",
+        "ScrCmd_call_if(",
+        "ScriptReadByte(ctx)",
+        "ScriptReadWord(ctx)"
+      ]
+    },
+    {
+      "id": "SCRCMD_SETVAR_CONSUMER",
+      "repository": "pret/pokefirered",
+      "path": "src/scrcmd.c",
+      "start": 336,
+      "end": 340,
+      "needles": [
+        "GetVarPointer(ScriptReadHalfword(ctx))",
+        "*varPtr = ScriptReadHalfword(ctx)"
+      ]
+    },
+    {
+      "id": "SCRIPT_WORD_READER",
+      "repository": "pret/pokefirered",
+      "path": "src/script.c",
+      "start": 188,
+      "end": 195,
+      "needles": [
+        "value0 = *(ctx->scriptPtr++)",
+        "value3 = *(ctx->scriptPtr++)",
+        "return (((((value3 << 8)"
+      ]
+    },
+    {
+      "id": "SCRIPT_DISPATCH_BOUNDS",
+      "repository": "pret/pokefirered",
+      "path": "src/script.c",
+      "start": 124,
+      "end": 134,
+      "needles": [
+        "cmdFunc = &ctx->cmdTable[cmdCode]",
+        "if (cmdFunc >= ctx->cmdTableEnd)"
+      ]
+    }
+  ],
+  "cross_source_contracts": [
+    {
+      "id": "MODERN_SELECTS_DISTINCT_LINKER",
+      "producer": {
+        "repository": "pret/pokefirered",
+        "path": "Makefile",
+        "start": 370,
+        "end": 382
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "ld_script_modern.ld",
+        "start": 4,
+        "end": 9
+      },
+      "type": "build_variant",
+      "meaning": "The MODERN build selects ld_script_modern.ld rather than the original linker script; shared ROM origin/extent does not imply identical section placement.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "ORIGINAL_SELECTS_ORIGINAL_LINKER",
+      "producer": {
+        "repository": "pret/pokefirered",
+        "path": "Makefile",
+        "start": 370,
+        "end": 382
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "ld_script.ld",
+        "start": 4,
+        "end": 9
+      },
+      "type": "build_variant",
+      "meaning": "The non-modern, non-revision-10 build selects ld_script.ld; revision 10 is a separate unreviewed linker path.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "ROM_OUTPUT_PAD_IS_NOT_CAPACITY",
+      "producer": {
+        "repository": "pret/pokefirered",
+        "path": "Makefile",
+        "start": 393,
+        "end": 395
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "ld_script_modern.ld",
+        "start": 4,
+        "end": 9
+      },
+      "type": "image_boundary",
+      "meaning": "The Makefile pads binary output to address 0x09000000 (16 MiB from ROM origin), while the modern linker reserves a 32 MiB ROM region; these are different bounds.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "MODERN_WILDCARD_SECTION_ABI",
+      "producer": {
+        "repository": "pret/pokefirered",
+        "path": "Makefile",
+        "start": 80,
+        "end": 93
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "ld_script_modern.ld",
+        "start": 40,
+        "end": 66
+      },
+      "type": "linker_abi",
+      "meaning": "The modern compiler branch and modern linker wildcard sections form a distinct output path; compiled layout and relocation identity require separate proof.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "PSCRIPT_GOTO_TO_EVENT_OPCODE",
+      "producer": {
+        "repository": "huderlem/poryscript",
+        "path": "emitter/chunk.go",
+        "start": 67,
+        "end": 80
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "asm/macros/event.inc",
+        "start": 27,
+        "end": 31
+      },
+      "type": "script_encoding",
+      "meaning": "Poryscript emits a goto label reference which the native event macro encodes as opcode 0x05 followed by a 32-bit address.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "PSCRIPT_TERMINATORS_TO_EVENT_OPCODES",
+      "producer": {
+        "repository": "huderlem/poryscript",
+        "path": "emitter/chunk.go",
+        "start": 73,
+        "end": 92
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "asm/macros/event.inc",
+        "start": 11,
+        "end": 19
+      },
+      "type": "script_encoding",
+      "meaning": "Poryscript distinguishes end from return; FireRed encodes these as different single-byte opcodes, affecting control-flow lifetime.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "EVENT_CALL_TO_RUNTIME_POINTER",
+      "producer": {
+        "repository": "pret/pokefirered",
+        "path": "asm/macros/event.inc",
+        "start": 21,
+        "end": 25
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "src/scrcmd.c",
+        "start": 146,
+        "end": 150
+      },
+      "type": "runtime_dispatch",
+      "meaning": "The event call macro writes a four-byte destination consumed by ScrCmd_call through ScriptReadWord and ScriptCall.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "EVENT_GOTO_TO_RUNTIME_POINTER",
+      "producer": {
+        "repository": "pret/pokefirered",
+        "path": "asm/macros/event.inc",
+        "start": 27,
+        "end": 31
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "src/scrcmd.c",
+        "start": 133,
+        "end": 137
+      },
+      "type": "runtime_dispatch",
+      "meaning": "The event goto macro writes a four-byte destination consumed by ScrCmd_goto through ScriptReadWord and ScriptJump.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "EVENT_CONDITIONAL_TO_RUNTIME",
+      "producer": {
+        "repository": "pret/pokefirered",
+        "path": "asm/macros/event.inc",
+        "start": 33,
+        "end": 45
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "src/scrcmd.c",
+        "start": 153,
+        "end": 168
+      },
+      "type": "runtime_dispatch",
+      "meaning": "Conditional event branches encode a byte condition and four-byte destination, matched by the runtime read sequence.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "EVENT_WORD_TO_LITTLE_ENDIAN_READER",
+      "producer": {
+        "repository": "pret/pokefirered",
+        "path": "asm/macros/event.inc",
+        "start": 103,
+        "end": 108
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "src/script.c",
+        "start": 188,
+        "end": 195
+      },
+      "type": "operand_abi",
+      "meaning": "The four-byte loadword payload is read byte-by-byte little-endian by the native ScriptReadWord routine.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "EVENT_SETVAR_TO_HALFWORD_CONSUMER",
+      "producer": {
+        "repository": "pret/pokefirered",
+        "path": "asm/macros/event.inc",
+        "start": 152,
+        "end": 157
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "src/scrcmd.c",
+        "start": 336,
+        "end": 340
+      },
+      "type": "operand_abi",
+      "meaning": "The event setvar macro emits two halfwords consumed by consecutive ScriptReadHalfword calls in ScrCmd_setvar.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "RUNTIME_DISPATCH_BOUNDARY_REVIEW",
+      "producer": {
+        "repository": "pret/pokefirered",
+        "path": "src/scrcmd.c",
+        "start": 133,
+        "end": 137
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "src/script.c",
+        "start": 124,
+        "end": 134
+      },
+      "type": "runtime_bounds",
+      "meaning": "Script command dispatch indexes a command table using an opcode byte before checking its resulting function pointer against cmdTableEnd; this remains a source-level bounds review obligation.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    }
+  ]
+}

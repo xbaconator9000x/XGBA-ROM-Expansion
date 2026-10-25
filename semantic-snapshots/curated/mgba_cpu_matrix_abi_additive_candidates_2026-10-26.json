@@ -1,0 +1,150 @@
+{
+  "schema": "xgba.phase1.additive_cpu_matrix_abi_semantic_candidates.v1",
+  "date": "2026-10-26",
+  "source_repository": "mgba-emu/mgba",
+  "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "parent_curated_registry": "semantic-snapshots/curated/p0_semantic_review_candidates_2026-10-26.json",
+  "parent_curated_count_unchanged": 29,
+  "prior_crosspacket_candidates": 33,
+  "additional_source_files": 4,
+  "independent_whole_file_approvals": 0,
+  "phase1_mapping_complete": false,
+  "status": "SOURCE_INTERPRETED_ADDITIVE_CANDIDATES_NOT_INDEPENDENTLY_REVIEWED",
+  "candidates": [
+    {
+      "path": "include/mgba/internal/arm/arm.h",
+      "git_blob_sha1": "5ef2da96519ac3f429b65fd6d323be0775f3b3cf",
+      "source_lines": [
+        1,
+        217
+      ],
+      "semantic_roles": [
+        "ARM_core_two_slot_prefetch_and_memory_callback_ABI",
+        "CPU_active_region_pointer_mask_and_branch_setter"
+      ],
+      "unresolved": [
+        "compiled_struct_offsets",
+        "callback_rebind_sites",
+        "instruction_boundary_remap_atomicity"
+      ],
+      "independent_signoff": false
+    },
+    {
+      "path": "include/mgba/internal/arm/isa-inlines.h",
+      "git_blob_sha1": "ebda28e411f627c6cd1570aff6f29a3b79a60840",
+      "source_lines": [
+        1,
+        186
+      ],
+      "semantic_roles": [
+        "ARM_and_Thumb_branch_refill_from_active_region",
+        "mode_switch_active_mask_and_event_semantics"
+      ],
+      "unresolved": [
+        "control_flow_into_PC_refill",
+        "prefetch_coherence_on_bank_change"
+      ],
+      "independent_signoff": false
+    },
+    {
+      "path": "include/mgba/internal/gba/memory.h",
+      "git_blob_sha1": "0aad912613e726560d06bbdbf6061986e69e5842",
+      "source_lines": [
+        1,
+        183
+      ],
+      "semantic_roles": [
+        "GBA_ROM_aperture_region_enumeration",
+        "ROM_buffer_size_mask_and_peripheral_state_ownership",
+        "DMA_timing_and_save_mapping_struct_ABI"
+      ],
+      "unresolved": [
+        "ownership_alias_lifetime",
+        "compiled_memory_variants",
+        "ROM2_EX_CPU_DMA_interleavings"
+      ],
+      "independent_signoff": false
+    },
+    {
+      "path": "include/mgba/internal/gba/cart/matrix.h",
+      "git_blob_sha1": "27e32a75c0f521dac9ded53821591485089d7b76",
+      "source_lines": [
+        1,
+        35
+      ],
+      "semantic_roles": [
+        "native_Matrix_16_slot_mapping_state_ABI",
+        "Matrix_command_and_savestate_interface"
+      ],
+      "unresolved": [
+        "compiled_struct_offsets",
+        "physical_extent_and_short_reads",
+        "save_state_resource_identity"
+      ],
+      "independent_signoff": false
+    }
+  ],
+  "cross_source_contracts": [
+    {
+      "id": "CPU_TWO_SLOT_PREFETCH",
+      "producer": "src/arm/arm.c:198-225",
+      "consumer": "include/mgba/internal/arm/arm.h:168-189",
+      "meaning": "ARM and Thumb steps shift two-entry prefetch buffer and fetch next instruction from active region; data callbacks are separate.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "BRANCH_REFILL_BINDS_GBA_REGION",
+      "producer": "include/mgba/internal/arm/isa-inlines.h:73-91",
+      "consumer": "src/gba/memory.c:42-80",
+      "meaning": "ARMWritePC and ThumbWritePC call active-region setter before two direct instruction reads; GBA initialization binds setter.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "ROM_EXEC_REGION_USES_BUFFER_AND_MASK",
+      "producer": "src/gba/memory.c:338-349",
+      "consumer": "include/mgba/internal/gba/memory.h:102-125",
+      "meaning": "Instruction-region mapping selects ROM buffer and mask; GBA memory also owns save, Matrix and peripheral state.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "MATRIX_REMAPPING_MUTATES_EXEC_BACKING",
+      "producer": "src/gba/cart/matrix.c:16-38",
+      "consumer": "src/gba/memory.c:338-349",
+      "meaning": "Native Matrix reads into ROM backing buffer used by CPU execution mapping, without refreshing already-prefetched opcodes.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "MATRIX_FIXED_16_SLOT_SAVESTATE",
+      "producer": "include/mgba/internal/gba/cart/matrix.h:13-31",
+      "consumer": "src/gba/cart/matrix.c:100-134",
+      "meaning": "Matrix sixteen-entry mapping array is serialized and replayed as sixteen entries, not an external-bank identity.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "SAVESTATE_REPLAYS_MATRIX_AFTER_SAVEDATA",
+      "producer": "src/gba/serialize.c:230-240",
+      "consumer": "src/gba/cart/matrix.c:116-134",
+      "meaning": "Savestate restores savedata, then replays Matrix slots before timing interrupt; external resource identity not checked here.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "ROM_LOADER_MATRIX_MODE_NOT_EXTENSION",
+      "producer": "src/gba/gba.c:432-449",
+      "consumer": "src/gba/cart/matrix.c:40-80",
+      "meaning": "Oversized ROM M marker selects native Matrix backing, not a versioned XGBA activation handshake.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "ROM2_EX_HEADER_TO_EEPROM_DISPATCH",
+      "producer": "include/mgba/internal/gba/memory.h:26-44",
+      "consumer": "src/gba/memory.c:986-1001",
+      "meaning": "ROM2_EX has special 16-bit EEPROM and e-Reader arbitration and cannot be unconditional bank reads.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    }
+  ],
+  "limitations": [
+    "Four additional header candidates, not four independent approvals.",
+    "Static source contracts do not prove runtime CPU/DMA interleavings, compiled ABI, editor interoperability or an expanded ROM.",
+    "Original 14,834-file census, 338 P0 records, 29-file curated register and v3 queue remain unchanged."
+  ]
+}

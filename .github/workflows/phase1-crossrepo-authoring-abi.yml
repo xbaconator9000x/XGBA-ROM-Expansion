@@ -1,0 +1,73 @@
+name: Phase 1 cross-repository authoring and assembler ABI source dependencies
+on:
+  pull_request:
+    paths:
+      - 'tools/phase1_crossrepo_authoring_abi_review.py'
+      - 'tools/phase1_script_variant_review.py'
+      - 'tools/phase1_rev10_linker_semantics.py'
+      - 'tools/phase1_event_opcode_semantic_index.py'
+      - 'tools/phase1_cpu_matrix_review_scheduler.py'
+      - 'semantic-snapshots/curated/**'
+      - 'semantic-snapshots/current/**'
+      - '.github/workflows/phase1-crossrepo-authoring-abi.yml'
+  push:
+    paths:
+      - 'tools/phase1_crossrepo_authoring_abi_review.py'
+      - 'tools/phase1_script_variant_review.py'
+      - 'tools/phase1_rev10_linker_semantics.py'
+      - 'tools/phase1_event_opcode_semantic_index.py'
+      - 'tools/phase1_cpu_matrix_review_scheduler.py'
+      - 'semantic-snapshots/curated/**'
+      - 'semantic-snapshots/current/**'
+      - '.github/workflows/phase1-crossrepo-authoring-abi.yml'
+permissions:
+  contents: read
+jobs:
+  pinned-authoring-abi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout exact pinned upstream source
+        run: |
+          mkdir -p upstream
+          checkout_pin() {
+            local name="$1" url="$2" pin="$3"
+            mkdir -p "upstream/$name"
+            git -C "upstream/$name" init
+            git -C "upstream/$name" remote add origin "$url"
+            git -C "upstream/$name" fetch --depth 1 origin "$pin"
+            git -C "upstream/$name" checkout --detach FETCH_HEAD
+          }
+          checkout_pin mgba https://github.com/mgba-emu/mgba.git fd9dc5c2cbf234365068855851107e762fc6211b
+          checkout_pin porymap https://github.com/huderlem/porymap.git 26b919d7ff4b54152de010abd5bf344af2ebe116
+          checkout_pin poryscript https://github.com/huderlem/poryscript.git c32481161c767b25a3425fa9f1f8729927ff3d55
+          checkout_pin pokefirered https://github.com/pret/pokefirered.git ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+      - name: Verify exact source opcodes, runtime handlers and deterministic v7 revision-10 queue
+        run: |
+          python3 -m py_compile tools/phase1_crossrepo_authoring_abi_review.py tools/phase1_script_variant_review.py tools/phase1_event_opcode_semantic_index.py tools/phase1_rev10_linker_semantics.py
+          python3 tools/verify_mgba_timing_dma_additive.py upstream/mgba
+          python3 tools/verify_mgba_eeprom_savestate_additive.py upstream/mgba
+          python3 tools/verify_mgba_cpu_matrix_abi_additive.py upstream/mgba
+          python3 tools/phase1_event_opcode_semantic_index.py upstream/pokefirered
+          python3 tools/phase1_rev10_linker_semantics.py
+      - name: Archive pinned source and review queue evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-script-rev10-linker-abi-v7
+          path: |
+            audit-output/crossrepo_authoring_abi_source_evidence.json
+            audit-output/script_variant_abi_source_evidence.json
+            audit-output/rev10_linker_semantic_index_v7.json
+            audit-output/architecture_semantic_review_priority_additive_v7.json
+            audit-output/architecture_semantic_review_queue_additive_v7.csv.gz
+            audit-output/field_script_opcode_semantic_index.json
+            audit-output/field_script_opcode_semantic_summary.json
+            audit-output/architecture_semantic_review_priority_additive_v6.json
+            audit-output/architecture_semantic_review_queue_additive_v6.csv.gz
+            audit-output/architecture_semantic_review_priority_additive_v5.json
+            audit-output/architecture_semantic_review_queue_additive_v5.csv.gz
+            audit-output/architecture_semantic_review_priority_additive_v4.json
+          retention-days: 90
+          if-no-files-found: warn
