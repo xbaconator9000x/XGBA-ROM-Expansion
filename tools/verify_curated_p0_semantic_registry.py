@@ -35,10 +35,13 @@ def validate(root,document):
         raise RuntimeError("Expected 29 curated source interpretation candidates")
     if document.get("independent_review_approvals")!=0 or document.get("phase1_mapping_complete") is not False:
         raise RuntimeError("Curated source roles are NOT independent approvals")
-    for doc in document.get("source_documentation",[]):
+    docs=document.get("source_documentation")
+    if not isinstance(docs,list) or not docs or any(not isinstance(x,str) for x in docs) or len(docs)!=len(set(docs)):
+        raise RuntimeError("Missing or malformed semantic source documentation")
+    for doc in docs:
         file=Path(doc)
-        if not doc.startswith("docs/") or not file.is_file():
-            raise RuntimeError("Missing source semantic review explanation: "+doc)
+        if not doc.startswith("docs/") or ".." in file.parts or file.is_absolute() or file.suffix!=".md" or not file.is_file():
+            raise RuntimeError("Unsafe or missing semantic source documentation path: "+doc)
     seen=set()
     counts=Counter()
     hashes=[]
@@ -51,6 +54,8 @@ def validate(root,document):
         pin=EXPECTED_PINS.get(repo)
         if not pin or entry.get("revision")!=pin:
             raise RuntimeError("Curated semantic file revision mismatch: "+str(key))
+        if entry.get("evidence_class")!="SOURCE_PINNED_MANUAL_SEMANTIC_INTERPRETATION_WITH_SOME_COMPILED_AND_RUNTIME_SUPPORT":
+            raise RuntimeError("Curated evidence class must remain source-interpreted and unsigned")
         if entry.get("independent_whole_file_signoff") is not False:
             raise RuntimeError("Unreviewed semantic candidate claimed as approved")
         if entry.get("path_complete_alias_lifetime_proof") is not False:
@@ -104,6 +109,7 @@ def self_test():
         ("interpreted_semantic_roles",[],"Untyped or missing candidate semantic role"),
         ("status","APPROVED","Curated file signoff state must remain pending"),
         ("path_complete_alias_lifetime_proof",True,"Unproved dynamic alias semantics claimed complete"),
+        ("evidence_class","INDEPENDENT_APPROVED","Curated evidence class must remain source-interpreted and unsigned"),
     ]
     for field,value,expected in cases:
         bad=json.loads(json.dumps(document))
@@ -115,7 +121,20 @@ def self_test():
                 raise RuntimeError(f"Wrong rejection reason for {field}: {ex}")
         else:
             raise AssertionError("Fail-open curated semantic review guard: "+field)
-    print("Curated candidate registry: five false-approval/identity negative guards PASS")
+    for value,expected in [
+        ([],"Missing or malformed semantic source documentation"),
+        (["docs/../tools/verify_curated_p0_semantic_registry.py"],"Unsafe or missing semantic source documentation path"),
+    ]:
+        bad=json.loads(json.dumps(document))
+        bad["source_documentation"]=value
+        try:
+            validate(Path("__intentionally_missing_checkout__"),bad)
+        except RuntimeError as ex:
+            if expected not in str(ex):
+                raise RuntimeError(f"Wrong source-documentation rejection reason: {ex}")
+        else:
+            raise AssertionError("Fail-open curated semantic documentation guard")
+    print("Curated candidate registry: eight false-approval/identity/documentation negative guards PASS")
 
 if __name__=="__main__":
     try:
