@@ -90,6 +90,21 @@ def main():
                "mgba-boundary-backtrace.log","mgba-boundary-log-sha256.txt","mgba_native_test_revision.txt"):
    candidate=Path("audit-output")/name
    if candidate.is_file(): (OUT/name).write_bytes(candidate.read_bytes())
+  recorded=OUT/"mgba-boundary-runtime.log"
+  if recorded.is_file():
+   runtime_text=recorded.read_text(errors="replace")
+   outcome={"source_revision":PIN,
+     "run_kind":"NATIVE_MGBA_SYNTHETIC_CARTRIDGE_ONLY",
+     "positive_checks_passed":len(re.findall(r"^PASS ",runtime_text,re.M)),
+     "positive_checks_failed":len(re.findall(r"^FAIL ",runtime_text,re.M)),
+     "native_gap_observations":re.findall(r"^OBSERVATION (.+)$",runtime_text,re.M),
+     "native_probe_exit_code":proc.returncode,
+     "independent_semantic_reviews_approved":0,
+     "external_XGBA_banking_implemented":False,
+     "phase1_mapping_complete":False}
+   (OUT/"mgba-native-boundary-result.json").write_text(json.dumps(outcome,indent=2,sort_keys=True)+"\\n")
+   print("Native mGBA fixture check summary:",outcome["positive_checks_passed"],
+         "passed,",outcome["positive_checks_failed"],"failed")
   print("Pinned native Matrix boundary probe:", "PASS" if proc.returncode==0 else "FAIL", "log:", log)
   if proc.returncode:
    print("Boundary probe error tail:",log.read_text(errors="replace")[-7500:])
