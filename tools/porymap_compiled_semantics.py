@@ -22,6 +22,46 @@ def main():
  comp=json.loads(command_file.read_text())
  if len(comp)<25:raise RuntimeError("Too few Porymap C++ translation units")
  seen=set();errors=[];definitions=collections.Counter();language=collections.Counter();compiler_commands=[]
+ generated_sources=[]
+ makefile=(ROOT/"Makefile").read_text(encoding="utf-8",errors="surrogateescape")
+ def qmake_generated_provenance(path,actual):
+  # Fail-closed: recognize only an explicit qmake moc/rcc target, tied to
+  # original, hash-checked Git source. Do not excuse arbitrary untracked C++.
+  name=Path(path).name
+  if not re.fullmatch(r"(?:moc_|qrc_)[A-Za-z0-9_]+\.cpp",name):return None
+  pattern=re.compile(r"(?m)^"+re.escape(name)+r":\s*([^\n]*)")
+  match=pattern.search(makefile)
+  if not match:return None
+  deptext=match.group(1)
+  lines=makefile[match.start():].splitlines()
+  end=1
+  while end<len(lines) and lines[end-1].rstrip().endswith("\\"):
+   deptext+=" "+lines[end].strip();end+=1
+  candidate_sources=[]
+  for token in deptext.replace("\\"," ").split():
+   candidate=token.strip()
+   if not candidate.startswith(("include/","resources/")):continue
+   if not candidate.endswith((".h",".qrc")):continue
+   file=ROOT/candidate
+   if not file.is_file():continue
+   obj=subprocess.check_output(["git","-C",str(ROOT),"ls-files","-s","--",candidate],text=True).strip()
+   if not obj:continue
+   expect=obj.split()[1]
+   original=file.read_bytes()
+   if sha(original)!=expect:raise RuntimeError("Generated Qt source input changed: "+candidate)
+   candidate_sources.append({"source_path":candidate,"git_blob_sha":expect})
+  if not candidate_sources:raise RuntimeError("Qt generated target lacks pinned source prerequisite "+name)
+  recipe="\n".join(lines[:min(12,end+8)])
+  # qmake typically writes the invocation immediately following its target
+  if name.startswith("moc_") and "MOC" not in recipe:
+   raise RuntimeError("Generated MOC source lacks Makefile tool invocation "+name)
+  if name.startswith("qrc_") and "RCC" not in recipe:
+   raise RuntimeError("Generated RCC source lacks Makefile tool invocation "+name)
+  return {"generated_cpp":name,"generated_content_sha256":hashlib.sha256(actual).hexdigest(),
+    "pinned_source_prerequisites":candidate_sources,
+    "generator":"MOC" if name.startswith("moc_") else "RCC",
+    "make_target_recipe_sha256":hashlib.sha256(recipe.encode("utf-8","surrogateescape")).hexdigest(),
+    "classification":"COMPILER_OBSERVED_QMAKE_GENERATED_SOURCE_WITH_PINNED_INPUTS"}
  for row in comp:
   file=Path(row["file"])
   cwd=Path(row["directory"])
@@ -33,6 +73,10 @@ def main():
   seen.add(path)
   obj=subprocess.check_output(["git","-C",str(ROOT),"ls-files","-s","--",path],text=True).strip()
   if not obj:
+   gen=qmake_generated_provenance(path,file.read_bytes())
+   if gen:
+    generated_sources.append(gen)
+    continue
    errors.append({"path":path,"issue":"COMPILED_SOURCE_NOT_TRACKED"})
    continue
   expected=obj.split()[1];data=file.read_bytes()
@@ -57,9 +101,13 @@ def main():
   important[symbol]=observed[:12]
  if not any(important.values()):raise RuntimeError("Compiled map editor symbol table empty")
  if errors:raise RuntimeError("Unverifiable pinned Porymap source units: "+str(errors[:8]))
+ (OUT/"generated_qmake_source_provenance.json").write_text(json.dumps(generated_sources,indent=2,sort_keys=True)+"\n")
  (OUT/"translation_unit_abi_inventory.jsonl").write_text("".join(json.dumps(x,sort_keys=True)+"\n" for x in compiler_commands))
  report={"pinned_porymap_commit":PIN,"compiled_cpp_translation_units":len(seen),
   "language_units":dict(language),"pinned_source_errors":errors,
+  "generated_qmake_compilation_units":len(generated_sources),
+  "generated_qmake_moc_count":sum(x["generator"]=="MOC" for x in generated_sources),
+  "generated_qmake_rcc_count":sum(x["generator"]=="RCC" for x in generated_sources),
   "qmake_defines":dict(definitions),"binary_sha256":hashlib.sha256(exe.read_bytes()).hexdigest(),
   "named_map_editor_symbol_sites":important,
   "porymap_qt_source_compiled":True,"editor_roundtrip_tested":False,
