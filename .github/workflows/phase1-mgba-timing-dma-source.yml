@@ -39,11 +39,18 @@ jobs:
         run: |
           python3 -m py_compile tools/verify_mgba_timing_dma_additive.py
           python3 tools/verify_mgba_timing_dma_additive.py upstream/mgba
-      - name: Reconcile both pinned registries against immutable 14,834-file queue\n        run: |\n          python3 -m py_compile tools/phase1_additive_review_scheduler.py\n          python3 tools/phase1_additive_review_scheduler.py\n      - name: Preserve source line/hash evidence
+      - name: Reconcile both pinned registries against immutable 14,834-file queue
+        run: |
+          python3 -m py_compile tools/phase1_additive_review_scheduler.py
+          python3 tools/phase1_additive_review_scheduler.py
+      - name: Preserve source line/hash evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: xgba-phase1-mgba-timing-dma-source-evidence
-          path: |\n            audit-output/mgba_timing_dma_source_evidence.json\n            audit-output/architecture_semantic_review_queue_additive_v2.csv.gz\n            audit-output/architecture_semantic_review_priority_additive_v2.json
+          path: |
+            audit-output/mgba_timing_dma_source_evidence.json
+            audit-output/architecture_semantic_review_queue_additive_v2.csv.gz
+            audit-output/architecture_semantic_review_priority_additive_v2.json
           retention-days: 90
           if-no-files-found: warn
