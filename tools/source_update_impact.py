@@ -30,6 +30,49 @@ SENSITIVE={
 ("huderlem/porymap","include/core/map.h"),
 ("huderlem/poryscript","emitter/emitter.go"),
 ("pret/agbcc","gcc_arm/config/arm/t-arm-elf")}
+# Verified contracts added after the initial sensitivity list. An upstream change
+# to any listed file requires re-validation of this contract; a matching basename
+# elsewhere does not authorize automatic relocation or adaptation.
+CONTRACT_SOURCE_FILES={
+ ("pret/pokefirered","src/save.c"):("native_flash_rotation","sidecar_consistency"),
+ ("pret/pokefirered","include/save.h"):("native_flash_sector_geometry","sidecar_consistency"),
+ ("pret/pokefirered","src/m4a.c"):("audio_song_table_and_live_header","resource_staging"),
+ ("pret/pokefirered","src/decompress.c"):("graphics_decompression_scratch","resource_staging"),
+ ("pret/pokefirered","src/sprite.c"):("obj_vram_tile_and_palette_allocation","resource_staging"),
+ ("pret/pokefirered","src/graphics.c"):("inlined_asset_tables","resource_staging"),
+ ("pret/pokefirered","src/battle_util.c"):("battle_bytecode_dispatch","script_operand_abi"),
+ ("pret/pokefirered","src/overworld.c"):("cross_map_clone_runtime","map_editor_roundtrip"),
+ ("pret/pokefirered","src/event_object_movement.c"):("cross_map_clone_runtime","map_editor_roundtrip"),
+ ("pret/pokefirered","tools/mapjson/mapjson.cpp"):("mapjson_native_compiler","map_editor_roundtrip"),
+ ("pret/pokefirered","asm/macros/map.inc"):("map_binary_event_abi","map_editor_roundtrip"),
+ ("pret/pokefirered","asm/macros/event.inc"):("field_script_macro_abi","script_operand_abi"),
+ ("pret/pokefirered","data/script_cmd_table.inc"):("field_script_opcode_registry","script_operand_abi"),
+ ("pret/pokefirered","data/maps/map_groups.json"):("map_group_numbering","map_editor_roundtrip"),
+ ("pret/pokefirered","data/layouts/layouts.json"):("map_layout_pointer_mapping","map_editor_roundtrip"),
+ ("pret/pokefirered","graphics_file_rules.mk"):("generated_graphics_converter","resource_staging"),
+ ("pret/pokefirered","src/battle_script_commands.c"):("battle_bytecode_dispatch","script_operand_abi"),
+ ("mgba-emu/mgba","src/gba/savedata.c"):("emulated_native_savedata","sidecar_consistency"),
+ ("mgba-emu/mgba","include/mgba/internal/gba/memory.h"):("gba_address_space","rom_dma_fetch"),
+ ("mgba-emu/mgba","src/gba/memory.c"):("rom_window_and_eeprom","rom_dma_fetch"),
+ ("mgba-emu/mgba","src/gba/dma.c"):("rom_dma_fetch","eeprom_priority"),
+ ("mgba-emu/mgba","src/gba/serialize.c"):("savestate_binding","sidecar_consistency"),
+ ("mgba-emu/mgba","src/arm/arm.c"):("direct_cpu_prefetch","rom_dma_fetch"),
+ ("mgba-emu/mgba","src/gba/cart/matrix.c"):("matrix_cart_arbitration","rom_dma_fetch"),
+ ("huderlem/porymap","src/core/maplayout.cpp"):("map_tile_collision_elevation","map_editor_roundtrip"),
+ ("huderlem/porymap","src/project.cpp"):("json_event_types_and_layout","map_editor_roundtrip"),
+ ("huderlem/poryscript","emitter/emitter.go"):("script_assembler_encoding","script_operand_abi"),
+ ("pret/agbcc","gcc/Makefile"):("legacy_agbcc_codegen","compiler_variant_binary_abi"),
+ ("pret/agbcc","gcc_arm/config/arm/t-arm-elf"):("arm_thumb_multilib","compiler_variant_binary_abi"),
+}
+SENSITIVE.update(CONTRACT_SOURCE_FILES)
+
+def affected_contracts(changed):
+ hits=collections.defaultdict(set)
+ for repo,path in changed:
+  for contract in CONTRACT_SOURCE_FILES.get((repo,path),()):
+   hits[contract].add(repo+"/"+path)
+ return {name:sorted(paths) for name,paths in sorted(hits.items())}
+
 def readrows(path):
  with gzip.open(path,"rt",encoding="utf-8",newline="") as f:yield from csv.DictReader(f)
 def git_current(root,repo):
@@ -73,6 +116,9 @@ def selftest():
  assert d["possible_renames"]==[{"blob_sha":"2","old_paths":["b.c"],"new_paths":["c.c"],"status":"IDENTICAL_BLOB_PATH_MOVE_CANDIDATE_NOT_APPROVED_RENAME"}]
  got,truncated=impact({("r","b.c"):{("r","a.c")}},[("r","b.c")])
  assert got==[("r","a.c")] and not truncated
+ assert ("pret/pokefirered","src/save.c") in SENSITIVE
+ assert "native_flash_rotation" in affected_contracts([("pret/pokefirered","src/save.c")])
+ assert affected_contracts([("pret/pokefirered","src/noncritical.c")])=={}
  print("Update-delta self-test passed")
 def main():
  p=argparse.ArgumentParser()
@@ -112,7 +158,9 @@ def main():
  report={"from_commits":PINS,"source_changes":dict(aggregate),
    "direct_critical_contract_changes":[{"repo":r,"path":p} for r,p in direct_sensitive],
    "candidate_indirect_critical_impacts":[{"repo":r,"path":p} for r,p in indirect_sensitive],
-   "reverse_candidate_impact_files":len(impacted),"candidate_impact_truncated":truncated,
+   "direct_contract_revalidations":affected_contracts(changed_source),
+   "indirect_candidate_contract_revalidations":affected_contracts(impacted),
+  "reverse_candidate_impact_files":len(impacted),"candidate_impact_truncated":truncated,
    "release_gate":release_gate,"repositories":repos,
    "automatically_compatible":False,
    "versioned_abi_review_approved":False,"phase1_mapping_complete":False,
