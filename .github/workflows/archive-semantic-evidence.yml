@@ -1,0 +1,84 @@
+name: Persist Phase 1 semantic evidence release
+
+on:
+  workflow_run:
+    workflows:
+      - Phase 1 pinned source census and review dossiers
+    types:
+      - completed
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  release-evidence:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository && github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Retrieve evidence from the verified successful source audit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          AUDIT_RUN: ${{ github.event.workflow_run.id }}
+        run: |
+          set -euo pipefail
+          gh run download "$AUDIT_RUN" --repo "$GITHUB_REPOSITORY" --name xgba-phase1-evidence-and-review-queue --dir audit-output
+          test -f audit-output/phase1_mapping_gate.json
+          test -f audit-output/bytecode_opcode_dispatch_summary.json
+          test -f audit-output/composite_graphics_source_summary.json
+          test -f audit-output/source_contract_assertions.json
+
+      - name: Package provenance and permanent audit archive
+        env:
+          AUDIT_SHA: ${{ github.event.workflow_run.head_sha }}
+          AUDIT_RUN: ${{ github.event.workflow_run.id }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os,pathlib
+          d=pathlib.Path("audit-output")
+          gate=json.loads((d/"phase1_mapping_gate.json").read_text())
+          contracts=json.loads((d/"source_contract_assertions.json").read_text())
+          composite=json.loads((d/"composite_graphics_source_summary.json").read_text())
+          dispatch=json.loads((d/"bytecode_opcode_dispatch_summary.json").read_text())
+          if gate.get("decision")!="FAIL_INCOMPLETE":
+              raise SystemExit("Unexpected completion gate result: review manually before publishing")
+          if contracts.get("source_checks_passed")!=25:
+              raise SystemExit("Source check count changed")
+          if composite.get("unresolved_composite_component_count")!=0:
+              raise SystemExit("Composite asset check regressed")
+          if dispatch.get("field_opcodes")!=213 or dispatch.get("battle_opcodes")!=248:
+              raise SystemExit("Dispatch table changed unexpectedly")
+          (d/"ARCHIVE_PROVENANCE.json").write_text(json.dumps({
+             "source_workflow_run":int(os.environ["AUDIT_RUN"]),
+             "source_workflow_commit":os.environ["AUDIT_SHA"],
+             "repository":os.environ["GITHUB_REPOSITORY"],
+             "decision":gate["decision"],
+             "semantic_dispositions_approved":gate["approved_semantic_dispositions"],
+             "preservation":"immutable pinned revisions and per-entry source hashes",
+             "warning":"Source-syntax graph and asset rules are NOT all-file semantic signoff"
+          },indent=2,sort_keys=True)+"\n")
+          PY
+          tar -czf XGBA_Phase1_SemanticEvidence_v18.tar.gz -C audit-output .
+          sha256sum XGBA_Phase1_SemanticEvidence_v18.tar.gz > XGBA_Phase1_SemanticEvidence_v18.sha256
+          ls -lh XGBA_Phase1_SemanticEvidence_v18.tar.gz
+
+      - name: Create or update durable GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: phase1-semantic-v1.8
+          AUDIT_SHA: ${{ github.event.workflow_run.head_sha }}
+          AUDIT_RUN: ${{ github.event.workflow_run.id }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$AUDIT_SHA" \
+              --title "Phase 1 v1.8 — pinned semantic mapping evidence" \
+              --notes "Full hash-anchored source/asset mapping, AST and opcode audit outputs. Phase 1 semantic signoff is **INCOMPLETE**. Produced by GitHub Actions run $AUDIT_RUN. Never infer full file understanding from parser-generated candidates." \
+              --prerelease
+          fi
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" \
+            XGBA_Phase1_SemanticEvidence_v18.tar.gz \
+            XGBA_Phase1_SemanticEvidence_v18.sha256 --clobber
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json url,assets
