@@ -91,6 +91,16 @@ def main():
     seen_sites.add(site)
    add(repo,e["dispatch_table_path"],e["handler_path"],
      "opcode_table_function_pointer",e["table_line"],"SOURCE_BACKED_HANDLER_DEFINITION")
+ # Member-function callback assignments are candidate runtime edges: producer
+ # wrote a named handler to a struct member and a consumer calls that member.
+ # Alias analysis is not proved; keep the edge's evidence type explicit.
+ callback=OUT/"indirect_member_callback_candidates.csv.gz"
+ if callback.exists():
+  for e in rows(callback):
+   if e["classification"]!="SAME_FILE_CALLBACK_VALUE_CANDIDATE":continue
+   add(e["repo"],e["caller_path"],e["target_definition_path"],
+       "member_callback_assignment_to_indirect_call",
+       e["caller_line"],"MEMBER_NAME_ALIAS_UNVERIFIED")
  bykind=collections.Counter();incoming=collections.Counter();outgoing=collections.Counter()
  rev=collections.defaultdict(set)
  with gzip.open(OUT/"unified_candidate_dependency_edges.csv.gz","wt",encoding="utf-8",newline="") as f:
@@ -127,7 +137,7 @@ def main():
   "limitations":["Linkage-screened C cross-file calls are candidates and are not compiler/linker-resolved; C++/Go/Python unresolved by design.",
     "Include files and literal asset paths are candidate uses; build flags and generated tables can change targets.",
     "Traversal follows candidate edges and does not prove runtime call reachability.",
-    "Most runtime callbacks, opaque binary dependencies and conditional macros remain outside this graph; specific verified FireRed opcode tables are included."]}
+    "Named member callbacks are linked only by slot candidate without type/alias proof; opaque binary dependencies and conditional macros remain unresolved."]}
  (OUT/"unified_candidate_dependency_summary.json").write_text(json.dumps(summary,indent=2)+"\n")
  (OUT/"p0_semantic_impact_candidates.json").write_text(json.dumps(impacts,indent=2)+"\n")
  print(json.dumps(summary,indent=2))
