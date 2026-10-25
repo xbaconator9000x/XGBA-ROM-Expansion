@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'tools/resource_execution_semantics.py'
+      - 'tools/graphics_hardware_semantics.py'
       - '.github/workflows/resource-contracts.yml'
 permissions:
   contents: read
@@ -27,11 +28,17 @@ jobs:
         run: |
           python3 -m py_compile tools/resource_execution_semantics.py
           python3 tools/resource_execution_semantics.py
+      - name: Verify fixed graphics decompression and OBJ/VRAM source boundaries
+        run: |
+          python3 -m py_compile tools/graphics_hardware_semantics.py
+          python3 tools/graphics_hardware_semantics.py
       - name: Preserve source-anchored contract evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: xgba-phase1-ROM-audio-DMA-lifetime-contracts
-          path: audit-output/resource_lifecycle_contracts*
+          path: |
+            audit-output/resource_lifecycle_contracts*
+            audit-output/graphics_hardware_contracts*
           if-no-files-found: warn
           retention-days: 90
