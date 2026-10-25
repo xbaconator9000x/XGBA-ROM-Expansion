@@ -113,5 +113,12 @@ def main():
    backtrace=OUT/"mgba-boundary-backtrace.log"
    if backtrace.exists(): print("Native debugger backtrace:",backtrace.read_text(errors="replace")[-5500:])
    raise RuntimeError(f"Native Matrix probe failed, see {log}")
+  # Fail-closed compiled-evidence gate. A successful process exit alone is not
+  # enough if assertions were removed, duplicated, or mislabeled as reviewed.
+  verifier=Path("tools/verify_native_mgba_regressions.py")
+  if not verifier.is_file():raise RuntimeError("Pinned mGBA regression evidence verifier absent")
+  subprocess.run([sys.executable,str(verifier),"--self-test"],check=True)
+  subprocess.run([sys.executable,str(verifier)],check=True)
+
 
 if __name__=="__main__":main()
