@@ -53,7 +53,38 @@ def self_test():
  assert resolve("r","src/main.c","missing.h",d)==[]
  assert resolve("r","src/main.c","../secret",d)==[]
  assert git_blob_sha(b"abc")=="f2ba8f84ab5c1bce84a7b441cb1959cfc7093b7f"
+ assert priority_floor("pret/pokefirered","src/load_save.c","source")>=90
+ assert priority_floor("pret/agbcc","gcc/config/arm/arm.c","source")>=70
+ assert priority_floor("mgba-emu/mgba","src/arm/arm.c","source")>=90
  print("Self-test PASSED")
+def priority_floor(repo,path,category):
+ """Conservative structural floor for risky files missed by exact token matches."""
+ is_text=category in ("source","structured_or_text_config")
+ if not is_text:
+  if repo=="pret/pokefirered" and path.startswith(("graphics/","sound/","data/","maps/")):return 40
+  return 0
+ if repo=="pret/agbcc":
+  if any(s in path for s in ("config/arm/","libgcc","ld/","as/","collect2","final.c","reload")):return 70
+  return 40
+ if repo=="pret/pokefirered":
+  if path.startswith(("src/load_save","src/save","src/flash","src/script","src/scrcmd",
+                      "src/fieldmap","src/map","include/script","include/save","include/global")):
+   return 95
+  if path.startswith(("src/decompress","src/pokemon","src/m4a","asm/macros",
+                      "tools/mapjson","data/layouts","data/maps")):return 70
+ if repo=="mgba-emu/mgba":
+  if path.startswith(("src/arm/","include/mgba/internal/arm/",
+                      "src/gba/memory","src/gba/dma","src/gba/serialize",
+                      "src/gba/cart/","src/gba/savedata","src/gba/gba.c")):return 95
+  if path.startswith(("src/gba/","include/mgba/internal/gba/","src/util/vfs")):return 70
+ if repo=="huderlem/poryscript":
+  if path.startswith(("emitter/","parser/")):return 95
+  return 70
+ if repo=="huderlem/porymap":
+  if any(s in path for s in ("/map","project.cpp","config.cpp","tileset","script")):return 80
+  if path.startswith("src/"):return 40
+ return 0
+
 def main():
  a=argparse.ArgumentParser()
  a.add_argument("--census",type=Path,required=True)
@@ -107,7 +138,7 @@ def main():
    is_text=r["category"] in ("source","structured_or_text_config")
    is_doc=r["category"]=="documentation"
    base=30 if is_text else (10 if is_doc else 20)
-   score=max(base,max_rule)+(5 if is_text and P0_PATH.search(r["path"]) else 0)
+   score=max(base,max_rule,priority_floor(r["repo"],r["path"],r["category"]))+(5 if is_text and P0_PATH.search(r["path"]) else 0)
    if score>=90:p="P0"
    elif score>=70:p="P1"
    elif score>=40:p="P2"
