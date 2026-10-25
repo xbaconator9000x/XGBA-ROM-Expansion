@@ -28,6 +28,11 @@ jobs:
           python3 tools/semantic_review_dossiers.py --self-test
       - name: Clone pinned sources and scan
         run: python3 tools/pinned_source_census.py --checkout --root upstream --out audit-output
+      - name: Verify pinned Poryscript compiler parsing and emission tests
+        working-directory: upstream/poryscript
+        run: |
+          go test ./... | tee ../../audit-output/poryscript_go_tests.log
+          go build ./...
       - name: Generate hashed review dossiers and priority queue
         run: python3 tools/semantic_review_dossiers.py --root upstream --census audit-output --out audit-output
       - name: Classify unresolved include candidates
