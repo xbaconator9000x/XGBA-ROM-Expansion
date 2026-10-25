@@ -115,4 +115,6 @@ if __name__=="__main__":
   run(root)
   # Additive gate, separate output; the original 25-count archive contract stays stable.
   subprocess.run([sys.executable,"tools/verify_p0_additive_source_contracts.py",str(root)],check=True)
+  # Review candidates require exact pinned blobs, never fabricated signoffs.
+  subprocess.run([sys.executable,"tools/verify_curated_p0_semantic_registry.py",str(root)],check=True)
  except Exception as e:print("CONTRACT CHECK FAILED:",e,file=sys.stderr);sys.exit(2)
