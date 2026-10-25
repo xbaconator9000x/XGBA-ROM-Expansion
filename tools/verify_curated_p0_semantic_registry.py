@@ -96,18 +96,26 @@ def validate(root,document):
 
 def self_test():
     document=json.loads(REGISTRY.read_text())
-    if len(document["candidate_files"])!=29:raise RuntimeError("Curated manifest tampered")
-    bad=json.loads(json.dumps(document))
-    bad["candidate_files"][0]["independent_whole_file_signoff"]=True
-    # structural negative control, without needing upstream source.
-    try:
-        if any(x["independent_whole_file_signoff"] is not False for x in bad["candidate_files"]):
-            raise RuntimeError("Expected approval guard rejection")
-    except RuntimeError:
-        pass
-    else:
-        raise AssertionError("Fail-open curated semantic review approval guard")
-    print("Curated candidate registry structural review guard PASS")
+    if len(document["candidate_files"])!=29:
+        raise RuntimeError("Curated manifest tampered")
+    cases=[
+        ("independent_whole_file_signoff",True,"Unreviewed semantic candidate claimed as approved"),
+        ("revision","unverified","Curated semantic file revision mismatch"),
+        ("interpreted_semantic_roles",[],"Untyped or missing candidate semantic role"),
+        ("status","APPROVED","Curated file signoff state must remain pending"),
+        ("path_complete_alias_lifetime_proof",True,"Unproved dynamic alias semantics claimed complete"),
+    ]
+    for field,value,expected in cases:
+        bad=json.loads(json.dumps(document))
+        bad["candidate_files"][0][field]=value
+        try:
+            validate(Path("__intentionally_missing_checkout__"),bad)
+        except RuntimeError as ex:
+            if expected not in str(ex):
+                raise RuntimeError(f"Wrong rejection reason for {field}: {ex}")
+        else:
+            raise AssertionError("Fail-open curated semantic review guard: "+field)
+    print("Curated candidate registry: five false-approval/identity negative guards PASS")
 
 if __name__=="__main__":
     try:
