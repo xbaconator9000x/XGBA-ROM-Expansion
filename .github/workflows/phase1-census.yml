@@ -19,6 +19,7 @@ on:
       - 'tools/generated_asset_provenance.py'
       - 'tools/dynamic_dispatch_semantics.py'
       - 'tools/script_opcode_semantic_obligations.py'
+      - 'tools/implicit_battle_cursor_semantics.py'
       - 'tools/module_semantic_dossiers.py'
       - 'tools/resolve_composite_assets.py'
       - '.github/workflows/phase1-census.yml'
@@ -75,6 +76,8 @@ jobs:
         run: python3 tools/script_opcode_semantic_obligations.py
       - name: Reconcile source, assembler and asset dependency candidates
         run: python3 tools/unified_semantic_dependencies.py
+      - name: Verify eight delegated or terminal battle cursor handlers
+        run: python3 tools/implicit_battle_cursor_semantics.py
       - name: Assemble complete per-module evidence and semantic review obligations
         run: python3 tools/module_semantic_dossiers.py
       - name: Evaluate Phase 1 semantic gate (incomplete is expected until signed review)
