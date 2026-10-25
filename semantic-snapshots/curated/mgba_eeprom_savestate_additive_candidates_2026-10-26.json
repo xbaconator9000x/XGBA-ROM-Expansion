@@ -1,0 +1,93 @@
+{
+  "schema": "xgba.phase1.additive_eeprom_savestate_semantic_candidates.v1",
+  "date": "2026-10-26",
+  "source_repository": "mgba-emu/mgba",
+  "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "parent_curated_registry": "semantic-snapshots/curated/p0_semantic_review_candidates_2026-10-26.json",
+  "parent_curated_count_unchanged": 29,
+  "additional_source_files": 2,
+  "independent_whole_file_approvals": 0,
+  "phase1_mapping_complete": false,
+  "status": "SOURCE_INTERPRETED_ADDITIVE_CANDIDATES_NOT_INDEPENDENTLY_REVIEWED",
+  "candidates": [
+    {
+      "path": "src/gba/savedata.c",
+      "git_blob_sha1": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "source_lines": [
+        46,
+        757
+      ],
+      "semantic_roles": [
+        "EEPROM_serial_bit_command_state_machine",
+        "EEPROM_512B_to_8KiB_dynamic_growth",
+        "EEPROM_settling_timing_event",
+        "save_state_relative_settling_event_serialization"
+      ],
+      "cross_source_consumers": [
+        "src/gba/memory.c:611-625",
+        "src/gba/memory.c:986-999",
+        "src/gba/serialize.c:84-93",
+        "src/gba/serialize.c:229-240"
+      ],
+      "unresolved": [
+        "all_EEPROM_command_bit_lengths_and_invalid_addresses",
+        "DMA_vs_CPU_16bit_ROM2_EX_interleavings",
+        "pending_settling_event_restoration_and_callback_order",
+        "save_type_file_mapping_alias_lifetime"
+      ],
+      "independent_signoff": false
+    },
+    {
+      "path": "include/mgba/internal/gba/savedata.h",
+      "git_blob_sha1": "6227be25e8c9d2c1cc14c06ded34389b96138577",
+      "source_lines": [
+        14,
+        125
+      ],
+      "semantic_roles": [
+        "savedata_command_and_address_struct_ABI",
+        "EEPROM_read_write_interface",
+        "savedata_timing_event_and_file_mapping_ownership"
+      ],
+      "cross_source_consumers": [
+        "src/gba/savedata.c:46-65",
+        "src/gba/serialize.c:84-93",
+        "src/gba/memory.c:986-999"
+      ],
+      "unresolved": [
+        "compiled_struct_layout_variants",
+        "all_call_sites_and_callback_reentrancy",
+        "snapshot_compatibility_across_save_type_changes"
+      ],
+      "independent_signoff": false
+    }
+  ],
+  "cross_source_contracts": [
+    {
+      "id": "EEPROM_ROM2_EX_16BIT_DISPATCH",
+      "producer": "src/gba/memory.c:611-625",
+      "consumer": "src/gba/savedata.c:560-583",
+      "meaning": "ROM2_EX 16-bit reads route to EEPROM state machine when save type is EEPROM; 16-bit stores detect and write EEPROM except e-Reader interception.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "EEPROM_WRITE_SETTLING_SCHEDULER",
+      "producer": "src/gba/savedata.c:524-540",
+      "consumer": "src/core/timing.c:36-63",
+      "meaning": "EEPROM write bits mark save dirty and schedule a 115000-cycle dust/settling callback; this event is not a ROM bank event.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "EEPROM_SAVESTATE_RELATIVE_EVENT_RESTORE",
+      "producer": "src/gba/savedata.c:715-756",
+      "consumer": "src/gba/serialize.c:229-240",
+      "meaning": "Savestate stores pending EEPROM settling as remaining cycles and restores its timing event before Matrix deserialize and timing interrupt/reroot.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    }
+  ],
+  "limitations": [
+    "These two files are additive to the 29-file historical registry and do not automatically modify the 14,834-file review queue.",
+    "Exact pinned source expressions are independently rechecked by CI; not a whole-file proof of callback ordering, EEPROM aliasing or restore safety.",
+    "No emulator, ROM, save-state format, XGBA runtime or Phase 2 implementation was changed."
+  ]
+}
