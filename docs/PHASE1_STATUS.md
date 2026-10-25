@@ -1,3 +1,9 @@
+# Current status: v2.2
+
+See [PHASE1_STATUS_v22.md](PHASE1_STATUS_v22.md). The older status below is historical. Phase 1 semantic review is **FAIL_INCOMPLETE**.
+
+---
+
 # Current status: v2.0
 
 The latest verified semantic evidence and remaining completion requirements are in [PHASE1_STATUS_v20.md](PHASE1_STATUS_v20.md). Prior v1.8 and v1.5 sections below are historical. **Phase 1 is NOT complete.**
