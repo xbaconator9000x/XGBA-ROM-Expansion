@@ -36,7 +36,7 @@ REQUIRED_CONTRACTS = {
     "MGBA_DMA3_ROM2_EX_EEPROM_SERVICE": (
         "src/gba/dma.c:259-315", "src/gba/memory.c:586-625"),
 }
-REF = re.compile(r"^([a-zA-Z0-9_./-]+):(\\d+)-(\\d+)$")
+REF = re.compile(r"^([a-zA-Z0-9_./-]+):([0-9]+)-([0-9]+)$")
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
 
 
