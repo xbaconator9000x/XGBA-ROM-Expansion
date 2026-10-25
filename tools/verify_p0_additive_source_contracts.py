@@ -65,6 +65,70 @@ EXTRA_CHECKS=[
  r"bool8 ScrCmd_setmetatile\([^)]*\).*?if \(!isImpassable\)\s*MapGridSetMetatileIdAt\(x, y, metatileId\);\s*else\s*MapGridSetMetatileIdAt\(x, y, metatileId \| MAPGRID_COLLISION_MASK\);"),
 ]
 
+
+def verify_map_cell_word_reference():
+    """Exhaustive default-mask arithmetic model, not compiled FireRed or Qt proof.
+
+    Source formulas are first pinned by EXTRA_CHECKS in run(). Model the
+    overwrite/preserve effects independently from reconstructed bitfields.
+    """
+    tile_mask, collision_mask, elevation_mask = 0x03FF, 0x0C00, 0xF000
+    if tile_mask | collision_mask | elevation_mask != 0xFFFF:
+        raise RuntimeError("Native packed map-cell masks no longer cover 16 bits")
+    collisions, elevations = set(), set()
+    for raw in range(65536):
+        old_id, old_collision, old_elevation = raw & tile_mask, (raw >> 10) & 3, raw >> 12
+        collisions.add(old_collision)
+        elevations.add(old_elevation)
+        new_id = (raw ^ 0x02A5) & tile_mask
+        supplied = ((raw * 73) ^ 0xA5C3) & 0xFFFF
+        supplied_id = supplied & tile_mask
+        supplied_collision = (supplied >> 10) & 3
+        supplied_elevation = supplied >> 12
+        # Actual formulas are derived from pinned Porymap and FireRed sources.
+        actual = {
+            "editor_set_id": (raw & (collision_mask | elevation_mask)) | new_id,
+            "runtime_set_id": (raw & elevation_mask) | (supplied & ~elevation_mask),
+            "runtime_set_entry": supplied,
+            "runtime_impassable": raw | collision_mask,
+            "runtime_passable": raw & ~collision_mask,
+            "script_unblocked": (raw & elevation_mask) | (supplied & ~elevation_mask),
+            "script_blocked": (raw & elevation_mask) | ((supplied | collision_mask) & ~elevation_mask),
+        }
+        # Independent field-wise oracle: elevation/collision/ID ownership.
+        expected = {
+            "editor_set_id": (old_elevation << 12) | (old_collision << 10) | new_id,
+            "runtime_set_id": (old_elevation << 12) | (supplied_collision << 10) | supplied_id,
+            "runtime_set_entry": (supplied_elevation << 12) | (supplied_collision << 10) | supplied_id,
+            "runtime_impassable": (old_elevation << 12) | (3 << 10) | old_id,
+            "runtime_passable": (old_elevation << 12) | old_id,
+            "script_unblocked": (old_elevation << 12) | (supplied_collision << 10) | supplied_id,
+            "script_blocked": (old_elevation << 12) | (3 << 10) | supplied_id,
+        }
+        for operation, result in actual.items():
+            if result != expected[operation] or not 0 <= result <= 0xFFFF:
+                raise RuntimeError(f"Map-cell {operation} field contract failed for 0x{raw:04X}")
+    if collisions != set(range(4)) or elevations != set(range(16)):
+        raise RuntimeError("Native map-cell collision/elevation coverage incomplete")
+    sample = 0x5809
+    editor = (sample & (collision_mask | elevation_mask)) | 10
+    runtime = (sample & elevation_mask) | 10
+    blocked = (sample & elevation_mask) | (10 | collision_mask)
+    if (editor, runtime, blocked) != (0x580A, 0x500A, 0x5C0A):
+        raise RuntimeError("Editor/runtime/script map-cell distinction regressed")
+    return {
+        "scope": "PINNED_DEFAULT_16BIT_MAP_CELL_ARITHMETIC_REFERENCE_ONLY",
+        "exhaustive_input_words": 65536,
+        "operation_models_per_word": 7,
+        "field_oracle_comparisons": 65536 * 7,
+        "collision_values_covered": 4,
+        "elevation_values_covered": 16,
+        "distinct_editor_runtime_script_example": ["0x580A", "0x500A", "0x5C0A"],
+        "out_of_bounds_coordinates_tested": False,
+        "compiled_runtime_tested": False,
+        "independent_whole_file_signoff": False,
+    }
+
 def run(root: Path) -> None:
     if len(EXTRA_CHECKS)!=16:
         raise RuntimeError("Expected 16 additive source contracts; preserve exact review scope")
@@ -95,8 +159,10 @@ def run(root: Path) -> None:
             "status":"PINNED_SOURCE_ASSERTION_PASS_NOT_INDEPENDENTLY_REVIEWED",
             "runtime_proof":False, "independent_signoff":False
         })
+    map_cell_reference=verify_map_cell_word_reference()
     output={
         "schema":"xgba.phase1.additive_p0_source_contracts.v1",
+        "map_cell_word_reference":map_cell_reference,
         "additive_source_checks_expected":16,
         "additive_source_checks_passed":len(evidence),
         "baseline_source_contracts_expected_unchanged":25,
@@ -108,7 +174,7 @@ def run(root: Path) -> None:
     out=Path("audit-output/p0_additive_source_contract_assertions.json")
     out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(output,indent=2,sort_keys=True)+"\n",encoding="utf-8")
-    print("Phase 1 additive pinned P0 contracts: 16/16 source assertions PASS; independent review pending")
+    print("Phase 1 additive pinned P0 contracts: 16/16 source assertions PASS; map-cell 65536 words x 7 operations PASS; independent review pending")
 
 if __name__=="__main__":
     try:run(Path(sys.argv[1] if len(sys.argv)>1 else "upstream"))
