@@ -1,0 +1,37 @@
+name: Phase 1 ROM and resource lifetime semantic contracts
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/resource_execution_semantics.py'
+      - '.github/workflows/resource-contracts.yml'
+permissions:
+  contents: read
+jobs:
+  audited-lifetimes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout pinned mGBA and FireRed source
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba fetch --quiet origin fd9dc5c2cbf234365068855851107e762fc6211b
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered fetch --quiet origin ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+      - name: Verify every source-backed ROM, audio and DMA invariant
+        run: |
+          python3 -m py_compile tools/resource_execution_semantics.py
+          python3 tools/resource_execution_semantics.py
+      - name: Preserve source-anchored contract evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-ROM-audio-DMA-lifetime-contracts
+          path: audit-output/resource_lifecycle_contracts*
+          if-no-files-found: warn
+          retention-days: 90
