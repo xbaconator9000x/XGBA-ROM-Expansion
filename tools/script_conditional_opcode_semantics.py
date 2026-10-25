@@ -62,7 +62,7 @@ def main():
  mapmac=macros(source("asm/macros/map.inc"))
  if "map" not in mapmac:raise RuntimeError("Missing source-pinned two-byte map macro")
  mapline,mapbody=mapmac["map"]
- mapbyte=[x for i,t in mapbody if re.match(r"^\.byte\s+",t)]
+ mapbyte=[t for i,t in mapbody if re.match(r"^\.byte\s+",t)]
  if len(mapbyte)!=2 or len([t for _,t in mapbody if t and not t.startswith(".byte")])!=0:
   raise RuntimeError("Map argument source macro no longer emits exactly two literal bytes")
  original=json.loads((OUT/"script_assembler_operand_summary.json").read_text())
@@ -80,7 +80,7 @@ def main():
   ends=[k for k,(lin,t) in enumerate(body) if t==".endif"]
   if len(if_idx)!=1 or len(elses)!=1 or len(ends)!=1 or not(if_idx[0]<elses[0]<ends[0]):
    raise RuntimeError("Map-source branch grammar changed "+name)
-  if any(t.startswith(".if") for i,t in body if i!=if_idx[0]):
+  if any(t.startswith(".if") for k,(lin,t) in enumerate(body) if k!=if_idx[0]):
    raise RuntimeError("Nested map macro conditional "+name)
   btrue=body[if_idx[0]+1:elses[0]]
   bfalse=body[elses[0]+1:ends[0]]
@@ -104,7 +104,6 @@ def main():
  with gzip.open(OUT/"script_conditional_opcode_variants.csv.gz","wt",encoding="utf-8",newline="") as f:
   w=csv.DictWriter(f,fieldnames=COLS);w.writeheader();w.writerows(records)
  rescued={("FIELD",r["opcode"]) for r in records}
- allmapped=rescued|{(x["kind"],x["opcode"]) for x in original.get("unmapped_opcode_slots",[]) if False}
  result={"script_opcode_dispatch_slots":original["original_opcode_slots"],
   "assembler_macros_initial_slots":original["opcode_slots_with_a_macro"],
   "conditional_branch_variants_resolved":len(records),
