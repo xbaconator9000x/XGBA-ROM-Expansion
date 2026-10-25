@@ -64,6 +64,16 @@ def main():
    if e["derived_primary"]:
     add(e["source_repo"],e["consumer"],e["derived_primary"],
       "generated_graphics_source_provenance",e["source_line"],e["resolution"])
+ # An explicit Make concat target can consume many differently named source files.
+ # Keep every component and its order in the separate evidence CSV; graph edges
+ # are candidate consumer->tracked source dependencies only.
+ comp=OUT/"composite_graphics_source_edges.csv.gz"
+ if comp.exists():
+  for e in rows(comp):
+   if e["component_resolution"]!="EXPLICIT_MAKE_RULE_COMPONENT_SOURCE_CANDIDATE":continue
+   add("pret/pokefirered",e["consumer_path"],e["component_checked_in_source"],
+       "composite_graphics_source_provenance",
+       e["consumer_source_line"],e["component_resolution"])
  # Function pointer dispatch: the interpreter calls a table indexed by bytecode.
  # Track interpreter -> opcode table and opcode table -> registered handler source.
  op=OUT/"bytecode_opcode_dispatch_semantic.csv.gz"
