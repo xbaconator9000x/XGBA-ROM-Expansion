@@ -20,7 +20,21 @@ cmake -S "$ROOT/tests" -B "$ROOT/build-mgba-boundary" -DCMAKE_BUILD_TYPE=Debug \
   2>&1 | tee "$ROOT/audit-output/mgba-boundary-configure.log"
 cmake --build "$ROOT/build-mgba-boundary" --target xgba_mgba_bank_boundary --parallel 2 \
   2>&1 | tee "$ROOT/audit-output/mgba-boundary-build.log"
+# Distinguish a harness crash from a failed assertion. Keep precise original exit status.
+ulimit -c 0 || true
+set +e
 "$ROOT/build-mgba-boundary/xgba_mgba_bank_boundary" \
   2>&1 | tee "$ROOT/audit-output/mgba-boundary-runtime.log"
+status="${PIPESTATUS[0]}"
+set -e
+if [ "$status" -ne 0 ]; then
+  echo "Boundary probe exited with status $status" | tee -a "$ROOT/audit-output/mgba-boundary-runtime.log"
+  if command -v gdb >/dev/null 2>&1; then
+    gdb --batch --quiet -ex run -ex "thread apply all bt 12" \
+      --args "$ROOT/build-mgba-boundary/xgba_mgba_bank_boundary" \
+      > "$ROOT/audit-output/mgba-boundary-backtrace.log" 2>&1 || true
+  fi
+  exit "$status"
+fi
 sha256sum "$ROOT/audit-output/mgba-boundary-"*.log > "$ROOT/audit-output/mgba-boundary-log-sha256.txt"
 echo "Phase 1 remains incomplete. A passing native probe does not certify safe XGBA banking."
