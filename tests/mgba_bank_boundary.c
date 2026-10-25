@@ -76,6 +76,7 @@ static void check_thumb(struct mCore *core, uint32_t addr, uint16_t expected, co
     check(label, data == expected && (cpu->prefetch[0] & 0xFFFFu) == expected);
 }
 static void run_one(bool matrix) {
+    fprintf(stderr,"STEP begin %s\n", matrix ? "matrix" : "vanilla");
     const size_t size = matrix ? ROM_BYTES_MATRIX : ROM_BYTES_SMALL;
     uint8_t *bytes = calloc(size, 1);
     if (!bytes) { fprintf(stderr, "Out of memory\n"); ++failures; return; }
@@ -88,6 +89,7 @@ static void run_one(bool matrix) {
         put16(bytes, BANK_A+0x200, THUMB_A);
         put16(bytes, BANK_B+0x200, THUMB_B);
     }
+    fprintf(stderr,"STEP fixture allocated %s\n", matrix ? "matrix" : "vanilla");
     struct mCore *core = GBACoreCreate();
     if (!core || !core->init(core)) {
         fprintf(stderr, "Cannot initialize pinned GBA core\n");
@@ -95,6 +97,7 @@ static void run_one(bool matrix) {
         free(bytes);
         return;
     }
+    fprintf(stderr,"STEP core created/initialized\n");
     mCoreInitConfig(core, NULL);
     struct VFile *vf = VFileFromConstMemory(bytes, size);
     if (!vf || !core->loadROM(core, vf)) {
@@ -106,16 +109,20 @@ static void run_one(bool matrix) {
         free(bytes);
         return;
     }
+    fprintf(stderr,"STEP ROM loaded, resetting\n");
     core->reset(core);
+    fprintf(stderr,"STEP core reset successful\n");
     struct GBA *gba = core->board;
     printf("CARTRIDGE %s backing_bytes=%zu visible_rom_bytes=%zu\n",
            matrix ? "matrix" : "vanilla", size, gba->memory.romSize);
     if (!matrix) {
+        fprintf(stderr,"STEP vanilla pre-check\n");
         check("vanilla_non_M_does_not_select_matrix",
               gba->memory.romSize == ROM_BYTES_SMALL && gba->memory.matrix.cmd == 0);
         check_arm(core, ADDRESS, OPCODE_A, "vanilla_ARM_fetch_data_consistency");
         check_thumb(core, THUMB_ADDRESS, THUMB_A, "vanilla_Thumb_fetch_data_consistency");
     } else {
+        fprintf(stderr,"STEP matrix pre-check\n");
         check("matrix_M_signature_and_16MiB_aperture",
               gba->memory.romSize == 0x01000000u);
         map512(gba, BANK_A, 0x1200u);
@@ -154,11 +161,15 @@ static void run_one(bool matrix) {
                     gba->memory.matrix.mappings[0x1600u >> 9] ==
                     (uint32_t)(size - 0x100u));
     }
+    fprintf(stderr,"STEP deinit\n");
     mCoreConfigDeinit(&core->config);
     core->deinit(core);
     free(bytes);
+    fprintf(stderr,"STEP complete\n");
 }
 int main(void) {
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
     run_one(false);
     run_one(true);
     printf("SUMMARY hard_failures=%d native_gap_observations=%d "
