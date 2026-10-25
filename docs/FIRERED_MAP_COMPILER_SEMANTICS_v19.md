@@ -29,7 +29,7 @@ A real pinned `g++ -std=c++11` build of the original mapjson tool generated all 
 
 ### Important source-compatible exceptions
 
-**28 maps with zero-dimension borders and eight-byte border blobs.** The source declares `border_width=0` and `border_height=0` while preserving a four-tile `border.bin`. This is *not* a file corruption to clean up. The compiler accepts those entries and the eight bytes are part of source provenance. They must be retained through edits and future rebuilds; their runtime display impact is determined by zero declared border dimensions.
+**28 layouts with zero-dimension borders and eight-byte border blobs.** The source declares `border_width=0` and `border_height=0` while preserving a four-tile `border.bin`. This is *not* a file corruption to clean up. The compiler accepts those entries and the eight bytes are part of source provenance. They must be retained through edits and future rebuilds; their runtime display impact is determined by zero declared border dimensions.
 
 **19 intentional `MAP_DYNAMIC` warp targets.** These are dynamic destinations, **not missing maps**. Do not replace them with a fixed map or treat them as broken links.
 
