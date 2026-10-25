@@ -122,7 +122,19 @@ static void test_native_peripherals(struct mCore *core) {
     GBADMAWriteDAD(gba, 3, GBA_BASE_EWRAM + 0x100u);
     gba->memory.io[GBA_REG_DMA3CNT_LO >> 1] = 1u;
     GBADMAWriteCNT_HI(gba, 3, 0x8000u); /* enable, immediate, 16-bit, one unit */
+    fprintf(stderr, "DMA DEBUG pre: now=%d event.when=%u scheduled=%d active=%d count=%d src=%08x dst=%08x cycles=%d nextEvent=%d\n",
+       mTimingCurrentTime(&gba->timing), gba->memory.dmaEvent.when,
+       mTimingIsScheduled(&gba->timing, &gba->memory.dmaEvent),
+       gba->memory.activeDMA, gba->memory.dma[3].nextCount,
+       gba->memory.dma[3].nextSource, gba->memory.dma[3].nextDest,
+       gba->cpu->cycles, gba->cpu->nextEvent);
     mTimingTick(&gba->timing, 80);
+    fprintf(stderr, "DMA DEBUG post: now=%d event.when=%u scheduled=%d active=%d count=%d dstword=%04x cycles=%d nextEvent=%d\n",
+       mTimingCurrentTime(&gba->timing), gba->memory.dmaEvent.when,
+       mTimingIsScheduled(&gba->timing, &gba->memory.dmaEvent),
+       gba->memory.activeDMA, gba->memory.dma[3].nextCount,
+       ((uint16_t*)gba->memory.wram)[0x100u >> 1],
+       gba->cpu->cycles, gba->cpu->nextEvent);
     check("native_DMA3_16bit_ROM2_EX_reads_EEPROM",
           ((uint16_t*)gba->memory.wram)[0x100u >> 1] == 1u);
     check("native_DMA3_immediate_one_unit_completes",
