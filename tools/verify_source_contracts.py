@@ -5,7 +5,9 @@ import hashlib,json,re,subprocess,sys
 from pathlib import Path
 PINS={
 "pret/pokefirered":"ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
-"mgba-emu/mgba":"fd9dc5c2cbf234365068855851107e762fc6211b"}
+"mgba-emu/mgba":"fd9dc5c2cbf234365068855851107e762fc6211b",
+"huderlem/porymap":"26b919d7ff4b54152de010abd5bf344af2ebe116",
+"huderlem/poryscript":"c32481161c767b25a3425fa9f1f8729927ff3d55"}
 CHECKS=[
 ("MGBA_CRC_WARNING_NONFATAL","mgba-emu/mgba","src/gba/serialize.c",
  "a307a51e751f412c64a7378323c56758304ebe85",
