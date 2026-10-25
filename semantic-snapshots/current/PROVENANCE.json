@@ -1,6 +1,6 @@
 {
-  "github_actions_run_id": 40237548061,
-  "pinned_workflow_head_sha": "37cd8a9fb7dbd2a117c2f7f99834a71b60b8741a",
+  "github_actions_run_id": 40237573017,
+  "pinned_workflow_head_sha": "e0a7c492ffb17fe9ef92e15b73e5625b8ba673b1",
   "source_census_validated": true,
   "semantic_mapping_gate": "FAIL_INCOMPLETE",
   "artifact_retention_risk": "full AST sites omitted but reproducible from scripts"
