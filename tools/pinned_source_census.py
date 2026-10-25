@@ -126,7 +126,7 @@ def census(root,out):
                                 raise ValueError("Git blob SHA mismatch")
                             if b"\0" in data:
                                 raise ValueError("NUL bytes in apparent text")
-                            content=data.decode("utf-8")
+                            content=data.decode("utf-8", errors="surrogateescape")
                             lines=content.splitlines()
                             line_count=len(lines)
                             for lineno,line in enumerate(lines,1):
