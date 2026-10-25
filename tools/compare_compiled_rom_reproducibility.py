@@ -40,6 +40,31 @@ def run(a,b,out):
            "total_hot_region_chunks":sum(var==v for var,_ in fine_a)}
  else:
   for v in VARIANTS:hot[v]={"available":False}
+ normalized_a=a/"compiled_timestamp_neutralized_rom_hashes.json"
+ normalized_b=b/"compiled_timestamp_neutralized_rom_hashes.json"
+ normalized={}
+ if normalized_a.exists() and normalized_b.exists():
+  na=json.loads(normalized_a.read_text())
+  nb=json.loads(normalized_b.read_text())
+  if na["pinned_commit"]!=pa["pinned_revision"] or nb["pinned_commit"]!=pb["pinned_revision"]:
+   raise RuntimeError("Wrong BuildDateTime source revision")
+  if na["source_main_blob_sha"]!=nb["source_main_blob_sha"]:
+   raise RuntimeError("BuildDateTime source blob changed across runs")
+  for v in VARIANTS:
+   x=na["variants"][v];y=nb["variants"][v]
+   if x["raw_rom_sha256"]!=pa["variants"][v]["rom_sha256"] or y["raw_rom_sha256"]!=pb["variants"][v]["rom_sha256"]:
+    raise RuntimeError("Timestamp-normalized run identity disagrees with original ROM SHA")
+   if x["symbol_address"]!=y["symbol_address"] or x["symbol_bytes"]!=y["symbol_bytes"]:
+    raise RuntimeError("BuildDateTime symbol layout drift: "+v)
+   normalized[v]={"available":True,
+    "timestamp_neutralized_roms_identical":x["timestamp_neutralized_rom_sha256"]==y["timestamp_neutralized_rom_sha256"],
+    "source_sha_proved":na["source_main_blob_sha"],
+    "rom_timestamp_address":x["symbol_address"],
+    "rom_timestamp_field_bytes":x["symbol_bytes"],
+    "normalized_sha_run_a":x["timestamp_neutralized_rom_sha256"],
+    "normalized_sha_run_b":y["timestamp_neutralized_rom_sha256"]}
+ else:
+  for v in VARIANTS:normalized[v]={"available":False}
  variants={}
  for v in VARIANTS:
   aa=pa["variants"][v];bb=pb["variants"][v]
@@ -51,6 +76,7 @@ def run(a,b,out):
   if bool(damaged)!=(aa["rom_sha256"]!=bb["rom_sha256"]):
    raise RuntimeError("Page hash disagreement with ROM-level checksum for "+v)
   variants[v]={"hot_region_32byte_diff":hot[v],
+   "timestamp_neutralization":normalized[v],
    "elf_sha256_identical":aa["elf_sha256"]==bb["elf_sha256"],
    "native_gba_sha256_identical":aa["rom_sha256"]==bb["rom_sha256"],
    "nm_defined_symbol_table_sha256_identical":
@@ -75,6 +101,8 @@ def run(a,b,out):
   "allow_rom_hash_plugin_identity_when_rom_byte_identical":
     all(v["native_gba_sha256_identical"] and
      v["nm_defined_symbol_table_sha256_identical"] for v in variants.values()),
+  "timestamp_normalization_verified_on_both_runs":all(normalized[v]["available"] for v in VARIANTS),
+  "timestamp_neutralized_images_both_identical":all(normalized[v]["available"] and normalized[v]["timestamp_neutralized_roms_identical"] for v in VARIANTS),
   "source_level_signoffs":0,"phase1_mapping_complete":False,
   "caveats":["Identical ROM bytes across two builds do not guarantee deterministic outputs for every future environment.",
     "Changed ELF bytes with same ROM hash shows a difference outside the native cartridge image, not the exact cause.",
