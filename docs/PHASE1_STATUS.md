@@ -1,13 +1,37 @@
-# Phase 1 status — 2026-10-25
+# Phase 1 checkpoint — v1.5 (2026-10-25)
 
-- Pinned source census: **PASS** in GitHub Actions run 40158454510.
-- Tracked files: **14,834**, five repositories, pinned commits.
-- First run (40158369056) scanned 4,684 source/config files and found 5,711 lexical candidate occurrences but failed on a legacy encoded source file; the subsequent run passed after a lossless surrogateescape decoding fix.
-- Existing prior workpack baseline: 11,024 mapping-register rows and 4,184 cross-reference links (historical workpack counts, **not** newly certified semantic dispositions).
-- **Phase 1 mapping is NOT complete.** Lexical candidate occurrences and regex symbol references are not semantic analysis, signed per-file dispositions, or validated relocation decisions.
-- Next gate: import the existing v1.4 mapping tools and consolidated contracts, run full-source audit on pinned Git checkouts, review and record each tracked file with source-hash-pinned evidence, verify dependency graphs and acceptance checks. Mapping completion is separate from Phase 2 emulator implementation.
-- No ROM or emulator binary patch has been implemented or tested by this workflow.
+**Decision: FAIL_INCOMPLETE. Phase 1 source mapping has not received independent semantic approval.**
 
-## Reproduction
+## Verified GitHub Actions evidence
+- [Successful 5-repo source audit, second-pass dossiers and mapping gate](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40159337299).
+- All **14,834** tracked files from five pinned upstream Git revisions are inventoried.
+- All **4,685** source/config files have been read and Git-blob SHA checked.
+- **14,834** machine-generated, hash-pinned per-file dossiers; **0** independently approved file dispositions.
+- **5,711** lexical candidate occurrences; **8,315** symbol candidates.
+- **13,729** include syntax references: **8,676** single-path candidates, **62** ambiguous, **4,991** unresolved. Provisional unresolved classes: **2,384** standard library, **1,015** Qt, **230** generated, **155** platform/third-party, **698** local basename hypotheses, **509** unknown.
+- Heuristic review queue: **338 P0**, **1,297 P1**, **8,658 P2**, **4,541 P3**. Priorities are not semantic signoffs.
 
-See [the workflow](../.github/workflows/phase1-census.yml) and [census script](../tools/pinned_source_census.py). GitHub Actions artifact `xgba-phase1-pinned-source-census` contains manifest, lexical candidates, include and symbol candidates, and 500-file checkpoints. The artifact is retained for 90 days; source scripts remain version controlled.
+## Source mapping register (v1.5)
+- Original **11,024** mapping entries source-reconciled: **0 missing paths, 0 blob hash mismatches, 0 revision mismatches**.
+- **4,315** novel source-line lexical candidates appended from the complete census, with original IDs untouched.
+- **13,729** typed include-reference candidates appended as a separate dependency class.
+- Combined **29,068** register records spanning **2,631** different files.
+- 500-record checkpoints at **11,500–29,000**. New entries explicitly state candidate-only status.
+- The 29,068 mapping register is a **candidate discovery and provenance index**, not 29,068 approved semantic findings.
+
+## Source-backed constraints
+See [new v1.5 contracts](CRITICAL_SOURCE_CONTRACTS_v15.md) for save-state identity, ROM remap sequencing, raw script bytecode execution, and FireRed save-block relocation/encryption.
+
+## Validation
+- GitHub Actions evidence pipeline: SUCCESS.
+- Fail-closed Phase 1 mapping gate: FAIL_INCOMPLETE, **0/14,834** independent signoffs.
+- Offline local integration tests: 11/11 PASS.
+- Preserved v1.4 offline tests: 18/18 PASS.
+- No XGBA emulator/ROM expansion patch or end-to-end runtime tests have been implemented.
+
+## Persistence and next step
+The reproducible pipeline is committed to this repository. The complete 11.5MB mapping workpack generated in ChatGPT must be copied to `imports/XGBA_Phase1_v1.5_Complete_Workpack.zip` for permanent GitHub persistence; the connected GitHub API cannot import a local binary attachment automatically. [Import workflow](../.github/workflows/import-workpack.yml) verifies each ZIP entry SHA256, the 29,068 record counts, and the non-completion status when the archive is uploaded.
+
+Once imported, continue ranked semantic review, source/asset dependency proofs, versioned adapter contracts and independent per-file approvals. Phase 2 compilation/runtime/compatibility checks are a separate release gate.
+
+Do not count initial source scans, guessed paths, or unsigned dossiers as completed semantic review.
