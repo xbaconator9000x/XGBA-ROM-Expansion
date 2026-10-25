@@ -1,0 +1,144 @@
+name: Persist Phase 1 v2.9 exact cartridge adapter preflight and narrowed ROM drift
+on:
+  workflow_run:
+    workflows:
+      - Phase 1 compiled FireRed classic versus modern ABI
+    types:
+      - completed
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: write
+concurrency:
+  group: xgba-v29-symbol-evidence
+  cancel-in-progress: false
+jobs:
+  preserve:
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository && github.event.workflow_run.head_branch == 'main') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download completed pinned compiled evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TRIGGER_RUN_ID: ${{ github.event.workflow_run.id }}
+          EVENT_KIND: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          run_id="$TRIGGER_RUN_ID"
+          if [ "$EVENT_KIND" = workflow_dispatch ]; then
+            run_id=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow compiled-firered-variants.yml --limit 20 --json databaseId,conclusion --jq 'map(select(.conclusion == "success")) | .[0].databaseId')
+          fi
+          test -n "$run_id" && test "$run_id" != null
+          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name xgba-phase1-firered-classic-modern-compiled-ABI --dir evidence
+          echo "EVIDENCE_RUN_ID=$run_id" >> "$GITHUB_ENV"
+      - name: Compare two independent compiled ROM images and stable symbol mappings
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          prev=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow compiled-firered-variants.yml --limit 50 --json databaseId,conclusion | jq -r --argjson now "$EVIDENCE_RUN_ID" '[.[] | select(.conclusion == "success" and .databaseId != $now)] | .[0].databaseId')
+          test -n "$prev" && test "$prev" != null
+          mkdir -p previous
+          gh run download "$prev" --repo "$GITHUB_REPOSITORY" --name xgba-phase1-firered-classic-modern-compiled-ABI --dir previous
+          python3 tools/compare_compiled_rom_reproducibility.py \
+            --run-a evidence/firered-variant-evidence \
+            --run-b previous/firered-variant-evidence \
+            --out evidence/compiled_cross_run_rom_reproducibility.json
+          echo "PREVIOUS_EVIDENCE_RUN_ID=$prev" >> "$GITHUB_ENV"
+      - name: Validate entire ABI symbol inventory and object-file provenance
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,os
+          p=Path("evidence/firered-variant-evidence")
+          full=json.loads((p/"compiled_full_symbol_delta_summary.json").read_text())
+          obj=json.loads((p/"compiled_object_binding_summary.json").read_text())
+          sample=json.loads((p/"firered_variants_abi_summary.json").read_text())
+          external=json.loads((p/"compiled_external_symbol_resolution_summary.json").read_text())
+          cartridge=json.loads((p/"compiled_runtime_rom_image_hashes.json").read_text())
+          adapter=json.loads((p/"runtime_rom_symbol_preflight_v1.json").read_text())
+          comparison=json.loads((Path("evidence")/"compiled_cross_run_rom_reproducibility.json").read_text())
+          abi=json.loads((p/"firered_variant_binding_fingerprints.json").read_text())
+          assert full["pinned_revision"]=="ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
+          assert full["sampled_critical_contracts_reconciled"]==11
+          assert full["unique_global_symbols_shared"]>25000
+          assert all(full["elf_variants"][v]["all_defined_symbols"]>100000 for v in ("original_agbcc","modern_gcc"))
+          assert obj["pinned_revision"]==full["pinned_revision"]
+          assert obj["source_hash_integrity_checked"]
+          assert all(obj["configurations"][v]["object_files"]==649 for v in ("original_agbcc","modern_gcc"))
+          assert all(obj["configurations"][v]["source_matched_objects"]==649 for v in ("original_agbcc","modern_gcc"))
+          assert all(obj["configurations"][v]["objects_without_unique_tracked_source"]==0 for v in ("original_agbcc","modern_gcc"))
+          assert external["pinned_revision"]==full["pinned_revision"]
+          assert all(external["compiled_variants"][v]["reference_sites_reconciled"]==obj["configurations"][v]["external_linker_archive_reference_sites"] for v in ("original_agbcc","modern_gcc"))
+          assert all(external["compiled_variants"][v]["reference_sites_reconciled"]>300 for v in ("original_agbcc","modern_gcc"))
+          assert not external["phase1_mapping_complete"]
+          assert (p/"compiled_external_symbol_resolution.csv.gz").stat().st_size>1000
+          assert comparison["pinned_commit"]==full["pinned_revision"]
+          assert set(comparison["variants"])=={"original_agbcc","modern_gcc"}
+          assert adapter["pinned_commit"]==full["pinned_revision"]
+          assert adapter["negative_compatibility_tests_passed"]==18
+          assert adapter["elf_metadata_only_drift_positives_passed"]==2
+          assert not adapter["phase1_mapping_complete"]
+          assert all(comparison["variants"][v]["hot_region_32byte_diff"]["available"] for v in ("original_agbcc","modern_gcc"))
+          assert cartridge["pinned_revision"]==full["pinned_revision"]
+          assert not cartridge["phase1_mapping_complete"]
+          assert all(cartridge["variants"][v]["nm_defined_symbol_entries"]==full["elf_variants"][v]["all_defined_symbols"] for v in ("original_agbcc","modern_gcc"))
+          assert all(cartridge["variants"][v]["rom_size_bytes"]>1000000 for v in ("original_agbcc","modern_gcc"))
+          assert (p/"compiled_rom_page_hashes.csv.gz").stat().st_size>500
+          assert sample["compiled_ABI_check_count_passed"]==12
+          assert abi["negative_preflight_tests_passed"]==12
+          assert not full["phase1_mapping_complete"] and not obj["phase1_mapping_complete"]
+          for fname in ("compiled_all_defined_symbols.csv.gz","compiled_global_symbol_semantic_delta.csv.gz",
+                        "compiled_object_symbol_dependencies.csv.gz","compiled_object_source_provenance.csv.gz"):
+            assert (p/fname).stat().st_size>2000,fname
+          result={"milestone":"v2.9","source_commit":full["pinned_revision"],
+            "run_id":int(os.environ["EVIDENCE_RUN_ID"]),
+            "complete_compiled_symbol_inventory":{v:full["elf_variants"][v]["all_defined_symbols"] for v in full["elf_variants"]},
+            "global_symbol_delta":full["global_delta_class_counts"],
+            "common_global_symbols":full["unique_global_symbols_shared"],
+            "external_or_linker_name_resolution":external["compiled_variants"],
+            "exact_native_rom_image_hashes":cartridge["variants"],
+            "exact_ROM_symbol_adapter_preflight":{
+              "negative_fixtures_rejected":adapter["negative_compatibility_tests_passed"],
+              "nonROM_ELF_metadata_tolerance_fixtures":adapter["elf_metadata_only_drift_positives_passed"],
+              "schema":adapter["schema"]},
+            "elf_vs_runtime_rom_hashes_separately_tracked":True,
+            "previous_run_id":int(os.environ["PREVIOUS_EVIDENCE_RUN_ID"]),
+            "two_run_rom_elf_reproducibility":comparison["variants"],
+            "all_two_run_rom_and_symbol_bytes_match":comparison["allow_rom_hash_plugin_identity_when_rom_byte_identical"],
+            "source_hash_pinned_compiled_objects":{v:obj["configurations"][v]["source_matched_objects"] for v in obj["configurations"]},
+            "build_variants":{v:{"elf_sha256":full["elf_variants"][v]["elf_sha256"],
+               "object_file_references":obj["configurations"][v]["undefined_symbol_sites"],
+               "provider_candidate_sites":obj["configurations"][v]["unique_provider_reference_sites"],
+               "linker_or_external_unknown_reference_sites":obj["configurations"][v]["external_linker_archive_reference_sites"]}
+               for v in obj["configurations"]},
+            "independent_semantic_dispositions_approved":0,
+            "phase1_mapping_complete":False,
+            "base_comprehensive_release":"https://github.com/"+os.environ["GITHUB_REPOSITORY"]+"/releases/tag/phase1-semantic-v2.5",
+            "caveat":"Full ELF and ROM hashes are exact snapshots of unmodified builds, not proof of emulator execution, portable plugin ABI, or cross-run determinism."}
+          Path("evidence/PROVENANCE_v29.json").write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(result,indent=2))
+          PY
+      - name: Archive and checksum compiled symbol and object edges
+        run: |
+          set -euo pipefail
+          tar -czf XGBA_Phase1_CompiledSymbolSemantics_v29.tar.gz -C evidence .
+          sha256sum XGBA_Phase1_CompiledSymbolSemantics_v29.tar.gz > XGBA_Phase1_CompiledSymbolSemantics_v29.sha256
+      - name: Save permanent verified v2.9 prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=phase1-semantic-v2.9
+          if ! gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "XGBA Phase 1 v2.9 — runtime ROM identity, 32-byte drift forensics, and fail-closed adapter preflight" \
+              --notes "Two pinned FireRed builds, full compiled ELF symbol inventories, 649 compiled source-linked objects per variant, global symbol/region deltas, compiled final ELF versus cartridge image and 64KiB and targeted 32-byte ROM chunk hashes, source-object and linker references, plus SHA provenance. Complements the v2.5 six-pipeline evidence. **Phase 1 semantic mapping remains INCOMPLETE.** No emulator expansion has been implemented or runtime tested." --prerelease
+          fi
+          gh release upload "$tag" --repo "$GITHUB_REPOSITORY" \
+            XGBA_Phase1_CompiledSymbolSemantics_v29.tar.gz \
+            XGBA_Phase1_CompiledSymbolSemantics_v29.sha256 --clobber
