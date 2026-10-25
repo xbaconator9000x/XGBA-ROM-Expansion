@@ -85,7 +85,15 @@ def main():
   log=OUT/"mgba-native-boundary-invocation.log"
   with log.open("w") as h:
    proc=subprocess.run(["bash",str(runner)],stdout=h,stderr=subprocess.STDOUT,check=False)
+  for name in ("mgba-boundary-configure.log","mgba-boundary-build.log","mgba-boundary-runtime.log",
+               "mgba-boundary-backtrace.log","mgba-boundary-log-sha256.txt","mgba_native_test_revision.txt"):
+   candidate=Path("audit-output")/name
+   if candidate.is_file(): (OUT/name).write_bytes(candidate.read_bytes())
   print("Pinned native Matrix boundary probe:", "PASS" if proc.returncode==0 else "FAIL", "log:", log)
-  if proc.returncode:raise RuntimeError(f"Native Matrix probe failed, see {log}")
+  if proc.returncode:
+   print("Boundary probe error tail:",log.read_text(errors="replace")[-7500:])
+   backtrace=OUT/"mgba-boundary-backtrace.log"
+   if backtrace.exists(): print("Native debugger backtrace:",backtrace.read_text(errors="replace")[-5500:])
+   raise RuntimeError(f"Native Matrix probe failed, see {log}")
 
 if __name__=="__main__":main()
