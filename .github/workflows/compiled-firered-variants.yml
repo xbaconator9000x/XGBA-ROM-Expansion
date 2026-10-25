@@ -1,0 +1,62 @@
+name: Phase 1 compiled FireRed classic versus modern ABI
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/firered_variant_semantics.py'
+      - '.github/workflows/compiled-firered-variants.yml'
+permissions:
+  contents: read
+jobs:
+  compare-compiled-variants:
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ARM/Thumb binutils, modern GCC and C runtime
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi libpng-dev build-essential
+          command -v arm-none-eabi-gcc
+          command -v arm-none-eabi-ld
+      - name: Checkout pinned original FireRed and agbcc source
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git clone --quiet --filter=blob:none https://github.com/pret/agbcc.git upstream/agbcc
+          git -C upstream/agbcc checkout --quiet --detach da598c1d918402c42c0c0d7128ba14567f3175e9
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/agbcc rev-parse HEAD)" = da598c1d918402c42c0c0d7128ba14567f3175e9
+      - name: Build and install pinned agbcc
+        run: |
+          set -o pipefail
+          (cd upstream/agbcc && ./build.sh && ./install.sh ../pokefirered) 2>&1 | tee variants-agbcc-build.log
+      - name: Compile original legacy agbcc FireRed ELF
+        run: |
+          set -o pipefail
+          make -C upstream/pokefirered -j2 GAME_VERSION=FIRERED MODERN=0 2>&1 | tee variants-classic-build.log
+          test -f upstream/pokefirered/pokefirered.elf
+      - name: Compile modern GCC FireRed ELF from identical pinned sources
+        run: |
+          set -o pipefail
+          make -C upstream/pokefirered -j2 GAME_VERSION=FIRERED MODERN=1 2>&1 | tee variants-modern-build.log
+          test -f upstream/pokefirered/pokefirered_modern.elf
+      - name: Compare compiled symbol layout and native script/pokemon table ABI
+        run: |
+          python3 -m py_compile tools/firered_variant_semantics.py
+          python3 tools/firered_variant_semantics.py
+      - name: Preserve compiler/version semantic differences without ROM binaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-firered-classic-modern-compiled-ABI
+          path: |
+            firered-variant-evidence/
+            variants-agbcc-build.log
+            variants-classic-build.log
+            variants-modern-build.log
+          if-no-files-found: warn
+          retention-days: 90
