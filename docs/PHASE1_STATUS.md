@@ -1,6 +1,10 @@
-# Current status: v2.2
+# Current Phase 1 checkpoint — v2.5
 
-See [PHASE1_STATUS_v22.md](PHASE1_STATUS_v22.md). The older status below is historical. Phase 1 semantic review is **FAIL_INCOMPLETE**.
+**Status: INCOMPLETE — no release-ready XGBA runtime.**
+
+The actively maintained source-map checkpoint is [v2.5](PHASE1_STATUS_v25.md). Five immutable source repositories, both FireRed compiler variants and native mGBA/Porymap build evidence are preserved. All 14,834 pinned files are inventoried, 39,530 function-scope dossiers are generated, and the native ROM/save/graphics/bytecode limits are source linked. Automated dossiers are not semantic approvals. The fail-closed Phase 1 gate still requires independent file dispositions.
+
+[Latest verified permanent archive — v2.4](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/releases/tag/phase1-semantic-v2.4) · [v2.5 save/ABI status](PHASE1_STATUS_v25.md)
 
 ---
 
