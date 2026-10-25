@@ -5,6 +5,7 @@ on:
     paths:
       - 'tools/mapjson_semantic_proof.py'
       - 'tools/clone_crossmap_semantics.py'
+      - 'tools/map_alias_compiler_semantics.py'
       - '.github/workflows/compiled-firered-maps.yml'
 permissions:
   contents: read
@@ -26,6 +27,8 @@ jobs:
         run: python3 tools/mapjson_semantic_proof.py
       - name: Verify cross-map clone targets and intentional off-layout coordinates
         run: python3 tools/clone_crossmap_semantics.py
+      - name: Verify 850 compiled shared-event/shared-script pointer directives
+        run: python3 tools/map_alias_compiler_semantics.py
       - name: Save reproducible source-to-compiled map semantic proof
         if: always()
         uses: actions/upload-artifact@v4
