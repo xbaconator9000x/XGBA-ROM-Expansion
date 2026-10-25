@@ -8,6 +8,7 @@ on:
       - 'tools/firered_full_symbol_census.py'
       - 'tools/firered_compiled_object_bindings.py'
       - 'tools/firered_external_symbol_reconciliation.py'
+      - 'tools/firered_runtime_rom_hashes.py'
       - '.github/workflows/compiled-firered-variants.yml'
 permissions:
   contents: read
@@ -68,6 +69,10 @@ jobs:
         run: |
           python3 -m py_compile tools/firered_external_symbol_reconciliation.py
           python3 tools/firered_external_symbol_reconciliation.py
+      - name: Hash original and modern cartridge bytes separately from ELF symbols and metadata
+        run: |
+          python3 -m py_compile tools/firered_runtime_rom_hashes.py
+          python3 tools/firered_runtime_rom_hashes.py
       - name: Preserve compiler/version semantic differences without ROM binaries
         if: always()
         uses: actions/upload-artifact@v4
