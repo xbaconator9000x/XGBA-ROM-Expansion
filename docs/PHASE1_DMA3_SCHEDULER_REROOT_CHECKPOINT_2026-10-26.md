@@ -24,3 +24,7 @@ The unchanged mGBA `src/core/timing.c` at commit `fd9dc5c2cbf234365068855851107e
 The existing native observations about stale ARM/Thumb prefetch after Matrix remap and accepted physical ranges extending beyond the backing EOF remain independent safety obligations, regardless of this fixture's result.
 
 **Acceptance boundary:** A passing native fixture would validate only the tested scheduler/EEPROM and Matrix behaviours at this pinned mGBA revision. It would not prove external XGBA banking, general DMA/interrupt compatibility, or any independent semantic disposition.
+
+## Verified post-fix CI result
+
+[Run 40203666311](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40203666311) **completed successfully** on commit `76d0fe1b50a5023d499aa42eb9ba9253c3189989`. The `Analyze actual compiler targets and linked symbols` and subsequent compiled-dependency steps both passed. The native boundary probe reported **25 positive checks passed, 0 failed**; the earlier DMA3 failure is therefore resolved in the bounded pinned fixture. This does **not** close the two native-gap observations or the Phase 1 independent semantic review gate.
