@@ -14,6 +14,7 @@ on:
       - 'tools/semantic_asm_build.py'
       - 'tools/unified_semantic_dependencies.py'
       - 'tools/semantic_linkage_filter.py'
+      - 'tools/semantic_callback_flow.py'
       - 'tools/generated_asset_provenance.py'
       - 'tools/dynamic_dispatch_semantics.py'
       - 'tools/resolve_composite_assets.py'
@@ -53,6 +54,8 @@ jobs:
         run: python3 tools/ast_semantic_index.py --root upstream --census audit-output --out audit-output
       - name: Reject unbindable cross-TU static C functions and unresolved C++ name calls
         run: python3 tools/semantic_linkage_filter.py
+      - name: Resolve named callback assignments to indirect member-call candidates
+        run: python3 tools/semantic_callback_flow.py
       - name: Verify every Git blob and structurally classify assets
         run: python3 tools/all_blob_structural_evidence.py
       - name: Index assembly, linker and build-file semantics
