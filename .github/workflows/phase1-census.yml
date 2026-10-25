@@ -28,6 +28,7 @@ on:
       - 'tools/implicit_battle_cursor_semantics.py'
       - 'tools/module_semantic_dossiers.py'
       - 'tools/source_update_impact.py'
+      - 'tools/resource_execution_semantics.py'
       - 'tools/resolve_composite_assets.py'
       - '.github/workflows/phase1-census.yml'
 permissions:
@@ -93,6 +94,8 @@ jobs:
         run: python3 tools/legacy_dummy_opcode_semantics.py
       - name: Verify typed ABI of field-script code, native and RAM byte pointers
         run: python3 tools/field_pointer_role_contracts.py
+      - name: Verify ROM backing, M4A track pointers and animated tileset DMA lifetimes
+        run: python3 tools/resource_execution_semantics.py
       - name: Reconcile source, assembler and asset dependency candidates
         run: python3 tools/unified_semantic_dependencies.py
       - name: Verify eight delegated or terminal battle cursor handlers
