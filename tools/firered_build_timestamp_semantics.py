@@ -79,10 +79,20 @@ def main():
   else:
    if size!=21 or not DATE_RE.fullmatch(section):
     raise RuntimeError("Unexpected modern GCC build-time symbol "+repr(section))
+  if sha(elf.read_bytes())!=allsym["elf_variants"][variant]["elf_sha256"]:
+   raise RuntimeError("Timestamp ELF does not match pinned full-symbol census")
+  if len(data)!=runtime["variants"][variant]["rom_size_bytes"]:
+   raise RuntimeError("Timestamp ROM size does not match full-image provenance")
   if sha(data)!=runtime["variants"][variant]["rom_sha256"]:
    raise RuntimeError("Actual ROM hash mismatches previously checked image")
   normalized=bytearray(data)
   normalized[offset:offset+size]=b"\x00"*size
+  # Negative control: one altered cartridge-header byte outside the approved
+  # field MUST alter the digest after the same narrow timestamp normalization.
+  corrupted=bytearray(normalized)
+  corrupted[0xA0]^=1
+  if sha(corrupted)==sha(normalized):
+   raise RuntimeError("Timestamp mask swallowed an unrelated ROM byte mutation")
   result["variants"][variant]={
    "raw_rom_sha256":sha(data),
    "timestamp_neutralized_rom_sha256":sha(normalized),
@@ -93,7 +103,8 @@ def main():
    "compiler_timestamp_format":"YYYY_MM_DD_FIXED" if variant=="original_agbcc" else "GCC_DATE_TIME_MACROS",
    "field_start_inside_page_30":0x001E0000<=offset<0x001F0000,
    "source_blob_sha_verified":MAIN_BLOB,
-   "mutation_scope":"ONLY_BuildDateTime_string_in_native_gba"
+   "mutation_scope":"ONLY_BuildDateTime_string_in_native_gba",
+   "unrelated_header_byte_negative_mutation_detected":True
   }
  if not result["variants"]["modern_gcc"]["field_start_inside_page_30"]:
   raise RuntimeError("Modern BuildDateTime no longer resides in the previously observed differing page")
