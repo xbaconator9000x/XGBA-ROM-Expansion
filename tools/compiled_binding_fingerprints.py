@@ -72,9 +72,9 @@ def main():
    ("different_battle_table_width",lambda c:c["bindings"]["gBattleScriptingCommandsTable"].update(symbol_size=123)),
    ("unknown_extra_symbol",lambda c:c["bindings"].update(extra_symbol={}))]
   for label,mut in negatives:
-   copy=globals()["copy"].deepcopy(record)
-   mut(copy)
-   ok,reason=preflight(copy,record)
+   fixture=copy.deepcopy(record)
+   mut(fixture)
+   ok,reason=preflight(fixture,record)
    if ok:raise RuntimeError("Preflight accepted invalid adapter fixture: "+label)
   output["supported_compiled_baselines"][name]["negative_preflight_fixtures_rejected"]=len(negatives)
  # Check that source-identical compiler variants cannot accidentally be mistaken for same ABI
