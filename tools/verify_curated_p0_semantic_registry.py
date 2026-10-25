@@ -38,6 +38,10 @@ def validate(root,document):
     docs=document.get("source_documentation")
     if not isinstance(docs,list) or not docs or any(not isinstance(x,str) for x in docs) or len(docs)!=len(set(docs)):
         raise RuntimeError("Missing or malformed semantic source documentation")
+    for doc in docs:
+        file=Path(doc)
+        if not doc.startswith("docs/") or ".." in file.parts or file.is_absolute() or file.suffix!=".md" or not file.is_file():
+            raise RuntimeError("Unsafe or missing semantic source documentation path: "+doc)
     doc_hashes=document.get("source_documentation_git_blob_sha1")
     if not isinstance(doc_hashes,dict) or set(doc_hashes)!=set(docs) or any(
         type(sha) is not str or len(sha)!=40 or any(c not in "0123456789abcdef" for c in sha)
@@ -45,10 +49,7 @@ def validate(root,document):
     ):
         raise RuntimeError("Semantic source documentation hash pins incomplete or malformed")
     for doc in docs:
-        file=Path(doc)
-        if not doc.startswith("docs/") or ".." in file.parts or file.is_absolute() or file.suffix!=".md" or not file.is_file():
-            raise RuntimeError("Unsafe or missing semantic source documentation path: "+doc)
-        if git_blob_sha(file.read_bytes())!=doc_hashes[doc]:
+        if git_blob_sha(Path(doc).read_bytes())!=doc_hashes[doc]:
             raise RuntimeError("Semantic source documentation content changed: "+doc)
     seen=set()
     counts=Counter()
