@@ -20,14 +20,38 @@ def run(a,b,out):
  pages_a=pages(a/"compiled_rom_page_hashes.csv.gz")
  pages_b=pages(b/"compiled_rom_page_hashes.csv.gz")
  if set(pages_a)!=set(pages_b):raise RuntimeError("ROM page index sets differ")
+ hot_a=a/"compiled_rom_page30_32byte_hashes.csv.gz"
+ hot_b=b/"compiled_rom_page30_32byte_hashes.csv.gz"
+ hot={}
+ if hot_a.exists() and hot_b.exists():
+  def hotrows(path):
+   with gzip.open(path,"rt",newline="",encoding="utf-8") as f:
+    return {(r["variant"],int(r["offset_inside_rom"])):r for r in csv.DictReader(f)}
+  fine_a=hotrows(hot_a);fine_b=hotrows(hot_b)
+  if set(fine_a)!=set(fine_b):raise RuntimeError("Hot-page 32-byte evidence row sets differ")
+  for v in VARIANTS:
+   differences=[]
+   for (var,offset),r in fine_a.items():
+    if var==v and r["chunk_sha256"]!=fine_b[(var,offset)]["chunk_sha256"]:
+     differences.append({"rom_offset":hex(offset),"gba_bus_address":r["gba_bus_address"]})
+   hot[v]={"available":True,"changed_32_byte_chunks":len(differences),
+           "changed_gba_addresses":differences[:200],
+           "sample_truncated":len(differences)>200,
+           "total_hot_region_chunks":sum(var==v for var,_ in fine_a)}
+ else:
+  for v in VARIANTS:hot[v]={"available":False}
  variants={}
  for v in VARIANTS:
   aa=pa["variants"][v];bb=pb["variants"][v]
   damaged=[n for (var,n),sha in pages_a.items()
     if var==v and sha!=pages_b[(var,n)]]
+  if hot[v]["available"]:
+   if (30 in damaged)!=(hot[v]["changed_32_byte_chunks"]>0):
+    raise RuntimeError("Coarse 64KiB page 30 and fine 32-byte hashes disagree: "+v)
   if bool(damaged)!=(aa["rom_sha256"]!=bb["rom_sha256"]):
    raise RuntimeError("Page hash disagreement with ROM-level checksum for "+v)
-  variants[v]={"elf_sha256_identical":aa["elf_sha256"]==bb["elf_sha256"],
+  variants[v]={"hot_region_32byte_diff":hot[v],
+   "elf_sha256_identical":aa["elf_sha256"]==bb["elf_sha256"],
    "native_gba_sha256_identical":aa["rom_sha256"]==bb["rom_sha256"],
    "nm_defined_symbol_table_sha256_identical":
       aa["nm_defined_symbol_table_sha256"]==bb["nm_defined_symbol_table_sha256"],
