@@ -34,6 +34,22 @@ SENSITIVE={
 # to any listed file requires re-validation of this contract; a matching basename
 # elsewhere does not authorize automatic relocation or adaptation.
 CONTRACT_SOURCE_FILES={
+ ("pret/pokefirered","include/global.fieldmap.h"):("map_tile_collision_elevation","native_map_header_pointer_abi","map_event_script_pointers"),
+ ("pret/pokefirered","include/fieldmap.h"):("map_backup_grid_capacity","map_tile_collision_elevation"),
+ ("pret/pokefirered","include/global.h"):("native_save_map_view_layout","native_map_save_state"),
+ ("pret/pokefirered","include/config.h"):("original_modern_ubfix_compile_branch","compiler_variant_binary_abi"),
+ ("pret/pokefirered","config.mk"):("original_modern_ubfix_compile_branch","compiler_variant_binary_abi"),
+ ("pret/pokefirered","Makefile"):("original_modern_ubfix_compile_branch","compiler_variant_binary_abi","native_rom_linkage"),
+ ("pret/pokefirered","ld_script.ld"):("native_rom_linkage","native_32bit_pointer_abi"),
+ ("pret/pokefirered","include/script.h"):("field_script_return_stack_lifetime","field_script_native_pointer_abi"),
+ ("pret/pokefirered","src/script.c"):("field_script_return_stack_lifetime","field_script_native_pointer_abi","native_script_suspend_resume"),
+ ("pret/pokefirered","src/scrcmd.c"):("field_script_return_stack_lifetime","field_opcode_pointer_role_abi"),
+ ("pret/pokefirered","src/fieldmap.c"):("map_backup_grid_capacity","map_tile_collision_elevation","native_save_map_view_bounds","metatile_attribute_layer_abi"),
+ ("huderlem/porymap","src/core/block.cpp"):("map_tile_collision_elevation","configured_map_block_masks"),
+ ("huderlem/porymap","src/core/bitpacker.cpp"):("configured_map_block_masks","strict_editor_export_adapter"),
+ ("huderlem/porymap","src/core/blockdata.cpp"):("native_map_block_le16_encoding","strict_editor_export_adapter"),
+ ("huderlem/poryscript","emitter/chunk.go"):("generated_script_labels_and_control_flow","script_assembler_encoding"),
+ ("huderlem/poryscript","main.go"):("poryscript_compile_switches","generated_script_labels_and_control_flow"),
  ("pret/pokefirered","src/save.c"):("native_flash_rotation","sidecar_consistency"),
  ("pret/pokefirered","include/save.h"):("native_flash_sector_geometry","sidecar_consistency"),
  ("pret/pokefirered","src/m4a.c"):("audio_song_table_and_live_header","resource_staging"),
@@ -119,6 +135,10 @@ def selftest():
  assert ("pret/pokefirered","src/save.c") in SENSITIVE
  assert "native_flash_rotation" in affected_contracts([("pret/pokefirered","src/save.c")])
  assert affected_contracts([("pret/pokefirered","src/noncritical.c")])=={}
+ assert set(affected_contracts([("pret/pokefirered","src/script.c")])) >= {"field_script_return_stack_lifetime","native_script_suspend_resume"}
+ assert "configured_map_block_masks" in affected_contracts([("huderlem/porymap","src/core/block.cpp")])
+ assert "native_save_map_view_bounds" in affected_contracts([("pret/pokefirered","src/fieldmap.c")])
+ assert "original_modern_ubfix_compile_branch" in affected_contracts([("pret/pokefirered","include/config.h")])
  print("Update-delta self-test passed")
 def main():
  p=argparse.ArgumentParser()
