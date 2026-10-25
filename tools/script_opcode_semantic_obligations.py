@@ -59,11 +59,12 @@ def main():
   if gib(data)!=sha:raise RuntimeError("Pinned source bytes changed: "+p)
   src=data.decode("utf-8","surrogateescape")
   files[p]=src
-  for m in DEFS.finditer(src):
+  sanitized=CLEAN_BLOCK.sub(lambda m:re.sub(r"[^\n]"," ",m.group(0)),src)
+  for m in DEFS.finditer(sanitized):
    name=m.group(1)
    if name in defs:raise RuntimeError("Duplicate handler definition "+name)
-   pos=src.index("{",m.start(),m.end())
-   end=braceclose(src,pos)
+   pos=sanitized.index("{",m.start(),m.end())
+   end=braceclose(sanitized,pos)
    text=src[m.start():end]
    defs[name]={"source":p,"line":src.count("\n",0,m.start())+1,
      "end_line":src.count("\n",0,end)+1,"body":text}
