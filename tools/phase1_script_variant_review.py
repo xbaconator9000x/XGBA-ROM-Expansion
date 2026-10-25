@@ -141,9 +141,11 @@ def main():
     validate_state(doc,rows,original,base,gate,previous)
     negative=negative_controls(doc,rows,original,base,gate,previous)
     new={(c["repository"],c["path"]):c for c in CANDIDATES}
+    expected_counts=collections.Counter(previous["tier_counts"])
     for row in rows:
         key=(row["repo"],row["path"])
         if key in new:
+            expected_counts[row["architecture_review_tier"]]-=1
             row.update(architecture_review_tier=TIER,
                        architecture_review_reason="Pinned field-script opcode and modern linker ABI; independent review pending",
                        curated_semantic_roles=",".join(new[key]["semantic_roles"]),
@@ -156,7 +158,7 @@ def main():
     counts=collections.Counter(r["architecture_review_tier"] for r in rows)
     if (len(rows)!=14834 or counts[TIER]!=2 or
         any(name not in rank for name in counts) or
-        any(counts[k]!=v for k,v in previous["tier_counts"].items() if k not in [r["architecture_review_tier"] for r in rows if (r["repo"],r["path"]) in new])):
+        counts!=collections.Counter(dict(expected_counts, **{TIER:2}))):
         fail("New review tier damaged prior assignments")
     rows.sort(key=lambda row:(rank[row["architecture_review_tier"]],row["repo"],row["path"]))
     TARGET.parent.mkdir(parents=True,exist_ok=True)
