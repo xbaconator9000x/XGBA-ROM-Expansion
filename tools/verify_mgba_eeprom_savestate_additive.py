@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import copy
+import collections
+import csv
+import gzip
 import hashlib
 import json
 import re
@@ -133,8 +136,93 @@ def self_test(doc):
     print("EEPROM source review schema: 8 negative controls PASS")
 
 
+def validate_snapshot(rows, base, gate, doc):
+    """Fail closed if additive candidates diverge from the immutable census."""
+    if (gate.get("decision") != "FAIL_INCOMPLETE"
+            or gate.get("approved_semantic_dispositions") != 0
+            or gate.get("verified_source_manifest_entries") != 14834
+            or gate.get("p0_review_candidates") != 338):
+        raise ValueError("Authoritative Phase 1 mapping gate drift or false approval")
+    if (len(rows) != 14834
+            or collections.Counter(x["priority"] for x in rows)["P0"] != 338
+            or base.get("candidate_file_count") != 29
+            or base.get("independent_review_approvals") != 0
+            or base.get("phase1_mapping_complete") is not False
+            or base.get("repository_pins", {}).get("mgba-emu/mgba") != PIN):
+        raise ValueError("Immutable source queue or original curated register drift")
+    index = {}
+    for row in rows:
+        key = (row["repo"], row["path"])
+        if key in index:
+            raise ValueError("Duplicate source file in baseline review queue")
+        index[key] = row["blob_sha"]
+    original = set()
+    for entry in base.get("candidate_files", []):
+        key = (entry["repository"], entry["source_path"])
+        if (key in original or key not in index
+                or entry.get("revision") != base["repository_pins"].get(key[0])
+                or entry.get("expected_git_blob_sha1") != index[key]
+                or entry.get("independent_whole_file_signoff") is not False
+                or entry.get("status") != "CANDIDATE_AWAITING_INDEPENDENT_WHOLE_FILE_REVIEW"):
+            raise ValueError("Original curated source identity or pending review state drift")
+        original.add(key)
+    if len(original) != 29:
+        raise ValueError("Original 29-file register incomplete")
+    for path, expected in EXPECTED.items():
+        key = ("mgba-emu/mgba", path)
+        if key not in index or index[key] != expected:
+            raise ValueError("EEPROM source/dependency not in pinned baseline: " + path)
+    for entry in doc["candidates"]:
+        if ("mgba-emu/mgba", entry["path"]) in original:
+            raise ValueError("EEPROM additive source duplicates original 29")
+    return {
+        "baseline_manifest_entries": len(rows),
+        "baseline_P0_entries": 338,
+        "original_curated_entries": 29,
+        "additive_source_candidates": 2,
+        "verified_dependency_blob_ids_in_source_queue": len(EXPECTED),
+        "independent_approvals": 0,
+        "phase1_mapping_complete": False,
+    }
+
+
+def reconcile_snapshot(doc):
+    queue_path = Path("semantic-snapshots/current/semantic_review_queue.csv.gz")
+    base_path = Path("semantic-snapshots/curated/p0_semantic_review_candidates_2026-10-26.json")
+    gate_path = Path("semantic-snapshots/current/phase1_mapping_gate.json")
+    with gzip.open(queue_path, "rt", encoding="utf-8", newline="") as stream:
+        rows = list(csv.DictReader(stream))
+    base = json.loads(base_path.read_text(encoding="utf-8"))
+    gate = json.loads(gate_path.read_text(encoding="utf-8"))
+    result = validate_snapshot(rows, base, gate, doc)
+    cases = [
+        ("gate-approval", lambda r, b, g: g.update(approved_semantic_dispositions=1)),
+        ("baseline-source-drift", lambda r, b, g: next(
+            x for x in r if x["repo"] == "mgba-emu/mgba" and x["path"] == "src/gba/savedata.c"
+        ).update(blob_sha="0" * 40)),
+        ("curated-false-signoff", lambda r, b, g: b["candidate_files"][0].update(independent_whole_file_signoff=True)),
+    ]
+    for label, mutate in cases:
+        r, b, g = copy.deepcopy((rows, base, gate))
+        mutate(r, b, g)
+        try:
+            validate_snapshot(r, b, g, doc)
+        except ValueError:
+            continue
+        raise AssertionError("Fail-open source queue reconciliation: " + label)
+    result.update({
+        "source_queue_sha256": hashlib.sha256(queue_path.read_bytes()).hexdigest(),
+        "original_curated_sha256": hashlib.sha256(base_path.read_bytes()).hexdigest(),
+        "phase1_gate_sha256": hashlib.sha256(gate_path.read_bytes()).hexdigest(),
+        "reconciliation_negative_controls_passed": 3,
+    })
+    print("EEPROM source queue reconciliation: 14,834 rows, 338 P0, 29 original + 2 additive; 3 negative controls PASS")
+    return result
+
+
 def verify(root, doc):
     validate(doc)
+    queue_evidence = reconcile_snapshot(doc)
     revision = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
     if revision != PIN:
         raise ValueError("mGBA source checkout is not pinned")
@@ -170,6 +258,7 @@ def verify(root, doc):
         "independent_whole_file_approvals": 0,
         "phase1_mapping_complete": False,
         "source_evidence": evidence,
+        "source_queue_reconciliation": queue_evidence,
         "limitations": [
             "Source expression checks do not establish all callback interleavings or ABI compatibility",
             "No native emulator regression was run by this verifier",
