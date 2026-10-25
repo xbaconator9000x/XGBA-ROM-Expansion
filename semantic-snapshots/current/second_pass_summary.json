@@ -1,0 +1,25 @@
+{
+  "include_edges": {
+    "AMBIGUOUS": 62,
+    "RESOLVED_CANDIDATE": 8676,
+    "UNRESOLVED": 4991
+  },
+  "lexical_sites": 5711,
+  "machine_review_status": {
+    "CANDIDATE_ONLY_SOURCE_HASH_VERIFIED": 4685,
+    "INVENTORIED_NOT_SEMANTICALLY_REVIEWED": 10149
+  },
+  "phase1_semantic_mapping_complete": false,
+  "priority_distribution": {
+    "P0": 338,
+    "P1": 1297,
+    "P2": 8658,
+    "P3": 4541
+  },
+  "semantic_signoff_count": 0,
+  "source_blobs_sha1_verified": 4685,
+  "source_candidates": 5711,
+  "symbol_candidates": 8315,
+  "tracked_files": 14834,
+  "warning": "Machine-generated evidentiary dossiers with blob-pinned snippets do not constitute independent semantic review."
+}

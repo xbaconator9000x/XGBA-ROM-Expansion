@@ -1,0 +1,17 @@
+{
+  "approved_semantic_dispositions": 0,
+  "decision": "FAIL_INCOMPLETE",
+  "disposition_status_counts": {},
+  "issues": [
+    "No completed, reviewed semantic dispositions supplied",
+    "14834 tracked files lack independent semantic dispositions"
+  ],
+  "issues_truncated": false,
+  "machine_generated_dossiers": 14834,
+  "not_in_phase1": "Emulator modification, external resource runtime, ROM build and regression tests are Phase 2/release tasks.",
+  "p0_review_candidates": 338,
+  "phase": "Phase 1 source mapping only",
+  "remaining_dispositions": 14834,
+  "source_blobs_verified": 4685,
+  "verified_source_manifest_entries": 14834
+}

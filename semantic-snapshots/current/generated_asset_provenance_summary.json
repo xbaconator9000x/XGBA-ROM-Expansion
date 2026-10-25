@@ -1,0 +1,24 @@
+{
+  "build_rule_evidence": "Makefile lines 262-268; 'include graphics_file_rules.mk' line 245",
+  "composite_or_no_simple_source": 17,
+  "consumer_files": 85,
+  "distinct_candidate_source_files": 5687,
+  "independent_semantic_signoffs": 0,
+  "limitations": [
+    "Suffix and stem correspondence does not prove which Make pattern or override executed.",
+    "Special spritesheets can concatenate fragments in graphics_file_rules.mk; missing direct PNGs are queued.",
+    "Generated .4bpp, .gbapal, .lz and .rl do not normally appear as tracked Git blobs.",
+    "Full build output contents, palette order and sprite width semantics require tool execution."
+  ],
+  "make_rules_sha": "8b454dbd18eb0069fa5851d788697190890a5b37",
+  "observed_generated_resource_literals": 6172,
+  "phase1_mapping_complete": false,
+  "resolved_candidate_tracked_source": 6155,
+  "suffix_counts": {
+    "compressed_lz": 3470,
+    "suffix_1bpp": 388,
+    "suffix_4bpp": 2721,
+    "suffix_8bpp": 12,
+    "suffix_gbapal": 3051
+  }
+}

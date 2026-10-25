@@ -1,0 +1,16 @@
+{
+  "all_17_generated_literals_have_explicit_composite_rules": true,
+  "component_tracked_source_matches": 62,
+  "composite_component_edges": 62,
+  "composite_targets_identified": 17,
+  "limitations": [
+    "Expanded simple Make variables, not an evaluated make dependency graph.",
+    "Component order follows the explicit rule but output binary concatenation is not executed.",
+    "Final LZ compression and pointer tables are separate build stages."
+  ],
+  "phase1_mapping_complete": false,
+  "previous_unresolved_generated_literals": 17,
+  "rule_blob_sha_verified": "39b952cd45b6a34eb98318a76aa531fcafff134d",
+  "unresolved_composite_component_count": 0,
+  "unresolved_samples": []
+}

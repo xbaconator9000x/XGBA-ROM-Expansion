@@ -1,0 +1,34 @@
+{
+  "detected_data_formats": {
+    "CARTRIDGE_IMAGE_CANDIDATE": 242,
+    "GIF": 35,
+    "JASC_PALETTE": 2612,
+    "MIDI": 347,
+    "PNG": 4238,
+    "RIFF_WAVE": 478,
+    "SOURCE_OR_CONFIG_TEXT": 4685,
+    "WOFF": 13,
+    "WOFF2": 13,
+    "unrecognized_or_raw": 2171
+  },
+  "direct_asset_path_references": {
+    "LITERAL_PATH_UNRESOLVED": 4715,
+    "UNIQUE_EXPLICIT_PATH_CANDIDATE": 1766,
+    "checkout_normalized_files": 2612
+  },
+  "file_semantic_signoffs": 0,
+  "limitations": [
+    "Path and file magic do not establish asset usage or game meaning.",
+    "Direct literal path references are candidate dependencies; generated symbol tables can be indirect.",
+    "A missing direct reference does not prove an asset is unused.",
+    "Binary blob content beyond recognized format headers has not been reverse-engineered.",
+    "JSON/XML parse errors may be due to template files or incompatible dialects."
+  ],
+  "phase1_mapping_complete": false,
+  "structured_syntax": {
+    "JSON_PARSED": 441,
+    "XML_PARSED": 115
+  },
+  "tracked_git_blobs_verified": 14834,
+  "tracked_total_expected": 14834
+}

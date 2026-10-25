@@ -1,0 +1,26 @@
+{
+  "manifest_files": 14834,
+  "unique_typed_file_dependency_edges": 22456,
+  "sites_aggregated": 63552,
+  "edge_types": {
+    "literal_asset_reference": 1760,
+    "preprocessor_include": 8755,
+    "c_linkage_screened_call_candidate": 5315,
+    "assembly_or_build_include": 869,
+    "opcode_table_function_pointer": 1,
+    "generated_graphics_source_provenance": 5692,
+    "indirect_opcode_dispatch_to_table": 2,
+    "composite_graphics_source_provenance": 62
+  },
+  "source_files_with_outgoing_edges": 1940,
+  "target_files_with_incoming_edges": 9156,
+  "unresolved_endpoint_candidates": {},
+  "phase1_mapping_complete": false,
+  "independent_semantic_signoffs": 0,
+  "limitations": [
+    "Linkage-screened C cross-file calls are candidates and are not compiler/linker-resolved; C++/Go/Python unresolved by design.",
+    "Include files and literal asset paths are candidate uses; build flags and generated tables can change targets.",
+    "Traversal follows candidate edges and does not prove runtime call reachability.",
+    "Most runtime callbacks, opaque binary dependencies and conditional macros remain outside this graph; specific verified FireRed opcode tables are included."
+  ]
+}

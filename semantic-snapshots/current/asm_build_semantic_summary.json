@@ -1,0 +1,34 @@
+{
+  "build_asm_files_indexed": 1235,
+  "file_types": {
+    "SHELL_SCRIPT": 70,
+    "MAKE_RECIPE": 39,
+    "ASM_OR_MACRO_INCLUDE": 812,
+    "GBA_OR_HOST_ASSEMBLY": 29,
+    "LINKER_SCRIPT": 3,
+    "CMAKE_RECIPE": 36,
+    "BUILD_TEMPLATE": 40,
+    "DOCKER_RECIPE": 1,
+    "DEFINITION_LIST": 17,
+    "QT_PROJECT": 4,
+    "QT_PRI": 2
+  },
+  "sites_by_kind": {
+    "include_or_binary_embed": 1518,
+    "symbol_definition": 13824,
+    "make_target": 857,
+    "build_variable": 2071,
+    "directive": 9417,
+    "symbol_binding": 52,
+    "linker_memory_region": 9,
+    "hardcoded_rom_window_address": 6
+  },
+  "symbol_definition_candidates": 13647,
+  "independent_semantic_reviews": 0,
+  "phase1_mapping_complete": false,
+  "limitations": [
+    "Macros and CPP conditionals have not been expanded; identifiers are syntax candidates.",
+    "Linker symbol order and unresolved build variable interpolation need actual build evaluation.",
+    "ASM source bytecode references are not relocatable external resources without ABI review."
+  ]
+}

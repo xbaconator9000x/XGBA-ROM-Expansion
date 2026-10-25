@@ -1,0 +1,16 @@
+{
+  "rows_checked": 29068,
+  "unique_source_files_checked": 2631,
+  "record_types": {
+    "source_candidate": 10304,
+    "registry_edge": 3798,
+    "registry_definition": 386,
+    "registry_slot": 808,
+    "registry_group": 43,
+    "include_dependency_candidate": 13729
+  },
+  "bad_anchors": 0,
+  "bad_anchor_samples": [],
+  "status": "PASS",
+  "semantic_review_complete": false
+}

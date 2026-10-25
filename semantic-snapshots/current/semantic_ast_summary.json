@@ -1,0 +1,30 @@
+{
+  "calls_indirect_member_unresolved": 40767,
+  "calls_unresolved": 263329,
+  "direct_calls_ambiguous_candidates": 47417,
+  "direct_calls_unique_repo_symbol_candidate": 91399,
+  "file_semantic_signoffs": 0,
+  "function_definitions_indexed": 39530,
+  "languages": {
+    "c": 2209,
+    "cpp": 571,
+    "go": 16,
+    "python": 36
+  },
+  "limitations": [
+    "Tree-sitter syntax trees do not preprocess conditional compilation.",
+    "Unique symbol-name matching is not C/C++ name binding or linker resolution.",
+    "Function-pointer, macros, templates, callbacks and generated code are not fully resolved.",
+    "Grammar errors and unsupported file types are visible, not silently approved.",
+    "No dynamic execution, binary inspection or external sidecar compatibility tests."
+  ],
+  "parse_status": {
+    "PARSED_AST": 1318,
+    "PARSED_WITH_SYNTAX_ERRORS": 1514,
+    "symlink_not_parsed": 2,
+    "unsupported_grammar": 1851
+  },
+  "phase": "1",
+  "phase1_mapping_complete": false,
+  "source_files_ast_attempted": 2832
+}

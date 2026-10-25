@@ -1,0 +1,55 @@
+{
+  "census_complete": true,
+  "checkpoint": "full pinned Git source census",
+  "conditions": {
+    "all_pinned_revisions_match": true,
+    "all_source_config_content_scanned": true,
+    "semantic_dispositions_complete": false,
+    "tracked_file_count_matches": true
+  },
+  "excluded_with_reason": 10149,
+  "lexical_sites": 5711,
+  "phase": "1",
+  "phase1_mapping_complete": false,
+  "repositories": {
+    "huderlem/porymap": {
+      "commit": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+      "expected": 858,
+      "lexical_sites": 420,
+      "source_or_config_scanned": 346,
+      "tracked": 858
+    },
+    "huderlem/poryscript": {
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "expected": 26,
+      "lexical_sites": 21,
+      "source_or_config_scanned": 21,
+      "tracked": 26
+    },
+    "mgba-emu/mgba": {
+      "commit": "fd9dc5c2cbf234365068855851107e762fc6211b",
+      "expected": 3161,
+      "lexical_sites": 1462,
+      "source_or_config_scanned": 1457,
+      "tracked": 3161
+    },
+    "pret/agbcc": {
+      "commit": "da598c1d918402c42c0c0d7128ba14567f3175e9",
+      "expected": 932,
+      "lexical_sites": 0,
+      "source_or_config_scanned": 806,
+      "tracked": 932
+    },
+    "pret/pokefirered": {
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "expected": 9857,
+      "lexical_sites": 3808,
+      "source_or_config_scanned": 2055,
+      "tracked": 9857
+    }
+  },
+  "source_and_config_scanned": 4685,
+  "source_scan_errors": [],
+  "tracked_files": 14834,
+  "warning": "Lexical matches and source inventory do NOT constitute semantic review or a working ROM expansion."
+}

@@ -1,0 +1,13 @@
+{
+  "battle_opcodes": 248,
+  "battle_unique_handlers": 248,
+  "bytecode_operand_ABI_verified": false,
+  "field_opcodes": 213,
+  "field_unique_handlers": 213,
+  "function_pointer_dispatch_paths_captured": 2,
+  "phase1_mapping_complete": false,
+  "runtime_execution_tested": false,
+  "source_blob_anchors_verified": 5,
+  "undefined_battle_handlers": [],
+  "undefined_field_handlers": []
+}

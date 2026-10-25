@@ -1,0 +1,358 @@
+{
+  "source_checks": 25,
+  "source_checks_passed": 25,
+  "runtime_tests_run": 0,
+  "phase1_mapping_complete": false,
+  "findings": [
+    {
+      "contract": "MGBA_CRC_WARNING_NONFATAL",
+      "repo": "mgba-emu/mgba",
+      "commit": "fd9dc5c2cbf234365068855851107e762fc6211b",
+      "path": "src/gba/serialize.c",
+      "git_blob_sha": "a307a51e751f412c64a7378323c56758304ebe85",
+      "lines": [
+        140,
+        142
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "MGBA_REMAP_BEFORE_REGION_RESET",
+      "repo": "mgba-emu/mgba",
+      "commit": "fd9dc5c2cbf234365068855851107e762fc6211b",
+      "path": "src/gba/serialize.c",
+      "git_blob_sha": "a307a51e751f412c64a7378323c56758304ebe85",
+      "lines": [
+        187,
+        189
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "FIRERED_RAW_BYTECODE_DISPATCH",
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/script.c",
+      "git_blob_sha": "d0433bdda062b138e53d1a1d3184b4566ad7d9dc",
+      "lines": [
+        124,
+        125
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "FIRERED_RAW_SCRIPT_WORD",
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/script.c",
+      "git_blob_sha": "d0433bdda062b138e53d1a1d3184b4566ad7d9dc",
+      "lines": [
+        188,
+        195
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "FIRERED_SAVEBLOCK_RANDOM_OFFSET",
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/load_save.c",
+      "git_blob_sha": "8b723dd044c6024b3671bb890b25b56a53f99ec5",
+      "lines": [
+        75,
+        77
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "FIRERED_SAVE_ENCRYPTION_ROTATION",
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/load_save.c",
+      "git_blob_sha": "8b723dd044c6024b3671bb890b25b56a53f99ec5",
+      "lines": [
+        127,
+        127
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "MGBA_ARM_DIRECT_PREFETCH",
+      "repo": "mgba-emu/mgba",
+      "commit": "fd9dc5c2cbf234365068855851107e762fc6211b",
+      "path": "src/arm/arm.c",
+      "git_blob_sha": "0b92d7f55f1fb853d4b1b9c9163ee086126066e2",
+      "lines": [
+        205,
+        205
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "MGBA_THUMB_DIRECT_PREFETCH",
+      "repo": "mgba-emu/mgba",
+      "commit": "fd9dc5c2cbf234365068855851107e762fc6211b",
+      "path": "src/arm/arm.c",
+      "git_blob_sha": "0b92d7f55f1fb853d4b1b9c9163ee086126066e2",
+      "lines": [
+        224,
+        224
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "MGBA_REGION_ROM_DIRECT_BASE",
+      "repo": "mgba-emu/mgba",
+      "commit": "fd9dc5c2cbf234365068855851107e762fc6211b",
+      "path": "src/gba/memory.c",
+      "git_blob_sha": "aa01fdcc7d6ae5ecdf8753efc63b3a60a1e8d3dc",
+      "lines": [
+        345,
+        346
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "MGBA_ROM2_EEPROM_PRIORITY",
+      "repo": "mgba-emu/mgba",
+      "commit": "fd9dc5c2cbf234365068855851107e762fc6211b",
+      "path": "src/gba/memory.c",
+      "git_blob_sha": "aa01fdcc7d6ae5ecdf8753efc63b3a60a1e8d3dc",
+      "lines": [
+        611,
+        613
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "MGBA_DMA_EEPROM_SPECIAL_READ",
+      "repo": "mgba-emu/mgba",
+      "commit": "fd9dc5c2cbf234365068855851107e762fc6211b",
+      "path": "src/gba/dma.c",
+      "git_blob_sha": "da2a800ba48cb32d6e10e42c3b3527ef406bad22",
+      "lines": [
+        297,
+        298
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "MGBA_DMA_EEPROM_SPECIAL_WRITE",
+      "repo": "mgba-emu/mgba",
+      "commit": "fd9dc5c2cbf234365068855851107e762fc6211b",
+      "path": "src/gba/dma.c",
+      "git_blob_sha": "da2a800ba48cb32d6e10e42c3b3527ef406bad22",
+      "lines": [
+        304,
+        310
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "MGBA_MATRIX_DIRECT_BACKING_COPY",
+      "repo": "mgba-emu/mgba",
+      "commit": "fd9dc5c2cbf234365068855851107e762fc6211b",
+      "path": "src/gba/cart/matrix.c",
+      "git_blob_sha": "9ccbe883235b98bcf56cd609015e7b4003aa832c",
+      "lines": [
+        36,
+        37
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "MGBA_MATRIX_SAVESTATE_MAP",
+      "repo": "mgba-emu/mgba",
+      "commit": "fd9dc5c2cbf234365068855851107e762fc6211b",
+      "path": "src/gba/cart/matrix.c",
+      "git_blob_sha": "9ccbe883235b98bcf56cd609015e7b4003aa832c",
+      "lines": [
+        116,
+        127
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "FIRERED_SCRIPT_NATIVE_CALLBACK",
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/scrcmd.c",
+      "git_blob_sha": "97b695ee2f6fca80a3b78f52f6a444f696fe5814",
+      "lines": [
+        120,
+        123
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "FIRERED_SCRIPT_RAW_POINTER_STORE",
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/scrcmd.c",
+      "git_blob_sha": "97b695ee2f6fca80a3b78f52f6a444f696fe5814",
+      "lines": [
+        300,
+        303
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "FIRERED_FIELD_MAP_MUTABLE_BACKUP",
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/fieldmap.c",
+      "git_blob_sha": "41567772299000ba5855419e5c39ad9373a34c20",
+      "lines": [
+        107,
+        108
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "PORYMAP_MAP_LAYOUT_SEPARATE",
+      "repo": "huderlem/porymap",
+      "commit": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+      "path": "src/project.cpp",
+      "git_blob_sha": "d43b0949303433111d4478ad76117c2b3445dd13",
+      "lines": [
+        313,
+        318
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "PORYMAP_TYPED_EVENT_GROUPS",
+      "repo": "huderlem/porymap",
+      "commit": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+      "path": "src/project.cpp",
+      "git_blob_sha": "d43b0949303433111d4478ad76117c2b3445dd13",
+      "lines": [
+        364,
+        367
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "PORYMAP_METATILE_COLLISION_PRESERVED",
+      "repo": "huderlem/porymap",
+      "commit": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+      "path": "src/core/maplayout.cpp",
+      "git_blob_sha": "44616ab6c9c3ea9b04eff011586b7ec29183588f",
+      "lines": [
+        149,
+        149
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "PORYSCRIPT_MAP_TERMINATORS",
+      "repo": "huderlem/poryscript",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "path": "emitter/emitter.go",
+      "git_blob_sha": "d35843ef29929ead47351646d7a33dd5c692b850",
+      "lines": [
+        121,
+        144
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "FIRERED_CLASSIC_LINKER_32M",
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "ld_script.ld",
+      "git_blob_sha": "9a4b45031e93c1e1da8186d8c697332710526048",
+      "lines": [
+        8,
+        8
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "FIRERED_MODERN_LINKER_32M",
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "ld_script_modern.ld",
+      "git_blob_sha": "e930243522bd21da40cc1a05de9a42b8ad409b46",
+      "lines": [
+        8,
+        8
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "FIRERED_OBJCOPY_FIXED_PAD_ABSOLUTE",
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "Makefile",
+      "git_blob_sha": "8b454dbd18eb0069fa5851d788697190890a5b37",
+      "lines": [
+        395,
+        395
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "AGBCC_ARM_INTERWORK_MULTILIB",
+      "repo": "pret/agbcc",
+      "commit": "da598c1d918402c42c0c0d7128ba14567f3175e9",
+      "path": "gcc_arm/config/arm/t-arm-elf",
+      "git_blob_sha": "b57eeca9805d5aeb0ba20e08948758cb27da82fd",
+      "lines": [
+        27,
+        27
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    }
+  ]
+}
