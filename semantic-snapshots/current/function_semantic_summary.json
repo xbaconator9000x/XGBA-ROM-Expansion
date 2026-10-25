@@ -1,0 +1,35 @@
+{
+  "ast_functions_from_error_files": 31043,
+  "by_language": {
+    "c": 31045,
+    "cpp": 7982,
+    "go": 168,
+    "python": 335
+  },
+  "file_semantic_signoffs": 0,
+  "function_containing_files": 1716,
+  "function_semantic_signoffs": 0,
+  "limitations": [
+    "Nested AST functions/blocks are assigned scope using the existing parser; this is not control-flow graph proof.",
+    "Global-looking names and pointer writes can be local aliases; no compiler-based points-to analysis.",
+    "Macro expansion, cross-function data flow, callbacks, exception paths and generated source are not resolved.",
+    "File AST syntax errors mean function ranges may be incomplete; never mark function approved from parse success."
+  ],
+  "phase1_mapping_complete": false,
+  "review_status": {
+    "AST_SYNTAX_CAPTURED_NOT_SEMANTICALLY_REVIEWED": 8487,
+    "AST_SYNTAX_PARTIAL_NOT_SEMANTICALLY_REVIEWED": 31043
+  },
+  "risk_obligation_function_counts": {
+    "CONTROL_FLOW_REQUIRES_PATH_REVIEW": 3433,
+    "DIRECT_MEMORY_ADDRESS_OR_BUS_REFERENCE_CANDIDATE": 682,
+    "GLOBAL_STATE_OR_GLOBAL_ALIAS_CANDIDATE": 1595,
+    "HELPER_SIDE_EFFECTS_AND_MACROS_STILL_UNKNOWN": 3239,
+    "INDIRECT_OR_MEMBER_CALL_TARGET_UNRESOLVED": 7915,
+    "POINTER_OR_STRUCT_WRITES_NEED_ALIAS_REVIEW": 13883,
+    "SOURCE_AST_CONTAINS_ERRORS": 31043
+  },
+  "source_anchored_function_dossiers": 39530,
+  "syntax_sites_outside_functions": 103320,
+  "unbound_ast_scope_names": 0
+}

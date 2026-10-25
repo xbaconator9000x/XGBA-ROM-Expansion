@@ -1,0 +1,39 @@
+{
+  "critical_areas": {
+    "FireRed_music_lifecycle": 3,
+    "FireRed_tileset_DMA_lifecycle": 4,
+    "mGBA_ROM_lifecycle": 6
+  },
+  "distinct_source_files_checked": 4,
+  "limitations": [
+    "Exact source clauses verified in pinned functions but branching and aliasing are not path-complete.",
+    "No emulator/audio/VRAM runtime instrumentation run in this stage.",
+    "No XGBA sidecar, bank switch or external music payload implemented."
+  ],
+  "phase1_mapping_complete": false,
+  "pinned_source_contracts_passed": 13,
+  "runtime_paths_exercised": 0,
+  "source_blob_revisions": [
+    {
+      "path": "src/gba/gba.c",
+      "repo": "mgba-emu/mgba",
+      "sha": "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e"
+    },
+    {
+      "path": "src/gba/memory.c",
+      "repo": "mgba-emu/mgba",
+      "sha": "aa01fdcc7d6ae5ecdf8753efc63b3a60a1e8d3dc"
+    },
+    {
+      "path": "src/m4a.c",
+      "repo": "pret/pokefirered",
+      "sha": "ebd3afe291b6c4e9f2ac62250a87c6a0482086d4"
+    },
+    {
+      "path": "src/tileset_anims.c",
+      "repo": "pret/pokefirered",
+      "sha": "04854a2e46a1d2ca89626e7be92955d6a20490e5"
+    }
+  ],
+  "whole_file_semantic_dispositions_approved": 0
+}
