@@ -1,0 +1,59 @@
+name: Phase 1 compiled FireRed ARM ABI evidence
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/firered_compiled_abi.py'
+      - '.github/workflows/compiled-firered-arm-abi.yml'
+permissions:
+  contents: read
+jobs:
+  compile-firered:
+    runs-on: ubuntu-latest
+    timeout-minutes: 95
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install cross assembler and graphics build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi libpng-dev build-essential
+          command -v arm-none-eabi-as
+          command -v arm-none-eabi-ld
+      - name: Clone pinned FireRed and agbcc
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered fetch --quiet origin ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git clone --quiet --filter=blob:none https://github.com/pret/agbcc.git upstream/agbcc
+          git -C upstream/agbcc fetch --quiet origin da598c1d918402c42c0c0d7128ba14567f3175e9
+          git -C upstream/agbcc checkout --quiet --detach da598c1d918402c42c0c0d7128ba14567f3175e9
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/agbcc rev-parse HEAD)" = da598c1d918402c42c0c0d7128ba14567f3175e9
+      - name: Build pinned agbcc host compiler
+        run: |
+          set -o pipefail
+          cd upstream/agbcc
+          ./build.sh 2>&1 | tee ../../agbcc-build.log
+      - name: Install pinned agbcc into FireRed source tree
+        run: |
+          cd upstream/agbcc
+          ./install.sh ../pokefirered
+      - name: Build pristine FireRed ELF and ROM locally without uploading ROM
+        run: |
+          set -o pipefail
+          make -C upstream/pokefirered -j2 2>&1 | tee firered-build.log
+      - name: Inspect ARM linker sections and important symbols
+        run: python3 tools/firered_compiled_abi.py
+      - name: Preserve linker analysis and full build diagnostics only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-firered-ARM-ELF-semantic-evidence
+          path: |
+            firered-compiler-evidence/
+            firered-build.log
+            agbcc-build.log
+          retention-days: 90
+          if-no-files-found: warn
