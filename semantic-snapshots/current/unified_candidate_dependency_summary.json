@@ -1,11 +1,12 @@
 {
   "manifest_files": 14834,
-  "unique_typed_file_dependency_edges": 22456,
-  "sites_aggregated": 63552,
+  "unique_typed_file_dependency_edges": 22523,
+  "sites_aggregated": 63965,
   "edge_types": {
     "literal_asset_reference": 1760,
     "preprocessor_include": 8755,
     "c_linkage_screened_call_candidate": 5315,
+    "member_callback_assignment_to_indirect_call": 67,
     "assembly_or_build_include": 869,
     "opcode_table_function_pointer": 1,
     "generated_graphics_source_provenance": 5692,
@@ -13,7 +14,7 @@
     "composite_graphics_source_provenance": 62
   },
   "source_files_with_outgoing_edges": 1940,
-  "target_files_with_incoming_edges": 9156,
+  "target_files_with_incoming_edges": 9160,
   "unresolved_endpoint_candidates": {},
   "phase1_mapping_complete": false,
   "independent_semantic_signoffs": 0,
