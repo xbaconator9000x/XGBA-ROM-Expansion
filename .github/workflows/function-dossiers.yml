@@ -1,0 +1,48 @@
+name: Phase 1 every-function semantic review dossiers
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/function_semantic_dossiers.py'
+      - '.github/workflows/function-dossiers.yml'
+permissions:
+  actions: read
+  contents: read
+jobs:
+  derive-function-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Recover latest complete pinned source AST evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          run_id=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow phase1-census.yml \
+            --limit 20 --json databaseId,conclusion \
+            --jq '[.[] | select(.conclusion == "success")][0].databaseId')
+          if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
+            echo "No passing pinned AST census is available" >&2
+            exit 2
+          fi
+          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" \
+            --name xgba-phase1-evidence-and-review-queue --dir audit-output
+          test -f audit-output/semantic_ast_sites.jsonl.gz
+          test -f audit-output/tracked_file_manifest.csv.gz
+      - name: Build and verify per-function semantic review dossiers
+        run: |
+          python3 -m py_compile tools/function_semantic_dossiers.py
+          python3 tools/function_semantic_dossiers.py
+      - name: Save dossiers, index and 500-function checkpoints
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-function-scope-review
+          path: |
+            audit-output/function_semantic_summary.json
+            audit-output/function_semantic_index.csv.gz
+            audit-output/function_semantic_dossiers.jsonl.gz
+            audit-output/function_checkpoints/
+          retention-days: 90
+          if-no-files-found: warn
