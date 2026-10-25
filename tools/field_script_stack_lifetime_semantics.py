@@ -36,7 +36,9 @@ def blob_sha(data):
 def function_body(src,name):
     # Function extraction narrowly scoped to pinned source and simple C bodies.
     # Brace-balanced; anchors are also pinned to exact source blob SHA.
-    pattern=(r"(?m)^[ \t]*(?:static[ \t]+)?"\n             r"(?:(?:bool8|u8|u16|u32|s8|s16|s32|int|void)[ \t]+|const[ \t]+u8[ \t]*\\*[ \t]*)"\n             +re.escape(name)+r"\s*\([^;]*?\)\s*\{")
+    pattern=(r"(?m)^[ \t]*(?:static[ \t]+)?"
+             r"(?:(?:bool8|u8|u16|u32|s8|s16|s32|int|void)[ \t]+|const[ \t]+u8[ \t]*\*[ \t]*)"
+             +re.escape(name)+r"\s*\([^;]*?\)\s*\{")
     matches=list(re.finditer(pattern,src))
     if len(matches)!=1:raise SourceContractFailure("Missing/nonunique C definition "+name)
     m=matches[0]
