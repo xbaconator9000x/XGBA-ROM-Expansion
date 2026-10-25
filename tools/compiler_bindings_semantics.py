@@ -96,7 +96,7 @@ def main():
    outcome={"source_revision":PIN,
      "test_source_sha256":hashlib.sha256(Path("tests/mgba_bank_boundary.c").read_bytes()).hexdigest(),
      "run_kind":"NATIVE_MGBA_SYNTHETIC_CARTRIDGE_ONLY",
-     "probe_suite_revision":"native_rom2_dma_timing_diagnostics_v2",
+     "probe_suite_revision":"native_rom2_dma_scheduler_reroot_v3",
      "positive_checks_passed":len(re.findall(r"^PASS ",runtime_text,re.M)),
      "positive_checks_failed":len(re.findall(r"^FAIL ",runtime_text,re.M)),
      "native_gap_observations":re.findall(r"^OBSERVATION (.+)$",runtime_text,re.M),
