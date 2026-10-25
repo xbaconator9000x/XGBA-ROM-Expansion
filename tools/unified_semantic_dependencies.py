@@ -55,6 +55,29 @@ def main():
   if e["resolution"]!="PATH_CANDIDATE":continue
   for p in e["value"].split(";"):
    if p:add(e["repo"],e["path"],p,"assembly_or_build_include",e["line"],e["resolution"])
+ # Generated graphics are compiled from tracked PNG/PAL by Makefile suffix rules.
+ # Consumer -> original source image is a candidate BUILD dependency, not a direct runtime pointer.
+ gen=OUT/"generated_asset_provenance_edges.csv.gz"
+ if gen.exists():
+  for e in rows(gen):
+   if e["resolution"]!="TRACKED_BUILD_SOURCE_CANDIDATE":continue
+   if e["derived_primary"]:
+    add(e["source_repo"],e["consumer"],e["derived_primary"],
+      "generated_graphics_source_provenance",e["source_line"],e["resolution"])
+ # Function pointer dispatch: the interpreter calls a table indexed by bytecode.
+ # Track interpreter -> opcode table and opcode table -> registered handler source.
+ op=OUT/"bytecode_opcode_dispatch_semantic.csv.gz"
+ if op.exists():
+  seen_sites=set()
+  for e in rows(op):
+   repo=e["repo"]
+   site=(repo,e["dispatch_site_path"],e["dispatch_table_path"],e["dispatch_table"])
+   if site not in seen_sites:
+    add(repo,e["dispatch_site_path"],e["dispatch_table_path"],
+      "indirect_opcode_dispatch_to_table",e["table_line"],"SOURCE_BACKED_TABLE_LOOKUP")
+    seen_sites.add(site)
+   add(repo,e["dispatch_table_path"],e["handler_path"],
+     "opcode_table_function_pointer",e["table_line"],"SOURCE_BACKED_HANDLER_DEFINITION")
  bykind=collections.Counter();incoming=collections.Counter();outgoing=collections.Counter()
  rev=collections.defaultdict(set)
  with gzip.open(OUT/"unified_candidate_dependency_edges.csv.gz","wt",encoding="utf-8",newline="") as f:
@@ -91,7 +114,7 @@ def main():
   "limitations":["Source calls are syntactic and are not linker-resolved.",
     "Include files and literal asset paths are candidate uses; build flags and generated tables can change targets.",
     "Traversal follows candidate edges and does not prove runtime call reachability.",
-    "Unresolved dynamic dispatch, opaque binary dependencies and conditional macros remain outside this graph."]}
+    "Most runtime callbacks, opaque binary dependencies and conditional macros remain outside this graph; specific verified FireRed opcode tables are included."]}
  (OUT/"unified_candidate_dependency_summary.json").write_text(json.dumps(summary,indent=2)+"\n")
  (OUT/"p0_semantic_impact_candidates.json").write_text(json.dumps(impacts,indent=2)+"\n")
  print(json.dumps(summary,indent=2))
