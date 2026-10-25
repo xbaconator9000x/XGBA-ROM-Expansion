@@ -19,7 +19,7 @@
 
 #define ADDRESS (GBA_BASE_ROM0 + 0x1200)
 #define THUMB_ADDRESS (GBA_BASE_ROM0 + 0x1400)
-#define ROM_BYTES_SMALL (16u * 1024u * 1024u)
+#define ROM_BYTES_SMALL (32u * 1024u * 1024u)
 #define ROM_BYTES_MATRIX (64u * 1024u * 1024u)
 #define BANK_A (0x00020000u)
 #define BANK_B (0x00040000u)
@@ -143,6 +143,8 @@ static void run_one(bool matrix) {
     if (!bytes) { fprintf(stderr, "Out of memory\n"); ++failures; return; }
     bytes[0xAC] = matrix ? 'M' : 'X';
     put32(bytes, 0x1200, OPCODE_A);
+    /* Native ROM2_EX begins at the second 16 MiB of a 32 MiB aperture. */
+    if (!matrix) put32(bytes, 0x01001200u, OPCODE_A);
     put16(bytes, 0x1400, THUMB_A);
     if (matrix) {
         put32(bytes, BANK_A, OPCODE_A);
