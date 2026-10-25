@@ -123,4 +123,11 @@ def main():
     "Host app compilation is not an arbitrary-ROM import or plugin compatibility test."]}
  (OUT/"porymap_compiled_semantics.json").write_text(json.dumps(report,indent=2,sort_keys=True)+"\n")
  print(json.dumps({k:v for k,v in report.items() if k not in ("named_map_editor_symbol_sites","qmake_defines","limitations")},indent=2))
+    # Reference-model assertion only: never mark actual editor roundtrip tested.
+    if os.environ.get("GITHUB_ACTIONS") == "true" and os.environ.get("GITHUB_WORKFLOW") == "Phase 1 compiled Porymap Qt semantic evidence":
+        validator=Path("tools/porymap_block_semantic_reference.py")
+        if not validator.is_file():raise RuntimeError("Pinned block ABI reference verifier missing")
+        subprocess.run(["python3",str(validator),"--self-test"],check=True)
+        subprocess.run(["python3",str(validator)],check=True)
+
 if __name__=="__main__":main()
