@@ -1,0 +1,39 @@
+name: Phase 1 pinned mGBA EEPROM and savestate source semantics
+on:
+  pull_request:
+    paths:
+      - 'tools/verify_mgba_eeprom_savestate_additive.py'
+      - 'semantic-snapshots/curated/mgba_eeprom_savestate_additive_candidates_2026-10-26.json'
+      - '.github/workflows/phase1-mgba-eeprom-savedata-source.yml'
+  push:
+    paths:
+      - 'tools/verify_mgba_eeprom_savestate_additive.py'
+      - 'semantic-snapshots/curated/mgba_eeprom_savestate_additive_candidates_2026-10-26.json'
+      - '.github/workflows/phase1-mgba-eeprom-savedata-source.yml'
+permissions:
+  contents: read
+jobs:
+  pinned-eeprom-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch exact pinned mGBA source revision
+        run: |
+          mkdir -p upstream/mgba
+          git -C upstream/mgba init
+          git -C upstream/mgba remote add origin https://github.com/mgba-emu/mgba.git
+          git -C upstream/mgba fetch --depth 1 origin fd9dc5c2cbf234365068855851107e762fc6211b
+          git -C upstream/mgba checkout --detach FETCH_HEAD
+      - name: Verify exact EEPROM/savestate producer-consumer source
+        run: |
+          python3 -m py_compile tools/verify_mgba_eeprom_savestate_additive.py
+          python3 tools/verify_mgba_eeprom_savestate_additive.py upstream/mgba
+      - name: Preserve hash and line-bound source evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-mgba-eeprom-savedata-source-evidence
+          path: audit-output/mgba_eeprom_savestate_source_evidence.json
+          retention-days: 90
+          if-no-files-found: warn
