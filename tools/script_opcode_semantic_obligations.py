@@ -66,7 +66,7 @@ def main():
    pos=sanitized.index("{",m.start(),m.end())
    end=braceclose(sanitized,pos)
    text=src[m.start():end]
-   defs[name]={"source":p,"line":src.count("\n",0,m.start())+1,
+   defs[name]={"source":p,"line":src.count("\n",0,m.start(1))+1,
      "end_line":src.count("\n",0,end)+1,"body":text}
  rows=[]
  with gzip.open(OUT/"bytecode_opcode_dispatch_semantic.csv.gz","rt",encoding="utf-8",newline="") as f:
