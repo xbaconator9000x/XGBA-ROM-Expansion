@@ -71,7 +71,7 @@ CHECKS=[
  r"setBlock\(x, y, Block\(metatileId, block\.collision\(\), block\.elevation\(\)\)"),
 ("PORYSCRIPT_MAP_TERMINATORS","huderlem/poryscript","emitter/emitter.go",
  "d35843ef29929ead47351646d7a33dd5c692b850",
- r"map_script.*?\\t\\.byte 0.*?map_script_2.*?\\t\\.2byte 0")
+ r"map_script.*?\\t\.byte 0.*?map_script_2.*?\\t\.2byte 0")
 ]
 def run(root):
  findings=[]
