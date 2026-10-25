@@ -106,9 +106,9 @@ def main():
     output=[]
     by_original=collections.Counter()
     tiers=collections.Counter()
+    labels={key:entry["interpreted_semantic_roles"] for key,entry in curated.items()}
     for row in items:
         key=(row["repo"],row["path"])
-        labels={k:v["interpreted_semantic_roles"] for k,v in curated.items()}
         tag,reason,roles=tier(row["repo"],row["path"],row["priority"],labels)
         result=dict(row)
         result.update({
