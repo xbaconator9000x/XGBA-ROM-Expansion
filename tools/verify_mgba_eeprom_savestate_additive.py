@@ -27,36 +27,36 @@ CONTRACTS = {
 }
 CHECKS = [
     ("EEPROM_SAVEDATA_COMMAND_STRUCT", "include/mgba/internal/gba/savedata.h",
-     r"struct GBASavedata \\{.*?enum SavedataCommand command;.*?int8_t readBitsRemaining;.*?uint32_t readAddress;.*?uint32_t writeAddress;.*?struct mTimingEvent dust;"),
+     r"struct GBASavedata \{.*?enum SavedataCommand command;.*?int8_t readBitsRemaining;.*?uint32_t readAddress;.*?uint32_t writeAddress;.*?struct mTimingEvent dust;"),
     ("EEPROM_SETTLE_115000_CYCLES", "src/gba/savedata.c",
      r"#define EEPROM_SETTLE_CYCLES 115000"),
     ("EEPROM_SETTLE_CALLBACK_REGISTERED", "src/gba/savedata.c",
-     r"void GBASavedataInit\\([^)]*\\)\\s*\\{.*?savedata->dust.priority = 0x70;.*?savedata->dust.callback = _ashesToAshes;"),
+     r"void GBASavedataInit\([^)]*\)\s*\{.*?savedata->dust.priority = 0x70;.*?savedata->dust.callback = _ashesToAshes;"),
     ("EEPROM_AUTODETECT_DEFAULT_512", "src/gba/savedata.c",
-     r"void GBASavedataInitEEPROM\\([^)]*\\)\\s*\\{.*?GBA_SAVEDATA_AUTODETECT\\) \\{\\s*savedata->type = GBA_SAVEDATA_EEPROM512;"),
+     r"void GBASavedataInitEEPROM\([^)]*\)\s*\{.*?GBA_SAVEDATA_AUTODETECT\) \{\s*savedata->type = GBA_SAVEDATA_EEPROM512;"),
     ("EEPROM_GROWTH_512_TO_8K", "src/gba/savedata.c",
-     r"static void _ensureEeprom\\([^)]*\\)\\s*\\{.*?savedata->type = GBA_SAVEDATA_EEPROM;.*?vf->unmap.*?vf->map"),
+     r"static void _ensureEeprom\([^)]*\)\s*\{.*?savedata->type = GBA_SAVEDATA_EEPROM;.*?vf->unmap.*?vf->map"),
     ("EEPROM_WRITE_RESCHEDULE_SETTLING", "src/gba/savedata.c",
-     r"void GBASavedataWriteEEPROM\\([^)]*\\)\\s*\\{.*?savedata->dirty \\|= mSAVEDATA_DIRT_NEW;.*?mTimingDeschedule\\(&savedata->p->timing, &savedata->dust\\);\\s*mTimingSchedule\\(&savedata->p->timing, &savedata->dust, EEPROM_SETTLE_CYCLES\\);"),
+     r"void GBASavedataWriteEEPROM\([^)]*\)\s*\{.*?savedata->dirty \|= mSAVEDATA_DIRT_NEW;.*?mTimingDeschedule\(&savedata->p->timing, &savedata->dust\);\s*mTimingSchedule\(&savedata->p->timing, &savedata->dust, EEPROM_SETTLE_CYCLES\);"),
     ("EEPROM_READ_BUSY_BIT", "src/gba/savedata.c",
-     r"uint16_t GBASavedataReadEEPROM\\([^)]*\\)\\s*\\{.*?if \\(!mTimingIsScheduled\\(&savedata->p->timing, &savedata->dust\\)\\) \\{\\s*return 1;\\s*\\} else \\{\\s*return 0;"),
+     r"uint16_t GBASavedataReadEEPROM\([^)]*\)\s*\{.*?if \(!mTimingIsScheduled\(&savedata->p->timing, &savedata->dust\)\) \{\s*return 1;\s*\} else \{\s*return 0;"),
     ("EEPROM_SERIALIZE_REMAINING_SETTLE_CYCLES", "src/gba/savedata.c",
-     r"void GBASavedataSerialize\\([^)]*\\)\\s*\\{.*?mTimingIsScheduled\\(&savedata->p->timing, &savedata->dust\\).*?savedata->dust.when - mTimingCurrentTime\\(&savedata->p->timing\\)"),
+     r"void GBASavedataSerialize\([^)]*\)\s*\{.*?mTimingIsScheduled\(&savedata->p->timing, &savedata->dust\).*?savedata->dust.when - mTimingCurrentTime\(&savedata->p->timing\)"),
     ("EEPROM_DESERIALIZE_RESTORES_EVENT", "src/gba/savedata.c",
-     r"void GBASavedataDeserialize\\([^)]*\\)\\s*\\{.*?GBASerializedSavedataFlagsIsDustSettling\\(flags\\).*?mTimingSchedule\\(&savedata->p->timing, &savedata->dust, when\\);"),
+     r"void GBASavedataDeserialize\([^)]*\)\s*\{.*?GBASerializedSavedataFlagsIsDustSettling\(flags\).*?mTimingSchedule\(&savedata->p->timing, &savedata->dust, when\);"),
     ("EEPROM_ROM2_EX_READ_PRIORITY", "src/gba/memory.c",
-     r"case GBA_REGION_ROM2_EX:.*?GBA_SAVEDATA_EEPROM512\\) \\{\\s*value = GBASavedataReadEEPROM\\(&memory->savedata\\);"),
+     r"case GBA_REGION_ROM2_EX:.*?GBA_SAVEDATA_EEPROM512\) \{\s*value = GBASavedataReadEEPROM\(&memory->savedata\);"),
     ("EEPROM_ROM2_EX_WRITE_AUTODETECT", "src/gba/memory.c",
-     r"case GBA_REGION_ROM2_EX:.*?GBA_SAVEDATA_AUTODETECT\\) \\{.*?GBASavedataInitEEPROM\\(&memory->savedata\\);.*?GBASavedataWriteEEPROM\\(&memory->savedata, value, 1\\);"),
+     r"case GBA_REGION_ROM2_EX:.*?GBA_SAVEDATA_AUTODETECT\) \{.*?GBASavedataInitEEPROM\(&memory->savedata\);.*?GBASavedataWriteEEPROM\(&memory->savedata, value, 1\);"),
     ("EEPROM_SAVESTATE_ORDER_BEFORE_MATRIX", "src/gba/serialize.c",
-     r"GBASavedataDeserialize\\(&gba->memory.savedata, state\\);\\s*if \\(gba->memory.matrix.size\\) \\{\\s*GBAMatrixDeserialize\\(gba, state\\);\\s*\\}\\s*mTimingInterrupt\\(&gba->timing\\);"),
+     r"GBASavedataDeserialize\(&gba->memory.savedata, state\);\s*if \(gba->memory.matrix.size\) \{\s*GBAMatrixDeserialize\(gba, state\);\s*\}\s*mTimingInterrupt\(&gba->timing\);"),
     ("EEPROM_TIMING_SCHEDULE_REROOT", "src/core/timing.c",
-     r"void mTimingSchedule\\([^)]*\\)\\s*\\{.*?if \\(timing->reroot\\) \\{\\s*previous = &timing->reroot;"),
+     r"void mTimingSchedule\([^)]*\)\s*\{.*?if \(timing->reroot\) \{\s*previous = &timing->reroot;"),
 ]
 
 
 def git_blob_sha(data):
-    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\\0" + data).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
 
 
 def validate(doc):
@@ -154,8 +154,8 @@ def verify(root, doc):
             "contract_id": ident,
             "source_path": path,
             "git_blob_sha1": EXPECTED[path],
-            "line_start": text.count("\\n", 0, match.start()) + 1,
-            "line_end": text.count("\\n", 0, match.end()) + 1,
+            "line_start": text.count("\n", 0, match.start()) + 1,
+            "line_end": text.count("\n", 0, match.end()) + 1,
             "matched_expression_sha256": hashlib.sha256(match.group(0).encode("utf-8", "surrogateescape")).hexdigest(),
             "status": "PINNED_SOURCE_ASSERTION_ONLY",
             "independent_whole_file_signoff": False,
@@ -184,7 +184,7 @@ if __name__ == "__main__":
         self_test(doc)
         evidence = verify(Path(sys.argv[1] if len(sys.argv) > 1 else "upstream/mgba"), doc)
         OUT.parent.mkdir(parents=True, exist_ok=True)
-        OUT.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\\n", encoding="utf-8")
+        OUT.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         print("Pinned mGBA EEPROM/savestate: 5/5 exact source blobs, " + str(len(CHECKS)) + " source expressions PASS; 0 approvals")
     except Exception as error:
         print("EEPROM source verification FAILED:", error, file=sys.stderr)
