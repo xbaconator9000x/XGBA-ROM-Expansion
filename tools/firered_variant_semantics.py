@@ -76,4 +76,8 @@ def main():
  OUT.mkdir(exist_ok=True)
  (OUT/"firered_variants_abi_summary.json").write_text(json.dumps(summary,indent=2,sort_keys=True)+"\n")
  print(json.dumps({k:v for k,v in summary.items() if k not in ("symbols","variants","design_requirements")},indent=2))
+ # Resolve real per-build source preprocessor branches under both pinned ELFs;
+ # this supplements symbol ABI and never represents emulator runtime proof.
+ subprocess.run(["python3","tools/firered_map_view_variant_semantics.py"],check=True)
+
 if __name__=="__main__":main()
