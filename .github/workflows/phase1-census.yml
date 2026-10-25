@@ -6,6 +6,7 @@ on:
       - 'tools/pinned_source_census.py'
       - 'tools/semantic_review_dossiers.py'
       - 'tools/include_dependency_classifier.py'
+      - 'tools/phase1_mapping_gate.py'
       - '.github/workflows/phase1-census.yml'
 permissions:
   contents: read
@@ -25,6 +26,11 @@ jobs:
         run: python3 tools/semantic_review_dossiers.py --root upstream --census audit-output --out audit-output
       - name: Classify unresolved include candidates
         run: python3 tools/include_dependency_classifier.py
+      - name: Evaluate Phase 1 semantic gate (incomplete is expected until signed review)
+        run: |
+          rc=0
+          python3 tools/phase1_mapping_gate.py --root audit-output || rc=$?
+          if [ "$rc" -ne 0 ] && [ "$rc" -ne 2 ]; then exit "$rc"; fi
       - name: Preserve census, review queue and 500-file checkpoints
         if: always()
         uses: actions/upload-artifact@v4
