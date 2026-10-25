@@ -17,10 +17,10 @@ BLOBS={
 SECONDARY={0x50:"applymovement",0x52:"waitmovement",0x54:"removeobject",0x56:"addobject"}
 OUTPUT=Path("audit-output/field_script_opcode_semantic_index.json")
 SUMMARY=Path("audit-output/field_script_opcode_semantic_summary.json")
-OPCODE=re.compile(r"^\\.byte\\s+0x([0-9a-f]+)\\s*$",re.I)
-DIRECTIVE=re.compile(r"^\\.(byte|2byte|4byte)\\s+(.+)$")
-TABLE=re.compile(r"^\\s*\\.4byte\\s+(ScrCmd_\\w+)\\s+@\\s+(0x[0-9a-f]+)\\s*$",re.I)
-HANDLER=re.compile(r"^\\s*(?:bool8|u8|void|s16|u16|u32|s32)\\s+(ScrCmd_\\w+)\\s*\\(")
+OPCODE=re.compile(r"^\.byte\s+0x([0-9a-f]+)\s*$",re.I)
+DIRECTIVE=re.compile(r"^\.(byte|2byte|4byte)\s+(.+)$")
+TABLE=re.compile(r"^\s*\.4byte\s+(ScrCmd_\w+)\s+@\s+(0x[0-9a-f]+)\s*$",re.I)
+HANDLER=re.compile(r"^\s*(?:bool8|u8|void|s16|u16|u32|s32)\s+(ScrCmd_\w+)\s*\(")
 
 def fail(message): raise ValueError(message)
 def blob_sha(raw): return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
@@ -46,7 +46,7 @@ def parse_macros(lines):
     current=None
     for line_number,raw in enumerate(lines,1):
         text=raw.split("@",1)[0].strip()
-        start=re.match(r"^\\.macro\\s+([A-Za-z_]\\w*)\\b",text)
+        start=re.match(r"^\.macro\s+([A-Za-z_]\w*)\b",text)
         if start:
             if current is not None: fail("Nested macro without closing .endm")
             current={"name":start.group(1),"start_line":line_number,"body":[]}
