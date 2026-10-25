@@ -52,15 +52,21 @@ def main():
    candidate_sources.append({"source_path":candidate,"git_blob_sha":expect})
   if not candidate_sources:raise RuntimeError("Qt generated target lacks pinned source prerequisite "+name)
   recipe="\n".join(lines[:min(len(lines),end+8)])
-  # qmake typically writes the invocation immediately following its target
-  if name.startswith("moc_") and (not re.search(r"(?m)^\s*MOC\s*=",makefile) or b"staticMetaObject" not in actual):
-   raise RuntimeError("Generated MOC source lacks qmake global moc tool or meta-object data "+name)
-  if name.startswith("qrc_") and "rcc" not in makefile.lower():
-   raise RuntimeError("Generated RCC source lacks qmake resource compiler declaration "+name)
+  # Check actual generator command from the clean qmake build transcript.
+  # Qt build recipes may list numerous resource/header dependencies.
+  generator="moc" if name.startswith("moc_") else "rcc"
+  buildlog=Path("porymap-build.log")
+  if not buildlog.is_file():raise RuntimeError("Missing original Qt build transcript")
+  observed=[line for line in buildlog.read_text(encoding="utf-8",errors="surrogateescape").splitlines()
+     if "-o "+name in line and re.search(r"(?:^|/)"+generator+r"\s",line)]
+  if not observed:raise RuntimeError("No executed Qt "+generator+" generation for "+name)
+  if not any(inp["source_path"] in cmd for inp in candidate_sources for cmd in observed):
+   raise RuntimeError("Qt generated file lacks compiler-observed pinned source for "+name)
   return {"generated_cpp":name,"generated_content_sha256":hashlib.sha256(actual).hexdigest(),
     "pinned_source_prerequisites":candidate_sources,
     "generator":"MOC" if name.startswith("moc_") else "RCC",
     "make_target_recipe_sha256":hashlib.sha256(recipe.encode("utf-8","surrogateescape")).hexdigest(),
+    "executed_generator_command_sha256":hashlib.sha256(observed[0].encode("utf-8","surrogateescape")).hexdigest(),
     "classification":"COMPILER_OBSERVED_QMAKE_GENERATED_SOURCE_WITH_PINNED_INPUTS"}
  for row in comp:
   file=Path(row["file"])
