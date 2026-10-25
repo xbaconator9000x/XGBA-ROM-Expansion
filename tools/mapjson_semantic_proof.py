@@ -58,7 +58,7 @@ def main():
  if len(layouts["layouts"])!=383 or len(layouts_by_id)!=365:
   raise RuntimeError("Expected pinned 383 layout slots incl 18 blank")
  layout_provenance={}
- layout_issues=[];verified_layout_bytes=0
+ layout_issues=[];zero_border_placeholders=[];verified_layout_bytes=0
  for lid,entry in layouts_by_id.items():
   width,height=int(entry["width"]),int(entry["height"])
   for typ,col,row in (("map","width","height"),("border","border_width","border_height")):
@@ -67,8 +67,13 @@ def main():
    data=readtracked(path)
    expected=int(entry[col])*int(entry[row])*2
    # Width x height u16 metatile blocks, or border_width x border_height
-   state="DIMENSIONS_MATCH_RAW_U16" if len(data)==expected else "SIZE_OR_LAYOUT_MISMATCH_REQUIRES_REVIEW"
-   if state!="DIMENSIONS_MATCH_RAW_U16":
+   state=("DIMENSIONS_MATCH_RAW_U16" if len(data)==expected else
+          ("SOURCE_ZERO_DIMENSION_BORDER_WITH_EIGHT_BYTE_PLACEHOLDER"
+           if typ=="border" and expected==0 and len(data)==8 else
+           "SIZE_OR_LAYOUT_MISMATCH_REQUIRES_REVIEW"))
+   if state=="SOURCE_ZERO_DIMENSION_BORDER_WITH_EIGHT_BYTE_PLACEHOLDER":
+    zero_border_placeholders.append({"layout":lid,"path":str(path),"bytes":len(data),"declared_border_cells":0})
+   elif state!="DIMENSIONS_MATCH_RAW_U16":
     layout_issues.append({"layout":lid,"path":str(path),"bytes":len(data),"expected":expected})
    layout_provenance[str(path)]={"git_blob_sha":gittracked(path),"bytes":len(data),
       "layout_id":lid,"block_kind":typ,"expected_bytes":expected,"status":state}
@@ -178,8 +183,12 @@ def main():
   "layout_slots":len(layouts["layouts"]),"nonempty_layouts":len(layouts_by_id),
   "layout_binary_bytes_verified":verified_layout_bytes,
   "layout_binary_mismatches":layout_issues[:60],
+  "source_zero_dimension_border_placeholders":len(zero_border_placeholders),
+  "border_placeholder_samples":zero_border_placeholders[:50],
   "typed_event_counts":dict(scene_counts),"all_typed_events":sum(scene_counts.values()),
   "map_to_map_edges":len(edges),"unknown_target_map_references":len(unresolved_warps),
+  "dynamic_warp_sentinels":sum(x["dest_map"]=="MAP_DYNAMIC" for x in unresolved_warps),
+  "other_unknown_map_references":[x for x in unresolved_warps if x["dest_map"]!="MAP_DYNAMIC"],
   "unknown_target_samples":unresolved_warps[:35],
   "events_outside_layout_bounds":len(out_of_bounds),
   "out_of_bounds_samples":out_of_bounds[:40],
@@ -195,4 +204,5 @@ def main():
  print(json.dumps({k:v for k,v in summary.items() if k not in ("out_of_bounds_samples","unknown_target_samples","layout_binary_mismatches","generated_event_macro_count_errors")},indent=2))
  if macro_mismatches:raise RuntimeError("Generated assembler event counts differ: "+str(macro_mismatches[:5]))
  if layout_issues:raise RuntimeError("Pinned source layout binary geometry mismatches: "+str(layout_issues[:5]))
+ if summary["other_unknown_map_references"]:raise RuntimeError("Unclassified destination map constants found")
 if __name__=="__main__":main()
