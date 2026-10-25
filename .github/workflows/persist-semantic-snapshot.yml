@@ -69,6 +69,8 @@ jobs:
           dst=Path("semantic-snapshots/current")
           names=[
             "audit_summary.json","second_pass_summary.json","phase1_mapping_gate.json",
+            "resource_lifecycle_contracts_summary.json","resource_lifecycle_contracts.csv",
+            "function_semantic_summary.json","function_semantic_index.csv.gz",
             "semantic_ast_summary.json","all_file_structure_summary.json",
             "asm_build_semantic_summary.json","unified_candidate_dependency_summary.json",
             "include_classification_summary.json","map_anchor_validation.json",
