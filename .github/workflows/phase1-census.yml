@@ -20,6 +20,7 @@ on:
       - 'tools/dynamic_dispatch_semantics.py'
       - 'tools/script_opcode_semantic_obligations.py'
       - 'tools/script_assembler_operand_abi.py'
+      - 'tools/script_conditional_opcode_semantics.py'
       - 'tools/implicit_battle_cursor_semantics.py'
       - 'tools/module_semantic_dossiers.py'
       - 'tools/source_update_impact.py'
@@ -78,6 +79,8 @@ jobs:
         run: python3 tools/script_opcode_semantic_obligations.py
       - name: Verify assembler macro argument widths for field and battle scripts
         run: python3 tools/script_assembler_operand_abi.py
+      - name: Resolve conditional movement/remote-object opcode variants
+        run: python3 tools/script_conditional_opcode_semantics.py
       - name: Reconcile source, assembler and asset dependency candidates
         run: python3 tools/unified_semantic_dependencies.py
       - name: Verify eight delegated or terminal battle cursor handlers
