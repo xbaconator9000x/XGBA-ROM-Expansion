@@ -18,6 +18,7 @@ on:
       - 'tools/gba_memory_region_contracts.py'
       - 'tools/generated_asset_provenance.py'
       - 'tools/dynamic_dispatch_semantics.py'
+      - 'tools/script_opcode_semantic_obligations.py'
       - 'tools/resolve_composite_assets.py'
       - '.github/workflows/phase1-census.yml'
 permissions:
@@ -69,6 +70,8 @@ jobs:
         run: python3 tools/resolve_composite_assets.py
       - name: Resolve all FireRed field and battle opcode dispatch tables
         run: python3 tools/dynamic_dispatch_semantics.py
+      - name: Audit source-backed operand and cursor semantics of all 461 script opcodes
+        run: python3 tools/script_opcode_semantic_obligations.py
       - name: Reconcile source, assembler and asset dependency candidates
         run: python3 tools/unified_semantic_dependencies.py
       - name: Evaluate Phase 1 semantic gate (incomplete is expected until signed review)
