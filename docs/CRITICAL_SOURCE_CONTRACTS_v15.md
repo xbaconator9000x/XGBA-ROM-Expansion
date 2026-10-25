@@ -42,4 +42,4 @@
 
 Four new source-anchored contract findings, not four approved whole-file dispositions. Phase 1 semantic mapping remains open. The source-hash-verified review queue gives this file group P0/P1 priority after the v1.5 priority-floor correction.
 
-All source locations: [mGBA serialize.c](https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/serialize.c) · [FireRed script.c](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/script.c) · [FireRed load_save.c](https://github.com/pret/pokefirered/blob/ce6406d8c2cbf234365068855851107e762fc6211b/src/load_save.c).
+All source locations: [mGBA serialize.c](https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/serialize.c) · [FireRed script.c](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/script.c) · [FireRed load_save.c](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/load_save.c).
