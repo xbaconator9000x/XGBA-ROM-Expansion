@@ -117,4 +117,6 @@ if __name__=="__main__":
   subprocess.run([sys.executable,"tools/verify_p0_additive_source_contracts.py",str(root)],check=True)
   # Review candidates require exact pinned blobs, never fabricated signoffs.
   subprocess.run([sys.executable,"tools/verify_curated_p0_semantic_registry.py",str(root)],check=True)
+  # Additive scheduling metadata: never replace the immutable lexical review queue.
+  subprocess.run([sys.executable,"tools/phase1_architecture_review_priorities.py"],check=True)
  except Exception as e:print("CONTRACT CHECK FAILED:",e,file=sys.stderr);sys.exit(2)
