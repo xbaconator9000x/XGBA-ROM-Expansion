@@ -43,7 +43,7 @@ def nm(rows,defined):
  return result
 def source_from_obj(objroot,obj,tracked):
  path=obj.relative_to(objroot).with_suffix("")
- options=[str(path)+ext for ext in (".c",".s",".S",".cpp",".cc")]
+ options=[str(path)+ext for ext in (".c",".s",".S",".cpp",".cc",".mid")]
  found=[p for p in options if p in tracked]
  if len(found)==1:return found[0],tracked[found[0]],"UNIQUE_STEM_SOURCE_CANDIDATE"
  if len(found)>1:return "","", "AMBIGUOUS_STEM_SOURCE_CANDIDATE"
