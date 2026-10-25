@@ -51,7 +51,7 @@ def main():
    if sha(original)!=expect:raise RuntimeError("Generated Qt source input changed: "+candidate)
    candidate_sources.append({"source_path":candidate,"git_blob_sha":expect})
   if not candidate_sources:raise RuntimeError("Qt generated target lacks pinned source prerequisite "+name)
-  recipe="\n".join(lines[:min(12,end+8)])
+  recipe="\n".join(lines[:min(len(lines),end+8)])
   # qmake typically writes the invocation immediately following its target
   if name.startswith("moc_") and "MOC" not in recipe:
    raise RuntimeError("Generated MOC source lacks Makefile tool invocation "+name)
