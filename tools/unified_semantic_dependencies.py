@@ -40,12 +40,15 @@ def main():
   if e["resolution"]=="UNRESOLVED":continue
   for dst in e["target_path"].split(";"):
    if dst:add(e["repo"],e["from_path"],dst,"preprocessor_include",e["line"],e["resolution"])
- for e in rows(OUT/"semantic_call_graph.csv.gz"):
-  if e["resolution"]!="UNIQUE_REPO_SYMBOL_CANDIDATE":continue
-  for spec in e["callee_paths"].split(";"):
-   if ":" not in spec:continue
-   path,line=spec.rsplit(":",1)
-   add(e["repo"],e["caller_file"],path,"ast_direct_call",e["caller_line"],e["resolution"])
+ # Linkage-screened C candidates replace naive whole-repo name matching.
+ # A C static name in another source unit does not establish a call edge.
+ # C++/Python/Go name lookups require a compiler-aware binder.
+ for e in rows(OUT/"call_graph_linkage_filtered.csv.gz"):
+  if e["binding_class"] not in ("EXTERNAL_C_LINKAGE_CANDIDATE","HEADER_INLINE_REQUIRES_INCLUDE_CHAIN"):
+   continue
+  if not e["target_file"]:continue
+  add(e["repo"],e["caller_file"],e["target_file"],"c_linkage_screened_call_candidate",
+      e["caller_line"],e["binding_class"])
  for e in rows(OUT/"explicit_asset_references.csv.gz"):
   if e["resolution"]!="UNIQUE_EXPLICIT_PATH_CANDIDATE":continue
   for p in e["target_paths"].split(";"):
@@ -121,7 +124,7 @@ def main():
   "target_files_with_incoming_edges":len(incoming),
   "unresolved_endpoint_candidates":dict(anomalous),
   "phase1_mapping_complete":False,"independent_semantic_signoffs":0,
-  "limitations":["Source calls are syntactic and are not linker-resolved.",
+  "limitations":["Linkage-screened C cross-file calls are candidates and are not compiler/linker-resolved; C++/Go/Python unresolved by design.",
     "Include files and literal asset paths are candidate uses; build flags and generated tables can change targets.",
     "Traversal follows candidate edges and does not prove runtime call reachability.",
     "Most runtime callbacks, opaque binary dependencies and conditional macros remain outside this graph; specific verified FireRed opcode tables are included."]}
