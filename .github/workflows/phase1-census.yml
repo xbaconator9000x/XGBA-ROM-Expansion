@@ -7,6 +7,8 @@ on:
       - 'tools/semantic_review_dossiers.py'
       - 'tools/include_dependency_classifier.py'
       - 'tools/phase1_mapping_gate.py'
+      - 'tools/phase1_review_attestations.py'
+      - 'semantic-snapshots/review-trust/**'
       - 'tools/verify_source_contracts.py'
       - 'tools/validate_mapping_anchors.py'
       - 'tools/ast_semantic_index.py'
@@ -44,7 +46,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify Python syntax
         run: |
-          python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py
+          python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py tools/phase1_mapping_gate.py tools/phase1_review_attestations.py
           python3 tools/semantic_review_dossiers.py --self-test
           python3 tools/phase1_mapping_gate.py --self-test
       - name: Clone pinned sources and scan
