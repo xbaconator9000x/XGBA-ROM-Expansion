@@ -13,6 +13,8 @@ on:
       - 'tools/all_blob_structural_evidence.py'
       - 'tools/semantic_asm_build.py'
       - 'tools/unified_semantic_dependencies.py'
+      - 'tools/generated_asset_provenance.py'
+      - 'tools/dynamic_dispatch_semantics.py'
       - '.github/workflows/phase1-census.yml'
 permissions:
   contents: read
@@ -51,6 +53,10 @@ jobs:
         run: python3 tools/all_blob_structural_evidence.py
       - name: Index assembly, linker and build-file semantics
         run: python3 tools/semantic_asm_build.py
+      - name: Trace FireRed generated graphics outputs to actual build inputs
+        run: python3 tools/generated_asset_provenance.py
+      - name: Resolve all FireRed field and battle opcode dispatch tables
+        run: python3 tools/dynamic_dispatch_semantics.py
       - name: Reconcile source, assembler and asset dependency candidates
         run: python3 tools/unified_semantic_dependencies.py
       - name: Evaluate Phase 1 semantic gate (incomplete is expected until signed review)
