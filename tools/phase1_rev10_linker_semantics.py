@@ -153,8 +153,17 @@ def source_index(source):
         if section in ("ewram", "iwram"):
             b = [s.replace("_rev10.ld", ".ld") for s in b]
         removed, added = MOVES.get(section, ([], []))
-        if ([s for s in a if s not in removed] !=
-                [s for s in b if s not in added]):
+        left = [s for s in a if s not in removed]
+        right = [s for s in b if s not in added]
+        if section == "lib_text":
+            # Revision 10 also swaps the order of these two retained RFU objects.
+            intr = "src/librfu_intr.o(.text);"
+            sio = "src/librfu_sio32id.o(.text);"
+            if left.count(intr) != 1 or left.count(sio) != 1:
+                fail("RFU lib_text order anchors missing")
+            i, j = left.index(intr), left.index(sio)
+            left[i], left[j] = left[j], left[i]
+        if left != right:
             fail("Unexpected ordered object selection drift: " + section)
         if any(a.count(s) != 1 for s in removed) or any(b.count(s) != 1 for s in added):
             fail("Expected revision-10 object relocation missing: " + section)
