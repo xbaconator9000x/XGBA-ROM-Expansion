@@ -4,6 +4,7 @@ on:
     paths:
       - 'tools/phase1_crossrepo_authoring_abi_review.py'
       - 'tools/phase1_script_variant_review.py'
+      - 'tools/phase1_event_opcode_semantic_index.py'
       - 'tools/phase1_cpu_matrix_review_scheduler.py'
       - 'semantic-snapshots/curated/**'
       - 'semantic-snapshots/current/**'
@@ -12,6 +13,7 @@ on:
     paths:
       - 'tools/phase1_crossrepo_authoring_abi_review.py'
       - 'tools/phase1_script_variant_review.py'
+      - 'tools/phase1_event_opcode_semantic_index.py'
       - 'tools/phase1_cpu_matrix_review_scheduler.py'
       - 'semantic-snapshots/curated/**'
       - 'semantic-snapshots/current/**'
@@ -39,12 +41,13 @@ jobs:
           checkout_pin porymap https://github.com/huderlem/porymap.git 26b919d7ff4b54152de010abd5bf344af2ebe116
           checkout_pin poryscript https://github.com/huderlem/poryscript.git c32481161c767b25a3425fa9f1f8729927ff3d55
           checkout_pin pokefirered https://github.com/pret/pokefirered.git ce6406d8c2eaf46d543c8a2606de0c3cb1951982
-      - name: Verify exact sources and deterministic v5 review queue
+      - name: Verify exact source opcodes, runtime handlers and deterministic v6 review queue
         run: |
-          python3 -m py_compile tools/phase1_crossrepo_authoring_abi_review.py tools/phase1_script_variant_review.py
+          python3 -m py_compile tools/phase1_crossrepo_authoring_abi_review.py tools/phase1_script_variant_review.py tools/phase1_event_opcode_semantic_index.py
           python3 tools/verify_mgba_timing_dma_additive.py upstream/mgba
           python3 tools/verify_mgba_eeprom_savestate_additive.py upstream/mgba
           python3 tools/verify_mgba_cpu_matrix_abi_additive.py upstream/mgba
+          python3 tools/phase1_event_opcode_semantic_index.py upstream/pokefirered
           python3 tools/phase1_script_variant_review.py
       - name: Archive pinned source and review queue evidence
         if: always()
@@ -54,6 +57,8 @@ jobs:
           path: |
             audit-output/crossrepo_authoring_abi_source_evidence.json
             audit-output/script_variant_abi_source_evidence.json
+            audit-output/field_script_opcode_semantic_index.json
+            audit-output/field_script_opcode_semantic_summary.json
             audit-output/architecture_semantic_review_priority_additive_v6.json
             audit-output/architecture_semantic_review_queue_additive_v6.csv.gz
             audit-output/architecture_semantic_review_priority_additive_v5.json
