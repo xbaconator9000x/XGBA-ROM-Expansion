@@ -12,7 +12,7 @@
 - Poryscript `huderlem/poryscript@c32481161c767b25a3425fa9f1f8729927ff3d55`
   - [`emitter/emitter.go:33-159`](https://github.com/huderlem/poryscript/blob/c32481161c767b25a3425fa9f1f8729927ff3d55/emitter/emitter.go#L33-L159), Git blob `d35843ef29929ead47351646d7a33dd5c692b850`
   - [`emitter/chunk.go:21-145`](https://github.com/huderlem/poryscript/blob/c32481161c767b25a3425fa9f1f8729927ff3d55/emitter/chunk.go#L21-L145), Git blob `bb3a6514988eb2699022551d3dbfe2bdce260377`
-  - [`main.go:20-100`](https://github.com/huderlem/poryscript/blob/c32481161c767b25a3425fa9f1f8729927ff3d55/main.go#L20-L100), command arguments and compile configuration (pin above; blob SHA to check separately on review).
+  - [`main.go:20-100`](https://github.com/huderlem/poryscript/blob/c32481161c767b25a3425fa9f1f8729927ff3d55/main.go#L20-L100), command arguments and compile configuration, pinned Git blob `10db05ef1518460da78b0bd41f22bb091917a385`.
 
 ## Contract PMAP-001 — native map block is a 16-bit packed semantic record
 
