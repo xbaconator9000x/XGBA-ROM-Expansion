@@ -113,6 +113,16 @@ def main():
    except ValueError:raise RuntimeError("Dynamic opcode byte in "+name)
    if actual!=op:raise RuntimeError("Compiled ABI opcode mismatch "+str((name,label,actual,op)))
    if ("FIELD",op) not in handlers:raise RuntimeError("Missing field handler")
+   handler_name=handlers[("FIELD",op)]
+   hline,readwidths,handlerbody=runtime_handler_read_sequence(handlersrc,handler_name)
+   expected_widths=[entry["width"] for entry in emit[1:]]
+   if readwidths!=expected_widths:
+    raise RuntimeError("Assembler emits different operand widths from handler's observed reads: "+str(
+      (name,label,handler_name,expected_widths,readwidths)))
+   if label=="map_provided":
+    if readwidths[-2:]!=[1,1]:raise RuntimeError("Map group and number must follow other operands")
+    if len(re.findall(r"ScriptReadByte\s*\(",handlerbody))!=2:
+     raise RuntimeError("Unexpected map group/number handler reads "+handler_name)
    rec={"macro":name,"variant":label,"opcode":op,"opcode_hex":hex(op),
     "field_handler":handlers[("FIELD",op)],
     "macro_git_blob_sha":SOURCES["asm/macros/event.inc"],
