@@ -1,0 +1,99 @@
+name: Persist verified semantic evidence snapshots
+on:
+  workflow_run:
+    workflows:
+      - Phase 1 pinned source census and review dossiers
+    types: [completed]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  save-verified-evidence:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: persist-phase1-semantic-snapshot
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve source-audited artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERIFIED_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          gh run download "$VERIFIED_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name xgba-phase1-evidence-and-review-queue \
+            --dir /tmp/xgba-evidence
+      - name: Confirm completion gate is preserved and provenance counts match
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("/tmp/xgba-evidence")
+          main=json.loads((root/"audit_summary.json").read_text())
+          second=json.loads((root/"second_pass_summary.json").read_text())
+          gate=json.loads((root/"phase1_mapping_gate.json").read_text())
+          units=json.loads((root/"bytecode_opcode_dispatch_summary.json").read_text())
+          generated=json.loads((root/"generated_asset_provenance_summary.json").read_text())
+          composites=json.loads((root/"composite_graphics_source_summary.json").read_text())
+          assert main["census_complete"] and main["tracked_files"]==14834
+          assert second["source_blobs_sha1_verified"]==4685
+          assert gate["decision"]=="FAIL_INCOMPLETE"
+          assert units["field_opcodes"]==213 and units["battle_opcodes"]==248
+          assert generated["observed_generated_resource_literals"]==6172
+          assert composites["all_17_generated_literals_have_explicit_composite_rules"]
+          assert composites["unresolved_composite_component_count"]==0
+          print("Full source semantic evidence consistency: PASS; signoffs still incomplete")
+          PY
+      - name: Commit bounded, durable semantic snapshots
+        env:
+          VERIFIED_RUN_ID: ${{ github.event.workflow_run.id }}
+          VERIFIED_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          git pull --ff-only origin main
+          mkdir -p semantic-snapshots/current
+          python3 - <<'PY'
+          import json,os,shutil
+          from pathlib import Path
+          src=Path("/tmp/xgba-evidence")
+          dst=Path("semantic-snapshots/current")
+          names=[
+            "audit_summary.json","second_pass_summary.json","phase1_mapping_gate.json",
+            "semantic_ast_summary.json","all_file_structure_summary.json",
+            "asm_build_semantic_summary.json","unified_candidate_dependency_summary.json",
+            "include_classification_summary.json","map_anchor_validation.json",
+            "source_contract_assertions.json","generated_asset_provenance_summary.json",
+            "composite_graphics_source_summary.json","bytecode_opcode_dispatch_summary.json",
+            "p0_semantic_impact_candidates.json","semantic_ast_file_manifest.csv.gz",
+            "asm_build_file_coverage.csv.gz","all_file_structures.jsonl.gz",
+            "unified_candidate_dependency_edges.csv.gz","generated_asset_provenance_edges.csv.gz",
+            "composite_graphics_source_edges.csv.gz","bytecode_opcode_dispatch_semantic.csv.gz",
+            "candidate_review_dossiers.jsonl.gz","semantic_review_queue.csv.gz"]
+          for name in names:
+            file=src/name
+            if not file.is_file():raise RuntimeError("Expected evidence file missing: "+name)
+            shutil.copyfile(file,dst/name)
+          (dst/"PROVENANCE.json").write_text(json.dumps({
+           "github_actions_run_id":int(os.environ["VERIFIED_RUN_ID"]),
+           "pinned_workflow_head_sha":os.environ["VERIFIED_HEAD_SHA"],
+           "source_census_validated":True,"semantic_mapping_gate":"FAIL_INCOMPLETE",
+           "artifact_retention_risk":"full AST sites omitted but reproducible from scripts"
+          },indent=2)+"\n")
+          PY
+          git add semantic-snapshots/current
+          if git diff --cached --quiet; then
+            echo "No changes to semantic snapshot"
+            exit 0
+          fi
+          git commit -m "Preserve verified Phase 1 semantic evidence from run ${VERIFIED_RUN_ID}"
+          git push origin HEAD:main
