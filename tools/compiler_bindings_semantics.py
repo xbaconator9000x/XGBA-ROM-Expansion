@@ -65,6 +65,7 @@ def main():
     "libraries_inspected":len(lib_candidates),
     "build_compilation_and_symbol_analysis":len(lib_candidates)>0,
     "runtime_execution_tested":False,
+    "native_boundary_probe_is_separate_post_summary_step":True,
     "semantic_mapping_complete":False,
     "limitations":["mGBA build-only proof; no BIOS or GBA test ROM executed.",
      "Feature defines vary by generated build configuration.",
