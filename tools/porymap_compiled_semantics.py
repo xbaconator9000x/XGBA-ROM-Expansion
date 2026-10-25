@@ -53,8 +53,8 @@ def main():
   if not candidate_sources:raise RuntimeError("Qt generated target lacks pinned source prerequisite "+name)
   recipe="\n".join(lines[:min(len(lines),end+8)])
   # qmake typically writes the invocation immediately following its target
-  if name.startswith("moc_") and "MOC" not in recipe:
-   raise RuntimeError("Generated MOC source lacks Makefile tool invocation "+name)
+  if name.startswith("moc_") and (not re.search(r"(?m)^\s*MOC\s*=",makefile) or b"staticMetaObject" not in actual):
+   raise RuntimeError("Generated MOC source lacks qmake global moc tool or meta-object data "+name)
   if name.startswith("qrc_") and "rcc" not in makefile.lower():
    raise RuntimeError("Generated RCC source lacks qmake resource compiler declaration "+name)
   return {"generated_cpp":name,"generated_content_sha256":hashlib.sha256(actual).hexdigest(),
