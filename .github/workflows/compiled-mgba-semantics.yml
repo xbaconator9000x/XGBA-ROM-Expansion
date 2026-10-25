@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'tools/compiler_bindings_semantics.py'
+      - 'tools/compiled_dependency_graph.py'
       - '.github/workflows/compiled-mgba-semantics.yml'
 permissions:
   contents: read
@@ -35,6 +36,8 @@ jobs:
           cmake --build build-mgba --parallel 2 2>&1 | tee cmake-build.log
       - name: Analyze actual compiler targets and linked symbols
         run: python3 tools/compiler_bindings_semantics.py
+      - name: Evaluate actual GCC include selection and compiled object-symbol dependencies
+        run: python3 tools/compiled_dependency_graph.py
       - name: Preserve compilation database and provenance
         if: always()
         uses: actions/upload-artifact@v4
