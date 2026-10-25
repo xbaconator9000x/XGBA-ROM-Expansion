@@ -1,6 +1,9 @@
 name: Persist Phase 1 v2.3 function and resource semantic evidence
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/archive-v23-deep-semantic.yml'
   workflow_run:
     workflows:
       - Phase 1 pinned source census and review dossiers
@@ -14,7 +17,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   preserve-five-pipelines:
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository) }}
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository) }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
