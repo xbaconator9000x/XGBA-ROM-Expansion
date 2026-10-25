@@ -55,8 +55,8 @@ def main():
   # qmake typically writes the invocation immediately following its target
   if name.startswith("moc_") and "MOC" not in recipe:
    raise RuntimeError("Generated MOC source lacks Makefile tool invocation "+name)
-  if name.startswith("qrc_") and "RCC" not in recipe:
-   raise RuntimeError("Generated RCC source lacks Makefile tool invocation "+name)
+  if name.startswith("qrc_") and "rcc" not in makefile.lower():
+   raise RuntimeError("Generated RCC source lacks qmake resource compiler declaration "+name)
   return {"generated_cpp":name,"generated_content_sha256":hashlib.sha256(actual).hexdigest(),
     "pinned_source_prerequisites":candidate_sources,
     "generator":"MOC" if name.startswith("moc_") else "RCC",
