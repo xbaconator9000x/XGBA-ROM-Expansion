@@ -38,7 +38,7 @@ PROOFS=[
 ("XGBA-GFX-07","pret/pokefirered","src/sprite.c","if (i == TOTAL_OBJ_TILE_COUNT)",
  "Sprite allocation explicitly stops at the hardware tile limit.",
  "Respect allocation failure instead of extending physical VRAM counts."),
-("XGBA-GFX-08","pret/pokefirered","src/sprite.c","return 0xFF;",
+("XGBA-GFX-08","pret/pokefirered","src/sprite.c","if (index == 0xFF)\n    {\n        return 0xFF;\n    }\n    else\n    {\n        sSpritePaletteTags[index] = palette->tag;",
  "Sprite palette allocator uses 0xFF when there is no free palette index.",
  "Handle palette exhaustion and preserve palette tags."),
 ("XGBA-GFX-09","pret/pokefirered","include/gba/defines.h","#define TOTAL_OBJ_TILE_COUNT 1024",
@@ -67,13 +67,12 @@ def main():
    if sha1_blob(b)!=BLOBS[key]:raise RuntimeError("Unexpected source blob "+str(key))
    cache[key]=b.decode("utf-8","surrogateescape")
   text=cache[key]
-  if text.count(needle)!=1 and not(id=="XGBA-GFX-02" and text.count(needle)==2):
-   raise RuntimeError(f"{id}: source anchor absent or ambiguous ({text.count(needle)})")
-  if id=="XGBA-GFX-02":
-   occurrences=[i for i in range(len(text)) if text.startswith(needle,i)]
-   if len(occurrences)!=2:raise RuntimeError("Decompressor sprite/palette stage count changed")
-   location=occurrences[0]
-  else:location=text.index(needle)
+  expected_count={"XGBA-GFX-02":2,"XGBA-GFX-03":2,
+                  "XGBA-GFX-04":3,"XGBA-GFX-07":2}.get(id,1)
+  actual_count=text.count(needle)
+  if actual_count!=expected_count:
+   raise RuntimeError(f"{id}: source anchor count differs: {actual_count} vs {expected_count}")
+  location=text.index(needle)
   line=text.count("\n",0,location)+1
   records.append({"contract":id,"repo":repo,"revision":PINS[repo],"path":path,
    "source_blob":BLOBS[key],"line":line,"source_expression":needle,
