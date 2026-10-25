@@ -4,7 +4,7 @@
 Every entry verified against Git bytes. This does NOT claim that PNG meaning,
 script execution, compiler macros, or unused assets can be inferred from bytes.
 """
-import collections,csv,gzip,hashlib,json,os,re,struct,sys,xml.etree.ElementTree as ET
+import collections,csv,gzip,hashlib,json,os,re,struct,sys,subprocess,xml.etree.ElementTree as ET
 from pathlib import Path
 ROOT=Path("upstream");OUT=Path("audit-output")
 ASSET_EXT={".png",".gif",".bmp",".pal",".bin",".wav",".mid",".midi",".gb",".gba",".gbc",
@@ -97,13 +97,23 @@ def main():
   for n,r in enumerate(manifest,1):
    repo,path,blob=r["repo"],r["path"],r["blob_sha"]
    p=ROOT/repo.split("/")[-1]/path
-   data=os.readlink(p).encode() if p.is_symlink() else p.read_bytes()
-   if sha(data)!=blob:raise RuntimeError("Tracked Git blob content differs "+repo+"/"+path)
+   worktree_data=os.readlink(p).encode() if p.is_symlink() else p.read_bytes()
+   data=worktree_data
+   checkout_normalization="none"
+   if sha(data)!=blob:
+    # Worktree bytes are allowed to differ from the canonical blob when .gitattributes
+    # requests eol=crlf (e.g. all pokefirered JASC .pal files).
+    data=subprocess.check_output(["git","-C",str(ROOT/repo.split("/")[-1]),
+                                  "cat-file","blob",blob])
+    if sha(data)!=blob:raise RuntimeError("Canonical Git blob hash differs "+repo+"/"+path)
+    checkout_normalization="worktree_content_transformed_by_checkout_rules"
+    totals["checkout_normalized_files"]+=1
    ext=Path(path).suffix.lower()
    typ=r["category"]
    structural=magic(data,ext) if typ in ("asset_or_other","documentation") else {"format":"SOURCE_OR_CONFIG_TEXT"}
    row={"repo":repo,"revision":r["revision"],"path":path,"blob_sha":blob,
      "size":len(data),"file_type":typ,"role_hypothesis":structural_role(repo,path),
+     "checkout_normalization":checkout_normalization,
      "content":{"format":structural["format"],"metadata":structural},
      "referenced_asset_literals":0,"evidence_status":"ALL_BYTES_GIT_BLOB_VERIFIED_STRUCTURAL_ONLY",
      "semantic_signoff":False}
