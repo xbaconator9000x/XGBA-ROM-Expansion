@@ -137,7 +137,7 @@ def self_test(header,script,cmds):
                                      "ctx->stackDepth >= (int)ARRAY_COUNT(ctx->stack)"),cmds),
         (header,script.replace("ScriptPush(ctx, ctx->scriptPtr);",
                                    "if (ScriptPush(ctx, ctx->scriptPtr)) return;"),cmds),
-        (header,script.replace("ctx->scriptPtr = ptr;","ctx->scriptPtr = NULL;",1),cmds),
+        (header,script.replace("ScriptPush(ctx, ctx->scriptPtr);\n    ctx->scriptPtr = ptr;","ScriptPush(ctx, ctx->scriptPtr);\n    ctx->scriptPtr = NULL;"),cmds),
         (header,script.replace("cmdCode = *(ctx->scriptPtr);",
                                "cmdCode = 0;"),cmds),
         (header,script.replace("ctx->scriptPtr = ScriptPop(ctx);",
