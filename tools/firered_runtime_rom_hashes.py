@@ -75,6 +75,25 @@ def main():
    report["variants"][variant]=record
  if report["variants"]["original_agbcc"]["header_first_192_bytes_sha256"]!=report["variants"]["modern_gcc"]["header_first_192_bytes_sha256"]:
   raise RuntimeError("Pin-identical original and modern GBA cartridge headers unexpectedly differ")
+ # Focus the next reproducibility test on the one 64KiB runtime ROM page
+ # that demonstrably differed in two independent same-source modern builds.
+ # No ROM bytes are published. All other pages retain 64KiB digests.
+ hot_page=30;hot_granularity=32
+ with gzip.open(OUT/"compiled_rom_page30_32byte_hashes.csv.gz","wt",encoding="utf-8",newline="") as fine:
+  w=csv.writer(fine)
+  w.writerow(["variant","rom_page","offset_inside_rom","gba_bus_address","chunk_bytes","chunk_sha256"])
+  for variant,(_,romname) in NAMES.items():
+   rom=(ROOT/romname).read_bytes()
+   chunk=rom[hot_page*PAGE:(hot_page+1)*PAGE]
+   if len(chunk)!=PAGE:raise RuntimeError("Pinned hot-page range outside original ROM")
+   for j in range(0,PAGE,hot_granularity):
+    w.writerow([variant,hot_page,hot_page*PAGE+j,
+       hex(0x08000000+hot_page*PAGE+j),hot_granularity,
+       sha(chunk[j:j+hot_granularity])])
+ report["hot_region_diagnostic"]={"gba_address_start":"0x081E0000",
+   "gba_address_end_exclusive":"0x081F0000",
+   "source_of_region":"IDENTICAL_NM_SYMBOL_TABLE_YET_MODERN_ROM_DRIFT_ACROSS_INDEPENDENT_BUILDS",
+   "digest_granularity_bytes":hot_granularity,"native_rom_bytes_disclosed":0}
  OUT.mkdir(exist_ok=True)
  (OUT/"compiled_runtime_rom_image_hashes.json").write_text(json.dumps(report,indent=2,sort_keys=True)+"\n")
  print(json.dumps({k:v for k,v in report.items() if k!="caveats"},indent=2))
