@@ -46,6 +46,7 @@ jobs:
         run: |
           python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py
           python3 tools/semantic_review_dossiers.py --self-test
+          python3 tools/phase1_mapping_gate.py --self-test
       - name: Clone pinned sources and scan
         run: python3 tools/pinned_source_census.py --checkout --root upstream --out audit-output
       - name: Verify pinned Poryscript compiler parsing and emission tests
