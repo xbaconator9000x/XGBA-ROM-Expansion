@@ -129,8 +129,34 @@ def evaluate(header,script,commands):
         ]
     }
 
+def function_matcher_self_test():
+    """Catch the typed-definition matcher regression before reading pinned sources."""
+    positives={
+        "RunScriptCommand":"bool8 RunScriptCommand(struct ScriptContext *ctx)\\n{\\n if (ctx) { return 1; }\\n return 0;\\n}\\n",
+        "ScriptPop":"const u8 *ScriptPop(struct ScriptContext *ctx)\\n{\\n return NULL;\\n}\\n",
+        "ScriptCall":"void ScriptCall(struct ScriptContext *ctx, const u8 *ptr)\\n{\\n ctx->scriptPtr = ptr;\\n}\\n",
+    }
+    for name,src in positives.items():
+        body,start,end=function_body(src,name)
+        if start!=1 or end<4 or not body.strip():
+            raise SourceContractFailure("Typed function matcher positive control failed: "+name)
+    negatives=[
+        ("RunScriptCommand","RunScriptCommand(ctx) { return 1; }"),
+        ("RunScriptCommand","// bool8 RunScriptCommand(ctx) { return 1; }"),
+        ("ScriptPop","const u8 *ScriptPop(ctx);"),
+        ("ScriptCall","void ScriptCall(ctx) { }\\nvoid ScriptCall(ctx) { }"),
+    ]
+    for name,src in negatives:
+        try:function_body(src,name)
+        except SourceContractFailure:continue
+        raise SourceContractFailure("Untyped/ambiguous function matcher false positive: "+name)
+    return {"typed_function_matcher_positive_fixtures":len(positives),
+            "typed_function_matcher_negative_fixtures":len(negatives)}
+
 def self_test(header,script,cmds):
+    matcher_controls=function_matcher_self_test()
     result=evaluate(header,script,cmds)
+    result.update(matcher_controls)
     if len(result["call_commands_using_ScriptCall"])!=6:
         raise SourceContractFailure("Incomplete cross-opcode call graph")
     negatives=[
