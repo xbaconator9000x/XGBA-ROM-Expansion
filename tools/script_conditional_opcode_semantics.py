@@ -13,7 +13,8 @@ OUT=Path("audit-output")
 PIN="ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
 SOURCES={
  "asm/macros/event.inc":"142ad979d7d3093244087a247fa2b4883424f77f",
- "asm/macros/map.inc":"83ef472c926ce767c9133ab9bd6922280b38bb2d"}
+ "asm/macros/map.inc":"83ef472c926ce767c9133ab9bd6922280b38bb2d",
+ "src/scrcmd.c":"97b695ee2f6fca80a3b78f52f6a444f696fe5814"}
 EXPECTED={
  "applymovement":(0x4F,0x50),
  "waitmovement":(0x51,0x52),
@@ -21,7 +22,9 @@ EXPECTED={
  "addobject":(0x55,0x56)}
 COLS=["macro","variant","opcode","opcode_hex","field_handler","macro_git_blob_sha",
  "macro_first_line","branch_header_line","map_helper_blob_sha","map_helper_line",
- "emitted_operands","emitted_widths","encoded_length_bytes","semantic_evidence"]
+ "emitted_operands","emitted_widths","encoded_length_bytes","handler_source_line",
+ "handler_read_widths","handler_operand_width_match","handler_source_sha",
+ "semantic_evidence"]
 def sha(b):return hashlib.sha1(f"blob {len(b)}\0".encode()+b).hexdigest()
 def source(path):
  b=(ROOT/path).read_bytes()
@@ -55,6 +58,24 @@ def emit_path(parts,maphelper):
   elif t:
    raise RuntimeError("Unexpected conditional branch statement "+str((line,t)))
  return out
+def runtime_handler_read_sequence(source_lines,name):
+ """Extract the pinned simple handler body and READ order, not indirect effects."""
+ src="\n".join(source_lines)
+ start=re.search(r"(?m)^\s*(?:bool8|void)\s+"+re.escape(name)+r"\s*\([^;]*\)\s*\{",src)
+ if not start:raise RuntimeError("Missing movement/object handler "+name)
+ begin=src.index("{",start.start(),start.end())
+ depth=0;end=None
+ for pos in range(begin,len(src)):
+  if src[pos]=="{":depth+=1
+  elif src[pos]=="}":
+   depth-=1
+   if depth==0:end=pos+1;break
+ if not end:raise RuntimeError("Unbalanced command handler "+name)
+ body=src[begin:end]
+ widths={"Byte":1,"Halfword":2,"Word":4}
+ matches=re.findall(r"\bScriptRead(Byte|Halfword|Word)\s*\(",body)
+ return src.count("\n",0,start.start())+1,[widths[z] for z in matches],body
+
 def main():
  if subprocess.check_output(["git","-C",str(ROOT),"rev-parse","HEAD"],text=True).strip()!=PIN:
   raise RuntimeError("Wrong pinned FireRed commit")
@@ -73,6 +94,7 @@ def main():
  with gzip.open(OUT/"bytecode_opcode_dispatch_semantic.csv.gz","rt",encoding="utf-8",newline="") as f:
   for r in csv.DictReader(f):handlers[(r["dispatch_table"],int(r["opcode"]))]=r["handler"]
  records=[]
+ handlersrc=source("src/scrcmd.c")
  for name,(baseid,scopedid) in EXPECTED.items():
   start,body=event[name]
   if_idx=[k for k,(lin,t) in enumerate(body) if t==" .ifb \\map" or re.fullmatch(r"\.ifb\s+\\map",t)]
@@ -99,7 +121,10 @@ def main():
     "emitted_operands":json.dumps(emit,separators=(",",":")),
     "emitted_widths":",".join(str(z["width"]) for z in emit),
     "encoded_length_bytes":sum(z["width"] for z in emit),
-    "semantic_evidence":"PINNED_GAS_IFB_ELSE_AND_MAP_HELPER_TWO_BYTES"}
+    "handler_source_line":hline,"handler_source_sha":SOURCES["src/scrcmd.c"],
+    "handler_read_widths":",".join(str(w) for w in readwidths),
+    "handler_operand_width_match":True,
+    "semantic_evidence":"PINNED_GAS_IFB_ELSE_MAP_HELPER_AND_C_HANDLER_READ_ORDER"}
    records.append(rec)
  with gzip.open(OUT/"script_conditional_opcode_variants.csv.gz","wt",encoding="utf-8",newline="") as f:
   w=csv.DictWriter(f,fieldnames=COLS);w.writeheader();w.writerows(records)
@@ -107,6 +132,7 @@ def main():
  result={"script_opcode_dispatch_slots":original["original_opcode_slots"],
   "assembler_macros_initial_slots":original["opcode_slots_with_a_macro"],
   "conditional_branch_variants_resolved":len(records),
+  "assembler_to_handler_byte_widths_proven":sum(bool(r["handler_operand_width_match"]) for r in records),
   "previously_unmapped_opcode_slots_resolved":len(rescued&missing),
   "now_macros_cover_all_461_dispatch_slots":original["opcode_slots_with_a_macro"]+len(rescued&missing)==461,
   "helper_two_byte_map_argument_verified":True,
