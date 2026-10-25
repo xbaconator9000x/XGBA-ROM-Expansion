@@ -132,9 +132,9 @@ def evaluate(header,script,commands):
 def function_matcher_self_test():
     """Catch the typed-definition matcher regression before reading pinned sources."""
     positives={
-        "RunScriptCommand":"bool8 RunScriptCommand(struct ScriptContext *ctx)\\n{\\n if (ctx) { return 1; }\\n return 0;\\n}\\n",
-        "ScriptPop":"const u8 *ScriptPop(struct ScriptContext *ctx)\\n{\\n return NULL;\\n}\\n",
-        "ScriptCall":"void ScriptCall(struct ScriptContext *ctx, const u8 *ptr)\\n{\\n ctx->scriptPtr = ptr;\\n}\\n",
+        "RunScriptCommand":"bool8 RunScriptCommand(struct ScriptContext *ctx)\n{\n if (ctx) { return 1; }\n return 0;\n}\n",
+        "ScriptPop":"const u8 *ScriptPop(struct ScriptContext *ctx)\n{\n return NULL;\n}\n",
+        "ScriptCall":"void ScriptCall(struct ScriptContext *ctx, const u8 *ptr)\n{\n ctx->scriptPtr = ptr;\n}\n",
     }
     for name,src in positives.items():
         body,start,end=function_body(src,name)
@@ -144,7 +144,7 @@ def function_matcher_self_test():
         ("RunScriptCommand","RunScriptCommand(ctx) { return 1; }"),
         ("RunScriptCommand","// bool8 RunScriptCommand(ctx) { return 1; }"),
         ("ScriptPop","const u8 *ScriptPop(ctx);"),
-        ("ScriptCall","void ScriptCall(ctx) { }\\nvoid ScriptCall(ctx) { }"),
+        ("ScriptCall","void ScriptCall(ctx) { }\nvoid ScriptCall(ctx) { }"),
     ]
     for name,src in negatives:
         try:function_body(src,name)
