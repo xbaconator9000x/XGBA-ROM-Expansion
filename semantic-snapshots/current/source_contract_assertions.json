@@ -1,6 +1,6 @@
 {
-  "source_checks": 36,
-  "source_checks_passed": 36,
+  "source_checks": 41,
+  "source_checks_passed": 41,
   "runtime_tests_run": 0,
   "phase1_mapping_complete": false,
   "findings": [
@@ -433,6 +433,76 @@
       "lines": [
         6,
         8
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "PORYMAP_EDITOR_SET_ID_PRESERVES_COLLISION_ELEVATION",
+      "repo": "huderlem/porymap",
+      "commit": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+      "path": "src/core/maplayout.cpp",
+      "git_blob_sha": "44616ab6c9c3ea9b04eff011586b7ec29183588f",
+      "lines": [
+        144,
+        149
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "FIRERED_MAP_SET_ID_REWRITES_COLLISION",
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/fieldmap.c",
+      "git_blob_sha": "41567772299000ba5855419e5c39ad9373a34c20",
+      "lines": [
+        401,
+        407
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "FIRERED_MAP_SET_ENTRY_OVERWRITES_ALL_FIELDS",
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/fieldmap.c",
+      "git_blob_sha": "41567772299000ba5855419e5c39ad9373a34c20",
+      "lines": [
+        411,
+        417
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "FIRERED_MAP_IMPASSABILITY_OVERWRITES_COLLISION_BITS",
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/fieldmap.c",
+      "git_blob_sha": "41567772299000ba5855419e5c39ad9373a34c20",
+      "lines": [
+        421,
+        428
+      ],
+      "source_check": "PASS",
+      "runtime_check": "NOT_RUN",
+      "whole_file_semantic_signoff": false
+    },
+    {
+      "contract": "FIRERED_SCRIPT_SET_TILE_IMPASSABILITY_BRANCH",
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/scrcmd.c",
+      "git_blob_sha": "97b695ee2f6fca80a3b78f52f6a444f696fe5814",
+      "lines": [
+        2103,
+        2115
       ],
       "source_check": "PASS",
       "runtime_check": "NOT_RUN",
