@@ -7,7 +7,8 @@ PINS={
 "pret/pokefirered":"ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
 "mgba-emu/mgba":"fd9dc5c2cbf234365068855851107e762fc6211b",
 "huderlem/porymap":"26b919d7ff4b54152de010abd5bf344af2ebe116",
-"huderlem/poryscript":"c32481161c767b25a3425fa9f1f8729927ff3d55"}
+"huderlem/poryscript":"c32481161c767b25a3425fa9f1f8729927ff3d55",
+"pret/agbcc":"da598c1d918402c42c0c0d7128ba14567f3175e9"}
 CHECKS=[
 ("MGBA_CRC_WARNING_NONFATAL","mgba-emu/mgba","src/gba/serialize.c",
  "a307a51e751f412c64a7378323c56758304ebe85",
@@ -71,7 +72,19 @@ CHECKS=[
  r"setBlock\(x, y, Block\(metatileId, block\.collision\(\), block\.elevation\(\)\)"),
 ("PORYSCRIPT_MAP_TERMINATORS","huderlem/poryscript","emitter/emitter.go",
  "d35843ef29929ead47351646d7a33dd5c692b850",
- r"map_script.*?\\t\.byte 0.*?map_script_2.*?\\t\.2byte 0")
+ r"map_script.*?\\t\.byte 0.*?map_script_2.*?\\t\.2byte 0"),
+("FIRERED_CLASSIC_LINKER_32M","pret/pokefirered","ld_script.ld",
+ "9a4b45031e93c1e1da8186d8c697332710526048",
+ r"ROM\s+\(rx\)\s*:\s*ORIGIN = 0x8000000, LENGTH = 32M"),
+("FIRERED_MODERN_LINKER_32M","pret/pokefirered","ld_script_modern.ld",
+ "e930243522bd21da40cc1a05de9a42b8ad409b46",
+ r"ROM\s+\(rx\)\s*:\s*ORIGIN = 0x8000000, LENGTH = 32M"),
+("FIRERED_OBJCOPY_FIXED_PAD_ABSOLUTE","pret/pokefirered","Makefile",
+ "8b454dbd18eb0069fa5851d788697190890a5b37",
+ r"\$\(OBJCOPY\) -O binary --gap-fill 0xFF --pad-to 0x9000000"),
+("AGBCC_ARM_INTERWORK_MULTILIB","pret/agbcc","gcc_arm/config/arm/t-arm-elf",
+ "b57eeca9805d5aeb0ba20e08948758cb27da82fd",
+ r"MULTILIB_OPTIONS\s*=.*?mlittle-endian.*?mthumb-interwork")
 ]
 def run(root):
  findings=[]
