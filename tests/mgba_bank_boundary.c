@@ -13,6 +13,7 @@
 #include <mgba/gba/core.h>
 #include <mgba/internal/gba/gba.h>
 #include <mgba/internal/gba/memory.h>
+#include <mgba/internal/gba/serialize.h>
 #include <mgba/internal/arm/isa-inlines.h>
 #include <mgba-util/vfs.h>
 
@@ -75,6 +76,66 @@ static void check_thumb(struct mCore *core, uint32_t addr, uint16_t expected, co
            label, data, cpu->prefetch[0] & 0xFFFFu, expected);
     check(label, data == expected && (cpu->prefetch[0] & 0xFFFFu) == expected);
 }
+/* The native 16-bit ROM2_EX cartridge address range has EEPROM and
+ * e-Reader priority over normal ROM backing. This fixture tests the real
+ * native decoder without altering memory.c.
+ */
+static void test_native_peripherals(struct mCore *core) {
+    struct GBA *gba = core->board;
+    struct ARMCore *cpu = core->cpu;
+    enum GBASavedataType original_type = gba->memory.savedata.type;
+    enum SavedataCommand original_command = gba->memory.savedata.command;
+    const uint32_t devices = gba->memory.hw.devices;
+    const uint16_t original_reader_register = gba->memory.ereader.registerUnk;
+    const uint32_t plain_addr = GBA_BASE_ROM2_EX + 0x1200u;
+    const uint32_t reader_addr = GBA_BASE_ROM2_EX + 0x00F80000u;
+    gba->memory.hw.devices &= ~HW_EREADER;
+    uint16_t ordinary = GBALoad16(cpu, plain_addr, NULL);
+    check("native_ROM2_EX_without_EEPROM_reads_ROM",
+          ordinary == GBALoad16(cpu, ADDRESS, NULL));
+
+    gba->memory.savedata.type = GBA_SAVEDATA_EEPROM512;
+    gba->memory.savedata.command = EEPROM_COMMAND_NULL;
+    uint16_t serial = GBALoad16(cpu, plain_addr, NULL);
+    check("native_ROM2_EX_16bit_EEPROM_overrides_ROM", serial == 1u);
+    check("native_ROM2_EX_32bit_EEPROM_not_16bit_override",
+          GBALoad32(cpu, plain_addr, NULL) == GBALoad32(cpu, ADDRESS, NULL));
+
+    gba->memory.savedata.type = original_type;
+    gba->memory.hw.devices |= HW_EREADER;
+    gba->memory.ereader.registerUnk = 0x1234u;
+    check("native_ROM2_EX_eReader_register_overrides_ROM",
+          GBALoad16(cpu, reader_addr, NULL) == 0x1234u);
+
+    gba->memory.savedata.type = GBA_SAVEDATA_EEPROM512;
+    gba->memory.savedata.command = EEPROM_COMMAND_NULL;
+    check("native_EEPROM_priority_over_eReader_on_16bit_ROM2_EX",
+          GBALoad16(cpu, reader_addr, NULL) == 1u);
+    gba->memory.savedata.type = original_type;
+    gba->memory.savedata.command = original_command;
+    gba->memory.ereader.registerUnk = original_reader_register;
+    gba->memory.hw.devices = devices;
+}
+
+static void test_native_matrix_state(struct mCore *core) {
+    struct GBA *gba = core->board;
+    struct GBASerializedState *state = calloc(1, sizeof(*state));
+    if (!state) { check("matrix_state_allocation", false); return; }
+    const uint32_t mapping_before = gba->memory.matrix.mappings[0x1200u >> 9];
+    const uint32_t thumb_before = gba->memory.matrix.mappings[0x1400u >> 9];
+    GBAMatrixSerialize(gba, state);
+    GBAMatrixReset(gba);
+    check("matrix_reset_does_not_preserve_alternate_bank",
+          gba->memory.matrix.mappings[0x1200u >> 9] != mapping_before);
+    GBAMatrixDeserialize(gba, state);
+    check("matrix_savestate_16slot_metadata_roundtrip",
+          gba->memory.matrix.mappings[0x1200u >> 9] == mapping_before &&
+          gba->memory.matrix.mappings[0x1400u >> 9] == thumb_before);
+    check_arm(core, ADDRESS, OPCODE_B, "matrix_savestate_reloads_ARM_physical_bank");
+    check_thumb(core, THUMB_ADDRESS, THUMB_B, "matrix_savestate_reloads_Thumb_physical_bank");
+    free(state);
+}
+
 static void run_one(bool matrix) {
     fprintf(stderr,"STEP begin %s\n", matrix ? "matrix" : "vanilla");
     const size_t size = matrix ? ROM_BYTES_MATRIX : ROM_BYTES_SMALL;
@@ -121,6 +182,7 @@ static void run_one(bool matrix) {
               gba->memory.romSize == ROM_BYTES_SMALL && gba->memory.matrix.cmd == 0);
         check_arm(core, ADDRESS, OPCODE_A, "vanilla_ARM_fetch_data_consistency");
         check_thumb(core, THUMB_ADDRESS, THUMB_A, "vanilla_Thumb_fetch_data_consistency");
+        test_native_peripherals(core);
     } else {
         fprintf(stderr,"STEP matrix pre-check\n");
         check("matrix_M_signature_and_16MiB_aperture",
@@ -139,6 +201,7 @@ static void run_one(bool matrix) {
         check_thumb(core, THUMB_ADDRESS, THUMB_A, "matrix_bank_A_Thumb_fetch_data");
         map512(gba, BANK_B+0x200u, 0x1400u);
         check_thumb(core, THUMB_ADDRESS, THUMB_B, "matrix_bank_B_Thumb_fetch_data");
+        test_native_matrix_state(core);
         /* Invalid virtual windows and zero size are rejected by native Matrix. */
         uint32_t previous = GBALoad32(cpu, ADDRESS, NULL);
         uint32_t slot = gba->memory.matrix.mappings[0x1200u >> 9];
