@@ -8,6 +8,7 @@ on:
       - 'tools/include_dependency_classifier.py'
       - 'tools/phase1_mapping_gate.py'
       - 'tools/verify_source_contracts.py'
+      - 'tools/validate_mapping_anchors.py'
       - '.github/workflows/phase1-census.yml'
 permissions:
   contents: read
@@ -29,6 +30,8 @@ jobs:
         run: python3 tools/include_dependency_classifier.py
       - name: Verify source-anchored ABI invariants
         run: python3 tools/verify_source_contracts.py upstream
+      - name: Verify all 29,068 mapping anchors against pinned source lines
+        run: python3 tools/validate_mapping_anchors.py upstream imports/XGBA_Phase1_v1.5_Complete_Workpack.zip
       - name: Evaluate Phase 1 semantic gate (incomplete is expected until signed review)
         run: |
           rc=0
