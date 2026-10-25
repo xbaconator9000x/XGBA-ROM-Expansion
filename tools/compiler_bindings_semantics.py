@@ -94,6 +94,7 @@ def main():
   if recorded.is_file():
    runtime_text=recorded.read_text(errors="replace")
    outcome={"source_revision":PIN,
+     "test_source_sha256":hashlib.sha256(Path("tests/mgba_bank_boundary.c").read_bytes()).hexdigest(),
      "run_kind":"NATIVE_MGBA_SYNTHETIC_CARTRIDGE_ONLY",
      "positive_checks_passed":len(re.findall(r"^PASS ",runtime_text,re.M)),
      "positive_checks_failed":len(re.findall(r"^FAIL ",runtime_text,re.M)),
