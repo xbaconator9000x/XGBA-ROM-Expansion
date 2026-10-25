@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'tools/porymap_compiled_semantics.py'
+      - 'tools/porymap_shared_semantics.py'
       - '.github/workflows/compiled-porymap-semantics.yml'
 permissions:
   contents: read
@@ -36,6 +37,8 @@ jobs:
           bear --output compile_commands.json -- make -j2 2>&1 | tee ../../porymap-build.log
       - name: Verify actual compiled editor map symbols and source revisions
         run: python3 tools/porymap_compiled_semantics.py
+      - name: Verify map inheritance and independent script/event source semantics
+        run: python3 tools/porymap_shared_semantics.py
       - name: Retain compiled ABI evidence without application binary
         if: always()
         uses: actions/upload-artifact@v4
