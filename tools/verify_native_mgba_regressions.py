@@ -124,7 +124,7 @@ def self_test()->None:
     assert check(data,rec,source)["assertions_verified"]==34
     negatives=[
         (data.replace("PASS "+sorted(REQUIRED_TESTS)[0]+"\n",""),rec,source),
-        ("PASS duplicate\n"+data.replace("PASS duplicate\n",""),{**rec,"positive_checks_passed":35},source),
+        ("PASS "+sorted(REQUIRED_TESTS)[0]+"\n"+data,{**rec,"positive_checks_passed":35},source),
         ("FAIL injected\n"+data,rec,source),
         (data.replace("OBSERVATION "+sorted(REQUIRED_NATIVE_GAPS)[0],
                       "OBSERVATION "+sorted(REQUIRED_NATIVE_GAPS)[0].replace("=true","=false")),rec,source),
