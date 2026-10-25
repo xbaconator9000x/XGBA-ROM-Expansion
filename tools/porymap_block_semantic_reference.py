@@ -29,7 +29,7 @@ def pack(value, mask):
     return sum(((value >> j) & 1) << bit for j,bit in enumerate(bit_positions(mask)))
 
 def validate_masks(masks):
-    if len(masks) != 3 or any(not isinstance(x,int) or x < 1 or x > 0xFFFF for x in masks):
+    if not isinstance(masks,(tuple,list)) or len(masks) != 3 or any(type(x) is not int or x < 1 or x > 0xFFFF for x in masks):
         raise InvalidMapBlock("Three nonzero 16-bit masks required")
     assigned = 0
     for mask in masks:
@@ -44,15 +44,21 @@ def legacy_clamp(value, mask):
 
 def strict_encode(fields, masks=DEFAULT):
     validate_masks(masks)
+    if not isinstance(fields,(tuple,list)) or len(fields) != 3:
+        raise InvalidMapBlock("Exactly three map-block fields required; never drop extras")
     value = 0
     for field,mask in zip(fields,masks):
-        if not isinstance(field,int) or field < 0 or field >= (1 << len(bit_positions(mask))):
+        if type(field) is not int or field < 0 or field >= (1 << len(bit_positions(mask))):
             raise InvalidMapBlock("Unrepresentable metatile/collision/elevation value")
         value |= pack(field,mask)
     return value.to_bytes(2,"little")
 
 def strict_decode(data, expected_count, masks=DEFAULT):
     validate_masks(masks)
+    if not isinstance(data,(bytes,bytearray,memoryview)):
+        raise InvalidMapBlock("Native map block stream must be binary")
+    if type(expected_count) is not int:
+        raise InvalidMapBlock("Layout block count must be an integer")
     if len(data) & 1:raise InvalidMapBlock("Odd-length native map block stream")
     if expected_count <= 0:raise InvalidMapBlock("Invalid layout dimensions")
     if len(data) != expected_count * 2:
@@ -96,6 +102,13 @@ def self_test():
         lambda:strict_decode(b"\x00\x00",0),
         lambda:strict_decode(b"\x00\x00\x00",1),
         lambda:strict_decode(b"\x00\x00",1,(0x000F,0x00F0,0x0F00)),
+        lambda:strict_encode((0,0)),
+        lambda:strict_encode((0,0,0,1)),
+        lambda:strict_encode((True,0,0)),
+        lambda:strict_encode((0,0,0),(True,0x0FFE,0xF000)),
+        lambda:strict_decode(b"\x00\x00",True),
+        lambda:strict_decode(b"\x00\x00",1.0),
+        lambda:strict_decode("\x00\x00",1),
     ]
     for i,case in enumerate(negatives,1):
         try:case()
@@ -121,7 +134,7 @@ def main():
     a=p.parse_args()
     results=self_test()
     if a.self_test:
-        print("Porymap block reference: 65536 exact roundtrips + 10 negative controls PASS")
+        print("Porymap block reference: 65536 exact roundtrips + 17 negative controls PASS")
         return
     verify_pinned_sources(a.source_root)
     results["pinned_Git_source_blobs_verified"]=SOURCES
