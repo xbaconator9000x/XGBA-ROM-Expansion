@@ -14,6 +14,51 @@ COLS=("source_map","map_source_sha","source_map_id","reference_kind",
  "generated_header_sha256","pointer_directive_line","observed_pointer_line",
  "target_source_sha","resolution")
 def blob(d):return hashlib.sha1(f"blob {len(d)}\0".encode()+d).hexdigest()
+def verify_four_shared_alias_fixtures():
+ """Positive-path compiler proof: independent event and script references.
+
+ The pinned game maps happen to have no shared pointer fields. Compile synthetic
+ in-memory-derived fixtures with the *original* mapjson tool without altering
+ any tracked upstream files.
+ """
+ exe=ROOT/"tools/mapjson/mapjson"
+ if not exe.is_file():raise RuntimeError("Native mapjson compiler required")
+ source=ROOT/"data/maps/CeladonCity/map.json"
+ data=json.loads(source.read_text())
+ fixtures=[]
+ for event_shared in (False,True):
+  for script_shared in (False,True):
+   label=f"events_{int(event_shared)}_scripts_{int(script_shared)}"
+   base=Path("map-generated")/"shared-alias-fixtures"/label
+   target=base/"generated";target.mkdir(parents=True,exist_ok=True)
+   model=dict(data)
+   model.pop("shared_events_map",None)
+   model.pop("shared_scripts_map",None)
+   if event_shared:model["shared_events_map"]="Route1"
+   if script_shared:model["shared_scripts_map"]="PalletTown"
+   inp=base/"map.json";inp.write_text(json.dumps(model,indent=2)+"\n",encoding="utf-8")
+   cmd=[str(exe),"map","firered",str(inp),str(ROOT/"data/layouts/layouts.json"),str(target)]
+   run=subprocess.run(cmd,capture_output=True,text=True,timeout=40)
+   if run.returncode:raise RuntimeError("Native fixture compilation failed "+label+": "+run.stderr[-1200:])
+   header=(target/"header.inc").read_text()
+   events=(target/"events.inc").read_text()
+   script_target="PalletTown" if script_shared else "CeladonCity"
+   event_target="Route1" if event_shared else "CeladonCity"
+   expected=[
+     "\t.4byte "+event_target+"_MapEvents",
+     "\t.4byte "+script_target+"_MapScripts"]
+   for needle in expected:
+    if needle not in header:raise RuntimeError("Wrong synthetic MapHeader pointer "+label+" "+needle)
+   if event_shared and events.strip():
+    raise RuntimeError("Shared-event fixture unexpectedly generated local event payload: "+label)
+   if not event_shared and not events.strip():
+    raise RuntimeError("Local-event fixture unexpectedly omitted event payload: "+label)
+   fixtures.append({"fixture":label,"event_target":event_target,
+    "script_target":script_target,"native_compiler_executed":True,
+    "generated_header_sha256":hashlib.sha256(header.encode()).hexdigest(),
+    "generated_events_empty":not bool(events.strip()),"pointer_semantics_verified":True})
+ return fixtures
+
 def main():
  if subprocess.check_output(["git","-C",str(ROOT),"rev-parse","HEAD"],text=True).strip()!=PIN:
   raise RuntimeError("Source commit changed")
@@ -79,8 +124,10 @@ def main():
  OUT.mkdir(exist_ok=True)
  with gzip.open(OUT/"map_compiled_shared_pointer_aliases.csv.gz","wt",encoding="utf-8",newline="") as f:
   w=csv.DictWriter(f,fieldnames=COLS);w.writeheader();w.writerows(out)
- summary={"pinned_source_commit":PIN,
+ fixtures=verify_four_shared_alias_fixtures()
+  summary={"pinned_source_commit":PIN,
    "map_header_pointer_checks":len(out),"map_header_files":counts["map_headers"],
+   "positive_shared_pointer_compiler_fixtures":fixtures,
    "shared_event_pointers":counts["event_shared_headers"],
    "shared_script_pointers":counts["script_shared_headers"],
    "own_event_pointers":counts["event_local_headers"],
