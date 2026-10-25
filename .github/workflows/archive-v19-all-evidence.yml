@@ -1,0 +1,111 @@
+name: Persist combined Phase 1 v1.9 evidence
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/archive-v19-all-evidence.yml'
+permissions:
+  actions: read
+  contents: write
+concurrency:
+  group: xgba-v19-audit-release
+  cancel-in-progress: false
+jobs:
+  persist-all-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch latest successful evidence from all three source-verified pipelines
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p collected/main collected/compiler-mgba collected/native-maps
+          python3 - <<'PY'
+          import json,os,subprocess,pathlib
+          repo=os.environ["GITHUB_REPOSITORY"]
+          workflows={
+            "main":("phase1-census.yml","xgba-phase1-evidence-and-review-queue"),
+            "compiler-mgba":("compiled-mgba-semantics.yml","xgba-phase1-mgba-compiled-semantic-evidence"),
+            "native-maps":("compiled-firered-maps.yml","xgba-phase1-all-425-maps-semantics")
+          }
+          runs={}
+          for key,(workflow,artifact) in workflows.items():
+            raw=subprocess.check_output(["gh","run","list","--repo",repo,"--workflow",workflow,
+              "--limit","25","--json","databaseId,conclusion,headSha"],text=True)
+            candidates=[x for x in json.loads(raw) if x.get("conclusion")=="success"]
+            if not candidates:raise SystemExit("No successful source evidence run: "+workflow)
+            chosen=candidates[0]
+            runs[key]={"id":chosen["databaseId"],"sha":chosen["headSha"],"artifact":artifact}
+            subprocess.run(["gh","run","download",str(chosen["databaseId"]),"--repo",repo,
+              "--name",artifact,"--dir","collected/"+key],check=True)
+          pathlib.Path("collected/RUNS.json").write_text(json.dumps(runs,indent=2)+"\n")
+          PY
+      - name: Fail closed on mapping provenance, native compiler and geometry evidence
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,pathlib
+          root=pathlib.Path("collected")
+          def read(prefix,path):
+            return json.loads((root/prefix/path).read_text())
+          audit=read("main","audit_summary.json")
+          gate=read("main","phase1_mapping_gate.json")
+          checks=read("main","source_contract_assertions.json")
+          mem=read("main","gba_memory_region_summary.json")
+          opcode=read("main","bytecode_opcode_dispatch_summary.json")
+          generated=read("main","generated_asset_provenance_summary.json")
+          composite=read("main","composite_graphics_source_summary.json")
+          compiler=read("compiler-mgba","compiler-evidence/compiled_dependency_summary.json")
+          maps=read("native-maps","map_semantics_summary.json")
+          assert audit["census_complete"] and audit["tracked_files"]==14834
+          assert gate["decision"]=="FAIL_INCOMPLETE" and gate["verified_source_manifest_entries"]==14834
+          assert checks["source_checks_passed"]>=25
+          assert mem["memory_callback_functions_mapped"]==9 and mem["region_case_sites"]==120
+          assert opcode["field_opcodes"]==213 and opcode["battle_opcodes"]==248
+          assert generated["observed_generated_resource_literals"]==6172
+          assert composite["unresolved_composite_component_count"]==0
+          assert compiler["compiler_inputs"]==173 and compiler["compiler_source_units_succeeded"]==173
+          assert compiler["compiler_errors"]==[] and compiler["compiled_transitive_header_edges"]>=3000
+          assert maps["maps_compiled_successfully"]==425 and maps["all_typed_events"]==3872
+          assert maps["source_zero_dimension_border_placeholders"]==28
+          assert maps["dynamic_warp_sentinels"]==19 and maps["events_outside_layout_bounds"]==9
+          assert maps["generated_event_macro_count_errors"]==[] and maps["layout_binary_mismatches"]==[]
+          assert (root/"native-maps"/"compiled_map_includes.tar.gz").exists()
+          assert (root/"compiler-mgba"/"compiler-evidence"/"compiled_symbol_reference_edges.csv").exists()
+          assert (root/"main"/"indirect_member_callback_summary.json").exists()
+          provenance={"version":"1.9","source_runs":read(".","RUNS.json"),
+            "upstream_commit_ids":{
+              "pokefirered":"ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+              "mgba":"fd9dc5c2cbf234365068855851107e762fc6211b",
+              "porymap":"26b919d7ff4b54152de010abd5bf344af2ebe116",
+              "poryscript":"c32481161c767b25a3425fa9f1f8729927ff3d55",
+              "agbcc":"da598c1d918402c42c0c0d7128ba14567f3175e9"},
+            "census_complete":True,"semantic_file_signoffs":gate["approved_semantic_dispositions"],
+            "phase1_complete":False,
+            "limitations":"Native source project map assembly and mGBA host build do not prove arbitrary ROM extraction or runtime XGBA expansion."}
+          (root/"PROVENANCE_v19.json").write_text(json.dumps(provenance,indent=2,sort_keys=True)+"\n")
+          print(json.dumps({"verified":"three pinned pipelines","phase1_semantic_mapping_complete":False},indent=2))
+          PY
+      - name: Create durable versioned archive with SHA-256 checksum
+        run: |
+          set -euo pipefail
+          tar -czf XGBA_Phase1_ThreePipelines_v19.tar.gz -C collected .
+          sha256sum XGBA_Phase1_ThreePipelines_v19.tar.gz > XGBA_Phase1_ThreePipelines_v19.sha256
+          ls -lh XGBA_Phase1_ThreePipelines_v19.tar.gz
+      - name: Publish private repo release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=phase1-semantic-v1.9
+          if ! gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "XGBA Phase 1 v1.9 — three pinned semantic proof pipelines" \
+              --notes "Includes full source mapping, AST/dataflow evidence, compiled mGBA translation units and symbol references, and FireRed native mapjson compilation for all 425 maps. **Phase 1 semantic review is INCOMPLETE.** The complete archive and SHA-256 are reproducible from the pinned sources." \
+              --prerelease
+          fi
+          gh release upload "$tag" --repo "$GITHUB_REPOSITORY" \
+            XGBA_Phase1_ThreePipelines_v19.tar.gz XGBA_Phase1_ThreePipelines_v19.sha256 --clobber
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json url,assets
