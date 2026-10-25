@@ -1,0 +1,160 @@
+{
+  "schema": "xgba.phase1.crossrepo_authoring_abi_additive.v1",
+  "date": "2026-10-26",
+  "pinned_revisions": {
+    "huderlem/porymap": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+    "huderlem/poryscript": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+    "pret/pokefirered": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
+  },
+  "original_curated_count_preserved": 29,
+  "previous_candidates_pending": 37,
+  "additional_source_files": 1,
+  "independent_whole_file_approvals": 0,
+  "phase1_mapping_complete": false,
+  "candidate": {
+    "repository": "pret/pokefirered",
+    "path": "asm/macros/map.inc",
+    "git_blob_sha1": "83ef472c926ce767c9133ab9bd6922280b38bb2d",
+    "source_lines": [
+      1,
+      160
+    ],
+    "semantic_roles": [
+      "map_script_table_and_native_pointer_encoding",
+      "map_event_object_warp_and_coordinate_assembler_ABI",
+      "Poryscript_emitter_to_linker_consumer"
+    ],
+    "unresolved": [
+      "complete_map_macro_pointer_and_padding_layout_review",
+      "compiled_symbol_relocation_and_script_pointer_bounds",
+      "Porymap_Poryscript_FireRed_roundtrip_and_versioned_source_identity"
+    ],
+    "independent_signoff": false
+  },
+  "cross_source_contracts": [
+    {
+      "id": "PMAP_MASKS_TO_FIRERED_GRID",
+      "producer": {
+        "repository": "huderlem/porymap",
+        "path": "src/core/block.cpp",
+        "start": 8,
+        "end": 10
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "include/global.fieldmap.h",
+        "start": 4,
+        "end": 11
+      },
+      "meaning": "The editor default packed metatile, collision and elevation masks match FireRed's native 16-bit map-grid ABI; configured project masks can diverge.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "PMAP_CONFIG_MASKS_ARE_NOT_NATIVE",
+      "producer": {
+        "repository": "huderlem/porymap",
+        "path": "src/core/block.cpp",
+        "start": 43,
+        "end": 52
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "include/global.fieldmap.h",
+        "start": 4,
+        "end": 11
+      },
+      "meaning": "Porymap changes packing masks from project configuration while the pinned FireRed runtime uses fixed grid masks; source-to-ROM conversion must validate compatibility.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "PMAP_LE16_SERIALIZATION_TO_MAP_COPY",
+      "producer": {
+        "repository": "huderlem/porymap",
+        "path": "src/core/blockdata.cpp",
+        "start": 3,
+        "end": 10
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "src/fieldmap.c",
+        "start": 103,
+        "end": 127
+      },
+      "meaning": "Porymap writes low then high byte for each packed map block; FireRed materializes the linked layout as 16-bit words with finite virtual-grid bounds.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "PMAP_LENGTH_RECONCILIATION_IS_LOSSY",
+      "producer": {
+        "repository": "huderlem/porymap",
+        "path": "src/core/maplayout.cpp",
+        "start": 576,
+        "end": 626
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "src/fieldmap.c",
+        "start": 103,
+        "end": 127
+      },
+      "meaning": "The editor may resize mismatched block arrays and ignores an odd trailing byte, while FireRed copies width-count 16-bit rows; a lossless import must reject or preserve anomalies.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "PSCRIPT_MAP_TABLE_TO_ASSEMBLER_MACROS",
+      "producer": {
+        "repository": "huderlem/poryscript",
+        "path": "emitter/emitter.go",
+        "start": 112,
+        "end": 145
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "asm/macros/map.inc",
+        "start": 9,
+        "end": 20
+      },
+      "meaning": "Poryscript emits map_script and map_script_2 directives plus distinct terminators; FireRed macros encode type and linked script pointers or variable comparisons.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "MAP_EVENT_MACRO_TO_NATIVE_OBJECT_ABI",
+      "producer": {
+        "repository": "pret/pokefirered",
+        "path": "asm/macros/map.inc",
+        "start": 22,
+        "end": 38
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "include/global.fieldmap.h",
+        "start": 110,
+        "end": 134
+      },
+      "meaning": "Object event assembler macro packs fixed-width fields, a 32-bit script pointer and padding into the native ObjectEventTemplate layout; JSON or image-only recovery is insufficient.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    },
+    {
+      "id": "LINKED_SCRIPT_POINTERS_REMAIN_ROM_BOUNDED",
+      "producer": {
+        "repository": "pret/pokefirered",
+        "path": "asm/macros/map.inc",
+        "start": 9,
+        "end": 20
+      },
+      "consumer": {
+        "repository": "pret/pokefirered",
+        "path": "ld_script.ld",
+        "start": 4,
+        "end": 9
+      },
+      "meaning": "Assembler map-script directives emit native 32-bit symbol relocations into a linker script declaring a 32 MiB ROM region; extension pointers need separate proof.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_ONLY"
+    }
+  ],
+  "limitations": [
+    "Only one new source candidate; seven typed cross-repository obligations, no independent approval.",
+    "Source contracts do not establish compiled linker compatibility, lossless editor round trip or any Phase 2 extension.",
+    "Original 14,834-file source queue, 338 P0 records, 29 curated candidates and v4 queue are unchanged."
+  ]
+}
