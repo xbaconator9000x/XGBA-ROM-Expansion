@@ -59,15 +59,22 @@ def main():
     part=raw[offset:offset+PAGE]
     w.writerow([variant,offset//PAGE,offset,len(part),sha(part)])
    header=raw[:0xC0]
+   if raw[0xB2]!=0x96:raise RuntimeError("GBA fixed header value invalid for "+variant)
    record={"elf_sha256":eh,"rom_sha256":sha(raw),"rom_size_bytes":len(raw),
       "rom_pages_sha256":sha(b"".join(bytes.fromhex(sha(raw[x:x+PAGE])) for x in range(0,len(raw),PAGE))),
       "page_count":len(raw)//PAGE,
       "header_first_192_bytes_sha256":sha(header),
       "gba_header_fixed_value_0xb2":hex(raw[0xB2]),
+      "gba_title_hex":raw[0xA0:0xAC].hex(),
+      "gba_game_code_ascii":raw[0xAC:0xB0].decode("ascii","replace"),
+      "gba_maker_code_ascii":raw[0xB0:0xB2].decode("ascii","replace"),
+      "gba_header_complement":hex(raw[0xBD]),
       "last_non_ff_byte_index":len(raw.rstrip(b"\xff"))-1,
       "nm_defined_symbol_entries":count,
       "nm_defined_symbol_table_sha256":symhash}
    report["variants"][variant]=record
+ if report["variants"]["original_agbcc"]["header_first_192_bytes_sha256"]!=report["variants"]["modern_gcc"]["header_first_192_bytes_sha256"]:
+  raise RuntimeError("Pin-identical original and modern GBA cartridge headers unexpectedly differ")
  OUT.mkdir(exist_ok=True)
  (OUT/"compiled_runtime_rom_image_hashes.json").write_text(json.dumps(report,indent=2,sort_keys=True)+"\n")
  print(json.dumps({k:v for k,v in report.items() if k!="caveats"},indent=2))
