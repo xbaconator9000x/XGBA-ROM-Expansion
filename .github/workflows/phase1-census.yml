@@ -11,6 +11,7 @@ on:
       - 'tools/validate_mapping_anchors.py'
       - 'tools/ast_semantic_index.py'
       - 'tools/all_blob_structural_evidence.py'
+      - 'tools/semantic_asm_build.py'
       - '.github/workflows/phase1-census.yml'
 permissions:
   contents: read
@@ -41,6 +42,8 @@ jobs:
         run: python3 tools/ast_semantic_index.py --root upstream --census audit-output --out audit-output
       - name: Verify every Git blob and structurally classify assets
         run: python3 tools/all_blob_structural_evidence.py
+      - name: Index assembly, linker and build-file semantics
+        run: python3 tools/semantic_asm_build.py
       - name: Evaluate Phase 1 semantic gate (incomplete is expected until signed review)
         run: |
           rc=0
