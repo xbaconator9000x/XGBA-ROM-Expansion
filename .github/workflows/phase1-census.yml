@@ -31,6 +31,7 @@ jobs:
       - name: Verify pinned Poryscript compiler parsing and emission tests
         working-directory: upstream/poryscript
         run: |
+          set -o pipefail
           go test ./... | tee ../../audit-output/poryscript_go_tests.log
           go build ./...
       - name: Generate hashed review dossiers and priority queue
