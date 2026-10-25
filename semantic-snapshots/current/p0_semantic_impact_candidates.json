@@ -2,9 +2,9 @@
   "mgba-emu/mgba/src/arm/arm.c": {
     "status": "CANDIDATE_DEPENDENCY_REACHABILITY_NOT_PROOF",
     "source_blob_sha": "0b92d7f55f1fb853d4b1b9c9163ee086126066e2",
-    "transitive_candidate_files": 99,
+    "transitive_candidate_files": 94,
     "by_repository": {
-      "mgba-emu/mgba": 99
+      "mgba-emu/mgba": 94
     },
     "sample_files": [
       "mgba-emu/mgba/include/mgba/internal/arm/isa-inlines.h",
@@ -13,7 +13,6 @@
       "mgba-emu/mgba/src/arm/debugger/memory-debugger.c",
       "mgba-emu/mgba/src/arm/decoder-arm.c",
       "mgba-emu/mgba/src/arm/decoder-thumb.c",
-      "mgba-emu/mgba/src/arm/decoder.c",
       "mgba-emu/mgba/src/arm/isa-arm.c",
       "mgba-emu/mgba/src/arm/isa-thumb.c",
       "mgba-emu/mgba/src/core/library.c",
@@ -51,27 +50,21 @@
       "mgba-emu/mgba/src/gb/serialize.c",
       "mgba-emu/mgba/src/gb/sio.c",
       "mgba-emu/mgba/src/gb/sio/lockstep.c",
-      "mgba-emu/mgba/src/gb/test/core.c"
+      "mgba-emu/mgba/src/gb/test/core.c",
+      "mgba-emu/mgba/src/gb/test/gbx.c"
     ]
   },
   "mgba-emu/mgba/src/gba/memory.c": {
     "status": "CANDIDATE_DEPENDENCY_REACHABILITY_NOT_PROOF",
     "source_blob_sha": "aa01fdcc7d6ae5ecdf8753efc63b3a60a1e8d3dc",
-    "transitive_candidate_files": 99,
+    "transitive_candidate_files": 88,
     "by_repository": {
-      "mgba-emu/mgba": 99
+      "mgba-emu/mgba": 88
     },
     "sample_files": [
-      "mgba-emu/mgba/include/mgba/internal/arm/isa-inlines.h",
-      "mgba-emu/mgba/src/arm/arm.c",
       "mgba-emu/mgba/src/arm/debugger/cli-debugger.c",
       "mgba-emu/mgba/src/arm/debugger/debugger.c",
       "mgba-emu/mgba/src/arm/debugger/memory-debugger.c",
-      "mgba-emu/mgba/src/arm/decoder-arm.c",
-      "mgba-emu/mgba/src/arm/decoder-thumb.c",
-      "mgba-emu/mgba/src/arm/decoder.c",
-      "mgba-emu/mgba/src/arm/isa-arm.c",
-      "mgba-emu/mgba/src/arm/isa-thumb.c",
       "mgba-emu/mgba/src/core/library.c",
       "mgba-emu/mgba/src/core/lockstep.c",
       "mgba-emu/mgba/src/core/scripting.c",
@@ -106,27 +99,27 @@
       "mgba-emu/mgba/src/gb/overrides.c",
       "mgba-emu/mgba/src/gb/serialize.c",
       "mgba-emu/mgba/src/gb/sio.c",
-      "mgba-emu/mgba/src/gb/sio/lockstep.c"
+      "mgba-emu/mgba/src/gb/sio/lockstep.c",
+      "mgba-emu/mgba/src/gb/test/core.c",
+      "mgba-emu/mgba/src/gb/test/gbx.c",
+      "mgba-emu/mgba/src/gb/test/mbc.c",
+      "mgba-emu/mgba/src/gb/test/memory.c",
+      "mgba-emu/mgba/src/gb/test/rtc.c",
+      "mgba-emu/mgba/src/gb/timer.c",
+      "mgba-emu/mgba/src/gb/video.c"
     ]
   },
   "mgba-emu/mgba/src/gba/dma.c": {
     "status": "CANDIDATE_DEPENDENCY_REACHABILITY_NOT_PROOF",
     "source_blob_sha": "da2a800ba48cb32d6e10e42c3b3527ef406bad22",
-    "transitive_candidate_files": 99,
+    "transitive_candidate_files": 88,
     "by_repository": {
-      "mgba-emu/mgba": 99
+      "mgba-emu/mgba": 88
     },
     "sample_files": [
-      "mgba-emu/mgba/include/mgba/internal/arm/isa-inlines.h",
-      "mgba-emu/mgba/src/arm/arm.c",
       "mgba-emu/mgba/src/arm/debugger/cli-debugger.c",
       "mgba-emu/mgba/src/arm/debugger/debugger.c",
       "mgba-emu/mgba/src/arm/debugger/memory-debugger.c",
-      "mgba-emu/mgba/src/arm/decoder-arm.c",
-      "mgba-emu/mgba/src/arm/decoder-thumb.c",
-      "mgba-emu/mgba/src/arm/decoder.c",
-      "mgba-emu/mgba/src/arm/isa-arm.c",
-      "mgba-emu/mgba/src/arm/isa-thumb.c",
       "mgba-emu/mgba/src/core/library.c",
       "mgba-emu/mgba/src/core/lockstep.c",
       "mgba-emu/mgba/src/core/scripting.c",
@@ -161,7 +154,14 @@
       "mgba-emu/mgba/src/gb/overrides.c",
       "mgba-emu/mgba/src/gb/serialize.c",
       "mgba-emu/mgba/src/gb/sio.c",
-      "mgba-emu/mgba/src/gb/sio/lockstep.c"
+      "mgba-emu/mgba/src/gb/sio/lockstep.c",
+      "mgba-emu/mgba/src/gb/test/core.c",
+      "mgba-emu/mgba/src/gb/test/gbx.c",
+      "mgba-emu/mgba/src/gb/test/mbc.c",
+      "mgba-emu/mgba/src/gb/test/memory.c",
+      "mgba-emu/mgba/src/gb/test/rtc.c",
+      "mgba-emu/mgba/src/gb/timer.c",
+      "mgba-emu/mgba/src/gb/video.c"
     ]
   },
   "mgba-emu/mgba/src/gba/serialize.c": {
@@ -180,21 +180,14 @@
   "mgba-emu/mgba/src/gba/cart/matrix.c": {
     "status": "CANDIDATE_DEPENDENCY_REACHABILITY_NOT_PROOF",
     "source_blob_sha": "9ccbe883235b98bcf56cd609015e7b4003aa832c",
-    "transitive_candidate_files": 100,
+    "transitive_candidate_files": 89,
     "by_repository": {
-      "mgba-emu/mgba": 100
+      "mgba-emu/mgba": 89
     },
     "sample_files": [
-      "mgba-emu/mgba/include/mgba/internal/arm/isa-inlines.h",
-      "mgba-emu/mgba/src/arm/arm.c",
       "mgba-emu/mgba/src/arm/debugger/cli-debugger.c",
       "mgba-emu/mgba/src/arm/debugger/debugger.c",
       "mgba-emu/mgba/src/arm/debugger/memory-debugger.c",
-      "mgba-emu/mgba/src/arm/decoder-arm.c",
-      "mgba-emu/mgba/src/arm/decoder-thumb.c",
-      "mgba-emu/mgba/src/arm/decoder.c",
-      "mgba-emu/mgba/src/arm/isa-arm.c",
-      "mgba-emu/mgba/src/arm/isa-thumb.c",
       "mgba-emu/mgba/src/core/library.c",
       "mgba-emu/mgba/src/core/lockstep.c",
       "mgba-emu/mgba/src/core/scripting.c",
@@ -229,7 +222,14 @@
       "mgba-emu/mgba/src/gb/overrides.c",
       "mgba-emu/mgba/src/gb/serialize.c",
       "mgba-emu/mgba/src/gb/sio.c",
-      "mgba-emu/mgba/src/gb/sio/lockstep.c"
+      "mgba-emu/mgba/src/gb/sio/lockstep.c",
+      "mgba-emu/mgba/src/gb/test/core.c",
+      "mgba-emu/mgba/src/gb/test/gbx.c",
+      "mgba-emu/mgba/src/gb/test/mbc.c",
+      "mgba-emu/mgba/src/gb/test/memory.c",
+      "mgba-emu/mgba/src/gb/test/rtc.c",
+      "mgba-emu/mgba/src/gb/timer.c",
+      "mgba-emu/mgba/src/gb/video.c"
     ]
   },
   "pret/pokefirered/src/script.c": {
