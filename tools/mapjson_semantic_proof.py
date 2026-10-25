@@ -106,7 +106,7 @@ def main():
     outputs[suffix]=raw.decode("utf-8","replace")
    shared="shared_events_map" in j
    for category in TYPES:
-    members=j.get(category,[])
+    members=(j.get(category) or [])
     for event_idx,event in enumerate(members):
      kind=event.get("type","object" if category=="object_events" else "warp")
      if kind not in MACROS[category]:
@@ -134,19 +134,19 @@ def main():
     for category in TYPES:
      group_expected=collections.Counter(
       MACROS[category][e.get("type","object" if category=="object_events" else "warp")]
-      for e in j.get(category,[]))
+      for e in (j.get(category) or []))
      for macro,expected in group_expected.items():
       observed=macro_count(outputs["events.inc"],macro)
       if observed!=expected:macro_mismatches.append((name,category,macro,expected,observed))
    elif outputs["events.inc"].strip():
     macro_mismatches.append((name,"shared","nonempty_generated_events","",outputs["events.inc"][:80]))
    actual_connections=macro_count(outputs["connections.inc"],"connection")
-   expected_connections=len(j.get("connections",[]))
+   expected_connections=len((j.get("connections") or []))
    if actual_connections!=expected_connections:
     # A source map can set connections_no_include; still generated connections
     # itself should match its JSON list.
     macro_mismatches.append((name,"connections","connection",expected_connections,actual_connections))
-   for i,conn in enumerate(j.get("connections",[])):
+   for i,conn in enumerate((j.get("connections") or [])):
     dest=conn["map"];target=idname.get(dest,"")
     edges.append({"source_map":name,"source_map_id":j["id"],"edge_kind":"connection",
       "target_map":target,"target_map_id":dest,"target_exists":bool(target),
