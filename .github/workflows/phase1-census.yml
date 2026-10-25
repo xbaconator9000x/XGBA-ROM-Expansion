@@ -24,6 +24,7 @@ on:
       - 'tools/field_operand_consumer_alignment.py'
       - 'tools/battle_opcode_cursor_alignment.py'
       - 'tools/legacy_dummy_opcode_semantics.py'
+      - 'tools/field_pointer_role_contracts.py'
       - 'tools/implicit_battle_cursor_semantics.py'
       - 'tools/module_semantic_dossiers.py'
       - 'tools/source_update_impact.py'
@@ -90,6 +91,8 @@ jobs:
         run: python3 tools/battle_opcode_cursor_alignment.py
       - name: Prove legacy no-consume script handlers and source-literal NOP padding
         run: python3 tools/legacy_dummy_opcode_semantics.py
+      - name: Verify typed ABI of field-script code, native and RAM byte pointers
+        run: python3 tools/field_pointer_role_contracts.py
       - name: Reconcile source, assembler and asset dependency candidates
         run: python3 tools/unified_semantic_dependencies.py
       - name: Verify eight delegated or terminal battle cursor handlers
