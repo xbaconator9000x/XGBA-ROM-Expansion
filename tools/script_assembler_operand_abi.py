@@ -90,6 +90,16 @@ def main():
   src=lines(path,sha)
   for m in parse_macros(src):
    entries,widths,conditions,unknown,other=emitted(m)
+   # stringvar is a one-byte argument encoder, not field opcode 0x00.
+   # Its conditional 0/1/2 bytes are string-buffer indices and it is
+   # invoked *inside* other field command macros (e.g. bufferspeciesname).
+   if kind=="FIELD" and m["name"]=="stringvar":
+    if m["params"]!="id:req" or m["start"]!=1028 or len(conditions)!=5:
+     raise RuntimeError("Unexpected pinned stringvar helper ABI changed")
+    wrappers.append({"kind":kind,"macro_name":m["name"],
+      "start_line":m["start"],"reason":"CONDITIONAL_ARGUMENT_ENCODER_NOT_OPCODE",
+      "emissions":len(entries),"source_blob_sha":sha})
+    continue
    op=None
    if entries and entries[0]["bytes"]==1:op=parse_id(entries[0]["value"])
    if op is None:
