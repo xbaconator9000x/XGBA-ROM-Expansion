@@ -1,0 +1,33 @@
+name: Phase 1 compiled FireRed map semantics
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/mapjson_semantic_proof.py'
+      - '.github/workflows/compiled-firered-maps.yml'
+permissions:
+  contents: read
+jobs:
+  pinned-mapjson-semantics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout immutable FireRed
+        run: |
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered fetch --quiet origin ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+      - name: Build original mapjson translator
+        run: make -C upstream/pokefirered/tools/mapjson -j2
+      - name: Compile all typed maps, layouts, warps, events and map groups
+        run: python3 tools/mapjson_semantic_proof.py
+      - name: Save reproducible source-to-compiled map semantic proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-all-425-maps-semantics
+          path: map-evidence/
+          retention-days: 90
+          if-no-files-found: warn
