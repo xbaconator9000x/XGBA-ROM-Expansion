@@ -1,0 +1,44 @@
+name: Phase 1 audit watchdog
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/phase1_watchdog.py'
+      - '.github/workflows/phase1-watchdog.yml'
+
+permissions:
+  actions: read
+  issues: write
+  contents: read
+
+concurrency:
+  group: xgba-phase1-watchdog
+  cancel-in-progress: false
+
+jobs:
+  check-audits:
+    name: Check audit status and update dashboard
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
+      WATCHDOG_ISSUE_NUMBER: "1"
+      WATCHDOG_STALE_MINUTES: "45"
+      WATCHDOG_QUEUE_MINUTES: "60"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate watcher syntax
+        run: python3 -m py_compile tools/phase1_watchdog.py
+      - name: Inspect every Phase 1 workflow and update issue
+        run: python3 tools/phase1_watchdog.py
+      - name: Keep machine-readable health snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-watchdog-status
+          path: watchdog-output/
+          retention-days: 30
+          if-no-files-found: warn
