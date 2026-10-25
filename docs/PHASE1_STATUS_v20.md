@@ -17,7 +17,7 @@
 
 ## New compiler experiment
 
-A separate original FireRed ARM/agbcc compilation experiment is running under [compiled FireRed ARM ABI workflow](../.github/workflows/compiled-firered-arm-abi.yml). It builds original source without publishing a game ROM and inspects true ELF/linker addresses and resource symbols. A clean compile alone does not prove XGBA streaming or ROM expansion.
+The original pinned FireRed + agbcc ARM toolchain **compiled successfully** in [the native ARM run](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40177607384), with an ELF SHA-256, real source/section addresses and resource symbols. Eight occupied ROM sections end at **0x08EB0B20** inside the native 0x08000000–0x0A000000 window; compiled field script table spans **852 bytes = 213 × 4**, battle table **992 bytes = 248 × 4**, and front/back sprite tables **3,520 bytes each = 440 × 8**. The game save-block pointers are in IWRAM, not ROM. The follow-up run [compiled FireRed ARM ABI workflow](../.github/workflows/compiled-firered-arm-abi.yml) now asserts these values automatically. No ROM binary is published; compile success does **not** demonstrate XGBA streaming or expanded execution.
 
 ## Required unfinished semantic work
 
