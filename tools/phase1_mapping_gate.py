@@ -2,6 +2,7 @@
 """Fail-closed Phase 1 mapping gate; never conflates source census with semantic signoff."""
 import argparse,csv,gzip,hashlib,json,re,sys
 from pathlib import Path
+from phase1_review_attestations import load_trust, verify_attestation, self_test as review_attestation_self_test
 GOOD={"mapped_dependencies","reviewed_not_relevant","excluded_with_evidence"}
 SHA1=re.compile(r"^[0-9a-f]{40}$")
 SHA256=re.compile(r"^[0-9a-f]{64}$")
@@ -61,6 +62,8 @@ def gate(root,dispositions):
  else:
   with gzip.open(dispositions,"rt",encoding="utf-8",newline="") as f:
    dispositions_rows=list(csv.DictReader(f))
+ # Trusted reviewer keys are provisioned separately; no CSV field is an attestation.
+ trusted=load_trust()
  seen=set();approved_keys=set();by_status={}
  for d in dispositions_rows:
   k=d.get("repo"),d.get("path")
@@ -69,6 +72,9 @@ def gate(root,dispositions):
   seen.add(k);src=index.get(k)
   if not src:issues.append("Disposition for unknown source "+str(k));continue
   problems=disposition_problems(d,src,qindex[k])
+  if not problems:
+   verified,reason=verify_attestation(d,trusted)
+   if not verified:problems.append("Unverified independent review "+str(k)+": "+reason)
   issues.extend(problems)
   if not duplicate and not problems:
    approved_keys.add(k)
@@ -109,7 +115,9 @@ def self_test():
  for status in ("reviewed_not_relevant","excluded_with_evidence"):
   item={**valid,"status":status,"contract_ids":""}
   assert not disposition_problems(item,src,review)
- print("Phase 1 disposition fail-closed negative controls: PASS")
+ # Structural validity is NOT review approval; the separate signature gate is mandatory.
+ review_attestation_self_test()
+ print("Phase 1 disposition structural and attestation fail-closed negative controls: PASS")
 if __name__=="__main__":
  a=argparse.ArgumentParser()
  a.add_argument("--root",type=Path,default=Path("audit-output"))
