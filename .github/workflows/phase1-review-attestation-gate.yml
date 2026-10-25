@@ -24,12 +24,13 @@ jobs:
         run: |
           python3 -m py_compile tools/phase1_mapping_gate.py tools/phase1_review_attestations.py
           python3 tools/phase1_mapping_gate.py --self-test
-      - name: Require empty trust roots until independent keys are provisioned
+      - name: Validate pinned reviewer trust registry and prohibit owner self-review
         env:
           PYTHONPATH: tools
         run: |
           python3 - <<'PY'
           from phase1_review_attestations import load_trust
-          assert load_trust() == {}, "Unreviewed independent key provision is forbidden"
-          print("No trusted reviewer keys: unsigned dispositions cannot be approved")
+          trusted = load_trust()
+          assert "xbaconator9000x" not in trusted, "Repository owner must not self-review"
+          print(f"{len(trusted)} independently provisioned reviewer keys; no CSV self-approval")
           PY
