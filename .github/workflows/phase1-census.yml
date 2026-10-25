@@ -21,6 +21,7 @@ on:
       - 'tools/script_opcode_semantic_obligations.py'
       - 'tools/implicit_battle_cursor_semantics.py'
       - 'tools/module_semantic_dossiers.py'
+      - 'tools/source_update_impact.py'
       - 'tools/resolve_composite_assets.py'
       - '.github/workflows/phase1-census.yml'
 permissions:
@@ -80,6 +81,10 @@ jobs:
         run: python3 tools/implicit_battle_cursor_semantics.py
       - name: Assemble complete per-module evidence and semantic review obligations
         run: python3 tools/module_semantic_dossiers.py
+      - name: Validate conservative source-update impact and pinned revision identity
+        run: |
+          python3 tools/source_update_impact.py --self-test
+          python3 tools/source_update_impact.py --baseline audit-output --root upstream --out audit-output
       - name: Evaluate Phase 1 semantic gate (incomplete is expected until signed review)
         run: |
           rc=0
