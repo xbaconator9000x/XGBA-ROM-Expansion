@@ -1,0 +1,49 @@
+name: Phase 1 compiled Porymap Qt semantic evidence
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/porymap_compiled_semantics.py'
+      - '.github/workflows/compiled-porymap-semantics.yml'
+permissions:
+  contents: read
+jobs:
+  compile-porymap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned editor host build prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-declarative-dev qt6-charts-dev libqt6svg6-dev bear make g++
+          qmake6 --version
+      - name: Clone source revision
+        run: |
+          git clone --quiet --filter=blob:none https://github.com/huderlem/porymap.git upstream/porymap
+          git -C upstream/porymap fetch --quiet origin 26b919d7ff4b54152de010abd5bf344af2ebe116
+          git -C upstream/porymap checkout --quiet --detach 26b919d7ff4b54152de010abd5bf344af2ebe116
+          test "$(git -C upstream/porymap rev-parse HEAD)" = 26b919d7ff4b54152de010abd5bf344af2ebe116
+      - name: Configure original qmake Qt application
+        run: |
+          set -o pipefail
+          cd upstream/porymap
+          qmake6 porymap.pro 2>&1 | tee ../../porymap-qmake.log
+      - name: Build pinned Porymap with compilation capture
+        run: |
+          set -o pipefail
+          cd upstream/porymap
+          bear --output compile_commands.json -- make -j2 2>&1 | tee ../../porymap-build.log
+      - name: Verify actual compiled editor map symbols and source revisions
+        run: python3 tools/porymap_compiled_semantics.py
+      - name: Retain compiled ABI evidence without application binary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-porymap-Qt-compiled-semantic-evidence
+          path: |
+            porymap-compiler-evidence/
+            porymap-qmake.log
+            porymap-build.log
+          retention-days: 90
+          if-no-files-found: warn
