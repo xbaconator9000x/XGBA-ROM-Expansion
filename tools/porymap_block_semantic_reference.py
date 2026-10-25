@@ -57,6 +57,8 @@ def strict_decode(data, expected_count, masks=DEFAULT):
     validate_masks(masks)
     if not isinstance(data,(bytes,bytearray,memoryview)):
         raise InvalidMapBlock("Native map block stream must be binary")
+    if isinstance(data,memoryview) and (data.ndim != 1 or data.itemsize != 1 or data.format not in ("B","b") or not data.c_contiguous):
+        raise InvalidMapBlock("Native map block memoryview must be contiguous bytes")
     if type(expected_count) is not int:
         raise InvalidMapBlock("Layout block count must be an integer")
     if len(data) & 1:raise InvalidMapBlock("Odd-length native map block stream")
@@ -109,6 +111,8 @@ def self_test():
         lambda:strict_decode(b"\x00\x00",True),
         lambda:strict_decode(b"\x00\x00",1.0),
         lambda:strict_decode("\x00\x00",1),
+        lambda:strict_decode(memoryview(bytes(4))[::2],1),
+        lambda:strict_decode(memoryview(bytes(2)).cast("H"),1),
     ]
     for i,case in enumerate(negatives,1):
         try:case()
@@ -134,7 +138,7 @@ def main():
     a=p.parse_args()
     results=self_test()
     if a.self_test:
-        print("Porymap block reference: 65536 exact roundtrips + 17 negative controls PASS")
+        print("Porymap block reference: 65536 exact roundtrips + 19 negative controls PASS")
         return
     verify_pinned_sources(a.source_root)
     results["pinned_Git_source_blobs_verified"]=SOURCES
