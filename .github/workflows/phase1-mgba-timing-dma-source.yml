@@ -3,11 +3,21 @@ on:
   pull_request:
     paths:
       - 'tools/verify_mgba_timing_dma_additive.py'
+      - 'tools/phase1_additive_review_scheduler.py'
+      - 'tools/phase1_architecture_review_priorities.py'
+      - 'semantic-snapshots/current/semantic_review_queue.csv.gz'
+      - 'semantic-snapshots/current/phase1_mapping_gate.json'
+      - 'semantic-snapshots/curated/p0_semantic_review_candidates_2026-10-26.json'
       - 'semantic-snapshots/curated/mgba_timing_dma_additive_candidates_2026-10-26.json'
       - '.github/workflows/phase1-mgba-timing-dma-source.yml'
   push:
     paths:
       - 'tools/verify_mgba_timing_dma_additive.py'
+      - 'tools/phase1_additive_review_scheduler.py'
+      - 'tools/phase1_architecture_review_priorities.py'
+      - 'semantic-snapshots/current/semantic_review_queue.csv.gz'
+      - 'semantic-snapshots/current/phase1_mapping_gate.json'
+      - 'semantic-snapshots/curated/p0_semantic_review_candidates_2026-10-26.json'
       - 'semantic-snapshots/curated/mgba_timing_dma_additive_candidates_2026-10-26.json'
       - '.github/workflows/phase1-mgba-timing-dma-source.yml'
 permissions:
@@ -29,11 +39,11 @@ jobs:
         run: |
           python3 -m py_compile tools/verify_mgba_timing_dma_additive.py
           python3 tools/verify_mgba_timing_dma_additive.py upstream/mgba
-      - name: Preserve source line/hash evidence
+      - name: Reconcile both pinned registries against immutable 14,834-file queue\n        run: |\n          python3 -m py_compile tools/phase1_additive_review_scheduler.py\n          python3 tools/phase1_additive_review_scheduler.py\n      - name: Preserve source line/hash evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: xgba-phase1-mgba-timing-dma-source-evidence
-          path: audit-output/mgba_timing_dma_source_evidence.json
+          path: |\n            audit-output/mgba_timing_dma_source_evidence.json\n            audit-output/architecture_semantic_review_queue_additive_v2.csv.gz\n            audit-output/architecture_semantic_review_priority_additive_v2.json
           retention-days: 90
           if-no-files-found: warn
