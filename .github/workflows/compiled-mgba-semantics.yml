@@ -1,0 +1,49 @@
+name: Phase 1 compiled mGBA source semantics
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/compiler_bindings_semantics.py'
+      - '.github/workflows/compiled-mgba-semantics.yml'
+permissions:
+  contents: read
+jobs:
+  compile-pinned-mgba:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clone immutable pinned mGBA
+        run: |
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba fetch --quiet origin fd9dc5c2cbf234365068855851107e762fc6211b
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Configure headless mGBA C core
+        run: |
+          set -o pipefail
+          cmake -S upstream/mgba -B build-mgba \
+            -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DBUILD_QT=OFF -DBUILD_SDL=OFF -DBUILD_LIBRETRO=OFF \
+            -DBUILD_TEST=OFF -DBUILD_STATIC=ON -DBUILD_SHARED=OFF \
+            -DENABLE_SCRIPTING=OFF -DENABLE_PYTHON=OFF -DENABLE_EXTRA=OFF \
+            -DUSE_PNG=OFF -DUSE_ZLIB=OFF -DENABLE_GDB_STUB=OFF \
+            2>&1 | tee cmake-configure.log
+      - name: Compile and link unmodified pinned mGBA
+        run: |
+          set -o pipefail
+          cmake --build build-mgba --parallel 2 2>&1 | tee cmake-build.log
+      - name: Analyze actual compiler targets and linked symbols
+        run: python3 tools/compiler_bindings_semantics.py
+      - name: Preserve compilation database and provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-mgba-compiled-semantic-evidence
+          path: |
+            compiler-evidence/
+            cmake-configure.log
+            cmake-build.log
+            build-mgba/compile_commands.json
+          retention-days: 90
+          if-no-files-found: warn
