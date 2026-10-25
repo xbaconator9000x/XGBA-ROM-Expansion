@@ -1,3 +1,9 @@
+# Latest verified checkpoint: v2.6
+
+[**Read the current Phase 1 v2.6 status and compiled ABI evidence**](PHASE1_STATUS_v26.md). The cumulative source and mapping work is preserved across v2.5 and earlier releases. **Phase 1 semantic signoff remains FAIL_INCOMPLETE.**
+
+---
+
 # Current Phase 1 checkpoint — v2.5
 
 **Status: INCOMPLETE — no release-ready XGBA runtime.**
