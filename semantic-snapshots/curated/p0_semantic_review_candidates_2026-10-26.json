@@ -456,5 +456,12 @@
       "status": "CANDIDATE_AWAITING_INDEPENDENT_WHOLE_FILE_REVIEW",
       "upstream_blob_url": "https://github.com/pret/agbcc/blob/da598c1d918402c42c0c0d7128ba14567f3175e9/gcc_arm/config/arm/t-arm-elf"
     }
-  ]
+  ],
+  "source_documentation_git_blob_sha1": {
+    "docs/PHASE1_P0_FIRERED_MAP_SCRIPT_POINTER_ABI_2026-10-26.md": "86bc159e07e6ccf23ef1c7e1ed95ba8cf8fc15e2",
+    "docs/PHASE1_P0_PORYMAP_PORYSCRIPT_AUTHORING_ABI_2026-10-26.md": "243d2dff40e87eb1efdd278897c6a8aa0c59b706",
+    "docs/PHASE1_P0_EXTERNAL_RESOURCE_BANKING_CONTRACT_2026-10-26.md": "18d6063e3aa7c4f6b0f039b2d4ebfe8dc0b9a718",
+    "docs/PHASE1_P0_FIELD_SCRIPT_RETURN_STACK_LIFETIME_2026-10-26.md": "da35b24264e675b2282977122ac5b0d9657d305b",
+    "docs/PHASE1_P0_MAP_CELL_WRITE_OPERATION_SEMANTICS_2026-10-26.md": "fa93caf8fb054fdb6ae214d10c7f9a838fe94020"
+  }
 }
