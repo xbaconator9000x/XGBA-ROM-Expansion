@@ -50,6 +50,36 @@ def main():
  if not rom_sections:raise RuntimeError("No native ROM sections found")
  if not any(x.get("inside_rom") for v in syms.values() for x in v):
   raise RuntimeError("No named ROM symbol addresses")
+ def sole(name):
+  candidates=syms.get(name,[])
+  if len(candidates)!=1:raise RuntimeError("Missing or ambiguous linker symbol: "+name)
+  return candidates[0]
+ def address(name):return int(sole(name)["address"],16)
+ dispatch_span=address("gScriptCmdTableEnd")-address("gScriptCmdTable")
+ battle_bytes=sole("gBattleScriptingCommandsTable")["size"]
+ front_bytes=sole("gMonFrontPicTable")["size"]
+ back_bytes=sole("gMonBackPicTable")["size"]
+ invariants={
+  "field_script_table_213_pointers":dispatch_span==213*4,
+  "battle_script_table_248_pointers":battle_bytes==248*4,
+  "front_sprite_table_440_entries":front_bytes==440*8,
+  "back_sprite_table_440_entries":back_bytes==440*8,
+  "save_block1_pointer_in_iwram":0x03000000<=address("gSaveBlock1Ptr")<0x03008000,
+  "save_block2_pointer_in_iwram":0x03000000<=address("gSaveBlock2Ptr")<0x03008000,
+  "all_critical_tables_in_rom":all(sole(n)["inside_rom"] for n in [
+    "gScriptCmdTable","gScriptCmdTableEnd","gBattleScriptingCommandsTable",
+    "gMonFrontPicTable","gMonBackPicTable","gSongTable","gMapGroups","gMapLayouts"])
+ }
+ if not all(invariants.values()):raise RuntimeError("Source-to-compiled ROM pointer ABI failed: "+str(invariants))
+ abi_facts={
+  "field_script_table_bytes":dispatch_span,
+  "battle_script_table_bytes":battle_bytes,
+  "front_sprite_table_bytes":front_bytes,
+  "back_sprite_table_bytes":back_bytes,
+  "compiled_invariants":invariants,
+  "compiled_invariants_passed":sum(invariants.values()),
+  "compiled_invariants_total":len(invariants)
+ }
  build_map=list(ROOT.glob("*.map"))
  result={"pinned_fire_red_commit":PIN,"elf_basename":elf.name,
   "elf_sha256":sha256,"linker_map_names":[m.name for m in build_map],
@@ -59,6 +89,7 @@ def main():
   "rom_section_high_water_mark":hex(max(x["address"]+x["bytes"] for x in rom_sections)),
   "sections":sections,"selected_symbol_addresses":dict(syms),
   "symbols_found_count":len(syms),"symbols_requested":TARGETS,
+  "compiled_dispatch_and_pointer_abi":abi_facts,
   "compiled_baseline_verified":True,
   "xgba_external_memory_implemented":False,
   "phase1_mapping_complete":False,
