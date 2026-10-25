@@ -19,7 +19,7 @@ SCRIPT_ROLE={
 def sha(data):return hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
 def magic(data,ext):
  meta={"format":"unrecognized_or_raw","structural_kind":"raw_or_unknown"}
- if len(data)>=24 and data.startswith(b"\x89PNG\r\n\x1a\n"):
+ if len(data)>=26 and data.startswith(b"\x89PNG\r\n\x1a\n"):
   w,h,depth,kind=struct.unpack(">IIBB",data[16:26])
   meta={"format":"PNG","width":w,"height":h,"bit_depth":depth,"color_type":kind}
  elif data.startswith(b"GIF87a") or data.startswith(b"GIF89a"):
