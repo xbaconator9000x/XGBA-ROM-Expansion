@@ -7,6 +7,7 @@ on:
       - 'tools/semantic_review_dossiers.py'
       - 'tools/include_dependency_classifier.py'
       - 'tools/phase1_mapping_gate.py'
+      - 'tools/verify_source_contracts.py'
       - '.github/workflows/phase1-census.yml'
 permissions:
   contents: read
@@ -26,6 +27,8 @@ jobs:
         run: python3 tools/semantic_review_dossiers.py --root upstream --census audit-output --out audit-output
       - name: Classify unresolved include candidates
         run: python3 tools/include_dependency_classifier.py
+      - name: Verify source-anchored ABI invariants
+        run: python3 tools/verify_source_contracts.py upstream
       - name: Evaluate Phase 1 semantic gate (incomplete is expected until signed review)
         run: |
           rc=0
