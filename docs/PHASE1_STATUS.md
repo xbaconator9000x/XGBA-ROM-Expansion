@@ -1,3 +1,17 @@
+# Current authoritative Phase 1 checkpoint — 26 October 2026
+
+**Decision: FAIL_INCOMPLETE. No XGBA unlimited ROM architecture has been implemented or runtime-certified.** This status overrides the old "latest v2.6" heading retained below for historical continuity.
+
+- **Immutable mapping baseline:** 14,834 tracked files across five pinned repositories, 4,685 source/config content blobs verified, 14,834 machine-generated source-hash-pinned dossiers, 338 P0 review candidates. **Independent whole-file semantic dispositions approved: 0/14,834.** The [machine mapping gate](../semantic-snapshots/current/phase1_mapping_gate.json) remains fail-closed.
+- **Native emulator regression:** [mGBA CI run #40204719637](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40204719637) executed 34/34 passing synthetic-ROM tests, reproducing 4 unsafe native behaviours (prefetch staleness, unchecked physical mapping extent, warning-only savestate ROM CRC, external bank resource drift during restore).
+- **Fail-closed test evidence verification:** [CI run #40205086061](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40205086061) independently verified all 34 required named checks, test source SHA, log/summary consistency, all four hazardous observations and 10 negative fixtures. Its verdict is **PASS_PINNED_NATIVE_MGBA_REGRESSION_ONLY**, *not* a Phase 1 mapping completion decision.
+- **Source-anchored design constraints:** [External bank identity and safety contract](PHASE1_P0_EXTERNAL_RESOURCE_BANKING_CONTRACT_2026-10-26.md) and [original 25-test baseline](PHASE1_NATIVE_MGBA_25_TESTS_PASS_2026-10-26.md). mGBA native Matrix supports only a 26-bit (64 MiB) physical bank offset, cannot provide unconstrained storage and is not an XGBA replacement.
+- **Artifacts and procedures:** `tests/mgba_bank_boundary.c`, `tests/run_pinned_mgba_boundary.sh`, `tools/verify_native_mgba_regressions.py`, `tools/compiler_bindings_semantics.py`. Source revision SHA, test code SHA, full logs and a test-result JSON are preserved by the existing `compiled-mgba-semantics.yml` CI workflow. Preserve chronological evidence; never overwrite pinned snapshots or mark a source file reviewed by machine-only evidence.
+
+**Next required work:** source-grounded per-file semantic dispositions with independent review and exact evidence/contract SHA; finish remaining P0 cross-engine prefetch, peripheral, compiled ABI, script/editor producer obligations; design versioned opt-in XGBA sidecar with checked bounds, exact resource identity, atomic remap semantics, emulators/editors fallback, and negative controls. Runtime expansion remains outside Phase 1.
+
+---
+
 # Latest verified checkpoint: v2.6
 
 [**Read the current Phase 1 v2.6 status and compiled ABI evidence**](PHASE1_STATUS_v26.md). The cumulative source and mapping work is preserved across v2.5 and earlier releases. **Phase 1 semantic signoff remains FAIL_INCOMPLETE.**
