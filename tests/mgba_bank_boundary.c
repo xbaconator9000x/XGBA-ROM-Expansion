@@ -158,7 +158,7 @@ static void test_native_peripherals(struct mCore *core) {
     gba->memory.hw.devices = devices;
 }
 
-static void test_native_matrix_state(struct mCore *core) {
+static void test_native_matrix_state(struct mCore *core, uint8_t *backing) {
     struct GBA *gba = core->board;
     struct GBASerializedState *state = calloc(1, sizeof(*state));
     if (!state) { check("matrix_state_allocation", false); return; }
@@ -186,6 +186,38 @@ static void test_native_matrix_state(struct mCore *core) {
         check_arm(core, ADDRESS, OPCODE_B, "matrix_full_state_restores_ARM_bank_B");
         check_thumb(core, THUMB_ADDRESS, THUMB_B, "matrix_full_state_restores_Thumb_bank_B");
     }
+
+    /* Native GBADeserialize checks header identity, but ROM CRC mismatch
+     * merely emits a warning. Confirm positive guards and capture the
+     * missing exact-backing identity as an observation, NOT a safety pass.
+     */
+    const uint32_t valid_crc = state->romCrc32;
+    state->romCrc32 ^= 1u;
+    observation("native_savestate_CRC_mismatch_only_warns",
+                GBADeserialize(gba, state));
+    state->romCrc32 = valid_crc;
+
+    state->id ^= 1u;
+    check("native_savestate_rejects_changed_game_code",
+          !GBADeserialize(gba, state));
+    state->id ^= 1u;
+
+    state->title[0] ^= 1u;
+    check("native_savestate_rejects_changed_game_title",
+          !GBADeserialize(gba, state));
+    state->title[0] ^= 1u;
+
+    const uint8_t original_backing = backing[BANK_B];
+    backing[BANK_B] ^= 2u;
+    bool accepted_altered_backing = GBADeserialize(gba, state);
+    uint32_t altered_data = GBALoad32(gba->cpu, ADDRESS, NULL);
+    observation("native_savestate_external_bank_payload_change_unverified",
+                accepted_altered_backing && altered_data != OPCODE_B);
+    backing[BANK_B] = original_backing;
+    check("native_savestate_restores_original_backing_after_fixture_mutation",
+          GBADeserialize(gba, state) &&
+          GBALoad32(gba->cpu, ADDRESS, NULL) == OPCODE_B);
+
     free(state);
 }
 
@@ -307,7 +339,7 @@ static void run_one(bool matrix) {
         check_thumb(core, THUMB_ADDRESS, THUMB_A, "matrix_bank_A_Thumb_fetch_data");
         map512(gba, BANK_B+0x200u, 0x1400u);
         check_thumb(core, THUMB_ADDRESS, THUMB_B, "matrix_bank_B_Thumb_fetch_data");
-        test_native_matrix_state(core);
+        test_native_matrix_state(core, bytes);
         /* Invalid virtual windows and zero size are rejected by native Matrix. */
         uint32_t previous = GBALoad32(cpu, ADDRESS, NULL);
         uint32_t slot = gba->memory.matrix.mappings[0x1200u >> 9];
