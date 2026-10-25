@@ -66,8 +66,16 @@ def def_name(node,data):
          or simple_name(node.child_by_field_name("name"),data)
          or simple_name(node.child_by_field_name("function"),data)
          or next((simple_name(n,data) for n in node.named_children if n.type in ("identifier","function_declarator")),None))
+def determine_lang(repo,path):
+ ext=Path(path).suffix.lower()
+ if ext==".h":
+  if repo=="huderlem/porymap":return "cpp"
+  if repo=="mgba-emu/mgba" and (path.startswith(("src/platform/qt/","src/feature/gui/","src/third-party/discord-rpc/")) or "c++" in path):
+   return "cpp"
+ return EXT.get(ext)
+
 def parse_file(repo,path,blob,raw):
- lang=EXT[Path(path).suffix.lower()]
+ lang=determine_lang(repo,path)
  tree=PARSERS[lang].parse(raw)
  root=tree.root_node
  functions=[];sites=[];type_defs=[];defs=[];errors=[]
@@ -146,7 +154,7 @@ def main():
   for row in manifest:
    repo,path,blob=row["repo"],row["path"],row["blob_sha"]
    if row["category"] not in ("source","structured_or_text_config"):continue
-   lang=EXT.get(Path(path).suffix.lower())
+   lang=determine_lang(repo,path)
    if not lang:counts["unsupported_grammar"]+=1;continue
    target=a.root/repo.split("/")[-1]/path
    if target.is_symlink():
