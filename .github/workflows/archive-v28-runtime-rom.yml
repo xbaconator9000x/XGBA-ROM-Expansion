@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      - uses: actions/checkout@v4
       - name: Download completed pinned compiled evidence
         env:
           GH_TOKEN: ${{ github.token }}
@@ -33,6 +34,20 @@ jobs:
           test -n "$run_id" && test "$run_id" != null
           gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name xgba-phase1-firered-classic-modern-compiled-ABI --dir evidence
           echo "EVIDENCE_RUN_ID=$run_id" >> "$GITHUB_ENV"
+      - name: Compare two independent compiled ROM images and stable symbol mappings
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          prev=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow compiled-firered-variants.yml --limit 50 --json databaseId,conclusion | jq -r --argjson now "$EVIDENCE_RUN_ID" '[.[] | select(.conclusion == "success" and .databaseId != $now)] | .[0].databaseId')
+          test -n "$prev" && test "$prev" != null
+          mkdir -p previous
+          gh run download "$prev" --repo "$GITHUB_REPOSITORY" --name xgba-phase1-firered-classic-modern-compiled-ABI --dir previous
+          python3 tools/compare_compiled_rom_reproducibility.py \
+            --run-a evidence/firered-variant-evidence \
+            --run-b previous/firered-variant-evidence \
+            --out evidence/compiled_cross_run_rom_reproducibility.json
+          echo "PREVIOUS_EVIDENCE_RUN_ID=$prev" >> "$GITHUB_ENV"
       - name: Validate entire ABI symbol inventory and object-file provenance
         run: |
           set -euo pipefail
@@ -45,6 +60,7 @@ jobs:
           sample=json.loads((p/"firered_variants_abi_summary.json").read_text())
           external=json.loads((p/"compiled_external_symbol_resolution_summary.json").read_text())
           cartridge=json.loads((p/"compiled_runtime_rom_image_hashes.json").read_text())
+          comparison=json.loads((Path("evidence")/"compiled_cross_run_rom_reproducibility.json").read_text())
           abi=json.loads((p/"firered_variant_binding_fingerprints.json").read_text())
           assert full["pinned_revision"]=="ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
           assert full["sampled_critical_contracts_reconciled"]==11
@@ -60,6 +76,8 @@ jobs:
           assert all(external["compiled_variants"][v]["reference_sites_reconciled"]>300 for v in ("original_agbcc","modern_gcc"))
           assert not external["phase1_mapping_complete"]
           assert (p/"compiled_external_symbol_resolution.csv.gz").stat().st_size>1000
+          assert comparison["pinned_commit"]==full["pinned_revision"]
+          assert set(comparison["variants"])=={"original_agbcc","modern_gcc"}
           assert cartridge["pinned_revision"]==full["pinned_revision"]
           assert not cartridge["phase1_mapping_complete"]
           assert all(cartridge["variants"][v]["nm_defined_symbol_entries"]==full["elf_variants"][v]["all_defined_symbols"] for v in ("original_agbcc","modern_gcc"))
@@ -79,6 +97,9 @@ jobs:
             "external_or_linker_name_resolution":external["compiled_variants"],
             "exact_native_rom_image_hashes":cartridge["variants"],
             "elf_vs_runtime_rom_hashes_separately_tracked":True,
+            "previous_run_id":int(os.environ["PREVIOUS_EVIDENCE_RUN_ID"]),
+            "two_run_rom_elf_reproducibility":comparison["variants"],
+            "all_two_run_rom_and_symbol_bytes_match":comparison["allow_rom_hash_plugin_identity_when_rom_byte_identical"],
             "source_hash_pinned_compiled_objects":{v:obj["configurations"][v]["source_matched_objects"] for v in obj["configurations"]},
             "build_variants":{v:{"elf_sha256":full["elf_variants"][v]["elf_sha256"],
                "object_file_references":obj["configurations"][v]["undefined_symbol_sites"],
