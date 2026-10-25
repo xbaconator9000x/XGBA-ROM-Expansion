@@ -3,11 +3,13 @@ on:
   pull_request:
     paths:
       - 'tools/verify_mgba_eeprom_savestate_additive.py'
+      - 'docs/PHASE1_MGBA_EEPROM_SAVESTATE_SOURCE_DEPENDENCY_2026-10-26.md'
       - 'semantic-snapshots/curated/mgba_eeprom_savestate_additive_candidates_2026-10-26.json'
       - '.github/workflows/phase1-mgba-eeprom-savedata-source.yml'
   push:
     paths:
       - 'tools/verify_mgba_eeprom_savestate_additive.py'
+      - 'docs/PHASE1_MGBA_EEPROM_SAVESTATE_SOURCE_DEPENDENCY_2026-10-26.md'
       - 'semantic-snapshots/curated/mgba_eeprom_savestate_additive_candidates_2026-10-26.json'
       - '.github/workflows/phase1-mgba-eeprom-savedata-source.yml'
 permissions:
