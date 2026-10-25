@@ -79,5 +79,10 @@ def main():
  # Resolve modern BUGFIX/UBFIX conditional branches under both pinned ELFs;
  # this supplements symbol ABI and never represents emulator runtime proof.
  subprocess.run(["python3","tools/firered_map_view_variant_semantics.py"],check=True)
+ # Source-pinned bytecode return-stack semantics and fail-closed mutation tests:
+ # a successful ELF build alone is not a script-pointer lifetime proof.
+ subprocess.run(["python3","tools/field_script_stack_lifetime_semantics.py",
+                 "--out","firered-variant-evidence/field_script_stack_lifetime_contract.json"],check=True)
+
 
 if __name__=="__main__":main()
