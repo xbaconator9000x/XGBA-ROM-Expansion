@@ -40,7 +40,7 @@ def main():
  require(mk,"-DMODERN=$(MODERN)")
  require(glob,'#include "config.h"')
  require(field,'#include "global.h"')
- require(cfg,"#if MODERN\n#ifndef UBFIX\n#define UBFIX\n#endif // UBFIX\n#endif // MODERN")
+ require(cfg,"#if MODERN\n#ifndef BUGFIX\n#define BUGFIX\n#endif // BUGFIX\n#ifndef UBFIX\n#define UBFIX\n#endif // UBFIX\n#endif // MODERN")
  require(glob,"u16 mapView[0x100];")
  require(field,"#ifndef UBFIX")
  require(field,"for (i = 0; i < 0x200; i++)")
