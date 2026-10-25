@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'tools/mapjson_semantic_proof.py'
+      - 'tools/clone_crossmap_semantics.py'
       - '.github/workflows/compiled-firered-maps.yml'
 permissions:
   contents: read
@@ -23,6 +24,8 @@ jobs:
         run: make -C upstream/pokefirered/tools/mapjson -j2
       - name: Compile all typed maps, layouts, warps, events and map groups
         run: python3 tools/mapjson_semantic_proof.py
+      - name: Verify cross-map clone targets and intentional off-layout coordinates
+        run: python3 tools/clone_crossmap_semantics.py
       - name: Save reproducible source-to-compiled map semantic proof
         if: always()
         uses: actions/upload-artifact@v4
