@@ -1,0 +1,140 @@
+name: Persist six-domain Phase 1 v2.2 semantic evidence
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Phase 1 pinned source census and review dossiers
+    types:
+      - completed
+permissions:
+  actions: read
+  contents: write
+concurrency:
+  group: xgba-semantic-v22-six-domains
+  cancel-in-progress: false
+jobs:
+  preserve-five-pipelines:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch latest verified evidence artifacts from five pinned source pipelines
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p collected
+          python3 - <<'PY'
+          import json,os,subprocess,pathlib
+          cases={
+           'main':('phase1-census.yml','xgba-phase1-evidence-and-review-queue'),
+           'compiled-mgba':('compiled-mgba-semantics.yml','xgba-phase1-mgba-compiled-semantic-evidence'),
+           'native-maps':('compiled-firered-maps.yml','xgba-phase1-all-425-maps-semantics'),
+           'compiled-firered-arm':('compiled-firered-arm-abi.yml','xgba-phase1-firered-ARM-ELF-semantic-evidence'),
+           'compiled-porymap-qt':('compiled-porymap-semantics.yml','xgba-phase1-porymap-Qt-compiled-semantic-evidence')
+          }
+          runs={}
+          for label,(workflow,artifact) in cases.items():
+           query=subprocess.check_output(['gh','run','list','--repo',os.environ['GITHUB_REPOSITORY'],
+            '--workflow',workflow,'--limit','30','--json','databaseId,conclusion,headSha'],text=True)
+           successes=[v for v in json.loads(query) if v.get('conclusion')=='success']
+           if not successes:raise SystemExit('Missing verified success: '+label)
+           chosen=successes[0]
+           dest=pathlib.Path('collected')/label;dest.mkdir()
+           subprocess.run(['gh','run','download',str(chosen['databaseId']),
+            '--repo',os.environ['GITHUB_REPOSITORY'],'--name',artifact,'--dir',str(dest)],check=True)
+           runs[label]={'run':chosen['databaseId'],'commit':chosen['headSha'],'artifact':artifact}
+          pathlib.Path('collected/PIPELINE_RUNS.json').write_text(json.dumps(runs,indent=2,sort_keys=True)+'\n')
+          PY
+      - name: Validate full inventory, semantic obligations and all compiled evidence
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,pathlib
+          root=pathlib.Path('collected')
+          def read(group,name):return json.loads((root/group/name).read_text())
+          main=read('main','audit_summary.json')
+          gate=read('main','phase1_mapping_gate.json')
+          modules=read('main','module_semantic_summary.json')
+          opcodes=read('main','script_opcode_semantic_obligations_summary.json')
+          eight=read('main','script_implicit_cursor_semantics.json')
+          compiled=read('compiled-mgba','compiler-evidence/compiled_dependency_summary.json')
+          maps=read('native-maps','map_semantics_summary.json')
+          clones=read('native-maps','clone_crossmap_semantics_summary.json')
+          arm=read('compiled-firered-arm','firered-compiler-evidence/firered_compiled_abi_summary.json')
+          qt=read('compiled-porymap-qt','porymap-compiler-evidence/porymap_compiled_semantics.json')
+          assert main['census_complete'] and main['tracked_files']==14834
+          assert gate['decision']=='FAIL_INCOMPLETE' and gate['approved_semantic_dispositions']==0
+          assert modules['tracked_files_assigned']==14834 and modules['semantic_modules']==163
+          assert opcodes['field_opcodes']==213 and opcodes['battle_opcodes']==248
+          assert eight['cursor_implicit_battle_handlers_explained']==8
+          assert compiled['compiler_inputs']==173 and compiled['compiler_errors']==[]
+          assert maps['maps_compiled_successfully']==425
+          assert clones['clones_outside_local_layout']==9 and clones['resolved_clone_local_ids']==9
+          assert arm['compiled_baseline_verified']
+          abi=arm['compiled_dispatch_and_pointer_abi']
+          assert abi['compiled_invariants_passed']==7 and abi['compiled_invariants_total']==7
+          assert qt['porymap_qt_source_compiled'] and qt['compiled_cpp_translation_units']>=25
+          assert not qt['pinned_source_errors']
+          pointer=read('main','field_pointer_role_summary.json')
+          dummy=read('main','legacy_dummy_opcode_source_semantics.json')
+          field=read('main','field_opcode_macro_vs_handler_summary.json')
+          battle=read('main','battle_opcode_cursor_alignment_summary.json')
+          conditional=read('main','script_conditional_opcode_summary.json')
+          qt_moc=read('compiled-porymap-qt','porymap-compiler-evidence/qt_compiled_map_metaobject_summary.json')
+          qt_sharing=read('compiled-porymap-qt','porymap-compiler-evidence/porymap_shared_map_semantics.json')
+          alias=read('native-maps','map_compiled_shared_pointer_aliases_summary.json')
+          assert pointer['pinned_32bit_pointer_command_handlers']==19
+          assert pointer['source_verified_pointer_word_sites']==21
+          assert dummy['dummy_source_handlers_confirmed']==6
+          assert dummy['invocation_counts']['hidemoneybox']==19
+          assert dummy['opcode_0_is_vanilla_nop_source_verified']
+          assert field['field_opcodes_reviewed']==213
+          assert field['status_counts']['EXPLICIT_OPERAND_READ_SEQUENCE_MISMATCH_OR_INDIRECT_READ']==6
+          assert battle['battle_opcode_handlers_checked']==248
+          assert conditional['now_macros_cover_all_461_dispatch_slots']
+          assert conditional['assembler_to_handler_byte_widths_proven']==8
+          assert qt_moc['source_header_signals_proven']==21
+          assert qt_sharing['source_contracts_passed']==12
+          assert alias['map_header_pointer_checks']==850 and alias['compiler_pointer_alias_errors']==[]
+          assert len(alias.get('positive_shared_pointer_compiler_fixtures',[]))==4
+
+          summary={'version':'2.2','five_compiler_or_semantic_pipelines_verified':True,
+            'source_inventory_files':14834,
+            'module_review_dossiers':163,'source_script_handlers':461,
+            'crossmap_clones_verified':9,
+            'classic_firered_compiled_ABI_checks':7,
+            'porymap_compiled_translation_units':qt['compiled_cpp_translation_units'],
+            'mgba_compiled_translation_units':173,
+            'critical_pointer_roles_source_proved':pointer['pinned_32bit_pointer_command_handlers'],
+            'legacy_hidemoneybox_source_invocations':dummy['invocation_counts']['hidemoneybox'],
+            'assembler_opcodes_source_accounted':461,
+            'qt_map_metaobject_signals_compiled':qt_moc['source_header_signals_proven'],
+            'compiled_map_event_script_pointer_fields_verified':alias['map_header_pointer_checks'],
+            'independent_file_semantic_signoffs':0,
+            'mapping_completion':'FAIL_INCOMPLETE',
+            'source_run_evidence':read('.','PIPELINE_RUNS.json'),
+            'caveat':'No XGBA patch or emulator runtime executed; compile evidence is for pinned unmodified baselines.'}
+          (root/'PROVENANCE_v20.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(summary,indent=2))
+          PY
+      - name: Package full pinned semantic evidence and integrity checksum
+        run: |
+          set -euo pipefail
+          tar -czf XGBA_Phase1_SixDomains_v22.tar.gz -C collected .
+          sha256sum XGBA_Phase1_SixDomains_v22.tar.gz > XGBA_Phase1_SixDomains_v22.sha256
+      - name: Publish permanent v2.0 prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=phase1-semantic-v2.2
+          if ! gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "XGBA Phase 1 v2.2 — five pinned compiler and semantic evidence pipelines" \
+              --notes "Source-hash-pinned inventory and semantic review obligations, original mGBA/FireRed/Porymap compiler evidence, native mapjson geometry and clone identities. **Phase 1 file-level semantic mapping remains INCOMPLETE**; no external-ROM implementation has been tested." \
+              --prerelease
+          fi
+          gh release upload "$tag" --repo "$GITHUB_REPOSITORY" \
+            XGBA_Phase1_SixDomains_v22.tar.gz XGBA_Phase1_SixDomains_v22.sha256 --clobber
