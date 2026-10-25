@@ -17,6 +17,10 @@ COLUMNS=["opcode","opcode_hex","handler","macro_variant_names","macro_emitted_op
 WIDTHS={"Byte":1,"Halfword":2,"Word":4}
 READS=re.compile(r"\bScriptRead(Byte|Halfword|Word)\s*\(")
 def sha(data):return hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+C_LEXICAL_NONCODE=re.compile(r'/\*[\s\S]*?\*/|//[^\n]*|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'')
+def c_code_without_comments(text):
+ # Preserve physical line count and byte offsets for pinned source evidence.
+ return C_LEXICAL_NONCODE.sub(lambda m:re.sub(r"[^\n]"," ",m.group(0)),text)
 def items_csv(path):
  with gzip.open(path,"rt",encoding="utf-8",newline="") as f:yield from csv.DictReader(f)
 def main():
@@ -45,7 +49,7 @@ def main():
  for opcode,handler in sorted(handlers.items()):
   starts=int(handler["definition_line"]);ends=int(handler["end_line"])
   if not 1<=starts<=ends<=len(lines):raise RuntimeError("Out-of-range pinned handler "+handler["handler"])
-  section="\n".join(lines[starts-1:ends])
+  section=c_code_without_comments("\n".join(lines[starts-1:ends]))
   if handler["source_git_blob_sha"]!=SRC_SHA:raise RuntimeError("Stale handler source revision")
   sequence=[WIDTHS[s] for s in READS.findall(section)]
   variants=base.get(opcode,[])
