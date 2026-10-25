@@ -1,6 +1,6 @@
-# Current status: v1.8
+# Current status: v2.0
 
-The newer verified semantic checkpoint is [PHASE1_STATUS_v18.md](PHASE1_STATUS_v18.md); the v1.5 notes below are historical. The v1.8 check still reports **FAIL_INCOMPLETE** for independent semantic review.
+The latest verified semantic evidence and remaining completion requirements are in [PHASE1_STATUS_v20.md](PHASE1_STATUS_v20.md). Prior v1.8 and v1.5 sections below are historical. **Phase 1 is NOT complete.**
 
 ---
 
