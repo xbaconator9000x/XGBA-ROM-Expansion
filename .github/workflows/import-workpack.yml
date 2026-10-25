@@ -1,0 +1,21 @@
+name: Import and verify Phase 1 mapped workpack
+on:
+  push:
+    paths:
+      - 'imports/XGBA_Phase1_v1.5_Complete_Workpack.zip'
+permissions:
+  contents: read
+jobs:
+  verify-import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify v1.5 workpack checksums and source-map counts
+        run: python3 tools/verify_imported_workpack.py imports/XGBA_Phase1_v1.5_Complete_Workpack.zip
+      - name: Save validated import report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-workpack-import-verification
+          path: import_report.json
+          if-no-files-found: warn
