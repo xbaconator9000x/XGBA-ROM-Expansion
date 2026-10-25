@@ -51,7 +51,19 @@
 
 See [v1.5 contracts](CRITICAL_SOURCE_CONTRACTS_v15.md) for mGBA savestate CRC/serialization and FireRed randomized save-block relocation/encryption. **Design contract XS16-SAVE-SEPARATION:** an emulator XGBA save-state extension (host-side) must separately validate sidecar identity and remapping sequence, while in-game FireRed saves need stable resource IDs and must never persist transient host addresses. These are two distinct serialization formats.
 
-## 6. Evidence and completion policy
+## 6. Build/linker ABI and 32 MiB region limit are independent from host-side storage
+
+- [FireRed Makefile:370-395](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/Makefile#L370-L395), blob `8b454dbd18eb0069fa5851d788697190890a5b37`: standard and modern variants select different linker scripts; final ELF is turned into a raw ROM with `objcopy -O binary --gap-fill 0xFF --pad-to 0x9000000`. The pad target is an **absolute address** 0x09000000 (16 MiB beyond 0x08000000), not an arbitrary 0x9000000-byte ROM allowance.
+- [FireRed ld_script.ld:4-9](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/ld_script.ld#L4-L9), blob `9a4b45031e93c1e1da8186d8c697332710526048`: EWRAM has a 256 KiB region, IWRAM 32 KiB, and the ROM link region starts at 0x08000000 with LENGTH 32M.
+- [FireRed ld_script_modern.ld:4-9](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/ld_script_modern.ld#L4-L9), blob `e930243522bd21da40cc1a05de9a42b8ad409b46`: modern link mode keeps these same physical memory-region bounds.
+- [mGBA include/mgba/internal/gba/memory.h:25-70](https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/gba/memory.h#L25-L70), blob `0aad912613e726560d06bbdbf6061986e69e5842`: ROM is exposed as different physical GBA address windows; `GBA_SIZE_ROM0` is 0x02000000. [Memory struct:110-125](https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/gba/memory.h#L110-L125) retains `size_t romSize` and a 32-bit mask.
+- [agbcc gcc/Makefile](https://github.com/pret/agbcc/blob/da598c1d918402c42c0c0d7128ba14567f3175e9/gcc/Makefile), blob `c34b354ed03b2e68c2da0131eb9618ca4cced900`: its custom compiler is built from RTL/generator sources; [ARM runtime multilib settings](https://github.com/pret/agbcc/blob/da598c1d918402c42c0c0d7128ba14567f3175e9/gcc_arm/config/arm/t-arm-elf#L25-L29), blob `b57eeca9805d5aeb0ba20e08948758cb27da82fd`, retain ARM/Thumb/interworking target distinctions.
+
+**Semantics:** a large external host file does not expand 32-bit GBA pointers, linker address ranges, IWRAM/EWRAM, or the real GBA bus. **Design contract XS16-BUILD-ABI:** the original ROM build remains a valid 32 MiB-address-space GBA artifact; XGBA-Lite uses explicit bank/window semantics, and an XGBA-Stream sidecar uses versioned opaque resource IDs and a supported emulator/loader—not fabricated globally addressable host pointers. Changing pad-to or `romSize` alone cannot make an arbitrary-sized ROM executable. Preserve old ARM/Thumb glue and relocation behaviors.
+
+**Unexecuted checks:** full linker map and pointer table relocation audit, absolute addresses and PC-relative branch coverage, cart-header and checksum behavior, old/modern compiler modes, asset-table overflows, emulator BIOS behavior.
+
+## 7. Evidence and completion policy
 
 - **Source confirmed:** the paths, branching decisions and read/write roles described above can be reproduced at the pinned revisions.
 - **AST candidate:** cross-file call targets inferred from syntax trees only; subject to macro expansion, build flags, function-pointer aliases, templates and duplicate symbols.
