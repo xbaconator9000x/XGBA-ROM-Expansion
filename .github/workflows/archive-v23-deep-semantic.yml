@@ -150,4 +150,4 @@ jobs:
               --prerelease
           fi
           gh release upload "$tag" --repo "$GITHUB_REPOSITORY" \
-            XGBA_Phase1_SixDomains_v22.tar.gz XGBA_Phase1_SixDomains_v22.sha256 --clobber
+            XGBA_Phase1_FunctionAndResources_v23.tar.gz XGBA_Phase1_FunctionAndResources_v23.sha256 --clobber
