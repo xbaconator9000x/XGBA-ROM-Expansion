@@ -189,6 +189,57 @@ static void test_native_matrix_state(struct mCore *core) {
     free(state);
 }
 
+/* Native >32MiB loading is not an XGBA opt-in handshake.
+ * mGBA's loader inspects byte 0xAC and takes different code paths:
+ * verify that a non-M oversized native file retains the ordinary 32MiB
+ * address aperture and never activates the Matrix controller.
+ */
+static void test_nonmatrix_oversize_loader(void) {
+    const size_t size = (size_t) GBA_SIZE_ROM0 + 0x1000u;
+    uint8_t *bytes = calloc(size, 1);
+    if (!bytes) { check("oversize_nonM_fixture_allocation", false); return; }
+    bytes[0xAC] = 'X';
+    put32(bytes, 0x1200u, OPCODE_A);
+    put32(bytes, GBA_SIZE_ROM0 - 0x10u, 0xA5B6C7D8u);
+    /* Bytes above the visible aperture must not alias into the image. */
+    put32(bytes, GBA_SIZE_ROM0 + 0x120u, OPCODE_B);
+    struct mCore *core = GBACoreCreate();
+    if (!core || !core->init(core)) {
+        check("oversize_nonM_core_init", false);
+        if (core) core->deinit(core);
+        free(bytes);
+        return;
+    }
+    mCoreInitConfig(core, NULL);
+    struct VFile *vf = VFileFromConstMemory(bytes, size);
+    if (!vf || !core->loadROM(core, vf)) {
+        check("oversize_nonM_native_load", false);
+        if (vf) vf->close(vf);
+        mCoreConfigDeinit(&core->config);
+        core->deinit(core);
+        free(bytes);
+        return;
+    }
+    core->reset(core);
+    struct GBA *gba = core->board;
+    check("native_oversize_nonM_keeps_32MiB_visible_aperture",
+          gba->memory.romSize == GBA_SIZE_ROM0);
+    check("native_oversize_nonM_keeps_full_VFile_backing_length",
+          gba->romVf && gba->romVf->size(gba->romVf) == (off_t)size);
+    check("native_oversize_nonM_does_not_activate_Matrix",
+          gba->memory.matrix.size == 0);
+    check_arm(core, ADDRESS, OPCODE_A, "native_oversize_nonM_ARM_visible_bytes");
+    check("native_oversize_nonM_ROM_end_access",
+          GBALoad32(core->cpu, GBA_BASE_ROM0 + GBA_SIZE_ROM0 - 0x10u, NULL)
+          == 0xA5B6C7D8u);
+    check("native_oversize_nonM_has_no_extra_CPU_address_window",
+          GBALoad32(core->cpu, GBA_BASE_ROM1 + 0x120u, NULL)
+          != OPCODE_B);
+    mCoreConfigDeinit(&core->config);
+    core->deinit(core);
+    free(bytes);
+}
+
 static void run_one(bool matrix) {
     fprintf(stderr,"STEP begin %s\n", matrix ? "matrix" : "vanilla");
     const size_t size = matrix ? ROM_BYTES_MATRIX : ROM_BYTES_SMALL;
@@ -290,6 +341,7 @@ int main(void) {
     setvbuf(stderr, NULL, _IONBF, 0);
     run_one(false);
     run_one(true);
+    test_nonmatrix_oversize_loader();
     printf("SUMMARY hard_failures=%d native_gap_observations=%d "
            "xgba_runtime_implemented=false phase1_mapping_complete=false\n",
            failures, observations);
