@@ -13,6 +13,7 @@ on:
       - 'tools/all_blob_structural_evidence.py'
       - 'tools/semantic_asm_build.py'
       - 'tools/unified_semantic_dependencies.py'
+      - 'tools/semantic_linkage_filter.py'
       - 'tools/generated_asset_provenance.py'
       - 'tools/dynamic_dispatch_semantics.py'
       - 'tools/resolve_composite_assets.py'
@@ -50,6 +51,8 @@ jobs:
           python3 -m pip install 'tree-sitter==0.25.2' 'tree-sitter-c==0.24.1' 'tree-sitter-cpp==0.23.4' 'tree-sitter-go==0.25.0' 'tree-sitter-python==0.25.0'
       - name: Build AST scope and candidate call graph
         run: python3 tools/ast_semantic_index.py --root upstream --census audit-output --out audit-output
+      - name: Reject unbindable cross-TU static C functions and unresolved C++ name calls
+        run: python3 tools/semantic_linkage_filter.py
       - name: Verify every Git blob and structurally classify assets
         run: python3 tools/all_blob_structural_evidence.py
       - name: Index assembly, linker and build-file semantics
