@@ -128,7 +128,19 @@ static void test_native_peripherals(struct mCore *core) {
        gba->memory.activeDMA, gba->memory.dma[3].nextCount,
        gba->memory.dma[3].nextSource, gba->memory.dma[3].nextDest,
        gba->cpu->cycles, gba->cpu->nextEvent);
-    mTimingTick(&gba->timing, 80);
+    /* mTimingSchedule may enqueue into reroot while the CPU is at an event
+     * boundary. The first tick promotes reroot; subsequent ticks dispatch
+     * the DMA service and completion callbacks. Drain a bounded number of
+     * native scheduler turns, never manually call private DMA callbacks. */
+    for (int turn = 0; turn < 8 &&
+         GBADMARegisterIsEnable(gba->memory.dma[3].reg); ++turn) {
+        mTimingTick(&gba->timing, 80);
+        fprintf(stderr, "DMA DEBUG tick=%d now=%d scheduled=%d count=%d enabled=%d\n",
+                turn + 1, mTimingCurrentTime(&gba->timing),
+                mTimingIsScheduled(&gba->timing, &gba->memory.dmaEvent),
+                gba->memory.dma[3].nextCount,
+                GBADMARegisterIsEnable(gba->memory.dma[3].reg));
+    }
     fprintf(stderr, "DMA DEBUG post: now=%d event.when=%u scheduled=%d active=%d count=%d dstword=%04x cycles=%d nextEvent=%d\n",
        mTimingCurrentTime(&gba->timing), gba->memory.dmaEvent.when,
        mTimingIsScheduled(&gba->timing, &gba->memory.dmaEvent),
