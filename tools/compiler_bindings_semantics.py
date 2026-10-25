@@ -102,7 +102,7 @@ def main():
      "independent_semantic_reviews_approved":0,
      "external_XGBA_banking_implemented":False,
      "phase1_mapping_complete":False}
-   (OUT/"mgba-native-boundary-result.json").write_text(json.dumps(outcome,indent=2,sort_keys=True)+"\\n")
+   (OUT/"mgba-native-boundary-result.json").write_text(json.dumps(outcome,indent=2,sort_keys=True)+"\n")
    print("Native mGBA fixture check summary:",outcome["positive_checks_passed"],
          "passed,",outcome["positive_checks_failed"],"failed")
   print("Pinned native Matrix boundary probe:", "PASS" if proc.returncode==0 else "FAIL", "log:", log)
