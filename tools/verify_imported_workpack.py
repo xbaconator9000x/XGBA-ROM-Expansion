@@ -30,10 +30,15 @@ def run(path):
     rid=row["record_id"]
     if rid in ids:fail("Duplicate mapping record ID "+rid)
     ids.add(rid)
-    if rid.startswith("XC15I-"):includes+=1
-    elif rid.startswith("XC15-"):newsite+=1
-    elif rid.startswith("XC-"):old+=1
-    else:fail("Unknown record prefix "+rid)
+    if linec<=11024:
+     if rid.startswith(("XC15I-","XC15-")):fail("New record embedded in legacy mapping group")
+     old+=1
+    elif linec<=15339:
+     if not rid.startswith("XC15-"):fail("Unexpected lexical candidate ID "+rid)
+     newsite+=1
+    else:
+     if not rid.startswith("XC15I-"):fail("Unexpected include candidate ID "+rid)
+     includes+=1
     if not row["source_blob_sha"] or len(row["source_blob_sha"])!=40:fail("Missing blob SHA "+rid)
    if (linec,old,newsite,includes)!=(29068,11024,4315,13729):
     fail("Mapping record composition mismatches authoritative checksum manifest")
