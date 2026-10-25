@@ -125,7 +125,7 @@ def main():
  with gzip.open(OUT/"map_compiled_shared_pointer_aliases.csv.gz","wt",encoding="utf-8",newline="") as f:
   w=csv.DictWriter(f,fieldnames=COLS);w.writeheader();w.writerows(out)
  fixtures=verify_four_shared_alias_fixtures()
-  summary={"pinned_source_commit":PIN,
+ summary={"pinned_source_commit":PIN,
    "map_header_pointer_checks":len(out),"map_header_files":counts["map_headers"],
    "positive_shared_pointer_compiler_fixtures":fixtures,
    "shared_event_pointers":counts["event_shared_headers"],
