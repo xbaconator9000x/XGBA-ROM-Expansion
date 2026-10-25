@@ -76,4 +76,16 @@ def main():
  print(json.dumps({k:v for k,v in summary.items() if k not in ("feature_token_counts","target_symbols_found")},indent=2))
  if errors:raise RuntimeError("Failed pinned compile-source provenance checks")
  if not lib_candidates:raise RuntimeError("No linked mGBA libraries produced")
+ # Run the separately versioned native boundary probe only in the dedicated
+ # pinned mGBA compiled-semantics CI workflow. It uses synthetic cartridge
+ # bytes and leaves the emulator source tree untouched. Keep logs even on error.
+ if os.environ.get("GITHUB_ACTIONS") == "true" and os.environ.get("GITHUB_WORKFLOW") == "Phase 1 compiled mGBA source semantics":
+  runner=Path("tests/run_pinned_mgba_boundary.sh")
+  if not runner.is_file():raise RuntimeError("Pinned native Matrix boundary probe script absent")
+  log=OUT/"mgba-native-boundary-invocation.log"
+  with log.open("w") as h:
+   proc=subprocess.run(["bash",str(runner)],stdout=h,stderr=subprocess.STDOUT,check=False)
+  print("Pinned native Matrix boundary probe:", "PASS" if proc.returncode==0 else "FAIL", "log:", log)
+  if proc.returncode:raise RuntimeError(f"Native Matrix probe failed, see {log}")
+
 if __name__=="__main__":main()
