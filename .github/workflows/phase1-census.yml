@@ -1,0 +1,27 @@
+name: Phase 1 pinned source census
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/pinned_source_census.py'
+      - '.github/workflows/phase1-census.yml'
+permissions:
+  contents: read
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Python syntax
+        run: python3 -m py_compile tools/pinned_source_census.py
+      - name: Clone pinned sources and scan
+        run: python3 tools/pinned_source_census.py --checkout --root upstream --out audit-output
+      - name: Preserve census and 500-file checkpoints
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-pinned-source-census
+          path: audit-output/
+          retention-days: 90
+          if-no-files-found: warn
