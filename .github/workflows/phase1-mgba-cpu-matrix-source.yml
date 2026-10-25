@@ -1,0 +1,62 @@
+name: Phase 1 mGBA CPU prefetch and Matrix ABI source dependencies
+on:
+  pull_request:
+    paths:
+      - 'tools/phase1_cpu_matrix_review_scheduler.py'
+      - 'tools/verify_mgba_cpu_matrix_abi_additive.py'
+      - 'tools/phase1_crosspacket_review_scheduler.py'
+      - 'tools/phase1_additive_review_scheduler.py'
+      - 'tools/verify_mgba_eeprom_savestate_additive.py'
+      - 'tools/verify_mgba_timing_dma_additive.py'
+      - 'semantic-snapshots/curated/**'
+      - 'semantic-snapshots/current/semantic_review_queue.csv.gz'
+      - 'semantic-snapshots/current/phase1_mapping_gate.json'
+      - '.github/workflows/phase1-mgba-cpu-matrix-source.yml'
+  push:
+    paths:
+      - 'tools/phase1_cpu_matrix_review_scheduler.py'
+      - 'tools/verify_mgba_cpu_matrix_abi_additive.py'
+      - 'tools/phase1_crosspacket_review_scheduler.py'
+      - 'tools/phase1_additive_review_scheduler.py'
+      - 'tools/verify_mgba_eeprom_savestate_additive.py'
+      - 'tools/verify_mgba_timing_dma_additive.py'
+      - 'semantic-snapshots/curated/**'
+      - 'semantic-snapshots/current/semantic_review_queue.csv.gz'
+      - 'semantic-snapshots/current/phase1_mapping_gate.json'
+      - '.github/workflows/phase1-mgba-cpu-matrix-source.yml'
+permissions:
+  contents: read
+jobs:
+  cpu-matrix-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout exact pinned mGBA source
+        run: |
+          mkdir -p upstream/mgba
+          git -C upstream/mgba init
+          git -C upstream/mgba remote add origin https://github.com/mgba-emu/mgba.git
+          git -C upstream/mgba fetch --depth 1 origin fd9dc5c2cbf234365068855851107e762fc6211b
+          git -C upstream/mgba checkout --detach FETCH_HEAD
+      - name: Verify source and deterministic v4 semantic review queue
+        run: |
+          python3 -m py_compile tools/phase1_cpu_matrix_review_scheduler.py tools/verify_mgba_cpu_matrix_abi_additive.py
+          python3 tools/verify_mgba_timing_dma_additive.py upstream/mgba
+          python3 tools/verify_mgba_eeprom_savestate_additive.py upstream/mgba
+          python3 tools/verify_mgba_cpu_matrix_abi_additive.py upstream/mgba
+          python3 tools/phase1_cpu_matrix_review_scheduler.py
+      - name: Archive exact source evidence and deterministic review queues
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-mgba-cpu-matrix-abi-v4
+          path: |
+            audit-output/mgba_timing_dma_source_evidence.json
+            audit-output/mgba_eeprom_savestate_source_evidence.json
+            audit-output/mgba_cpu_matrix_abi_source_evidence.json
+            audit-output/architecture_semantic_review_priority_additive_v3.json
+            audit-output/architecture_semantic_review_priority_additive_v4.json
+            audit-output/architecture_semantic_review_queue_additive_v4.csv.gz
+          retention-days: 90
+          if-no-files-found: warn
