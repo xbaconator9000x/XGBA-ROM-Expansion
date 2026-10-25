@@ -1,3 +1,9 @@
+# Current status: v1.8
+
+The newer verified semantic checkpoint is [PHASE1_STATUS_v18.md](PHASE1_STATUS_v18.md); the v1.5 notes below are historical. The v1.8 check still reports **FAIL_INCOMPLETE** for independent semantic review.
+
+---
+
 # Phase 1 checkpoint — v1.5 (2026-10-25)
 
 **Decision: FAIL_INCOMPLETE. Phase 1 source mapping has not received independent semantic approval.**
