@@ -31,8 +31,8 @@ def main():
  files=collections.defaultdict(set)
  for r in rows:files[r["repo"]].add(r["path"])
  count=collections.Counter();kind=collections.Counter();byscope=collections.Counter();symbols=set()
- with gzip.open(OUT/"asm_build_semantic_sites.csv.gz","wt",encoding="utf-8",newline="") as out, \
-      gzip.open(OUT/"asm_build_file_coverage.csv.gz","wt",encoding="utf-8",newline="") as mf:
+ with gzip.open(OUT/"asm_build_semantic_sites.csv.gz","wt",encoding="utf-8",errors="backslashreplace",newline="") as out, \
+      gzip.open(OUT/"asm_build_file_coverage.csv.gz","wt",encoding="utf-8",errors="backslashreplace",newline="") as mf:
   w=csv.DictWriter(out,fieldnames=RECORD);w.writeheader()
   fw=csv.writer(mf);fw.writerow(["repo","path","blob_sha","category","language","site_count","semantic_status"])
   for n,r in enumerate(rows,1):
