@@ -1,0 +1,76 @@
+{
+  "schema": "xgba.phase1.native_matrix_source_observation.v1",
+  "created_date": "2026-10-26",
+  "status": "PINNED_SOURCE_STATIC_EVIDENCE_ONLY_NOT_INDEPENDENT_REVIEWED",
+  "source_commit": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "sources": {
+    "src/gba/cart/matrix.c": "9ccbe883235b98bcf56cd609015e7b4003aa832c",
+    "src/gba/gba.c": "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e",
+    "src/arm/arm.c": "0b92d7f55f1fb853d4b1b9c9163ee086126066e2",
+    "src/gba/memory.c": "aa01fdcc7d6ae5ecdf8753efc63b3a60a1e8d3dc"
+  },
+  "source_checks_performed": 9,
+  "source_checks_matched": 9,
+  "observations": [
+    {
+      "kind": "MATRIX_READ",
+      "result": "SOURCE_MATCH",
+      "anchor": "src/gba/cart/matrix.c:36-37",
+      "detail": "Matrix mapper seeks and reads ROM backing VFile"
+    },
+    {
+      "kind": "MATRIX_READ_RETURN",
+      "result": "SOURCE_MATCH",
+      "anchor": "src/gba/cart/matrix.c:36-37",
+      "detail": "Return values not examined; no claim about actual short-read consequence"
+    },
+    {
+      "kind": "MATRIX_VIRTUAL_GUARDS",
+      "result": "SOURCE_MATCH",
+      "anchor": "src/gba/cart/matrix.c:16-28",
+      "detail": "Virtual address, size, end-window guards present"
+    },
+    {
+      "kind": "MATRIX_PHYSICAL_BACKING_LIMIT",
+      "result": "SOURCE_MATCH",
+      "anchor": "src/gba/cart/matrix.c:16-37",
+      "detail": "No explicit paddr+size vs backing file extent check in _remapMatrix"
+    },
+    {
+      "kind": "MATRIX_SAVESTATE",
+      "result": "SOURCE_MATCH",
+      "anchor": "src/gba/cart/matrix.c:100-132",
+      "detail": "16 mappings serialized and reconstructed"
+    },
+    {
+      "kind": "MATRIX_HEADER_SELECTION",
+      "result": "SOURCE_MATCH",
+      "anchor": "src/gba/gba.c:433-450",
+      "detail": "For >32MiB ROM, M at 0xAC selects Matrix path"
+    },
+    {
+      "kind": "CPU_INSTRUCTION_FETCH",
+      "result": "SOURCE_MATCH",
+      "anchor": "src/arm/arm.c:198-225",
+      "detail": "ARM and Thumb fetch next opcode from CPU active memory region rather than calling busRead"
+    },
+    {
+      "kind": "FETCH_ROM_REGION",
+      "result": "SOURCE_MATCH",
+      "anchor": "src/gba/memory.c:338-353",
+      "detail": "GBA ROM CPU fetch region points to in-memory rom with ROM mask"
+    },
+    {
+      "kind": "EEPROM_16BIT_ARBITRATION",
+      "result": "SOURCE_MATCH",
+      "anchor": "src/gba/memory.c:605-625",
+      "detail": "ROM2_EX 16-bit access contains EEPROM and e-Reader conditions"
+    }
+  ],
+  "test_harness": "tests/mgba_bank_boundary.c",
+  "executable_runtime_tests_executed": false,
+  "native_negative_controls_certified": false,
+  "independent_whole_file_semantic_dispositions_approved": 0,
+  "phase1_mapping_complete": false,
+  "next_action": "Execute bash tests/run_pinned_mgba_boundary.sh against pinned source on a networked build host, preserve real configure/build/runtime logs, then construct EEPROM/DMA/save-state test family."
+}
