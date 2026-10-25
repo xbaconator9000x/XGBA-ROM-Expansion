@@ -18,6 +18,9 @@ Poryscript revision: `huderlem/poryscript@c32481161c767b25a3425fa9f1f8729927ff3d
 | FireRed `src/script.c` | `d0433bdda062b138e53d1a1d3184b4566ad7d9dc` | 82–144 bytecode interpreter; 165–200 call/jump/32-bit operand reader |
 | FireRed `src/scrcmd.c` | `97b695ee2f6fca80a3b78f52f6a444f696fe5814` | 118–187 native function-pointer invocation and direct branch target; 286–335 direct word/byte pointers; 2103–2118 map editing |
 | FireRed `data/maps.s` | `fc88d8fc2521e92db22264bf6cf33966fda977ba` | 1–22 inclusion of original map layouts/headers/groups/events/scripts |
+| FireRed `config.mk` | `c07d31fc083fa341cca29c340e560ed107d5364a` | 7–18 default `MODERN=0`, modern explicit target switch |
+| FireRed `Makefile` | `8b454dbd18eb0069fa5851d788697190890a5b37` | 72–91 `-DMODERN` and revision compile flags |
+| FireRed `include/config.h` | `db131b2717ab739e62e41c5054a798f045c0631d` | 65–74 conditional `#if MODERN` defines `UBFIX` |
 | FireRed `ld_script.ld` | `9a4b45031e93c1e1da8186d8c697332710526048` | 4–8 256KiB EWRAM, 32KiB IWRAM, 32MiB ROM region |
 | Porymap `src/core/block.cpp` | `fc4fe774ccd75673c549734055907eb7c79c0fc2` | 8–11 default masks, 43–54 block packing and project-defined mask override |
 | Porymap `src/core/blockdata.cpp` | `5fcd4e32b115790f5a86b5cef5726cace8005017` | 3–11 little-endian 16-bit block stream |
@@ -42,7 +45,7 @@ The exact revision+blob combination, not a floating branch, is the review key.
 
 - `include/fieldmap.h:6–22` sets a native virtual map max `VIRTUAL_MAP_SIZE = 0x2800` **u16 cells** and horizontal/vertical border offsets. `fieldmap.c:92–124` verifies `(width + MAP_OFFSET_W) * (height + MAP_OFFSET_H) <= VIRTUAL_MAP_SIZE` with a Game Freak assertion, then copies the raw tiles into finite EWRAM. The native native cap is **10,240 cells**, *not* 10,240 raw file bytes; the border means supported authored area is smaller than the cell budget.
 - `include/global.h:352` makes `gSaveBlock2Ptr->mapView` a `u16[0x100]` (**256 entries**). `fieldmap.c:452–468` persists a 15×14 (**210 entry**) local viewport.
-- **Pinned conditional original bug:** `fieldmap.c:468–488` has `#ifndef UBFIX` checking **0x200 (=512)** u16 elements to see whether the saved view is empty, exceeding the declared **0x100 (=256)** array. The `#else` `UBFIX` path uses `NELEMS` and is bounds-correct for this loop. Which branch executes in a given compiled ROM depends on its actual preprocessor configuration and must be established from that build's compiler evidence; do not assert every ROM exhibits this bug.
+- **Pinned conditional original bug:** `fieldmap.c:468–488` has `#ifndef UBFIX` checking **0x200 (=512)** u16 elements to see whether the saved view is empty, exceeding the declared **0x100 (=256)** array. The `#else` `UBFIX` path uses `NELEMS` and is bounds-correct for this loop. The pinned default `config.mk` assigns `MODERN ?= 0`; `Makefile` forwards `-DMODERN=$(MODERN)`; `include/config.h:65–74` defines `UBFIX` automatically under `#if MODERN`. **Therefore the pinned project's default non-modern configuration selects the buggy path unless an external flag defines UBFIX, while the modern target enables the bounds-correct path by default.** This is source-grounded compile-branch resolution, not yet a runtime observation in both compiled ROM variants.
 
 **Contract:** expansion map data must not bypass the runtime's allocated backup grid; use validated streaming/sub-area buffers or an explicitly updated runtime, and version save-view data independently. Keep `UBFIX` preprocessor selection and original save-block binary layout in compatibility regression checks.
 
@@ -71,7 +74,7 @@ The original linker file `ld_script.ld:4–8` places `ROM` at `0x08000000` and c
 
 ## Required follow-up review and regression gates
 
-1. Verify the exact `UBFIX` C preprocessor state in each pinned original/modern FireRed build; compile-source and binary evidence must establish behavior, not a comment.
+1. Verify the **actual invoked compiler flags and preprocessed** `UBFIX` branch in pinned original/modern CI builds. The pinned default source configuration already establishes the intended original `!UBFIX` / modern `UBFIX` split, but custom `-DUBFIX` or build overrides could change it.
 2. Trace `gScriptCmdTable` opcode macros to handler input sizes, argument pointer roles and all lifetime/stack failure paths. Independently verify relocation provenance of ASM-expanded pointers.
 3. Test map border, secondary tileset, collision, elevation, layer attributes, warp/object scripts and saved-view behavior on a **compiled pinned ROM**, not only an editor reference model.
 4. Prove byte-identical no-op export/import with a pinned Porymap/Poryscript source project, then negative cases for odd/truncated binary, changed masks, unrepresentable fields and unknown compiled-only metadata.
