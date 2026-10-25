@@ -14,6 +14,7 @@
 #include <mgba/internal/gba/gba.h>
 #include <mgba/internal/gba/memory.h>
 #include <mgba/internal/gba/serialize.h>
+#include <mgba/internal/gba/io.h>
 #include <mgba/internal/arm/isa-inlines.h>
 #include <mgba-util/vfs.h>
 
@@ -111,6 +112,22 @@ static void test_native_peripherals(struct mCore *core) {
     gba->memory.savedata.command = EEPROM_COMMAND_NULL;
     check("native_EEPROM_priority_over_eReader_on_16bit_ROM2_EX",
           GBALoad16(cpu, reader_addr, NULL) == 1u);
+    /* Prove the native 16-bit DMA3 source path goes through EEPROM rather
+     * than treating the ROM2_EX window as unconditionally banked ROM. */
+    gba->memory.savedata.type = GBA_SAVEDATA_EEPROM512;
+    gba->memory.savedata.command = EEPROM_COMMAND_NULL;
+    gba->memory.hw.devices &= ~HW_EREADER;
+    ((uint16_t*)gba->memory.wram)[0x100u >> 1] = 0xA5A5u;
+    GBADMAWriteSAD(gba, 3, plain_addr);
+    GBADMAWriteDAD(gba, 3, GBA_BASE_EWRAM + 0x100u);
+    gba->memory.io[GBA_REG_DMA3CNT_LO >> 1] = 1u;
+    GBADMAWriteCNT_HI(gba, 3, 0x8000u); /* enable, immediate, 16-bit, one unit */
+    mTimingTick(&gba->timing, 80);
+    check("native_DMA3_16bit_ROM2_EX_reads_EEPROM",
+          ((uint16_t*)gba->memory.wram)[0x100u >> 1] == 1u);
+    check("native_DMA3_immediate_one_unit_completes",
+          !GBADMARegisterIsEnable(gba->memory.dma[3].reg));
+
     gba->memory.savedata.type = original_type;
     gba->memory.savedata.command = original_command;
     gba->memory.ereader.registerUnk = original_reader_register;
@@ -133,6 +150,18 @@ static void test_native_matrix_state(struct mCore *core) {
           gba->memory.matrix.mappings[0x1400u >> 9] == thumb_before);
     check_arm(core, ADDRESS, OPCODE_B, "matrix_savestate_reloads_ARM_physical_bank");
     check_thumb(core, THUMB_ADDRESS, THUMB_B, "matrix_savestate_reloads_Thumb_physical_bank");
+
+    /* Distinct from Matrix-only metadata: the complete GBA serializer
+     * must restore the selected external bank and CPU-visible bytes. */
+    GBASerialize(gba, state);
+    map512(gba, BANK_A, 0x1200u);
+    check_arm(core, ADDRESS, OPCODE_A, "matrix_pre_full_state_mutation_bank_A");
+    bool restored = GBADeserialize(gba, state);
+    check("matrix_full_emulator_state_deserialize_success", restored);
+    if (restored) {
+        check_arm(core, ADDRESS, OPCODE_B, "matrix_full_state_restores_ARM_bank_B");
+        check_thumb(core, THUMB_ADDRESS, THUMB_B, "matrix_full_state_restores_Thumb_bank_B");
+    }
     free(state);
 }
 
