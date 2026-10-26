@@ -30,3 +30,7 @@ Run `python3 tools/phase1_firered_mgba_savestate_mapping.py --firered upstream-f
 **Open proofs:** inspect compiled savestate layout and variant ABI; determine Matrix VFile length and read-error behaviour; reproduce restores with same game ID/title but altered ROM/bank contents; trace pipeline and prefetch after Matrix remapping, including old-format savestates; verify save-device state under reset and restore; test editor round trips and obtain independent whole-file reviews. The earlier native mGBA regression observations are relevant but do not close these additional proofs.
 
 **Phase 1: FAIL_INCOMPLETE. Independent whole-file approvals: 0/14,834. No Phase 2 implementation.**
+
+## 27 October — Matrix activation, CRC and VFile dependency addendum
+
+The original six-blob investigation has been extended with [six additional exact-pinned mGBA sources](PHASE1_P0_MGBA_MATRIX_ROM_IDENTITY_VFS_2026-10-27.md) covering the >32 MiB `0xAC == 'M'` Matrix opt-in, 16 MiB reported ROM size versus 32 MiB buffer, 8 KiB active remap window, in-memory pre-reset CRC provenance, and short-read semantics of three VFile backends. The updated checker pins **12 blobs** and contains **25 scoped negative controls**. Previous six-blob/14-control figures describe the original checkpoint, not the current verifier. Source-only; no backing-file identity, short-read runtime, editor or independent-review certification.
