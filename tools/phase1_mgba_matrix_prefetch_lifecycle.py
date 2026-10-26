@@ -116,7 +116,7 @@ def contract(src):
             "GBAMatrixDeserialize(gba, state);",
             "mTimingInterrupt(&gba->timing);")
     between = scope(restore, "GBAMatrixDeserialize(gba, state);", "mTimingInterrupt(&gba->timing);")
-    require("prefetch" not in between and "setActiveRegion" not in between,
+    require(all(refresh not in between for refresh in ("prefetch", "setActiveRegion", "ARMWritePC(", "ThumbWritePC(")),
             "post-Matrix restore now contains a local pipeline refresh")
     return {
         "instruction_consumption": "ARM_and_Thumb_consume_saved_prefetch_0_then_shift_and_refill",
