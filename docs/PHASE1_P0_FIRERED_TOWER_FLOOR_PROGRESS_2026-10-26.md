@@ -24,6 +24,8 @@ Consequently, **if** saved floorsCleared is 8–255 at BuildEnemyParty entry, th
 
 [Dedicated CI workflow](../.github/workflows/phase1-firered-layout-writers.yml) compiles and executes the checker against the pinned FireRed checkout and archives a JSON evidence result. **CI status must be checked against the exact head commit before claiming the checker passed.** A passing source test remains explicitly FAIL_INCOMPLETE, with zero semantic signoffs.
 
+**Verified checker CI:** [GitHub Actions run #40289837936](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40289837936), job 121462036308, **PASS** at source-check commit 2cfbaf4ad5582e4df4ad58b801a2ccd26baf93bd. The job log records `PINNED_TOWER_FLOOR_PROGRESS_SOURCE_PASS rows=8 negative_controls=9` and `PHASE1_GATE=FAIL_INCOMPLETE independent_approvals=0`. Two earlier runs (#40289689740 and #40289763285) failed because the audit matcher overlooked original source offset comments before the saved challenge record field; the corrected matcher pins both explicit field offsets and passed. This verifies the source contract and nine synthetic rejection controls only, not compiled execution or runtime reachability.
+
 ## Open proof obligations
 
 Trace every floor-clear producer and all authored battle paths, including transitions/resume; determine whether save-load integrity or gameplay can yield floorsCleared >= 8 at battle entry; compile and execute controlled malformed-save negative cases; separately resolve VAR_TEMP_1, challenge-ID and map-derived floor index bounds; complete independent whole-file review, editor/emulator interoperability and all Phase 1 gates.
