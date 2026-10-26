@@ -33,7 +33,14 @@
 | `huderlem/porymap:src/core/blockdata.cpp` | [0019](0019-porymap-blockdata-impl.md) | pending independent review |
 | `huderlem/porymap:include/core/blockdata.h` | [0020](0020-porymap-blockdata-header.md) | pending independent review |
 
-**Count: 26 distinct pinned upstream whole-file identities prepared / 14,834 = 0.1753%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
+| `huderlem/porymap:include/core/tile.h` | [0021](0021-porymap-tile-header.md) | pending independent review |
+| `huderlem/porymap:src/core/tile.cpp` | [0022](0022-porymap-tile-impl.md) | pending independent review |
+| `huderlem/porymap:include/core/metatile.h` | [0023](0023-porymap-metatile-header.md) | pending independent review |
+| `huderlem/porymap:src/core/metatile.cpp` | [0024](0024-porymap-metatile-impl.md) | pending independent review |
+| `huderlem/porymap:include/core/mapconnection.h` | [0025](0025-porymap-mapconnection-header.md) | pending independent review |
+| `huderlem/porymap:src/core/mapconnection.cpp` | [0026](0026-porymap-mapconnection-impl.md) | pending independent review |
+
+**Count: 32 distinct pinned upstream whole-file identities prepared / 14,834 = 0.2157%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
 
 ## Collision and acceptance safeguards
 Multiple filenames now reuse sequence numbers (including `0006` and `0015`–`0019`) for **different** pinned files. The integer alone is therefore **not a unique candidate ID**. Until filenames and references are migrated atomically, identify a candidate by **(upstream repository, pinned commit, exact path, Git blob SHA)**, and use the full filename for links. Do not count the sequence maximum as the number of distinct files or use it as an approval counter. A later registry migration may assign unique sequence numbers, preserving historical links.
@@ -56,3 +63,7 @@ The preceding `00156d49` commit had four successful PR workflows: [Poryscript #4
 ## 27 October — concurrent-source register reconciliation
 
 The register now preserves six additional **distinct** Porymap source identities (bitpacker implementation/header, block implementation/header, blockdata implementation/header), whose review documents were verified present, alongside the five new FireRed identities from this batch (legacy linker variants, GBA umbrella, multiboot ABI and conditional debug print). This reconciliation **does not claim** to have independently reviewed the Porymap candidates or their external consumers. It corrects the stale denominator calculation and broken Markdown links without changing the authoritative approval gate. **26/14,834 = 0.1753% prepared; 0/14,834 = 0.0000% independently approved; 14,834/14,834 = 100% inventoried. FAIL_INCOMPLETE.**
+
+## 27 October — Porymap tile, metatile and connection contracts
+
+Six exact-blob source candidates were added: header/implementation pairs for `Tile`, `Metatile`, and `MapConnection`. They cover 16-bit tile packing, configurable metatile attribute masks and mirrored map connections. The metatile coordinate conversion has a **source-level negative exact-multiple boundary discrepancy** (`-16` pixel coordinate maps to `-2` instead of mathematical floor `-1`); runtime/editor reachability is not established. **32/14,834 = 0.2157% analyst-prepared, 0/14,834 = 0.0000% independently approved.** CI for this documentation commit must be checked separately.
