@@ -170,7 +170,7 @@ def verify_scene_lifecycle_contract(lobby, exterior, lobby_map):
 
     # These counts apply only to the two pinned scripts, not all generated
     # or compiled script sites in the game.
-    scene_set = re.compile(r"(?m)^\\s*setvar VAR_MAP_SCENE_TRAINER_TOWER, [01]\\s*$")
+    scene_set = re.compile(r"(?m)^\s*setvar VAR_MAP_SCENE_TRAINER_TOWER, [01]\s*$")
     require(len(scene_set.findall(lobby)) == 2
             and len(scene_set.findall(exterior)) == 1,
             "pinned authored scene setter count drift")
@@ -195,10 +195,10 @@ def verify_scene_lifecycle(source):
 
     # Each fixture must fail its own source-order/scene-guard contract.
     reordered = lobby.replace(
-        "\\tsetvar VAR_MAP_SCENE_TRAINER_TOWER, 1\\n", "", 1
+        "setvar VAR_MAP_SCENE_TRAINER_TOWER, 1\n", "", 1
     ).replace(
-        "\\tttower_startchallenge\\n",
-        "\\ttower_startchallenge\\n\\tsetvar VAR_MAP_SCENE_TRAINER_TOWER, 1\\n", 1
+        "ttower_startchallenge\n",
+        "ttower_startchallenge\n\tsetvar VAR_MAP_SCENE_TRAINER_TOWER, 1\n", 1
     )
     scene_zero = lobby.replace(
         "setvar VAR_MAP_SCENE_TRAINER_TOWER, 1",
