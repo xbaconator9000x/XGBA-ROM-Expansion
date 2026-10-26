@@ -31,12 +31,22 @@ FireRed: [pret/pokefirered at ce6406d8](https://github.com/pret/pokefirered/tree
 
 **PSFR-004 — Source control-flow identity is not preserved by emitted bytecode.** chunk.go assigns a base entry label to chunk 0 and numbered labels to generated chunks, rejects authored labels that collide with generated chunk/text labels, emits return when returnID is -1 unless explicitly configured for end, and emits goto when the return chunk is not physically next. emitter.go optionally reorders chunks to exploit fallthrough and suppresses unused generated labels. Both optimized and unoptimized expected outputs are represented in the pinned emitter test. The CLI defaults to optimization and line markers enabled, but line markers require an input filepath. These are provenance and source-reconstruction constraints, not proof of a reversible compiler.
 
+
+## Native consumer closure — script.c and event_data.c
+
+The producer-side map record interpretation above now has an exact-pinned FireRed reader join:
+
+- [src/script.c](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/script.c), blob d0433bdda062b138e53d1a1d3184b4566ad7d9dc: MapHeaderGetScriptTable scans tag+pointer entries in **five-byte strides** until the **one-byte zero tag**, then returns the pointer for the matching tag. MapHeaderCheckScriptTable reads a **two-byte first variable**, stops if zero, reads a **two-byte second operand**, compares both via VarGet and otherwise advances four bytes over the pointer, giving an eight-byte entry. This directly confirms both Poryscript-emitted terminator widths and FireRed macro record widths.
+- [src/event_data.c](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/event_data.c), blob da9391cf0ef74c1addf550def8616c81f16e89e3: VarGet returns its input unchanged if GetVarPointer returns NULL, otherwise dereferences the variable pointer. GetVarPointer returns NULL below VARS_START, indexes saved variables below SPECIAL_VARS_START, and otherwise indexes gSpecialVars. Thus the table's second operand can act as an immediate or a variable ID under the pinned variable ABI; the first operand value **zero is reserved as a sentinel**. No local table-length guard appears in these reader loops, so malformed/truncated data remains an unverified safety boundary, not a proven gameplay exploit.
+
+The source checker now pins **nine** upstream blobs and rejects **24** semantic mutations, including incorrect reader strides, sentinels and VarGet behaviour. This closes the **source-level producer/consumer width join**, but does not close compiled output, invalid-table runtime behaviour, editor round trips or independent review.
+
 ## Reproducibility and review boundary
 
-Run the [seven-blob fail-closed source checker](../tools/phase1_poryscript_firered_map_script_abi.py) against the two pinned upstream checkouts. It validates bounded producer/consumer anchors, verifies exact upstream commits and Git blob hashes, and requires **17 in-memory semantic mutations to be rejected**. The dedicated workflow archives JSON evidence, including negative-control count, without incrementing the authoritative gate.
+Run the [nine-blob fail-closed source checker](../tools/phase1_poryscript_firered_map_script_abi.py) against the two pinned upstream checkouts. It validates bounded producer/consumer anchors, verifies exact upstream commits and Git blob hashes, and requires **24 in-memory semantic mutations to be rejected**. The dedicated workflow archives JSON evidence, including negative-control count, without incrementing the authoritative gate.
 
 The [whole-file chunk.go candidate](phase1-disposition-candidates/0009-poryscript-chunk.md) inventories all functions, including the nonbranching label/command paths. It is pending an actual independent reviewer.
 
-**Unresolved:** compiled assembler bytes for map-script tables; native map-script consumer and termination scans; conditional switch scratch-variable reachability; parse/emit round trips across compile flags; label uniqueness across top-level scripts; ROM-bytecode-to-source information loss; Porymap/FireRed editor integration; independent whole-file review.
+**Unresolved:** compiled assembler bytes for map-script tables; malformed/truncated table runtime behaviour; conditional switch scratch-variable reachability; parse/emit round trips across compile flags; label uniqueness across top-level scripts; ROM-bytecode-to-source information loss; Porymap/FireRed editor integration; independent whole-file review.
 
 **Gate: FAIL_INCOMPLETE. Independent whole-file approvals: 0/14,834. No Phase 2 implementation.**

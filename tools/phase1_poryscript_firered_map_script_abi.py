@@ -20,6 +20,8 @@ PS_BLOBS = {
 FR_BLOBS = {
     "asm/macros/map.inc": "83ef472c926ce767c9133ab9bd6922280b38bb2d",
     "asm/macros/event.inc": "142ad979d7d3093244087a247fa2b4883424f77f",
+    "src/script.c": "d0433bdda062b138e53d1a1d3184b4566ad7d9dc",
+    "src/event_data.c": "da9391cf0ef74c1addf550def8616c81f16e89e3",
 }
 
 
@@ -52,6 +54,8 @@ def contract(ps, fr):
     main = ps["main.go"]
     mapmacro = fr["asm/macros/map.inc"]
     event = fr["asm/macros/event.inc"]
+    script = fr["src/script.c"]
+    event_data = fr["src/event_data.c"]
 
     authored_map = section(emitter, "func (e *Emitter) emitMapScriptStatement(", "func (e *Emitter) emitScriptStatement(")
     ordered(authored_map,
@@ -125,10 +129,34 @@ def contract(ps, fr):
             'e := New(program, false, false, "")',
             'e = New(program, true, false, "")')
 
+
+    # Native consumer confirms both distinct sentinel widths and record strides.
+    header_reader = section(script, "static u8 *MapHeaderGetScriptTable(", "static void MapHeaderRunScriptType(")
+    ordered(header_reader, "const u8 *mapScripts = gMapHeader.mapScripts;",
+            "if (mapScripts == NULL)", "if (*mapScripts == 0)",
+            "if (*mapScripts == tag)", "return T2_READ_PTR(mapScripts);",
+            "mapScripts += 5;")
+    table_reader = section(script, "static u8 *MapHeaderCheckScriptTable(", "void RunOnLoadMapScript(")
+    ordered(table_reader, "varIndex1 = T1_READ_16(ptr);",
+            "if (!varIndex1)", "ptr += 2;",
+            "varIndex2 = T1_READ_16(ptr);", "ptr += 2;",
+            "if (VarGet(varIndex1) == VarGet(varIndex2))",
+            "return T2_READ_PTR(ptr);", "ptr += 4;")
+    pointer = section(event_data, "u16 *GetVarPointer(", "static bool8 IsFlagOrVarStoredInQuestLog(")
+    ordered(pointer, "if (idx < VARS_START)", "return NULL;",
+            "if (idx < SPECIAL_VARS_START)",
+            "return &gSaveBlock1Ptr->vars[idx - VARS_START];",
+            "return gSpecialVars[idx - SPECIAL_VARS_START];")
+    get = section(event_data, "u16 VarGet(", "bool8 VarSet(")
+    ordered(get, "GetVarPointer(idx);", "if (ptr == NULL)",
+            "return idx;", "return *ptr;")
+
     return {
         "map_script_entry": "Poryscript_type_plus_label_to_FireRed_1byte_type_4byte_pointer",
         "map_script_table": "Poryscript_var_compare_label_to_FireRed_2byte_var_2byte_compare_4byte_pointer",
         "map_script_terminators": "one_byte_type_zero_and_two_byte_table_var_zero",
+        "native_consumer": "five_byte_tag_pointer_scan_and_eight_byte_var_compare_pointer_scan",
+        "varget": "returns_immediate_id_when_GetVarPointer_is_null_else_dereferenced_value",
         "comparison": "strict_value_uses_explicit_compare_var_to_value_otherwise_range_sensitive_compare",
         "switch_scratch": "FireRed_switch_macro_writes_VAR_0x8000_and_case_reads_it",
         "chunk_labels": "generated_suffixes_and_optimization_dependent_fallthrough",
@@ -158,6 +186,14 @@ def negative_controls(ps, fr):
         ("ps", "emitter/emitter.go", "chunkIDs = optimizeChunkOrder(chunks)", "chunkIDs = nil"),
         ("ps", "main.go", 'flag.Bool("optimize", true', 'flag.Bool("optimize", false'),
         ("ps", "emitter/emitter_test.go", 'e = New(program, true, false, "")', 'e = New(program, false, false, "")'),
+
+        ("fr", "src/script.c", "mapScripts += 5;", "mapScripts += 6;"),
+        ("fr", "src/script.c", "if (*mapScripts == 0)", "if (*mapScripts == 1)"),
+        ("fr", "src/script.c", "varIndex1 = T1_READ_16(ptr);", "varIndex1 = T1_READ_8(ptr);"),
+        ("fr", "src/script.c", "if (!varIndex1)", "if (!varIndex2)"),
+        ("fr", "src/script.c", "if (VarGet(varIndex1) == VarGet(varIndex2))", "if (varIndex1 == varIndex2)"),
+        ("fr", "src/event_data.c", "return idx;", "return 0;"),
+        ("fr", "src/event_data.c", "return gSpecialVars[idx - SPECIAL_VARS_START];", "return gSpecialVars[0];"),
     ]
     for n, (which, path, old, new) in enumerate(cases, 1):
         source = ps if which == "ps" else fr
