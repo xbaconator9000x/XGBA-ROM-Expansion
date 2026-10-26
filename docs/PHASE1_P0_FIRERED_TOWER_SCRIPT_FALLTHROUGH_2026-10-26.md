@@ -44,7 +44,7 @@ The native `sFloorLayouts` table has **eight rows and three columns**, explicitl
 
 The exact-pinned checker now verifies the seven upstream blobs, 8×3 initializer, enum/dimension values, script-to-native dispatch, native branch/index order and transition default commands. **Six additional fail-closed mutations** cover native index substitution, roof sentinel, table row, transition hide behavior, mixed enum and macro dispatch, bringing the checker to **12** negative controls. These are synthetic source controls, not compiled ROM tests.
 
-**Checkpoint commit:** `ddba78a8eeb49d0f6fc95ff87a71c68499bf20c3`. CI must be checked against the exact resulting head before calling this extended checker verified. The authoritative Phase 1 gate remains **FAIL_INCOMPLETE; 0/14,834 independent whole-file approvals**.
+**Checkpoint commit:** `ddba78a8eeb49d0f6fc95ff87a71c68499bf20c3`. **Verified exact-head CI PASS:** [run #40303500581](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40303500581) at commit `a40ab818c7458d3c7c0c7352d554f32f6bfb9919`; the job completed successfully and the earlier checker job log at `ddba78a8` explicitly records `PINNED_TOWER_SCRIPT_FALLTHROUGH_SOURCE_PASS edges=5 floor_layout=8x3 negatives=12`. The new documentation-only checkpoint commit must not be treated as separately verified until its own workflow completes. The authoritative Phase 1 gate remains **FAIL_INCOMPLETE; 0/14,834 independent whole-file approvals**.
 
 ## Reproducibility and negative controls
 
