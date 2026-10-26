@@ -6,7 +6,7 @@
 - Repository: `pret/pokefirered`; commit: `ce6406d8c2eaf46d543c8a2606de0c3cb1951982`.
 - Entire source: [`constants/version.inc`](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/constants/version.inc); exact Git blob SHA-1: `c5bef93d867c66816f73616e0136125c5aca6cd7` (checked against the pinned upstream file response).
 - Direct source consumers/producers inspected: [`src/crt0.s`](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/crt0.s), blob `a0d8a4b55237b38afc5b69d4e9aad0c2df232e14`; [`Makefile`](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/Makefile), blob `8b454dbd18eb0069fa5851d788697190890a5b37`; [`config.mk`](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/config.mk), blob `c07d31fc083fa341cca29c340e560ed107d5364a`.
-- The source's complete 15-line scope has **two independent conditional blocks**, no includes, data emissions, executable instructions, labels, functions or storage declarations.
+- The source's complete 13-line scope has **two independent conditional blocks**, no includes, data emissions, executable instructions, labels, functions or storage declarations.
 
 ## Whole-file conditional semantics
 1. `.ifdef FIRERED` defines assembler symbol `GAME_VERSION = 4`; its `.else` defines `GAME_VERSION = 5`. There is no explicit `LEAFGREEN` test in this file: **any build without `FIRERED` takes the 5 branch**, whether or not `LEAFGREEN` was defined.
