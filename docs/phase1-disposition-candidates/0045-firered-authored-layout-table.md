@@ -15,6 +15,16 @@
 - Lines 639–654 (`generate_layouts_constants_text`) use a **1-based slot counter**, incremented even for empty objects; `#define LAYOUT_… <slot>` is emitted only for populated slots. The highest populated ID position is **383**. This is a **sparse 1-based layout-ID ABI**, not a dense 365-element enumeration.
 - `data/maps.s` includes generated `layouts.inc` and `layouts_table.inc` before map headers. `src/overworld.c` lines 490–496 retrieves a saved `mapLayoutId` using `gMapLayouts[mapLayoutId - 1]` after checking only that the ID is nonzero. This source function does not itself check the upper bound or NULL hole. That is a **caller/data invariant obligation**, not proof that normal game code ever supplies an invalid ID.
 
+## Actual pinned generator validation (passing CI #40421978391)
+
+The [compiled pinned layout-slot witness #40421978391](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40421978391) at workflow commit `b8853dd462e09f98fa20e5106aa302b7aff59881` built the unmodified `mapjson` executable and ran `layouts firered` on the original authored JSON and a separately labeled synthetic control with the 18 empty slots compacted. It verified the actual generated assembler and C header output:
+
+- Authored input: **383 `gMapLayouts` pointer entries**, exactly **18 NULL positions** matching the pinned holes; **365 numeric `LAYOUT_*` constants** at their original **1-based slot IDs**; **730 `.incbin` directives** (border and blockdata for each populated layout).
+- Synthetic hole-compacted control: **365 table pointers**, no NULL slots, **365 numeric constants**, with **344 of the 365 named layout constants assigned a different numeric ID**. This is a controlled compiler-generator observation, not a suggestion to compact holes.
+- The test did not assemble the layouts into native `maps.o`, link a ROM, run an emulator, or verify save/editor behaviour. The output archive contains generated assembler/header files and a JSON report.
+
+**Concrete compatibility conclusion:** even though only 18 placeholders are removed, compaction changes **344 layout IDs**. A ROM expansion or editor merge that collapses these holes would break numeric identity for most populated layouts in this exact pin.
+
 ## Expansion/editor/save implications and remaining gates
 
 Any expansion that repacks layouts, extends native layout-ID widths, imports map layouts from a ROM or round-trips Porymap authored projects must preserve the 18 empty positions and distinguish the 383 table slots from 365 valid layouts. Do not compress empty slots, assign consecutive IDs to populated records, or treat `NULL` tileset names as missing JSON fields. The saved map layout ID and map-header layout references require source, compiled and runtime validation before a new representation can be called compatible.
