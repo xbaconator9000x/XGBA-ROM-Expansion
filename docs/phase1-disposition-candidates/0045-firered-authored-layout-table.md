@@ -25,6 +25,14 @@ The [compiled pinned layout-slot witness #40421978391](https://github.com/xbacon
 
 **Concrete compatibility conclusion:** even though only 18 placeholders are removed, compaction changes **344 layout IDs**. A ROM expansion or editor merge that collapses these holes would break numeric identity for most populated layouts in this exact pin.
 
+## All 365 pinned binary path and size census (passing CI #40422108349)
+
+The [pinned asset census #40422108349](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40422108349) at workflow commit `d9637a5ef2783aa36661e3ca13a617b0074ecd73` opened **all 730 referenced map/border binaries**, produced a per-layout SHA-256 manifest, and compared actual file lengths to the simple 16-bit-cell expectations:
+
+- **365/365 blockdata binaries exist and match `width × height × 2` bytes.**
+- **365/365 border binaries exist; 337/365 match `border_width × border_height × 2` bytes, and 28 differ.** This is an **observed file-size discrepancy against the simple expectation**, not a finding that the source is invalid or that the game renders incorrectly. The 28 cases require exact size/dimension and border-encoding review; a follow-up census is classifying them.
+- A synthetic width+1 negative control was detected without modifying any pinned source or asset. The census does not verify metatile collision, palette, layout border wrapping, native decompression or editor rendering.
+
 ## Expansion/editor/save implications and remaining gates
 
 Any expansion that repacks layouts, extends native layout-ID widths, imports map layouts from a ROM or round-trips Porymap authored projects must preserve the 18 empty positions and distinguish the 383 table slots from 365 valid layouts. Do not compress empty slots, assign consecutive IDs to populated records, or treat `NULL` tileset names as missing JSON fields. The saved map layout ID and map-header layout references require source, compiled and runtime validation before a new representation can be called compatible.
