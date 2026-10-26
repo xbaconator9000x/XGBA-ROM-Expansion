@@ -22,6 +22,8 @@ VARIANTS = {
     "modern_gcc": ("pokefirered_modern.elf", "build/firered_modern/src/crt0.o"),
 }
 COPY_BYTES = 0x200 * 4
+# Pinned src/main.c: 14 gIntrTableTemplate entries, one 32-bit IntrFunc each.
+INTR_TABLE_BYTES = 14 * 4
 IWRAM_TOP_RESERVED_START = 0x03007E00
 
 
@@ -67,7 +69,7 @@ def text_section_size(obj):
 
 
 def verify_layout(irq_rom, buffer_ram, table_ram, obj_irq_offset,
-                  obj_text_bytes, compiled_buffer_bytes):
+                  obj_text_bytes, compiled_buffer_bytes, compiled_table_bytes):
     require(0x08000000 <= irq_rom < 0x0A000000,
             "linked IRQ source not in native ROM")
     require(irq_rom % 4 == 0 and irq_rom + COPY_BYTES <= 0x0A000000,
@@ -80,6 +82,13 @@ def verify_layout(irq_rom, buffer_ram, table_ram, obj_irq_offset,
             "compiled IRQ callback table not in IWRAM")
     require(compiled_buffer_bytes == COPY_BYTES,
             "compiled IRQ buffer extent differs from 0x200 words")
+    require(compiled_table_bytes == INTR_TABLE_BYTES,
+            "compiled IRQ callback table extent differs from 14 pointers")
+    require(table_ram + compiled_table_bytes <= IWRAM_TOP_RESERVED_START,
+            "IRQ callback table overlaps reserved IWRAM tail")
+    require(buffer_ram + COPY_BYTES <= table_ram
+            or table_ram + compiled_table_bytes <= buffer_ram,
+            "copied IRQ code overlaps callback table")
     require(0 <= obj_irq_offset < obj_text_bytes
             and 0 < obj_text_bytes - obj_irq_offset <= COPY_BYTES,
             "crt0 IRQ code plus trailing literal pool exceeds DMA copy")
@@ -88,6 +97,8 @@ def verify_layout(irq_rom, buffer_ram, table_ram, obj_irq_offset,
         "iwram_copy_address": f"0x{buffer_ram:08X}",
         "iwram_callback_table_address": f"0x{table_ram:08X}",
         "copy_bytes": COPY_BYTES,
+        "callback_table_bytes": compiled_table_bytes,
+        "callback_table_end": f"0x{table_ram + compiled_table_bytes:08X}",
         "crt0_object_irq_offset": obj_irq_offset,
         "crt0_object_text_bytes": obj_text_bytes,
         "crt0_irq_through_text_end_bytes": obj_text_bytes - obj_irq_offset,
@@ -96,7 +107,7 @@ def verify_layout(irq_rom, buffer_ram, table_ram, obj_irq_offset,
 
 
 def negative_controls():
-    normal = (0x08000100, 0x03001000, 0x03002000, 0x40, 0x200, COPY_BYTES)
+    normal = (0x08000100, 0x03001000, 0x03002000, 0x40, 0x200, COPY_BYTES, INTR_TABLE_BYTES)
     verify_layout(*normal)
     cases = [
         (0x0A000000, *normal[1:]),
@@ -104,7 +115,11 @@ def negative_controls():
         (normal[0], normal[1], 0x08000000, *normal[3:]),
         (*normal[:4], 0x841, normal[5]),
         (*normal[:5], 0x400),
-        (*normal[:3], normal[4], normal[4], normal[5]),
+        (*normal[:3], normal[4], normal[4], normal[5], normal[6]),
+        (*normal[:2], normal[1] + 0x10, *normal[3:]),
+        (normal[0], normal[2] - 0x10, *normal[2:]),
+        (*normal[:2], 0x03007DF0, *normal[3:]),
+        (*normal[:6], INTR_TABLE_BYTES - 4),
     ]
     for number, candidate in enumerate(cases, 1):
         try:
@@ -153,15 +168,16 @@ def main():
         obj_irq = unique(obj_syms, "intr_main")
         require(irq["type"].upper() == "T" and obj_irq["type"].upper() == "T",
                 "IRQ handler not compiled as text")
-        require(buffer["size"] is not None,
-                "compiler did not expose IRQ buffer size")
+        require(buffer["size"] is not None and table["size"] is not None,
+                "compiler did not expose IRQ buffer/table size")
         relocations = cmd("arm-none-eabi-readelf", "-rW", str(obj))
         for external in ("AgbMain", "gIntrTable", "gSTWIStatus"):
             require(re.search(r"\b" + external + r"\b", relocations) is not None,
                     "crt0 external relocation missing: " + external)
         layout = verify_layout(
             irq["address"], buffer["address"], table["address"],
-            obj_irq["address"], text_section_size(obj), buffer["size"])
+            obj_irq["address"], text_section_size(obj), buffer["size"],
+            table["size"])
         layout.update({
             "elf_sha256": hashlib.sha256(elf.read_bytes()).hexdigest(),
             "crt0_object_sha256": hashlib.sha256(obj.read_bytes()).hexdigest(),
