@@ -76,12 +76,12 @@ jobs:
           python3 tools/phase1_firered_tower_temp_index_lifetime.py \
             --source upstream-firered \
             --output phase1-evidence/firered-tower-temp-index-lifetime.json
-      - name: Preserve pinned evidence
       - name: Verify pinned Trainer Tower authored map topology and progress dispatch
         run: |
           python3 tools/phase1_firered_tower_authored_topology.py \
             --source upstream-firered \
             --output phase1-evidence/firered-tower-authored-topology.json
+      - name: Preserve pinned evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
