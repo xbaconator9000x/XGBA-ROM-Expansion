@@ -1,3 +1,7 @@
+# 27 October 2026 — full authored map-group JSON candidate
+
+All **45 raw and parsed top-level fields** of the exact pinned `data/maps/map_groups.json` were reconciled, with 43 ordered group arrays, 425 unique maps, 63 explicitly ordered connection includes, 362 omitted null-connection maps and a maximum of 123 maps per group. The [complete-file candidate 0043](phase1-disposition-candidates/0043-firered-authored-map-groups.md) records source-to-generator-to-native-ID dependencies and separate ordering provenance. The register now contains **49/14,834 = 0.3303% distinct analyst-prepared candidates**; **0/14,834 independent approvals**. Native object comparison still pending; **FAIL_INCOMPLETE**.
+
 # 27 October 2026 — map event assembly root complete-file candidate
 
 The exact pinned **17-line `data/map_events.s`** was reviewed in full and registered as [candidate 0042](phase1-disposition-candidates/0042-firered-map-events-assembly-root.md). Its eleven C constant includes, two assembler includes, `.rodata` selection and generated `events.inc` dependency establish a separate `map_events.o` producer path from `data/maps.s`. **48/14,834 = 0.3236% distinct analyst-prepared whole-file candidates; 0/14,834 independent approvals; FAIL_INCOMPLETE.** Native object equivalence testing remains pending.
