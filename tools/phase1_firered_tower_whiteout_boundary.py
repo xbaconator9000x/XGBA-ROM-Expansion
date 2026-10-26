@@ -74,8 +74,8 @@ def verify_save_load_boundary(source):
     require("gSaveDataBufferPtr->checksum == checksum" in save
             and "locations[id].data[j] = gSaveDataBufferPtr->data[j];" in save,
             "checksum-gated sector copy drift")
-    require(re.search(r"void LoadSerializedGame\\(void\\)\\s*\\{\\s*"
-                      r"LoadPlayerParty\\(\\);\\s*LoadObjectEvents\\(\\);\\s*\\}",
+    require(re.search(r"void LoadSerializedGame\(void\)\s*\{\s*"
+                      r"LoadPlayerParty\(\);\s*LoadObjectEvents\(\);\s*\}",
                       loader) is not None,
             "serialized party/object restore body drift")
     require("ClearSav1();" in new_game and "ResetTrainerTowerResults();" in new_game,
