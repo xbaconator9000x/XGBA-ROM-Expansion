@@ -79,6 +79,7 @@ jobs:
               'nonempty_explicitly_ordered': len(nonempty & ordered),
               'nonempty_omitted_from_order': len(nonempty - ordered),
               'nonempty_no_include': len(no_include),
+              'nonempty_no_include_names': sorted(no_include),
               'nonempty_no_include_omitted_from_order': len(no_include - ordered),
               'nonempty_omitted_names': sorted(nonempty - ordered),
               'connection_field_shapes': {k: len(v) for k,v in connection_shapes.items()},
