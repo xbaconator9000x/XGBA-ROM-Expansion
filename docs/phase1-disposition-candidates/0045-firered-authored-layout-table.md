@@ -43,7 +43,7 @@ The pinned `src/fieldmap.c` lines **39–55** defines `GetBorderBlockAt` using `
 
 The [pinned all-map reference census #40422231819](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40422231819) inspected the `layout` field in **all 425 authored `map.json` files**. Those maps reference **309 distinct layout IDs**. Crucially, **none of the 28 zero-border-dimension layouts is referenced by any of the 425 authored map headers**; all 28 are unreferenced in this exact pinned map corpus. This explains why the source-level modulo-zero hazard cannot be assumed reachable through an ordinary authored map header. It does **not** rule out forced/synthetic save layout IDs, unused legacy assets, editor imports or future modifications that make such layouts reachable.
 
-A subsequent exact-pin regression assertion has been added to fail if any authored map references an unknown layout ID or a zero-border layout; its own exact-head CI must be verified separately.
+A subsequent exact-pin regression assertion now **passed** in [CI #40422282772](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40422282772): it fails closed if any authored map references an unknown layout ID or a zero-border layout. This proves the asserted invariants for the pinned input, not all possible save/runtime inputs.
 
 ## Expansion/editor/save implications and remaining gates
 
