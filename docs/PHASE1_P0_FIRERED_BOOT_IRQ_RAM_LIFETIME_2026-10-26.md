@@ -4,12 +4,13 @@
 
 ## Exact upstream source identities
 
-All nine paths are pinned to `pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982`. Git blob identities are checked by [the reproducible verifier](../tools/phase1_firered_boot_irq_ram_lifetime.py), not merely inferred from a branch name.
+The original nine paths plus the direct IRQ-flag assembler constants include are pinned to `pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982`. Git blob identities are checked by [the reproducible verifier](../tools/phase1_firered_boot_irq_ram_lifetime.py), not merely inferred from a branch name.
 
 | File | Git blob | Dependency |
 | --- | --- | --- |
 | [src/rom_header.s](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/rom_header.s) | `c98c89992a128b82ef3bc8f75c791cd1c6cbdcb9` | ROM entry branches to `start_vector` |
-| [src/crt0.s](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/crt0.s) | `a0d8a4b55237b38afc5b69d4e9aad0c2df232e14` | Initial IRQ vector and call to `AgbMain` |
+| [src/crt0.s](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/crt0.s) | `a0d8a4b55237b38afc5b69d4e9aad0c2df232e14` | Initial IRQ vector, callback priority, conditional GAMEPAK spin and call to `AgbMain` |
+| [constants/gba_constants.inc](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/constants/gba_constants.inc) | `3ff857ee8dfb1f4e2dfaf8ac98373bac5dfdb25c` | Assembler IRQ flag bits, IWRAM stack boundaries and MMIO offsets |
 | [src/main.c](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/main.c) | `542b0f5d16dd93107523d11163bfcb70a42b707a` | Boot RAM clearing, DMA copy of IRQ handler, vector switch |
 | [src/reset_save_heap.c](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/reset_save_heap.c) | `745270dc7415b869c302daaa7b9c2b2e5b2865f1` | `ReloadSave` resets EWRAM, not the boot-time IWRAM path |
 | [include/gba/defines.h](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/include/gba/defines.h) | `5521e942c00cc2c263b842ae7608dfb7ac881a76` | `INTR_VECTOR` at `0x03007FFC`, RAM bounds, common-data annotation |
@@ -32,7 +33,7 @@ A future XGBA-aware loader or bank switch must account for **both** the early RO
 
 ## Reproducibility and fail-closed limits
 
-Run `python3 tools/phase1_firered_boot_irq_ram_lifetime.py --source <exact-pinned-pokefirered-checkout> --output phase1-evidence/firered-boot-irq-ram-lifetime.json`. The verifier checks the upstream commit and nine Git blob identities, verifies the ordering and RAM bounds, and runs **14 synthetic negative mutations** against the semantic relationships. CI archives JSON from the pinned source-check workflow.
+Run `python3 tools/phase1_firered_boot_irq_ram_lifetime.py --source <exact-pinned-pokefirered-checkout> --output phase1-evidence/firered-boot-irq-ram-lifetime.json`. The verifier checks the upstream commit and nine Git blob identities, verifies the ordering, RAM bounds and IRQ dispatch priority, and runs **20 synthetic negative mutations** against the semantic relationships. CI archives JSON from the pinned source-check workflow.
 
 **Do not claim a passing CI result until the final exact-head run has completed successfully.** Open proof obligations: linked ELF VMA/LMA and IRQ buffer location; instruction/DMA/IRQ runtime timing; emulator mapping and save reload behaviour; editor/patcher interoperability; independent file-by-file signoff.
 
@@ -44,4 +45,4 @@ The [exact-blob whole-file candidate](PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2
 
 The handler prioritizes 14 `IE & IF` flags and advances its callback-table byte offset by four after each failed flag test. **Source-level edge case:** if no tested flag is set, the final GAMEPAK `ands` leaves Z set, so the `bne loop` spin is not entered; control falls into `jump_intr` with a zero acknowledge mask and the last callback-table offset (52 bytes, index 13). Conversely, when the GAMEPAK bit is set, the conditional sound-control byte store and `bne loop` spin prevent normal callback dispatch. The 14-entry table in pinned `src/main.c` has `IntrDummy` in its last slot. These are source-order conclusions, **not evidence that a no-pending IRQ or GAMEPAK IRQ is reachable or faulty in normal execution**.
 
-The handler also dereferences the `gSTWIStatus` pointer and a byte at offset `0xA` when constructing a temporary IE mask; the inspected assembly contains no local pointer or shift-value bounds check. Producer initialization and runtime validity remain open. No approval or Phase 2 implementation follows from this addendum. **FAIL_INCOMPLETE; 0/14,834 independent approvals.**
+The updated pinned checker verifies the 14 IRQ tests in priority order, their exact assembler flag bits, 13 four-byte offset increments, the 14 C callback entries, the conditional GAMEPAK spin and the zero-mask fallthrough. It adds **six** targeted negative mutations (20 total); this remains source-level proof and must be checked against the final commit's CI run. The handler also dereferences the `gSTWIStatus` pointer and a byte at offset `0xA` when constructing a temporary IE mask; the inspected assembly contains no local pointer or shift-value bounds check. Producer initialization and runtime validity remain open. No approval or Phase 2 implementation follows from this addendum. **FAIL_INCOMPLETE; 0/14,834 independent approvals.**
