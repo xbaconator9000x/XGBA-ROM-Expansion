@@ -1,5 +1,11 @@
 name: Phase 1 pinned Poryscript FireRed map-script ABI
 on:
+  push:
+    branches:
+      - 'phase1/**'
+    paths:
+      - 'tools/phase1_poryscript_firered_map_script_abi.py'
+      - '.github/workflows/phase1-poryscript-firered-abi.yml'
   pull_request:
     paths:
       - 'tools/phase1_poryscript_firered_map_script_abi.py'
