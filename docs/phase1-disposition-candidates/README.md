@@ -21,6 +21,9 @@
 | `pret/pokefirered:include/gba/defines.h` | [0012](0012-firered-gba-defines.md) | pending independent review |
 | `pret/pokefirered:include/constants/trainer_tower.h` | [0013](0013-firered-trainer-tower-constants.md) | pending independent review |
 | `pret/pokefirered:include/cereader_tool.h` | [0014](0014-firered-cereader-abi.md) | pending independent review |
+| `pret/pokefirered:ld_script.ld` | [0015](0015-firered-legacy-linker.md) | pending independent review |
+| `pret/pokefirered:ld_script_rev10.ld` | [0016](0016-firered-rev10-linker.md) | pending independent review |
+| `pret/pokefirered:include/gba/gba.h` | [0017](0017-firered-gba-umbrella.md) | pending independent review |
 
 | `huderlem/porymap:src/core/bitpacker.cpp` | [0015](0015-porymap-bitpacker-impl.md ) | pending independent review |
 | `huderlem/porymap:include/core/bitpacker.h` | [0016](0016-porymap-bitpacker-header.md ) | pending independent review |
@@ -42,3 +45,9 @@ The new Poryscript/FireRed source candidate passed [exact-head CI #40379777582](
 At exact head `9c7b3ca1598e21962aac8d64001e1b06ec2f3774`, four workflows passed: [Poryscript/FireRed #40380386984](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40380386984), [save reload #40380386910](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40380386910), [savestate/Matrix #40380387051](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40380387051) and [layout writers #40380387204](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40380387204). **These passes precede the new 0010–0014 documentation candidates.** Do not infer exact-head CI for later commits until separately verified. None of those jobs constitutes an independent whole-file semantic review.
 
 **Phase 1 remains FAIL_INCOMPLETE; no Phase 2 implementation or independent signoff.**
+
+## 27 October — legacy linker pair and umbrella header checkpoint
+
+Three further **distinct** exact-hash candidates were prepared: `ld_script.ld` (0015), `ld_script_rev10.ld` (0016) and `include/gba/gba.h` (0017). Both legacy linker scripts were inspected through all 11 allocated output-section families, symbol includes, fixed graphics address, debug outputs and discard rule. The comparison identifies revision-10 RFU input-object section moves and different DWARF selectors, which are source-level distinctions rather than compiled-address claims. The umbrella header has eight includes and no authored executable definitions. GitHub's exact-commit file response verified each blob identity. No reviewer verdict is asserted.
+
+The preceding `00156d49` commit had four successful PR workflows: [Poryscript #40380990395](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40380990395), [savestate/Matrix #40380990451](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40380990451), [save reload #40380991212](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40380991212), [layout writer #40380990760](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40380990760). These passes **predate** this checkpoint; exact-head CI for the current docs commits is not yet asserted. Formal approvals remain **0/14,834 (0.0000%)**, inventory **14,834/14,834 (100%)**. **FAIL_INCOMPLETE.**
