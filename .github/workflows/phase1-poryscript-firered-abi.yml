@@ -1,0 +1,49 @@
+name: Phase 1 pinned Poryscript FireRed map-script ABI
+on:
+  pull_request:
+    paths:
+      - 'tools/phase1_poryscript_firered_map_script_abi.py'
+      - 'docs/PHASE1_P0_PORYSCRIPT_FIRERED_MAP_SCRIPT_ABI_2026-10-27.md'
+      - 'docs/phase1-disposition-candidates/0009-poryscript-chunk.md'
+      - '.github/workflows/phase1-poryscript-firered-abi.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pinned-poryscript-firered:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout XGBA audit
+        uses: actions/checkout@v4
+      - name: Checkout pinned Poryscript
+        uses: actions/checkout@v4
+        with:
+          repository: huderlem/poryscript
+          ref: c32481161c767b25a3425fa9f1f8729927ff3d55
+          path: upstream-poryscript
+          persist-credentials: false
+      - name: Checkout pinned FireRed
+        uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - name: Syntax check and verify exact-source contracts
+        run: |
+          python3 -m py_compile tools/phase1_poryscript_firered_map_script_abi.py
+          python3 tools/phase1_poryscript_firered_map_script_abi.py \
+            --poryscript upstream-poryscript \
+            --firered upstream-firered \
+            --output phase1-evidence/poryscript-firered-map-script-abi.json
+      - name: Preserve fail-closed evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-poryscript-firered-map-script-abi
+          path: phase1-evidence/
+          if-no-files-found: warn
+          retention-days: 30
