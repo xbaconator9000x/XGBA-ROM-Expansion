@@ -51,6 +51,17 @@ jobs:
           missing=[r['id'] for r in rows if r['block_bytes'] is None or r['border_bytes'] is None]
           mismatch_block=[r['id'] for r in rows if not r['block_matches_2byte_cells']]
           mismatch_border=[r['id'] for r in rows if not r['border_matches_2byte_cells']]
+          border_mismatch_details=[]
+          for r in rows:
+              if r['border_matches_2byte_cells']: continue
+              layout=d['layouts'][r['slot']-1]
+              border_mismatch_details.append({
+                  'id':r['id'], 'slot':r['slot'],
+                  'border_width':layout['border_width'],
+                  'border_height':layout['border_height'],
+                  'actual_bytes':r['border_bytes'],
+                  'expected_bytes':r['border_expected_2byte_cells']
+              })
           # Negative fixture: changing a valid width must fail the length
           # contract without modifying any pinned source or binary.
           original=next(r for r in rows if r['block_matches_2byte_cells'])
@@ -70,6 +81,7 @@ jobs:
               'missing_binary_layout_ids':missing,
               'block_size_mismatch_layout_ids':mismatch_block,
               'border_size_mismatch_layout_ids':mismatch_border,
+              'border_size_mismatch_details':border_mismatch_details,
               'block_size_matches':len(rows)-len(mismatch_block),
               'border_size_matches':len(rows)-len(mismatch_border),
               'synthetic_width_plus_one_negative_control_detected':True,
@@ -78,6 +90,7 @@ jobs:
           }
           pathlib.Path('layout-binary-evidence/summary.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
           print(json.dumps({k:v for k,v in summary.items() if not k.endswith('_layout_ids')},indent=2))
+          print('BORDER_SIZE_MISMATCH_DETAILS',json.dumps(border_mismatch_details))
           print('missing',missing[:10],'block_mismatch',mismatch_block[:10],'border_mismatch',mismatch_border[:10])
           PY
       - name: Preserve complete hashed layout binary manifest
