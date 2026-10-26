@@ -75,9 +75,11 @@ jobs:
               'nonempty_omitted_names': sorted(nonempty - ordered),
           }
           pathlib.Path('evidence/authored-connection-coverage.json').write_text(
-              json.dumps(coverage, indent=2, sort_keys=True)+'\\n')
+              json.dumps(coverage, indent=2, sort_keys=True)+'\n')
           print('AUTHORED_CONNECTION_COVERAGE', json.dumps(coverage))
-          # Synthetic POSITIVE CONTROL ONLY, saved beside the authored input so\n          # map constants still resolve 425 sibling map.json files. The\n          # original pinned input remains untouched.
+          # Synthetic POSITIVE CONTROL ONLY, saved beside the authored input so
+          # map constants still resolve 425 sibling map.json files. The
+          # original pinned input remains untouched.
           data['connections_include_order'] = order + [n for n in names if n not in set(order)]
           pathlib.Path('upstream/data/maps/map_groups_xgba_complete_order_control.json').write_text(json.dumps(data))
           PY
@@ -135,7 +137,15 @@ jobs:
           if results['release-authored']['exit_code'] == 0:
               def included_names(directory):
                   text = (directory/'data/maps/connections.inc').read_text()
-                  return re.findall(r'^\\s*\\.include\\s+"[^"]+/([^/"]+)/connections\\.inc"              # Generated group/index constants and other unrelated output must
+                  return re.findall(r'^\s*\.include\s+"[^"]+/([^/"]+)/connections\.inc"$', text, re.M)
+              original_order = included_names(normal)
+              control_order = included_names(positive)
+              results['release_vs_control_full_include_order_equal'] = original_order == control_order
+              active = set(coverage['nonempty_omitted_names'])
+              results['release_vs_control_omitted_nonempty_order_equal'] = (
+                  [x for x in original_order if x in active] ==
+                  [x for x in control_order if x in active])
+              # Generated group/index constants and other unrelated output must
               # not depend on global connection include order.
               import hashlib
               for p in ('data/maps/groups.inc','data/maps/headers.inc','data/maps/events.inc',
