@@ -19,6 +19,10 @@ BLOBS = {
     "src/quest_log.c": "0a2f76f2c4019fa0938d5044da73fcea1b2b069c",
     "src/scrcmd.c": "97b695ee2f6fca80a3b78f52f6a444f696fe5814",
     "src/trainer_tower.c": "732b3f2ed31ed95d6476b9e111d53f759c448d81",
+    "src/cereader_tool.c": "395be0bcbed8454e645a9f5670cde3024eda508e",
+    "src/trainer_tower_sets.c": "a79580e10e5014c916e2f622cae24ef868381fa9",
+    "include/cereader_tool.h": "5cb5a9ebc32db23de07800ccce124bcb28d3ef15",
+    "include/constants/trainer_tower.h": "ea0039ea1408c06b8c968cfde8e2628213b2a0dc",
     "asm/macros/event.inc": "142ad979d7d3093244087a247fa2b4883424f77f",
     "data/script_cmd_table.inc": "c5d112d9ea66d258d5a372dda89b9ad96ed2b1e1",
     "data/maps/ThreeIsland_DunsparceTunnel/scripts.inc": "889af04201aef92c34fc9ceac64a5370fba27fe2",
@@ -146,6 +150,65 @@ def main():
             "trainer tower roof selector drift")
     require("SetCurrentMapLayout(sFloorLayouts[sTrainerTowerState->floorIdx][gSpecialVar_Result]);"
             in tower, "trainer tower dynamic floor selector drift")
+    # Source-grounded branch disposition: FireRed's reader predicate is a stub,
+    # so SetUpTrainerTowerDataStruct chooses its local table. Do not mistake
+    # the dormant e-Reader validation for an active setup-time guarantee.
+    reader = sources["src/cereader_tool.c"]
+    reader_header = sources["include/cereader_tool.h"]
+    tower_constants = sources["include/constants/trainer_tower.h"]
+    local_sets = sources["src/trainer_tower_sets.c"]
+    require(re.search(r"bool32 ReadTrainerTowerAndValidate\(void\)\s*\{\s*"
+                      r"// Stubbed out\. Populated in Emerald\s*return FALSE;\s*\}",
+                      reader) is not None, "FireRed e-Reader stub drift")
+    require("if (ReadTrainerTowerAndValidate() == TRUE)\n"
+            "        CEReaderTool_LoadTrainerTower(&sTrainerTowerState->data);"
+            in tower, "Trainer Tower branch selector drift")
+    require("if (numFloors < 1 || numFloors > MAX_TRAINER_TOWER_FLOORS)"
+            in reader and "if (floor->challengeType > CHALLENGE_TYPE_KNOCKOUT)"
+            in reader and "if (!ValidateTrainerTowerData(ttdata))" in reader,
+            "dormant reader validation contract drift")
+    require("#define MAX_TRAINER_TOWER_FLOORS 8" in tower_constants
+            and "#define CHALLENGE_TYPE_KNOCKOUT   2" in tower_constants
+            and "#define CHALLENGE_TYPE_MIXED      3" in tower_constants,
+            "Trainer Tower bounds constants drift")
+    require("struct EReaderTrainerTowerSet" in reader_header
+            and "struct TrainerTowerFloor floors[MAX_TRAINER_TOWER_FLOORS];"
+            in reader_header, "Trainer Tower data shape drift")
+    require(".numFloors = MAX_TRAINER_TOWER_FLOORS," in local_sets,
+            "built-in tower floor count drift")
+    modes = re.findall(r"\[CHALLENGE_TYPE_(SINGLE|DOUBLE|KNOCKOUT|MIXED)\]\s*=\s*"
+                       r"\{([^{}]*)\}", local_sets)
+    require(len(modes) == 4 and len({mode for mode, _ in modes}) == 4,
+            "built-in Trainer Tower challenge mode drift")
+    local_mode_counts = {
+        mode: len(re.findall(r"&sTrainerTowerFloor_[A-Za-z0-9_]+", body))
+        for mode, body in modes
+    }
+    require(all(count == 8 for count in local_mode_counts.values()),
+            "built-in Trainer Tower row count drift")
+    require("u32 challengeType = gSaveBlock1Ptr->towerChallengeId;" in tower
+            and "floors_p = gTrainerTowerFloors[challengeType];" in tower,
+            "saved challenge ID to local pointer table drift")
+    require("if (gSaveBlock1Ptr->towerChallengeId >= NUM_TOWER_CHALLENGE_TYPES)"
+            in tower and "gSaveBlock1Ptr->towerChallengeId = 0;" in tower,
+            "challenge-start normalization drift")
+    # Recording snapshots the backup variable after it is written. Playback
+    # can also populate normal save vars from quest-log flag/var records.
+    require(quest.index("    BackUpMapLayout();") <
+            quest.index("    SetGameStateAtScene(sCurrentSceneNum);"),
+            "quest-log backup/snapshot ordering drift")
+    require("VarSet(VAR_QLBAK_MAP_LAYOUT, gSaveBlock1Ptr->mapLayoutId);"
+            in quest and
+            "CpuCopy16(gSaveBlock1Ptr->vars, questLog->vars, sizeof(gSaveBlock1Ptr->vars));"
+            in quest, "quest-log backup snapshot drift")
+    require("case QL_PLAYBACK_STATE_RUNNING:" in get_var_ptr
+            and "ptr = QuestLogGetFlagOrVarPtr(FALSE, idx);" in get_var_ptr
+            and "gSaveBlock1Ptr->vars[idx - VARS_START] = *ptr;" in get_var_ptr,
+            "quest-log playback variable replay drift")
+    require("void *QuestLogGetFlagOrVarPtr(bool8 isFlag, u16 idx)" in quest
+            and "sFlagOrVarRecords[sFlagOrVarPlayhead].idx == idx" in quest,
+            "quest-log replay record lookup drift")
+
     # Authored Trainer Tower map-header IDs are consecutive table positions.
     # This establishes the arithmetic for normal 1F..8F headers, not the
     # integrity of runtime floor data or the e-Reader challenge-type values.
@@ -202,6 +265,18 @@ def main():
         ],
         "trainer_tower_lobby_slot": lobby_slot,
         "trainer_tower_roof_slot": roof_slot,
+        "trainer_tower_active_setup_branch": "BUILT_IN_DATA_PINNED_STUB_FALSE",
+        "trainer_tower_ereader_validation_present_but_not_invoked_by_setup": True,
+        "trainer_tower_reader_validator": {
+            "floor_count_min": 1, "floor_count_max": 8,
+            "challenge_type_max": 2,
+        },
+        "trainer_tower_built_in_modes": local_mode_counts,
+        "trainer_tower_built_in_floor_count": 8,
+        "trainer_tower_challenge_start_normalizes_saved_id": True,
+        "trainer_tower_setup_saved_id_locally_checked": False,
+        "quest_log_backup_var_snapshot_after_write": True,
+        "quest_log_playback_may_replay_variable_records": True,
         "trainer_tower_floor_layouts": len(floor_ids),
         "trainer_tower_roof_layouts": 1,
         "explicit_alternate_layouts": dimensions,
@@ -210,7 +285,8 @@ def main():
         "unresolved": [
             "The four authored script layout constants are literal VarGet identity operands, not variable references.",
             "Quest-log backup 0x40AE is a variable and its restored nonzero value lacks a local range check.",
-            "Authored Trainer Tower floor IDs map to 0..7 indices, but runtime numFloors/challengeType and e-Reader data bounds remain unproven.",
+            "Built-in Trainer Tower setup is selected by the pinned FALSE e-Reader stub; its saved challenge ID is normalized at challenge start, not locally in setup.",
+            "Authored floor IDs map to 0..7; corrupted saved IDs, replayed quest-log vars, compiled ABI and runtime integrity remain unproven.",
             "No exhaustive dataflow, save integrity, runtime reachability, or linked ROM proof.",
             "Source selector census is not independent whole-file semantic approval.",
         ],
