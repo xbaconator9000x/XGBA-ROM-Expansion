@@ -9,6 +9,7 @@ on:
       - 'tools/compiled_binding_fingerprints.py'
       - 'tools/firered_full_symbol_census.py'
       - 'tools/phase1_compiled_irq_relocation.py'
+      - 'docs/PHASE1_P0_FIRERED_COMPILED_IRQ_COPY_2026-10-26.md'
       - 'tools/firered_compiled_object_bindings.py'
       - 'tools/firered_external_symbol_reconciliation.py'
       - 'tools/firered_runtime_rom_hashes.py'
