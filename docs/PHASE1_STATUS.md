@@ -1,3 +1,7 @@
+# 27 October 2026 — map event assembly root complete-file candidate
+
+The exact pinned **17-line `data/map_events.s`** was reviewed in full and registered as [candidate 0042](phase1-disposition-candidates/0042-firered-map-events-assembly-root.md). Its eleven C constant includes, two assembler includes, `.rodata` selection and generated `events.inc` dependency establish a separate `map_events.o` producer path from `data/maps.s`. **48/14,834 = 0.3236% distinct analyst-prepared whole-file candidates; 0/14,834 independent approvals; FAIL_INCOMPLETE.** Native object equivalence testing remains pending.
+
 # 27 October 2026 — complete map assembly root candidate
 
 The exact pinned **17-line `data/maps.s`** was inspected end-to-end and added as [candidate 0041](phase1-disposition-candidates/0041-firered-maps-assembly-root.md), covering all C constants includes, assembler macro includes, read-only-data section selection and the five generated map/layout includes in order. This is **one new distinct analyst-prepared whole-file candidate**, bringing the register to **47/14,834 = 0.3168%**. No independent reviewer has approved it; the authoritative gate remains **0/14,834 approved, FAIL_INCOMPLETE**. Native object-byte equivalence workflow has been submitted and is pending verification. Previous compiled mapjson evidence is unchanged.
