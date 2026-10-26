@@ -69,3 +69,15 @@ The lobby's exit-challenge script and the exterior's map-transition script both 
 **Phase 1: FAIL_INCOMPLETE; 0/14,834 independent whole-file dispositions.**
 
 **Post-change CI verification (26 October 2026, 05:33 UTC):** [GitHub Actions run #40274858217](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40274858217), job `121415340765`, completed **successfully** at source/checkpoint head `0790c606eb84fe423cfa8ac07aae46a90e4aa111`. Logs report `PINNED_TOWER_WHITEOUT_SOURCE_PASS array_extent=4 negative_controls=3 scene_lifecycle_controls=5` and `PHASE1_GATE=FAIL_INCOMPLETE independent_approvals=0`. The uploaded evidence artifact is `12629229159` (GitHub-reported ZIP SHA-256 `1d9d808b3b3bb89e63543d346f068735b87f1d5b064091e43fd63a252e2ff632`). This verifies the pinned-source regression, **not** compiled/runtime reachability or independent semantic approval.
+
+## Addendum — complete direct setup caller census and continuation callback boundary
+
+At the same immutable FireRed source revision, `src/trainer_tower.c` (blob `732b3f2ed31ed95d6476b9e111d53f759c448d81`) has exactly **three direct invocations** of `SetUpTrainerTowerDataStruct()`:
+
+1. `CallTrainerTowerFunc` (lines 438–443) performs setup before dispatching the selected function, including the start-challenge handler whose later normalization cannot protect that first lookup.
+2. `InitTrainerTowerBattleStruct` (lines 460–489) performs setup before reading `VarGet(VAR_TEMP_1)` and indexing `CURR_FLOOR.trainers[trainerId]`. This is a separate opponent-initialization entrypoint and a distinct trainer-index proof obligation. No claim is made that an invalid `trainerId` is reachable.
+3. `PrintTrainerTowerRecords` (lines 1054–1075) performs setup before rendering the records board, independent of the challenge-start dispatcher. The later bounded `for` loop over four record entries does not protect the earlier setup-time `gTrainerTowerFloors[challengeType]` access.
+
+In `src/overworld.c` (blob `339014da46ae8543143edc99ab72bf7496203a0d`), `CB2_ContinueSavedGame` (lines 1691–1720) loads the saved map header, restores object scripts and initializes the map, but **does not itself read or normalize `towerChallengeId`**. This is a *bounded callback-body observation*, not a proof that no other callback or map initialization path validates saved challenge state.
+
+The updated pinned checker asserts the three direct setup call sites, the opponent and records-board ordering, the bounded continue callback, and two fail-closed negative controls (removing battle setup and adding saved-ID normalization inside the continue callback). It retains exact upstream Git blob checks and records `FAIL_INCOMPLETE`, zero independent approvals and explicit unresolved runtime reachability. These checks are **not** compiled ROM, save-state, or emulator certification. CI verification of the new exact head is required; earlier passing runs do not certify this revision.
