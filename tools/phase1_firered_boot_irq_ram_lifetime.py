@@ -14,6 +14,7 @@ PIN = "ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
 BLOBS = {
     "src/rom_header.s": "c98c89992a128b82ef3bc8f75c791cd1c6cbdcb9",
     "src/crt0.s": "a0d8a4b55237b38afc5b69d4e9aad0c2df232e14",
+    "constants/gba_constants.inc": "3ff857ee8dfb1f4e2dfaf8ac98373bac5dfdb25c",
     "src/main.c": "542b0f5d16dd93107523d11163bfcb70a42b707a",
     "src/reset_save_heap.c": "745270dc7415b869c302daaa7b9c2b2e5b2865f1",
     "include/gba/defines.h": "5521e942c00cc2c263b842ae7608dfb7ac881a76",
@@ -34,6 +35,7 @@ def contract(files):
                          ("src/rom_header.s", "src/crt0.s", "src/main.c"))
     defines, syscall = files["include/gba/defines.h"], files["include/gba/syscall.h"]
     reload_src = files["src/reset_save_heap.c"]
+    gba_constants = files["constants/gba_constants.inc"]
 
     require(re.search(r"(?m)^Start:\s*\n\s*b start_vector\s*$", header),
             "ROM header entry branch drift")
@@ -129,6 +131,57 @@ def contract(files):
             r"\s*ALIGN\(4\)\s*\{[^{}]*\}\s*>\s*IWRAM\s*$", script),
             "IWRAM NOLOAD output drift: " + path)
 
+    # Inspect the entire crt0 IRQ dispatcher, not just the boot vector.
+    # The final GAMEPAK test has a conditional spin; a zero pending mask
+    # falls through to callback-table slot 13 with an IF acknowledge of 0.
+    irq_match = re.search(r"(?s)(?m)^intr_main:\s*(.*?)^\s*\.pool\s*$", crt)
+    require(irq_match is not None, "IRQ handler body/literal-pool scope drift")
+    irq = irq_match.group(1)
+    flags = re.findall(
+        r"(?m)^\s*ands r0, r1, #INTR_FLAG_([A-Z0-9]+)\s*$", irq)
+    expected_flags = (
+        "VCOUNT", "SERIAL", "TIMER3", "HBLANK", "VBLANK", "TIMER0",
+        "TIMER1", "TIMER2", "DMA0", "DMA1", "DMA2", "DMA3",
+        "KEYPAD", "GAMEPAK",
+    )
+    require(tuple(flags) == expected_flags,
+            "14-slot IRQ dispatch priority/order drift")
+    bit_numbers = {
+        "VCOUNT": 2, "SERIAL": 7, "TIMER3": 6, "HBLANK": 1,
+        "VBLANK": 0, "TIMER0": 3, "TIMER1": 4, "TIMER2": 5,
+        "DMA0": 8, "DMA1": 9, "DMA2": 10, "DMA3": 11,
+        "KEYPAD": 12, "GAMEPAK": 13,
+    }
+    for name, bit in bit_numbers.items():
+        require(re.search(
+            rf"(?m)^\s*\.set\s+INTR_FLAG_{name},\s*1 << {bit}\s*$",
+            gba_constants) is not None, "IRQ flag definition drift: " + name)
+    require(len(re.findall(
+        r"(?m)^\s*add r12, r12, 0x4\s*$",
+        irq.split("ands r0, r1, #INTR_FLAG_GAMEPAK", 1)[0])) == 13,
+        "IRQ callback-table byte offset drift")
+    require(re.search(
+        r"ands r0, r1, #INTR_FLAG_GAMEPAK\s*\n"
+        r"\s*strbne r0, \[r3, #REG_SOUNDCNT_X - REG_IE\]\s*\n"
+        r"loop:\s*\n\s*bne loop @ spin\s*\n"
+        r"jump_intr:\s*\n\s*strh r0, \[r3, #REG_IF - REG_IE\]",
+        irq) is not None,
+        "GAMEPAK spin / zero-pending fallthrough semantics drift")
+    require(re.search(
+        r"ldr r1, =gIntrTable\s*\n\s*add r1, r1, r12\s*\n"
+        r"\s*ldr r0, \[r1\]\s*\n\s*stmdb sp!, \{lr\}\s*\n"
+        r"\s*adr lr, intr_return\s*\n\s*bx r0", irq) is not None,
+        "IRQ callback-pointer dispatch drift")
+    table = re.search(
+        r"const IntrFunc gIntrTableTemplate\[\]\s*=\s*\{(?P<body>[^{}]*)\};",
+        main, re.S)
+    require(table is not None, "IRQ callback template scope drift")
+    callbacks = re.findall(r"(?m)^\s*(\w+),", table.group("body"))
+    require(callbacks == [
+        "VCountIntr", "SerialIntr", "Timer3Intr", "HBlankIntr",
+        "VBlankIntr", *(["IntrDummy"] * 9),
+    ], "IRQ priority-to-callback table mapping drift")
+
     return {
         "boot_entry": "ROM header branch -> start_vector -> AgbMain",
         "initial_irq_vector": "INTR_VECTOR (0x03007FFC) -> intr_main",
@@ -142,6 +195,11 @@ def contract(files):
         "reload_save_reset": "RESET_EWRAM only, with IME masked",
         "all_link_variants_boot_objects_in_rom_text": True,
         "compiled_section_or_runtime_proof": False,
+        "irq_dispatch_flags_in_priority_order": list(expected_flags),
+        "irq_callback_table_entries": len(callbacks),
+        "no_pending_irq_source_falls_through_to_slot_13": True,
+        "gamepak_pending_source_enters_spin": True,
+        "irq_dispatch_runtime_reachability_proved": False,
     }
 
 
@@ -186,6 +244,18 @@ def main():
         ("ld_script_modern.ld", "src/crt0.o(.text);", "src/crt0.o(.data);"),
         ("ld_script_modern.ld", "iwram 0x3000000 (NOLOAD)",
          "iwram 0x3000000"),
+        ("src/crt0.s", "ands r0, r1, #INTR_FLAG_VCOUNT",
+         "ands r0, r1, #INTR_FLAG_TIMER0"),
+        ("src/crt0.s", "add r12, r12, 0x4",
+         "add r12, r12, 0x8"),
+        ("src/crt0.s", "bne loop @ spin",
+         "b loop @ spin"),
+        ("src/crt0.s", "strbne r0, [r3, #REG_SOUNDCNT_X - REG_IE]",
+         "strb r0, [r3, #REG_SOUNDCNT_X - REG_IE]"),
+        ("src/main.c", "VCountIntr, // V-count interrupt",
+         "IntrDummy, // V-count interrupt"),
+        ("constants/gba_constants.inc", ".set INTR_FLAG_GAMEPAK, 1 << 13",
+         ".set INTR_FLAG_GAMEPAK, 1 << 12"),
     ]
     for index, (path, before, after) in enumerate(mutations, 1):
         require(before in files[path], f"mutation fixture {index} missing: {path}")
