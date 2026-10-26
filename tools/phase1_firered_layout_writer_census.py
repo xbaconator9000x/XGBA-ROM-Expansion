@@ -146,6 +146,21 @@ def main():
             "trainer tower roof selector drift")
     require("SetCurrentMapLayout(sFloorLayouts[sTrainerTowerState->floorIdx][gSpecialVar_Result]);"
             in tower, "trainer tower dynamic floor selector drift")
+    # Authored Trainer Tower map-header IDs are consecutive table positions.
+    # This establishes the arithmetic for normal 1F..8F headers, not the
+    # integrity of runtime floor data or the e-Reader challenge-type values.
+    lobby_slot = layout_by_id["LAYOUT_TRAINER_TOWER_LOBBY"][0]
+    authored_floor_slots = [
+        layout_by_id[f"LAYOUT_TRAINER_TOWER_{n}F"][0] for n in range(1, 9)
+    ]
+    roof_slot = layout_by_id["LAYOUT_TRAINER_TOWER_ROOF"][0]
+    require(authored_floor_slots == list(range(lobby_slot + 1, lobby_slot + 9)),
+            "trainer tower authored floor ID arithmetic drift")
+    require(roof_slot == lobby_slot + 9, "trainer tower roof slot drift")
+    require("sTrainerTowerState->floorIdx = gMapHeader.mapLayoutId - LAYOUT_TRAINER_TOWER_1F;"
+            in tower, "trainer tower floor index origin drift")
+    require("gMapHeader.mapLayoutId - LAYOUT_TRAINER_TOWER_LOBBY > sTrainerTowerState->data.numFloors"
+            in tower, "trainer tower roof branch drift")
     selected = [row["layout"] for row in script_sites] + floor_ids + ["LAYOUT_TRAINER_TOWER_ROOF"]
     require(len(selected) == len(set(selected)) == 29, "explicit alternate layout overlap/drift")
     dimensions = []
@@ -180,6 +195,13 @@ def main():
         "literal_varget_threshold": vars_start,
         "quest_log_backup_var_id": 0x40AE,
         "quest_log_restore_is_dynamic": True,
+        "trainer_tower_authored_header_floor_slots": [
+            {"floor": n, "layout_table_slot_1_based": slot,
+             "derived_floor_idx": slot - authored_floor_slots[0]}
+            for n, slot in enumerate(authored_floor_slots, 1)
+        ],
+        "trainer_tower_lobby_slot": lobby_slot,
+        "trainer_tower_roof_slot": roof_slot,
         "trainer_tower_floor_layouts": len(floor_ids),
         "trainer_tower_roof_layouts": 1,
         "explicit_alternate_layouts": dimensions,
@@ -188,6 +210,7 @@ def main():
         "unresolved": [
             "The four authored script layout constants are literal VarGet identity operands, not variable references.",
             "Quest-log backup 0x40AE is a variable and its restored nonzero value lacks a local range check.",
+            "Authored Trainer Tower floor IDs map to 0..7 indices, but runtime numFloors/challengeType and e-Reader data bounds remain unproven.",
             "No exhaustive dataflow, save integrity, runtime reachability, or linked ROM proof.",
             "Source selector census is not independent whole-file semantic approval.",
         ],
