@@ -101,7 +101,11 @@ def main():
         files[path] = (root / path).read_text(encoding="utf-8")
     contract(files)
     variants = (
-        ("src/cereader_tool.c", "return FALSE;", "return TRUE;"),
+        ("src/cereader_tool.c",
+         "bool32 ReadTrainerTowerAndValidate(void)\n{\n"
+         "    // Stubbed out. Populated in Emerald\n    return FALSE;",
+         "bool32 ReadTrainerTowerAndValidate(void)\n{\n"
+         "    // Stubbed out. Populated in Emerald\n    return TRUE;"),
         ("include/constants/global.h",
          "#define NUM_TOWER_CHALLENGE_TYPES 4",
          "#define NUM_TOWER_CHALLENGE_TYPES 5"),
