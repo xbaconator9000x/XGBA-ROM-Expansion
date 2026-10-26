@@ -40,7 +40,12 @@
 | `huderlem/porymap:include/core/mapconnection.h` | [0025](0025-porymap-mapconnection-header.md) | pending independent review |
 | `huderlem/porymap:src/core/mapconnection.cpp` | [0026](0026-porymap-mapconnection-impl.md) | pending independent review |
 
-**Count: 32 distinct pinned upstream whole-file identities prepared / 14,834 = 0.2157%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
+| `pret/pokefirered:asm/macros/map.inc` | [0027](0027-firered-map-assembly-macros.md) | pending independent review |
+| `pret/pokefirered:include/constants/map_scripts.h` | [0028](0028-firered-map-script-types.md) | pending independent review |
+| `pret/pokefirered:include/constants/event_bg.h` | [0029](0029-firered-background-event-constants.md) | pending independent review |
+| `pret/pokefirered:include/constants/event_objects.h` | [0030](0030-firered-object-event-constants.md) | pending independent review |
+
+**Count: 36 distinct pinned upstream whole-file identities prepared / 14,834 = 0.2427%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
 
 ## Collision and acceptance safeguards
 Multiple filenames now reuse sequence numbers (including `0006` and `0015`–`0019`) for **different** pinned files. The integer alone is therefore **not a unique candidate ID**. Until filenames and references are migrated atomically, identify a candidate by **(upstream repository, pinned commit, exact path, Git blob SHA)**, and use the full filename for links. Do not count the sequence maximum as the number of distinct files or use it as an approval counter. A later registry migration may assign unique sequence numbers, preserving historical links.
@@ -67,3 +72,7 @@ The register now preserves six additional **distinct** Porymap source identities
 ## 27 October — Porymap tile, metatile and connection contracts
 
 Six exact-blob source candidates were added: header/implementation pairs for `Tile`, `Metatile`, and `MapConnection`. They cover 16-bit tile packing, configurable metatile attribute masks and mirrored map connections. The metatile coordinate conversion has a **source-level negative exact-multiple boundary discrepancy** (`-16` pixel coordinate maps to `-2` instead of mathematical floor `-1`); runtime/editor reachability is not established. **32/14,834 = 0.2157% analyst-prepared, 0/14,834 = 0.0000% independently approved.** CI for this documentation commit must be checked separately.
+
+## 27 October — map-event assembler and constants checkpoint
+
+Four distinct pinned FireRed source files were read in full, and exact Git blobs were verified: `asm/macros/map.inc` (0027), `include/constants/map_scripts.h` (0028), `include/constants/event_bg.h` (0029), and `include/constants/event_objects.h` (0030). The records distinguish the 24-byte normal/clone templates, 8-byte warp, 16-byte coord, 12-byte background and connection records, one-byte event counters, 32-bit pointers, dynamic graphics selectors and local-ID namespaces. This is **source-level semantic preparation**, not a compiled ABI or runtime verification. No independent reviewer has signed off. **36/14,834 = 0.2427% prepared; 0/14,834 = 0.0000% approved; 100% inventoried.** Exact-head CI after this documentation checkpoint must be checked separately.
