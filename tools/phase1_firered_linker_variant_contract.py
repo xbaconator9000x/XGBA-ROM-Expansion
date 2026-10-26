@@ -89,8 +89,8 @@ def contract(files):
             ("IWRAM", "0x3000000", "32K"),
         ):
             decl = re.compile(
-                rf"(?m)^\\s*{region}\\s+\\(rwx\\)\\s*:\\s*"
-                rf"ORIGIN\\s*=\\s*{origin},\\s*LENGTH\\s*=\\s*{size}\\s*$")
+                rf"(?m)^\s*{region}\s+\(rwx\)\s*:\s*"
+                rf"ORIGIN\s*=\s*{origin},\s*LENGTH\s*=\s*{size}\s*$")
             require(len(decl.findall(script)) == 1,
                     "RAM memory-region drift: " + path + ":" + region)
         for name, origin, region in (
@@ -98,19 +98,19 @@ def contract(files):
             ("iwram", "0x3000000", "IWRAM"),
         ):
             require(re.search(
-                rf"(?ms)^\\s*{name}\\s+{origin}\\s+\\(NOLOAD\\)\\s*:"
-                rf"\\s*ALIGN\\(4\\)\\s*\\{{.*?^\\s*\\}}\\s*>\\s*{region}\\s*$",
+                rf"(?ms)^\s*{name}\s+{origin}\s+\(NOLOAD\)\s*:"
+                rf"\s*ALIGN\(4\)\s*\{{.*?^\s*\}}\s*>\s*{region}\s*$",
                 script), "NOLOAD RAM placement drift: " + path + ":" + name)
         require(re.search(
-            r"(?ms)^\\s*script_data\\s*:\\s*ALIGN\\(4\\)\\s*"
-            r"\\{.*?^\\s*\\}\\s*>\\s*ROM\\s*=0\\s*$", script),
+            r"(?ms)^\s*script_data\s*:\s*ALIGN\(4\)\s*"
+            r"\{.*?^\s*\}\s*>\s*ROM\s*=0\s*$", script),
             "script_data ROM placement drift: " + path)
 
     for path in LEGACY:
         ewram = re.search(
-            r"(?ms)^\\s*ewram\\s+0x2000000\\s+\\(NOLOAD\\)\\s*:"
-            r"\\s*ALIGN\\(4\\)\\s*\\{(?P<body>.*?)^\\s*\\}"
-            r"\\s*>\\s*EWRAM\\s*$", files[path])
+            r"(?ms)^\s*ewram\s+0x2000000\s+\(NOLOAD\)\s*:"
+            r"\s*ALIGN\(4\)\s*\{(?P<body>.*?)^\s*\}"
+            r"\s*>\s*EWRAM\s*$", files[path])
         require(ewram is not None and all(
             item in ewram.group("body") for item in (
                 "*libc.a:impure.o(.data);",
@@ -120,9 +120,9 @@ def contract(files):
     modern = files["ld_script_modern.ld"]
     for section in (".data", ".rodata"):
         require(re.search(
-            rf"(?ms)^\\s*{re.escape(section)}\\s*:\\s*ALIGN\\(4\\)\\s*"
-            rf"\\{{\\s*\\*\\({re.escape(section)}\\*\\);\\s*\\}}"
-            rf"\\s*>\\s*ROM\\s*=0\\s*$", modern),
+            rf"(?ms)^\s*{re.escape(section)}\s*:\s*ALIGN\(4\)\s*"
+            rf"\{{\s*\*\({re.escape(section)}\*\);\s*\}}"
+            rf"\s*>\s*ROM\s*=0\s*$", modern),
             "modern initialized-data ROM placement drift: " + section)
 
     fixed = re.compile(r"(?m)^\s*gfx_data\s+0x08D00000\s*:\s*$")
@@ -208,10 +208,10 @@ def main():
          "ewram 0x2000000"),
         ("ld_script.ld", "iwram 0x3000000 (NOLOAD)",
          "iwram 0x3000000"),
-        ("ld_script_modern.ld", "    } > ROM =0\\n\\n    .data :",
-         "    } > EWRAM\\n\\n    .data :"),
-        ("ld_script_modern.ld", "    } > ROM =0\\n\\n    .rodata :",
-         "    } > EWRAM\\n\\n    .rodata :"),
+        ("ld_script_modern.ld", "    } > ROM =0\n\n    .data :",
+         "    } > EWRAM\n\n    .data :"),
+        ("ld_script_modern.ld", "    } > ROM =0\n\n    .rodata :",
+         "    } > EWRAM\n\n    .rodata :"),
         ("ld_script_modern.ld", "*(.data*);", "*(.bss*);"),
         ("ld_script_modern.ld", "*(.rodata*);", "*(.bss*);"),
         ("ld_script.ld", "*libc.a:impure.o(.data);",
