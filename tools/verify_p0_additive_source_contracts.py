@@ -210,7 +210,7 @@ def verify_map_layout_border_metadata_reference(root: Path):
     if blob_sha(data) != expected_layout_blob or blob_sha(header_data) != expected_header_blob:
         raise RuntimeError("Pinned authored layouts or native MapLayout struct changed")
     header_text = header_data.decode("utf-8", "surrogateescape")
-    if not re.search(r"struct MapLayout\\s*\\{.*?u8 borderWidth;\\s*u8 borderHeight;", header_text, re.S):
+    if not re.search(r"struct MapLayout\s*\{.*?u8 borderWidth;\s*u8 borderHeight;", header_text, re.S):
         raise RuntimeError("Native MapLayout border dimension ABI changed")
     document = json.loads(data)
     layouts = document.get("layouts")
