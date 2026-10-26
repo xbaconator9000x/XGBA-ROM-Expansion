@@ -82,6 +82,66 @@ def contract(files):
         require(len(pointers) == 8 and
                 re.sub(r"&sTrainerTowerFloor_[A-Za-z0-9_]+|,|\s", "", values) == "",
                 "local-floor row must have eight explicit pointers: " + name)
+    # Resolve every local table pointer to its actual floor record. In the
+    # mixed challenge, row membership is not the per-floor battle type.
+    expected = {
+        "CHALLENGE_TYPE_SINGLE": ["Single_%d" % n for n in range(1, 9)],
+        "CHALLENGE_TYPE_DOUBLE": ["Double_%d" % n for n in range(1, 9)],
+        "CHALLENGE_TYPE_KNOCKOUT": ["Knockout_%d" % n for n in range(1, 9)],
+        "CHALLENGE_TYPE_MIXED": [
+            "Mixed_1", "Mixed_2", "Mixed_3", "Double_8",
+            "Mixed_5", "Knockout_8", "Double_3", "Knockout_2",
+        ],
+    }
+    refs = []
+    for name, values in entries:
+        pointers = re.findall(r"&sTrainerTowerFloor_([A-Za-z0-9_]+)", values)
+        require(pointers == expected[name],
+                "local-floor pointer identity/order drift: " + name)
+        refs.extend(pointers)
+    require(len(refs) == 32 and len(set(refs)) == 28,
+            "local-floor pointer identity cardinality drift")
+    definitions = re.findall(
+        r"(?ms)^static const struct TrainerTowerFloor "
+        r"(sTrainerTowerFloor_[A-Za-z0-9_]+)\\s*=\\s*\\{(.*?)^\\};",
+        sets,
+    )
+    require(len(definitions) == 32 and
+            len({name for name, _ in definitions}) == 32,
+            "local-floor record definition cardinality/identity drift")
+    records = dict(definitions)
+    resolved_types = {}
+    for pointer in sorted(set(refs)):
+        body = records.get("sTrainerTowerFloor_" + pointer)
+        require(body is not None, "unresolved local-floor pointer: " + pointer)
+        types = re.findall(
+            r"(?m)^\\s*\\.challengeType\\s*=\\s*(CHALLENGE_TYPE_[A-Z]+),\\s*$",
+            body,
+        )
+        require(len(types) == 1 and types[0] in {
+            "CHALLENGE_TYPE_SINGLE", "CHALLENGE_TYPE_DOUBLE",
+            "CHALLENGE_TYPE_KNOCKOUT",
+        }, "local-floor record challenge type out of 8x3 column range: " + pointer)
+        require(len(re.findall(
+            r"(?m)^\\s*\\.floorIdx\\s*=\\s*MAX_TRAINER_TOWER_FLOORS,\\s*$",
+            body,
+        )) == 1, "local-floor record floorIdx metadata drift: " + pointer)
+        resolved_types[pointer] = types[0]
+    require([resolved_types[p] for p in expected["CHALLENGE_TYPE_MIXED"]] == [
+        "CHALLENGE_TYPE_SINGLE", "CHALLENGE_TYPE_SINGLE",
+        "CHALLENGE_TYPE_SINGLE", "CHALLENGE_TYPE_DOUBLE",
+        "CHALLENGE_TYPE_DOUBLE", "CHALLENGE_TYPE_KNOCKOUT",
+        "CHALLENGE_TYPE_DOUBLE", "CHALLENGE_TYPE_KNOCKOUT",
+    ], "mixed local-floor effective challenge-type sequence drift")
+    return {
+        "local_floor_references": len(refs),
+        "unique_referenced_floor_records": len(set(refs)),
+        "mixed_effective_challenge_types": [
+            resolved_types[p] for p in expected["CHALLENGE_TYPE_MIXED"]
+        ],
+        "all_referenced_floor_challenge_types_within_0_to_2": True,
+        "malformed_or_mutated_floor_data_reachability_proven": False,
+    }
 
 
 def main():
@@ -99,7 +159,7 @@ def main():
         require((root / path).is_file() and git("hash-object", path) == blob,
                 "source blob drift: " + path)
         files[path] = (root / path).read_text(encoding="utf-8")
-    contract(files)
+    facts = contract(files)
     variants = (
         ("src/cereader_tool.c",
          "bool32 ReadTrainerTowerAndValidate(void)\n{\n"
@@ -116,6 +176,18 @@ def main():
          "floors_p = gTrainerTowerFloors[challengeType];",
          "if (challengeType >= NUM_TOWER_CHALLENGE_TYPES) challengeType = 0;\n"
          "        floors_p = gTrainerTowerFloors[challengeType];"),
+        ("src/trainer_tower_sets.c",
+         "&sTrainerTowerFloor_Mixed_5,",
+         "&sTrainerTowerFloor_Mixed_4,"),
+        ("src/trainer_tower_sets.c",
+         ".challengeType = CHALLENGE_TYPE_SINGLE,",
+         ".challengeType = CHALLENGE_TYPE_MIXED,"),
+        ("src/trainer_tower_sets.c",
+         "&sTrainerTowerFloor_Double_8,",
+         "&sTrainerTowerFloor_Double_7,"),
+        ("src/trainer_tower_sets.c",
+         ".floorIdx = MAX_TRAINER_TOWER_FLOORS,",
+         ".floorIdx = 7,"),
     )
     for number, (path, before, after) in enumerate(variants, 1):
         require(before in files[path], "fixture target missing: " + str(number))
@@ -136,6 +208,7 @@ def main():
         "setup_local_floor_branch_selected_by_source_stub": True,
         "local_floor_table_rows": 4,
         "local_floor_pointers_per_row": 8,
+        "resolved_floor_record_facts": facts,
         "saved_id_local_pre_index_bounds_check_present": False,
         "negative_controls_passed": len(variants),
         "unresolved": [
@@ -147,7 +220,7 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(evidence, sort_keys=True, indent=2) + "\n",
                            encoding="utf-8")
-    print("PINNED_TOWER_LOCAL_FLOOR_BRANCH_PASS rows=4 pointers_per_row=8 negative_controls=4")
+    print("PINNED_TOWER_LOCAL_FLOOR_BRANCH_PASS rows=4 pointers=32 distinct_records=28 negative_controls=8")
     print("PHASE1_GATE=FAIL_INCOMPLETE independent_approvals=0")
 
 
