@@ -103,7 +103,7 @@ def contract(files):
             "local-floor pointer identity cardinality drift")
     definitions = re.findall(
         r"(?ms)^static const struct TrainerTowerFloor "
-        r"(sTrainerTowerFloor_[A-Za-z0-9_]+)\\s*=\\s*\\{(.*?)^\\};",
+        r"(sTrainerTowerFloor_[A-Za-z0-9_]+)\s*=\s*\{(.*?)^\};",
         sets,
     )
     require(len(definitions) == 32 and
@@ -115,7 +115,7 @@ def contract(files):
         body = records.get("sTrainerTowerFloor_" + pointer)
         require(body is not None, "unresolved local-floor pointer: " + pointer)
         types = re.findall(
-            r"(?m)^\\s*\\.challengeType\\s*=\\s*(CHALLENGE_TYPE_[A-Z]+),\\s*$",
+            r"(?m)^\s*\.challengeType\s*=\s*(CHALLENGE_TYPE_[A-Z]+),\s*$",
             body,
         )
         require(len(types) == 1 and types[0] in {
@@ -123,7 +123,7 @@ def contract(files):
             "CHALLENGE_TYPE_KNOCKOUT",
         }, "local-floor record challenge type out of 8x3 column range: " + pointer)
         require(len(re.findall(
-            r"(?m)^\\s*\\.floorIdx\\s*=\\s*MAX_TRAINER_TOWER_FLOORS,\\s*$",
+            r"(?m)^\s*\.floorIdx\s*=\s*MAX_TRAINER_TOWER_FLOORS,\s*$",
             body,
         )) == 1, "local-floor record floorIdx metadata drift: " + pointer)
         resolved_types[pointer] = types[0]
