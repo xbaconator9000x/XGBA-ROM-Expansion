@@ -92,7 +92,7 @@ def main():
     global_header = source["include/global.h"]
     constants = source["include/constants/global.h"]
     tower = source["src/trainer_tower.c"]
-    require(re.search(r"\bu32 towerChallengeId;\s*"
+    require(re.search(r"\bu32 towerChallengeId;\s*/\*0x3D38\*/\s*"
                       r"struct TrainerTower trainerTower\[NUM_TOWER_CHALLENGE_TYPES\];",
                       global_header) is not None,
             "saved challenge ID and array layout drift")
