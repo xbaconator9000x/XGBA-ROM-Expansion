@@ -1,3 +1,7 @@
+# 27 October 2026 — compiled sparse layout generator confirms 344 ID shifts under compaction
+
+[Passing pinned generator CI #40421978391](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40421978391) verified **383 layout pointer slots with 18 NULL holes, 365 layout constants and 730 border/blockdata `.incbin` directives**. A separately labeled synthetic control that removed the 18 holes **renumbered 344 of 365 named layout IDs**. This is a concrete generated ABI identity hazard for editors/expansion that compact sparse layout tables, not a linked-ROM/runtime test. See [candidate 0045](phase1-disposition-candidates/0045-firered-authored-layout-table.md). **51/14,834 prepared; 0/14,834 approved; FAIL_INCOMPLETE.**
+
 # 27 October 2026 — sparse FireRed layout-slot ABI review
 
 The exact pinned [layout table candidate 0045](phase1-disposition-candidates/0045-firered-authored-layout-table.md) structurally covers **383 ordered slots, 365 populated layouts and 18 explicit empty slots** at 1-based positions 22, 23, 29, 38–45, 56, 58–61, 76 and 175. The pinned generator emits **383 table pointers (18 NULL)** but only **365 layout constants**, with 1-based IDs retaining holes; `src/overworld.c` retrieves `gMapLayouts[mapLayoutId - 1]` for nonzero saved IDs. This is a source-grounded sparse-ABI obligation, not evidence of reachable invalid IDs. A compiled generator control is in progress. **51/14,834 = 0.3438% distinct analyst-prepared; 0/14,834 approved; FAIL_INCOMPLETE.**
