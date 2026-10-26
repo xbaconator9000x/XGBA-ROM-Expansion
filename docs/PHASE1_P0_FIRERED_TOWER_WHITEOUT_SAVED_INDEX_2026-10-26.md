@@ -46,3 +46,24 @@ This follow-up examines the **save-data ingress path**, rather than assuming tha
 **Interpretation.** Sector signature/checksum integrity is distinct from semantic validation of a saved challenge ID. The source evidence now links the save-sector copy, limited post-load restoration, new-game initialization and whiteout consumer. It does **not** prove an out-of-range value can survive every continuation path, or that the Trainer Tower scene predicate can coincide with it. Those remain runtime/lifecycle and save-corruption test obligations. No exploit, crash, independent approval, compiled proof or Phase 2 implementation is claimed.
 
 **Reproducibility.** The pinned-source checker verifies all eight exact Git blobs, these bounded contracts and three additional mutation controls. It records `FAIL_INCOMPLETE` and zero independent whole-file approvals regardless of the result. GitHub Actions must pass at the exact resulting commit before this extension is described as CI-verified.
+
+
+## Addendum — authored scene-flag lifecycle and challenge-start ordering
+
+The pinned source-level whiteout predicate can now be connected to the **authored** Trainer Tower lobby script, without assuming a runtime crash. Three additional immutable FireRed source blobs are checked against the actual working-tree bytes:
+
+| Source | Git blob | Verified contract |
+| --- | --- | --- |
+| `data/maps/TrainerTower_Lobby/scripts.inc` | `b2543ec3f7fe3481bb43ebe3bf783e33b668c9c5` | Challenge entry sets scene 1 before `ttower_startchallenge`; lobby challenge-exit path resets scene 0 |
+| `data/maps/SevenIsland_TrainerTower/scripts.inc` | `b357537593138b61bb43e399d70fca17fd991f0f` | Exterior map-transition script resets scene 0 |
+| `data/maps/TrainerTower_Lobby/map.json` | `bc3221e5c44e960804fa565e93e3828544722e84` | Lobby coordinate event (9,7,elevation 3) invokes the entry trigger only when the scene variable equals 0 |
+
+**Temporal dependency:** `TrainerTower_Lobby_EventScript_BeginChallenge` copies the selected challenge mode into `VAR_0x8005`, writes `VAR_MAP_SCENE_TRAINER_TOWER = 1`, heals the party, and only then executes `ttower_startchallenge`. In the separately pinned C dispatcher, setup reads the saved challenge ID before `StartTrainerTowerChallenge` assigns/clamps it. Thus the authored scene flag is already 1 during challenge-start dispatch, and the whiteout consumer's scene-1 predicate is not merely a hypothetical constant. This establishes a source-level **potential overlap in the state lifecycle**, not that a malformed saved ID is reachable or survives normal challenge initialization.
+
+The lobby's exit-challenge script and the exterior's map-transition script both reset the scene to 0; the whiteout function can also reset it if `spokeToOwner` is false. The two authored script files have exactly three explicit scene-setting instructions between them. **This is not a game-wide writer census** and does not prove the order or reachability of all runtime transitions.
+
+`tools/phase1_firered_tower_whiteout_boundary.py` now checks the three additional blobs, the challenge-entry ordering, both reset sites and the map coordinate-event condition. Five synthetic negative controls cover scene-value drift, assignment after challenge start, missing/altered resets, and the coordinate trigger's scene value. The evidence JSON retains `FAIL_INCOMPLETE` and zero independent approvals.
+
+**Verification boundary:** The authored source texts and their Git blob identities were inspected through the pinned GitHub source interface. Exact-head GitHub Actions verification of this new checker revision is required before calling these five controls CI-passed. Compiled scripts, save-load state survival, whiteout runtime execution, emulator behaviour and whole-file semantic approvals remain unverified.
+
+**Phase 1: FAIL_INCOMPLETE; 0/14,834 independent whole-file dispositions.**
