@@ -20,6 +20,9 @@ BLOBS = {
     "src/load_save.c": "8b723dd044c6024b3671bb890b25b56a53f99ec5",
     "src/new_game.c": "3768b3ccb98cdad514b858cbc59244f21bedb7b0",
     "src/overworld.c": "339014da46ae8543143edc99ab72bf7496203a0d",
+    "data/maps/TrainerTower_Lobby/scripts.inc": "b2543ec3f7fe3481bb43ebe3bf783e33b668c9c5",
+    "data/maps/SevenIsland_TrainerTower/scripts.inc": "b357537593138b61bb43e399d70fca17fd991f0f",
+    "data/maps/TrainerTower_Lobby/map.json": "bc3221e5c44e960804fa565e93e3828544722e84",
 }
 SIGNATURE = "void SetWhiteoutRespawnWarpAndHealerNpc(struct WarpData * warp)"
 NEXT_FUNCTION = "static void SetWhiteoutRespawnHealerNpcAsLastTalked(u32 healLocationIdx)"
@@ -135,6 +138,106 @@ def negative_controls(source):
         raise RuntimeError(f"whiteout negative control {index} accepted")
 
 
+
+def verify_scene_lifecycle_contract(lobby, exterior, lobby_map):
+    """Bounded authored-script/coordinate-event ordering, not runtime reachability."""
+    def section(text, first, last):
+        require(text.count(first) == text.count(last) == 1,
+                "Trainer Tower script section marker drift: " + first)
+        return text.split(first, 1)[1].split(last, 1)[0]
+
+    begin = section(lobby, "TrainerTower_Lobby_EventScript_BeginChallenge::",
+                    "TrainerTower_Lobby_EventScript_DeclineChallenge::")
+    sequence = (
+        "copyvar VAR_0x8005, VAR_RESULT",
+        "setvar VAR_MAP_SCENE_TRAINER_TOWER, 1",
+        "special HealPlayerParty",
+        "ttower_startchallenge",
+    )
+    require(all(begin.count(part) == 1 for part in sequence)
+            and [begin.index(part) for part in sequence]
+            == sorted(begin.index(part) for part in sequence),
+            "lobby challenge scene assignment/start ordering drift")
+
+    exit_script = section(lobby, "TrainerTower_Lobby_EventScript_ExitChallenge::",
+                          "TrainerTower_Lobby_EventScript_EnterEnd::")
+    require(exit_script.count("setvar VAR_MAP_SCENE_TRAINER_TOWER, 0") == 1,
+            "lobby exit challenge scene reset drift")
+    transition = section(exterior, "SevenIsland_TrainerTower_OnTransition::",
+                         "SevenIsland_TrainerTower_EventScript_TrainerTowerSign::")
+    require(transition.count("setvar VAR_MAP_SCENE_TRAINER_TOWER, 0") == 1,
+            "exterior transition scene reset drift")
+
+    # These counts apply only to the two pinned scripts, not all generated
+    # or compiled script sites in the game.
+    scene_set = re.compile(r"(?m)^\\s*setvar VAR_MAP_SCENE_TRAINER_TOWER, [01]\\s*$")
+    require(len(scene_set.findall(lobby)) == 2
+            and len(scene_set.findall(exterior)) == 1,
+            "pinned authored scene setter count drift")
+
+    events = lobby_map.get("coord_events")
+    require(isinstance(events, list), "lobby coordinate event table drift")
+    triggers = [e for e in events
+                if e.get("var") == "VAR_MAP_SCENE_TRAINER_TOWER"]
+    require(len(triggers) == 1 and triggers[0].get("var_value") == "0"
+            and triggers[0].get("script") ==
+                "TrainerTower_Lobby_EventScript_EntryTrigger"
+            and (triggers[0].get("x"), triggers[0].get("y"),
+                 triggers[0].get("elevation")) == (9, 7, 3),
+            "lobby entry scene-gated coordinate trigger drift")
+
+
+def verify_scene_lifecycle(source):
+    lobby = source["data/maps/TrainerTower_Lobby/scripts.inc"]
+    exterior = source["data/maps/SevenIsland_TrainerTower/scripts.inc"]
+    lobby_map = json.loads(source["data/maps/TrainerTower_Lobby/map.json"])
+    verify_scene_lifecycle_contract(lobby, exterior, lobby_map)
+
+    # Each fixture must fail its own source-order/scene-guard contract.
+    reordered = lobby.replace(
+        "\\tsetvar VAR_MAP_SCENE_TRAINER_TOWER, 1\\n", "", 1
+    ).replace(
+        "\\tttower_startchallenge\\n",
+        "\\ttower_startchallenge\\n\\tsetvar VAR_MAP_SCENE_TRAINER_TOWER, 1\\n", 1
+    )
+    scene_zero = lobby.replace(
+        "setvar VAR_MAP_SCENE_TRAINER_TOWER, 1",
+        "setvar VAR_MAP_SCENE_TRAINER_TOWER, 0", 1
+    )
+    exit_reset = lobby.replace(
+        "setvar VAR_MAP_SCENE_TRAINER_TOWER, 0",
+        "setvar VAR_MAP_SCENE_TRAINER_TOWER, 1", 1
+    )
+    exterior_reset = exterior.replace(
+        "setvar VAR_MAP_SCENE_TRAINER_TOWER, 0",
+        "setvar VAR_MAP_SCENE_TRAINER_TOWER, 1", 1
+    )
+    changed_trigger = json.loads(json.dumps(lobby_map))
+    for event in changed_trigger["coord_events"]:
+        if event.get("var") == "VAR_MAP_SCENE_TRAINER_TOWER":
+            event["var_value"] = "1"
+    variants = (
+        (reordered, exterior, lobby_map),
+        (scene_zero, exterior, lobby_map),
+        (exit_reset, exterior, lobby_map),
+        (lobby, exterior_reset, lobby_map),
+        (lobby, exterior, changed_trigger),
+    )
+    require(reordered != lobby and scene_zero != lobby and exit_reset != lobby
+            and exterior_reset != exterior and changed_trigger != lobby_map,
+            "scene lifecycle negative fixtures failed to mutate")
+    for index, (variant_lobby, variant_exterior, variant_map) in enumerate(variants, 1):
+        try:
+            verify_scene_lifecycle_contract(
+                variant_lobby, variant_exterior, variant_map
+            )
+        except RuntimeError:
+            continue
+        raise RuntimeError(
+            f"scene lifecycle negative control {index} accepted"
+        )
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path, required=True)
@@ -169,6 +272,7 @@ def main():
             "setup-time saved-ID table index drift")
     negative_controls(source["src/heal_location.c"])
     verify_save_load_boundary(source)
+    verify_scene_lifecycle(source)
 
     output = {
         "evidence_class": "PINNED_FIRERED_WHITEOUT_INDEX_SOURCE_ONLY",
@@ -184,6 +288,10 @@ def main():
         "conditional_out_of_bounds_witness_id": 4,
         "negative_controls_passed": 3,
         "save_load_negative_controls_passed": 3,
+        "authored_tower_scene_lifecycle_negative_controls_passed": 5,
+        "authored_lobby_scene_set_precedes_challenge_start": True,
+        "lobby_exit_and_exterior_transition_reset_scene": True,
+        "lobby_coordinate_entry_trigger_scene_value": 0,
         "save_sector_checksum_validation": True,
         "normal_save_load_copies_sectors_then_restores_party_and_object_events": True,
         "new_game_clears_saveblock1_and_resets_tower_record_times": True,
@@ -199,7 +307,7 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(output, sort_keys=True, indent=2) + "\n",
                            encoding="utf-8")
-    print("PINNED_TOWER_WHITEOUT_SOURCE_PASS array_extent=4 negative_controls=3")
+    print("PINNED_TOWER_WHITEOUT_SOURCE_PASS array_extent=4 negative_controls=3 scene_lifecycle_controls=5")
     print("PHASE1_GATE=FAIL_INCOMPLETE independent_approvals=0")
 
 
