@@ -26,3 +26,13 @@ Upstream: `pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982`. Pinned Gi
 Determine actual script operand values after compilation, enumerate any nonliteral `VarGet` sources and quest-log backup corruption/restore paths, prove Trainer Tower state index bounds, and inspect original/modern compiled table inclusion. Trace `GetBorderBlockAt` callers and coordinate ranges before asserting a reachable zero divisor or negative index. Preserve save/editor/emulator round-trip and independent whole-file review gates.
 
 **Phase 1: FAIL_INCOMPLETE; 0/14,834 independently approved whole-file dispositions. No Phase 2 implementation.**
+
+## Addendum — literal script operands versus quest-log variables
+
+The pinned `src/event_data.c` (Git blob `da9391cf0ef74c1addf550def8616c81f16e89e3`) resolves `VarGet(idx)` through `GetVarPointer(idx)`. For `idx < VARS_START`, `GetVarPointer` returns `NULL` and `VarGet` returns the original 16-bit operand unchanged. The pinned `include/constants/vars.h` (blob `5c7bbf8a3356606af13e744ac24de806c1b0869e`) defines `VARS_START = 0x4000` and `VAR_QLBAK_MAP_LAYOUT = 0x40AE`.
+
+**Narrowed finding:** Each of the four authored `setmaplayoutindex LAYOUT_...` sites uses a one-based layout-table position less than `0x4000`. Under the pinned source semantics, these four script operands are **immediate layout IDs**, not indirect variable references. The checker now pins both additional source blobs, asserts the `VarGet`/pointer-lookup contract, verifies each immediate value and archives the resolved operands in its JSON evidence.
+
+**Separate unresolved path:** Quest-log `QL_RestoreMapLayoutId` calls `VarGet(0x40AE)`, which *is* in the variable range. That value is backed up from the mutable saved layout ID and can be restored as a nonzero value without a local upper-bound check. The source-only proof does not establish that invalid values arise during ordinary gameplay, nor that the saved data is corrupt. Trainer Tower state bounds, linked layout-table bounds, saved-state integrity, and actual runtime reachability remain unproven.
+
+This addendum changes no independent approvals or Phase 1 verdict. **FAIL_INCOMPLETE.** CI must pass at the new exact commit before this checker extension can be described as CI-verified.
