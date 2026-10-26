@@ -286,9 +286,9 @@ def verify_tower_setup_entrypoints(tower, overworld):
         "    u16 trainerId;\n    int i;\n\n"
         "    /* setup removed */", 1)
     changed_continue = overworld.replace(
-        "    LoadSaveblockMapHeader();",
-        "    gSaveBlock1Ptr->towerChallengeId = 0;\n"
-        "    LoadSaveblockMapHeader();", 1)
+        "void CB2_ContinueSavedGame(void)\n{",
+        "void CB2_ContinueSavedGame(void)\n{\n"
+        "    gSaveBlock1Ptr->towerChallengeId = 0;", 1)
     require(changed_battle != tower and changed_continue != overworld,
             "setup entrypoint negative fixture did not mutate")
     for index, (changed_tower, changed_overworld) in enumerate((
