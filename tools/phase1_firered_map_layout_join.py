@@ -98,7 +98,7 @@ def main() -> None:
 
     group_order = groups["group_order"]
     require(len(group_order) == len(set(group_order)) == 43, "map-group order drift")
-    require(set(groups) == set(group_order) | {"group_order"}, "map-group keys drift")
+    require(set(groups) == set(group_order) | {"group_order", "connections_include_order"}, "map-group keys drift")
     maps = []
     seen_names = set()
     seen_ids = set()
