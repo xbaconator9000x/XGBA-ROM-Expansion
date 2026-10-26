@@ -62,6 +62,23 @@ jobs:
                   'actual_bytes':r['border_bytes'],
                   'expected_bytes':r['border_expected_2byte_cells']
               })
+          groups=json.loads((root/'data/maps/map_groups.json').read_text())
+          map_names=[n for group in groups['group_order'] for n in groups[group]]
+          assert len(map_names)==425
+          map_layout_ids=[]
+          for name in map_names:
+              m=json.loads((root/'data/maps'/name/'map.json').read_text())
+              map_layout_ids.append(m['layout'])
+          referenced=set(map_layout_ids)
+          known={r['id'] for r in rows}
+          missing_layout_ids=sorted(referenced-known)
+          zero_border_ids={
+              r['id'] for r in rows
+              if d['layouts'][r['slot']-1]['border_width']==0 or
+                 d['layouts'][r['slot']-1]['border_height']==0
+          }
+          zero_border_referenced=sorted(zero_border_ids & referenced)
+          zero_border_unreferenced=sorted(zero_border_ids-referenced)
           # Negative fixture: changing a valid width must fail the length
           # contract without modifying any pinned source or binary.
           original=next(r for r in rows if r['block_matches_2byte_cells'])
@@ -84,6 +101,12 @@ jobs:
               'border_size_mismatch_details':border_mismatch_details,
               'block_size_matches':len(rows)-len(mismatch_block),
               'border_size_matches':len(rows)-len(mismatch_border),
+              'authored_maps':len(map_names),
+              'distinct_layout_ids_referenced_by_maps':len(referenced),
+              'missing_referenced_layout_ids':missing_layout_ids,
+              'zero_border_dimension_layout_ids':sorted(zero_border_ids),
+              'zero_border_referenced_by_authored_maps':zero_border_referenced,
+              'zero_border_unreferenced_by_authored_maps':zero_border_unreferenced,
               'synthetic_width_plus_one_negative_control_detected':True,
               'native_tile_behavior_verified':False,
               'independent_approvals':0,'phase1_complete':False
