@@ -56,15 +56,15 @@ jobs:
           assert len(order) == len(set(order)) == 63
           assert set(order) <= set(names)
           assert len(set(names) - set(order)) == 362
-          # Synthetic POSITIVE CONTROL ONLY. Original upstream input stays untouched.
+          # Synthetic POSITIVE CONTROL ONLY, saved beside the authored input so\n          # map constants still resolve 425 sibling map.json files. The\n          # original pinned input remains untouched.
           data['connections_include_order'] = order + [n for n in names if n not in set(order)]
-          pathlib.Path('evidence/complete-order-control.json').write_text(json.dumps(data))
+          pathlib.Path('upstream/data/maps/map_groups_xgba_complete_order_control.json').write_text(json.dumps(data))
           PY
           for mode in release-authored debug-authored debug-complete-control; do
             mkdir -p "evidence/$mode/data/maps" "evidence/$mode/include/constants"
             if [[ "$mode" == release-* ]]; then bin=mapjson-release; else bin=mapjson-debug; fi
             if [[ "$mode" == *complete-control ]]; then
-              input="$GITHUB_WORKSPACE/evidence/complete-order-control.json"
+              input="$GITHUB_WORKSPACE/upstream/data/maps/map_groups_xgba_complete_order_control.json"
             else
               input="$GITHUB_WORKSPACE/upstream/data/maps/map_groups.json"
             fi
