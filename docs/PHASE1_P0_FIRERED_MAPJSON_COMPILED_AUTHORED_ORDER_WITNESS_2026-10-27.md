@@ -49,6 +49,17 @@ All **63 nonempty maps are the exact 63 explicitly ordered names**; all **362 om
 
 **Narrowed native-risk assessment:** for these specific pinned inputs, the sort discrepancy appears confined to the placement of 362 null-connection includes, which emit no connection records, while all nonempty connection includes preserve their relative order. This materially reduces the evidence for a *native connection-data layout difference* from the comparator bug in this exact build. It does **not** prove identical `maps.o` or ROM bytes: assembler state, include alignment, other generated files and linker placement still require direct compiled comparison. The C++ iterator operation remains undefined and fails under the actual debug-iterator toolchain.
 
+## Native FireRed `maps.o` byte comparison — modern GCC (passing run #40421312981)
+
+The controlled [passing native build #40421312981](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40421312981) at workflow commit `acd2ab3b99d50982b3aa2d3d296763133ed4a264` compiled the **same exact pinned FireRed checkout** with `GAME_VERSION=FIRERED MODERN=1`, first with unmodified authored `map_groups.json`, then after replacing **only** the `connections_include_order` array in the disposable checkout with the original 63 names followed by the 362 omitted names. The original source pin and JSON blob were checked **before** the first build. The second build was incremental, using the same toolchain and object path; build logs, generated includes, both object files and a JSON comparison were archived.
+
+| Generated artifact | Authored input SHA-256 | Synthetic completed-order SHA-256 | Comparison |
+| --- | --- | --- | --- |
+| `data/maps/connections.inc` | `3c2ef81589d9bf09784350da0714a8a07d891c795c00024cdb1da5ea743e98cf` | `7c6201e043905d641bb0bc9c22af54ed428044ec707f675f8697179a63d3d960` | **Different** |
+| Native `data/maps.o` | `1b52f4efdb9c7125e5860af211f8097882f2dadc6ee0d997a020945c1cd4ef98` | **same SHA-256** | **Byte-identical** |
+
+**This closes the native modern `maps.o` comparison gate for this one pinned input and one compiler/build configuration.** The C++ iterator bug remains genuine: debug-iterator execution aborts on ordinary authored input. The optimized generated include text differs, but because the 362 reordered omitted maps are null-connection maps, their changed placement did **not** change the native compiled map object in this controlled modern build. The result does not establish linked ROM equivalence, original agbcc/revision-10 equivalence, behaviour under other source inputs (especially explicit empty arrays), Porymap editor round trips, or independent approval. Do not generalize the object identity beyond this exact pinned source and toolchain configuration.
+
 ## Dependency and interoperability implications
 
 The confirmed defect is in the **build-time source producer**, not a demonstrated ROM-side runtime crash. The pipeline is authored `map_groups.json` → `generate_connections_text` → generated `connections.inc` → `data/maps.s` → `maps.o` → native ROM map connection data. The global include sort can change the placement of per-map records. Per-map `connections` array iteration (generator lines 188–209) and map group/index ID allocation (lines 522–562) are separate channels; this compiled experiment confirms the four other generated outputs are unchanged by the synthetic order completion.
@@ -58,7 +69,7 @@ Porymap round-trip compatibility still requires preserving authored map identity
 ## Remaining fail-closed gates
 
 1. **Resolved for pinned input:** all 362 omitted maps contain explicit `null`, no omitted map has an empty array, and the optimized output retains the exact authored relative order of all 63 nonempty maps. Re-run this classification on any future source pin.
-2. Inspect release-generated connection include ordering and the synthetic control ordering, then assemble/link both variants in a controlled original/modern FireRed build and compare pointer/layout bytes.
+2. **Modern `maps.o` comparison complete:** original and synthetic order produce byte-identical native objects in pinned modern build. Still inspect linked ROM and original agbcc/revision variants; do not infer these from one object hash.
 3. Run alternative compilers/standard library configurations and sanitizers as available; one GCC 13 debug-iterator abort is not a universal compiler outcome.
 4. Verify actual map transition, editor import/export and save/asset regression boundaries separately.
 5. Obtain **independent whole-file semantic review** for each affected pinned file; this document is an analyst dossier, not an independent approval.
