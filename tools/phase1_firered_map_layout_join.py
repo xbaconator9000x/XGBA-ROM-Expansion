@@ -25,7 +25,7 @@ REQUIRED_GENERATOR_EXPRESSIONS = (
     'if (map_layout_id == json_to_string(layout, "id", true))',
     'if (matched.size() != 1)',
     '<< "\\t.4byte " << json_to_string(layout, "name")',
-    'text << "\\t.2byte " << json_to_string(layout, "id")',
+    '<< "\\t.2byte " << json_to_string(layout, "id")',
 )
 REQUIRED_RUNTIME_EXPRESSIONS = (
     "u16 mapLayoutId = gSaveBlock1Ptr->mapLayoutId;",
