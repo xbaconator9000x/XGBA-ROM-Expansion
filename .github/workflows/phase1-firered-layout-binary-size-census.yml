@@ -79,6 +79,8 @@ jobs:
           }
           zero_border_referenced=sorted(zero_border_ids & referenced)
           zero_border_unreferenced=sorted(zero_border_ids-referenced)
+          assert not missing_layout_ids, missing_layout_ids
+          assert not zero_border_referenced, zero_border_referenced
           # Negative fixture: changing a valid width must fail the length
           # contract without modifying any pinned source or binary.
           original=next(r for r in rows if r['block_matches_2byte_cells'])
