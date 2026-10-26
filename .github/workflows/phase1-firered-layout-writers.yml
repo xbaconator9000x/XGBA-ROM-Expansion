@@ -11,6 +11,7 @@ on:
       - 'tools/phase1_firered_tower_authored_topology.py'
       - 'tools/phase1_firered_tower_script_fallthrough.py'
       - 'tools/phase1_firered_linker_variant_contract.py'
+      - 'tools/phase1_firered_boot_irq_ram_lifetime.py'
       - '.github/workflows/phase1-firered-layout-writers.yml'
       - 'docs/PHASE1_P0_FIRERED_LAYOUT_WRITER_CENSUS_2026-10-26.md'
       - 'docs/PHASE1_P0_FIRERED_TOWER_WHITEOUT_SAVED_INDEX_2026-10-26.md'
@@ -21,6 +22,7 @@ on:
       - 'docs/PHASE1_P0_FIRERED_TOWER_AUTHORED_TOPOLOGY_2026-10-26.md'
       - 'docs/PHASE1_P0_FIRERED_TOWER_SCRIPT_FALLTHROUGH_2026-10-26.md'
       - 'docs/PHASE1_P0_FIRERED_LINKER_VARIANTS_2026-10-26.md'
+      - 'docs/PHASE1_P0_FIRERED_BOOT_IRQ_RAM_LIFETIME_2026-10-26.md'
       - 'docs/PHASE1_STATUS.md'
   workflow_dispatch:
 
@@ -52,6 +54,7 @@ jobs:
           python3 -m py_compile tools/phase1_firered_tower_authored_topology.py
           python3 -m py_compile tools/phase1_firered_tower_script_fallthrough.py
           python3 -m py_compile tools/phase1_firered_linker_variant_contract.py
+          python3 -m py_compile tools/phase1_firered_boot_irq_ram_lifetime.py
       - name: Run pinned authored layout-writer census
         run: |
           python3 tools/phase1_firered_layout_writer_census.py \
@@ -97,6 +100,11 @@ jobs:
           python3 tools/phase1_firered_linker_variant_contract.py \
             --source upstream-firered \
             --output phase1-evidence/firered-linker-variant.json
+      - name: Verify pinned FireRed boot interrupt vector and RAM lifetime
+        run: |
+          python3 tools/phase1_firered_boot_irq_ram_lifetime.py \
+            --source upstream-firered \
+            --output phase1-evidence/firered-boot-irq-ram-lifetime.json
       - name: Preserve pinned evidence
         if: always()
         uses: actions/upload-artifact@v4
