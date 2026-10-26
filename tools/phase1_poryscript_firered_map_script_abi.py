@@ -120,7 +120,8 @@ def contract(ps, fr):
             "if chunkID == 0 || jumpChunks[chunkID] {")
     require('flag.Bool("optimize", true' in main and 'flag.Bool("lm", true' in main,
             "Poryscript command-line defaults changed")
-    ordered(tests, "expectedUnoptimized :=", "expectedOptimized :=",
+    first_test = section(tests, "func TestEmit1(", "func TestEmitDoWhile(")
+    ordered(first_test, "expectedUnoptimized :=", "expectedOptimized :=",
             'e := New(program, false, false, "")',
             'e = New(program, true, false, "")')
 
