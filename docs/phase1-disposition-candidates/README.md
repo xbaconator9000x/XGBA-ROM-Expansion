@@ -26,6 +26,8 @@ Two pre-existing filenames use sequence `0006` for **different** pinned files. T
 A reviewer must separately verify complete-file coverage, exact source hashes, all consumers and relevant variant/error paths, unresolved evidence, and record an authenticated independent verdict before the authoritative gate can count an approval. No candidate above has that verdict. CI passing checks is **not** independent approval.
 
 ## CI boundary
+The new Poryscript/FireRed source candidate passed [exact-head CI #40379777582](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40379777582) at 3f536c23cbf403d620d1a7fd3f954625694c9543 (17 negative controls); this is source evidence, not independent review. Subsequent documentation commits require their own exact-head checks.
+
 At the previous exact head `df588ef0e79ac388ab4bed393ad11d8c4eb13d63`, the three GitHub Actions workflows `40370799334` (reload-save), `40370799354` (savestate/Matrix), and `40370799345` (layout writers) completed successfully. This does **not** establish that subsequent documentation commits passed CI; check exact-head runs independently. None of those jobs constitutes an independent whole-file semantic review.
 
 **Phase 1 remains FAIL_INCOMPLETE; no Phase 2 implementation or independent signoff.**
