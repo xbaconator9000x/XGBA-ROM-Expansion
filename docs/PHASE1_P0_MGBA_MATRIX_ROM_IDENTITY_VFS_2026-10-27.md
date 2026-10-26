@@ -1,0 +1,32 @@
+# Phase 1 P0 — mGBA Matrix activation, ROM CRC provenance and VFile read bounds (27 October 2026)
+
+**Verdict: PINNED_SOURCE_CANDIDATE / FAIL_INCOMPLETE.** This is an unapproved cross-file semantic mapping, not a demonstrated exploit, executed savestate test, ROM-expansion implementation, or independent whole-file disposition.
+
+## Immutable upstream scope
+
+All source anchors below refer to `mgba-emu/mgba@fd9dc5c2cbf234365068855851107e762fc6211b`. The [reproducible source checker](../tools/phase1_firered_mgba_savestate_mapping.py) verifies the following exact Git blobs, in addition to the six files already mapped in the [save/Matrix dossier](PHASE1_P0_FIRERED_MGBA_SAVESTATE_MATRIX_2026-10-27.md):
+
+| Pinned source | Git blob SHA-1 | Semantic role |
+| --- | --- | --- |
+| [src/gba/gba.c](https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/gba.c#L297-L305) | `c30bd943909dc00df0b5b9932e6d9ddb6e1c404e` | ROM load, reset, header activation and CRC |
+| [include/mgba/internal/gba/memory.h](https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/gba/memory.h#L49-L67) | `0aad912613e726560d06bbdbf6061986e69e5842` | 32 MiB ROM0 extent |
+| [include/mgba-util/vfs.h](https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba-util/vfs.h) | `6c9bd299153af4c3c9cd5487f2425a2481331ee5` | VFile seek/read/size ABI |
+| [src/util/vfs/vfs-mem.c](https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/util/vfs/vfs-mem.c) | `048194e2dd2d0b3b395a852d2092c694663c88a2` | In-memory VFile EOF and short reads |
+| [src/util/vfs/vfs-fd.c](https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/util/vfs/vfs-fd.c#L119-L127) | `2535bd0fb76740745ae038d5523ead28658f1035` | Direct OS read result |
+| [src/util/vfs/vfs-file.c](https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/util/vfs/vfs-file.c#L75-L84) | `4a63e53f842b31b24d6188e6525ddcf121a0c7da` | `fread` short-read result |
+
+## Producer → consumer contract
+
+1. **Matrix is a conditional cartridge mode, not a generic ROM-size extension.** [`GBALoadROM`](https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/gba.c#L425-L475) branches on the backing VFile being *strictly larger than* `GBA_SIZE_ROM0 = 0x02000000` (32 MiB). It reads a single byte at header offset `0xAC`; only `'M'` selects the Matrix allocation branch. That branch sets the emulated `romSize` to `0x01000000` (16 MiB) while allocating a 32 MiB ROM buffer. A >32 MiB file without that marker follows a distinct 32 MiB map path. A header marker alone is not proof that any arbitrary file or tool is compatible.
+2. **Matrix state is rebuilt at emulator reset, not simply implied by file length.** [`GBAMemoryReset`](https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/memory.c#L117-L158) clears the Matrix struct. [`GBAReset`](https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/gba.c#L297-L305) checks the backing VFile size and `0xAC == 'M'` again before `GBAMatrixReset`. That routine programs two 4 KiB mappings: virtual `0x0000` ← physical `0x0000` and virtual `0x1000` ← physical `0x0200`. The 16×512-byte slots and `0xFFFFE000` range guard constrain the actively remapped virtual window to 8 KiB, **not** a limitless linear ROM.
+3. **The stored ROM CRC does not attest the entire Matrix backing file.** In the >32 MiB `'M'` branch, the ROM buffer is allocated without copying the backing VFile into it. `pristineRomSize` is then truncated to `GBA_SIZE_ROM0`, and `romCrc32 = doCrc32(gba->memory.rom, gba->pristineRomSize)` is calculated **before** the later reset-time Matrix remapping. Thus the CRC source is the allocated in-memory ROM buffer, not a digest of the >32 MiB backing VFile. Do not assume the buffer's precise contents without a separately pinned allocator/runtime proof. The previously established savestate CRC mismatch path is warning-only even outside this Matrix-specific provenance issue.
+4. **VFile reads are not guaranteed to fill requested lengths.** [`struct VFile`](https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba-util/vfs.h) exposes signed seek/read/size results. Memory-backed VFiles clamp reads at EOF; FD-backed VFiles return the OS `read` result, and FILE-backed VFiles return `fread`'s byte count. The pinned [`_remapMatrix`](https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/cart/matrix.c#L11-L37) ignores its VFile seek/read return values, does not locally query `size()`, and does not compare `paddr + size` with the backing file's length. A short read can therefore leave part of the destination window unchanged; the exact bytes depend on prior buffer state and backend behaviour. **This is a source-level conditional consequence, not a reproduced corrupt savestate or crash.**
+5. **Restore ordering makes identity a lifecycle obligation.** The [pinned savestate deserializer](https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/serialize.c) validates title/ID, warns on CRC mismatch, restores CPU prefetch before conditional Matrix replay, and only then invokes timing interrupts. No source-local check binds all 16 serialized Matrix physical mappings to the same backing VFile contents used when the state was saved. Older savestate formats and external VFile replacement require separate testing.
+
+## Reproducible gate and outstanding proof
+
+Run `python3 tools/phase1_firered_mgba_savestate_mapping.py --firered upstream-firered --mgba upstream-mgba --output phase1-evidence/firered-mgba-savestate-mapping.json` against the two exact pinned checkouts. The checker pins the original six files plus the six files above, and checks 11 additional scoped negative mutations (25 total). **A passing checker is a source-assertion pass, not a full semantic approval.**
+
+Remaining obligations: test Matrix boot/reset with >32 MiB files of both header classes; trace allocator and CRC bytes; inject EOF, short reads and failed seeks in VFile backends; test savestate restore with identical title/ID but changed backing bytes, old formats and active prefetch; check compiled/runtime/editor/hardware compatibility and obtain independent whole-file review.
+
+**Phase 1: FAIL_INCOMPLETE. Independent approvals: 0/14,834. No Phase 2 implementation.**
