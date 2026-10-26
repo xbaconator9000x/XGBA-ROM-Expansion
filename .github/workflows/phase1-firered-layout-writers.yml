@@ -12,6 +12,7 @@ on:
       - 'tools/phase1_firered_tower_script_fallthrough.py'
       - 'tools/phase1_firered_linker_variant_contract.py'
       - 'tools/phase1_firered_boot_irq_ram_lifetime.py'
+      - 'tools/phase1_firered_mgba_irq_bridge.py'
       - '.github/workflows/phase1-firered-layout-writers.yml'
       - 'docs/PHASE1_P0_FIRERED_LAYOUT_WRITER_CENSUS_2026-10-26.md'
       - 'docs/PHASE1_P0_FIRERED_TOWER_WHITEOUT_SAVED_INDEX_2026-10-26.md'
@@ -23,6 +24,7 @@ on:
       - 'docs/PHASE1_P0_FIRERED_TOWER_SCRIPT_FALLTHROUGH_2026-10-26.md'
       - 'docs/PHASE1_P0_FIRERED_LINKER_VARIANTS_2026-10-26.md'
       - 'docs/PHASE1_P0_FIRERED_BOOT_IRQ_RAM_LIFETIME_2026-10-26.md'
+      - 'docs/PHASE1_P0_FIRERED_MGBA_IRQ_BRIDGE_2026-10-26.md'
       - 'docs/PHASE1_STATUS.md'
   workflow_dispatch:
 
@@ -43,6 +45,13 @@ jobs:
           ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
           path: upstream-firered
           persist-credentials: false
+      - name: Checkout pinned mGBA upstream
+        uses: actions/checkout@v4
+        with:
+          repository: mgba-emu/mgba
+          ref: fd9dc5c2cbf234365068855851107e762fc6211b
+          path: upstream-mgba
+          persist-credentials: false
       - name: Compile checkers
         run: |
           python3 -m py_compile tools/phase1_firered_layout_writer_census.py
@@ -55,6 +64,7 @@ jobs:
           python3 -m py_compile tools/phase1_firered_tower_script_fallthrough.py
           python3 -m py_compile tools/phase1_firered_linker_variant_contract.py
           python3 -m py_compile tools/phase1_firered_boot_irq_ram_lifetime.py
+          python3 -m py_compile tools/phase1_firered_mgba_irq_bridge.py
       - name: Run pinned authored layout-writer census
         run: |
           python3 tools/phase1_firered_layout_writer_census.py \
@@ -105,6 +115,12 @@ jobs:
           python3 tools/phase1_firered_boot_irq_ram_lifetime.py \
             --source upstream-firered \
             --output phase1-evidence/firered-boot-irq-ram-lifetime.json
+      - name: Verify pinned FireRed to mGBA IRQ and reset bridge
+        run: |
+          python3 tools/phase1_firered_mgba_irq_bridge.py \
+            --firered upstream-firered \
+            --mgba upstream-mgba \
+            --output phase1-evidence/firered-mgba-irq-bridge.json
       - name: Preserve pinned evidence
         if: always()
         uses: actions/upload-artifact@v4
