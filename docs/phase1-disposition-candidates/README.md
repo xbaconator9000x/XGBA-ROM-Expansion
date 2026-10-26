@@ -24,18 +24,20 @@
 | `pret/pokefirered:ld_script.ld` | [0015](0015-firered-legacy-linker.md) | pending independent review |
 | `pret/pokefirered:ld_script_rev10.ld` | [0016](0016-firered-rev10-linker.md) | pending independent review |
 | `pret/pokefirered:include/gba/gba.h` | [0017](0017-firered-gba-umbrella.md) | pending independent review |
+| `pret/pokefirered:include/gba/multiboot.h` | [0018 FireRed](0018-firered-gba-multiboot.md) | pending independent review |
+| `pret/pokefirered:include/gba/isagbprint.h` | [0019 FireRed](0019-firered-gba-debug-print.md) | pending independent review |
 
-| `huderlem/porymap:src/core/bitpacker.cpp` | [0015](0015-porymap-bitpacker-impl.md ) | pending independent review |
-| `huderlem/porymap:include/core/bitpacker.h` | [0016](0016-porymap-bitpacker-header.md ) | pending independent review |
-| `huderlem/porymap:src/core/block.cpp` | [0017](0017-porymap-block-impl.md ) | pending independent review |
-| `huderlem/porymap:include/core/block.h` | [0018](0018-porymap-block-header.md ) | pending independent review |
-| `huderlem/porymap:src/core/blockdata.cpp` | [0019](0019-porymap-blockdata-impl.md ) | pending independent review |
-| `huderlem/porymap:include/core/blockdata.h` | [0020](0020-porymap-blockdata-header.md ) | pending independent review |
+| `huderlem/porymap:src/core/bitpacker.cpp` | [0015](0015-porymap-bitpacker-impl.md) | pending independent review |
+| `huderlem/porymap:include/core/bitpacker.h` | [0016](0016-porymap-bitpacker-header.md) | pending independent review |
+| `huderlem/porymap:src/core/block.cpp` | [0017](0017-porymap-block-impl.md) | pending independent review |
+| `huderlem/porymap:include/core/block.h` | [0018](0018-porymap-block-header.md) | pending independent review |
+| `huderlem/porymap:src/core/blockdata.cpp` | [0019](0019-porymap-blockdata-impl.md) | pending independent review |
+| `huderlem/porymap:include/core/blockdata.h` | [0020](0020-porymap-blockdata-header.md) | pending independent review |
 
-**Count: 21 distinct pinned upstream whole-file identities prepared / 14,834 = 0.1011%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
+**Count: 26 distinct pinned upstream whole-file identities prepared / 14,834 = 0.1753%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
 
 ## Collision and acceptance safeguards
-Two pre-existing filenames use sequence `0006` for **different** pinned files. The integer alone is therefore **not a unique candidate ID**. Until filenames and references are migrated atomically, identify a candidate by **(upstream repository, pinned commit, exact path, Git blob SHA)**, and use the full filename for links. Do not count the sequence maximum as the number of distinct files or use it as an approval counter. A later registry migration may assign unique sequence numbers, preserving historical links.
+Multiple filenames now reuse sequence numbers (including `0006` and `0015`–`0019`) for **different** pinned files. The integer alone is therefore **not a unique candidate ID**. Until filenames and references are migrated atomically, identify a candidate by **(upstream repository, pinned commit, exact path, Git blob SHA)**, and use the full filename for links. Do not count the sequence maximum as the number of distinct files or use it as an approval counter. A later registry migration may assign unique sequence numbers, preserving historical links.
 
 A reviewer must separately verify complete-file coverage, exact source hashes, all consumers and relevant variant/error paths, unresolved evidence, and record an authenticated independent verdict before the authoritative gate can count an approval. No candidate above has that verdict. CI passing checks is **not** independent approval.
 
@@ -51,3 +53,7 @@ At exact head `9c7b3ca1598e21962aac8d64001e1b06ec2f3774`, four workflows passed:
 Three further **distinct** exact-hash candidates were prepared: `ld_script.ld` (0015), `ld_script_rev10.ld` (0016) and `include/gba/gba.h` (0017). Both legacy linker scripts were inspected through all 11 allocated output-section families, symbol includes, fixed graphics address, debug outputs and discard rule. The comparison identifies revision-10 RFU input-object section moves and different DWARF selectors, which are source-level distinctions rather than compiled-address claims. The umbrella header has eight includes and no authored executable definitions. GitHub's exact-commit file response verified each blob identity. No reviewer verdict is asserted.
 
 The preceding `00156d49` commit had four successful PR workflows: [Poryscript #40380990395](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40380990395), [savestate/Matrix #40380990451](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40380990451), [save reload #40380991212](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40380991212), [layout writer #40380990760](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40380990760). These passes **predate** this checkpoint; exact-head CI for the current docs commits is not yet asserted. Formal approvals remain **0/14,834 (0.0000%)**, inventory **14,834/14,834 (100%)**. **FAIL_INCOMPLETE.**
+
+## 27 October — concurrent-source register reconciliation
+
+The register now preserves six additional **distinct** Porymap source identities (bitpacker implementation/header, block implementation/header, blockdata implementation/header), whose review documents were verified present, alongside the five new FireRed identities from this batch (legacy linker variants, GBA umbrella, multiboot ABI and conditional debug print). This reconciliation **does not claim** to have independently reviewed the Porymap candidates or their external consumers. It corrects the stale denominator calculation and broken Markdown links without changing the authoritative approval gate. **26/14,834 = 0.1753% prepared; 0/14,834 = 0.0000% independently approved; 14,834/14,834 = 100% inventoried. FAIL_INCOMPLETE.**
