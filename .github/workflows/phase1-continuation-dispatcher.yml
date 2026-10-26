@@ -42,7 +42,7 @@ jobs:
               echo "$workflow: evidence succeeded at current default-branch head; no-op"
               continue
             fi
-            if [[ -n "$last" ]]; then
+            # A source revision change may need new evidence; a failed run\n            # receives at most one dispatch attempt per cooldown window.\n            if [[ -n "$last" ]]; then
               age=$(( ($(date -u +%s) - $(date -u -d "$last" +%s)) / 60 ))
               if (( age < 60 )); then
                 echo "$workflow: retry cooldown ${age}m < 60m; no-op"
