@@ -57,15 +57,21 @@ def contract(files):
         r"\s+\.macro case condition:req, dest:req\s+"
         r"compare VAR_0x8000, \\condition\s+goto_if_eq \\dest\s+\.endm",
         macros), "switch/case macro conditional-dispatch drift")
+    jump = re.search(
+        r"bool8 ScrCmd_goto_if\(struct ScriptContext \* ctx\)\s*\{([^{}]*)\}",
+        runtime, re.S)
+    require(jump is not None, "runtime conditional jump function drift")
+    jump_body = jump.group(1)
     require(re.search(
-        r"(?s)bool8 ScrCmd_goto_if\(struct ScriptContext \* ctx\)\s*\{"
-        r".*?if \(sScriptConditionTable\[condition\]\[ctx->comparisonResult\] == 1\)"
-        r"\s*ScriptJump\(ctx, scrptr\);", runtime),
+        r"if \(sScriptConditionTable\[condition\]\[ctx->comparisonResult\] == 1\)"
+        r"\s*ScriptJump\(ctx, scrptr\);", jump_body),
         "runtime conditional jump semantics drift")
-    require(re.search(
-        r"(?s)bool8 ScrCmd_compare_var_to_value\(struct ScriptContext \* ctx\)"
-        r"\s*\{.*?ctx->comparisonResult = Compare\(value1, value2\);",
-        runtime), "runtime compare semantics drift")
+    compare = re.search(
+        r"bool8 ScrCmd_compare_var_to_value\(struct ScriptContext \* ctx\)"
+        r"\s*\{([^{}]*)\}", runtime, re.S)
+    require(compare is not None and
+            "ctx->comparisonResult = Compare(value1, value2);" in compare.group(1),
+            "runtime compare semantics drift")
     labels, ordered = script_labels(script)
     edges = [
         verify_switch(labels, ordered, "TrainerTower_EventScript_TriggerBattle",
