@@ -37,3 +37,11 @@ Run `python3 tools/phase1_firered_boot_irq_ram_lifetime.py --source <exact-pinne
 **Do not claim a passing CI result until the final exact-head run has completed successfully.** Open proof obligations: linked ELF VMA/LMA and IRQ buffer location; instruction/DMA/IRQ runtime timing; emulator mapping and save reload behaviour; editor/patcher interoperability; independent file-by-file signoff.
 
 **Phase 1 remains `FAIL_INCOMPLETE`. No Phase 2 implementation.**
+
+## 27 October — full-file `crt0.s` review candidate and IRQ dispatch corner cases
+
+The [exact-blob whole-file candidate](PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md) inventories all of pinned `src/crt0.s` (blob `a0d8a4b55237b38afc5b69d4e9aad0c2df232e14`), including its assembly includes, both boot stack literals, IRQ handler and trailing literal pool. It remains **blocked for independent whole-file signoff**.
+
+The handler prioritizes 14 `IE & IF` flags and advances its callback-table byte offset by four after each failed flag test. **Source-level edge case:** if no tested flag is set, the final GAMEPAK `ands` leaves Z set, so the `bne loop` spin is not entered; control falls into `jump_intr` with a zero acknowledge mask and the last callback-table offset (52 bytes, index 13). Conversely, when the GAMEPAK bit is set, the conditional sound-control byte store and `bne loop` spin prevent normal callback dispatch. The 14-entry table in pinned `src/main.c` has `IntrDummy` in its last slot. These are source-order conclusions, **not evidence that a no-pending IRQ or GAMEPAK IRQ is reachable or faulty in normal execution**.
+
+The handler also dereferences the `gSTWIStatus` pointer and a byte at offset `0xA` when constructing a temporary IE mask; the inspected assembly contains no local pointer or shift-value bounds check. Producer initialization and runtime validity remain open. No approval or Phase 2 implementation follows from this addendum. **FAIL_INCOMPLETE; 0/14,834 independent approvals.**
