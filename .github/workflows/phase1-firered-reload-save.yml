@@ -5,6 +5,7 @@ on:
       - 'tools/phase1_firered_reload_save_lifetime.py'
       - 'docs/PHASE1_P0_FIRERED_RELOAD_SAVE_RAM_LIFETIME_2026-10-27.md'
       - 'docs/phase1-disposition-candidates/0003-firered-reset-save-heap.md'
+      - 'docs/PHASE1_STATUS.md'
       - '.github/workflows/phase1-firered-reload-save.yml'
   workflow_dispatch:
 
