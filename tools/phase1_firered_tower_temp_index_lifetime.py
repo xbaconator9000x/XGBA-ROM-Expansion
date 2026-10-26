@@ -78,7 +78,9 @@ def contract(files):
             "case CHALLENGE_TYPE_DOUBLE, TrainerTower_EventScript_DoDoubleBattle" in scripts,
             "shared battle dispatch drift")
     require("trainerId = VarGet(VAR_TEMP_1);" in tower and
-            "CURR_FLOOR.trainers[trainerId + 1]" in tower and
+            tower.count("CURR_FLOOR.trainers[trainerId + 1]") == 2 and
+            "CURR_FLOOR.trainers[trainerId + 1].speechWin" in tower and
+            "CURR_FLOOR.trainers[trainerId + 1].speechLose" in tower and
             "u16 trainerIdx = VarGet(VAR_TEMP_1);" in tower and
             "u16 idx = VarGet(VAR_TEMP_1);" in tower,
             "C opponent/party/music index consumers drift")
