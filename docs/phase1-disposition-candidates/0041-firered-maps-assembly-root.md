@@ -1,6 +1,6 @@
 # Phase 1 whole-file analyst candidate — FireRed map assembly root
 
-**PENDING INDEPENDENT REVIEW; NOT APPROVED.** Pinned `pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982`, exact path `data/maps.s`, verified Git blob `fc88d8fc2521e92db22264bf6cf33966fda977ba`. [Pinned whole file](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps.s). This record covers the **entire 16-line assembly root**, not only the connection include.
+**PENDING INDEPENDENT REVIEW; NOT APPROVED.** Pinned `pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982`, exact path `data/maps.s`, verified Git blob `fc88d8fc2521e92db22264bf6cf33966fda977ba`. [Pinned whole file](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps.s). This record covers the **entire 17-line assembly root**, not only the connection include.
 
 ## Whole-file authored directive disposition
 
