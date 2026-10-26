@@ -14,6 +14,8 @@ PIN = "ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
 BLOBS = {
     "data/layouts/layouts.json": "41d0eb1b5e51fa75d535b5a098bae2bd650f710d",
     "src/overworld.c": "339014da46ae8543143edc99ab72bf7496203a0d",
+    "src/event_data.c": "da9391cf0ef74c1addf550def8616c81f16e89e3",
+    "include/constants/vars.h": "5c7bbf8a3356606af13e744ac24de806c1b0869e",
     "src/quest_log.c": "0a2f76f2c4019fa0938d5044da73fcea1b2b069c",
     "src/scrcmd.c": "97b695ee2f6fca80a3b78f52f6a444f696fe5814",
     "src/trainer_tower.c": "732b3f2ed31ed95d6476b9e111d53f759c448d81",
@@ -71,6 +73,26 @@ def main():
     quest = sources["src/quest_log.c"]
     scrcmd = sources["src/scrcmd.c"]
     tower = sources["src/trainer_tower.c"]
+    event_data = sources["src/event_data.c"]
+    var_constants = sources["include/constants/vars.h"]
+    # A literal script operand is not a variable lookup in this pinned engine.
+    # VarGet returns its argument unchanged when GetVarPointer returns NULL.
+    get_var_ptr = event_data.split("u16 *GetVarPointer(u16 idx)", 1)
+    require(len(get_var_ptr) == 2, "GetVarPointer definition missing")
+    get_var_ptr = get_var_ptr[1].split("static bool8 IsFlagOrVarStoredInQuestLog", 1)[0]
+    var_get = event_data.split("u16 VarGet(u16 idx)", 1)
+    require(len(var_get) == 2, "VarGet definition missing")
+    var_get = var_get[1].split("bool8 VarSet(u16 idx", 1)[0]
+    require("if (idx < VARS_START)\n        return NULL;" in get_var_ptr,
+            "literal variable-pointer identity contract drift")
+    require("u16 *ptr = GetVarPointer(idx);" in var_get
+            and "if (ptr == NULL)\n        return idx;" in var_get
+            and "return *ptr;" in var_get, "VarGet literal identity contract drift")
+    require("#define VARS_START 0x4000" in var_constants,
+            "variable range start drift")
+    require("#define VAR_QLBAK_MAP_LAYOUT        0x40AE" in var_constants,
+            "quest-log backup variable identity drift")
+    vars_start = 0x4000
     for expression in (
         "gSaveBlock1Ptr->mapLayoutId = gMapHeader.mapLayoutId;",
         "gSaveBlock1Ptr->mapLayoutId = mapLayoutId;",
@@ -134,6 +156,17 @@ def main():
         dimensions.append({"layout": ident, "table_slot_1_based": slot,
                            "border_width": width, "border_height": height})
 
+    # Every authored script site passes a layout constant, not VAR_QLBAK_MAP_LAYOUT.
+    # Verify each generated one-based table slot is below the variable range.
+    literal_script_ids = [
+        {"path": row["path"], "layout": row["layout"],
+         "immediate_operand": layout_by_id[row["layout"]][0],
+         "varget_result": layout_by_id[row["layout"]][0]}
+        for row in script_sites
+    ]
+    require(all(0 < row["immediate_operand"] < vars_start
+                for row in literal_script_ids),
+            "script selector operand crosses into variable range")
     output = {
         "evidence_class": "PINNED_AUTHORED_LAYOUT_WRITERS_ONLY",
         "phase1_verdict": "FAIL_INCOMPLETE",
@@ -143,13 +176,18 @@ def main():
         "direct_save_layout_writers": {"src/overworld.c": 2, "src/quest_log.c": 2},
         "script_opcode": "0xA7",
         "script_selector_sites": script_sites,
+        "literal_script_operand_identity": literal_script_ids,
+        "literal_varget_threshold": vars_start,
+        "quest_log_backup_var_id": 0x40AE,
+        "quest_log_restore_is_dynamic": True,
         "trainer_tower_floor_layouts": len(floor_ids),
         "trainer_tower_roof_layouts": 1,
         "explicit_alternate_layouts": dimensions,
         "zero_border_layout_count": len(zero),
         "zero_border_explicit_alternate_selectors": sorted(set(selected) & zero),
         "unresolved": [
-            "VarGet script operand and quest-log restored nonzero IDs lack a local range check.",
+            "The four authored script layout constants are literal VarGet identity operands, not variable references.",
+            "Quest-log backup 0x40AE is a variable and its restored nonzero value lacks a local range check.",
             "No exhaustive dataflow, save integrity, runtime reachability, or linked ROM proof.",
             "Source selector census is not independent whole-file semantic approval.",
         ],
