@@ -54,8 +54,11 @@ jobs:
           # Negative fixture: changing a valid width must fail the length
           # contract without modifying any pinned source or binary.
           original=next(r for r in rows if r['block_matches_2byte_cells'])
-          assert original['block_bytes'] != 2*(original['block_expected_2byte_cells']//2 + 1)*1 if False else True
-          assert original['block_bytes'] != original['block_expected_2byte_cells'] + 2
+          source_layout=d['layouts'][original['slot']-1]
+          mutated_width=source_layout['width']+1
+          synthetic_expected=2*mutated_width*source_layout['height']
+          assert original['block_bytes']==original['block_expected_2byte_cells']
+          assert original['block_bytes']!=synthetic_expected
           with (pathlib.Path('layout-binary-evidence')/'layout_binary_manifest.csv').open('w',newline='') as f:
               writer=csv.DictWriter(f,fieldnames=list(rows[0]))
               writer.writeheader()
