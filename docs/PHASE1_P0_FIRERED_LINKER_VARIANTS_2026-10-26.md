@@ -26,7 +26,7 @@ All five files below are from `pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3c
 
 ## Reproducible source verification
 
-The [pinned variant checker](../tools/phase1_firered_linker_variant_contract.py) rejects upstream revision/blob drift and asserts the build-mode dispatch, all three ROM memory regions, fixed legacy graphics placement, modern output sections and ELF-to-ROM rule. **Ten synthetic mutations** must be rejected, including altered ROM extents, changed fixed graphics addresses, a newly added modern fixed section, switched linker variant, changed image padding, altered compiler and changed default mode.
+The [pinned variant checker](../tools/phase1_firered_linker_variant_contract.py) rejects upstream revision/blob drift and asserts the build-mode dispatch, all three ROM memory regions, fixed legacy graphics placement, modern output sections and ELF-to-ROM rule. **Twenty synthetic mutations** must be rejected, including altered ROM extents, changed fixed graphics addresses, a newly added modern fixed section, switched linker variant, changed image padding, altered compiler and changed default mode.
 
 It emits `phase1-evidence/firered-linker-variant.json` in the existing source-check workflow. **Do not call this a CI PASS until the exact-head run has succeeded and its evidence has been inspected.**
 
@@ -35,3 +35,15 @@ It emits `phase1-evidence/firered-linker-variant.json` in the existing source-ch
 Obtain actual ELF section addresses and symbol/map files for each selected build variant, including the effects of link-time padding and `gfx_data` placement. Correlate the compiled binary with emulator ROM aperture/mirroring, executable pointer encoding and bank-switch behaviour. Complete editor round trips, external-resource identity tests and independent whole-file semantic reviews. No Phase 2 work is authorized by this packet.
 
 **Gate: `FAIL_INCOMPLETE`.**
+
+## 26 October — RAM NOLOAD and initialized-data placement addendum
+
+The same five immutable FireRed source blobs now support an additional **source-only** section-placement dependency, distinct from the ROM-size and fixed-graphics findings:
+
+- All three linker scripts declare **EWRAM at `0x02000000` (256 KiB)** and **IWRAM at `0x03000000` (32 KiB)**, alongside the existing 32 MiB ROM region. Both `ewram` and `iwram` output sections are marked `NOLOAD` and assigned to their respective RAM memory regions. A `NOLOAD` section is **not an ordinary file-backed ROM asset section**; this alone does not prove runtime initialization or contents.
+- All three variants place `script_data` in `ROM`. The modern linker also places wildcard `*(.data*)` and `*(.rodata*)` input sections into **ROM-addressed** output sections, not a generic EWRAM output section. In contrast, both legacy scripts explicitly collect the `impure.o`, `locale.o` and `mallocr.o` libc `.data` inputs in the **EWRAM `NOLOAD`** section.
+- **Adapter consequence:** neither the `.data` name nor a C declaration alone determines the storage and loading behaviour across build variants. A future relocation or external-resource manifest must distinguish actual linked output section, runtime address, loadability and initialization ownership; the source contract does **not** substitute for an ELF program-header/section inspection or emulator trace.
+
+[The existing pinned linker verifier](../tools/phase1_firered_linker_variant_contract.py) now asserts those destinations and RAM apertures, adding **ten negative controls** (20 total) for RAM sizes, `NOLOAD`, `script_data` placement, modern `.data`/`.rodata` wildcard and destination, and legacy libc input placement. A first post-change [CI run #40315289862](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40315289862) correctly **failed** because the new script-section matcher could skip a mutated closing brace and match the next ROM section. [Corrective commit `96169ebd`](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/commit/96169ebd41c76cf16b5e9c3f7843b31a65895629) confines section-body matching to `[^{}]*` so a changed destination cannot borrow the following section's destination. **Do not treat the failed run as passing evidence; a later exact-head CI PASS is required.**
+
+**Unresolved:** compiled section sizes and LMAs/VMAs, program-header loading semantics, startup initialization, real emulator memory behaviour, editor round trips and independent whole-file semantic approval. The authoritative Phase 1 gate remains `FAIL_INCOMPLETE`, **0/14,834 approvals**.
