@@ -17,7 +17,7 @@ These are source-level examples of potential out-of-bounds reads **if** those co
 
 Commit `f6c9f0ae2870241f620f783216350799cf37dc93` extends `tools/verify_p0_additive_source_contracts.py` with `verify_map_border_coordinate_reference`. It pins both source/header Git blobs, asserts the macro/guard/fallback expressions, checks C signed-remainder arithmetic for two valid-index controls and two negative-index witnesses, and writes a separate `map_border_coordinate_reference` evidence object into the existing additive P0 JSON output. It preserves the 25 historical baseline assertions, 16 additive source assertions, and the 458,752 map-cell arithmetic comparisons.
 
-[Post-commit census run #40247291725](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40247291725) was queued when this checkpoint was drafted; do not treat it as verified until its actual job and log pass.
+[Post-commit census run #40247291725](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40247291725) **completed successfully** (job 121331442074). Its actual job log reports `16/16 source assertions PASS; map-cell 65536 words x 7 operations PASS; pinned border signed-remainder counterexamples PASS`, ten curated negative guards PASS, and the authoritative Phase 1 gate `FAIL_INCOMPLETE`. This verifies the pinned source/reference checker only; it does not establish a compiled runtime out-of-bounds observation.
 
 ## Design obligations
 
