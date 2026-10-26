@@ -244,7 +244,7 @@ def verify_tower_setup_entrypoints(tower, overworld):
     def function_body(source, name):
         match = re.search(
             r"(?ms)^void " + re.escape(name) +
-            r"\\(void\\)\\s*\\{(.*?)^\\}", source
+            r"\(void\)\s*\{(.*?)^\}", source
         )
         require(match is not None, "function body drift: " + name)
         return match.group(1)
@@ -254,12 +254,12 @@ def verify_tower_setup_entrypoints(tower, overworld):
         "InitTrainerTowerBattleStruct",
         "PrintTrainerTowerRecords",
     )
-    require(len(re.findall(r"(?m)^\\s*SetUpTrainerTowerDataStruct\\(\\);$",
+    require(len(re.findall(r"(?m)^\s*SetUpTrainerTowerDataStruct\(\);$",
                            tower)) == 3,
             "direct Trainer Tower setup caller census drift")
     for name in consumers:
         body = function_body(tower, name)
-        require(re.search(r"^\\s*SetUpTrainerTowerDataStruct\\(\\);", body)
+        require(re.search(r"^\s*SetUpTrainerTowerDataStruct\(\);", body)
                 is not None,
                 "setup not first statement in " + name)
         require(body.count("SetUpTrainerTowerDataStruct();") == 1,
@@ -276,15 +276,15 @@ def verify_tower_setup_entrypoints(tower, overworld):
             "bounded continue callback contract drift")
 
     changed_battle = tower.replace(
-        "void InitTrainerTowerBattleStruct(void)\\n{\\n"
-        "    u16 trainerId;\\n    int i;\\n\\n"
+        "void InitTrainerTowerBattleStruct(void)\n{\n"
+        "    u16 trainerId;\n    int i;\n\n"
         "    SetUpTrainerTowerDataStruct();",
-        "void InitTrainerTowerBattleStruct(void)\\n{\\n"
-        "    u16 trainerId;\\n    int i;\\n\\n"
+        "void InitTrainerTowerBattleStruct(void)\n{\n"
+        "    u16 trainerId;\n    int i;\n\n"
         "    /* setup removed */", 1)
     changed_continue = overworld.replace(
         "    LoadSaveblockMapHeader();",
-        "    gSaveBlock1Ptr->towerChallengeId = 0;\\n"
+        "    gSaveBlock1Ptr->towerChallengeId = 0;\n"
         "    LoadSaveblockMapHeader();", 1)
     require(changed_battle != tower and changed_continue != overworld,
             "setup entrypoint negative fixture did not mutate")
