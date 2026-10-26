@@ -1,0 +1,23 @@
+# Phase 1 whole-file analyst candidate — authored FireRed map group and connection include ordering
+
+**PENDING INDEPENDENT REVIEW; NOT APPROVED.** Pinned `pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982`, exact path `data/maps/map_groups.json`, verified Git blob `8c382f504d208286161903244772c93138cd7662`. [Pinned complete authored JSON](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/map_groups.json). This is a **complete structural/semantic disposition of all 45 top-level JSON fields and all array entries**, not a sampled-map description.
+
+## Complete-file structure and validated cardinalities
+
+The authored object has **exactly 45 keys**: `group_order`, `connections_include_order`, and **43 named group arrays** referenced by `group_order`. There are no additional top-level fields, no duplicate group names, and no empty groups. All 43 groups are arrays of strings; together they enumerate **425 unique map-directory names**, with **no duplicate map names** across groups. The largest group (`gMapGroup_Dungeons`) contains **123** maps; 43 groups and every per-group map index fit the original 8-bit group/index encoding. The smallest groups have one map. The group sizes and ordering were checked from the entire pinned JSON, not inferred from generated code.
+
+The separate `connections_include_order` array has **63 unique strings**, all present among those 425 map names. It omits **362** map names. Exact-pinned per-map JSON census in [compiled witness #40421156293](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40421156293) establishes that the **63 ordered maps are precisely the 63 maps with nonempty `connections` arrays**; all 362 omitted maps have explicit `connections: null`, not `[]` or missing keys. One of the 63 nonempty maps sets `connections_no_include`.
+
+## All authored field roles and downstream consumers
+
+- `group_order` is the **authoritative map-group index order**, consumed by `generate_groups_text` (`tools/mapjson/mapjson.cpp` lines 436–456) and `generate_map_constants_text` (522–562). Changing its order can change group IDs, `gMapGroups` pointer table indexing and map constants; it is not interchangeable with object-key order.
+- Each of the **43 named arrays** is the **authoritative per-group map-number order**. The generator uses each name to locate `data/maps/<name>/map.json`, reads its authored `id` field, and emits the numeric constant `map_index | (group_index << 8)`. Changing membership or order changes native map IDs and may affect warps, connections, scripts and save/ROM references.
+- `connections_include_order` is a separate **global assembler include placement preference**. The generator sorts all 425 map names using it, including the 362 omitted names. The missing-name branch uses invalid `begin() + INT_MAX` iterator arithmetic; the [actual compiled pinned generator](../PHASE1_P0_FIRERED_MAPJSON_COMPILED_AUTHORED_ORDER_WITNESS_2026-10-27.md) aborts under GCC 13 debug iterators on the unmodified JSON, while optimized generation completes. The optimized output preserves the relative order of all 63 nonempty maps, but its full 425-name include order differs from a synthetic completed-order control. The 362 omitted null-connection maps emit no native connection record in their per-map generator branch. This field does **not** assign map IDs or per-map connection entry order.
+
+The generated consumers are `data/maps/groups.inc`, `data/maps/connections.inc`, `include/constants/map_groups.h`, and other aggregate includes via `process_groups` and `map_data_rules.mk`; `data/maps.s` assembles them into `maps.o`. Native `gMapGroups` lookup and map connections depend on those compiled records. Source-editor identity must preserve the original group/map array ordering and distinct global connection include order.
+
+## Fail-closed review requirements
+
+Verify every referenced map directory and per-map `id` against the pinned source and any generated constants; validate all 43 group arrays and 425 names against actual editor round trips, compiler variants, object/ROM layout, save and runtime references; test reorder/add/remove and map-index byte boundaries before proposing expansion. The source parser's treatment of duplicate JSON object keys remains a separate `json11` review obligation; the parsed structural checks above do not prove that no duplicate keys existed in raw JSON source without lexical inspection. A controlled modern `maps.o` byte comparison is pending.
+
+**Analyst whole-file candidate only; independent reviewer none; approval credit 0; Phase 1 FAIL_INCOMPLETE.**
