@@ -39,6 +39,12 @@ The [passing detailed census #40422166952](https://github.com/xbaconator9000x/XG
 
 The pinned `src/fieldmap.c` lines **39–55** defines `GetBorderBlockAt` using `xprime %= mapLayout->borderWidth` and `yprime %= mapLayout->borderHeight` **without a local zero-dimension guard**. Line 59 selects that macro when coordinates fall outside the virtual map bounds, and line 372 calls it in an out-of-bounds metatile lookup path. If a zero-dimension layout reaches that path, modulo by zero is a source-level undefined-behaviour hazard. **No actual runtime reachability, divide-by-zero crash, or compiled variant behaviour is established.** A follow-up check is tracing all 425 authored map header layout references against the 28 zero-dimension layouts to distinguish dormant source assets from normally reachable map layouts.
 
+## Cross-check against every authored map header (passing CI #40422231819)
+
+The [pinned all-map reference census #40422231819](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40422231819) inspected the `layout` field in **all 425 authored `map.json` files**. Those maps reference **309 distinct layout IDs**. Crucially, **none of the 28 zero-border-dimension layouts is referenced by any of the 425 authored map headers**; all 28 are unreferenced in this exact pinned map corpus. This explains why the source-level modulo-zero hazard cannot be assumed reachable through an ordinary authored map header. It does **not** rule out forced/synthetic save layout IDs, unused legacy assets, editor imports or future modifications that make such layouts reachable.
+
+A subsequent exact-pin regression assertion has been added to fail if any authored map references an unknown layout ID or a zero-border layout; its own exact-head CI must be verified separately.
+
 ## Expansion/editor/save implications and remaining gates
 
 Any expansion that repacks layouts, extends native layout-ID widths, imports map layouts from a ROM or round-trips Porymap authored projects must preserve the 18 empty positions and distinguish the 383 table slots from 365 valid layouts. Do not compress empty slots, assign consecutive IDs to populated records, or treat `NULL` tileset names as missing JSON fields. The saved map layout ID and map-header layout references require source, compiled and runtime validation before a new representation can be called compatible.
