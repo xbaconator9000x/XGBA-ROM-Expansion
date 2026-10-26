@@ -40,8 +40,9 @@ def contract(files):
             "authored trainer extent drift")
     require(re.search(r"struct TrainerTower\s*\{.*?\bu8 floorsCleared;", saved, re.S),
             "saved floor-progress type or layout drift")
-    require(re.search(r"u32 towerChallengeId;\s*struct TrainerTower trainerTower"
-                      r"\[NUM_TOWER_CHALLENGE_TYPES\];", saved),
+    require(re.search(r"(?m)^\s*/\*0x3D34\*/ u32 towerChallengeId;\s*$", saved)
+            and re.search(r"(?m)^\s*/\*0x3D38\*/ struct TrainerTower trainerTower"
+                          r"\[NUM_TOWER_CHALLENGE_TYPES\];\s*$", saved),
             "saved challenge record structure drift")
 
     increment = static_body(tower, "TrainerTowerAddFloorCleared")
