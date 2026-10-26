@@ -99,17 +99,17 @@ def contract(files):
         ):
             require(re.search(
                 rf"(?ms)^\s*{name}\s+{origin}\s+\(NOLOAD\)\s*:"
-                rf"\s*ALIGN\(4\)\s*\{{.*?^\s*\}}\s*>\s*{region}\s*$",
+                rf"\s*ALIGN\(4\)\s*\{{[^{{}}]*^\s*\}}\s*>\s*{region}\s*$",
                 script), "NOLOAD RAM placement drift: " + path + ":" + name)
         require(re.search(
             r"(?ms)^\s*script_data\s*:\s*ALIGN\(4\)\s*"
-            r"\{.*?^\s*\}\s*>\s*ROM\s*=0\s*$", script),
+            r"\{[^{}]*^\s*\}\s*>\s*ROM\s*=0\s*$", script),
             "script_data ROM placement drift: " + path)
 
     for path in LEGACY:
         ewram = re.search(
             r"(?ms)^\s*ewram\s+0x2000000\s+\(NOLOAD\)\s*:"
-            r"\s*ALIGN\(4\)\s*\{(?P<body>.*?)^\s*\}"
+            r"\s*ALIGN\(4\)\s*\{(?P<body>[^{}]*)^\s*\}"
             r"\s*>\s*EWRAM\s*$", files[path])
         require(ewram is not None and all(
             item in ewram.group("body") for item in (
