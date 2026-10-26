@@ -238,6 +238,82 @@ def verify_scene_lifecycle(source):
         )
 
 
+
+def verify_tower_setup_entrypoints(tower, overworld):
+    """Trace direct setup consumers and continue callback; no reachability claim."""
+    def function_body(source, name):
+        match = re.search(
+            r"(?ms)^void " + re.escape(name) +
+            r"\\(void\\)\\s*\\{(.*?)^\\}", source
+        )
+        require(match is not None, "function body drift: " + name)
+        return match.group(1)
+
+    consumers = (
+        "CallTrainerTowerFunc",
+        "InitTrainerTowerBattleStruct",
+        "PrintTrainerTowerRecords",
+    )
+    require(len(re.findall(r"(?m)^\\s*SetUpTrainerTowerDataStruct\\(\\);$",
+                           tower)) == 3,
+            "direct Trainer Tower setup caller census drift")
+    for name in consumers:
+        body = function_body(tower, name)
+        require(re.search(r"^\\s*SetUpTrainerTowerDataStruct\\(\\);", body)
+                is not None,
+                "setup not first statement in " + name)
+        require(body.count("SetUpTrainerTowerDataStruct();") == 1,
+                "duplicate setup invocation in " + name)
+    battle = function_body(tower, "InitTrainerTowerBattleStruct")
+    require(battle.index("SetUpTrainerTowerDataStruct();") <
+            battle.index("trainerId = VarGet(VAR_TEMP_1);") <
+            battle.index("CURR_FLOOR.trainers[trainerId].name"),
+            "battle trainer operand/read order drift")
+    continuation = function_body(overworld, "CB2_ContinueSavedGame")
+    require("LoadSaveblockMapHeader();" in continuation and
+            "InitMapFromSavedGame();" in continuation and
+            "towerChallengeId" not in continuation,
+            "bounded continue callback contract drift")
+
+    changed_battle = tower.replace(
+        "void InitTrainerTowerBattleStruct(void)\\n{\\n"
+        "    u16 trainerId;\\n    int i;\\n\\n"
+        "    SetUpTrainerTowerDataStruct();",
+        "void InitTrainerTowerBattleStruct(void)\\n{\\n"
+        "    u16 trainerId;\\n    int i;\\n\\n"
+        "    /* setup removed */", 1)
+    changed_continue = overworld.replace(
+        "    LoadSaveblockMapHeader();",
+        "    gSaveBlock1Ptr->towerChallengeId = 0;\\n"
+        "    LoadSaveblockMapHeader();", 1)
+    require(changed_battle != tower and changed_continue != overworld,
+            "setup entrypoint negative fixture did not mutate")
+    for index, (changed_tower, changed_overworld) in enumerate((
+        (changed_battle, overworld),
+        (tower, changed_continue),
+    ), 1):
+        try:
+            verify_tower_setup_entrypoints_contract(
+                changed_tower, changed_overworld
+            )
+        except RuntimeError:
+            continue
+        raise RuntimeError("setup entrypoint negative control accepted: " + str(index))
+
+
+def verify_tower_setup_entrypoints_contract(tower, overworld):
+    require(tower.count("    SetUpTrainerTowerDataStruct();") == 3,
+            "direct setup caller count drift")
+    battle = tower.split("void InitTrainerTowerBattleStruct(void)", 1)[-1]
+    require("    SetUpTrainerTowerDataStruct();" in battle.split(
+            "void FreeTrainerTowerBattleStruct(void)", 1)[0],
+            "battle setup consumer drift")
+    continuation = overworld.split("void CB2_ContinueSavedGame(void)", 1)[-1]
+    continuation = continuation.split("static void FieldClearVBlankHBlankCallbacks", 1)[0]
+    require("towerChallengeId" not in continuation,
+            "continue callback now handles challenge ID; re-review required")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path, required=True)
@@ -273,6 +349,7 @@ def main():
     negative_controls(source["src/heal_location.c"])
     verify_save_load_boundary(source)
     verify_scene_lifecycle(source)
+    verify_tower_setup_entrypoints(tower, source["src/overworld.c"])
 
     output = {
         "evidence_class": "PINNED_FIRERED_WHITEOUT_INDEX_SOURCE_ONLY",
@@ -289,6 +366,8 @@ def main():
         "negative_controls_passed": 3,
         "save_load_negative_controls_passed": 3,
         "authored_tower_scene_lifecycle_negative_controls_passed": 5,
+        "tower_setup_direct_callers": ["CallTrainerTowerFunc", "InitTrainerTowerBattleStruct", "PrintTrainerTowerRecords"],
+        "tower_setup_entrypoint_negative_controls_passed": 2,
         "authored_lobby_scene_set_precedes_challenge_start": True,
         "lobby_exit_and_exterior_transition_reset_scene": True,
         "lobby_coordinate_entry_trigger_scene_value": 0,
@@ -307,7 +386,7 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(output, sort_keys=True, indent=2) + "\n",
                            encoding="utf-8")
-    print("PINNED_TOWER_WHITEOUT_SOURCE_PASS array_extent=4 negative_controls=3 scene_lifecycle_controls=5")
+    print("PINNED_TOWER_WHITEOUT_SOURCE_PASS array_extent=4 negative_controls=3 scene_lifecycle_controls=5 setup_entrypoint_controls=2")
     print("PHASE1_GATE=FAIL_INCOMPLETE independent_approvals=0")
 
 
