@@ -53,6 +53,14 @@ def inspect(files):
         ("TrainerTower_EventScript_DoubleBattleTriggerBottom", "VAR_TEMP_F"),
     }
     for n in range(1, 9):
+        # Position and elevation are part of the authored trigger ABI, not
+        # merely decoration: the 1F upper double trigger is elevation zero.
+        expected_positions = {
+            "TrainerTower_EventScript_SingleBattleTrigger": (10, 13, 3),
+            "TrainerTower_EventScript_DoubleBattleTriggerTop":
+                (9, 12, 0 if n == 1 else 3),
+            "TrainerTower_EventScript_DoubleBattleTriggerBottom": (9, 13, 3),
+        }
         path = f"data/maps/TrainerTower_{n}F/map.json"
         m = json.loads(files[path])
         require(m["layout"] == f"LAYOUT_TRAINER_TOWER_{n}F",
@@ -69,6 +77,14 @@ def inspect(files):
                 warps[1]["dest_map"] == expected_down and
                 str(warps[1]["dest_warp_id"]) == "0",
                 f"floor {n}: stair destination drift")
+        expected_warp_positions = [(15, 6, 3), (4, 6, 3)]
+        if n > 1:
+            expected_warp_positions.append((13, 5, 0))
+        require(
+            [(w["x"], w["y"], w["elevation"]) for w in warps]
+            == expected_warp_positions,
+            f"floor {n}: authored warp coordinate/elevation drift",
+        )
         if n > 1:
             require(warps[2]["dest_map"] == "MAP_TRAINER_TOWER_ELEVATOR",
                     f"floor {n}: elevator destination drift")
@@ -76,7 +92,11 @@ def inspect(files):
         require(len(triggers) == 3 and
                 {(e["script"], e["var"]) for e in triggers} == expected_triggers
                 and all(str(e["var_value"]) == "0" and e["type"] == "trigger"
-                        for e in triggers),
+                        for e in triggers)
+                and {(e["script"], e["x"], e["y"], e["elevation"])
+                     for e in triggers}
+                == {(name, *position)
+                    for name, position in expected_positions.items()},
                 f"floor {n}: authored battle-trigger drift")
         floor_rows.append({
             "floor": n,
@@ -85,6 +105,11 @@ def inspect(files):
             "down": expected_down,
             "elevator": n > 1,
             "trigger_scripts": sorted(e["script"] for e in triggers),
+            "trigger_positions": {
+                e["script"]: [e["x"], e["y"], e["elevation"]]
+                for e in triggers
+            },
+            "warp_positions": expected_warp_positions,
             "source_blob": BLOBS[path],
         })
     lobby = json.loads(files["data/maps/TrainerTower_Lobby/map.json"])
@@ -187,6 +212,18 @@ def main():
         ("src/trainer_tower.c",
          "TRAINER_TOWER.floorsCleared++;",
          "TRAINER_TOWER.floorsCleared += 2;", "progress"),
+        ("data/maps/TrainerTower_4F/map.json",
+         '"x": 10,\\n      "y": 13,\\n      "elevation": 3',
+         '"x": 11,\\n      "y": 13,\\n      "elevation": 3',
+         "trigger_coordinate"),
+        ("data/maps/TrainerTower_1F/map.json",
+         '"x": 9,\\n      "y": 12,\\n      "elevation": 0',
+         '"x": 9,\\n      "y": 12,\\n      "elevation": 3',
+         "first_floor_trigger_elevation"),
+        ("data/maps/TrainerTower_8F/map.json",
+         '"x": 15,\\n      "y": 6,\\n      "elevation": 3',
+         '"x": 14,\\n      "y": 6,\\n      "elevation": 3',
+         "stair_coordinate"),
     ]
     for path, old, new, label in mutations:
         require(old in files[path], "negative fixture missing: " + label)
@@ -216,7 +253,7 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n",
                            encoding="utf-8")
-    print("PINNED_TOWER_TOPOLOGY_SOURCE_PASS floors=8 triggers=24 negatives=4")
+    print("PINNED_TOWER_TOPOLOGY_SOURCE_PASS floors=8 triggers=24 negatives=7")
     print("PHASE1_GATE=FAIL_INCOMPLETE independent_approvals=0")
 
 if __name__ == "__main__":
