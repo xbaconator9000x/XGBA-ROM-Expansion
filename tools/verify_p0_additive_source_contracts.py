@@ -262,14 +262,14 @@ def verify_map_layout_border_metadata_reference(root: Path):
     if not all(contract in producer for contract in producer_contracts):
         raise RuntimeError("Pinned mapjson layout emitter semantics changed")
     if not re.search(
-        r"static const struct MapLayout \\*GetMapLayout\\(void\\)\\s*\\{\\s*"
-        r"u16 mapLayoutId = gSaveBlock1Ptr->mapLayoutId;\\s*"
-        r"if \\(mapLayoutId\\)\\s*return gMapLayouts\\[mapLayoutId - 1\\];",
+        r"static const struct MapLayout \*GetMapLayout\(void\)\s*\{\s*"
+        r"u16 mapLayoutId = gSaveBlock1Ptr->mapLayoutId;\s*"
+        r"if \(mapLayoutId\)\s*return gMapLayouts\[mapLayoutId - 1\];",
         consumer,
     ) or not re.search(
-        r"void SetCurrentMapLayout\\(u16 mapLayoutId\\)\\s*\\{\\s*"
-        r"gSaveBlock1Ptr->mapLayoutId = mapLayoutId;\\s*"
-        r"gMapHeader.mapLayout = GetMapLayout\\(\\);",
+        r"void SetCurrentMapLayout\(u16 mapLayoutId\)\s*\{\s*"
+        r"gSaveBlock1Ptr->mapLayoutId = mapLayoutId;\s*"
+        r"gMapHeader.mapLayout = GetMapLayout\(\);",
         consumer,
     ):
         raise RuntimeError("Pinned native layout-table index or setter semantics changed")
