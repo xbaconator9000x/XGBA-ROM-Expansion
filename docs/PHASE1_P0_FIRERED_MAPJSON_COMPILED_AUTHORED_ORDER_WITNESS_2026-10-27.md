@@ -34,6 +34,21 @@ The follow-up [passing run #40421087366](https://github.com/xbaconator9000x/XGBA
 
 **Critical remaining distinction:** a map with `connections: null` or a missing field yields a newline from `generate_map_connections_text`, but a map with `connections: []` can emit an empty `MapConnectionsList` plus an eight-byte count/pointer table. Therefore **zero nonempty connections among omitted maps does not alone prove their compiled includes are byte-empty**. A follow-up witness now distinguishes null/missing versus empty arrays and compares the order of all 63 active maps.
 
+## Exact authored null/empty and active-order classification (compiled run #40421156293)
+
+The [passing pinned run #40421156293](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40421156293), at workflow commit `e5608c5a2735f1bef681b164b182deb812573776`, resolves the critical remaining distinction from the previous coverage run:
+
+| Connection field in 425 pinned `map.json` files | Count |
+| --- | ---: |
+| Nonempty connection arrays | **63** |
+| Explicit `null` | **362** |
+| Explicit empty arrays `[]` | **0** |
+| Missing field | **0** |
+
+All **63 nonempty maps are the exact 63 explicitly ordered names**; all **362 omitted maps have `connections: null`**. The pinned `generate_map_connections_text` returns a single newline for null, rather than a connection count/pointer table. The optimized executable's order of the **63 nonempty maps exactly matches the authored explicit order**, and the synthetic control preserves that same nonempty relative order. Nevertheless the **full 425-name include sequences differ**, and the debug-iterator build still aborts on the unmodified authored input.
+
+**Narrowed native-risk assessment:** for these specific pinned inputs, the sort discrepancy appears confined to the placement of 362 null-connection includes, which emit no connection records, while all nonempty connection includes preserve their relative order. This materially reduces the evidence for a *native connection-data layout difference* from the comparator bug in this exact build. It does **not** prove identical `maps.o` or ROM bytes: assembler state, include alignment, other generated files and linker placement still require direct compiled comparison. The C++ iterator operation remains undefined and fails under the actual debug-iterator toolchain.
+
 ## Dependency and interoperability implications
 
 The confirmed defect is in the **build-time source producer**, not a demonstrated ROM-side runtime crash. The pipeline is authored `map_groups.json` → `generate_connections_text` → generated `connections.inc` → `data/maps.s` → `maps.o` → native ROM map connection data. The global include sort can change the placement of per-map records. Per-map `connections` array iteration (generator lines 188–209) and map group/index ID allocation (lines 522–562) are separate channels; this compiled experiment confirms the four other generated outputs are unchanged by the synthetic order completion.
@@ -42,7 +57,7 @@ Porymap round-trip compatibility still requires preserving authored map identity
 
 ## Remaining fail-closed gates
 
-1. Determine whether the 362 omitted maps contain **explicit empty arrays** rather than null/missing fields, and verify all 63 nonempty connection maps retain the authored relative order in the optimized output. An empty array may still emit an eight-byte table.
+1. **Resolved for pinned input:** all 362 omitted maps contain explicit `null`, no omitted map has an empty array, and the optimized output retains the exact authored relative order of all 63 nonempty maps. Re-run this classification on any future source pin.
 2. Inspect release-generated connection include ordering and the synthetic control ordering, then assemble/link both variants in a controlled original/modern FireRed build and compare pointer/layout bytes.
 3. Run alternative compilers/standard library configurations and sanitizers as available; one GCC 13 debug-iterator abort is not a universal compiler outcome.
 4. Verify actual map transition, editor import/export and save/asset regression boundaries separately.
