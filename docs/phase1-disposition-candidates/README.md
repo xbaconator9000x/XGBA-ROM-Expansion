@@ -22,7 +22,14 @@
 | `pret/pokefirered:include/constants/trainer_tower.h` | [0013](0013-firered-trainer-tower-constants.md) | pending independent review |
 | `pret/pokefirered:include/cereader_tool.h` | [0014](0014-firered-cereader-abi.md) | pending independent review |
 
-**Count: 15 distinct pinned upstream whole-file identities prepared / 14,834 = 0.1011%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
+| `huderlem/porymap:src/core/bitpacker.cpp` | [0015](0015-porymap-bitpacker-impl.md ) | pending independent review |
+| `huderlem/porymap:include/core/bitpacker.h` | [0016](0016-porymap-bitpacker-header.md ) | pending independent review |
+| `huderlem/porymap:src/core/block.cpp` | [0017](0017-porymap-block-impl.md ) | pending independent review |
+| `huderlem/porymap:include/core/block.h` | [0018](0018-porymap-block-header.md ) | pending independent review |
+| `huderlem/porymap:src/core/blockdata.cpp` | [0019](0019-porymap-blockdata-impl.md ) | pending independent review |
+| `huderlem/porymap:include/core/blockdata.h` | [0020](0020-porymap-blockdata-header.md ) | pending independent review |
+
+**Count: 21 distinct pinned upstream whole-file identities prepared / 14,834 = 0.1011%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
 
 ## Collision and acceptance safeguards
 Two pre-existing filenames use sequence `0006` for **different** pinned files. The integer alone is therefore **not a unique candidate ID**. Until filenames and references are migrated atomically, identify a candidate by **(upstream repository, pinned commit, exact path, Git blob SHA)**, and use the full filename for links. Do not count the sequence maximum as the number of distinct files or use it as an approval counter. A later registry migration may assign unique sequence numbers, preserving historical links.
