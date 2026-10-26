@@ -1,0 +1,116 @@
+name: Phase 1 compiled FireRed sparse layout slot ABI
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/compiled-firered-layout-slot-abi.yml'
+permissions:
+  contents: read
+jobs:
+  layout-slots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout exact pinned FireRed
+        uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream
+          persist-credentials: false
+      - name: Verify source hashes and compile pinned mapjson
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C upstream rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream hash-object data/layouts/layouts.json)" = 41d0eb1b5e51fa75d535b5a098bae2bd650f710d
+          test "$(git -C upstream hash-object tools/mapjson/mapjson.cpp)" = 8d8ec4e4e6e1c011b06f00819abe40bad10d19d5
+          mkdir -p layout-slot-evidence/bin
+          (cd upstream/tools/mapjson && g++ -std=c++11 -Wall -O2 json11.cpp mapjson.cpp -o "$GITHUB_WORKSPACE/layout-slot-evidence/bin/mapjson")
+      - name: Run unmodified source and separate synthetic hole-compacted control
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib
+          source=pathlib.Path('upstream/data/layouts/layouts.json')
+          d=json.loads(source.read_text())
+          assert set(d)=={'layouts','layouts_table_label'}
+          assert d['layouts_table_label']=='gMapLayouts'
+          slots=d['layouts']
+          assert len(slots)==383
+          holes=[i+1 for i,x in enumerate(slots) if x=={}]
+          assert holes==[22,23,29,38,39,40,41,42,43,44,45,56,58,59,60,61,76,175]
+          d['layouts']=[x for x in slots if x!={}]
+          assert len(d['layouts'])==365
+          pathlib.Path('layout-slot-evidence/synthetic-compacted-layouts.json').write_text(json.dumps(d))
+          PY
+          exe="$GITHUB_WORKSPACE/layout-slot-evidence/bin/mapjson"
+          for mode in authored synthetic-compacted; do
+            mkdir -p "layout-slot-evidence/$mode/asm" "layout-slot-evidence/$mode/include"
+            if [[ "$mode" == authored ]]; then
+              input="$GITHUB_WORKSPACE/upstream/data/layouts/layouts.json"
+            else
+              input="$GITHUB_WORKSPACE/layout-slot-evidence/synthetic-compacted-layouts.json"
+            fi
+            "$exe" layouts firered "$input" "layout-slot-evidence/$mode/asm" "layout-slot-evidence/$mode/include"
+          done
+      - name: Validate 383 pointer slots, 18 NULL holes and preserved numeric IDs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib, re
+          root=pathlib.Path('layout-slot-evidence')
+          d=json.loads(pathlib.Path('upstream/data/layouts/layouts.json').read_text())
+          slots=d['layouts']
+          holes=[i+1 for i,x in enumerate(slots) if x=={}]
+          def generated(mode):
+              directory=root/mode
+              table=(directory/'asm/layouts_table.inc').read_text()
+              defs=(directory/'include/layouts.h').read_text()
+              inc=(directory/'asm/layouts.inc').read_text()
+              assert 'gMapLayouts::' in table
+              pointers=re.findall(r'^\s*\.4byte\s+(\S+)\s*$',table,re.M)
+              ids={name:int(num) for name,num in re.findall(r'^#define\s+(LAYOUT_\w+)\s+(\d+)\s*$',defs,re.M)}
+              return pointers,ids,inc
+          pointers,ids,inc=generated('authored')
+          assert len(pointers)==383
+          assert [i+1 for i,x in enumerate(pointers) if x=='NULL']==holes
+          assert len(ids)==365
+          for i,slot in enumerate(slots,1):
+              if slot=={}: continue
+              assert pointers[i-1]==slot['name']
+              assert ids[slot['id']]==i
+          assert len(re.findall(r'^\s*\.incbin\s+',inc,re.M))==730
+          compact_ptrs,compact_ids,compact_inc=generated('synthetic-compacted')
+          assert len(compact_ptrs)==len(compact_ids)==365
+          assert 'NULL' not in compact_ptrs
+          shifted=[name for name in ids if ids[name]!=compact_ids[name]]
+          assert shifted and len(shifted)==len([s for i,s in enumerate(slots,1) if s and i>holes[0]])
+          result={
+              'pinned_source':'ce6406d8c2eaf46d543c8a2606de0c3cb1951982',
+              'authored_slots':383,'populated_layouts':365,'null_slot_count':18,
+              'null_slot_ids_1based':holes,'authored_layout_constants':365,
+              'authored_border_block_incbin_count':730,
+              'synthetic_compacted_slots':365,
+              'numeric_ids_changed_by_compaction':len(shifted),
+              'compiled_generator_verified':True,
+              'linked_rom_verified':False,
+              'independent_approvals':0,'phase1_complete':False
+          }
+          (root/'summary.json').write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(result,indent=2))
+          PY
+      - name: Preserve generated assembler, C headers and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-sparse-layout-slot-abi
+          path: |
+            layout-slot-evidence/*/asm/*.inc
+            layout-slot-evidence/*/include/*.h
+            layout-slot-evidence/summary.json
+          retention-days: 90
+          if-no-files-found: warn
