@@ -131,7 +131,7 @@ def contract(files):
     link = files["src/link.c"]
     require(re.search(
         r"if \(gWirelessCommType == 1\).*?if \(JOY_NEW\(A_BUTTON\)\)"
-        r".*?gWirelessCommType = 0;.*?ReloadSave\(\);",
+        r".*?gWirelessCommType = 0;\s*sLinkErrorBuffer\.disconnected = 0;\s*ReloadSave\(\);",
         link, re.S), "link error acknowledgment reload route drift")
     require(re.search(
         r"#if REVISION >= 0xA\s*if \(reloadOrReset\).*?"
