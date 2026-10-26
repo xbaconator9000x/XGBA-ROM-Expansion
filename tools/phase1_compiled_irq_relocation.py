@@ -38,7 +38,7 @@ def nm_symbols(path):
     found = {}
     for line in cmd("arm-none-eabi-nm", "-S", "--defined-only", str(path)).splitlines():
         match = re.fullmatch(
-            r"([0-9a-fA-F]+)\\s+(?:([0-9a-fA-F]+)\\s+)?([a-zA-Z])\\s+(\\S+)",
+            r"([0-9a-fA-F]+)\s+(?:([0-9a-fA-F]+)\s+)?([a-zA-Z])\s+(\S+)",
             line.strip())
         if match:
             addr, size, typ, name = match.groups()
@@ -59,8 +59,8 @@ def unique(symbols, name):
 def text_section_size(obj):
     listing = cmd("arm-none-eabi-readelf", "-SW", str(obj))
     sizes = re.findall(
-        r"(?m)^\\s*\\[\\s*\\d+\\]\\s+\\.text\\s+PROGBITS\\s+"
-        r"[0-9a-fA-F]+\\s+[0-9a-fA-F]+\\s+([0-9a-fA-F]+)\\s+",
+        r"(?m)^\s*\[\s*\d+\]\s+\.text\s+PROGBITS\s+"
+        r"[0-9a-fA-F]+\s+[0-9a-fA-F]+\s+([0-9a-fA-F]+)\s+",
         listing)
     require(len(sizes) == 1, "crt0 object .text extent ambiguous")
     return int(sizes[0], 16)
@@ -157,7 +157,7 @@ def main():
                 "compiler did not expose IRQ buffer size")
         relocations = cmd("arm-none-eabi-readelf", "-rW", str(obj))
         for external in ("AgbMain", "gIntrTable", "gSTWIStatus"):
-            require(re.search(r"\\b" + external + r"\\b", relocations) is not None,
+            require(re.search(r"\b" + external + r"\b", relocations) is not None,
                     "crt0 external relocation missing: " + external)
         layout = verify_layout(
             irq["address"], buffer["address"], table["address"],
