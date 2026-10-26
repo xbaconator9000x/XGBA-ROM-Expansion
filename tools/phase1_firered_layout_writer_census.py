@@ -192,6 +192,20 @@ def main():
     require("if (gSaveBlock1Ptr->towerChallengeId >= NUM_TOWER_CHALLENGE_TYPES)"
             in tower and "gSaveBlock1Ptr->towerChallengeId = 0;" in tower,
             "challenge-start normalization drift")
+    # The dispatcher constructs tower data before calling any selected
+    # function, including StartTrainerTowerChallenge. Therefore its saved-ID
+    # normalization is too late to guard this invocation's setup lookup.
+    require("void CallTrainerTowerFunc(void)\n{\n"
+            "    SetUpTrainerTowerDataStruct();\n"
+            "    sTrainerTowerFunctions[gSpecialVar_0x8004]();\n"
+            "    FreeTrainerTowerDataStruct();" in tower,
+            "Trainer Tower dispatch-before-setup order drift")
+    require("[TRAINER_TOWER_FUNC_START_CHALLENGE]        = StartTrainerTowerChallenge,"
+            in tower, "Trainer Tower start dispatcher slot drift")
+    require("void PrintTrainerTowerRecords(void)\n{" in tower
+            and "    SetUpTrainerTowerDataStruct();" in
+            tower.split("void PrintTrainerTowerRecords(void)\n{", 1)[1],
+            "Trainer Tower records setup call drift")
     # Recording snapshots the backup variable after it is written. Playback
     # can also populate normal save vars from quest-log flag/var records.
     require(quest.index("    BackUpMapLayout();") <
@@ -275,6 +289,8 @@ def main():
         "trainer_tower_built_in_floor_count": 8,
         "trainer_tower_challenge_start_normalizes_saved_id": True,
         "trainer_tower_setup_saved_id_locally_checked": False,
+        "trainer_tower_start_dispatch_setup_precedes_id_normalization": True,
+        "trainer_tower_records_board_direct_setup": True,
         "quest_log_backup_var_snapshot_after_write": True,
         "quest_log_playback_may_replay_variable_records": True,
         "trainer_tower_floor_layouts": len(floor_ids),
@@ -285,7 +301,7 @@ def main():
         "unresolved": [
             "The four authored script layout constants are literal VarGet identity operands, not variable references.",
             "Quest-log backup 0x40AE is a variable and its restored nonzero value lacks a local range check.",
-            "Built-in Trainer Tower setup is selected by the pinned FALSE e-Reader stub; its saved challenge ID is normalized at challenge start, not locally in setup.",
+            "Built-in setup precedes even the START_CHALLENGE dispatcher call; saved challenge-ID normalization cannot guard that initial lookup.",
             "Authored floor IDs map to 0..7; corrupted saved IDs, replayed quest-log vars, compiled ABI and runtime integrity remain unproven.",
             "No exhaustive dataflow, save integrity, runtime reachability, or linked ROM proof.",
             "Source selector census is not independent whole-file semantic approval.",
