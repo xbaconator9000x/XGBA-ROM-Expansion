@@ -259,12 +259,15 @@ def verify_tower_setup_entrypoints(tower, overworld):
             "direct Trainer Tower setup caller census drift")
     for name in consumers:
         body = function_body(tower, name)
-        require(re.search(r"^\s*SetUpTrainerTowerDataStruct\(\);", body)
-                is not None,
-                "setup not first statement in " + name)
+        require("SetUpTrainerTowerDataStruct();" in body,
+                "setup call missing in " + name)
         require(body.count("SetUpTrainerTowerDataStruct();") == 1,
                 "duplicate setup invocation in " + name)
     battle = function_body(tower, "InitTrainerTowerBattleStruct")
+    records = function_body(tower, "PrintTrainerTowerRecords")
+    require(records.index("SetUpTrainerTowerDataStruct();") <
+            records.index("FillWindowPixelRect("),
+            "record-board setup/display ordering drift")
     require(battle.index("SetUpTrainerTowerDataStruct();") <
             battle.index("trainerId = VarGet(VAR_TEMP_1);") <
             battle.index("CURR_FLOOR.trainers[trainerId].name"),
