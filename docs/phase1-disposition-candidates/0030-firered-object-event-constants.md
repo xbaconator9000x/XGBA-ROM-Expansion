@@ -1,0 +1,17 @@
+# Phase 1 whole-file analyst candidate — FireRed object-event ID and graphics constants
+
+**PENDING INDEPENDENT REVIEW; NOT APPROVED.** Pinned `pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982`, path `include/constants/event_objects.h`, verified Git blob `9d8c514f9e2d634d40d215bf657f33041c55c28e`. [Pinned source](https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/include/constants/event_objects.h).
+
+## Entire-file authored inventory
+- Include guard `GUARD_CONSTANTS_EVENT_OBJECTS_H`; imports `constants/map_event_ids.h`.
+- Defines **152 consecutive static `OBJ_EVENT_GFX_*` identifiers 0 through 151**, starting `OBJ_EVENT_GFX_RED_NORMAL=0`, including playable poses, NPCs, trainers, overworld Pokémon, items, cut trees, rocks, signs and `OBJ_EVENT_GFX_SS_ANNE=151`. `NUM_OBJ_EVENT_GFX=152` follows. The sequential static range does not prove that every ID has an asset or runtime consumer, or that 152–239 are safe for allocation.
+- Defines **16 dynamic graphics aliases** `OBJ_EVENT_GFX_VAR_0` through `OBJ_EVENT_GFX_VAR_F` at `OBJ_EVENT_GFX_VARS=240` through 255. The source comment ties these to `VAR_OBJ_GFX_ID_X` variables in `include/constants/vars.h`. These IDs are *selectors*, not additional fixed asset entries; a ROM importer must not resolve them as static sprite indices without the variable state.
+- Shadow sizes: `SHADOW_SIZE_S=0`, `M=1`, `L=2`, `XL=3`. Object flags: `F_INANIMATE=(1<<6)`, `F_DISABLE_REFLECTION_PALETTE_LOAD=(1<<7)`. Track categories: `TRACKS_NONE=0`, `TRACKS_FOOT=1`, `TRACKS_BIKE_TIRE=2`.
+- Object kinds: `OBJ_KIND_NORMAL=0`, `OBJ_KIND_CLONE=255`. The assembler macros `object_event` and `clone_event` write these into a **one-byte kind field**, with differing record layouts but both 24 bytes.
+- Special *local* object IDs: `LOCALID_NONE=0`, `LOCALID_CAMERA=127`, `LOCALID_BERRY_BLENDER_PLAYER_END=240` (comment: five linked-player IDs ending at 240, i.e. 236–240), `LOCALID_PLAYER=255`. `OBJ_EVENT_ID_CAMERA` and `OBJ_EVENT_ID_PLAYER` are aliases for those local IDs; the source expressly warns these are **not** indices into `gObjectEvents`. Template local IDs otherwise use one plus template index. **Local ID namespace, graphics ID namespace and runtime object array indices must not be conflated.**
+
+## Expansion-specific contracts
+Sprite and follower expansions must distinguish static graphic IDs 0–151, dynamic graphic selectors 240–255, and separately-scoped local event IDs (which also use 127, 240 and 255 without collision because they are different namespaces). A serializer or map editor must preserve this distinction, the normal/clone kind byte and the dynamic variable lookup. No claim is made that there is free sprite space in 152–239, that 8-bit graphics indices can be widened without altering engine ABI, or that an overworld image exists for each enum value.
+
+## Evidence gaps and reviewer requirements
+The full pinned header and Git blob were inspected. Independently enumerate the object graphics table, sprite loader, mapjson/object-event emitter, clone consumers, dynamic variable resolution and reserved local IDs; test static/dynamic boundaries (151, 152, 239, 240, 255), invalid IDs, and build variants with compiled/runtime/editor checks. This record is an analyst candidate, not independent whole-file approval. Reviewer **none**; status **pending**; authoritative gate contribution **0 / FAIL_INCOMPLETE**.
