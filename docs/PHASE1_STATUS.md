@@ -2,6 +2,10 @@
 
 **Decision: FAIL_INCOMPLETE. No XGBA unlimited ROM architecture has been implemented or runtime-certified.**
 
+- **Porymap → FireRed map-connection ABI and mirror ownership (27 October 2026; draft PR #7):** [Ten-blob pinned producer/consumer trace](PHASE1_P0_PORYMAP_FIRERED_CONNECTION_ABI_2026-10-27.md) joins authored connection JSON, 12-byte native entries, map-header omission via `connections_no_include`, ambiguous reciprocal mirror pairing, duplicate dive/emerge handling, save scope and different native cardinal/dive selection rules. Source-only evidence; no compiled/Qt/runtime certification, new checker or independent approval. **FAIL_INCOMPLETE; 0/14,834 approved.**
+
+
+
 - **Porymap project-mask load/reload transaction (27 October 2026; draft PR #7):** [Six-blob pinned call-order trace](PHASE1_P0_PORYMAP_MASK_RELOAD_TRANSACTION_2026-10-27.md) resolves the earlier mask-initialization question: normal successful project opening loads layout metadata before masks, but binary Block decoding is lazy and occurs after `readFieldmapMasks` rebinds static packers. Saving edited masks while declining the optional reload can leave a conditional in-memory config/packer split; settings save ignores three return values and config writing does not verify write length. These are source-level compatibility obligations, not observed corruption, compiled Qt evidence or whole-file approval. **FAIL_INCOMPLETE; 0/14,834 approved.**
  This status overrides the old "latest v2.6" heading retained below for historical continuity.
 
