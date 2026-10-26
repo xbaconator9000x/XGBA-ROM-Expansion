@@ -1,6 +1,9 @@
 # Current authoritative Phase 1 checkpoint — 27 October 2026
 
-**Decision: FAIL_INCOMPLETE. No XGBA unlimited ROM architecture has been implemented or runtime-certified.** This status overrides the old "latest v2.6" heading retained below for historical continuity.
+**Decision: FAIL_INCOMPLETE. No XGBA unlimited ROM architecture has been implemented or runtime-certified.**
+
+- **Porymap project-mask load/reload transaction (27 October 2026; draft PR #7):** [Six-blob pinned call-order trace](PHASE1_P0_PORYMAP_MASK_RELOAD_TRANSACTION_2026-10-27.md) resolves the earlier mask-initialization question: normal successful project opening loads layout metadata before masks, but binary Block decoding is lazy and occurs after `readFieldmapMasks` rebinds static packers. Saving edited masks while declining the optional reload can leave a conditional in-memory config/packer split; settings save ignores three return values and config writing does not verify write length. These are source-level compatibility obligations, not observed corruption, compiled Qt evidence or whole-file approval. **FAIL_INCOMPLETE; 0/14,834 approved.**
+ This status overrides the old "latest v2.6" heading retained below for historical continuity.
 
 - **Porymap packed-block and mask-lifetime review batch (27 October 2026; draft PR #7):** [Eleven-blob source trace](PHASE1_P0_PORYMAP_PACKED_BLOCK_MASK_LIFETIME_2026-10-27.md) closes the BitPacker → Block → Blockdata → Layout source dependency, distinguishes constructor truncation from setter modulo-clamping, documents process-wide configurable mask provenance, C-define truncation versus config-file bounds coercion, UI overlap warnings without save-path rejection, and the unchecked QFile write result/odd-byte/resize boundaries. [Six complete-file analyst candidates 0015–0020](phase1-disposition-candidates/README.md) are pending actual independent review, **not approved**. This is source-level evidence only; no compiled Qt test, editor round trip, or new CI result is claimed. **FAIL_INCOMPLETE; 0/14,834 independent approvals.**
 
