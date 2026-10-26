@@ -57,9 +57,17 @@ jobs:
           assert set(order) <= set(names)
           assert len(set(names) - set(order)) == 362
           authored = {}
+          connection_shapes = {'missing': [], 'null': [], 'empty_array': [], 'nonempty_array': []}
           for name in names:
               m = json.loads((root.parent/name/'map.json').read_text())
-              authored[name] = {'count': len(m.get('connections') or []),
+              raw = m.get('connections')
+              if 'connections' not in m: shape = 'missing'
+              elif raw is None: shape = 'null'
+              elif isinstance(raw, list) and len(raw) == 0: shape = 'empty_array'
+              elif isinstance(raw, list): shape = 'nonempty_array'
+              else: raise AssertionError((name, type(raw)))
+              connection_shapes[shape].append(name)
+              authored[name] = {'count': len(raw or []),
                                 'no_include': m.get('connections_no_include') in (True, 'TRUE')}
           ordered = set(order)
           nonempty = {name for name in names if authored[name]['count'] > 0}
@@ -73,6 +81,10 @@ jobs:
               'nonempty_no_include': len(no_include),
               'nonempty_no_include_omitted_from_order': len(no_include - ordered),
               'nonempty_omitted_names': sorted(nonempty - ordered),
+              'connection_field_shapes': {k: len(v) for k,v in connection_shapes.items()},
+              'omitted_empty_array_names': sorted(set(connection_shapes['empty_array']) - ordered),
+              'omitted_null_names_count': len(set(connection_shapes['null']) - ordered),
+              'omitted_missing_names_count': len(set(connection_shapes['missing']) - ordered),
           }
           pathlib.Path('evidence/authored-connection-coverage.json').write_text(
               json.dumps(coverage, indent=2, sort_keys=True)+'\n')
@@ -141,6 +153,13 @@ jobs:
               original_order = included_names(normal)
               control_order = included_names(positive)
               results['release_vs_control_full_include_order_equal'] = original_order == control_order
+              ordered = json.loads(pathlib.Path('upstream/data/maps/map_groups.json').read_text())['connections_include_order']
+              nonempty = set(ordered)
+              results['release_vs_control_nonempty_order_equal'] = (
+                  [x for x in original_order if x in nonempty] ==
+                  [x for x in control_order if x in nonempty])
+              results['release_nonempty_order_matches_authored'] = (
+                  [x for x in original_order if x in nonempty] == ordered)
               active = set(coverage['nonempty_omitted_names'])
               results['release_vs_control_omitted_nonempty_order_equal'] = (
                   [x for x in original_order if x in active] ==
