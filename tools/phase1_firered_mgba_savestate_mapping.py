@@ -20,6 +20,12 @@ MG_BLOBS = {
     "src/gba/cart/matrix.c": "9ccbe883235b98bcf56cd609015e7b4003aa832c",
     "include/mgba/internal/gba/cart/matrix.h": "27e32a75c0f521dac9ded53821591485089d7b76",
     "src/gba/memory.c": "aa01fdcc7d6ae5ecdf8753efc63b3a60a1e8d3dc",
+    "src/gba/gba.c": "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e",
+    "include/mgba/internal/gba/memory.h": "0aad912613e726560d06bbdbf6061986e69e5842",
+    "include/mgba-util/vfs.h": "6c9bd299153af4c3c9cd5487f2425a2481331ee5",
+    "src/util/vfs/vfs-mem.c": "048194e2dd2d0b3b395a852d2092c694663c88a2",
+    "src/util/vfs/vfs-fd.c": "2535bd0fb76740745ae038d5523ead28658f1035",
+    "src/util/vfs/vfs-file.c": "4a63e53f842b31b24d6188e6525ddcf121a0c7da",
 }
 
 
@@ -42,6 +48,76 @@ def section(source, start, end=None):
     j = source.find(end, i + len(start)) if end else len(source)
     require(j >= 0, "missing section end: " + str(end))
     return source[i:j]
+
+
+def banking_contract(mg):
+    """Pinned >32 MiB Matrix opt-in, CRC provenance and VFile short-read ABI."""
+    gba = mg["src/gba/gba.c"]
+    memory = mg["src/gba/memory.c"]
+    memh = mg["include/mgba/internal/gba/memory.h"]
+    matrix = mg["src/gba/cart/matrix.c"]
+    vfs = mg["include/mgba-util/vfs.h"]
+    vfmem = mg["src/util/vfs/vfs-mem.c"]
+    vffd = mg["src/util/vfs/vfs-fd.c"]
+    vffile = mg["src/util/vfs/vfs-file.c"]
+    require("GBA_SIZE_ROM0 = 0x02000000," in memh, "ROM0 32 MiB extent drift")
+    load = section(gba, "bool GBALoadROM(", "void GBAYankROM(")
+    large = section(load, "if (gba->pristineRomSize > GBA_SIZE_ROM0) {",
+                    "} else if (gba->pristineRomSize == 0x00100000)")
+    ordered(large, "vf->seek(vf, 0xAC, SEEK_SET);",
+            "vf->read(vf, &ident, 1);", "if (ident == 'M') {",
+            "gba->memory.romSize = 0x01000000;",
+            "gba->memory.rom = anonymousMemoryMap(GBA_SIZE_ROM0);",
+            "gba->pristineRomSize = GBA_SIZE_ROM0;")
+    require("vf->read(vf, gba->memory.rom" not in large,
+            "Matrix branch now populates ROM buffer before CRC")
+    ordered(load, "gba->pristineRomSize = vf->size(vf);",
+            "if (gba->pristineRomSize > GBA_SIZE_ROM0)",
+            "gba->pristineRomSize = GBA_SIZE_ROM0;",
+            "gba->romCrc32 = doCrc32(gba->memory.rom, gba->pristineRomSize);")
+    reset = section(gba, "void GBAReset(", "void GBASkipBIOS(")
+    ordered(reset, "GBAMemoryReset(gba);",
+            "if (gba->romVf && gba->romVf->size(gba->romVf) > GBA_SIZE_ROM0)",
+            "gba->romVf->seek(gba->romVf, 0xAC, SEEK_SET);",
+            "if (ident == 'M') {", "GBAMatrixReset(gba);")
+    memreset = section(memory, "void GBAMemoryReset(", "void GBAMemoryClearAGBPrint(")
+    require("memset(&gba->memory.matrix, 0, sizeof(gba->memory.matrix));" in memreset,
+            "Matrix reset-to-disabled state changed")
+    matrix_reset = section(matrix, "void GBAMatrixReset(", "void GBAMatrixWrite(")
+    ordered(matrix_reset, "gba->memory.matrix.size = 0x1000;",
+            "gba->memory.matrix.paddr = 0;",
+            "gba->memory.matrix.vaddr = 0;",
+            "_remapMatrix(gba);",
+            "gba->memory.matrix.paddr = 0x200;",
+            "gba->memory.matrix.vaddr = 0x1000;",
+            "_remapMatrix(gba);")
+    remap = section(matrix, "static void _remapMatrix(", "void GBAMatrixReset(")
+    require("0xFFFFE000" in remap and "int start = gba->memory.matrix.vaddr >> 9;" in remap,
+            "8 KiB Matrix window / 512-byte slot constraint changed")
+    require("ssize_t (*read)(struct VFile* vf, void* buffer, size_t size);" in vfs
+            and "off_t (*seek)(struct VFile* vf, off_t offset, int whence);" in vfs
+            and "ssize_t (*size)(struct VFile* vf);" in vfs,
+            "VFile seek/read/size return-value ABI changed")
+    memread = section(vfmem, "ssize_t _vfmRead(", "ssize_t _vfmWrite(")
+    require("size = vfm->size - vfm->offset;" in memread
+            and "return size;" in memread,
+            "memory-backed VFile short-read behaviour changed")
+    require("return read(vfd->fd, buffer, size);" in
+            section(vffd, "ssize_t _vfdRead(", "ssize_t _vfdWrite("),
+            "FD VFile read return-value behaviour changed")
+    require("return fread(buffer, 1, size, vff->file);" in
+            section(vffile, "ssize_t _vffRead(", "ssize_t _vffWrite("),
+            "FILE VFile read return-value behaviour changed")
+    return {
+        "matrix_activation": "ROM_file_gt_32MiB_and_header_byte_0xAC_equals_M",
+        "matrix_rom_buffer_size": "32MiB",
+        "matrix_reported_rom_size": "16MiB",
+        "matrix_virtual_window": "8KiB_in_16_x_512B_slots",
+        "rom_crc_provenance": "in_memory_ROM_buffer_before_GBAMatrixReset_not_entire_backing_VFile",
+        "matrix_reset": "cleared_then_conditionally_enabled",
+        "vfile_read_contract": "short_or_failed_reads_possible_no_local_matrix_result_check",
+        "runtime_or_editor_certification": False,
+    }
 
 
 def contract(fr, mg):
@@ -136,6 +212,7 @@ def contract(fr, mg):
             "LoadGameSave(SAVE_NORMAL);",
             "SetMainCallback2(CB2_ContinueSavedGame);")
     return {
+        **banking_contract(mg),
         "savestate_bytes": 0x61000,
         "rom_crc_mismatch": "warning_only",
         "rom_identity_mismatch": "hard_reject",
@@ -180,6 +257,17 @@ def mutation_checks(fr, mg):
         ("mg", "src/gba/cart/matrix.c", "gba->romVf->read(gba->romVf, &gba->memory.rom[gba->memory.matrix.vaddr >> 2], gba->memory.matrix.size);", "gba->romVf->read(gba->romVf, &gba->memory.rom[gba->memory.matrix.vaddr >> 2], gba->memory.matrix.size - 1);"),
         ("mg", "src/gba/cart/matrix.c", "gba->memory.matrix.size = 0x200;", "gba->memory.matrix.size = 0x400;"),
         ("fr", "src/reset_save_heap.c", "RegisterRamReset(RESET_EWRAM);", "RegisterRamReset(RESET_ALL);"),
+        ("mg", "src/gba/gba.c", "if (gba->pristineRomSize > GBA_SIZE_ROM0) {", "if (gba->pristineRomSize >= GBA_SIZE_ROM0) {"),
+        ("mg", "src/gba/gba.c", "if (ident == 'M') {", "if (ident == 'N') {"),
+        ("mg", "src/gba/gba.c", "gba->memory.romSize = 0x01000000;", "gba->memory.romSize = 0x02000000;"),
+        ("mg", "src/gba/gba.c", "gba->romCrc32 = doCrc32(gba->memory.rom, gba->pristineRomSize);", "gba->romCrc32 = 0;"),
+        ("mg", "src/gba/memory.c", "memset(&gba->memory.matrix, 0, sizeof(gba->memory.matrix));", "/* Matrix reset omitted */"),
+        ("mg", "src/gba/cart/matrix.c", "gba->memory.matrix.paddr = 0x200;", "gba->memory.matrix.paddr = 0x400;"),
+        ("mg", "include/mgba/internal/gba/memory.h", "GBA_SIZE_ROM0 = 0x02000000,", "GBA_SIZE_ROM0 = 0x04000000,"),
+        ("mg", "include/mgba-util/vfs.h", "ssize_t (*size)(struct VFile* vf);", "void (*size)(struct VFile* vf);"),
+        ("mg", "src/util/vfs/vfs-mem.c", "size = vfm->size - vfm->offset;", "size = size;"),
+        ("mg", "src/util/vfs/vfs-fd.c", "return read(vfd->fd, buffer, size);", "return size;"),
+        ("mg", "src/util/vfs/vfs-file.c", "return fread(buffer, 1, size, vff->file);", "return size;"),
     ]
     for index, (which, path, before, after) in enumerate(cases, 1):
         src = fr if which == "fr" else mg
@@ -214,6 +302,7 @@ def main():
         "unverified": [
             "compiled savestate ABI under all supported variants",
             "ROM bank content identity and Matrix VFile read bounds",
+            "Matrix opt-in by ROM header, CRC provenance and VFile short-read runtime effects",
             "pipeline and prefetch behaviour after Matrix restore",
             "save corruption and alternate BIOS/runtime execution",
             "editor round-trip and independent whole-file reviews",
