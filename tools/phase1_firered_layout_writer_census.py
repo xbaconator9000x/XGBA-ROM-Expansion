@@ -37,6 +37,39 @@ SCRIPT_SELECTORS = {
     "data/maps/SevenIsland_House_Room1/scripts.inc": "LAYOUT_SEVEN_ISLAND_HOUSE_ROOM1_DOOR_OPEN",
 }
 
+# Recognise every authored instruction line before validating its operand.
+# The old LAYOUT_-only matcher silently ignored numeric and variable operands.
+SCRIPT_INSTRUCTION_RE = re.compile(
+    r"(?m)^[ \t]*(?:[A-Za-z_][A-Za-z0-9_]*:{1,2}[ \t]*)?setmaplayoutindex\b([^\r\n]*)$"
+)
+
+def authored_script_layout_operands(source):
+    operands = []
+    for match in SCRIPT_INSTRUCTION_RE.finditer(source):
+        operand = match.group(1).split("@", 1)[0].strip()
+        require(re.fullmatch(r"LAYOUT_[A-Z0-9_]+", operand) is not None,
+                "unsupported authored setmaplayoutindex operand: " + repr(operand))
+        operands.append(operand)
+    return operands
+
+def verify_selector_scanner_negative_controls():
+    require(authored_script_layout_operands(
+        "\tsetmaplayoutindex LAYOUT_EXAMPLE @ comment\n"
+        "Example_Label:: setmaplayoutindex LAYOUT_OTHER\n"
+    ) == ["LAYOUT_EXAMPLE", "LAYOUT_OTHER"],
+            "selector scanner positive controls failed")
+    for invalid in (
+        "\tsetmaplayoutindex VAR_QLBAK_MAP_LAYOUT\n",
+        "\tsetmaplayoutindex 300\n",
+        "\tsetmaplayoutindex\n",
+        "\tsetmaplayoutindex LAYOUT_A, LAYOUT_B\n",
+    ):
+        try:
+            authored_script_layout_operands(invalid)
+        except RuntimeError:
+            continue
+        raise RuntimeError("selector scanner accepted invalid operand: " + repr(invalid))
+
 def run_git(root, *args):
     return subprocess.check_output(["git", "-C", str(root), *args],
                                    text=True, stderr=subprocess.PIPE).strip()
@@ -126,11 +159,14 @@ def main():
     require(len(assignment.findall(overworld)) == 2, "overworld direct writer count drift")
     require(len(assignment.findall(quest)) == 2, "quest-log direct writer count drift")
 
+    verify_selector_scanner_negative_controls()
     script_sites = []
-    for path in sorted((root / "data/maps").rglob("scripts.inc")):
+    # Scan all authored data assembly sources, not only map scripts.inc files.
+    # Fail closed if an invocation uses a numeric/variable/unknown operand.
+    for path in sorted(p for p in (root / "data").rglob("*")
+                       if p.is_file() and p.suffix in (".inc", ".s")):
         relative = path.relative_to(root).as_posix()
-        matches = re.findall(r"(?m)^\s*setmaplayoutindex\s+(LAYOUT_[A-Z0-9_]+)\s*$",
-                             path.read_text(encoding="utf-8"))
+        matches = authored_script_layout_operands(path.read_text(encoding="utf-8"))
         if not matches:
             continue
         require(relative in SCRIPT_SELECTORS and matches == [SCRIPT_SELECTORS[relative]],
