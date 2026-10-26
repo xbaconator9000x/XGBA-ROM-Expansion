@@ -15,6 +15,10 @@ BLOBS = {
     "src/rom_header.s": "c98c89992a128b82ef3bc8f75c791cd1c6cbdcb9",
     "src/crt0.s": "a0d8a4b55237b38afc5b69d4e9aad0c2df232e14",
     "constants/gba_constants.inc": "3ff857ee8dfb1f4e2dfaf8ac98373bac5dfdb25c",
+    "src/librfu_stwi.c": "7b3b486cae2f249adf652cfb6ceca7565e8fd2f6",
+    "src/librfu_rfu.c": "76e2158e68428584abc2d75165fb9b495cacb25b",
+    "src/link_rfu_2.c": "78087d76fd3b2869b2bedc5b6dc29840e7d7a55a",
+    "include/librfu.h": "fa57ac4a2efc527296db5223e20ef0428c37f18c",
     "src/main.c": "542b0f5d16dd93107523d11163bfcb70a42b707a",
     "src/reset_save_heap.c": "745270dc7415b869c302daaa7b9c2b2e5b2865f1",
     "include/gba/defines.h": "5521e942c00cc2c263b842ae7608dfb7ac881a76",
@@ -36,6 +40,10 @@ def contract(files):
     defines, syscall = files["include/gba/defines.h"], files["include/gba/syscall.h"]
     reload_src = files["src/reset_save_heap.c"]
     gba_constants = files["constants/gba_constants.inc"]
+    stwi_src = files["src/librfu_stwi.c"]
+    rfu_src = files["src/librfu_rfu.c"]
+    link_rfu_src = files["src/link_rfu_2.c"]
+    rfu_header = files["include/librfu.h"]
 
     require(re.search(r"(?m)^Start:\s*\n\s*b start_vector\s*$", header),
             "ROM header entry branch drift")
@@ -182,6 +190,36 @@ def contract(files):
         "VBlankIntr", *(["IntrDummy"] * 9),
     ], "IRQ priority-to-callback table mapping drift")
 
+    # Cross-object lifetime: crt0 unconditionally reads gSTWIStatus at IRQ
+    # dispatch; RFU initializes the pointer later than the first IME enable.
+    # Source order alone does not demonstrate a real interrupt in this window.
+    require("COMMON_DATA struct STWIStatus *gSTWIStatus = NULL;" in stwi_src,
+            "RFU status pointer initial value drift")
+    require("gSTWIStatus = &interruptStruct->block2;" in stwi_src
+            and "gSTWIStatus = (struct STWIStatus *)interruptStruct->block1;"
+            in stwi_src
+            and "gSTWIStatus->timerSelect = timerSelect;" in stwi_src,
+            "RFU status pointer producer or timer assignment drift")
+    require(re.search(
+        r"struct STWIStatus\s*\{\s*vs32 state;\s*"
+        r"u8 reqLength;\s*u8 reqNext;\s*u8 reqActiveCommand;\s*"
+        r"u8 ackLength;\s*u8 ackNext;\s*u8 ackActiveCommand;\s*"
+        r"u8 timerSelect;", rfu_header) is not None,
+        "RFU status timerSelect offset-0xA structure prefix drift")
+    require("STWI_init_all((struct RfuIntrStruct *)&gRfuSlotStatusUNI[3][1],"
+            in rfu_src
+            and "return ERR_RFU_API_BUFF_SIZE;" in rfu_src
+            and "return ERR_RFU_API_BUFF_ADR;" in rfu_src,
+            "RFU API buffer validation / STWI pointer producer drift")
+    require("rfu_initializeAPI(sRfuAPIBuffer, RFU_API_BUFF_SIZE_RAM,"
+            " &gIntrTable[1], TRUE)" in link_rfu_src
+            and "rfu_setTimerInterrupt(3, &gIntrTable[2]);" in link_rfu_src
+            and "void InitRFU(void)" in link_rfu_src,
+            "RFU API initialization / timer 3 source path drift")
+    require(main.index("    InitIntrHandlers();")
+            < main.index("    InitRFU();"),
+            "RFU pointer initialization no longer follows IRQ enabling")
+
     return {
         "boot_entry": "ROM header branch -> start_vector -> AgbMain",
         "initial_irq_vector": "INTR_VECTOR (0x03007FFC) -> intr_main",
@@ -200,6 +238,11 @@ def contract(files):
         "no_pending_irq_source_falls_through_to_slot_13": True,
         "gamepak_pending_source_enters_spin": True,
         "irq_dispatch_runtime_reachability_proved": False,
+        "rfu_status_pointer_initially_null": True,
+        "rfu_timer_select_source_struct_offset": 10,
+        "rfu_timer_select_authored_init_value": 3,
+        "irq_enable_before_rfu_initialization_source_order": True,
+        "rfu_pointer_window_runtime_reachability_proved": False,
     }
 
 
@@ -256,6 +299,17 @@ def main():
          "IntrDummy, // V-count interrupt"),
         ("constants/gba_constants.inc", ".set INTR_FLAG_GAMEPAK, 1 << 13",
          ".set INTR_FLAG_GAMEPAK, 1 << 12"),
+        ("src/librfu_stwi.c", "gSTWIStatus = NULL;",
+         "gSTWIStatus = (void *)1;"),
+        ("src/librfu_stwi.c", "gSTWIStatus = &interruptStruct->block2;",
+         "gSTWIStatus = &interruptStruct->block1;"),
+        ("include/librfu.h", "u8 timerSelect;",
+         "u16 timerSelect;"),
+        ("src/link_rfu_2.c", "rfu_setTimerInterrupt(3, &gIntrTable[2]);",
+         "rfu_setTimerInterrupt(2, &gIntrTable[2]);"),
+        ("src/librfu_rfu.c",
+         "STWI_init_all((struct RfuIntrStruct *)&gRfuSlotStatusUNI[3][1],",
+         "STWI_init_timer((struct RfuIntrStruct *)&gRfuSlotStatusUNI[3][1],"),
     ]
     for index, (path, before, after) in enumerate(mutations, 1):
         require(before in files[path], f"mutation fixture {index} missing: {path}")
