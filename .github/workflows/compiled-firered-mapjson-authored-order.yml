@@ -59,8 +59,8 @@ jobs:
           authored = {}
           for name in names:
               m = json.loads((root.parent/name/'map.json').read_text())
-              authored[name] = {'count': len(m.get('connections', [])),
-                                'no_include': m.get('connections_no_include') is True}
+              authored[name] = {'count': len(m.get('connections') or []),
+                                'no_include': m.get('connections_no_include') in (True, 'TRUE')}
           ordered = set(order)
           nonempty = {name for name in names if authored[name]['count'] > 0}
           no_include = {name for name in nonempty if authored[name]['no_include']}
