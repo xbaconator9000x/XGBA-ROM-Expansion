@@ -16,7 +16,8 @@
 
 - Initial test commit: `293c9cea0d293dee3b2ee9601994b02db0ffdf7c`.
 - Regex-escape correction: `19310b15f54fcc3c83a9b3e1f6732499615877a5`.
-- The corrected post-commit census was triggered as [run #40250025014](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40250025014). **Result pending at checkpoint creation.** The earlier [run #40247291725](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40247291725) passed before this additional metadata check.
+- Native C header member-comment-aware matcher correction: `c3296d403daa807a55b97c6800ebe4d5df3e2d30`.
+- The final corrected post-commit census was triggered as [run #40250082483](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40250082483). **Result pending at checkpoint update.** Prior intermediate runs #40250015817 and #40250025014 were triggered by earlier revisions and cannot verify the final matcher. The earlier [run #40247291725](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40247291725) passed before this additional metadata check.
 
 ## Next required evidence
 
