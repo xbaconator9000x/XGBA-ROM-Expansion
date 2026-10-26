@@ -16,6 +16,10 @@ BLOBS = {
     "include/global.h": "77155b09014aa854fcf87260e6ad2969e222da53",
     "include/constants/global.h": "21c781a0d40aa8b303642bbf1eac9ac09ce2b5a9",
     "src/trainer_tower.c": "732b3f2ed31ed95d6476b9e111d53f759c448d81",
+    "src/save.c": "36b960f375c92711aa49b99bdfe9c6b3a99d6b1c",
+    "src/load_save.c": "8b723dd044c6024b3671bb890b25b56a53f99ec5",
+    "src/new_game.c": "3768b3ccb98cdad514b858cbc59244f21bedb7b0",
+    "src/overworld.c": "339014da46ae8543143edc99ab72bf7496203a0d",
 }
 SIGNATURE = "void SetWhiteoutRespawnWarpAndHealerNpc(struct WarpData * warp)"
 NEXT_FUNCTION = "static void SetWhiteoutRespawnHealerNpcAsLastTalked(u32 healLocationIdx)"
@@ -53,6 +57,62 @@ def verify_whiteout_function(source):
     # healLocationIdx lookup, not the trainerTower[challengeId] read.
     require("#ifdef BUGFIX" in body and position < body.index("#ifdef BUGFIX"),
             "whiteout BUGFIX branch positioning drift")
+
+
+def verify_save_load_boundary(source):
+    """Confirm the bounded save-load/whiteout dependency, not global validation."""
+    save = source["src/save.c"]
+    loader = source["src/load_save.c"]
+    new_game = source["src/new_game.c"]
+    overworld = source["src/overworld.c"]
+    require("result = TryLoadSaveSlot(FULL_SAVE_SLOT, gRamSaveSectorLocations);"
+            in save and "LoadSerializedGame();" in save,
+            "normal save load/callback sequence drift")
+    require("status = GetSaveValidStatus(locations);" in save
+            and "CopySaveSlotData(FULL_SAVE_SLOT, locations);" in save,
+            "slot validation/copy sequence drift")
+    require("gSaveDataBufferPtr->checksum == checksum" in save
+            and "locations[id].data[j] = gSaveDataBufferPtr->data[j];" in save,
+            "checksum-gated sector copy drift")
+    require(re.search(r"void LoadSerializedGame\\(void\\)\\s*\\{\\s*"
+                      r"LoadPlayerParty\\(\\);\\s*LoadObjectEvents\\(\\);\\s*\\}",
+                      loader) is not None,
+            "serialized party/object restore body drift")
+    require("ClearSav1();" in new_game and "ResetTrainerTowerResults();" in new_game,
+            "new-game save clear/record reset drift")
+    require("SetWhiteoutRespawnWarpAndHealerNpc(&sWarpDestination);" in overworld,
+            "whiteout caller drift")
+    # This is deliberately a bounded observation about these three files,
+    # NOT a proof that no other caller validates or normalizes saved IDs.
+    require(all("towerChallengeId" not in source[path]
+                for path in ("src/save.c", "src/load_save.c", "src/new_game.c")),
+            "save/new-game saved-ID handling changed; re-review required")
+    mutations = (
+        ("src/save.c", "locations[id].data[j] = gSaveDataBufferPtr->data[j];",
+         "locations[id].data[j] = 0;"),
+        ("src/load_save.c", "LoadObjectEvents();", "LoadBag();"),
+        ("src/overworld.c", "SetWhiteoutRespawnWarpAndHealerNpc(&sWarpDestination);",
+         "SetWarpDestinationToLastHealLocation();"),
+    )
+    for index, (path, before, after) in enumerate(mutations, 1):
+        require(before in source[path], f"save boundary mutation {index} unavailable")
+        altered = dict(source)
+        altered[path] = source[path].replace(before, after, 1)
+        try:
+            verify_save_load_contract_only(altered)
+        except RuntimeError:
+            continue
+        raise RuntimeError(f"save boundary negative control {index} accepted")
+
+
+def verify_save_load_contract_only(source):
+    save, loader, overworld = (source[p] for p in
+                               ("src/save.c", "src/load_save.c", "src/overworld.c"))
+    require("locations[id].data[j] = gSaveDataBufferPtr->data[j];" in save,
+            "sector-copy contract drift")
+    require("LoadObjectEvents();" in loader, "serialized restore contract drift")
+    require("SetWhiteoutRespawnWarpAndHealerNpc(&sWarpDestination);" in overworld,
+            "whiteout caller contract drift")
 
 
 def negative_controls(source):
@@ -108,6 +168,7 @@ def main():
     require("floors_p = gTrainerTowerFloors[challengeType];" in tower,
             "setup-time saved-ID table index drift")
     negative_controls(source["src/heal_location.c"])
+    verify_save_load_boundary(source)
 
     output = {
         "evidence_class": "PINNED_FIRERED_WHITEOUT_INDEX_SOURCE_ONLY",
@@ -122,6 +183,12 @@ def main():
         "whiteout_bugfix_branch_is_later_else_branch": True,
         "conditional_out_of_bounds_witness_id": 4,
         "negative_controls_passed": 3,
+        "save_load_negative_controls_passed": 3,
+        "save_sector_checksum_validation": True,
+        "normal_save_load_copies_sectors_then_restores_party_and_object_events": True,
+        "new_game_clears_saveblock1_and_resets_tower_record_times": True,
+        "whiteout_caller": "Overworld_SetWhiteoutRespawnPoint",
+        "save_load_semantic_range_validation_proven": False,
         "unresolved": [
             "Whether an out-of-range saved ID can survive save loading or occur in ordinary play.",
             "Whether the whiteout scene predicate and malformed ID can coincide.",
