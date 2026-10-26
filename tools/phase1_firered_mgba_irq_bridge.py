@@ -52,7 +52,15 @@ def contract(fr, mg):
         r"if \(registers & 0x02\)\s*\{\s*"
         r"memset\(gba->memory.iwram, 0, GBA_SIZE_IWRAM - 0x200\);\s*\}",
         bios), "mGBA SWI IWRAM clear/reserved-tail drift")
-    swi = bios[bios.index("void GBASwi16("):]
+    # Bound both SWI checks to GBASwi16; a later function must not
+    # accidentally satisfy a dispatch or ordering assertion.
+    swi = bios[bios.index("void GBASwi16("):bios.index("void GBASwi32(")]
+    require(re.search(
+        r"(?s)switch\s*\(immediate\)\s*\{\s*case 0xF0:.*?"
+        r"cpu->gprs\[11\] = gba->biosStall;\s*return;\s*"
+        r"case 0xFA:.*?GBAPrintFlush\(gba\);\s*return;\s*\}"
+        r"\s*if \(gba->memory.fullBios\)",
+        swi), "mGBA internal SWI exceptions before full-BIOS dispatch drift")
     require(re.search(
         r"(?s)if \(gba->memory.fullBios\)\s*\{\s*"
         r"ARMRaiseSWI\(cpu\);\s*return;\s*\}.*?"
@@ -126,6 +134,10 @@ def main():
          "INTR_VECTOR = intr_main;"),
         ("mg", "src/gba/bios.c", "GBA_SIZE_IWRAM - 0x200",
          "GBA_SIZE_IWRAM"),
+        ("mg", "src/gba/bios.c", "case 0xF0:", "case 0xF1:"),
+        ("mg", "src/gba/bios.c", "case 0xFA:", "case 0xFB:"),
+        ("mg", "src/gba/bios.c", "cpu->gprs[11] = gba->biosStall;",
+         "cpu->gprs[10] = gba->biosStall;"),
         ("mg", "src/gba/bios.c", "if (gba->memory.fullBios)",
          "if (!gba->memory.fullBios)"),
         ("mg", "src/gba/hle-bios.s", "ldr    pc, [r0, #-4]",
