@@ -12,6 +12,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from collections import Counter
 from verify_source_contracts import PINS
 
 EXTRA_CHECKS=[
@@ -197,6 +198,64 @@ def verify_map_border_coordinate_reference(root: Path):
         "independent_whole_file_signoff": False,
     }
 
+def verify_map_layout_border_metadata_reference(root: Path):
+    """Pin authored border dimensions, not compiled layout reachability."""
+    path = root / "pokefirered" / "data/layouts/layouts.json"
+    header = root / "pokefirered" / "include/global.fieldmap.h"
+    data, header_data = path.read_bytes(), header.read_bytes()
+    def blob_sha(raw):
+        return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
+    expected_layout_blob = "41d0eb1b5e51fa75d535b5a098bae2bd650f710d"
+    expected_header_blob = "e2828ec0cb1439718e830fbef4366770b3b77b1c"
+    if blob_sha(data) != expected_layout_blob or blob_sha(header_data) != expected_header_blob:
+        raise RuntimeError("Pinned authored layouts or native MapLayout struct changed")
+    header_text = header_data.decode("utf-8", "surrogateescape")
+    if not re.search(r"struct MapLayout\\s*\\{.*?u8 borderWidth;\\s*u8 borderHeight;", header_text, re.S):
+        raise RuntimeError("Native MapLayout border dimension ABI changed")
+    document = json.loads(data)
+    layouts = document.get("layouts")
+    if not isinstance(layouts, list) or len(layouts) != 383:
+        raise RuntimeError("Pinned layouts table count changed")
+    empty_placeholders = 0
+    counts = Counter()
+    ids = set()
+    for entry in layouts:
+        if entry == {}:
+            empty_placeholders += 1
+            continue
+        if not isinstance(entry, dict) or not isinstance(entry.get("id"), str):
+            raise RuntimeError("Unexpected non-layout entry in pinned layout table")
+        if entry["id"] in ids:
+            raise RuntimeError("Duplicate authored map layout id")
+        ids.add(entry["id"])
+        width, height = entry.get("border_width"), entry.get("border_height")
+        if type(width) is not int or type(height) is not int or not 0 <= width <= 255 or not 0 <= height <= 255:
+            raise RuntimeError("Invalid native u8 border dimensions in authored layout")
+        if (width == 0) != (height == 0):
+            raise RuntimeError("Unexpected partially-zero authored border dimensions")
+        counts[(width, height)] += 1
+    expected_counts = Counter({(2, 2): 330, (0, 0): 28, (3, 2): 7})
+    if empty_placeholders != 18 or counts != expected_counts or len(ids) != 365:
+        raise RuntimeError("Pinned authored border-dimension distribution changed")
+    if not {"LAYOUT_LITTLEROOT_TOWN_MAYS_HOUSE_2F", "LAYOUT_PALLET_TOWN_PLAYERS_HOUSE_1F"} <= ids:
+        raise RuntimeError("Representative authored layout IDs changed")
+    return {
+        "scope": "PINNED_AUTHORED_LAYOUT_METADATA_NOT_COMPILED_REACHABILITY",
+        "layouts_git_blob_sha1": expected_layout_blob,
+        "native_layout_header_git_blob_sha1": expected_header_blob,
+        "raw_layout_entries": len(layouts),
+        "empty_placeholders": empty_placeholders,
+        "named_layout_entries": len(ids),
+        "border_dimension_counts": {"2x2": 330, "0x0": 28, "3x2": 7},
+        "two_by_two_signed_remainder_witness_uses_declared_dimensions": True,
+        "zero_dimension_divisor_risk_if_border_macro_invoked": True,
+        "zero_dimension_layouts_proven_compiled_or_reachable": False,
+        "negative_coordinate_reachability_proven": False,
+        "compiled_runtime_tested": False,
+        "independent_whole_file_signoff": False,
+    }
+
+
 def run(root: Path) -> None:
     if len(EXTRA_CHECKS)!=16:
         raise RuntimeError("Expected 16 additive source contracts; preserve exact review scope")
@@ -229,10 +288,12 @@ def run(root: Path) -> None:
         })
     map_cell_reference=verify_map_cell_word_reference()
     map_border_reference=verify_map_border_coordinate_reference(root)
+    map_layout_metadata_reference=verify_map_layout_border_metadata_reference(root)
     output={
         "schema":"xgba.phase1.additive_p0_source_contracts.v1",
         "map_cell_word_reference":map_cell_reference,
         "map_border_coordinate_reference":map_border_reference,
+        "map_layout_border_metadata_reference":map_layout_metadata_reference,
         "additive_source_checks_expected":16,
         "additive_source_checks_passed":len(evidence),
         "baseline_source_contracts_expected_unchanged":25,
@@ -244,7 +305,7 @@ def run(root: Path) -> None:
     out=Path("audit-output/p0_additive_source_contract_assertions.json")
     out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(output,indent=2,sort_keys=True)+"\n",encoding="utf-8")
-    print("Phase 1 additive pinned P0 contracts: 16/16 source assertions PASS; map-cell 65536 words x 7 operations PASS; pinned border signed-remainder counterexamples PASS; independent review pending")
+    print("Phase 1 additive pinned P0 contracts: 16/16 source assertions PASS; map-cell 65536 words x 7 operations PASS; pinned border signed-remainder counterexamples PASS; authored border metadata 365 layouts PASS; independent review pending")
 
 if __name__=="__main__":
     try:run(Path(sys.argv[1] if len(sys.argv)>1 else "upstream"))
