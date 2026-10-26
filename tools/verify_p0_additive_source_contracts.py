@@ -239,10 +239,69 @@ def verify_map_layout_border_metadata_reference(root: Path):
         raise RuntimeError("Pinned authored border-dimension distribution changed")
     if not {"LAYOUT_LITTLEROOT_TOWN_MAYS_HOUSE_2F", "LAYOUT_PALLET_TOWN_PLAYERS_HOUSE_1F"} <= ids:
         raise RuntimeError("Representative authored layout IDs changed")
+    # Source-pinned producer -> table -> consumer trace. This establishes the
+    # generated table's *intended* slots, not actual linker retention or reachability.
+    generator_path = root / "pokefirered" / "tools/mapjson/mapjson.cpp"
+    consumer_path = root / "pokefirered" / "src/overworld.c"
+    generator_data, consumer_data = generator_path.read_bytes(), consumer_path.read_bytes()
+    generator_blob = "8d8ec4e4e6e1c011b06f00819abe40bad10d19d5"
+    consumer_blob = "339014da46ae8543143edc99ab72bf7496203a0d"
+    if blob_sha(generator_data) != generator_blob or blob_sha(consumer_data) != consumer_blob:
+        raise RuntimeError("Pinned layout producer or runtime table consumer changed")
+    producer = generator_data.decode("utf-8", "surrogateescape")
+    consumer = consumer_data.decode("utf-8", "surrogateescape")
+    producer_contracts = (
+        'if (layout == Json::object()) continue;',
+        'json_to_string(layout, "border_width")',
+        'json_to_string(layout, "border_height")',
+        'if (layout_name.empty()) layout_name = "NULL";',
+        'text << "\\t.4byte " << layout_name << "\\n";',
+        'int i = 1;',
+        'text << "#define " << json_to_string(layout, "id") << " " << i << "\\n";',
+    )
+    if not all(contract in producer for contract in producer_contracts):
+        raise RuntimeError("Pinned mapjson layout emitter semantics changed")
+    if not re.search(
+        r"static const struct MapLayout \\*GetMapLayout\\(void\\)\\s*\\{\\s*"
+        r"u16 mapLayoutId = gSaveBlock1Ptr->mapLayoutId;\\s*"
+        r"if \\(mapLayoutId\\)\\s*return gMapLayouts\\[mapLayoutId - 1\\];",
+        consumer,
+    ) or not re.search(
+        r"void SetCurrentMapLayout\\(u16 mapLayoutId\\)\\s*\\{\\s*"
+        r"gSaveBlock1Ptr->mapLayoutId = mapLayoutId;\\s*"
+        r"gMapHeader.mapLayout = GetMapLayout\\(\\);",
+        consumer,
+    ):
+        raise RuntimeError("Pinned native layout-table index or setter semantics changed")
+    table_names = []
+    zero_slots = []
+    for slot, entry in enumerate(layouts, 1):
+        if entry == {}:
+            table_names.append(None)  # mapjson emits NULL, retains this slot.
+            continue
+        name = entry.get("name")
+        if not isinstance(name, str) or not name:
+            raise RuntimeError("Named authored layout has no generated table symbol")
+        table_names.append(name)
+        if entry["border_width"] == entry["border_height"] == 0:
+            zero_slots.append({"table_slot_1_based": slot, "layout_id": entry["id"]})
+    if (len(table_names) != 383 or len(set(n for n in table_names if n)) != 365
+            or len(zero_slots) != 28 or zero_slots[0] != {
+                "table_slot_1_based": 4,
+                "layout_id": "LAYOUT_LITTLEROOT_TOWN_MAYS_HOUSE_2F",
+            }):
+        raise RuntimeError("Pinned generated layout table / zero-border slot model changed")
     return {
         "scope": "PINNED_AUTHORED_LAYOUT_METADATA_NOT_COMPILED_REACHABILITY",
         "layouts_git_blob_sha1": expected_layout_blob,
         "native_layout_header_git_blob_sha1": expected_header_blob,
+        "mapjson_generator_git_blob_sha1": generator_blob,
+        "overworld_table_consumer_git_blob_sha1": consumer_blob,
+        "generated_table_slots_modeled": len(table_names),
+        "generated_null_placeholder_slots_modeled": table_names.count(None),
+        "zero_border_generated_table_slots_modeled": zero_slots,
+        "generated_producer_and_runtime_index_source_traced": True,
+        "linker_retention_and_map_header_reachability_proven": False,
         "raw_layout_entries": len(layouts),
         "empty_placeholders": empty_placeholders,
         "named_layout_entries": len(ids),
@@ -305,7 +364,7 @@ def run(root: Path) -> None:
     out=Path("audit-output/p0_additive_source_contract_assertions.json")
     out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(output,indent=2,sort_keys=True)+"\n",encoding="utf-8")
-    print("Phase 1 additive pinned P0 contracts: 16/16 source assertions PASS; map-cell 65536 words x 7 operations PASS; pinned border signed-remainder counterexamples PASS; authored border metadata 365 layouts PASS; independent review pending")
+    print("Phase 1 additive pinned P0 contracts: 16/16 source assertions PASS; map-cell 65536 words x 7 operations PASS; pinned border signed-remainder counterexamples PASS; authored border metadata 365 layouts PASS; 28 zero-border generated-table slots source-modeled PASS; independent review pending")
 
 if __name__=="__main__":
     try:run(Path(sys.argv[1] if len(sys.argv)>1 else "upstream"))
