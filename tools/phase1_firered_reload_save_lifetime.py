@@ -204,7 +204,8 @@ def main():
         ("src/overworld.c", "if (UseContinueGameWarp() == TRUE)",
          "if (UseContinueGameWarp() == FALSE)"),
         ("src/new_game.c", "SetDefaultOptions();", "ResetMenuAndMonGlobals();"),
-        ("src/save.c", "gDamagedSaveSectors = 0;", "gDamagedSaveSectors = 1;"),
+        ("src/save.c", "void Save_ResetSaveCounters(void)\n{\n    gSaveCounter = 0;\n    gLastWrittenSector = 0;\n    gDamagedSaveSectors = 0;",
+         "void Save_ResetSaveCounters(void)\n{\n    gSaveCounter = 0;\n    gLastWrittenSector = 0;\n    gDamagedSaveSectors = 1;"),
     ]
     for index, (path, before, after) in enumerate(mutations, 1):
         require(before in files[path], "negative fixture missing " + str(index))
