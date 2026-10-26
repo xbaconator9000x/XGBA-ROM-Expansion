@@ -26,7 +26,6 @@
 | `pret/pokefirered:include/gba/gba.h` | [0017](0017-firered-gba-umbrella.md) | pending independent review |
 | `pret/pokefirered:include/gba/multiboot.h` | [0018 FireRed](0018-firered-gba-multiboot.md) | pending independent review |
 | `pret/pokefirered:include/gba/isagbprint.h` | [0019 FireRed](0019-firered-gba-debug-print.md) | pending independent review |
-
 | `huderlem/porymap:src/core/bitpacker.cpp` | [0015](0015-porymap-bitpacker-impl.md) | pending independent review |
 | `huderlem/porymap:include/core/bitpacker.h` | [0016](0016-porymap-bitpacker-header.md) | pending independent review |
 | `huderlem/porymap:src/core/block.cpp` | [0017](0017-porymap-block-impl.md) | pending independent review |

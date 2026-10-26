@@ -36,8 +36,27 @@ Default masks `0x03FF/0x0C00/0xF000` partition 16 bits. `Block::setLayout` mutat
 
 `BitPacker` takes uint32_t masks and values, but `Block::rawValue` is uint16_t and `Blockdata::serialize` writes 16-bit words. The 31-set-bit expression `(1 << 31) - 1` also merits compiler-specific signed-overflow review if such a mask is supplied; no evidence here shows that project masks use it. Do not infer >16-bit native map-cell support from the packer's public type.
 
+## Producer and UI call-site closure — four additional pinned source blobs
+
+These four files are **selected-function evidence only**, not additional whole-file review candidates. Their exact pinned Git blobs were fetched and checked against the same Porymap commit:
+
+| Source file | Git blob SHA-1 | Source path |
+| --- | --- | --- |
+| [src/project.cpp](https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/src/project.cpp#L2437-L2481) | `d43b0949303433111d4478ad76117c2b3445dd13` | `Project::readFieldmapMasks`, define reader and `Block::setLayout` caller |
+| [src/config.cpp](https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/src/config.cpp#L292-L300) | `9264f99bb18e0a725ef023f514c00df529d1d28d` | `getConfigUint32`, mask parse and serialization |
+| [include/config.h](https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/include/config.h#L323-L330) | `539c5f3d416d22d847020cd324726b33725e5437` | project defaults and 16-bit mask declarations |
+| [src/ui/projectsettingseditor.cpp](https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/src/ui/projectsettingseditor.cpp#L253-L278) | `0df96149b86694d5c95e1489493b91d646b99b98` | overlap warning and settings-save path |
+
+**PBLOCK-005 — Two mask-input paths have different coercion.** In `Project::readFieldmapMasks`, parsed fieldmap C defines are cast to uint16_t, and truncation emits a warning but does **not** reject the mask. The function copies available defines into projectConfig and then calls `Block::setLayout`. Independently, project config-file keys `block_metatile_id_mask`, `block_collision_mask` and `block_elevation_mask` are parsed by `getConfigUint32(..., 0, Block::maxValue)`: nonnumeric input gets the configured default, and numeric input is bounded with `qBound` to the 16-bit maximum. These are distinct source-level provenance/coercion behaviours; a future adapter must record whether masks originated in defines or config rather than assuming every input was accepted verbatim.
+
+**PBLOCK-006 — Overlap warning is not a fail-closed editor constraint.** `ProjectSettingsEditor::updateMaskOverlapWarning` detects pairwise overlap and updates a warning label/style; its own comment says overlapping masks are technically allowed and Porymap will not properly reflect linked values. `ProjectSettingsEditor::save` assigns the three spinbox masks into projectConfig, saves the config and sets `projectNeedsReload = true`; no overlap rejection appears in that save path. The code does **not** immediately call `Block::setLayout` from save; the confirmed application is `Project::readFieldmapMasks`. Whether every reload invokes that reader in the required order still needs a caller/lifecycle trace. This narrows the earlier source-level mask-identity risk: **UI warning exists, but no demonstrated hard rejection or atomic conversion.**
+
+These findings refine the previously mapped mask dependency; they do not establish a user-visible corruption incident, a full-file review of the four large files, or an editor round-trip test.
+
 ## Fail-closed Phase 1 obligations
 
 A compatible editor/ROM adapter must (1) bind the exact source-project masks and layout identity; (2) reject unrepresentable semantic fields and overlapping/omitted bits unless explicitly modeled; (3) detect odd bytes, unexpected block counts, dimensions and partial writes rather than silently declaring success; (4) distinguish source-preserving no-op refresh from raw ROM reconstruction; and (5) verify compiler-specific and real editor read/write round trips. Existing Porymap and FireRed ABI evidence is in [the authoring-format dossier](PHASE1_P0_PORYMAP_PORYSCRIPT_AUTHORING_ABI_2026-10-26.md); it does not prove these runtime obligations.
+
+**Eleven exact-pinned upstream source files examined (six complete-file candidates, five selected-function dependencies); no compiled test.**
 
 **New analyst whole-file candidates:** 0015–0020 in [the register](phase1-disposition-candidates/README.md), six unique pinned paths. No independent signoffs. **Gate: FAIL_INCOMPLETE; 0/14,834 approved. No Phase 2.**
