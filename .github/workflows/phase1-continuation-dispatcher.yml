@@ -36,8 +36,10 @@ jobs:
             # default-branch source. Only dispatch when evidence is absent,
             # or latest run failed and requires one controlled retry.
             conclusion=$(jq -r '.workflow_runs[0].conclusion // empty' <<<"$response")
-            if [[ "$conclusion" == "success" ]]; then
-              echo "$workflow: latest evidence run succeeded; no-op"
+            head=$(gh api "repos/$REPO/commits/\${{ github.event.repository.default_branch }}" --jq .sha)
+            last_head=$(jq -r '.workflow_runs[0].head_sha // empty' <<<"$response")
+            if [[ "$conclusion" == "success" && "$last_head" == "$head" ]]; then
+              echo "$workflow: evidence succeeded at current default-branch head; no-op"
               continue
             fi
             if [[ -n "$last" ]]; then
