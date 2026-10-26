@@ -1,0 +1,49 @@
+name: Phase 1 pinned FireRed-mGBA savestate and Matrix mapping
+on:
+  pull_request:
+    paths:
+      - 'tools/phase1_firered_mgba_savestate_mapping.py'
+      - 'docs/PHASE1_P0_FIRERED_MGBA_SAVESTATE_MATRIX_2026-10-27.md'
+      - '.github/workflows/phase1-firered-mgba-savestate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pinned-savestate-mapping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout Phase 1 audit branch
+        uses: actions/checkout@v4
+      - name: Checkout exact FireRed source
+        uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - name: Checkout exact mGBA source
+        uses: actions/checkout@v4
+        with:
+          repository: mgba-emu/mgba
+          ref: fd9dc5c2cbf234365068855851107e762fc6211b
+          path: upstream-mgba
+          persist-credentials: false
+      - name: Syntax-check source verifier
+        run: python3 -m py_compile tools/phase1_firered_mgba_savestate_mapping.py
+      - name: Verify pinned source dependencies and mutation controls
+        run: |
+          python3 tools/phase1_firered_mgba_savestate_mapping.py \
+            --firered upstream-firered \
+            --mgba upstream-mgba \
+            --output phase1-evidence/firered-mgba-savestate-mapping.json
+      - name: Archive source evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-firered-mgba-savestate-mapping
+          path: phase1-evidence/
+          if-no-files-found: warn
+          retention-days: 30
