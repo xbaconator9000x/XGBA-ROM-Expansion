@@ -98,15 +98,15 @@ def banking_contract(mg):
             and "off_t (*seek)(struct VFile* vf, off_t offset, int whence);" in vfs
             and "ssize_t (*size)(struct VFile* vf);" in vfs,
             "VFile seek/read/size return-value ABI changed")
-    memread = section(vfmem, "ssize_t _vfmRead(", "ssize_t _vfmWrite(")
+    memread = section(vfmem, "\nssize_t _vfmRead(", "\nssize_t _vfmWrite(")
     require("size = vfm->size - vfm->offset;" in memread
             and "return size;" in memread,
             "memory-backed VFile short-read behaviour changed")
     require("return read(vfd->fd, buffer, size);" in
-            section(vffd, "ssize_t _vfdRead(", "ssize_t _vfdWrite("),
+            section(vffd, "\nssize_t _vfdRead(", "\nssize_t _vfdWrite("),
             "FD VFile read return-value behaviour changed")
     require("return fread(buffer, 1, size, vff->file);" in
-            section(vffile, "ssize_t _vffRead(", "ssize_t _vffWrite("),
+            section(vffile, "\nssize_t _vffRead(", "\nssize_t _vffWrite("),
             "FILE VFile read return-value behaviour changed")
     return {
         "matrix_activation": "ROM_file_gt_32MiB_and_header_byte_0xAC_equals_M",
