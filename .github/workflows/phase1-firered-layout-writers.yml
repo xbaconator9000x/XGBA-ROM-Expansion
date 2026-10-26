@@ -8,6 +8,7 @@ on:
       - 'tools/phase1_firered_tower_opponent_index.py'
       - 'tools/phase1_firered_tower_floor_progress.py'
       - 'tools/phase1_firered_tower_temp_index_lifetime.py'
+      - 'tools/phase1_firered_tower_authored_topology.py'
       - '.github/workflows/phase1-firered-layout-writers.yml'
       - 'docs/PHASE1_P0_FIRERED_LAYOUT_WRITER_CENSUS_2026-10-26.md'
       - 'docs/PHASE1_P0_FIRERED_TOWER_WHITEOUT_SAVED_INDEX_2026-10-26.md'
@@ -15,6 +16,7 @@ on:
       - 'docs/PHASE1_P0_FIRERED_TOWER_OPPONENT_INDEX_2026-10-26.md'
       - 'docs/PHASE1_P0_FIRERED_TOWER_FLOOR_PROGRESS_2026-10-26.md'
       - 'docs/PHASE1_P0_FIRERED_TOWER_TEMP_INDEX_LIFETIME_2026-10-26.md'
+      - 'docs/PHASE1_P0_FIRERED_TOWER_AUTHORED_TOPOLOGY_2026-10-26.md'
       - 'docs/PHASE1_STATUS.md'
   workflow_dispatch:
 
@@ -43,6 +45,7 @@ jobs:
           python3 -m py_compile tools/phase1_firered_tower_opponent_index.py
           python3 -m py_compile tools/phase1_firered_tower_floor_progress.py
           python3 -m py_compile tools/phase1_firered_tower_temp_index_lifetime.py
+          python3 -m py_compile tools/phase1_firered_tower_authored_topology.py
       - name: Run pinned authored layout-writer census
         run: |
           python3 tools/phase1_firered_layout_writer_census.py \
@@ -74,6 +77,11 @@ jobs:
             --source upstream-firered \
             --output phase1-evidence/firered-tower-temp-index-lifetime.json
       - name: Preserve pinned evidence
+      - name: Verify pinned Trainer Tower authored map topology and progress dispatch
+        run: |
+          python3 tools/phase1_firered_tower_authored_topology.py \
+            --source upstream-firered \
+            --output phase1-evidence/firered-tower-authored-topology.json
         if: always()
         uses: actions/upload-artifact@v4
         with:
