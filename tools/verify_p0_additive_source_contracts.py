@@ -129,6 +129,74 @@ def verify_map_cell_word_reference():
         "independent_whole_file_signoff": False,
     }
 
+
+def verify_map_border_coordinate_reference(root: Path):
+    """Pinned C signed-remainder border-index counterexample; not runtime execution."""
+    source_path = root / "pokefirered" / "src/fieldmap.c"
+    header_path = root / "pokefirered" / "include/fieldmap.h"
+    source_bytes, header_bytes = source_path.read_bytes(), header_path.read_bytes()
+    def git_blob(data):
+        return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
+    source_sha = "41567772299000ba5855419e5c39ad9373a34c20"
+    header_sha = "639e329a9a0f721abd7e40001228859cb9466005"
+    if git_blob(source_bytes) != source_sha or git_blob(header_bytes) != header_sha:
+        raise RuntimeError("Map-border coordinate source/header blob identity changed")
+    src = source_bytes.decode("utf-8", "surrogateescape")
+    hdr = header_bytes.decode("utf-8", "surrogateescape")
+    if not re.search(r"^#define MAP_OFFSET 7$", hdr, re.M):
+        raise RuntimeError("Pinned map-border offset changed")
+    macro = re.search(
+        r"#define GetBorderBlockAt\(x, y\)(.*?)#define AreCoordsWithinMapGridBounds",
+        src, re.S)
+    if not macro:
+        raise RuntimeError("Pinned map-border macro not found")
+    for expression in (
+        "xprime = x - MAP_OFFSET;",
+        "xprime += 8 * mapLayout->borderWidth;",
+        "xprime %= mapLayout->borderWidth;",
+        "yprime = y - MAP_OFFSET;",
+        "yprime += 8 * mapLayout->borderHeight;",
+        "yprime %= mapLayout->borderHeight;",
+        "block = mapLayout->border[xprime + yprime * mapLayout->borderWidth] | MAPGRID_COLLISION_MASK;",
+    ):
+        if expression not in macro.group(1):
+            raise RuntimeError("Pinned map-border expression changed: " + expression)
+    for pattern in (
+        r"#define AreCoordsWithinMapGridBounds\(x, y\) \(x >= 0 && x < VMap\.Xsize && y >= 0 && y < VMap\.Ysize\)",
+        r"#define GetMapGridBlockAt\(x, y\) \(AreCoordsWithinMapGridBounds\(x, y\) \? VMap\.map\[x \+ VMap\.Xsize \* y\] : GetBorderBlockAt\(x, y\)\)",
+    ):
+        if not re.search(pattern, src):
+            raise RuntimeError("Pinned map-grid bounds/fallback expression changed")
+    def c_remainder(value, divisor):
+        if divisor <= 0:
+            raise RuntimeError("Reference requires a positive border dimension")
+        return value % divisor if value >= 0 else -((-value) % divisor)
+    def border_index(x, y, width=2, height=2):
+        xp = c_remainder(x - 7 + 8 * width, width)
+        yp = c_remainder(y - 7 + 8 * height, height)
+        return xp, yp, xp + yp * width
+    expected = {
+        "in_range_border_0_0": ((0, 0), (1, 1, 3)),
+        "in_range_border_7_7": ((7, 7), (0, 0, 0)),
+        "negative_x_minus10_7": ((-10, 7), (-1, 0, -1)),
+        "negative_y_7_minus10": ((7, -10), (0, -1, -2)),
+    }
+    for label, (coords, outcome) in expected.items():
+        if border_index(*coords) != outcome:
+            raise RuntimeError("Pinned C map-border index reference regressed: " + label)
+    return {
+        "scope": "PINNED_FIRERED_BORDER_MACRO_C_SIGNED_REMAINDER_REFERENCE_ONLY",
+        "source_git_blob_sha1": source_sha,
+        "header_git_blob_sha1": header_sha,
+        "hypothetical_positive_border_dimensions": [2, 2],
+        "cases": {label: {"coordinates": list(coords), "xprime_yprime_index": list(outcome)}
+                  for label, (coords, outcome) in expected.items()},
+        "negative_array_index_counterexamples": 2,
+        "compiled_runtime_tested": False,
+        "actual_game_map_border_dimensions_proven": False,
+        "independent_whole_file_signoff": False,
+    }
+
 def run(root: Path) -> None:
     if len(EXTRA_CHECKS)!=16:
         raise RuntimeError("Expected 16 additive source contracts; preserve exact review scope")
@@ -160,9 +228,11 @@ def run(root: Path) -> None:
             "runtime_proof":False, "independent_signoff":False
         })
     map_cell_reference=verify_map_cell_word_reference()
+    map_border_reference=verify_map_border_coordinate_reference(root)
     output={
         "schema":"xgba.phase1.additive_p0_source_contracts.v1",
         "map_cell_word_reference":map_cell_reference,
+        "map_border_coordinate_reference":map_border_reference,
         "additive_source_checks_expected":16,
         "additive_source_checks_passed":len(evidence),
         "baseline_source_contracts_expected_unchanged":25,
@@ -174,7 +244,7 @@ def run(root: Path) -> None:
     out=Path("audit-output/p0_additive_source_contract_assertions.json")
     out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(output,indent=2,sort_keys=True)+"\n",encoding="utf-8")
-    print("Phase 1 additive pinned P0 contracts: 16/16 source assertions PASS; map-cell 65536 words x 7 operations PASS; independent review pending")
+    print("Phase 1 additive pinned P0 contracts: 16/16 source assertions PASS; map-cell 65536 words x 7 operations PASS; pinned border signed-remainder counterexamples PASS; independent review pending")
 
 if __name__=="__main__":
     try:run(Path(sys.argv[1] if len(sys.argv)>1 else "upstream"))
