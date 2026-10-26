@@ -36,3 +36,9 @@ The pinned `src/event_data.c` (Git blob `da9391cf0ef74c1addf550def8616c81f16e89e
 **Separate unresolved path:** Quest-log `QL_RestoreMapLayoutId` calls `VarGet(0x40AE)`, which *is* in the variable range. That value is backed up from the mutable saved layout ID and can be restored as a nonzero value without a local upper-bound check. The source-only proof does not establish that invalid values arise during ordinary gameplay, nor that the saved data is corrupt. Trainer Tower state bounds, linked layout-table bounds, saved-state integrity, and actual runtime reachability remain unproven.
 
 This addendum changes no independent approvals or Phase 1 verdict. **FAIL_INCOMPLETE.** CI must pass at the new exact commit before this checker extension can be described as CI-verified.
+
+## Addendum — Trainer Tower authored floor index arithmetic
+
+The same pinned `data/layouts/layouts.json` assigns consecutive one-based positions **297** to `LAYOUT_TRAINER_TOWER_LOBBY`, **298–305** to `LAYOUT_TRAINER_TOWER_1F` through `8F`, and **306** to the roof. The pinned `src/trainer_tower.c` initializes `floorIdx = gMapHeader.mapLayoutId - LAYOUT_TRAINER_TOWER_1F`; therefore, **if the normal authored 1F–8F header IDs are in effect**, the arithmetic produces **0–7**, the first dimension of the eight-row `sFloorLayouts` table. The checker pins the source expression and all ten positional IDs and archives the floor-by-floor arithmetic.
+
+This is a conditional source-level result, **not** an unconditional memory-safety proof: the branch choosing a floor uses `data.numFloors`, while the second table index comes from `CURR_FLOOR.challengeType`, including e-Reader data paths. Validation of those values, dynamic map-header state, and compiled/runtime behavior remains outstanding. **FAIL_INCOMPLETE.**
