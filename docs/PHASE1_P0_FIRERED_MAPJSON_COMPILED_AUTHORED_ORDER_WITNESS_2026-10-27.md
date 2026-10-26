@@ -23,6 +23,17 @@ The synthetic control appends the 362 omitted map names to the original 63-name 
 
 The four outputs independent of global connection include sorting — `groups.inc`, `headers.inc`, `events.inc`, and `map_groups.h` — were **byte-identical** between the successful authored release and synthetic debug-control executions. The global `connections.inc` was deliberately **not** asserted byte-identical. It is the output under investigation. The release exit code **0 does not make its out-of-bounds iterator expression defined**.
 
+## Follow-up authored-data coverage (compiled run #40421087366)
+
+The follow-up [passing run #40421087366](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40421087366) at workflow commit `2bed8c378967bee3b87a6120d696d79d9a3c8ac6` inspected **every pinned per-map `map.json`** and compared the authored order against the actual generator output:
+
+- **425 maps total; 63 with nonempty `connections` arrays.**
+- **All 63 nonempty maps are explicitly present** in the 63-entry `connections_include_order`. Thus **none of the 362 omitted maps has a nonempty connection array**.
+- Exactly **one nonempty-connection map** uses `connections_no_include`, and it is explicitly ordered. This is an authored header-pointer suppression flag, not evidence that the assembler necessarily omits its connection record.
+- The **full 425-name release-generated include order differs** from the synthetic completed-order control, despite all four unrelated generated outputs remaining byte-identical. This confirms a visible build-time output ordering difference in this experiment; it does **not** by itself establish a linked-ROM difference.
+
+**Critical remaining distinction:** a map with `connections: null` or a missing field yields a newline from `generate_map_connections_text`, but a map with `connections: []` can emit an empty `MapConnectionsList` plus an eight-byte count/pointer table. Therefore **zero nonempty connections among omitted maps does not alone prove their compiled includes are byte-empty**. A follow-up witness now distinguishes null/missing versus empty arrays and compares the order of all 63 active maps.
+
 ## Dependency and interoperability implications
 
 The confirmed defect is in the **build-time source producer**, not a demonstrated ROM-side runtime crash. The pipeline is authored `map_groups.json` → `generate_connections_text` → generated `connections.inc` → `data/maps.s` → `maps.o` → native ROM map connection data. The global include sort can change the placement of per-map records. Per-map `connections` array iteration (generator lines 188–209) and map group/index ID allocation (lines 522–562) are separate channels; this compiled experiment confirms the four other generated outputs are unchanged by the synthetic order completion.
@@ -31,7 +42,7 @@ Porymap round-trip compatibility still requires preserving authored map identity
 
 ## Remaining fail-closed gates
 
-1. Determine how many of the **362 omitted maps actually contain nonempty connections**, and whether those records can influence native layout; a follow-up authored-data coverage run is being added. Do not assume all omitted maps produce empty includes.
+1. Determine whether the 362 omitted maps contain **explicit empty arrays** rather than null/missing fields, and verify all 63 nonempty connection maps retain the authored relative order in the optimized output. An empty array may still emit an eight-byte table.
 2. Inspect release-generated connection include ordering and the synthetic control ordering, then assemble/link both variants in a controlled original/modern FireRed build and compare pointer/layout bytes.
 3. Run alternative compilers/standard library configurations and sanitizers as available; one GCC 13 debug-iterator abort is not a universal compiler outcome.
 4. Verify actual map transition, editor import/export and save/asset regression boundaries separately.
