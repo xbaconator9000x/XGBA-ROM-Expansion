@@ -1,0 +1,104 @@
+name: Phase 1 compiled FireRed Saffron authored connection suppression
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/compiled-firered-saffron-no-include.yml'
+permissions:
+  contents: read
+jobs:
+  saffron-header:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout pinned FireRed
+        uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream
+          persist-credentials: false
+      - name: Verify source identity and build pinned mapjson
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C upstream rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream hash-object data/maps/SaffronCity/map.json)" = 97eeb4f22c31035436de0ccd0d44682e02ac26b9
+          test "$(git -C upstream hash-object tools/mapjson/mapjson.cpp)" = 8d8ec4e4e6e1c011b06f00819abe40bad10d19d5
+          mkdir -p saffron-evidence/bin saffron-evidence/authored saffron-evidence/synthetic-flag-off
+          (cd upstream/tools/mapjson && g++ -std=c++11 -Wall -O2 json11.cpp mapjson.cpp -o "$GITHUB_WORKSPACE/saffron-evidence/bin/mapjson")
+      - name: Compile authored Saffron and synthetic flag-only control
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib
+          source = pathlib.Path('upstream/data/maps/SaffronCity/map.json')
+          raw = source.read_text()
+          d = json.loads(raw)
+          keys = [line.split('"')[1] for line in raw.splitlines() if line.startswith('  "') and '": ' in line]
+          # Top-level keys are exactly two-space indented in this pinned file.
+          assert len(keys) == len(set(keys)) == len(d) == 20
+          assert d['name'] == 'SaffronCity' and d['connections_no_include'] is True
+          assert [(c['direction'],c['offset'],c['map']) for c in d['connections']] == [
+              ('up',0,'MAP_ROUTE5'),('down',12,'MAP_ROUTE6'),
+              ('left',10,'MAP_ROUTE7'),('right',10,'MAP_ROUTE8')]
+          assert (len(d['object_events']),len(d['warp_events']),
+                  len(d['coord_events']),len(d['bg_events'])) == (15,15,0,9)
+          d['connections_no_include'] = False
+          pathlib.Path('saffron-evidence/synthetic-flag-off.json').write_text(json.dumps(d))
+          PY
+          exe="$GITHUB_WORKSPACE/saffron-evidence/bin/mapjson"
+          layouts="$GITHUB_WORKSPACE/upstream/data/layouts/layouts.json"
+          "$exe" map firered "$GITHUB_WORKSPACE/upstream/data/maps/SaffronCity/map.json" "$layouts" saffron-evidence/authored
+          "$exe" map firered "$GITHUB_WORKSPACE/saffron-evidence/synthetic-flag-off.json" "$layouts" saffron-evidence/synthetic-flag-off
+      - name: Compare generated header pointer and preserved authored records
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, pathlib, re
+          root=pathlib.Path('saffron-evidence')
+          authored=root/'authored'
+          control=root/'synthetic-flag-off'
+          def header_fields(path):
+              lines=path.read_text().splitlines()
+              i=lines.index('SaffronCity:')
+              return lines[i+1:i+5]
+          a=header_fields(authored/'header.inc')
+          b=header_fields(control/'header.inc')
+          assert a[:3] == b[:3]
+          assert a[3].strip()=='.4byte NULL', a
+          assert b[3].strip()=='.4byte SaffronCity_MapConnections', b
+          assert (authored/'connections.inc').read_bytes()==(control/'connections.inc').read_bytes()
+          assert (authored/'events.inc').read_bytes()==(control/'events.inc').read_bytes()
+          connection_text=(authored/'connections.inc').read_text()
+          assert len(re.findall(r'^\s*connection\s+',connection_text,re.M))==4
+          assert 'SaffronCity_MapConnections:' in connection_text
+          assert re.search(r'^\s*\.4byte 4$',connection_text,re.M)
+          result={
+              'source_pin':'ce6406d8c2eaf46d543c8a2606de0c3cb1951982',
+              'authored_map':'SaffronCity',
+              'authored_flag':True,'synthetic_flag':False,
+              'authored_header_connection_pointer':'NULL',
+              'synthetic_header_connection_pointer':'SaffronCity_MapConnections',
+              'generated_connection_entries':4,
+              'connections_inc_identical':True,'events_inc_identical':True,
+              'linked_native_header_pointer_verified':False,
+              'independent_approvals':0,'phase1_complete':False,
+          }
+          (root/'summary.json').write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(result,indent=2))
+          PY
+      - name: Archive source-to-compiled generator evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-saffron-connection-suppression
+          path: |
+            saffron-evidence/authored/*.inc
+            saffron-evidence/synthetic-flag-off/*.inc
+            saffron-evidence/summary.json
+          retention-days: 90
+          if-no-files-found: warn
