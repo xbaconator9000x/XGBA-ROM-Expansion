@@ -80,6 +80,51 @@ def contract(files):
                 and re.search(r"\}\s*>\s*ROM\s*=0", script),
                 "ROM output section linkage drift: " + path)
 
+    # A ROM-addressed .data section is not interchangeable with NOLOAD RAM.
+    # Pin both the memory apertures and the output-section destinations.
+    for path in ALL_SCRIPTS:
+        script = files[path]
+        for region, origin, size in (
+            ("EWRAM", "0x2000000", "256K"),
+            ("IWRAM", "0x3000000", "32K"),
+        ):
+            decl = re.compile(
+                rf"(?m)^\\s*{region}\\s+\\(rwx\\)\\s*:\\s*"
+                rf"ORIGIN\\s*=\\s*{origin},\\s*LENGTH\\s*=\\s*{size}\\s*$")
+            require(len(decl.findall(script)) == 1,
+                    "RAM memory-region drift: " + path + ":" + region)
+        for name, origin, region in (
+            ("ewram", "0x2000000", "EWRAM"),
+            ("iwram", "0x3000000", "IWRAM"),
+        ):
+            require(re.search(
+                rf"(?ms)^\\s*{name}\\s+{origin}\\s+\\(NOLOAD\\)\\s*:"
+                rf"\\s*ALIGN\\(4\\)\\s*\\{{.*?^\\s*\\}}\\s*>\\s*{region}\\s*$",
+                script), "NOLOAD RAM placement drift: " + path + ":" + name)
+        require(re.search(
+            r"(?ms)^\\s*script_data\\s*:\\s*ALIGN\\(4\\)\\s*"
+            r"\\{.*?^\\s*\\}\\s*>\\s*ROM\\s*=0\\s*$", script),
+            "script_data ROM placement drift: " + path)
+
+    for path in LEGACY:
+        ewram = re.search(
+            r"(?ms)^\\s*ewram\\s+0x2000000\\s+\\(NOLOAD\\)\\s*:"
+            r"\\s*ALIGN\\(4\\)\\s*\\{(?P<body>.*?)^\\s*\\}"
+            r"\\s*>\\s*EWRAM\\s*$", files[path])
+        require(ewram is not None and all(
+            item in ewram.group("body") for item in (
+                "*libc.a:impure.o(.data);",
+                "*libc.a:locale.o(.data);",
+                "*libc.a:mallocr.o(.data);",
+            )), "legacy libc data placement drift: " + path)
+    modern = files["ld_script_modern.ld"]
+    for section in (".data", ".rodata"):
+        require(re.search(
+            rf"(?ms)^\\s*{re.escape(section)}\\s*:\\s*ALIGN\\(4\\)\\s*"
+            rf"\\{{\\s*\\*\\({re.escape(section)}\\*\\);\\s*\\}}"
+            rf"\\s*>\\s*ROM\\s*=0\\s*$", modern),
+            "modern initialized-data ROM placement drift: " + section)
+
     fixed = re.compile(r"(?m)^\s*gfx_data\s+0x08D00000\s*:\s*$")
     for path in LEGACY:
         require(len(fixed.findall(files[path])) == 1,
@@ -109,6 +154,14 @@ def contract(files):
             "modern": "ld_script_modern.ld",
         },
         "modern_has_legacy_fixed_graphics_section": False,
+        "ewram_origin": "0x02000000",
+        "ewram_size_bytes": 256 * 1024,
+        "iwram_origin": "0x03000000",
+        "iwram_size_bytes": 32 * 1024,
+        "ram_output_sections_noload_all_variants": True,
+        "script_data_rom_all_variants": True,
+        "modern_data_and_rodata_rom": True,
+        "legacy_libc_data_in_ewram_noload": True,
         "proves_arbitrary_rom_expansion": False,
         "compiled_elf_or_emulator_test": False,
     }
@@ -149,6 +202,22 @@ def main():
         ("Makefile", "CC1 := tools/agbcc/bin/agbcc$(EXE)",
          "CC1 := tools/agbcc/bin/other$(EXE)"),
         ("config.mk", "MODERN        ?= 0", "MODERN        ?= 1"),
+        ("ld_script.ld", "LENGTH = 256K", "LENGTH = 128K"),
+        ("ld_script_rev10.ld", "LENGTH = 32K", "LENGTH = 64K"),
+        ("ld_script_modern.ld", "ewram 0x2000000 (NOLOAD)",
+         "ewram 0x2000000"),
+        ("ld_script.ld", "iwram 0x3000000 (NOLOAD)",
+         "iwram 0x3000000"),
+        ("ld_script_modern.ld", "    } > ROM =0\\n\\n    .data :",
+         "    } > EWRAM\\n\\n    .data :"),
+        ("ld_script_modern.ld", "    } > ROM =0\\n\\n    .rodata :",
+         "    } > EWRAM\\n\\n    .rodata :"),
+        ("ld_script_modern.ld", "*(.data*);", "*(.bss*);"),
+        ("ld_script_modern.ld", "*(.rodata*);", "*(.bss*);"),
+        ("ld_script.ld", "*libc.a:impure.o(.data);",
+         "*libc.a:impure.o(.rodata);"),
+        ("ld_script_rev10.ld", "*libc.a:locale.o(.data);",
+         "*libc.a:locale.o(.rodata);"),
     ]
     for index, (path, old, new) in enumerate(mutations, 1):
         require(old in files[path], "missing mutation fixture: " + str(index))
@@ -178,7 +247,8 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, sort_keys=True, indent=2) + "\n",
                            encoding="utf-8")
-    print("PINNED_FIRERED_LINKER_VARIANT_SOURCE_PASS negative_controls=10")
+    print("PINNED_FIRERED_LINKER_VARIANT_SOURCE_PASS "
+          f"negative_controls={len(mutations)}")
     print("PHASE1_GATE=FAIL_INCOMPLETE independent_approvals=0")
 
 
