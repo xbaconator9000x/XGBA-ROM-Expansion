@@ -16,6 +16,9 @@ BLOBS = {
     "asm/macros/event.inc": "142ad979d7d3093244087a247fa2b4883424f77f",
     "src/scrcmd.c": "97b695ee2f6fca80a3b78f52f6a444f696fe5814",
     "src/trainer_tower.c": "732b3f2ed31ed95d6476b9e111d53f759c448d81",
+    "asm/macros/trainer_tower.inc": "94d9efe775658c7865d74f8819b9c5bfb74db893",
+    "include/constants/trainer_tower.h": "ea0039ea1408c06b8c968cfde8e2628213b2a0dc",
+    "include/constants/global.h": "21c781a0d40aa8b303642bbf1eac9ac09ce2b5a9",
 }
 
 def require(value, reason):
@@ -47,6 +50,92 @@ def verify_switch(labels, ordered, label, prefix, variable, cases, next_label):
     return {"source_label": label, "unmatched_next_label": next_label,
             "tested_cases": [value for value, _ in cases]}
 
+def verify_floor_transition(labels, ordered, files):
+    """Pin C floor-layout index before the script's unmatched-type fallback."""
+    tower = files["src/trainer_tower.c"]
+    macros = files["asm/macros/trainer_tower.inc"]
+    constants = files["include/constants/trainer_tower.h"]
+    global_constants = files["include/constants/global.h"]
+    for name, value, header in [
+        ("CHALLENGE_TYPE_SINGLE", 0, constants),
+        ("CHALLENGE_TYPE_DOUBLE", 1, constants),
+        ("CHALLENGE_TYPE_KNOCKOUT", 2, constants),
+        ("CHALLENGE_TYPE_MIXED", 3, constants),
+        ("MAX_TRAINER_TOWER_FLOORS", 8, constants),
+        ("NUM_TOWER_CHALLENGE_TYPES", 4, global_constants),
+    ]:
+        require(re.search(r"(?m)^#define\s+" + name + r"\s+" + str(value) + r"\s*(?://[^\n]*)?$",
+                          header), "Trainer Tower dimension/enum drift: " + name)
+    require(re.search(
+        r"(?s)\.macro ttower_initfloor\s+"
+        r"setvar VAR_0x8004, TRAINER_TOWER_FUNC_INIT_FLOOR\s+"
+        r"special CallTrainerTowerFunc\s+\.endm", macros),
+        "script-to-C init-floor macro dispatch drift")
+    require(re.search(
+        r"\[TRAINER_TOWER_FUNC_INIT_FLOOR\]\s*=\s*InitTrainerTowerFloor,", tower),
+        "native init-floor dispatch drift")
+    table = re.search(
+        r"static const u16 sFloorLayouts\[MAX_TRAINER_TOWER_FLOORS\]"
+        r"\[NUM_TOWER_CHALLENGE_TYPES - 1\]\s*=\s*\{(.*?)\n\};", tower, re.S)
+    require(table is not None, "8x3 floor-layout declaration drift")
+    actual_rows = re.findall(r"\{[^{}]+\}", table.group(1))
+    expected_rows = [
+        "{LAYOUT_TRAINER_TOWER_%dF, LAYOUT_TRAINER_TOWER_%dF_DOUBLES, LAYOUT_TRAINER_TOWER_%dF_KNOCKOUT}" % (n, n, n)
+        for n in range(1, 9)
+    ]
+    require([re.sub(r"\s+", "", row) for row in actual_rows] ==
+            [re.sub(r"\s+", "", row) for row in expected_rows],
+            "8x3 floor-layout initializer drift")
+    init = re.search(
+        r"(?ms)^static void InitTrainerTowerFloor\(void\)\s*\{.*?^\}", tower)
+    require(init is not None, "native init-floor definition missing")
+    original = re.sub(r"//[^\n]*", "", init.group(0))
+    expected = """static void InitTrainerTowerFloor(void)
+    {
+        if (gMapHeader.mapLayoutId - LAYOUT_TRAINER_TOWER_LOBBY > sTrainerTowerState->data.numFloors)
+        {
+            gSpecialVar_Result = 3;
+            SetCurrentMapLayout(LAYOUT_TRAINER_TOWER_ROOF);
+        }
+        else
+        {
+            gSpecialVar_Result = CURR_FLOOR.challengeType;
+            SetCurrentMapLayout(sFloorLayouts[sTrainerTowerState->floorIdx][gSpecialVar_Result]);
+            SetTrainerTowerNPCGraphics();
+        }
+    }"""
+    require(re.sub(r"\s+", " ", original).strip() ==
+            re.sub(r"\s+", " ", expected).strip(),
+            "native floor-layout index / roof branch / pre-index guard drift")
+    label = "TrainerTower_OnTransition"
+    next_label = "TrainerTower_EventScript_SetObjectsSingles"
+    require(label in labels and next_label in labels and
+            ordered[ordered.index(label) + 1] == next_label,
+            "script transition label adjacency drift")
+    require(commands(labels[label]) == [
+        "ttower_initfloor",
+        "switch VAR_RESULT",
+        "case CHALLENGE_TYPE_SINGLE, TrainerTower_EventScript_SetObjectsSingles",
+        "case CHALLENGE_TYPE_DOUBLE, TrainerTower_EventScript_SetObjectsDoubles",
+        "case CHALLENGE_TYPE_KNOCKOUT, TrainerTower_EventScript_SetObjectsKnockout",
+        "setflag HIDE_TRAINER_DOUBLES1",
+        "setflag HIDE_TRAINER_SINGLES",
+        "setflag HIDE_TRAINER_KNOCKOUT",
+        "setflag HIDE_TRAINER_DOUBLES2",
+        "setvar DISABLE_SINGLES_TRIGGER, TRUE",
+        "setvar DISABLE_DOUBLES_TRIGGER, TRUE",
+        "end",
+    ], "unmatched transition challenge-type fallback drift")
+    return {
+        "native_floor_layout_rows": 8,
+        "native_floor_layout_columns": 3,
+        "mixed_challenge_id": 3,
+        "native_layout_index_checked_locally": False,
+        "unmatched_transition_script_hides_trainers_and_triggers": True,
+        "script_default_can_prevent_native_preceding_index": False,
+        "invalid_floor_challenge_type_reachability_proven": False,
+    }
+
 def contract(files):
     script = files["data/scripts/trainer_tower.inc"]
     macros = files["asm/macros/event.inc"]
@@ -73,6 +162,7 @@ def contract(files):
             "ctx->comparisonResult = Compare(value1, value2);" in compare.group(1),
             "runtime compare semantics drift")
     labels, ordered = script_labels(script)
+    floor_facts = verify_floor_transition(labels, ordered, files)
     edges = [
         verify_switch(labels, ordered, "TrainerTower_EventScript_TriggerBattle",
                       "ttower_getchallengetype", "VAR_RESULT",
@@ -120,7 +210,8 @@ def contract(files):
     require(re.search(r"trainerId = VarGet\(VAR_TEMP_1\);", tower) and
             "CURR_FLOOR.trainers[trainerId + 1]" in tower,
             "native battle index dependency drift")
-    return {"unmatched_switch_fallthrough_edges": edges,
+    return {"floor_init_layout_index": floor_facts,
+            "unmatched_switch_fallthrough_edges": edges,
             "unmatched_outcome_next_label": "TrainerTower_EventScript_WonBattle",
             "unmatched_knockout_progression": "increment VAR_TEMP_1 then retry dispatch",
             "source_semantics_proven": True,
@@ -160,6 +251,26 @@ def main():
          "addvar VAR_TEMP_1, 1\n\tgoto TrainerTower_EventScript_DoKnockoutBattle",
          "setvar VAR_TEMP_1, 0\n\tgoto TrainerTower_EventScript_DoKnockoutBattle",
          "knockout_increment"),
+        ("src/trainer_tower.c",
+         "SetCurrentMapLayout(sFloorLayouts[sTrainerTowerState->floorIdx][gSpecialVar_Result]);",
+         "SetCurrentMapLayout(sFloorLayouts[sTrainerTowerState->floorIdx][gSpecialVar_Result % 3]);",
+         "floor_layout_index_clamp"),
+        ("src/trainer_tower.c",
+         "gSpecialVar_Result = 3; // Skip past usable challenge types",
+         "gSpecialVar_Result = 2; // Skip past usable challenge types",
+         "roof_sentinel"),
+        ("src/trainer_tower.c",
+         "LAYOUT_TRAINER_TOWER_8F_KNOCKOUT}",
+         "LAYOUT_TRAINER_TOWER_7F_KNOCKOUT}", "floor_layout_row"),
+        ("data/scripts/trainer_tower.inc",
+         "setflag HIDE_TRAINER_SINGLES", "clearflag HIDE_TRAINER_SINGLES",
+         "transition_hide_all"),
+        ("include/constants/trainer_tower.h",
+         "#define CHALLENGE_TYPE_MIXED      3",
+         "#define CHALLENGE_TYPE_MIXED      2", "mixed_enum"),
+        ("asm/macros/trainer_tower.inc",
+         "special CallTrainerTowerFunc", "special UnrelatedSpecial",
+         "transition_macro_dispatch"),
     ]
     for path, before, after, name in changes:
         require(before in files[path], "missing negative fixture: " + name)
@@ -183,7 +294,7 @@ def main():
             "Cross-repository editor round-trip and compatibility gates",
         ],
     }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print("PINNED_TOWER_SCRIPT_FALLTHROUGH_SOURCE_PASS edges=5 negatives=6")
+    print("PINNED_TOWER_SCRIPT_FALLTHROUGH_SOURCE_PASS edges=5 floor_layout=8x3 negatives=12")
     print("PHASE1_GATE=FAIL_INCOMPLETE independent_approvals=0")
 
 if __name__ == "__main__":
