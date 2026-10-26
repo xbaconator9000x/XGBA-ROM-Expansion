@@ -17,7 +17,7 @@
 - Initial test commit: `293c9cea0d293dee3b2ee9601994b02db0ffdf7c`.
 - Regex-escape correction: `19310b15f54fcc3c83a9b3e1f6732499615877a5`.
 - Native C header member-comment-aware matcher correction: `c3296d403daa807a55b97c6800ebe4d5df3e2d30`.
-- The final corrected post-commit census was triggered as [run #40250082483](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40250082483). **Result pending at checkpoint update.** Prior intermediate runs #40250015817 and #40250025014 were triggered by earlier revisions and cannot verify the final matcher. The earlier [run #40247291725](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40247291725) passed before this additional metadata check.
+- The final corrected post-commit census was triggered as [run #40250082483](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40250082483). **Completed successfully** (job 121339860555). The actual job log reports `16/16 source assertions PASS; map-cell 65536 words x 7 operations PASS; pinned border signed-remainder counterexamples PASS; authored border metadata 365 layouts PASS`, ten curated negative guards PASS, and the authoritative mapping gate `FAIL_INCOMPLETE` with 14,834 remaining. Prior intermediate runs #40250015817 and #40250025014 were triggered by earlier revisions and are not the final matcher verification. The earlier [run #40247291725](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40247291725) passed before this additional metadata check.
 
 ## Next required evidence
 
