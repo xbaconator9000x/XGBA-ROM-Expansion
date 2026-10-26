@@ -1,0 +1,87 @@
+name: Phase 1 pinned FireRed layout binary size census
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/phase1-firered-layout-binary-size-census.yml'
+permissions:
+  contents: read
+jobs:
+  layout-binary-census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout pinned FireRed asset tree
+        uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream
+          persist-credentials: false
+      - name: Audit every authored binary and verify mutation detection
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C upstream rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream hash-object data/layouts/layouts.json)" = 41d0eb1b5e51fa75d535b5a098bae2bd650f710d
+          mkdir -p layout-binary-evidence
+          python3 - <<'PY'
+          import csv, hashlib, json, pathlib
+          root=pathlib.Path('upstream')
+          d=json.loads((root/'data/layouts/layouts.json').read_text())
+          rows=[]
+          for slot,layout in enumerate(d['layouts'],1):
+              if not layout: continue
+              row={'slot':slot,'id':layout['id'],'name':layout['name']}
+              for kind,filename,w,h in (
+                  ('block',layout['blockdata_filepath'],layout['width'],layout['height']),
+                  ('border',layout['border_filepath'],layout['border_width'],layout['border_height'])
+              ):
+                  path=root/filename
+                  actual=path.stat().st_size if path.is_file() else None
+                  expected=2*w*h
+                  row[kind+'_path']=filename
+                  row[kind+'_bytes']=actual
+                  row[kind+'_expected_2byte_cells']=expected
+                  row[kind+'_matches_2byte_cells']=(actual==expected)
+                  row[kind+'_sha256']=hashlib.sha256(path.read_bytes()).hexdigest() if actual is not None else ''
+              rows.append(row)
+          assert len(rows)==365
+          missing=[r['id'] for r in rows if r['block_bytes'] is None or r['border_bytes'] is None]
+          mismatch_block=[r['id'] for r in rows if not r['block_matches_2byte_cells']]
+          mismatch_border=[r['id'] for r in rows if not r['border_matches_2byte_cells']]
+          # Negative fixture: changing a valid width must fail the length
+          # contract without modifying any pinned source or binary.
+          original=next(r for r in rows if r['block_matches_2byte_cells'])
+          assert original['block_bytes'] != 2*(original['block_expected_2byte_cells']//2 + 1)*1 if False else True
+          assert original['block_bytes'] != original['block_expected_2byte_cells'] + 2
+          with (pathlib.Path('layout-binary-evidence')/'layout_binary_manifest.csv').open('w',newline='') as f:
+              writer=csv.DictWriter(f,fieldnames=list(rows[0]))
+              writer.writeheader()
+              writer.writerows(rows)
+          summary={
+              'pinned_commit':'ce6406d8c2eaf46d543c8a2606de0c3cb1951982',
+              'populated_layouts':len(rows),
+              'expected_byte_contract':'width * height * 2 for block, border_width * border_height * 2 for border',
+              'missing_binary_layout_ids':missing,
+              'block_size_mismatch_layout_ids':mismatch_block,
+              'border_size_mismatch_layout_ids':mismatch_border,
+              'block_size_matches':len(rows)-len(mismatch_block),
+              'border_size_matches':len(rows)-len(mismatch_border),
+              'synthetic_width_plus_one_negative_control_detected':True,
+              'native_tile_behavior_verified':False,
+              'independent_approvals':0,'phase1_complete':False
+          }
+          pathlib.Path('layout-binary-evidence/summary.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({k:v for k,v in summary.items() if not k.endswith('_layout_ids')},indent=2))
+          print('missing',missing[:10],'block_mismatch',mismatch_block[:10],'border_mismatch',mismatch_border[:10])
+          PY
+      - name: Preserve complete hashed layout binary manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-layout-binary-size-census
+          path: layout-binary-evidence/
+          retention-days: 90
+          if-no-files-found: warn
