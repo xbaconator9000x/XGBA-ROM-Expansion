@@ -24,7 +24,7 @@ REQUIRED_GENERATOR_EXPRESSIONS = (
     'string map_layout_id = json_to_string(map_data, "layout");',
     'if (map_layout_id == json_to_string(layout, "id", true))',
     'if (matched.size() != 1)',
-    'text << "\\t.4byte " << json_to_string(layout, "name")',
+    '<< "\\t.4byte " << json_to_string(layout, "name")',
     'text << "\\t.2byte " << json_to_string(layout, "id")',
 )
 REQUIRED_RUNTIME_EXPRESSIONS = (
