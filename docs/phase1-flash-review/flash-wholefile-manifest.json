@@ -97,138 +97,66 @@
           "end_line": 297
         }
       ],
-      "global_definitions": [
-        {
-          "line": 4,
-          "text": "static u8 sTimerNum;"
-        },
-        {
-          "line": 5,
-          "text": "static u16 sTimerCount;"
-        },
-        {
-          "line": 7,
-          "text": "static u16 sSavedIme;"
-        },
-        {
-          "line": 9,
-          "text": "COMMON_DATA u8 gFlashTimeoutFlag = 0;"
-        },
-        {
-          "line": 10,
-          "text": "COMMON_DATA u8 (*PollFlashStatus)(u8 *) = NULL;"
-        },
-        {
-          "line": 11,
-          "text": "COMMON_DATA u16 (*WaitForFlashWrite)(u8 phase, u8 *addr, u8 lastData) = NULL;"
-        },
-        {
-          "line": 12,
-          "text": "COMMON_DATA u16 (*ProgramFlashSector)(u16 sectorNum, void *src) = NULL;"
-        },
-        {
-          "line": 13,
-          "text": "COMMON_DATA const struct FlashType *gFlash = NULL;"
-        },
-        {
-          "line": 14,
-          "text": "COMMON_DATA u16 (*ProgramFlashByte)(u16 sectorNum, u32 offset, u8 data) = NULL;"
-        },
-        {
-          "line": 15,
-          "text": "COMMON_DATA u16 gFlashNumRemainingBytes = 0;"
-        },
-        {
-          "line": 16,
-          "text": "COMMON_DATA u16 (*EraseFlashChip)() = NULL;"
-        },
-        {
-          "line": 17,
-          "text": "COMMON_DATA u16 (*EraseFlashSector)(u16 sectorNum) = NULL;"
-        },
-        {
-          "line": 18,
-          "text": "COMMON_DATA const u16 *gFlashMaxTime = NULL;"
-        },
-        {
-          "line": 39,
-          "text": "u16 flashId;"
-        },
-        {
-          "line": 40,
-          "text": "u16 readFlash1Buffer[0x20];"
-        },
-        {
-          "line": 41,
-          "text": "u8 (*readFlash1)(u8 *);"
-        },
-        {
-          "line": 84,
-          "text": "const u16 *maxTime = &gFlashMaxTime[phase * 3];"
-        },
-        {
-          "line": 113,
-          "text": "u16 *src;"
-        },
-        {
-          "line": 114,
-          "text": "u16 i;"
-        },
-        {
-          "line": 142,
-          "text": "u8 *src;"
-        },
-        {
-          "line": 143,
-          "text": "u16 i;"
-        },
-        {
-          "line": 189,
-          "text": "u16 i;"
-        },
-        {
-          "line": 193,
-          "text": "u8 *tgt;"
-        },
-        {
-          "line": 194,
-          "text": "u16 size;"
-        },
-        {
-          "line": 195,
-          "text": "u32 (*verifyFlashSector_Core)(u8 *, u8 *, u32);"
-        },
-        {
-          "line": 227,
-          "text": "u16 i;"
-        },
-        {
-          "line": 231,
-          "text": "u8 *tgt;"
-        },
-        {
-          "line": 232,
-          "text": "u32 (*verifyFlashSector_Core)(u8 *, u8 *, u32);"
-        },
-        {
-          "line": 263,
-          "text": "u8 i;"
-        },
-        {
-          "line": 264,
-          "text": "u32 result;"
-        },
-        {
-          "line": 282,
-          "text": "u8 i;"
-        },
-        {
-          "line": 283,
-          "text": "u32 result;"
-        }
-      ],
       "review_status": "proposed_complete_file_candidate_pending_independent_review",
-      "independent_approval": false
+      "independent_approval": false,
+      "file_scope_symbols": [
+        {
+          "name": "sTimerNum",
+          "line": 4
+        },
+        {
+          "name": "sTimerCount",
+          "line": 5
+        },
+        {
+          "name": "sTimerReg",
+          "line": 6
+        },
+        {
+          "name": "sSavedIme",
+          "line": 7
+        },
+        {
+          "name": "gFlashTimeoutFlag",
+          "line": 9
+        },
+        {
+          "name": "PollFlashStatus",
+          "line": 10
+        },
+        {
+          "name": "WaitForFlashWrite",
+          "line": 11
+        },
+        {
+          "name": "ProgramFlashSector",
+          "line": 12
+        },
+        {
+          "name": "gFlash",
+          "line": 13
+        },
+        {
+          "name": "ProgramFlashByte",
+          "line": 14
+        },
+        {
+          "name": "gFlashNumRemainingBytes",
+          "line": 15
+        },
+        {
+          "name": "EraseFlashChip",
+          "line": 16
+        },
+        {
+          "name": "EraseFlashSector",
+          "line": 17
+        },
+        {
+          "name": "gFlashMaxTime",
+          "line": 18
+        }
+      ]
     },
     {
       "repository": "pret/pokefirered",
@@ -253,38 +181,18 @@
           "end_line": 86
         }
       ],
-      "global_definitions": [
-        {
-          "line": 4,
-          "text": "static const char AgbLibFlashVersion[] = \"FLASH1M_V103\";"
-        },
-        {
-          "line": 6,
-          "text": "const struct FlashSetupInfo * const sSetupInfos[] ="
-        },
-        {
-          "line": 15,
-          "text": "u16 result;"
-        },
-        {
-          "line": 16,
-          "text": "u16 flashId;"
-        },
-        {
-          "line": 17,
-          "text": "const struct FlashSetupInfo * const *setupInfo;"
-        },
-        {
-          "line": 53,
-          "text": "u16 result = 0;"
-        },
-        {
-          "line": 54,
-          "text": "u8 status;"
-        }
-      ],
       "review_status": "proposed_complete_file_candidate_pending_independent_review",
-      "independent_approval": false
+      "independent_approval": false,
+      "file_scope_symbols": [
+        {
+          "name": "AgbLibFlashVersion",
+          "line": 4
+        },
+        {
+          "name": "sSetupInfos",
+          "line": 6
+        }
+      ]
     },
     {
       "repository": "pret/pokefirered",
@@ -324,66 +232,22 @@
           "end_line": 197
         }
       ],
-      "global_definitions": [
-        {
-          "line": 4,
-          "text": "const u16 mxMaxTime[] ="
-        },
-        {
-          "line": 12,
-          "text": "const struct FlashSetupInfo MX29L010 ="
-        },
-        {
-          "line": 37,
-          "text": "const struct FlashSetupInfo DefaultFlash ="
-        },
-        {
-          "line": 60,
-          "text": "u16 result;"
-        },
-        {
-          "line": 61,
-          "text": "u16 readFlash1Buffer[0x20];"
-        },
-        {
-          "line": 83,
-          "text": "u16 numTries;"
-        },
-        {
-          "line": 84,
-          "text": "u16 result;"
-        },
-        {
-          "line": 85,
-          "text": "u8 *addr;"
-        },
-        {
-          "line": 86,
-          "text": "u16 readFlash1Buffer[0x20];"
-        },
-        {
-          "line": 127,
-          "text": "u8 *addr;"
-        },
-        {
-          "line": 128,
-          "text": "u16 readFlash1Buffer[0x20];"
-        },
-        {
-          "line": 162,
-          "text": "u16 result;"
-        },
-        {
-          "line": 163,
-          "text": "u8 *dest;"
-        },
-        {
-          "line": 164,
-          "text": "u16 readFlash1Buffer[0x20];"
-        }
-      ],
       "review_status": "proposed_complete_file_candidate_pending_independent_review",
-      "independent_approval": false
+      "independent_approval": false,
+      "file_scope_symbols": [
+        {
+          "name": "mxMaxTime",
+          "line": 4
+        },
+        {
+          "name": "MX29L010",
+          "line": 12
+        },
+        {
+          "name": "DefaultFlash",
+          "line": 37
+        }
+      ]
     },
     {
       "repository": "pret/pokefirered",
@@ -397,18 +261,18 @@
         "gba/flash_internal.h"
       ],
       "functions": [],
-      "global_definitions": [
+      "review_status": "proposed_complete_file_candidate_pending_independent_review",
+      "independent_approval": false,
+      "file_scope_symbols": [
         {
-          "line": 4,
-          "text": "const u16 leMaxTime[] ="
+          "name": "leMaxTime",
+          "line": 4
         },
         {
-          "line": 12,
-          "text": "const struct FlashSetupInfo LE26FV10N1TS ="
+          "name": "LE26FV10N1TS",
+          "line": 12
         }
-      ],
-      "review_status": "proposed_complete_file_candidate_pending_independent_review",
-      "independent_approval": false
+      ]
     }
   ],
   "dependency_blobs": [
