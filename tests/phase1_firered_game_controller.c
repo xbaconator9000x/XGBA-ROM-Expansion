@@ -171,7 +171,7 @@ int main(int argc, char **argv) {
         ? core->busRead8(core, sb2 + 0xB80U) : 0xFFFFFFFFU;
     uint32_t player_name_word = (sb2 >= 0x02000000U && sb2 < 0x0203F000U)
         ? core->busRead32(core, sb2) : 0xFFFFFFFFU;
-    printf("{\"mode\":\"controller\",\"frames\":%u,\"input_events\":%u,
+    printf("{\"mode\":\"controller\",\"frames\":%u,\"input_events\":%u,"
            "\"save_type\":%u,\"baseline_frame\":%u,\"flash_changed_bytes\":%u,"
            "\"frames_with_changed_flash\":%u,\"first_flash_change_frame\":%u,"
            "\"first_dirty_frame\":%u,\"save_status\":%u,\"save_counter\":%u,"
