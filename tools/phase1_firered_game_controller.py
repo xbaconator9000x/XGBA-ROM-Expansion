@@ -7,6 +7,9 @@ import shutil
 import subprocess
 from pathlib import Path
 
+TRACE_CASES = ("menu_navigation", "pallet_null_layout", "pallet_valid",
+               "pallet_save_navigation", "pallet_save_dense_confirm")
+
 def sha(p):
     return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 
@@ -50,7 +53,7 @@ def make_schedule(name):
             pulse(e, f, 0x80)
         for f in (1540, 1680, 1820, 1960, 2100, 2260):
             pulse(e, f, 0x1)
-    elif name in ("menu_navigation", "pallet_valid", "pallet_null_layout", "pallet_save_navigation", "pallet_save_dense_confirm"):
+    elif name in ("menu_navigation", "pallet_valid", "pallet_null_layout"):
         for f in range(330, 1000, 60):
             pulse(e, f, 0x1)
         pulse(e, 1100, 0x8)
@@ -83,7 +86,7 @@ def main(a):
         before = sha(save)
         budget = 3200 if name == "pallet_save_dense_confirm" else 2400
         command = [a.probe, a.rom, str(save), str(schedule), str(budget), a.status, a.counter, a.sb2]
-        if name in ("menu_navigation", "pallet_valid", "pallet_null_layout", "pallet_save_navigation"):
+        if name in TRACE_CASES:
             command.extend((a.start_menu_save, a.dialog_do_save, a.try_saving_data,
                             a.title_task, a.init_main_menu, a.execute_main_menu,
                             a.return_to_field, a.continue_saved_game,
@@ -96,8 +99,8 @@ def main(a):
         assert len(lines) == 1, (name, p.stdout[-500:])
         d = lines[0]
         assert d["frames"] >= budget and d["host_flash_writes"] == 0, (name, d)
-        assert d["trace_mode"] == (name in ("menu_navigation", "pallet_valid", "pallet_null_layout", "pallet_save_navigation")), (name, d)
-        if name in ("menu_navigation", "pallet_valid", "pallet_null_layout", "pallet_save_navigation"):
+        assert d["trace_mode"] == (name in TRACE_CASES), (name, d)
+        if name in TRACE_CASES:
             assert d["trace_steps"] > 0, (name, "missing instruction trace", d)
             for key in ("start_menu_save_hits", "save_dialog_do_save_hits",
                         "try_saving_data_entry_hits", "first_try_save_arg",
