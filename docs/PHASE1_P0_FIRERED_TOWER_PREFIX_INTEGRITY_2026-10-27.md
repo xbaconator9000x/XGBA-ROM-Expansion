@@ -9,6 +9,8 @@
 | src/cereader_tool.c | 395be0bcbed8454e645a9f5670cde3024eda508e | Set/floor validators, split writer and paired reader |
 | src/save.c | 36b960f375c92711aa49b99bdfe9c6b3a99d6b1c | Special-sector sentinel, physical flash reader/writer |
 | src/util.c | b32799584937a120a03b08897886f08adc033fce | Actual additive byte checksum |
+| src/ereader_screen.c | 20ec25d0150084bc259de47038ac7d8c972dd268 | Remote card validation before save |
+| include/gba/isagbprint.h | 9c79e03e8e95c02b17361073eff841bd59a8311c | NDEBUG-dependent assert macro |
 | include/cereader_tool.h | 5cb5a9ebc32db23de07800ccce124bcb28d3ef15 | Set/floor declarations and checksum fields |
 | include/save.h | 87fb9b615b434b58823d15688056695acda9feab | Sector constants, counter-offset and sentinel |
 | include/constants/trainer_tower.h | ea0039ea1408c06b8c968cfde8e2628213b2a0dc | Eight-floor and challenge-type bounds |
@@ -18,6 +20,10 @@
 **Reader:** CEReaderTool_LoadTrainerTower_r (src/cereader_tool.c:70–83) requires both special-sector reads to return 1, copies both halves, and invokes ValidateTrainerTowerData. TryReadSpecialSaveSector (src/save.c:831–855) checks a four-byte sentinel and copies 4,092 bytes, not a conventional save-slot checksum. Its success does not authenticate the copied Trainer Tower payload.
 
 **Logical validator:** ValidateTrainerTowerData (src/cereader_tool.c:29–43) requires 1 <= numFloors <= 8, validates each floor **only for i < numFloors**, and compares the stored set checksum against CalcByteArraySum(floors, numFloors * sizeof(floor)). ValidateTrainerTowerTrainer (:18–27) checks floor index, challenge type and a per-floor checksum over the bytes preceding the floor's checksum field. CalcByteArraySum (src/util.c) simply adds bytes into a 32-bit accumulator; it is not an order-sensitive or cryptographic digest. The set checksum does **not** cover the eight-byte set header. The native writer explicitly changes header byte 1 after copying the set, and the reader's logical validator does not compare header id/dummy against an expected value. These fields are not covered by the checksum predicates, although separate gameplay consumers may impose other requirements.
+
+## e-Reader input and debug-only assertion boundary
+
+The pinned e-Reader state machine (src/ereader_screen.c:461–483) calls ValidateTrainerTowerData on the received gDecompressionBuffer and, after successful disconnect, passes the same buffer to CEReaderTool_SaveTrainerTower. The writer has AGB_ASSERT_EX checks that set id and dummy are zero (src/cereader_tool.c:45–49), **but these checks are not part of ValidateTrainerTowerData**. In include/gba/isagbprint.h, NDEBUG expands AGB_ASSERT_EX to an empty macro; without NDEBUG it calls DebugAssert. Consequently, the source-level receive/save path has a **build-configuration-dependent assertion boundary**, not unconditional runtime validation of these header bytes. The received data is still constrained by the floor/set checksum predicates and any additional untraced link or gameplay checks. This does not establish a malformed-card exploit or a particular production-build configuration.
 
 ## Conditional active-prefix boundary
 
@@ -40,6 +46,6 @@ Run [the checker](../tools/phase1_tower_prefix_integrity.py) against a local che
 
     python3 tools/phase1_tower_prefix_integrity.py --source-dir /path/to/pinned-pokefirered --self-test --out tower-prefix-integrity.json
 
-It checks six exact Git blob IDs, source anchors and removal-mutation controls, and emits separate synthetic results. [Dedicated CI workflow](../.github/workflows/phase1-tower-prefix-integrity.yml) obtains the pinned sources independently. **A passing workflow at the exact commit is required before recording CI success.**
+It checks eight exact Git blob IDs, source anchors and removal-mutation controls, and emits separate synthetic results. [Dedicated CI workflow](../.github/workflows/phase1-tower-prefix-integrity.yml) obtains the pinned sources independently. **A passing workflow at the exact commit is required before recording CI success.**
 
-**Unresolved:** original agbcc layout equivalence; compiled/linked binary validation paths; physical flash partial-write/recovery behaviour; mGBA/hardware tests with one-to-eight-floor fixtures and checksum collisions; consumers of inactive floors; Qt/editor import-export preservation; extension/sidecar integrity requirements; independent full-file review of the involved implementations. Do not convert these gaps into PASS. This dossier adds no independent approval and makes no Phase 2 changes.
+**Unresolved:** original agbcc layout equivalence; compiled/linked binary validation paths; physical flash partial-write/recovery behaviour; mGBA/hardware tests with one-to-eight-floor fixtures and checksum collisions; consumers of inactive floors; e-Reader card input constraints and debug/release assertion behavior; Qt/editor import-export preservation; extension/sidecar integrity requirements; independent full-file review of the involved implementations. Do not convert these gaps into PASS. This dossier adds no independent approval and makes no Phase 2 changes.
