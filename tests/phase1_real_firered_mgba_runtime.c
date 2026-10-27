@@ -55,10 +55,10 @@ int main(int argc, char **argv) {
     } else {
         for (int i = 0; i < 180; ++i) {
             core->runFrame(core);
-            if (i == 0) fprintf(stderr, "stage: first frame complete\\n");
+            if (i == 0) fprintf(stderr, "stage: first frame complete\n");
         }
     }
-    fprintf(stderr, "stage: 180 frames complete\\n");
+    fprintf(stderr, "stage: 180 frames complete\n");
     unsigned type = gba->memory.savedata.type;
     uint32_t statusAddr = (uint32_t)strtoul(argv[4], NULL, 0);
     uint32_t counterAddr = (uint32_t)strtoul(argv[5], NULL, 0);
@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
         for (int i = 0; i < 3; ++i) core->runFrame(core);
     }
     if (!strcmp(mode, "verify") && before != 0x5A) fail("Flash1M byte not restored from physical save file");
-    printf("{\\"mode\\":\\"%s\\",\\"frames\\":%u,\\"save_type\\":%u,\\"save_status\\":%u,\\"save_counter\\":%u,\\"flash_byte_40\\":%u,\\"trace_steps\\":%llu,\\"load_game_save_entry_hits\\":%u,\\"get_save_valid_status_entry_hits\\":%u,\\"copy_save_slot_data_entry_hits\\":%u}\\n",
+    printf("{\"mode\":\"%s\",\"frames\":%u,\"save_type\":%u,\"save_status\":%u,\"save_counter\":%u,\"flash_byte_40\":%u,\"trace_steps\":%llu,\"load_game_save_entry_hits\":%u,\"get_save_valid_status_entry_hits\":%u,\"copy_save_slot_data_entry_hits\":%u}\n",
         mode, core->frameCounter(core), type, status, counter, before, steps, hits[0], hits[1], hits[2]);
     core->deinit(core);
     free(video);
