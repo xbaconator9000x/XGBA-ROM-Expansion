@@ -30,6 +30,16 @@ def make_schedule(name):
         pulse(e, 1250, 0x8)
         for f in range(1330, 2300, 42):
             pulse(e, f, 0x1)
+    elif name == "pallet_save_dense_confirm":
+        # Same two-step Save cursor, but dense A pulses across both Yes prompts
+        # and slow text. These are ordinary controller inputs, never direct calls.
+        for f in range(330, 1000, 60):
+            pulse(e, f, 0x1)
+        pulse(e, 1100, 0x8)
+        for f in (1200, 1260):
+            pulse(e, f, 0x80)
+        for f in range(1540, 3150, 40):
+            pulse(e, f, 0x1)
     elif name == "pallet_save_navigation":
         # Source-pinned start menu with no Pokedex/Pokemon flags:
         # BAG, PLAYER, SAVE, OPTION, EXIT => SAVE at cursor index 2.
@@ -40,7 +50,7 @@ def make_schedule(name):
             pulse(e, f, 0x80)
         for f in (1540, 1680, 1820, 1960, 2100, 2260):
             pulse(e, f, 0x1)
-    elif name in ("menu_navigation", "pallet_valid", "pallet_null_layout", "pallet_save_navigation"):
+    elif name in ("menu_navigation", "pallet_valid", "pallet_null_layout", "pallet_save_navigation", "pallet_save_dense_confirm"):
         for f in range(330, 1000, 60):
             pulse(e, f, 0x1)
         pulse(e, 1100, 0x8)
@@ -61,16 +71,18 @@ def main(a):
     assert entries["slot0"]["fixture_not_game_generated"]
     results = []
     for name in ("no_input", "title_continue", "repeated_confirm", "menu_navigation",
-                 "pallet_null_layout", "pallet_valid", "pallet_save_navigation"):
+                 "pallet_null_layout", "pallet_valid", "pallet_save_navigation",
+                 "pallet_save_dense_confirm"):
         save = root / (name + ".sav")
-        fixture = ("pallet_valid" if name == "pallet_save_navigation" else
+        fixture = ("pallet_valid" if name in ("pallet_save_navigation", "pallet_save_dense_confirm") else
                    name if name.startswith("pallet_") else "slot0")
         shutil.copyfile(Path(a.fixtures) / (fixture + ".sav"), save)
         assert sha(save) == entries[fixture]["sha256"]
         schedule = root / (name + ".keys")
         schedule.write_text("".join(f"{f} {keys:03x}\n" for f, keys in make_schedule(name)))
         before = sha(save)
-        command = [a.probe, a.rom, str(save), str(schedule), "2400", a.status, a.counter, a.sb2]
+        budget = 3200 if name == "pallet_save_dense_confirm" else 2400
+        command = [a.probe, a.rom, str(save), str(schedule), str(budget), a.status, a.counter, a.sb2]
         if name in ("menu_navigation", "pallet_valid", "pallet_null_layout", "pallet_save_navigation"):
             command.extend((a.start_menu_save, a.dialog_do_save, a.try_saving_data,
                             a.title_task, a.init_main_menu, a.execute_main_menu,
@@ -83,7 +95,7 @@ def main(a):
         lines = [json.loads(line) for line in p.stdout.splitlines() if line.startswith('{"mode":"controller"')]
         assert len(lines) == 1, (name, p.stdout[-500:])
         d = lines[0]
-        assert d["frames"] >= 2400 and d["host_flash_writes"] == 0, (name, d)
+        assert d["frames"] >= budget and d["host_flash_writes"] == 0, (name, d)
         assert d["trace_mode"] == (name in ("menu_navigation", "pallet_valid", "pallet_null_layout", "pallet_save_navigation")), (name, d)
         if name in ("menu_navigation", "pallet_valid", "pallet_null_layout", "pallet_save_navigation"):
             assert d["trace_steps"] > 0, (name, "missing instruction trace", d)
@@ -99,6 +111,10 @@ def main(a):
                         "return_local_state_hist", "last_gmain_state", "last_callback2",
                         "saveblock1_map_group", "saveblock1_map_num", "saveblock1_layout_id"):
                 assert key in d, (name, key)
+        if name == "pallet_valid":
+            assert d["field_get_player_input_hits"] > 0 and d["show_start_menu_hits"] > 0, d
+        if name == "pallet_save_dense_confirm":
+            assert d["start_menu_save_hits"] > 0, ("Save cursor path regressed", d)
         after = sha(save)
         record = {
             "case": name, "source_fixture": "synthetic_" + fixture,
@@ -107,7 +123,7 @@ def main(a):
             "native": d, "game_initiated_save_verified": False,
             "cold_boot_player_state_verified": False,
             "overworld_input_path_observed": bool(d["field_get_player_input_hits"] and d["callback2_overworld_frames"]),
-            "save_menu_index_two_attempted": name == "pallet_save_navigation",
+            "save_menu_index_two_attempted": name in ("pallet_save_navigation", "pallet_save_dense_confirm"),
             "interpretation": "Input-driven real-ROM observation. Changed Flash alone is insufficient to prove save callsite or complete game roundtrip.",
             "phase1_gate": "FAIL_INCOMPLETE", "independent_approval": False,
         }
