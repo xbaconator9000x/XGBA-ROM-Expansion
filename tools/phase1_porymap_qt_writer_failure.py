@@ -25,6 +25,12 @@ BLOBS = {
 FUNCTIONS = {
     "map_writer": ("src/project.cpp", "bool Project::saveMap(Map *map, bool skipLayout)"),
     "groups_writer": ("src/project.cpp", "bool Project::saveMapGroups()"),
+    "layouts_writer": ("src/project.cpp", "bool Project::saveMapLayouts()"),
+    "sections_writer": ("src/project.cpp", "bool Project::saveRegionMapSections()"),
+    "wild_writer": ("src/project.cpp", "bool Project::saveWildMonData()"),
+    "heal_writer": ("src/project.cpp", "bool Project::saveHealLocations()"),
+    "text_writer": ("src/project.cpp", "bool Project::saveTextFile(const QString &path, const QString &text)"),
+    "text_append": ("src/project.cpp", "bool Project::appendTextFile(const QString &path, const QString &text)"),
     "global_writer": ("src/project.cpp", "bool Project::saveGlobalData()"),
     "editor_save": ("src/editor.cpp", "bool Editor::save(bool currentOnly)"),
     "gui_save": ("src/mainwindow.cpp", "bool MainWindow::save(bool currentOnly)"),
@@ -81,6 +87,34 @@ def contract(files: dict[str, str]) -> dict:
         "mapGroupsFile.close();",
         "return true;",
     ], "map-group writer")
+    # Census every OrderedJsonDoc writer in this pinned Project implementation.
+    # Each opens, dumps, closes and reports true without validating stream I/O.
+    json_writers = {
+        "map_writer": "mapFile",
+        "groups_writer": "mapGroupsFile",
+        "layouts_writer": "layoutsFile",
+        "sections_writer": "file",
+        "wild_writer": "wildEncountersFile",
+        "heal_writer": "file",
+    }
+    for name, device in json_writers.items():
+        writer = parts[name]
+        ordered(writer, [
+            "jsonDoc.dump(&" + device + ");",
+            device + ".close();",
+            "return true;",
+        ], name)
+        require(device + ".flush()" not in writer and device + ".error()" not in writer,
+                name + " gained write validation: reassess")
+    for name in ("text_writer", "text_append"):
+        writer = parts[name]
+        ordered(writer, ["file.write(text.toUtf8());", "return true;"], name)
+        require("file.flush()" not in writer and "file.error()" not in writer,
+                name + " gained write validation: reassess")
+    require("saveTextFile(fullPath +" in m and "appendTextFile(root +" in m,
+            "new-map collateral writer calls changed")
+    require("if (!saveTextFile(" not in m and "if (!appendTextFile(" not in m,
+            "new-map collateral error propagation changed")
     ordered(s, [
         "QTextStream fileStream(file);",
         "fileStream << m_obj->dump(&m_indent);",
@@ -120,6 +154,9 @@ def contract(files: dict[str, str]) -> dict:
         "serializer_return_type": "void",
         "editor_save_current_can_propagate_unchecked_success": True,
         "gui_failure_message_conditioned_on_editor_false": True,
+        "project_json_writer_sites_checked": len(json_writers),
+        "project_text_writer_sites_checked": 2,
+        "new_map_collateral_file_errors_propagated": False,
         "actual_gui_save_failure_observed": False,
         "independent_whole_file_approvals": 0,
         "phase1_gate": "FAIL_INCOMPLETE",
@@ -142,6 +179,16 @@ def negative_controls(files: dict[str, str]) -> list[str]:
          "saveMapGroups();", "global save propagation"),
         ("src/editor.cpp", "if (!this->project->saveGlobalData())",
          "if (false)", "editor save propagation"),
+        ("src/project.cpp", "jsonDoc.dump(&layoutsFile);",
+         "if (!jsonDoc.dump(&layoutsFile)) return false;", "layouts checked dump"),
+        ("src/project.cpp", "jsonDoc.dump(&wildEncountersFile);",
+         "if (!jsonDoc.dump(&wildEncountersFile)) return false;", "wild checked dump"),
+        ("src/project.cpp", "jsonDoc.dump(&file);",
+         "if (!jsonDoc.dump(&file)) return false;", "generic JSON checked dump"),
+        ("src/project.cpp", "file.write(text.toUtf8());",
+         "if (file.write(text.toUtf8()) < 0) return false;", "text checked write"),
+        ("src/project.cpp", "saveTextFile(fullPath +",
+         "if (!saveTextFile(fullPath +", "new-map script checked write"),
         ("src/mainwindow.cpp", 'RecentErrorMessage::show(QStringLiteral("Failed to save some project changes."), this);',
          'RecentErrorMessage::show(QStringLiteral("Saved."), this);', "GUI failure message"),
         ("src/core/map.cpp", "m_hasUnsavedDataChanges = false;",
