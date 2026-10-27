@@ -7,6 +7,7 @@
 #include <string.h>
 typedef uint8_t u8;
 typedef uint16_t u16;
+typedef uint32_t u32;
 enum { GBA_SAVEDATA_FLASH512=4, GBA_SAVEDATA_FLASH1M=5 };
 enum { FLASH_STATE_RAW=0, FLASH_STATE_START=1, FLASH_STATE_CONTINUE=2 };
 enum { FLASH_COMMAND_START=0xAA, FLASH_COMMAND_CONTINUE=0x55,
@@ -44,6 +45,23 @@ static struct GBASavedata s;
 static int callbacks;
 static int scheduled;
 static int checks;
+static int waitCalls;
+static u8 waitPhase, waitLast;
+static u16 regWaitcnt;
+#define REG_WAITCNT regWaitcnt
+#define WAITCNT_SRAM_MASK 0x3
+#define WAITCNT_SRAM_8 0
+#define FLASH_BASE (s.currentBank)
+struct FlashType { u16 wait[2]; };
+static struct FlashType flashType = { {3, 1} };
+static const struct FlashType *gFlash = &flashType;
+static void SetReadFlash1(u16* dest) { (void)dest; }
+static u16 waitFlashStub(u8 phase, u8* addr, u8 last) {
+  (void)addr;
+  ++waitCalls; waitPhase=phase; waitLast=last;
+  return 0;
+}
+static u16 (*WaitForFlashWrite)(u8,u8*,u8) = waitFlashStub;
 static void mTimingDeschedule(struct mTiming* t, struct mTimingEvent* e) {
   (void)t; (void)e; scheduled=0;
 }
@@ -73,10 +91,6 @@ static void eraseSector(uint16_t addr) {
   unlock(); FLASH_WRITE(0x5555,0x80);
   unlock(); FLASH_WRITE(addr,0x30);
 }
-static void eraseChip(void) {
-  unlock(); FLASH_WRITE(0x5555,0x80);
-  unlock(); FLASH_WRITE(0x5555,0x10);
-}
 int main(void) {
   uint8_t* bytes=(uint8_t*)malloc(GBA_SIZE_FLASH1M);
   check(bytes!=NULL,"allocation");
@@ -104,7 +118,9 @@ int main(void) {
   uint8_t old=bytes[21*0x1000];
   FLASH_WRITE(0x5000,0x12);
   check(bytes[21*0x1000]==old,"unlocked data cannot be written");
-  eraseChip();
+  check(EraseFlashChip_MX()==0,"actual FireRed chip erase returned success");
+  check(waitCalls==1 && waitPhase==3 && waitLast==0xFF,"FireRed chip erase wait phase");
+  check(regWaitcnt==WAITCNT_SRAM_8,"FireRed wait state restored");
   for(int i=0;i<32;++i)
     check(bytes[i*0x1000]==0xFF,"full chip erase");
   check((s.dirty & mSAVEDATA_DIRT_NEW)!=0,"dirty flag");
