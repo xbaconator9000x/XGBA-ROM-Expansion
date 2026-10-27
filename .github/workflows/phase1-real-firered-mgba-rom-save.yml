@@ -108,6 +108,11 @@ jobs:
               assert len(records)==1,(name,"expected exactly one structured trace record",len(records))
               d=records[0]
               assert d["frames"]>=180 and d["trace_steps"]>0,(name,d)
+              assert d["load_game_save_entry_hits"]>=1,(name,"save-loader not reached",d)
+              assert d["get_save_valid_status_entry_hits"]>=1,(name,"save validation not reached",d)
+              assert d["load_game_save_arg"]==0,(name,"not SAVE_NORMAL",d)
+              for key in ("load_game_save_return_hits","load_game_save_return_value","trace_end_pc","trace_frame_limit"):
+                  assert key in d,(name,key)
               for key in ("load_game_save_entry_hits","get_save_valid_status_entry_hits","copy_save_slot_data_entry_hits"):
                   assert key in d,(name,key)
           print("Instruction-level save-loader PC entry observations recorded; no recovery claim inferred")
