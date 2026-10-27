@@ -11,7 +11,7 @@ from pathlib import Path
 
 MAX_BLOB = 60_000_000
 MAX_MEMBER = 100_000_000
-MAX_TOTAL = 1_000_000_000
+MAX_TOTAL = 5_000_000_000
 MAX_FINDINGS = 500
 
 def git(*args):
@@ -21,8 +21,11 @@ def patterns(data):
     text = data.decode('utf-8', 'replace')
     findings = set()
     low = text.lower()
-    if ('chat' + 'gpt') in low or ('<|im' + '_start|>') in text or ('user' + ' knowledge ' + 'memories') in low:
-        findings.add('dialogue_marker')
+    if (re.search(r'<\|im_start\|>\s*user', text, re.I) and
+            re.search(r'<\|im_start\|>\s*assistant', text, re.I)):
+        findings.add('dialogue_marker_pair')
+    if re.search(r'(?m)^#{1,3}\s*User Knowledge Memories\b', text, re.I):
+        findings.add('context_summary_header')
     if (re.search(r'"role"\s*:\s*"user"', text, re.I) and
             re.search(r'"role"\s*:\s*"assistant"', text, re.I)):
         findings.add('dialogue_role_pair')
