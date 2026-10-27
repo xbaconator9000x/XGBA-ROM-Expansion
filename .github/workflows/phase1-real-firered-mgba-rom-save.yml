@@ -1,0 +1,123 @@
+name: Phase 1 real pinned FireRed ROM under pinned mGBA save probe
+on:
+  push:
+    branches:
+      - phase1/firered-mgba-real-rom-boot-save-20261028
+    paths:
+      - '.github/workflows/phase1-real-firered-mgba-rom-save.yml'
+      - 'tests/phase1_real_firered_mgba_runtime.c'
+      - 'tools/phase1_real_firered_mgba_fixtures.py'
+      - 'docs/phase1-review-readiness/real-firered-mgba-runtime-20261028.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-built-rom-emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned FireRed and mGBA build prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi libpng-dev build-essential cmake ninja-build pkg-config
+      - name: Checkout immutable source revisions
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git clone --quiet --filter=blob:none https://github.com/pret/agbcc.git upstream/agbcc
+          git -C upstream/agbcc checkout --quiet --detach da598c1d918402c42c0c0d7128ba14567f3175e9
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/agbcc rev-parse HEAD)" = da598c1d918402c42c0c0d7128ba14567f3175e9
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+          git -C upstream/pokefirered hash-object include/save.h | grep -Fx 87fb9b615b434b58823d15688056695acda9feab
+          git -C upstream/pokefirered hash-object src/save.c | grep -Fx 36b960f375c92711aa49b99bdfe9c6b3a99d6b1c
+      - name: Build real FireRed cartridge using pinned original agbcc
+        run: |
+          set -euo pipefail
+          (cd upstream/agbcc && ./build.sh && ./install.sh ../pokefirered) > agbcc.log 2>&1 || { tail -100 agbcc.log; exit 1; }
+          make -C upstream/pokefirered -j2 GAME_VERSION=FIRERED MODERN=0 > firered.log 2>&1 || { tail -120 firered.log; exit 1; }
+          test -s upstream/pokefirered/pokefirered.gba
+          test -s upstream/pokefirered/pokefirered.elf
+          sha256sum upstream/pokefirered/pokefirered.gba | tee rom-sha256.txt
+          arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | grep -E ' (gSaveFileStatus|gSaveCounter)$'
+      - name: Build actual pinned mGBA emulator core and headless perf frontend
+        run: |
+          set -euo pipefail
+          cmake -S upstream/mgba -B upstream/mgba/build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_QT=OFF -DBUILD_SDL=OFF -DBUILD_PERF=ON -DBUILD_SHARED=ON -DUSE_FFMPEG=OFF -DUSE_LUA=OFF -DUSE_DISCORD_RPC=OFF > mgba-config.log 2>&1 || { tail -120 mgba-config.log; exit 1; }
+          cmake --build upstream/mgba/build -j4 --target mgba-perf > mgba-build.log 2>&1 || { tail -120 mgba-build.log; exit 1; }
+          test -x upstream/mgba/build/mgba-perf
+          python3 - <<'PY'
+          import json,shlex,subprocess
+          from pathlib import Path
+          entries=json.loads(Path("upstream/mgba/build/compile_commands.json").read_text())
+          perf=next(e for e in entries if e["file"].endswith("/src/platform/test/perf-main.c"))
+          argv=shlex.split(perf["command"])
+          # mCore has conditional struct members. Compile with EXACTLY the same
+          # FEATURE_DEFINES as pinned mGBA or function pointers have wrong offsets.
+          flags=[arg for arg in argv if arg.startswith(("-D","-I"))]
+          print("Pinned emulator compile flags:",flags)
+          subprocess.run(["cc","-std=c11","-O2","-g","-Wall","-Wextra",*flags,
+              "-Iupstream/mgba/include","-Iupstream/mgba/build/include",
+              "tests/phase1_real_firered_mgba_runtime.c",
+              "-Lupstream/mgba/build",
+              "-Wl,-rpath,"+str(Path("upstream/mgba/build").resolve()),
+              "-lmgba","-o","real-rom-probe"],check=True)
+          PY
+      - name: Boot source-built ROM under actual pinned emulator
+        run: |
+          set -euo pipefail
+          timeout 120s upstream/mgba/build/mgba-perf -N -P -F 180 upstream/pokefirered/pokefirered.gba | tee mgba-perf.txt
+          grep -E '180' mgba-perf.txt
+      - name: Run valid malformed and older-slot save probes
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/fixtures evidence/results
+          python3 tools/phase1_real_firered_mgba_fixtures.py --rom upstream/pokefirered/pokefirered.gba --output evidence/fixtures
+          cp evidence/fixtures/fixture_manifest.json evidence/results/
+          status=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveFileStatus" {print "0x"$1;exit}')
+          counter=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveCounter" {print "0x"$1;exit}')
+          test -n "$status" && test -n "$counter"
+          for case in empty slot0 both malformed_id14 mixed_counters older_slot_fallback; do
+            cp "evidence/fixtures/$case.sav" "evidence/results/$case.sav"
+            timeout 120s ./real-rom-probe upstream/pokefirered/pokefirered.gba "evidence/results/$case.sav" probe "$status" "$counter" | tee "evidence/results/$case.json"
+          done
+          cp evidence/fixtures/empty.sav evidence/results/flash_program.sav
+          timeout 120s ./real-rom-probe upstream/pokefirered/pokefirered.gba evidence/results/flash_program.sav program "$status" "$counter" | tee evidence/results/flash_program.json
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("evidence/results/flash_program.sav")
+          assert p.stat().st_size == 131072, p.stat().st_size
+          assert p.read_bytes()[0x40] == 0x5A, hex(p.read_bytes()[0x40])
+          print("Physical Flash byte persisted in .sav")
+          PY
+          timeout 120s ./real-rom-probe upstream/pokefirered/pokefirered.gba evidence/results/flash_program.sav verify "$status" "$counter" | tee evidence/results/flash_verify.json
+          cp evidence/fixtures/empty.sav evidence/results/changed_header.sav
+          timeout 120s ./real-rom-probe evidence/fixtures/firered_header_changed.gba evidence/results/changed_header.sav probe "$status" "$counter" | tee evidence/results/changed_header.json
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          results=Path("evidence/results")
+          for name in ("empty","slot0","both","malformed_id14","mixed_counters","older_slot_fallback","flash_program","flash_verify","changed_header"):
+              d=json.loads((results/(name+".json")).read_text().strip().splitlines()[-1])
+              assert d["frames"] >= 180,(name,d)
+          print("9 actual-emulator frame-advance cases verified; save correctness is NOT inferred")
+          PY
+      - name: Upload only text evidence, never source-built ROM or raw saves
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-real-firered-mgba-runtime-text-evidence
+          path: |
+            evidence/results/*.json
+            evidence/results/fixture_manifest.json
+            rom-sha256.txt
+            mgba-perf.txt
+            mgba-config.log
+            agbcc.log
+          if-no-files-found: warn
+          retention-days: 30
