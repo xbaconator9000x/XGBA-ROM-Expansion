@@ -15,7 +15,10 @@ from pathlib import Path
 
 PS_PIN = "c32481161c767b25a3425fa9f1f8729927ff3d55"
 FR_PIN = "ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
-PS_BLOBS = {"emitter/emitter.go": "d35843ef29929ead47351646d7a33dd5c692b850"}
+PS_BLOBS = {
+    "emitter/emitter.go": "d35843ef29929ead47351646d7a33dd5c692b850",
+    "emitter/emitter_test.go": "4c3209166937384a0dc26fc83a0341a5dac48ca5",
+}
 FR_BLOBS = {
     "asm/macros/map.inc": "83ef472c926ce767c9133ab9bd6922280b38bb2d",
     "src/script.c": "d0433bdda062b138e53d1a1d3184b4566ad7d9dc",
@@ -64,6 +67,11 @@ def macro(source, name):
 
 def source_contract(ps, fr):
     emitter = ps["emitter/emitter.go"]
+    emitter_test = ps["emitter/emitter_test.go"]
+    check("func TestEmitMapScripts(" in emitter_test and
+          "expectedUnoptimized :=" in emitter_test and
+          "expectedOptimized :=" in emitter_test,
+          "pinned map-script emitter regression fixture missing")
     native = fr["asm/macros/map.inc"]
     reader = fr["src/script.c"]
     constants = fr["include/constants/map_scripts.h"]
