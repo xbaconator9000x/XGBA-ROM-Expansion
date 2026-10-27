@@ -1,0 +1,24 @@
+name: Phase 1 FireRed mGBA Flash identification contract (no approvals)
+on:
+  push:
+    branches:
+      - phase1/firered-mgba-flash-identification-contract-20261027
+  pull_request:
+    paths:
+      - 'tools/phase1_firered_mgba_flash_contract.py'
+      - 'docs/phase1-review-readiness/firered-mgba-flash-identification-contract-20261027.md'
+      - '.github/workflows/phase1-firered-mgba-flash-identification.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-cross-repo-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify 11 pinned blobs, cross-repo source contract and negative controls
+        run: python tools/phase1_firered_mgba_flash_contract.py
