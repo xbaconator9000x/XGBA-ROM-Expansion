@@ -52,6 +52,8 @@ ANCHORS = {
         r"savData\s*=\s*&gSaveDataBuffer.data\[4\]",
         r"for\s*\(; i <= size; i\+\+\)",
         r"ProgramFlashSectorAndVerify\(sector, savDataBuffer\)",
+        r"ReadFlash\(sectorId, 0, \(u8 \*\)&gSaveDataBuffer, SECTOR_SIZE\)",
+        r"\*\(u32 \*\)\(savDataBuffer\) = SPECIAL_SECTOR_SENTINEL",
     ],
     "src/ereader_screen.c": [
         r"data->status = ValidateTrainerTowerData\(\(struct EReaderTrainerTowerSet \*\)gDecompressionBuffer\)",
@@ -235,6 +237,55 @@ def synthetic_torn_generation_cases():
         }
     return results
 
+
+def synthetic_special_sector_wrapper():
+    """Model special-sector copy bounds, NOT flash or emulator behavior.
+
+    The native special-sector code starts at physical offset 4 and copies
+    SECTOR_COUNTER_OFFSET bytes, including the four bytes ordinarily named
+    SaveSector.counter. This is within the 4096-byte physical sector.
+    """
+    sector_size = 3968 + 128
+    counter_offset = 3968 + (128 - 12) + 2 + 2 + 4
+    sentinel = 0xB39D
+    copy_size = counter_offset
+    assert sector_size == 4096 and counter_offset == 4092
+    assert 4 + copy_size == sector_size
+
+    payload = bytearray((i * 17 + 3) % 256 for i in range(copy_size))
+    physical = bytearray(sector_size)
+    physical[:4] = sentinel.to_bytes(4, "little")
+    physical[4:4 + copy_size] = payload
+    assert physical[counter_offset:] == payload[-4:]
+    assert physical[0:4] == b"\x9d\xb3\x00\x00"
+
+    def read_if_sentinel(image):
+        if int.from_bytes(image[:4], "little") != sentinel:
+            return None
+        return bytes(image[4:4 + copy_size])
+
+    assert read_if_sentinel(physical) == bytes(payload)
+    corrupted = bytearray(physical)
+    corrupted[0] ^= 1
+    assert read_if_sentinel(corrupted) is None
+    # A mutation to the last four physical bytes does not affect the sentinel.
+    # The special-sector reader returns the mutated bytes without validating them.
+    corrupted = bytearray(physical)
+    corrupted[-1] ^= 1
+    assert read_if_sentinel(corrupted) is not None
+    assert read_if_sentinel(corrupted)[-1] != payload[-1]
+    return {
+        "physical_sector_bytes": sector_size,
+        "sentinel_bytes": 4,
+        "copy_bytes": copy_size,
+        "physical_copy_offsets_inclusive": [4, 4095],
+        "includes_last_four_bytes_named_counter_in_save_sector_layout": True,
+        "copy_out_of_bounds": False,
+        "sentinel_mutation_rejected": True,
+        "last_byte_mutation_not_authenticated_by_wrapper": True,
+        "evidence_kind": "synthetic_wrapper_not_flash_or_emulator",
+    }
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--source-dir", type=Path)
@@ -249,6 +300,7 @@ def main():
         "independent_approvals_added": 0,
         "synthetic": synthetic_tests(),
         "torn_generation_cases": synthetic_torn_generation_cases(),
+        "special_sector_wrapper": synthetic_special_sector_wrapper(),
     }
     if args.source_dir:
         report["pinned_sources"] = verify_sources(args.source_dir)
