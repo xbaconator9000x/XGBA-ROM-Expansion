@@ -1,6 +1,6 @@
 # Phase 1 P0 — map-connection offset crosses editor, generator and native fill geometry
 
-**27 October 2026 · EXACT-PINNED CROSS-TOOL SOURCE TRACE + SYNTHETIC GEOMETRY · NOT APPROVED.** FireRed pin `pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982`; Porymap pin `huderlem/porymap@26b919d7ff4b54152de010abd5bf344af2ebe116`. This documents an unresolved **source-level geometry precondition**, not a claim that any of the 63 stock compiled connections violates it. Independent approvals **0/14,834**, Phase 1 **FAIL_INCOMPLETE**.
+**27 October 2026 · EXACT-PINNED CROSS-TOOL SOURCE TRACE + PASSING AUTHORED-GEOMETRY CENSUS · NOT APPROVED.** FireRed pin `pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982`; Porymap pin `huderlem/porymap@26b919d7ff4b54152de010abd5bf344af2ebe116`. This documents a **source-level geometry precondition** and a pinned authored-input census. The synthetic invalid cases are distinct from the stock authored connections. Independent approvals **0/14,834**, Phase 1 **FAIL_INCOMPLETE**.
 
 ## Pinned source-to-native ABI
 
@@ -32,7 +32,7 @@ The analogous `FillWestConnection`/`FillEastConnection` branches (272–345) can
 
 1. A JSON/editor round trip must preserve the *signed authored offset* independently of the native four-byte representation, and must not infer a connection's identity from its physical ROM pointer. The earlier mirrored `INT_MIN` negation finding is a **different** boundary.
 2. Validate overlap and source/destination clipping separately for south, north, west and east, including short neighboring maps and disjoint offsets. A valid virtual-map area alone does not prove these calls safe.
-3. Audit the **actual 63 pinned maps with authored connections**, their target layout dimensions, and reciprocal offsets before asserting stock reachability or safety. The new [425-map authored geometry census](../tools/audit_firered_authored_connection_geometry.py) walks all pinned map IDs, 383 sparse layout slots (365 populated), connection suppression, and cardinal copy rectangles; it writes a fail-closed JSON report. **The census has been committed and wired to CI, but its result is not yet verified.** Account for `connections_no_include` suppression and maps without native connection pointers.
+3. **Authored source geometry census now verified:** [passing CI run #40434310820](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40434310820) at `2a7079554f67a4799180a4bc71aa57f2b0136843` checked all **425 map JSONs**, **383 layout slots (365 populated)**, and **116 active cardinal connections**. **Zero** source/destination rectangle issues were found under the pinned clipping arithmetic. The only suppressed map with authored connections is **SaffronCity (four entries)**. This closes the pinned authored-rectangle bounds question, **not** arbitrary edited offsets, runtime transitions, pointer validity, native BIOS execution or save interoperability. [Reproducible census checker](../tools/audit_firered_authored_connection_geometry.py); its full JSON artifact is emitted by the workflow.
 4. The source macro’s 21-bit masked negative-count conversion is now traced. Compile and inspect the actual `CpuCopy16` call conventions under original agbcc, revision10 and modern GCC, then test representative invalid/valid offsets only in a disposable harness, not by modifying authored production maps.
 5. Run Porymap Qt save/reopen and mGBA map-edge transitions, with source-project JSON and generated object bytes compared independently. Obtain independent whole-file review before approval.
 
@@ -59,4 +59,4 @@ assert south(40) == (47, 0, -12)
 assert south(-40) == (0, 33, -13)
 ```
 
-**Disposition: source ABI and synthetic geometry preconditions mapped; authored-data census, compiled copy semantics, editor and runtime gates OPEN. No new whole-file candidate or approval.**
+**Disposition: source ABI and synthetic invalid geometry mapped; pinned authored cardinal rectangles PASS (116/116) under source arithmetic; actual compiled BIOS copy, editor, runtime and independent-review gates OPEN. No new whole-file candidate or approval.**
