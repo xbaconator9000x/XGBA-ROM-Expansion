@@ -8,6 +8,7 @@ on:
       - 'tools/map_alias_compiler_semantics.py'
       - 'tools/verify_firered_mapview_save_boundary.py'
       - 'tools/verify_firered_connection_fill_geometry.py'
+      - 'tools/audit_firered_authored_connection_geometry.py'
       - '.github/workflows/compiled-firered-maps.yml'
 permissions:
   contents: read
@@ -35,6 +36,11 @@ jobs:
           python3 tools/verify_firered_connection_fill_geometry.py --self-test
           python3 tools/verify_firered_mapview_save_boundary.py --root upstream/pokefirered
           python3 tools/verify_firered_connection_fill_geometry.py --firered upstream/pokefirered --porymap upstream/porymap
+      - name: Census every authored cardinal connection rectangle against pinned layouts
+        run: |
+          python3 -m py_compile tools/audit_firered_authored_connection_geometry.py
+          python3 tools/audit_firered_authored_connection_geometry.py --self-test
+          python3 tools/audit_firered_authored_connection_geometry.py --root upstream/pokefirered
       - name: Build original mapjson translator
         run: make -C upstream/pokefirered/tools/mapjson -j2
       - name: Compile all typed maps, layouts, warps, events and map groups
@@ -52,5 +58,6 @@ jobs:
             map-evidence/
             audit-output/fieldmap_save_boundary.json
             audit-output/connection_fill_geometry.json
+            audit-output/authored_connection_fill_geometry.json
           retention-days: 90
           if-no-files-found: warn
