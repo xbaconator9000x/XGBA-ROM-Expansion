@@ -38,6 +38,7 @@ jobs:
           test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
           git -C upstream/pokefirered hash-object include/save.h | grep -Fx 87fb9b615b434b58823d15688056695acda9feab
           git -C upstream/pokefirered hash-object src/save.c | grep -Fx 36b960f375c92711aa49b99bdfe9c6b3a99d6b1c
+          git -C upstream/pokefirered hash-object include/global.h | grep -Fx 77155b09014aa854fcf87260e6ad2969e222da53
       - name: Build real FireRed cartridge using pinned original agbcc
         run: |
           set -euo pipefail
