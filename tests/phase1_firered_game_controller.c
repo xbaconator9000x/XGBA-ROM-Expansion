@@ -27,6 +27,9 @@ int main(int argc, char **argv) {
     uint32_t targets[13] = {0};
     unsigned hits[13] = {0}, first_hit_frame[13] = {0};
     unsigned first_try_save_arg = 0xFFFFFFFFU;
+    uint32_t pending_try_save_return_pc = 0;
+    unsigned try_save_return_hits = 0, first_try_save_return_frame = 0;
+    unsigned first_try_save_return_value = 0xFFFFFFFFU;
     unsigned long long trace_steps = 0;
     uint32_t gmain_addr = 0, sb1_ptr_addr = 0;
     unsigned callback2_return_local_frames = 0, return_local_state_hist[16] = {0};
@@ -100,12 +103,28 @@ int main(int argc, char **argv) {
                 struct ARMCore *cpu = gba->cpu;
                 uint32_t executing = (uint32_t)cpu->gprs[ARM_PC]
                     - (cpu->executionMode == MODE_THUMB ? 4U : 8U);
+                /* Source-pinned TrySavingData is a normal Thumb subroutine.
+                 * Capture the caller return PC from LR at actual entry.
+                 * Observe execution of that return PC and R0 at the return,
+                 * not a speculative frame-sampled return value. */
+                if (pending_try_save_return_pc && executing == pending_try_save_return_pc) {
+                    ++try_save_return_hits;
+                    if (!first_try_save_return_frame) {
+                        first_try_save_return_frame = frame + 1;
+                        first_try_save_return_value = (unsigned)cpu->gprs[0] & 0xFFU;
+                    }
+                    pending_try_save_return_pc = 0;
+                }
                 for (unsigned j = 0; j < 13; ++j) {
                     if (executing == targets[j]) {
                         ++hits[j];
                         if (!first_hit_frame[j]) first_hit_frame[j] = frame + 1;
-                        if (j == 2 && first_try_save_arg == 0xFFFFFFFFU)
+                        if (j == 2 && first_try_save_arg == 0xFFFFFFFFU) {
                             first_try_save_arg = (unsigned)cpu->gprs[0] & 0xFFU;
+                            uint32_t return_pc = (uint32_t)cpu->gprs[ARM_LR] & ~1U;
+                            if (return_pc >= 0x08000000U && return_pc < 0x0A000000U)
+                                pending_try_save_return_pc = return_pc;
+                        }
                     }
                 }
                 core->step(core);
@@ -181,7 +200,9 @@ int main(int argc, char **argv) {
            "\"start_menu_save_hits\":%u,\"save_dialog_do_save_hits\":%u,"
            "\"try_saving_data_entry_hits\":%u,\"first_start_menu_save_frame\":%u,"
            "\"first_save_dialog_frame\":%u,\"first_try_saving_data_frame\":%u,"
-           "\"first_try_save_arg\":%u,\"title_task_hits\":%u,"
+           "\"first_try_save_arg\":%u,\"try_saving_data_return_hits\":%u,"
+           "\"first_try_saving_data_return_frame\":%u,\"first_try_saving_data_return_value\":%u,"
+           "\"title_task_hits\":%u,"
            "\"init_main_menu_hits\":%u,\"execute_main_menu_hits\":%u,"
            "\"return_to_field_hits\":%u,\"continue_saved_game_hits\":%u,"
            "\"first_title_task_frame\":%u,\"first_init_main_menu_frame\":%u,"
@@ -207,6 +228,7 @@ int main(int argc, char **argv) {
            tracing ? "true" : "false", tracing ? 181U : 0U, trace_steps,
            hits[0], hits[1], hits[2], first_hit_frame[0], first_hit_frame[1],
            first_hit_frame[2], first_try_save_arg,
+           try_save_return_hits, first_try_save_return_frame, first_try_save_return_value,
            hits[3], hits[4], hits[5], hits[6], hits[7],
            first_hit_frame[3], first_hit_frame[4], first_hit_frame[5],
            first_hit_frame[6], first_hit_frame[7],

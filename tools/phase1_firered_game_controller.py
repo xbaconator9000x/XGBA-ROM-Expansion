@@ -109,6 +109,8 @@ def main(a):
             assert d["trace_steps"] > 0, (name, "missing instruction trace", d)
             for key in ("start_menu_save_hits", "save_dialog_do_save_hits",
                         "try_saving_data_entry_hits", "first_try_save_arg",
+                        "try_saving_data_return_hits", "first_try_saving_data_return_frame",
+                        "first_try_saving_data_return_value",
                         "title_task_hits", "init_main_menu_hits",
                         "execute_main_menu_hits", "return_to_field_hits",
                         "continue_saved_game_hits", "return_field_local_hits",
@@ -125,6 +127,8 @@ def main(a):
             assert d["start_menu_save_hits"] > 0, ("Save cursor path regressed", d)
             assert d["save_dialog_do_save_hits"] > 0 and d["try_saving_data_entry_hits"] > 0, (
                 "Compiled in-game save callsite not observed", d)
+            assert d["try_saving_data_return_hits"] > 0 and d["first_try_saving_data_return_value"] == 1, (
+                "TrySavingData did not return source-defined SAVE_STATUS_OK=1", d)
             assert d["flash_changed_bytes"] > 0 and d["save_counter"] == 1, (
                 "No native Flash transaction/counter increment", d)
         after = sha(save)
@@ -234,7 +238,7 @@ def main(a):
         "Cold boot did not recover named player and original payload", cb)
     assert cb["field_get_player_input_hits"] > 0 and cb["callback2_overworld_frames"] > 0, (
         "Cold boot failed to recover playable field", cb)
-    assert cb["try_saving_data_entry_hits"] == 0 and cb["flash_changed_bytes"] == 0, (
+    assert cb["try_saving_data_entry_hits"] == 0 and cb["try_saving_data_return_hits"] == 0 and cb["flash_changed_bytes"] == 0, (
         "Cold boot control unexpectedly performed a second save", cb)
     assert sha(cold) == cold_before, "Cold boot modified physical save without Save command"
     cold_record = {
@@ -245,7 +249,7 @@ def main(a):
         "slot1_sector_ids": ids,
         "slot1_all_sector_checksums_verified": True,
         "named_player_map_and_field_recovered": True,
-        "try_saving_data_return_status_not_traced": True,
+        "try_saving_data_return_status_verified_on_first_boot": True,
         "phase1_gate": "FAIL_INCOMPLETE", "independent_approval": False,
     }
     (root / "cold_boot_game_generated.json").write_text(
@@ -264,6 +268,8 @@ def main(a):
         "layout_id": cb["saveblock1_layout_id"],
         "field_input_hits": cb["field_get_player_input_hits"],
         "try_saving_data_entry_hits": cb["try_saving_data_entry_hits"],
+        "first_boot_try_save_return_value": dense["native"]["first_try_saving_data_return_value"],
+        "first_boot_try_save_return_hits": dense["native"]["try_saving_data_return_hits"],
         "host_flash_writes": cb["host_flash_writes"],
     }), flush=True)
 
@@ -281,7 +287,7 @@ def main(a):
         "cases": results, "new_machine_indexed_files": 0,
         "analyst_prepared_complete_file_reviews": 0, "independent_approvals": 0,
         "phase1_gates": "FAIL_INCOMPLETE",
-        "limits": ["TrySavingData entry observed but function return/result not yet traced",
+        "limits": ["TrySavingData entry/return instrumented; return status must be exact-head CI verified",
                    "Original playable fixture was synthetic, although subsequent Flash was game-written",
                    "Controller schedule not equivalent to human verified gameplay",
                    "No XGBA-expanded ROM interoperability or independent semantic approval"],
