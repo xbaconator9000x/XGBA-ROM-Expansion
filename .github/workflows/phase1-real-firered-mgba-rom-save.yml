@@ -103,7 +103,10 @@ jobs:
           from pathlib import Path
           import json
           for name in ("slot0","malformed_id14","older_slot_fallback"):
-              d=json.loads(Path(f"evidence/results/trace_{name}.json").read_text())
+              lines=Path(f"evidence/results/trace_{name}.json").read_text().splitlines()
+              records=[json.loads(line) for line in lines if line.strip().startswith('{"mode":"trace"')]
+              assert len(records)==1,(name,"expected exactly one structured trace record",len(records))
+              d=records[0]
               assert d["frames"]>=180 and d["trace_steps"]>0,(name,d)
               for key in ("load_game_save_entry_hits","get_save_valid_status_entry_hits","copy_save_slot_data_entry_hits"):
                   assert key in d,(name,key)
