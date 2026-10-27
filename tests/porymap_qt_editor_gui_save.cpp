@@ -156,6 +156,9 @@ int main(int argc, char **argv) {
         require(diskOffset(routePath, otherDirection, otherTarget) == -(original + 1),
                 "failed current-only GUI save unexpectedly persisted mirror");
 
+        const int diskAfterFailedGuiSave = diskOffset(palletPath, direction, target);
+        require(diskAfterFailedGuiSave == original + 1,
+                "failed current-only save disk snapshot unexpectedly changed");
         // Consequential edge case: the failed current-only save cleared the
         // PalletTown dirty flag, while the mirrored Route1 edit remains dirty.
         // Trigger the actual Save Project QAction again. Does it repair BOTH
@@ -184,7 +187,7 @@ int main(int argc, char **argv) {
         result["qaction_save_project_triggers"] = int(allTriggers);
         result["current_only_disk_offset"] = original + 1;
         result["mirror_disk_offset_after_save_all"] = -(original + 1);
-        result["failed_gui_save_disk_offset"] = diskOffset(palletPath, direction, target);
+        result["failed_gui_save_disk_offset"] = diskAfterFailedGuiSave;
         result["failed_gui_save_in_memory_offset"] = conn->offset();
         result["failed_gui_save_cleared_dirty"] = !dirtyAfterFailedGuiSave;
         result["failed_gui_save_mirror_remains_dirty"] = true; // captured immediately after failure
