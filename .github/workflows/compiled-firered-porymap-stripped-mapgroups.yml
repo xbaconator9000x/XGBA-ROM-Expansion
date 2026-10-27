@@ -1,9 +1,5 @@
 name: Phase 1 compiled Porymap-stripped FireRed map-groups ABI
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/compiled-firered-porymap-stripped-mapgroups.yml'
-      - 'docs/PHASE1_P0_PORYMAP_FIRERED_MAP_GROUPS_METADATA_ROUNDTRIP_2026-10-27.md'
   workflow_dispatch:
 permissions:
   contents: read
