@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'tools/phase1_firered_flash_sector_id_boundary.py'
+      - 'tools/phase1_firered_slot_counter_coherence.py'
+      - 'docs/PHASE1_P0_FIRERED_SAVE_SLOT_COUNTER_COHERENCE_2026-10-27.md'
       - 'docs/PHASE1_P0_FIRERED_FLASH_SECTOR_ID_AND_MAPVIEW_2026-10-27.md'
       - '.github/workflows/phase1-firered-flash-sector-id.yml'
 permissions:
@@ -27,11 +29,19 @@ jobs:
           python3 tools/phase1_firered_flash_sector_id_boundary.py \
             --source upstream-firered \
             --output phase1-evidence/firered-flash-sector-id.json
+      - name: Verify pinned slot counter coherence and two synthetic fixtures
+        run: |
+          python3 -m py_compile tools/phase1_firered_slot_counter_coherence.py
+          python3 tools/phase1_firered_slot_counter_coherence.py \
+            --source upstream-firered \
+            --out phase1-evidence/firered-slot-counter-coherence.json
       - name: Preserve evidence even if checker fails
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: phase1-firered-flash-sector-id
-          path: phase1-evidence/firered-flash-sector-id.json
+          path: |
+            phase1-evidence/firered-flash-sector-id.json
+            phase1-evidence/firered-slot-counter-coherence.json
           if-no-files-found: warn
           retention-days: 90
