@@ -47,7 +47,7 @@ def check_entries(entries: list) -> None:
             raise ValueError("Unpinned or wrong upstream source")
         if not re.fullmatch(r"include/[A-Za-z0-9_]+\.h", e["path"]):
             raise ValueError("Invalid source path")
-        if not re.fullmatch(r"00(?:[5-7][0-9]|8[0-3])-firered-[a-z0-9-]+\.md", e["document"]):
+        if not re.fullmatch(r"(?:00[5-9][0-9]|010[0-8])-firered-[a-z0-9-]+\.md", e["document"]):
             raise ValueError("Invalid candidate document name")
         if not re.fullmatch(r"[0-9a-f]{40}", e["git_blob_sha1"]):
             raise ValueError("Invalid Git blob SHA")
@@ -86,6 +86,7 @@ def self_test() -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source-root", type=Path)
+    parser.add_argument("--manifest", type=Path, default=MANIFEST)
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     if args.self_test:
@@ -97,7 +98,7 @@ def main() -> None:
     rev = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
     if rev != PIN:
         raise ValueError(f"Source checkout mismatch: {rev} != {PIN}")
-    entries = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    entries = json.loads(args.manifest.read_text(encoding="utf-8"))
     check_entries(entries)
     register = (DOCS / "README.md").read_text(encoding="utf-8")
     for e in entries:

@@ -100,8 +100,33 @@
 | `pret/pokefirered:include/bg_regs.h` | [0081](0081-firered-bg-regs.md) | pending independent review |
 | `pret/pokefirered:include/help_message.h` | [0082](0082-firered-help-message.md) | pending independent review |
 | `pret/pokefirered:include/intro.h` | [0083](0083-firered-intro.md) | pending independent review |
+| `pret/pokefirered:include/quest_log_battle.h` | [0084](0084-firered-quest-log-battle.md) | pending independent review |
+| `pret/pokefirered:include/quest_log_objects.h` | [0085](0085-firered-quest-log-objects.md) | pending independent review |
+| `pret/pokefirered:include/quest_log_player.h` | [0086](0086-firered-quest-log-player.md) | pending independent review |
+| `pret/pokefirered:include/save.h` | [0087](0087-firered-save.md) | pending independent review |
+| `pret/pokefirered:include/save_location.h` | [0088](0088-firered-save-location.md) | pending independent review |
+| `pret/pokefirered:include/save_menu_util.h` | [0089](0089-firered-save-menu-util.md) | pending independent review |
+| `pret/pokefirered:include/save_failed_screen.h` | [0090](0090-firered-save-failed-screen.md) | pending independent review |
+| `pret/pokefirered:include/load_save.h` | [0091](0091-firered-load-save.md) | pending independent review |
+| `pret/pokefirered:include/reset_save_heap.h` | [0092](0092-firered-reset-save-heap.md) | pending independent review |
+| `pret/pokefirered:include/new_game.h` | [0093](0093-firered-new-game.md) | pending independent review |
+| `pret/pokefirered:include/play_time.h` | [0094](0094-firered-play-time.md) | pending independent review |
+| `pret/pokefirered:include/region_map.h` | [0095](0095-firered-region-map.md) | pending independent review |
+| `pret/pokefirered:include/renewable_hidden_items.h` | [0096](0096-firered-renewable-hidden-items.md) | pending independent review |
+| `pret/pokefirered:include/script_menu.h` | [0097](0097-firered-script-menu.md) | pending independent review |
+| `pret/pokefirered:include/script_movement.h` | [0098](0098-firered-script-movement.md) | pending independent review |
+| `pret/pokefirered:include/script_pokemon_util.h` | [0099](0099-firered-script-pokemon-util.md) | pending independent review |
+| `pret/pokefirered:include/shop.h` | [0100](0100-firered-shop.md) | pending independent review |
+| `pret/pokefirered:include/wild_encounter.h` | [0101](0101-firered-wild-encounter.md) | pending independent review |
+| `pret/pokefirered:include/wild_pokemon_area.h` | [0102](0102-firered-wild-pokemon-area.md) | pending independent review |
+| `pret/pokefirered:include/tileset_anims.h` | [0103](0103-firered-tileset-anims.md) | pending independent review |
+| `pret/pokefirered:include/tilesets.h` | [0104](0104-firered-tilesets.md) | pending independent review |
+| `pret/pokefirered:include/tilemap_util.h` | [0105](0105-firered-tilemap-util.md) | pending independent review |
+| `pret/pokefirered:include/scanline_effect.h` | [0106](0106-firered-scanline-effect.md) | pending independent review |
+| `pret/pokefirered:include/palette.h` | [0107](0107-firered-palette.md) | pending independent review |
+| `pret/pokefirered:include/palette_util.h` | [0108](0108-firered-palette-util.md) | pending independent review |
 
-**Count: 88 distinct pinned upstream whole-file identities prepared / 14,834 = 0.4247%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
+**Count: 113 distinct pinned upstream whole-file identities prepared / 14,834 = 0.4247%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
 
 ## 27 October — corrected duplicate and script interpreter ABI closure
 
@@ -177,3 +202,8 @@ Two complete pinned source files, [GPU register manager implementation](0057-fir
 ## 27 October — source-verified field/overworld interface batch (25 files)
 
 Candidates [0059–0083](0059-firered-field-camera.md) prepare **25 distinct complete pinned FireRed headers** covering camera, player movement, doors, field effects, warp/fade, weather, poison, message windows, bike, heal/respawn, previews and BG interfaces. Each candidate records its exact Git blob SHA, line-anchored exhaustive non-comment source inventory, semantic interpretation and unresolved independent-review obligations. The batch manifest `batch-20261027-field-interfaces.json` and `tools/phase1_field_header_batch_verify.py` check source hashes and full line-inventory equivalence, with fail-closed negative fixtures. These are declaration-level whole-file preparations, **not** implementation or consumer signoffs. **88/14,834 = 0.5932% prepared; 0/14,834 = 0.0000% independently approved; inventory 100%; FAIL_INCOMPLETE.** Exact-head CI remains unverified until workflow completion.
+
+
+## 27 October — source-verified save, map-script and graphics interface batch (25 files)
+
+Candidates [0084–0108](0084-firered-quest-log-battle.md) add **25 distinct complete pinned FireRed headers** covering quest-log replay, flash save-sector structures, save-block relocation/encryption, new-game and map-warp state, script menus/movement/gifts, encounter tables, tileset assets, scanline DMA and palette bitfields. Each records exact Git blob SHA, line-anchored exhaustive non-comment source inventory, semantic interpretation and unresolved reviewer obligations. `batch-20261027-save-map-graphics-interfaces.json` is verified by the same fail-closed pinned source checker and CI workflow as the field-interface batch. These are **source-header preparations, not implementation, compiled or independent-review approvals**. **113/14,834 = 0.7618% prepared; 0/14,834 = 0.0000% independently approved; inventory 100%; FAIL_INCOMPLETE.** Exact-head CI must be checked before claiming a verified result.
