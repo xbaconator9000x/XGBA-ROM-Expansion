@@ -31,7 +31,7 @@ CHECKS = {
     "default_false": ("config", "this->preserveMatchingOnlyData = false;"),
     "config_override": ("config_impl", 'key == "preserve_matching_only_data"'),
     "load_removes": ("project", 'mapGroupsObj.remove("connections_include_order");'),
-    "load_condition": ("project", "if (!projectConfig.preserveMatchingOnlyData) {"),
+    "load_condition": ("project", '// Chuck the "connections_include_order" field, this is only for matching.\\n    if (!projectConfig.preserveMatchingOnlyData) {'),
     "load_retains_other_fields": ("project", "this->customMapGroupsData = mapGroupsObj;"),
     "save_appends_custom": ("project", "OrderedJson::append(&mapGroupsObj, this->customMapGroupsData);"),
     "save_global_calls_groups": ("project", "if (!saveMapGroups()) success = false;"),
