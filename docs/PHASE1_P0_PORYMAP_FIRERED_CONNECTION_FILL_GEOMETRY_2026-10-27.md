@@ -34,6 +34,8 @@ The analogous `FillWestConnection`/`FillEastConnection` branches (272–345) can
 4. Compile and inspect `CpuCopy16` call conventions under original agbcc, revision10 and modern GCC; test representative invalid/valid offsets only in a disposable harness, not by modifying authored production maps.
 5. Run Porymap Qt save/reopen and mGBA map-edge transitions, with source-project JSON and generated object bytes compared independently. Obtain independent whole-file review before approval.
 
+**Reproduce the source-anchored synthetic witness:** `python3 tools/verify_firered_connection_fill_geometry.py --self-test` exercises the geometry model and a negative source-anchor mutation. With the exact pinned FireRed and Porymap checkouts, `python3 tools/verify_firered_connection_fill_geometry.py --firered upstream/pokefirered --porymap upstream/porymap` additionally verifies both commit IDs, six Git blob hashes and producer/consumer anchors, emitting `audit-output/connection_fill_geometry.json`. The [source checker](../tools/verify_firered_connection_fill_geometry.py) is wired into [fieldmap boundary CI](../.github/workflows/phase1-fieldmap-save-boundary.yml), but **latest-head CI execution has not yet been confirmed**. No compiled/runtime result is implied.
+
 **Reproduce arithmetic only (synthetic, not compiled):**
 
 ```python
