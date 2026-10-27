@@ -1,0 +1,97 @@
+{
+  "schema": "xgba.phase1.independent_real_rom_probe_observations.v1",
+  "source": "GitHub Actions job log; parsed JSON result lines, not an in-game save trace",
+  "run_id": 40525408728,
+  "job_id": 122263516059,
+  "head_sha": "b6f0cee6a4b5ec25c2eb39eaf4340b65e8da10d8",
+  "source_pins": {
+    "pret/pokefirered": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+    "src/save.c": "36b960f375c92711aa49b99bdfe9c6b3a99d6b1c",
+    "include/save.h": "87fb9b615b434b58823d15688056695acda9feab"
+  },
+  "classification": "FRAME_ADVANCE_AND_HOST_FLASH_ONLY",
+  "independent_approvals": 0,
+  "observations": [
+    {
+      "case_name": "empty",
+      "mode": "probe",
+      "frames": 180,
+      "save_type": 3,
+      "save_status": 0,
+      "save_counter": 0,
+      "flash_byte_40": 255
+    },
+    {
+      "case_name": "slot0",
+      "mode": "probe",
+      "frames": 180,
+      "save_type": 3,
+      "save_status": 0,
+      "save_counter": 0,
+      "flash_byte_40": 0
+    },
+    {
+      "case_name": "both",
+      "mode": "probe",
+      "frames": 180,
+      "save_type": 3,
+      "save_status": 0,
+      "save_counter": 0,
+      "flash_byte_40": 0
+    },
+    {
+      "case_name": "malformed_id14",
+      "mode": "probe",
+      "frames": 180,
+      "save_type": 3,
+      "save_status": 0,
+      "save_counter": 0,
+      "flash_byte_40": 0
+    },
+    {
+      "case_name": "mixed_counters",
+      "mode": "probe",
+      "frames": 180,
+      "save_type": 3,
+      "save_status": 0,
+      "save_counter": 0,
+      "flash_byte_40": 0
+    },
+    {
+      "case_name": "older_slot_fallback",
+      "mode": "probe",
+      "frames": 180,
+      "save_type": 3,
+      "save_status": 0,
+      "save_counter": 0,
+      "flash_byte_40": 0
+    },
+    {
+      "case_name": "flash_program",
+      "mode": "program",
+      "frames": 183,
+      "save_type": 3,
+      "save_status": 0,
+      "save_counter": 0,
+      "flash_byte_40": 255
+    },
+    {
+      "case_name": "flash_verify",
+      "mode": "verify",
+      "frames": 180,
+      "save_type": 3,
+      "save_status": 0,
+      "save_counter": 0,
+      "flash_byte_40": 90
+    },
+    {
+      "case_name": "changed_header",
+      "mode": "probe",
+      "frames": 180,
+      "save_type": 3,
+      "save_status": 0,
+      "save_counter": 0,
+      "flash_byte_40": 255
+    }
+  ]
+}
