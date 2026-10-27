@@ -51,7 +51,7 @@ CHECKS = {
     "window_hooks_map": ("mainwindow", "connect(map, &Map::modified, [this, map] { markMapEdited(map); });"),
     "window_marks_target_dirty": ("mainwindow", "map->setHasUnsavedDataChanges(true);"),
     "mirror_lazy_load": ("connection", "return project ? project->loadMap(mapName) : nullptr;"),
-    "mirror_resolve_target": ("connection", "auto map = targetMap();"),
+    "mirror_resolve_target": ("connection", "MapConnection* MapConnection::findMirror() {"),
     "mirror_offset_propagates": ("connection", "connection->setOffset(-offset, false);"),
     "mirror_marks_target": ("connection", "m_parentMap->modify();"),
     "map_emits_modified": ("map", "emit modified();"),
@@ -59,7 +59,7 @@ CHECKS = {
     "save_all_maps": ("project", "for (auto map : this->maps) {"),
     "save_map_cleans": ("project", "map->setClean();"),
     "mirror_default": ("config_impl", "this->mirrorConnectingMaps = true;"),
-    "mirror_command_snapshot": ("editcommands", "this->mirrored = porymapConfig.mirrorConnectingMaps;"),
+    "mirror_command_snapshot": ("editcommands", "MapConnectionMove::MapConnectionMove("),
 }
 
 def check_contract(sources: dict[str, str]) -> None:
@@ -86,6 +86,11 @@ def check_contract(sources: dict[str, str]) -> None:
     if not (w.index("connect(project, &Project::mapLoaded, this, &MainWindow::onMapLoaded);")
             < w.index("void MainWindow::onMapLoaded(Map *map)")):
         raise ValueError("MainWindow map-loaded signal registration changed")
+    if "auto map = targetMap();" not in conn[conn.index("MapConnection* MapConnection::findMirror() {"):conn.index("MapConnection * MapConnection::createMirror() {")]:
+        raise ValueError("Mirror resolution no longer lazily loads target")
+    edits = sources["editcommands"]
+    if "this->mirrored = porymapConfig.mirrorConnectingMaps;" not in edits[edits.index("MapConnectionMove::MapConnectionMove("):edits.index("void MapConnectionMove::redo()")]:
+        raise ValueError("Mirrored edit command preference snapshot changed")
     if not (conn.index("void MapConnection::setOffset(int offset, bool mirror)")
             < conn.index("connection->setOffset(-offset, false);")
             < conn.index("markMapEdited();", conn.index("void MapConnection::setOffset(int offset, bool mirror)"))):
