@@ -147,7 +147,7 @@ def main():
     for key, (_, items) in FILES.items():
         for anchor in items:
             changed = dict(source)
-            changed[key] = changed[key].replace(anchor, "MUTATED_" + anchor, 1)
+            changed[key] = changed[key].replace(anchor, anchor[:1] + "MUTATED_" + anchor[1:])
             try:
                 validate(changed)
             except ValueError:
