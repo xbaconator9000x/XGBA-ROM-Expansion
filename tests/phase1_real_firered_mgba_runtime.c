@@ -36,22 +36,40 @@ int main(int argc, char **argv) {
     struct GBA *gba = (struct GBA *)core->board;
     unsigned hits[3] = {0, 0, 0};
     unsigned long long steps = 0;
+    uint32_t traceEndPc = 0, loadReturnPc = 0;
+    unsigned loadSaveArg = 0xFFFFFFFFU, loadReturnValue = 0xFFFFFFFFU, loadReturnHits = 0;
+    unsigned traceFrameLimit = 0;
     if (!strcmp(mode, "trace")) {
         uint32_t target[3];
         for (int j = 0; j < 3; ++j)
             target[j] = (uint32_t)strtoul(argv[6 + j], NULL, 0) & ~1U;
         /* Prefetched ARM PC is +8 in ARM mode and +4 in Thumb mode. */
-        while (core->frameCounter(core) < 180 && steps < 100000000ULL) {
+        traceFrameLimit = 720; /* observe save-loader return, not just boot */
+        while (core->frameCounter(core) < traceFrameLimit && steps < 100000000ULL) {
             struct ARMCore *cpu = gba->cpu;
             uint32_t pc = (uint32_t)cpu->gprs[ARM_PC];
             uint32_t executing = pc - (cpu->executionMode == MODE_THUMB ? 4U : 8U);
-            for (int j = 0; j < 3; ++j)
-                if (executing == target[j]) ++hits[j];
+            traceEndPc = executing;
+            if (loadReturnPc && executing == loadReturnPc) {
+                ++loadReturnHits;
+                loadReturnValue = (unsigned)cpu->gprs[ARM_R0] & 0xFFU;
+                loadReturnPc = 0;
+            }
+            for (int j = 0; j < 3; ++j) {
+                if (executing == target[j]) {
+                    ++hits[j];
+                    if (j == 0) {
+                        loadSaveArg = (unsigned)cpu->gprs[ARM_R0] & 0xFFU;
+                        loadReturnPc = (uint32_t)cpu->gprs[ARM_LR] & ~1U;
+                    }
+                }
+            }
             core->step(core);
             ++steps;
+            if (core->frameCounter(core) >= 180 && loadReturnHits > 0) break;
         }
         if (core->frameCounter(core) < 180)
-            fail("100-million-instruction trace budget exhausted before frame 180");
+            fail("trace budget exhausted before frame 180");
     } else {
         for (int i = 0; i < 180; ++i) {
             core->runFrame(core);
@@ -86,8 +104,9 @@ int main(int argc, char **argv) {
         for (int i = 0; i < 3; ++i) core->runFrame(core);
     }
     if (!strcmp(mode, "verify") && before != 0x5A) fail("Flash1M byte not restored from physical save file");
-    printf("{\"mode\":\"%s\",\"frames\":%u,\"save_type\":%u,\"save_status\":%u,\"save_counter\":%u,\"flash_byte_40\":%u,\"trace_steps\":%llu,\"load_game_save_entry_hits\":%u,\"get_save_valid_status_entry_hits\":%u,\"copy_save_slot_data_entry_hits\":%u}\n",
-        mode, core->frameCounter(core), type, status, counter, before, steps, hits[0], hits[1], hits[2]);
+    printf("{\"mode\":\"%s\",\"frames\":%u,\"save_type\":%u,\"save_status\":%u,\"save_counter\":%u,\"flash_byte_40\":%u,\"trace_steps\":%llu,\"load_game_save_entry_hits\":%u,\"get_save_valid_status_entry_hits\":%u,\"copy_save_slot_data_entry_hits\":%u,\"load_game_save_arg\":%u,\"load_game_save_return_hits\":%u,\"load_game_save_return_value\":%u,\"trace_end_pc\":%u,\"trace_frame_limit\":%u}\n",
+        mode, core->frameCounter(core), type, status, counter, before, steps, hits[0], hits[1], hits[2],
+        loadSaveArg, loadReturnHits, loadReturnValue, traceEndPc, traceFrameLimit);
     core->deinit(core);
     free(video);
     return 0;
