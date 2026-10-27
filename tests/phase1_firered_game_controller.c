@@ -149,6 +149,16 @@ int main(int argc, char **argv) {
         }
         if (save->dirty && !first_dirty) first_dirty = frame + 1;
     }
+    /* Fail closed: no Flash1M baseline means no valid zero-change observation.
+     * The environment override is an explicit harness-only negative control;
+     * it never writes emulator memory or the cartridge save device. */
+    if (getenv("XGBA_PHASE1_FORCE_MISSING_BASELINE"))
+        baseline_frame = 0;
+    if (!baseline || baseline_frame == 0 || baseline_size != 131072 ||
+        gba->memory.savedata.type != GBA_SAVEDATA_FLASH1M ||
+        !gba->memory.savedata.data ||
+        GBASavedataSize(&gba->memory.savedata) != baseline_size)
+        die("Flash1M baseline/final mapping unavailable; observation invalid");
     screen_last = digest(video, 256 * 160 * sizeof(*video));
     unsigned changed_bytes = 0;
     if (baseline && gba->memory.savedata.data &&
@@ -159,11 +169,13 @@ int main(int argc, char **argv) {
     uint32_t sb2 = core->busRead32(core, (uint32_t)strtoul(argv[7], NULL, 0));
     unsigned marker = (sb2 >= 0x02000000U && sb2 < 0x0203F000U)
         ? core->busRead8(core, sb2 + 0xB80U) : 0xFFFFFFFFU;
-    printf("{\"mode\":\"controller\",\"frames\":%u,\"input_events\":%u,"
+    uint32_t player_name_word = (sb2 >= 0x02000000U && sb2 < 0x0203F000U)
+        ? core->busRead32(core, sb2) : 0xFFFFFFFFU;
+    printf("{\"mode\":\"controller\",\"frames\":%u,\"input_events\":%u,
            "\"save_type\":%u,\"baseline_frame\":%u,\"flash_changed_bytes\":%u,"
            "\"frames_with_changed_flash\":%u,\"first_flash_change_frame\":%u,"
            "\"first_dirty_frame\":%u,\"save_status\":%u,\"save_counter\":%u,"
-           "\"saveblock2_marker\":%u,\"screen_hash_frame180\":\"%016llx\","
+           "\"saveblock2_marker\":%u,\"saveblock2_player_name_u32\":%u,\"screen_hash_frame180\":\"%016llx\","
            "\"screen_hash_final\":\"%016llx\",\"host_flash_writes\":0,"
            "\"trace_mode\":%s,\"trace_start_frame\":%u,\"trace_steps\":%llu,"
            "\"start_menu_save_hits\":%u,\"save_dialog_do_save_hits\":%u,"
@@ -191,7 +203,7 @@ int main(int argc, char **argv) {
            first_change, first_dirty,
            core->busRead16(core, (uint32_t)strtoul(argv[5], NULL, 0)),
            core->busRead32(core, (uint32_t)strtoul(argv[6], NULL, 0)),
-           marker, (unsigned long long)screen_first, (unsigned long long)screen_last,
+           marker, player_name_word, (unsigned long long)screen_first, (unsigned long long)screen_last,
            tracing ? "true" : "false", tracing ? 181U : 0U, trace_steps,
            hits[0], hits[1], hits[2], first_hit_frame[0], first_hit_frame[1],
            first_hit_frame[2], first_try_save_arg,

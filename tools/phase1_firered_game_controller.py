@@ -4,11 +4,13 @@ import argparse
 import hashlib
 import json
 import shutil
+import struct
+import os
 import subprocess
 from pathlib import Path
 
 TRACE_CASES = ("menu_navigation", "pallet_null_layout", "pallet_valid",
-               "pallet_save_navigation", "pallet_save_dense_confirm")
+               "pallet_save_navigation", "pallet_save_dense_confirm", "cold_boot")
 
 def sha(p):
     return hashlib.sha256(Path(p).read_bytes()).hexdigest()
@@ -20,6 +22,8 @@ def make_schedule(name):
     e = []
     if name == "no_input":
         return e
+    if name == "cold_boot":
+        return make_schedule("pallet_valid")
     pulse(e, 260, 0x8)  # START
     if name == "title_continue":
         for f in (390, 520, 680, 850, 980):
@@ -99,6 +103,7 @@ def main(a):
         assert len(lines) == 1, (name, p.stdout[-500:])
         d = lines[0]
         assert d["frames"] >= budget and d["host_flash_writes"] == 0, (name, d)
+        assert d["save_type"] == 3 and d["baseline_frame"] > 0, (name, "Flash1M baseline absent", d)
         assert d["trace_mode"] == (name in TRACE_CASES), (name, d)
         if name in TRACE_CASES:
             assert d["trace_steps"] > 0, (name, "missing instruction trace", d)
@@ -118,7 +123,13 @@ def main(a):
             assert d["field_get_player_input_hits"] > 0 and d["show_start_menu_hits"] > 0, d
         if name == "pallet_save_dense_confirm":
             assert d["start_menu_save_hits"] > 0, ("Save cursor path regressed", d)
+            assert d["save_dialog_do_save_hits"] > 0 and d["try_saving_data_entry_hits"] > 0, (
+                "Compiled in-game save callsite not observed", d)
+            assert d["flash_changed_bytes"] > 0 and d["save_counter"] == 1, (
+                "No native Flash transaction/counter increment", d)
         after = sha(save)
+        if name == "pallet_save_dense_confirm":
+            assert before != after, ("No persisted game-controlled Flash write", before, after)
         record = {
             "case": name, "source_fixture": "synthetic_" + fixture,
             "input_schedule_sha256": sha(schedule), "before_sha256": before,
@@ -162,12 +173,118 @@ def main(a):
                           "saveblock1_layout_id": d["saveblock1_layout_id"]}),
               flush=True)
         results.append(record)
+
+    # Validate physical Flash written by the compiled game before cold boot.
+    # Source-pinned save.c rotates all 14 logical sectors into physical slot 1
+    # on the first normal save (counter 1); each sector is 4096 bytes with
+    # id/checksum/signature/counter at 0xFF4/0xFF6/0xFF8/0xFFC.
+    dense = next(x for x in results if x["case"] == "pallet_save_dense_confirm")
+    generated = root / "pallet_save_dense_confirm.sav"
+    flash = generated.read_bytes()
+    assert len(flash) == 131072, "Game-generated Flash must be 128 KiB"
+    ids = []
+    for physical in range(14, 28):
+        sector = flash[physical * 4096:(physical + 1) * 4096]
+        ident, stored_sum, signature, counter = struct.unpack_from("<HHII", sector, 0xFF4)
+        assert signature == 0x08012025 and counter == 1, (
+            "Game-generated slot1 signature/counter invalid", physical, ident, signature, counter)
+        assert 0 <= ident < 14, ("Game-generated sector ID invalid", physical, ident)
+        # save.c zero-initializes the sector before copying the sized payload,
+        # so a full 0xF80 checksum equals the source-sized checksum.
+        words = struct.unpack_from("<992I", sector, 0)
+        total = sum(words) & 0xFFFFFFFF
+        computed = ((total >> 16) + total) & 0xFFFF
+        assert stored_sum == computed, (
+            "Game-generated sector checksum mismatch", physical, ident, stored_sum, computed)
+        ids.append(ident)
+    assert sorted(ids) == list(range(14)), ("Missing/duplicate game-written sectors", ids)
+    assert dense["native"]["saveblock2_player_name_u32"] == 0xFFBEBFCD, (
+        "Expected synthetic RED player name absent before cold boot", dense["native"])
+
+    # A *new emulator process* loads the physical .sav produced by the real
+    # controller-driven TrySavingData path. No host writes and no save-menu
+    # confirmations are permitted on this second boot.
+    cold = root / "cold_boot_game_generated.sav"
+    shutil.copyfile(generated, cold)
+    cold_before = sha(cold)
+    cold_keys = root / "cold_boot.keys"
+    cold_keys.write_text("".join(f"{f} {keys:03x}\\n" for f, keys in make_schedule("cold_boot")))
+    command = [a.probe, a.rom, str(cold), str(cold_keys), "2400",
+               a.status, a.counter, a.sb2,
+               a.start_menu_save, a.dialog_do_save, a.try_saving_data,
+               a.title_task, a.init_main_menu, a.execute_main_menu,
+               a.return_to_field, a.continue_saved_game,
+               a.return_field_local, a.overworld, a.cb1_overworld,
+               a.show_start_menu, a.field_get_player_input, a.gmain, a.sb1]
+    p = subprocess.run(command, capture_output=True, text=True, timeout=900, check=False)
+    if p.returncode:
+        raise RuntimeError(f"cold boot: native probe rc={p.returncode}, stderr={p.stderr[-1500:]}")
+    records = [json.loads(line) for line in p.stdout.splitlines()
+               if line.startswith('{"mode":"controller"')]
+    assert len(records) == 1, ("Cold boot missing native result", p.stdout[-500:])
+    cb = records[0]
+    assert cb["trace_mode"] and cb["trace_steps"] > 0 and cb["frames"] >= 2400
+    assert cb["host_flash_writes"] == 0 and cb["save_type"] == 3 and cb["baseline_frame"] > 0
+    assert (cb["save_status"], cb["save_counter"]) == (1, 1), (
+        "Cold boot did not validate newly written slot", cb)
+    assert (cb["saveblock1_map_group"], cb["saveblock1_map_num"],
+            cb["saveblock1_layout_id"]) == (3, 0, 78), (
+        "Cold boot did not restore authored PalletTown player map", cb)
+    assert cb["saveblock2_player_name_u32"] == 0xFFBEBFCD and cb["saveblock2_marker"] == 0xA5, (
+        "Cold boot did not recover named player and original payload", cb)
+    assert cb["field_get_player_input_hits"] > 0 and cb["callback2_overworld_frames"] > 0, (
+        "Cold boot failed to recover playable field", cb)
+    assert cb["try_saving_data_entry_hits"] == 0 and cb["flash_changed_bytes"] == 0, (
+        "Cold boot control unexpectedly performed a second save", cb)
+    assert sha(cold) == cold_before, "Cold boot modified physical save without Save command"
+    cold_record = {
+        "case": "cold_boot_game_generated",
+        "source_fixture": "physical_flash_written_by_compiled_TrySavingData",
+        "before_sha256": cold_before, "after_sha256": sha(cold),
+        "physical_save_changed": False, "native": cb,
+        "slot1_sector_ids": ids,
+        "slot1_all_sector_checksums_verified": True,
+        "named_player_map_and_field_recovered": True,
+        "try_saving_data_return_status_not_traced": True,
+        "phase1_gate": "FAIL_INCOMPLETE", "independent_approval": False,
+    }
+    (root / "cold_boot_game_generated.json").write_text(
+        json.dumps(cold_record, indent=2, sort_keys=True) + "\\n")
+    results.append(cold_record)
+    dense["game_controlled_flash_and_coldboot_observed"] = True
+    (root / "pallet_save_dense_confirm.json").write_text(
+        json.dumps(dense, indent=2, sort_keys=True) + "\\n")
+    print(json.dumps({
+        "case": "cold_boot_game_generated",
+        "physical_save_sha256": cold_before,
+        "slot1_sector_ids": ids,
+        "save_status": cb["save_status"], "save_counter": cb["save_counter"],
+        "player_name_u32": cb["saveblock2_player_name_u32"],
+        "map_group": cb["saveblock1_map_group"], "map_num": cb["saveblock1_map_num"],
+        "layout_id": cb["saveblock1_layout_id"],
+        "field_input_hits": cb["field_get_player_input_hits"],
+        "try_saving_data_entry_hits": cb["try_saving_data_entry_hits"],
+        "host_flash_writes": cb["host_flash_writes"],
+    }), flush=True)
+
+    # Deliberate missing-baseline negative control. The native probe must fail,
+    # rather than report zero Flash mutations from an uninitialized baseline.
+    bad_env = os.environ.copy()
+    bad_env["XGBA_PHASE1_FORCE_MISSING_BASELINE"] = "1"
+    p = subprocess.run([a.probe, a.rom, str(cold), str(cold_keys), "180",
+                        a.status, a.counter, a.sb2],
+                       capture_output=True, text=True, env=bad_env, timeout=120, check=False)
+    assert p.returncode != 0 and "Flash1M baseline/final mapping unavailable" in p.stderr, (
+        "Missing-baseline negative control did not fail closed", p.returncode, p.stderr[-400:])
+    print("Native missing-Flash-baseline negative control rejected as required", flush=True)
     (root / "controller_summary.json").write_text(json.dumps({
         "cases": results, "new_machine_indexed_files": 0,
         "analyst_prepared_complete_file_reviews": 0, "independent_approvals": 0,
         "phase1_gates": "FAIL_INCOMPLETE",
-        "limits": ["No TrySavingData PC-entry witness", "No demonstrated game-generated cold-boot player-state recovery",
-                   "Synthetic save source", "Controller schedule not equivalent to human verified gameplay"],
+        "limits": ["TrySavingData entry observed but function return/result not yet traced",
+                   "Original playable fixture was synthetic, although subsequent Flash was game-written",
+                   "Controller schedule not equivalent to human verified gameplay",
+                   "No XGBA-expanded ROM interoperability or independent semantic approval"],
     }, indent=2, sort_keys=True) + "\n")
 
 if __name__ == "__main__":
