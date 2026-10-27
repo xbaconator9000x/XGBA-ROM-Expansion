@@ -134,7 +134,7 @@ int main(void) {
   program(0x1234,0x00);
   program(0x1234,0xFF);
   check(bytes[0x10000+0x1234]==0xFF,"emulator direct byte overwrite");
-  printf("{\"compiled_pinned_functions\":5,\"assertions\":%d,\"sector_programs\":32,\"chip_erase\":true,\"sector_erase\":true,\"invalid_bank_rejected\":true,\"flash512_upgrade\":true,\"full_emulator_executed\":false,\"phase1_gate\":\"FAIL_INCOMPLETE\"}\n",checks);
+  printf("{\"compiled_pinned_functions\":6,\"assertions\":%d,\"sector_programs\":32,\"chip_erase\":true,\"sector_erase\":true,\"invalid_bank_rejected\":true,\"flash512_upgrade\":true,\"full_emulator_executed\":false,\"phase1_gate\":\"FAIL_INCOMPLETE\"}\n",checks);
   free(bytes);
   return 0;
 }
