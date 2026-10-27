@@ -56,6 +56,10 @@ int main(int argc, char **argv) {
 
     // Reopen through actual MainWindow::initialize -> openProject, including
     // setProjectUI and map-list initialization (previous bypass crashed).
+    // MainWindow constructor sets these names; match them BEFORE resolving
+    // QStandardPaths::AppDataLocation for the startup recent-project config.
+    QCoreApplication::setOrganizationName("pret");
+    QCoreApplication::setApplicationName("porymap");
     porymapConfig.load();
     porymapConfig.addRecentProject(root);
     porymapConfig.reopenOnLaunch = true;
@@ -63,12 +67,16 @@ int main(int argc, char **argv) {
     porymapConfig.checkForUpdates = false;
     porymapConfig.showProjectLoadingScreen = false;
     porymapConfig.shownInGameReloadMessage = true;
-    porymapConfig.save();
+    require(porymapConfig.save(), "could not persist startup recent-project config");
+    require(porymapConfig.getRecentProject() == root, "recent project not configured");
     {
         MainWindow window(nullptr);
         std::cerr << "PHASE1_GUI_STAGE real_open_project_begin" << std::endl;
         window.initialize();
-        std::cerr << "PHASE1_GUI_STAGE real_open_project_done" << std::endl;
+        std::cerr << "PHASE1_GUI_STAGE real_open_project_done recent="
+                  << porymapConfig.getRecentProject().toStdString()
+                  << " reopen=" << porymapConfig.reopenOnLaunch
+                  << " manually_closed=" << porymapConfig.projectManuallyClosed << std::endl;
         require(window.editor && window.editor->project,
                 "MainWindow::openProject did not initialize real Editor/Project");
         Project *project = window.editor->project;
