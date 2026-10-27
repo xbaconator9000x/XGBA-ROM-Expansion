@@ -19,17 +19,17 @@ static uint64_t digest(const void *data, size_t size) {
     return h;
 }
 int main(int argc, char **argv) {
-    if (argc != 8 && argc != 11) die("usage: controller ROM SAV EVENTS FRAMES STATUS_ADDR COUNTER_ADDR SB2_PTR_ADDR [START_MENU_SAVE DO_SAVE TRY_SAVING_DATA]");
+    if (argc != 8 && argc != 16) die("usage: controller ROM SAV EVENTS FRAMES STATUS_ADDR COUNTER_ADDR SB2_PTR_ADDR [START_MENU_SAVE DO_SAVE TRY_SAVING_DATA TITLE_TASK INIT_MAIN EXEC_MAIN RETURN_FIELD CONTINUE_GAME]");
     char *end;
     unsigned limit = (unsigned)strtoul(argv[4], &end, 10);
     if (*end || limit < 180 || limit > 5000) die("invalid frame budget");
-    const int tracing = argc == 11;
-    uint32_t targets[3] = {0, 0, 0};
-    unsigned hits[3] = {0, 0, 0}, first_hit_frame[3] = {0, 0, 0};
+    const int tracing = argc == 16;
+    uint32_t targets[8] = {0};
+    unsigned hits[8] = {0}, first_hit_frame[8] = {0};
     unsigned first_try_save_arg = 0xFFFFFFFFU;
     unsigned long long trace_steps = 0;
     if (tracing) {
-        for (unsigned i = 0; i < 3; ++i) {
+        for (unsigned i = 0; i < 8; ++i) {
             char *tail;
             unsigned long value = strtoul(argv[8 + i], &tail, 0);
             if (*tail || value < 0x08000000UL || value >= 0x0A000000UL)
@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
                 struct ARMCore *cpu = gba->cpu;
                 uint32_t executing = (uint32_t)cpu->gprs[ARM_PC]
                     - (cpu->executionMode == MODE_THUMB ? 4U : 8U);
-                for (unsigned j = 0; j < 3; ++j) {
+                for (unsigned j = 0; j < 8; ++j) {
                     if (executing == targets[j]) {
                         ++hits[j];
                         if (!first_hit_frame[j]) first_hit_frame[j] = frame + 1;
@@ -132,7 +132,12 @@ int main(int argc, char **argv) {
            "\"start_menu_save_hits\":%u,\"save_dialog_do_save_hits\":%u,"
            "\"try_saving_data_entry_hits\":%u,\"first_start_menu_save_frame\":%u,"
            "\"first_save_dialog_frame\":%u,\"first_try_saving_data_frame\":%u,"
-           "\"first_try_save_arg\":%u,\"game_save_callsite_verified\":false}\n",
+           "\"first_try_save_arg\":%u,\"title_task_hits\":%u,"
+           "\"init_main_menu_hits\":%u,\"execute_main_menu_hits\":%u,"
+           "\"return_to_field_hits\":%u,\"continue_saved_game_hits\":%u,"
+           "\"first_title_task_frame\":%u,\"first_init_main_menu_frame\":%u,"
+           "\"first_execute_main_menu_frame\":%u,\"first_return_to_field_frame\":%u,"
+           "\"first_continue_saved_game_frame\":%u,\"game_save_callsite_verified\":false}\n",
            core->frameCounter(core), count, gba->memory.savedata.type,
            baseline_frame, changed_bytes, frames_with_changed_data,
            first_change, first_dirty,
@@ -141,7 +146,10 @@ int main(int argc, char **argv) {
            marker, (unsigned long long)screen_first, (unsigned long long)screen_last,
            tracing ? "true" : "false", tracing ? 181U : 0U, trace_steps,
            hits[0], hits[1], hits[2], first_hit_frame[0], first_hit_frame[1],
-           first_hit_frame[2], first_try_save_arg);
+           first_hit_frame[2], first_try_save_arg,
+           hits[3], hits[4], hits[5], hits[6], hits[7],
+           first_hit_frame[3], first_hit_frame[4], first_hit_frame[5],
+           first_hit_frame[6], first_hit_frame[7]);
     core->setKeys(core, 0);
     core->deinit(core);
     free(baseline);

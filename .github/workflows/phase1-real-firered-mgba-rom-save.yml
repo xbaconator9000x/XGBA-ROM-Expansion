@@ -44,6 +44,9 @@ jobs:
           git -C upstream/pokefirered hash-object include/save.h | grep -Fx 87fb9b615b434b58823d15688056695acda9feab
           git -C upstream/pokefirered hash-object src/save.c | grep -Fx 36b960f375c92711aa49b99bdfe9c6b3a99d6b1c
           git -C upstream/pokefirered hash-object src/start_menu.c | grep -Fx 88cc377cea556d3663aa5ea5f5bd4537cb29ea72
+          git -C upstream/pokefirered hash-object src/title_screen.c | grep -Fx 75f0e6743a2a84c906090df230bac7accb8dbe84
+          git -C upstream/pokefirered hash-object src/main_menu.c | grep -Fx 5cef7c46ea5dcaccbdb3698909e9fc23e7d00b9c
+          git -C upstream/pokefirered hash-object src/overworld.c | grep -Fx 339014da46ae8543143edc99ab72bf7496203a0d
           git -C upstream/pokefirered hash-object include/global.h | grep -Fx 77155b09014aa854fcf87260e6ad2969e222da53
       - name: Build real FireRed cartridge using pinned original agbcc
         run: |
@@ -195,7 +198,14 @@ jobs:
           start_menu_save=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="StartMenuSaveCallback" {print "0x"$1;exit}')
           dialog_do_save=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="SaveDialogCB_DoSave" {print "0x"$1;exit}')
           try_saving_data=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="TrySavingData" {print "0x"$1;exit}')
+          title_task=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="Task_TitleScreenMain" {print "0x"$1;exit}')
+          init_main_menu=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CB2_InitMainMenu" {print "0x"$1;exit}')
+          execute_main_menu=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="Task_ExecuteMainMenuSelection" {print "0x"$1;exit}')
+          return_to_field=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CB2_ReturnToField" {print "0x"$1;exit}')
+          continue_saved_game=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CB2_ContinueSavedGame" {print "0x"$1;exit}')
           test -n "$status" && test -n "$counter" && test -n "$sb2"
+          test -n "$title_task" && test -n "$init_main_menu" && test -n "$execute_main_menu"
+          test -n "$return_to_field" && test -n "$continue_saved_game"
           test -n "$start_menu_save" && test -n "$dialog_do_save" && test -n "$try_saving_data"
           printf 'Compiled save callsites: start=%s dialog=%s try=%s\n' "$start_menu_save" "$dialog_do_save" "$try_saving_data"
           python3 tools/phase1_firered_game_controller.py \
@@ -204,6 +214,9 @@ jobs:
             --status "$status" --counter "$counter" --sb2 "$sb2" \
             --start-menu-save "$start_menu_save" --dialog-do-save "$dialog_do_save" \
             --try-saving-data "$try_saving_data" \
+            --title-task "$title_task" --init-main-menu "$init_main_menu" \
+            --execute-main-menu "$execute_main_menu" \
+            --return-to-field "$return_to_field" --continue-saved-game "$continue_saved_game" \
             --output evidence/controller
           cp evidence/controller/*.json evidence/results/
       - name: Upload only text evidence, never source-built ROM or raw saves

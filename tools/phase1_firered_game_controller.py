@@ -59,7 +59,9 @@ def main(a):
         before = sha(save)
         command = [a.probe, a.rom, str(save), str(schedule), "2400", a.status, a.counter, a.sb2]
         if name == "menu_navigation":
-            command.extend((a.start_menu_save, a.dialog_do_save, a.try_saving_data))
+            command.extend((a.start_menu_save, a.dialog_do_save, a.try_saving_data,
+                            a.title_task, a.init_main_menu, a.execute_main_menu,
+                            a.return_to_field, a.continue_saved_game))
         p = subprocess.run(command, capture_output=True, text=True, timeout=900, check=False)
         if p.returncode:
             raise RuntimeError(f"{name}: native probe rc={p.returncode}, stderr={p.stderr[-1500:]}")
@@ -71,7 +73,10 @@ def main(a):
         if name == "menu_navigation":
             assert d["trace_steps"] > 0, (name, "missing instruction trace", d)
             for key in ("start_menu_save_hits", "save_dialog_do_save_hits",
-                        "try_saving_data_entry_hits", "first_try_save_arg"):
+                        "try_saving_data_entry_hits", "first_try_save_arg",
+                        "title_task_hits", "init_main_menu_hits",
+                        "execute_main_menu_hits", "return_to_field_hits",
+                        "continue_saved_game_hits"):
                 assert key in d, (name, key)
         after = sha(save)
         record = {
@@ -91,7 +96,12 @@ def main(a):
                           "trace_steps": d["trace_steps"],
                           "start_menu_save_hits": d["start_menu_save_hits"],
                           "save_dialog_do_save_hits": d["save_dialog_do_save_hits"],
-                          "try_saving_data_entry_hits": d["try_saving_data_entry_hits"]}),
+                          "try_saving_data_entry_hits": d["try_saving_data_entry_hits"],
+                          "title_task_hits": d["title_task_hits"],
+                          "init_main_menu_hits": d["init_main_menu_hits"],
+                          "execute_main_menu_hits": d["execute_main_menu_hits"],
+                          "return_to_field_hits": d["return_to_field_hits"],
+                          "continue_saved_game_hits": d["continue_saved_game_hits"]}),
               flush=True)
         results.append(record)
     (root / "controller_summary.json").write_text(json.dumps({
@@ -106,6 +116,8 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     for arg in ("rom", "fixtures", "probe", "status", "counter", "sb2", "output"):
         p.add_argument("--" + arg, required=True)
-    for arg in ("start_menu_save", "dialog_do_save", "try_saving_data"):
+    for arg in ("start_menu_save", "dialog_do_save", "try_saving_data",
+                "title_task", "init_main_menu", "execute_main_menu",
+                "return_to_field", "continue_saved_game"):
         p.add_argument("--" + arg.replace("_", "-"), required=True)
     main(p.parse_args())
