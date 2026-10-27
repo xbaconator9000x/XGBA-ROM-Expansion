@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - phase1/firered-mgba-real-rom-boot-save-20261028
+      - phase1/firered-mgba-save-loader-steptrace-20261028
     paths:
       - '.github/workflows/phase1-real-firered-mgba-rom-save.yml'
       - 'tests/phase1_real_firered_mgba_runtime.c'
@@ -86,6 +87,27 @@ jobs:
             cp "evidence/fixtures/$case.sav" "evidence/results/$case.sav"
             timeout 120s ./real-rom-probe upstream/pokefirered/pokefirered.gba "evidence/results/$case.sav" probe "$status" "$counter" | tee "evidence/results/$case.json"
           done
+          # Instruction-level PC entry witness. These are observations only:
+          # absence means the loader was not seen during this 180-frame window.
+          loader=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="LoadGameSave" {print "0x"$1;exit}')
+          valid=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="GetSaveValidStatus" {print "0x"$1;exit}')
+          copy=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CopySaveSlotData" {print "0x"$1;exit}')
+          test -n "$loader" && test -n "$valid" && test -n "$copy"
+          printf 'ELF trace targets: LoadGameSave=%s GetSaveValidStatus=%s CopySaveSlotData=%s\n' "$loader" "$valid" "$copy"
+          for case in slot0 malformed_id14 older_slot_fallback; do
+            cp "evidence/fixtures/$case.sav" "evidence/results/trace_$case.sav"
+            timeout 240s ./real-rom-probe upstream/pokefirered/pokefirered.gba "evidence/results/trace_$case.sav" trace "$status" "$counter" "$loader" "$valid" "$copy" | tee "evidence/results/trace_$case.json"
+          done
+          python3 - <<'PYTRACE'
+          from pathlib import Path
+          import json
+          for name in ("slot0","malformed_id14","older_slot_fallback"):
+              d=json.loads(Path(f"evidence/results/trace_{name}.json").read_text())
+              assert d["frames"]>=180 and d["trace_steps"]>0,(name,d)
+              for key in ("load_game_save_entry_hits","get_save_valid_status_entry_hits","copy_save_slot_data_entry_hits"):
+                  assert key in d,(name,key)
+          print("Instruction-level save-loader PC entry observations recorded; no recovery claim inferred")
+          PYTRACE
           cp evidence/fixtures/empty.sav evidence/results/flash_program.sav
           timeout 120s ./real-rom-probe upstream/pokefirered/pokefirered.gba evidence/results/flash_program.sav program "$status" "$counter" | tee evidence/results/flash_program.json
           python3 - <<'PY'
