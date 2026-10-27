@@ -6,6 +6,8 @@ on:
       - 'tools/mapjson_semantic_proof.py'
       - 'tools/clone_crossmap_semantics.py'
       - 'tools/map_alias_compiler_semantics.py'
+      - 'tools/verify_firered_mapview_save_boundary.py'
+      - 'tools/verify_firered_connection_fill_geometry.py'
       - '.github/workflows/compiled-firered-maps.yml'
 permissions:
   contents: read
@@ -21,6 +23,18 @@ jobs:
           git -C upstream/pokefirered fetch --quiet origin ce6406d8c2eaf46d543c8a2606de0c3cb1951982
           git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
           test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+      - name: Checkout pinned Porymap editor for cross-tool connection boundary
+        run: |
+          git clone --quiet --filter=blob:none https://github.com/huderlem/porymap.git upstream/porymap
+          git -C upstream/porymap fetch --quiet origin 26b919d7ff4b54152de010abd5bf344af2ebe116
+          git -C upstream/porymap checkout --quiet --detach 26b919d7ff4b54152de010abd5bf344af2ebe116
+      - name: Verify pinned saved-map-view and connection-fill source boundaries
+        run: |
+          python3 -m py_compile tools/verify_firered_mapview_save_boundary.py tools/verify_firered_connection_fill_geometry.py
+          python3 tools/verify_firered_mapview_save_boundary.py --self-test
+          python3 tools/verify_firered_connection_fill_geometry.py --self-test
+          python3 tools/verify_firered_mapview_save_boundary.py --root upstream/pokefirered
+          python3 tools/verify_firered_connection_fill_geometry.py --firered upstream/pokefirered --porymap upstream/porymap
       - name: Build original mapjson translator
         run: make -C upstream/pokefirered/tools/mapjson -j2
       - name: Compile all typed maps, layouts, warps, events and map groups
@@ -34,6 +48,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: xgba-phase1-all-425-maps-semantics
-          path: map-evidence/
+          path: |
+            map-evidence/
+            audit-output/fieldmap_save_boundary.json
+            audit-output/connection_fill_geometry.json
           retention-days: 90
           if-no-files-found: warn
