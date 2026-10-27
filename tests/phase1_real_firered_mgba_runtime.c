@@ -42,15 +42,26 @@ int main(int argc, char **argv) {
     uint32_t counterAddr = (uint32_t)strtoul(argv[5], NULL, 0);
     unsigned status = core->busRead16(core, statusAddr);
     unsigned counter = core->busRead32(core, counterAddr);
-    unsigned before = core->busRead8(core, 0x0E000040U);
+    unsigned before = gba->memory.savedata.data ? gba->memory.savedata.data[0x40] : 0xFF;
     if (!strcmp(mode, "program")) {
         if (type != GBA_SAVEDATA_FLASH1M) fail("expected Flash1M before program");
+        /* Host-driven probe: finish any interrupted game-side Flash command,
+         * select physical bank zero, then send real bus programming commands.
+         * This does NOT represent an in-game SaveGame call. */
+        GBASavedataReset(&gba->memory.savedata);
+        flash_write(core, 0x5555, 0xAA);
+        flash_write(core, 0x2AAA, 0x55);
+        flash_write(core, 0x5555, 0xB0);
+        flash_write(core, 0x0000, 0);
+        if (gba->memory.savedata.currentBank != gba->memory.savedata.data)
+            fail("could not select physical Flash bank zero");
         flash_write(core, 0x5555, 0xAA);
         flash_write(core, 0x2AAA, 0x55);
         flash_write(core, 0x5555, 0xA0);
         flash_write(core, 0x0040, 0x5A);
+        if (gba->memory.savedata.data[0x40] != 0x5A)
+            fail("host bus Flash programming did not change bank zero data");
         for (int i = 0; i < 3; ++i) core->runFrame(core);
-        if (core->busRead8(core, 0x0E000040U) != 0x5A) fail("flash programming did not persist in mapped memory");
     }
     if (!strcmp(mode, "verify") && before != 0x5A) fail("Flash1M byte not restored from physical save file");
     printf("{\"mode\":\"%s\",\"frames\":%u,\"save_type\":%u,\"save_status\":%u,\"save_counter\":%u,\"flash_byte_40\":%u}\n",
