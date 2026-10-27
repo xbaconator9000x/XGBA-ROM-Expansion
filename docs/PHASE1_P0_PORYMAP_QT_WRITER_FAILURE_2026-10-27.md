@@ -29,17 +29,25 @@ The underlying `OrderedJsonDoc::dump(QFile*)` returns **`void`**. It creates a `
 
 The same writer uses `QFile::WriteOnly`, not an atomic replace/commit protocol. In the presence of a failed or interrupted write, preservation of the original JSON and a recoverable multi-file transaction must be established separately. This dossier does not claim an observed partial-write incident.
 
-## PWRITE-002 — independent compiled Qt serializer witness
+## PWRITE-002 — the same unchecked result extends across six JSON writers and two text helpers
+
+A complete search of the pinned `src/project.cpp` finds **six `OrderedJsonDoc::dump` writer sites**, in `saveMapLayouts` (line 759), `saveMapGroups` (909), `saveRegionMapSections` (951), `saveWildMonData` (1046), `saveHealLocations` (1098) and `saveMap` (1442). Each checks opening the `QFile`, but not the dump, flush or close result before returning success. `saveWildMonData` may return early without writing when encounter data is not loaded; the finding concerns the branch where it does write.
+
+Two further helpers, `saveTextFile` (1714–1721) and `appendTextFile` (1724–1731), call `QFile::write(text.toUtf8())` without inspecting its signed byte count. When `saveMap` creates a new map (1335–1355), it invokes these helpers to create script/text files and append to `data/event_scripts.s`, **without checking their boolean returns** before proceeding to `map.json`. This is a separate new-map multi-file persistence obligation. A successful `map.json` write cannot prove that its companion scripts and includes were durably created.
+
+These are **eight source-located writer sites**, not eight demonstrated write failures or eight new file reviews. The same six pinned source blobs underlie the census. The source checker now guards all eight sites and new-map caller error propagation with additional mutation controls.
+
+## PWRITE-003 — independent compiled Qt serializer witness
 
 `tests/porymap_qt_writer_device.cpp` compiles the **actual pinned** `src/lib/orderedjson.cpp` against Qt6Core, verifies a real `QTemporaryFile` JSON round trip, then executes the same `OrderedJsonDoc` against Linux `/dev/full`, an intentionally write-failing device. It independently probes that the device really rejects writes, checks the resulting `QFile` flush/error in the harness, and statically verifies that `dump` returns `void`.
 
 **Evidence boundary:** This test executes the pinned Qt serializer, not `Project::saveMap`, `Project::saveMapGroups`, the GUI, or a real project save/reopen. The project-level propagation claim remains source-grounded. A passing CI result would establish only the isolated device test and source guards.
 
-`tools/phase1_porymap_qt_writer_failure.py` checks all six exact Git blobs, the call-chain anchors and nine fail-closed in-memory negative mutations. The dedicated workflow checks out the immutable Porymap commit, installs Qt6Core, compiles the serializer witness and archives machine-readable evidence. **Treat CI as unverified until it passes against the exact latest branch head.**
+`tools/phase1_porymap_qt_writer_failure.py` checks all six exact Git blobs, the call-chain anchors and fail-closed in-memory negative mutations. The dedicated workflow checks out the immutable Porymap commit, installs Qt6Core, compiles the serializer witness and archives machine-readable evidence. **Treat CI as unverified until it passes against the exact latest branch head.**
 
 ## Unresolved producer/consumer and failure boundaries
 
-1. Run a pinned full-editor Qt fixture with a writable project copied into a disposable directory. Inject a short write or ENOSPC on `map.json` and `map_groups.json`, then assert actual `saveCurrent` / `saveAll` return values, dirty flags, UI messages and on-disk JSON.
+1. Run a pinned full-editor Qt fixture with a writable project copied into a disposable directory. Inject a short write or ENOSPC on all six JSON writer sites and both text helpers, then assert actual `saveCurrent` / `saveAll` return values, dirty flags, UI messages and on-disk files. Test new-map creation with a failed `scripts.inc` creation or `event_scripts.s` append.
 2. Verify QFile/stream error observability after `close()` and actual GUI response to fault-injected saves. The pinned GUI source only shows a failure notification when the editor reports false; it does not prove any particular user-visible outcome during a real failed write.
 3. Exercise mirrored A→B connections, Save Current vs Save All, unknown JSON fields, map-group metadata, reload and partial multi-file writes. Preserve source provenance independently from generated FireRed connection records.
 4. Validate a crash-safe and lossless editor/ROM refresh protocol before accepting any generated native map or ROM output as authoritative.
