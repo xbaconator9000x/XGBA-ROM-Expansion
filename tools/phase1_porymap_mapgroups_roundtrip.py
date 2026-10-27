@@ -26,7 +26,7 @@ BLOBS = {
     "mainwindow": ("porymap", "src/mainwindow.cpp", "08ce1a7a599ef825967717b69626984cdc6d772b"),
     "connection": ("porymap", "src/core/mapconnection.cpp", "d2d3f0460c6a52669ca8f6856bfe7ec3103cd9e4"),
     "map": ("porymap", "src/core/map.cpp", "47b279919bd4afcc76b88f9eeecd459b3452989f"),
-    "editcommands": ("porymap", "src/core/editcommands.cpp", "684d98c7ea8b2c600a5fb8888831b95723e741f"),
+    "editcommands": ("porymap", "src/core/editcommands.cpp", "684d98c7ea8b2c600a5fb8888831b95723e741f3"),
 }
 
 # Exact source anchors, not approximate keyword counts. Any upstream change
