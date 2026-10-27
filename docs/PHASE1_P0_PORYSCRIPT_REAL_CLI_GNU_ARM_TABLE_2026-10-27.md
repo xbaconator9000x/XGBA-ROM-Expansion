@@ -1,6 +1,6 @@
 # Phase 1 P0 — actual pinned Poryscript CLI output to GNU ARM map-table object
 
-**27 October 2026.** Status: **TEST SUBMITTED / CI NOT YET VERIFIED / FAIL_INCOMPLETE**. This is a narrowly scoped producer/assembler/linker test using a synthetic input, not a FireRed stock ROM, mGBA execution, independent approval, or Phase 2 implementation.
+**27 October 2026.** Status: **EXACT-HEAD PINNED PRODUCER/PREPROCESSOR/GNU ARM COMPILED WITNESS PASSED / FAIL_INCOMPLETE**. This is a narrowly scoped producer/assembler/linker test using a synthetic input, not a FireRed stock ROM, mGBA execution, independent approval, or Phase 2 implementation.
 
 ## Why this packet is distinct
 
@@ -14,9 +14,9 @@ Draft PR #16 proved that a manually constructed Poryscript-emitter-shaped table 
 - Consumer: FireRed's five-byte tag/pointer reader and eight-byte conditional table reader remain pinned source anchors.
 - Build: exact FireRed `map_script` and `map_script_2` macro bodies are prepended to the **unmodified CLI output**. FireRed's pinned `preproc` is built from source and translates global labels before GNU ARM assembly. The fixture adds only a synthetic section directive and two symbolic map-script constants.
 
-## Observed failed control and expected fail-closed checks (new exact-head CI pending)
+## Observed failed control and passing compiled checks
 
-**Negative evidence from exact-head run #40505735342:** GNU ARM assembler rejected the direct Poryscript output at `XGBA_MapScripts::` (`junk at end of line`). The pinned FireRed Makefile runs `tools/preproc` before the assembler for data `.s` files, and the pinned preprocessor explicitly translates `::` to `label: ; .global label`. The revised checker now executes that actual build stage instead of assuming the CLI output is directly acceptable to GAS. This failure is a missing-stage fixture error, not a Poryscript or FireRed product defect. The new preprocessor-inclusive run remains unverified until exact-head CI completes.
+**Negative evidence from exact-head run #40505735342:** GNU ARM assembler rejected the direct Poryscript output at `XGBA_MapScripts::` (`junk at end of line`). The pinned FireRed Makefile runs `tools/preproc` before the assembler for data `.s` files, and the pinned preprocessor explicitly translates `::` to `label: ; .global label`. The revised checker now executes that actual build stage instead of assuming the CLI output is directly acceptable to GAS. This failure is a missing-stage fixture error, not a Poryscript or FireRed product defect. The corrected preprocessor-inclusive test **passed** at source head `54a6d9417b6d4a43551fc7a7f7fd79677a01af64` in [workflow #40505970655](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40505970655); this document-only update must still be checked at its new exact head.
 
 The checker requires the optimized and unoptimized CLI outputs to match for this deliberately simple fixture, verifies table record order and both terminators, and checks the GNU ARM object and linked `.rodata` bytes against explicit expected arrays.
 
@@ -24,7 +24,7 @@ Expected outer records: 2 × 5 bytes, followed by one-byte zero; conditional rec
 
 Seven in-memory assembly mutations (tag, outer sentinel, conditional variable, comparison value, pointer target, native macro pointer width and script payload) must be rejected by compilation or byte/relocation validation. These are regression controls, not independently observed gameplay defects.
 
-The actual output and object hashes are deliberately recorded by the CI runner rather than guessed in this document.
+The successful pinned GNU ARM run measured these SHA-256 values: CLI output `411a9e954470723a9b0186e74eaaa3544aad2f12658737e35fc320b9da1d4b7d`, unlinked `.rodata` `4f29b83ebbcd085627fb92d956889780c65956b98728e435cb79463a32f73234`, linked `.rodata` `f7915d62b201f52079c834b7996bed2e46f938d2a21a9ee1df20dd7dc5c6b2af`. The [evidence artifact #12735340866](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40505970655/artifacts/12735340866) contains the machine-readable result. All **7** negative controls passed. The optimized/unoptimized fixture output matched.
 
 ## Explicit unresolved boundaries and negative evidence
 
