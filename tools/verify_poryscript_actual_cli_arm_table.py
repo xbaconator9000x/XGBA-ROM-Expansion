@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import json
 import re
+import sys
 import shutil
 import struct
 import subprocess
@@ -65,7 +66,12 @@ def require(ok: bool, why: str) -> None:
 
 
 def call(argv: list[str], cwd: Path | None = None) -> str:
-    return subprocess.check_output(argv, cwd=cwd, text=True, stderr=subprocess.PIPE)
+    try:
+        return subprocess.check_output(argv, cwd=cwd, text=True, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as exc:
+        print("FAILED COMMAND:", " ".join(argv), file=sys.stderr)
+        print("STDERR:", exc.stderr, file=sys.stderr)
+        raise
 
 
 def pin(root: Path, revision: str, blobs: dict[str, str]) -> dict[str, str]:
@@ -108,7 +114,11 @@ def elf_section(blob: bytes, name: str) -> tuple[tuple[int, ...], bytes]:
 def compile_assembly(assembly: str, root: Path) -> dict:
     asm, obj, linked = (root / "fixture.s", root / "fixture.o", root / "fixture.elf")
     asm.write_text(assembly, encoding="utf-8")
-    call(["arm-none-eabi-as", "-mcpu=arm7tdmi", "-o", str(obj), str(asm)])
+    try:
+        call(["arm-none-eabi-as", "-mcpu=arm7tdmi", "-o", str(obj), str(asm)])
+    except subprocess.CalledProcessError:
+        print("FAILED ASSEMBLY INPUT:\n" + assembly[:8000], file=sys.stderr)
+        raise
     call(["arm-none-eabi-ld", "--section-start=.rodata=0x08000000",
           "-e", "XGBA_MapScripts", "-o", str(linked), str(obj)])
     object_data = obj.read_bytes()
