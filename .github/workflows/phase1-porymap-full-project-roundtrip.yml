@@ -36,7 +36,7 @@ jobs:
       - name: Install pinned Porymap Qt build prerequisites
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-base-dev-tools qmake6 libqt6svg6-dev libgl1-mesa-dev pkg-config g++
+          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-base-dev-tools qmake6 libqt6svg6-dev libgl1-mesa-dev pkg-config g++ gdb
       - name: Compile full pinned Porymap application with test entrypoint
         run: |
           set -euo pipefail
@@ -102,7 +102,16 @@ jobs:
           assert (dest/"data/maps/PalletTown/map.json").is_file()
           PY
           mkdir -p phase1-evidence/gui-config
+          set +e
           XDG_CONFIG_HOME="$PWD/phase1-evidence/gui-config" QT_QPA_PLATFORM=offscreen timeout 180s upstream-porymap/porymap-phase1-gui "$PWD/phase1-project-gui/pokefirered" | tee phase1-evidence/gui-save.log
+          gui_rc=${PIPESTATUS[0]}
+          set -e
+          if [ "$gui_rc" -ne 0 ]; then
+            echo "Real GUI harness exited $gui_rc; capturing native gdb backtrace (not a PASS)"
+            XDG_CONFIG_HOME="$PWD/phase1-evidence/gui-config" QT_QPA_PLATFORM=offscreen timeout 90s gdb -batch -ex "set pagination off" -ex run -ex "thread apply all bt 16" --args upstream-porymap/porymap-phase1-gui "$PWD/phase1-project-gui/pokefirered" > phase1-evidence/gui-gdb.log 2>&1 || true
+            tail -100 phase1-evidence/gui-gdb.log
+            exit "$gui_rc"
+          fi
           python3 - <<'PY'
           import json
           from pathlib import Path
@@ -125,6 +134,7 @@ jobs:
           name: phase1-porymap-full-project-qt-text-evidence
           path: |
             phase1-evidence/*.json
+            phase1-evidence/*.log
             phase1-porymap-source.json
             porymap-build.log
             porymap-gui-build.log

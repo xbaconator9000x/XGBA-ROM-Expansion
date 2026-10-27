@@ -58,17 +58,24 @@ int main(int argc, char **argv) {
     {
         MainWindow window(nullptr);
         window.initialize();
+        std::cerr << "PHASE1_GUI_STAGE window_initialized" << std::endl;
         require(window.editor, "MainWindow did not initialize real Editor");
         // MainWindow::openProject ordinarily installs this exact signal connection.
         require(QObject::connect(&project, SIGNAL(mapLoaded(Map*)), &window, SLOT(onMapLoaded(Map*))),
                 "cannot connect real Project mapLoaded to private MainWindow Qt slot");
         window.editor->setProject(&project);
+        std::cerr << "PHASE1_GUI_STAGE project_load_begin" << std::endl;
         require(project.load(), "full pinned project load failed");
+        std::cerr << "PHASE1_GUI_STAGE project_load_done" << std::endl;
+        std::cerr << "PHASE1_GUI_STAGE editor_setmap_begin" << std::endl;
         require(window.editor->setMap("PalletTown"), "real Editor::setMap failed");
+        std::cerr << "PHASE1_GUI_STAGE editor_setmap_done" << std::endl;
         Map *map = window.editor->map;
         require(map != nullptr && !map->getConnections().isEmpty(), "map connections absent");
         MapConnection *conn = map->getConnections().first();
+        std::cerr << "PHASE1_GUI_STAGE mirror_lookup_begin" << std::endl;
         MapConnection *mirror = conn->findMirror();
+        std::cerr << "PHASE1_GUI_STAGE mirror_lookup_done" << std::endl;
         require(mirror != nullptr, "expected authored Route1 mirror not found");
         Map *other = project.loadMap(conn->targetMapName());
         require(other != nullptr, "target map not loaded");
@@ -98,6 +105,7 @@ int main(int argc, char **argv) {
         require(map->hasUnsavedChanges(), "MainWindow did not mark current map dirty");
         require(other->hasUnsavedChanges(), "MainWindow did not mark mirrored map dirty");
         require(mirror->offset() == -(original + 1), "mirror not updated in memory");
+        std::cerr << "PHASE1_GUI_STAGE first_gui_save" << std::endl;
         save->trigger(); // Real QAction -> MainWindow::on_action_Save_triggered -> Editor::saveCurrent
         require(saveTriggers == 1, "GUI current-map QAction did not emit triggered");
         require(!map->hasUnsavedChanges(), "current-map GUI save did not clear dirty flag");
@@ -106,6 +114,7 @@ int main(int argc, char **argv) {
         require(other->hasUnsavedChanges(), "current-only save unexpectedly cleared mirror dirty flag");
         require(diskOffset(routePath, otherDirection, otherTarget) == -original,
                 "current-only save unexpectedly wrote Route1");
+        std::cerr << "PHASE1_GUI_STAGE save_project" << std::endl;
         saveAll->trigger(); // Real QAction -> MainWindow::save(false) -> Editor::saveAll
         require(allTriggers == 1, "GUI save-project QAction did not emit triggered");
         require(!other->hasUnsavedChanges(), "GUI save-all did not clean mirror");
@@ -121,6 +130,7 @@ int main(int argc, char **argv) {
         QFile full("/dev/full");
         require(full.link(palletPath), "cannot inject /dev/full symlink");
         require(QFileInfo(palletPath).isSymLink(), "injected failure path not symlink");
+        std::cerr << "PHASE1_GUI_STAGE injected_failure_gui_save" << std::endl;
         save->trigger(); // Actual GUI save QAction on a failing output device.
         require(saveTriggers == 2, "GUI failure save action not triggered");
         const bool dirtyAfterFailedGuiSave = map->hasUnsavedChanges();
