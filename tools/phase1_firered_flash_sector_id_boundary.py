@@ -94,10 +94,13 @@ def contract(f):
             "save pointer offset alignment drift")
 
     write = body(save, "u8 HandleSavingData(u8 saveType)")
-    ordered(write, [
-        "case SAVE_NORMAL:",
+    require("case SAVE_NORMAL:" in write and "case SAVE_LINK:" in write,
+            "normal save case boundaries missing")
+    normal = write.split("case SAVE_NORMAL:", 1)[1].split("case SAVE_LINK:", 1)[0]
+    ordered(normal, [
         "SaveSerializedGame();",
         "WriteSaveSectorOrSlot(FULL_SAVE_SLOT, gRamSaveSectorLocations);",
+        "break;",
     ], "normal save producer")
     read = body(save, "u8 LoadGameSave(u8 saveType)")
     ordered(read, [
