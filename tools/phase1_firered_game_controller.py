@@ -208,7 +208,7 @@ def main(a):
     shutil.copyfile(generated, cold)
     cold_before = sha(cold)
     cold_keys = root / "cold_boot.keys"
-    cold_keys.write_text("".join(f"{f} {keys:03x}\\n" for f, keys in make_schedule("cold_boot")))
+    cold_keys.write_text("".join(f"{f} {keys:03x}\n" for f, keys in make_schedule("cold_boot")))
     command = [a.probe, a.rom, str(cold), str(cold_keys), "2400",
                a.status, a.counter, a.sb2,
                a.start_menu_save, a.dialog_do_save, a.try_saving_data,
@@ -249,11 +249,11 @@ def main(a):
         "phase1_gate": "FAIL_INCOMPLETE", "independent_approval": False,
     }
     (root / "cold_boot_game_generated.json").write_text(
-        json.dumps(cold_record, indent=2, sort_keys=True) + "\\n")
+        json.dumps(cold_record, indent=2, sort_keys=True) + "\n")
     results.append(cold_record)
     dense["game_controlled_flash_and_coldboot_observed"] = True
     (root / "pallet_save_dense_confirm.json").write_text(
-        json.dumps(dense, indent=2, sort_keys=True) + "\\n")
+        json.dumps(dense, indent=2, sort_keys=True) + "\n")
     print(json.dumps({
         "case": "cold_boot_game_generated",
         "physical_save_sha256": cold_before,
