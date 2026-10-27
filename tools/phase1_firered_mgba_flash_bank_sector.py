@@ -51,7 +51,7 @@ def require(ok, message):
         raise RuntimeError(message)
 
 def sha(data):
-    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\\0" + data).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
 
 def fetch(repo, path):
     url = "https://raw.githubusercontent.com/" + repo + "/" + PINS[repo] + "/" + path
@@ -122,7 +122,7 @@ def main():
     negatives = negative_controls(raw)
     harness = args.harness.read_text()
     require(harness.count("/* PINNED_FUNCTIONS_INSERT */") == 1, "missing injection marker")
-    compiled = harness.replace("/* PINNED_FUNCTIONS_INSERT */", "\\n\\n".join(parts.values()))
+    compiled = harness.replace("/* PINNED_FUNCTIONS_INSERT */", "\n\n".join(parts.values()))
     with tempfile.TemporaryDirectory(prefix="xgba-flash-bank-") as d:
         cfile = Path(d) / "witness.c"
         binary = Path(d) / "witness"
@@ -146,7 +146,7 @@ def main():
         "evidence_scope": "five exact upstream C function bodies in stubbed host Flash bus; no native ROM/emulator",
     })
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\\n")
+    args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
     print(json.dumps(result, indent=2, sort_keys=True))
 
 if __name__ == "__main__":
