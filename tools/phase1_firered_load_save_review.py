@@ -54,7 +54,7 @@ DEPENDENCIES = {
     "src/berry_powder.c": ("void ApplyNewEncryptionKeyToBerryPowder(u32 encryptionKey)",),
     "include/malloc.h": ("#define HEAP_SIZE 0x1C000",),
     "ld_script_modern.ld": ("gHeap = .;", ". = 0x1C000;"),
-    "include/load_save.h": ("void MoveSaveBlocks_ResetHeap(void);", "void ApplyNewEncryptionKeyToAllEncryptedData(u32 encryptionKey);"),
+    "include/load_save.h": ("void ApplyNewEncryptionKeyToAllEncryptedData(u32 encryptionKey);",),
 }
 
 def git_blob(data):
@@ -98,6 +98,9 @@ def validate_dependencies(sources):
         for anchor in anchors:
             if sources[path].count(anchor) != 1:
                 raise ValueError("Pinned dependency anchor drift: " + path + ": " + anchor)
+
+    if sources['include/load_save.h'].count('void MoveSaveBlocks_ResetHeap(void);') != 2:
+        raise ValueError('Pinned duplicate relocation prototype drift')
 
 def negative_controls(sources):
     original = sources["src/load_save.c"]

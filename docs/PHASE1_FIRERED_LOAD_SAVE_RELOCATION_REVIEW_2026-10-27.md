@@ -4,7 +4,7 @@
 
 ## Whole-file coverage and inventory
 
-Read all 299 physical lines (including final newline), 13 direct includes, 21 function definitions, all EWRAM/IWRAM declarations, one REVISION conditional and all save data fields in this translation unit. The accompanying fail-closed verifier pins the source and eight dependency blobs, enumerates all 21 definitions, and rejects source/anchor mutations. This is source-level semantic preparation, not compiled ABI equivalence or runtime certification.
+Read all 298 physical source lines (with a trailing newline), 13 direct includes, 21 function definitions, all EWRAM/IWRAM declarations, one REVISION conditional and all save data fields in this translation unit. The accompanying fail-closed verifier pins the source and eight dependency blobs, enumerates all 21 definitions, and rejects source/anchor mutations. This is source-level semantic preparation, not compiled ABI equivalence or runtime certification.
 
 | Source line | Function | Full-file semantic responsibility |
 | --- | --- | --- |
@@ -39,7 +39,7 @@ Data declarations L16–41: LoadedSaveData contains five bag pocket arrays and m
 - src/reset_save_heap.c (blob 745270dc7415b869c302daaa7b9c2b2e5b2865f1), L9–27: ReloadSave resets EWRAM, calls SetSaveBlocksPointers before loading saved data and later initializes heap. Relocation must therefore tolerate startup/reset states as well as live migration.
 - src/overworld.c (blob 339014da46ae8543143edc99ab72bf7496203a0d), L394 onward: rekeys game stats; src/berry_powder.c (blob d5090e0ddcd47f11afb018e047b23c97b5a89bd8), L27 onward: rekeys berry powder. Both are reached by ApplyNewEncryptionKeyToAllEncryptedData.
 - include/malloc.h (blob bf89badc53a4cad8ba5615900d5014cc34f76fea) fixes HEAP_SIZE = 0x1C000. ld_script_modern.ld (blob e930243522bd21da40cc1a05de9a42b8ad409b46) places gHeap at the start of the EWRAM region and reserves 0x1C000. The heap backup must fit all three structures, with no overlapping live consumers.
-- include/load_save.h (blob 95de991a82204927d209a39e426f78633af0c04c) exposes relocation, bag and encryption interfaces. Its declarations alone do not prove callers, variant compatibility or execution reachability.
+- include/load_save.h (blob 95de991a82204927d209a39e426f78633af0c04c) exposes relocation, bag and encryption interfaces. It contains a duplicate MoveSaveBlocks_ResetHeap prototype, which the checker explicitly recognizes; its declarations alone do not prove callers, variant compatibility or execution reachability.
 
 ## Source-grounded risks and proof obligations
 
