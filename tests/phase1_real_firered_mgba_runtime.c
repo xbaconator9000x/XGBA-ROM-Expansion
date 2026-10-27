@@ -18,6 +18,7 @@ int main(int argc, char **argv) {
     const char *mode = argv[3];
     struct mCore *core = mCoreFind(argv[1]);
     if (!core) fail("mCoreFind did not recognize ROM");
+    fprintf(stderr, "stage: core identified\n");
     if (!core->init(core)) fail("mGBA core initialization failed");
     mCoreInitConfig(core, "xgba-phase1-real-rom");
     fprintf(stderr, "stage: core initialized\n");
