@@ -27,6 +27,10 @@ BLOBS = {
     "connection": ("porymap", "src/core/mapconnection.cpp", "d2d3f0460c6a52669ca8f6856bfe7ec3103cd9e4"),
     "map": ("porymap", "src/core/map.cpp", "47b279919bd4afcc76b88f9eeecd459b3452989f"),
     "editcommands": ("porymap", "src/core/editcommands.cpp", "684d98c7ea8b2c600a5fb8888831b95723e741f3"),
+    "parseutil": ("porymap", "src/core/parseutil.cpp", "a1c3e69daed3f04d7ed64e1a34bd95db56137ae2"),
+    "connection_h": ("porymap", "include/core/mapconnection.h", "40713d3a26157fce7a36465858e8273c78dc12f6"),
+    "mapmacro": ("firered", "asm/macros/map.inc", "83ef472c926ce767c9133ab9bd6922280b38bb2d"),
+    "fieldheader": ("firered", "include/global.fieldmap.h", "e2828ec0cb1439718e830fbef4366770b3b77b1c"),
 }
 
 # Exact source anchors, not approximate keyword counts. Any upstream change
@@ -60,6 +64,12 @@ CHECKS = {
     "save_map_cleans": ("project", "map->setClean();"),
     "mirror_default": ("config_impl", "this->mirrorConnectingMaps = true;"),
     "mirror_command_snapshot": ("editcommands", "MapConnectionMove::MapConnectionMove("),
+    "parse_numeric_offset": ("parseutil", "case QJsonValue::Double: return value.toInt();"),
+    "connection_signed_offset": ("connection_h", "int m_offset;"),
+    "mirror_negation_compare": ("connection", "a->m_offset == -b->m_offset"),
+    "mirror_negation_create": ("connection", "oppositeDirection(m_direction), -m_offset"),
+    "native_32bit_offset": ("mapmacro", r".4byte \\offset"),
+    "native_offset_unsigned": ("fieldheader", "/*0x04*/ u32 offset;"),
 }
 
 def check_contract(sources: dict[str, str]) -> None:
@@ -176,6 +186,8 @@ def main() -> None:
         "metadata_lost_by_default_model": True,
         "mirror_target_dirty_normal_gui_source_chain": True,
         "save_current_is_not_two_map_transaction": True,
+        "signed_int_min_reciprocal_negation_unrepresentable": True,
+        "signed_int_min_compiled_or_qt_tested": False,
         "qt_mirror_save_executed": False,
         "relative_order_of_63_ordered_maps_preserved_in_pinned_data": True,
         "compiled_equivalence_claimed": False,
