@@ -1,0 +1,57 @@
+name: Phase 1 pinned Porymap save write-acknowledgement boundary
+on:
+  push:
+    branches: ["phase1/**"]
+    paths:
+      - "tools/verify_porymap_save_write_ack.py"
+      - "docs/PHASE1_P0_PORYMAP_SAVE_WRITE_ACK_BOUNDARY_2026-10-27.md"
+      - ".github/workflows/phase1-porymap-save-write-ack.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-save-ack-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch immutable Porymap and FireRed source trees
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/porymap-save-ack"
+          while read -r repo sha; do
+            target="$RUNNER_TEMP/porymap-save-ack/$(basename "$repo")"
+            git init -q "$target"
+            git -C "$target" remote add origin "https://github.com/$repo.git"
+            git -C "$target" -c protocol.version=2 fetch -q --filter=blob:none --depth=1 origin "$sha"
+            git -C "$target" config remote.origin.promisor true
+            git -C "$target" config remote.origin.partialclonefilter blob:none
+            git -C "$target" update-ref refs/heads/pinned "$sha"
+            git -C "$target" symbolic-ref HEAD refs/heads/pinned
+            test "$(git -C "$target" rev-parse HEAD)" = "$sha"
+          done <<'PINS'
+          huderlem/porymap 26b919d7ff4b54152de010abd5bf344af2ebe116
+          pret/pokefirered ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          PINS
+      - name: Verify exact blobs, source control flow and fail-closed mutation controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/verify_porymap_save_write_ack.py
+          python3 tools/verify_porymap_save_write_ack.py --source-root "$RUNNER_TEMP/porymap-save-ack"
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          doc=json.loads(Path("audit-output/porymap_save_write_ack.json").read_text())
+          assert len(doc["source_blobs"])==7
+          assert doc["guarded_source_anchors"]==doc["negative_mutation_controls"]
+          assert doc["guarded_source_anchors"]>=30
+          assert doc["independent_approvals"]==0 and doc["phase1_gate"]=="FAIL_INCOMPLETE"
+          print("PINNED_PORYMAP_SAVE_ACK_SOURCE_PASS; no Qt execution or approvals claimed")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phase1-porymap-save-write-ack-source
+          path: audit-output/porymap_save_write_ack.json
+          retention-days: 90
