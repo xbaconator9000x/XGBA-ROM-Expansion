@@ -122,7 +122,8 @@ jobs:
           expected={
               "slot0": (1,0,0xA5),
               "both": (1,1,0x5A),
-              "mixed_counters": (1,2,0x5A),
+              # Counter 2 selects physical slot 0 via gSaveCounter % 2, despite slot 1 being valid.
+              "mixed_counters": (1,2,0xA5),
               "malformed_id14": (255,0,0xA5),
               "older_slot_fallback": (255,0,0xA5),
           }
