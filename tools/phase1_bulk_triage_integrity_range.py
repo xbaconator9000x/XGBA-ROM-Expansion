@@ -28,6 +28,8 @@ def verify(root, snapshot, register, upto, new_start):
     shards = []
     intervals = []
     for path in sorted(root.glob("batch-*.json")):
+        if path.name == "batch-config.json":
+            continue
         match = PATTERN.fullmatch(path.name)
         if not match:
             raise ValueError("Unexpected batch filename: " + path.name)
