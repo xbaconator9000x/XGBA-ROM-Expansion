@@ -12,6 +12,8 @@ The executable witness `tools/phase1_firered_mgba_compiled_flash_join.py` verifi
 | same | `src/load_save.c` / `CheckForFlashMemory` | `8b723dd044c6024b3671bb890b25b56a53f99ec5` |
 | `mgba-emu/mgba@fd9dc5c2cbf234365068855851107e762fc6211b` | `src/gba/savedata.c` / `GBASavedataReadFlash` | `fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb` |
 
+A fifth exact source file, `pret/pokefirered/src/agb_flash.c` at Git blob `08aeed1638e214a3cad8b28d103964ab24342fba`, is verified as **source-only** evidence. Its actual `ReadFlashId` writes the Flash unlock/ID commands, copies a Thumb reader into RAM, reads address +1 as the high byte and address +0 as the low byte, then issues the exit-ID commands. The checker asserts the ordered source anchors, but does not compile or execute this RAM-relocated function.
+
 The harness connects FireRed's `ReadFlashId` boundary to the two bytes returned by mGBA's actual `GBASavedataReadFlash`, in little-endian order. It stubs the physical GBA save bus, Flash setup descriptors, Flash timer, scheduler and memory bank. It uses C11, `-Werror`, and UBSan.
 
 ## Nine scoped positive/negative cases
