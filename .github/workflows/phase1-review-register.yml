@@ -6,6 +6,7 @@ on:
     paths:
       - "docs/phase1-disposition-candidates/**"
       - "tools/phase1_review_register_integrity.py"
+      - "tools/phase1_field_header_batch_verify.py"
       - ".github/workflows/phase1-review-register.yml"
   workflow_dispatch:
 
@@ -18,3 +19,11 @@ jobs:
         run: python3 tools/phase1_review_register_integrity.py --self-test
       - name: Validate unique identities, document links and count
         run: python3 tools/phase1_review_register_integrity.py
+      - name: Verify field-header batch negative controls
+        run: python3 tools/phase1_field_header_batch_verify.py --self-test
+      - name: Fetch exact pinned FireRed source for whole-file verification
+        run: |
+          git clone --quiet --filter=blob:none --no-checkout https://github.com/pret/pokefirered.git "$RUNNER_TEMP/pokefirered"
+          git -C "$RUNNER_TEMP/pokefirered" checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+      - name: Verify 25 source Git blobs and exhaustive header inventories
+        run: python3 tools/phase1_field_header_batch_verify.py --source-root "$RUNNER_TEMP/pokefirered"

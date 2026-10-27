@@ -75,8 +75,33 @@
 | `pret/pokefirered:constants/gba_constants.inc` | [0056](0056-firered-assembly-gba-constants.md) | pending independent review |
 | `pret/pokefirered:src/gpu_regs.c` | [0057](0057-firered-gpu-register-buffer-runtime.md) | pending independent review |
 | `pret/pokefirered:include/gpu_regs.h` | [0058](0058-firered-gpu-regs-public-api.md) | pending independent review |
+| `pret/pokefirered:include/field_camera.h` | [0059](0059-firered-field-camera.md) | pending independent review |
+| `pret/pokefirered:include/field_door.h` | [0060](0060-firered-field-door.md) | pending independent review |
+| `pret/pokefirered:include/field_effect.h` | [0061](0061-firered-field-effect.md) | pending independent review |
+| `pret/pokefirered:include/field_effect_helpers.h` | [0062](0062-firered-field-effect-helpers.md) | pending independent review |
+| `pret/pokefirered:include/field_effect_scripts.h` | [0063](0063-firered-field-effect-scripts.md) | pending independent review |
+| `pret/pokefirered:include/field_fadetransition.h` | [0064](0064-firered-field-fadetransition.md) | pending independent review |
+| `pret/pokefirered:include/field_message_box.h` | [0065](0065-firered-field-message-box.md) | pending independent review |
+| `pret/pokefirered:include/field_player_avatar.h` | [0066](0066-firered-field-player-avatar.md) | pending independent review |
+| `pret/pokefirered:include/field_poison.h` | [0067](0067-firered-field-poison.md) | pending independent review |
+| `pret/pokefirered:include/field_screen.h` | [0068](0068-firered-field-screen.md) | pending independent review |
+| `pret/pokefirered:include/field_screen_effect.h` | [0069](0069-firered-field-screen-effect.md) | pending independent review |
+| `pret/pokefirered:include/field_specials.h` | [0070](0070-firered-field-specials.md) | pending independent review |
+| `pret/pokefirered:include/field_tasks.h` | [0071](0071-firered-field-tasks.md) | pending independent review |
+| `pret/pokefirered:include/field_weather_effects.h` | [0072](0072-firered-field-weather-effects.md) | pending independent review |
+| `pret/pokefirered:include/field_weather_util.h` | [0073](0073-firered-field-weather-util.md) | pending independent review |
+| `pret/pokefirered:include/fldeff.h` | [0074](0074-firered-fldeff.md) | pending independent review |
+| `pret/pokefirered:include/coord_event_weather.h` | [0075](0075-firered-coord-event-weather.md) | pending independent review |
+| `pret/pokefirered:include/event_object_lock.h` | [0076](0076-firered-event-object-lock.md) | pending independent review |
+| `pret/pokefirered:include/heal_location.h` | [0077](0077-firered-heal-location.md) | pending independent review |
+| `pret/pokefirered:include/map_name_popup.h` | [0078](0078-firered-map-name-popup.md) | pending independent review |
+| `pret/pokefirered:include/map_preview_screen.h` | [0079](0079-firered-map-preview-screen.md) | pending independent review |
+| `pret/pokefirered:include/bike.h` | [0080](0080-firered-bike.md) | pending independent review |
+| `pret/pokefirered:include/bg_regs.h` | [0081](0081-firered-bg-regs.md) | pending independent review |
+| `pret/pokefirered:include/help_message.h` | [0082](0082-firered-help-message.md) | pending independent review |
+| `pret/pokefirered:include/intro.h` | [0083](0083-firered-intro.md) | pending independent review |
 
-**Count: 63 distinct pinned upstream whole-file identities prepared / 14,834 = 0.4247%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
+**Count: 88 distinct pinned upstream whole-file identities prepared / 14,834 = 0.4247%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
 
 ## 27 October — corrected duplicate and script interpreter ABI closure
 
@@ -147,3 +172,8 @@ The complete pinned [assembly GBA constants include](0056-firered-assembly-gba-c
 ## 27 October — GPU register buffering and public API closure
 
 Two complete pinned source files, [GPU register manager implementation](0057-firered-gpu-register-buffer-runtime.md) and [public header](0058-firered-gpu-regs-public-api.md), are now distinct analyst-prepared candidates. The implementation exposes a conditional 16-bit buffer boundary hazard for offset 95 and the header has one declaration without an identified definition; neither is claimed reachable in stock gameplay or a confirmed linker/runtime defect. **63/14,834 = 0.4247% prepared; 0/14,834 = 0.0000% independently approved; inventory 100%; FAIL_INCOMPLETE.** Exact-head CI remains to be checked.
+
+
+## 27 October — source-verified field/overworld interface batch (25 files)
+
+Candidates [0059–0083](0059-firered-field-camera.md) prepare **25 distinct complete pinned FireRed headers** covering camera, player movement, doors, field effects, warp/fade, weather, poison, message windows, bike, heal/respawn, previews and BG interfaces. Each candidate records its exact Git blob SHA, line-anchored exhaustive non-comment source inventory, semantic interpretation and unresolved independent-review obligations. The batch manifest `batch-20261027-field-interfaces.json` and `tools/phase1_field_header_batch_verify.py` check source hashes and full line-inventory equivalence, with fail-closed negative fixtures. These are declaration-level whole-file preparations, **not** implementation or consumer signoffs. **88/14,834 = 0.5932% prepared; 0/14,834 = 0.0000% independently approved; inventory 100%; FAIL_INCOMPLETE.** Exact-head CI remains unverified until workflow completion.
