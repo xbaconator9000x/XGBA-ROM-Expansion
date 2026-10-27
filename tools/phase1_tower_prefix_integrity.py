@@ -14,6 +14,8 @@ PIN = "ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
 BLOBS = {
     "src/cereader_tool.c": "395be0bcbed8454e645a9f5670cde3024eda508e",
     "src/save.c": "36b960f375c92711aa49b99bdfe9c6b3a99d6b1c",
+    "src/trainer_tower.c": "732b3f2ed31ed95d6476b9e111d53f759c448d81",
+    "data/specials.inc": "d880bf6b9dc9fd765f0b85e6d698411e3da81d5d",
     "src/util.c": "b32799584937a120a03b08897886f08adc033fce",
     "src/ereader_screen.c": "20ec25d0150084bc259de47038ac7d8c972dd268",
     "include/gba/isagbprint.h": "9c79e03e8e95c02b17361073eff841bd59a8311c",
@@ -54,6 +56,16 @@ ANCHORS = {
         r"ProgramFlashSectorAndVerify\(sector, savDataBuffer\)",
         r"ReadFlash\(sectorId, 0, \(u8 \*\)&gSaveDataBuffer, SECTOR_SIZE\)",
         r"\*\(u32 \*\)\(savDataBuffer\) = SPECIAL_SECTOR_SENTINEL",
+    ],
+    "src/trainer_tower.c": [
+        r"if\s*\(ReadTrainerTowerAndValidate\(\) == TRUE\)",
+        r"CEReaderTool_LoadTrainerTower\(&sTrainerTowerState->data\)",
+        r"floors_p\s*=\s*gTrainerTowerFloors\[challengeType\]",
+        r"if\s*\(!ReadTrainerTowerAndValidate\(\)\)",
+        r"TRAINER_TOWER\.validated\s*=\s*TRUE",
+    ],
+    "data/specials.inc": [
+        r"def_special ReadTrainerTowerAndValidate",
     ],
     "src/ereader_screen.c": [
         r"data->status = ValidateTrainerTowerData\(\(struct EReaderTrainerTowerSet \*\)gDecompressionBuffer\)",
@@ -304,6 +316,14 @@ def main():
     }
     if args.source_dir:
         report["pinned_sources"] = verify_sources(args.source_dir)
+        report["source_level_reachability"] = {
+            "fire_red_read_trainer_tower_and_validate_returns_false": True,
+            "trainer_tower_gameplay_uses_local_floor_fallback": True,
+            "gameplay_external_sector_load_branch_unreachable_under_pinned_source": True,
+            "external_sector_writer_still_reachable_from_ereader_screen": True,
+            "compiled_or_runtime_reachability_verified": False,
+            "evidence_kind": "pinned_source_static_control_flow_not_emulator",
+        }
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
