@@ -1,5 +1,10 @@
 name: Phase 1 Porymap map-group metadata round-trip witness
 on:
+  pull_request:
+    paths:
+      - 'tools/phase1_porymap_mapgroups_roundtrip.py'
+      - '.github/workflows/phase1-porymap-mapgroups-roundtrip.yml'
+      - 'docs/PHASE1_P0_PORYMAP_FIRERED_MAP_GROUPS_METADATA_ROUNDTRIP_2026-10-27.md'
   workflow_dispatch:
   push:
     paths:
