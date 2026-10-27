@@ -60,7 +60,8 @@ int main(int argc, char **argv) {
         window.initialize();
         require(window.editor, "MainWindow did not initialize real Editor");
         // MainWindow::openProject ordinarily installs this exact signal connection.
-        QObject::connect(&project, &Project::mapLoaded, &window, &MainWindow::onMapLoaded);
+        require(QObject::connect(&project, SIGNAL(mapLoaded(Map*)), &window, SLOT(onMapLoaded(Map*))),
+                "cannot connect real Project mapLoaded to private MainWindow Qt slot");
         window.editor->setProject(&project);
         require(project.load(), "full pinned project load failed");
         require(window.editor->setMap("PalletTown"), "real Editor::setMap failed");
