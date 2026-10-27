@@ -1,0 +1,48 @@
+{
+  "schema": "xgba-phase1-artifact-recovery-v1",
+  "repo": "xbaconator9000x/XGBA-ROM-Expansion",
+  "source_workflow_run": 40450431429,
+  "source_workflow_head": "467e9145b4fc952b573f0201a14781cacb26d11b",
+  "source_workflow_note": "Four successful shard jobs; reconciliation failed. Do not treat the workflow run as passing.",
+  "start": 3000,
+  "end_exclusive": 4000,
+  "prior_committed_total": 3000,
+  "analyst_prepared_baseline": 113,
+  "independent_approvals": 0,
+  "phase1_gate": "FAIL_INCOMPLETE",
+  "shards": [
+    {
+      "artifact_id": 12710461083,
+      "filename": "batch-003000-003249.json",
+      "offset": 3000,
+      "count": 250,
+      "zip_sha256": "a66f9fd73e1aee39f98b1624817bd3e3bdb2e3f1938b70aadacfcc2880ba5d6c",
+      "content_sha256": "50ab84ca14e22e6822d2e5a1bafdae31e98e10296a4c27e44fec3ebcc8aa75bc"
+    },
+    {
+      "artifact_id": 12710206799,
+      "filename": "batch-003250-003499.json",
+      "offset": 3250,
+      "count": 250,
+      "zip_sha256": "831a4d815fd41e8f5fb2143ffab25bbf74db2fbde0a0040ea3a0e7463695348d",
+      "content_sha256": "2ee45b5221c67366591afe61a876c5cf4b2c229330e3977a4b970a564562166a"
+    },
+    {
+      "artifact_id": 12709862325,
+      "filename": "batch-003500-003749.json",
+      "offset": 3500,
+      "count": 250,
+      "zip_sha256": "35e52df252b381a3e576cc4a75e1cc9e8389a18a58e9fa2128ed0f54dd99c7e4",
+      "content_sha256": "b0929e9c2cee9fd2bb1005e6c112e74976649da911f8134d62ec24b625000c57"
+    },
+    {
+      "artifact_id": 12710277445,
+      "filename": "batch-003750-003999.json",
+      "offset": 3750,
+      "count": 250,
+      "zip_sha256": "05644cb07603e88f5d66c0190db11d2d04fb9260b6f0ad816b15357a7d83a0f3",
+      "content_sha256": "3f6b5b410cc107417afa3e43ecf02f99e6fab54681f98448ed7af7b2926c422b"
+    }
+  ],
+  "scope": "Pinned-source machine-triage artifact recovery only; not whole-file semantic review, compiled/runtime proof or independent approval"
+}
