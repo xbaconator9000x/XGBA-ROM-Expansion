@@ -40,7 +40,7 @@ ANCHORS = {
 }
 
 def blob_sha(data):
-    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\\0" + data).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
 
 def validate_sources(data):
     if set(data) != set(BLOBS):
@@ -59,9 +59,9 @@ def contract(data):
                 raise ValueError("Cross-repo anchor drift: " + str((key,n,phrase)))
     le = data[(F,"src/agb_flash_le.c")].decode()
     em = data[(M,"include/mgba/internal/gba/savedata.h")].decode()
-    le_match = re.search(r"\\{ \\{ 0x([0-9A-Fa-f]+), 0x([0-9A-Fa-f]+) \\} \\} // ID", le)
-    sanyo = re.search(r"FLASH_SANYO_LE26FV10N1TS\\s*=\\s*(0x[0-9A-Fa-f]+)", em)
-    panasonic = re.search(r"FLASH_PANASONIC_MN63F805MNP\\s*=\\s*(0x[0-9A-Fa-f]+)", em)
+    le_match = re.search(r"\{ \{ 0x([0-9A-Fa-f]+), 0x([0-9A-Fa-f]+) \} \} // ID", le)
+    sanyo = re.search(r"FLASH_SANYO_LE26FV10N1TS\s*=\s*(0x[0-9A-Fa-f]+)", em)
+    panasonic = re.search(r"FLASH_PANASONIC_MN63F805MNP\s*=\s*(0x[0-9A-Fa-f]+)", em)
     if not all((le_match,sanyo,panasonic)):
         raise ValueError("Chip ID extraction failed")
     joined = int(le_match[1],16) | (int(le_match[2],16)<<8)
@@ -95,7 +95,7 @@ def negative_controls(data):
     ]:
         if old not in data[key]:raise AssertionError("Negative fixture not anchored")
         mod=dict(data);mod[key]=data[key].replace(old,new,1);rejected(mod)
-    corrupt=dict(data);key=(F,"include/save.h");corrupt[key]+=b"\\n"
+    corrupt=dict(data);key=(F,"include/save.h");corrupt[key]+=b"\n"
     try:validate_sources(corrupt)
     except ValueError:count+=1
     else:raise AssertionError("Altered blob accepted")
