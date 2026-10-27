@@ -44,12 +44,12 @@ CONSUMER_ANCHORS = {
 }
 
 def blob_sha(data):
-    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\\0" + data).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
 
 def check_blob(path, data):
     if blob_sha(data) != BLOBS[path]:
         raise ValueError("Pinned Git blob mismatch: " + path)
-    if b"\\0" in data:
+    if b"\0" in data:
         raise ValueError("Text source unexpectedly contains NUL: " + path)
     return data.decode("utf-8").splitlines()
 
@@ -57,7 +57,7 @@ def check_source(data):
     lines = check_blob("src/gba/savedata.c", data)
     if len(lines) != 800:
         raise ValueError("Savedata whole-file line count drift")
-    defs = re.findall(r"^(?:static\\s+)?(?:void|bool|size_t|uint8_t|uint16_t)\\s+(\\w+)\\s*\\([^;\\n]*\\)\\s*\\{", data.decode(), re.M)
+    defs = re.findall(r"^(?:static\s+)?(?:void|bool|size_t|uint8_t|uint16_t)\s+(\w+)\s*\([^;\n]*\)\s*\{", data.decode(), re.M)
     if tuple(defs) != DEFINITIONS:
         raise ValueError("Savedata function-definition inventory drift")
     for line, snippet in ANCHORS.items():
@@ -91,8 +91,8 @@ def negative_controls(data):
     for bad in (
         data.replace(b"if (end < GBA_SIZE_FLASH512)", b"if (end <= GBA_SIZE_FLASH512)", 1),
         data.replace(b"GBASavedataSerialize(", b"GBASavedataSerializeChanged(", 1),
-        data + b"\\n",
-        b"\\x00" + data,
+        data + b"\n",
+        b"\x00" + data,
     ):
         try:
             check_source(bad)
