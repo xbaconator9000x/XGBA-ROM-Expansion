@@ -9,6 +9,7 @@ on:
       - 'docs/phase1-review-readiness/firered-mgba-flash-identification-contract-20261027.md'
       - '.github/workflows/phase1-firered-mgba-flash-identification.yml'
       - 'tools/phase1_mgba_override_compiled_branch_matrix.py'
+      - 'tools/phase1_mgba_flash_id_compiled_reader.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -25,9 +26,13 @@ jobs:
         run: python tools/phase1_firered_mgba_flash_contract.py
       - name: Compile actual pinned mGBA override function with 12 branch cases
         run: python tools/phase1_mgba_override_compiled_branch_matrix.py --output phase1-evidence/mgba-override-compiled.json
+      - name: Compile pinned Flash ID reader with 11 bank/timing cases
+        run: python tools/phase1_mgba_flash_id_compiled_reader.py --output phase1-evidence/mgba-flash-id-compiled.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: mgba-override-compiled-evidence
-          path: phase1-evidence/mgba-override-compiled.json
+          path: |
+            phase1-evidence/mgba-override-compiled.json
+            phase1-evidence/mgba-flash-id-compiled.json
           if-no-files-found: warn
