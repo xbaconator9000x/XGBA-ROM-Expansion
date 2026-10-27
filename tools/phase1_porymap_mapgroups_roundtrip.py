@@ -68,7 +68,7 @@ CHECKS = {
     "connection_signed_offset": ("connection_h", "int m_offset;"),
     "mirror_negation_compare": ("connection", "a->m_offset == -b->m_offset"),
     "mirror_negation_create": ("connection", "oppositeDirection(m_direction), -m_offset"),
-    "native_32bit_offset": ("mapmacro", r".4byte \\offset"),
+    "native_32bit_offset": ("mapmacro", ".4byte " + chr(92) + "offset"),
     "native_offset_unsigned": ("fieldheader", "/*0x04*/ u32 offset;"),
 }
 
