@@ -4,6 +4,7 @@ on:
     branches: ["phase1/**"]
     paths:
       - "docs/phase1-machine-triage/batch-config.json"
+      - "tools/phase1_bulk_triage_integrity_range.py"
       - ".github/workflows/phase1-bulk-triage-configurable.yml"
   workflow_dispatch:
 permissions:
