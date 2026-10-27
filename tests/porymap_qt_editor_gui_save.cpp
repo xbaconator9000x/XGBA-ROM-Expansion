@@ -53,20 +53,25 @@ int main(int argc, char **argv) {
     const QString routePath = root + "/data/maps/Route1/map.json";
     require(QFileInfo(palletPath).isFile() && QFileInfo(routePath).isFile(),
             "pinned map pair missing");
-    Project project;
-    project.setRoot(root);
+
+    // Reopen through actual MainWindow::initialize -> openProject, including
+    // setProjectUI and map-list initialization (previous bypass crashed).
+    porymapConfig.load();
+    porymapConfig.addRecentProject(root);
+    porymapConfig.reopenOnLaunch = true;
+    porymapConfig.projectManuallyClosed = false;
+    porymapConfig.checkForUpdates = false;
+    porymapConfig.showProjectLoadingScreen = false;
+    porymapConfig.shownInGameReloadMessage = true;
+    porymapConfig.save();
     {
         MainWindow window(nullptr);
+        std::cerr << "PHASE1_GUI_STAGE real_open_project_begin" << std::endl;
         window.initialize();
-        std::cerr << "PHASE1_GUI_STAGE window_initialized" << std::endl;
-        require(window.editor, "MainWindow did not initialize real Editor");
-        // MainWindow::openProject ordinarily installs this exact signal connection.
-        require(QObject::connect(&project, SIGNAL(mapLoaded(Map*)), &window, SLOT(onMapLoaded(Map*))),
-                "cannot connect real Project mapLoaded to private MainWindow Qt slot");
-        window.editor->setProject(&project);
-        std::cerr << "PHASE1_GUI_STAGE project_load_begin" << std::endl;
-        require(project.load(), "full pinned project load failed");
-        std::cerr << "PHASE1_GUI_STAGE project_load_done" << std::endl;
+        std::cerr << "PHASE1_GUI_STAGE real_open_project_done" << std::endl;
+        require(window.editor && window.editor->project,
+                "MainWindow::openProject did not initialize real Editor/Project");
+        Project *project = window.editor->project;
         std::cerr << "PHASE1_GUI_STAGE editor_setmap_begin" << std::endl;
         require(window.editor->setMap("PalletTown"), "real Editor::setMap failed");
         std::cerr << "PHASE1_GUI_STAGE editor_setmap_done" << std::endl;
@@ -77,12 +82,12 @@ int main(int argc, char **argv) {
         MapConnection *mirror = conn->findMirror();
         std::cerr << "PHASE1_GUI_STAGE mirror_lookup_done" << std::endl;
         require(mirror != nullptr, "expected authored Route1 mirror not found");
-        Map *other = project.loadMap(conn->targetMapName());
+        Map *other = project->loadMap(conn->targetMapName());
         require(other != nullptr, "target map not loaded");
         const QString direction = conn->direction();
-        const QString target = project.getMapConstant(conn->targetMapName(), conn->targetMapName());
+        const QString target = project->getMapConstant(conn->targetMapName(), conn->targetMapName());
         const QString otherDirection = mirror->direction();
-        const QString otherTarget = project.getMapConstant(mirror->targetMapName(), mirror->targetMapName());
+        const QString otherTarget = project->getMapConstant(mirror->targetMapName(), mirror->targetMapName());
         const int original = conn->offset();
         require(mirror->offset() == -original, "original mirror offset inconsistent");
         require(diskOffset(palletPath, direction, target) == original, "pallet disk baseline mismatch");
@@ -93,9 +98,8 @@ int main(int argc, char **argv) {
         QAction *save = window.findChild<QAction*>("action_Save");
         QAction *saveAll = window.findChild<QAction*>("action_Save_Project");
         require(save != nullptr && saveAll != nullptr, "real GUI save actions absent");
-        // Project was attached through public Editor API rather than private openProject.
-        save->setEnabled(true);
-        saveAll->setEnabled(true);
+        require(save->isEnabled() && saveAll->isEnabled(),
+                "real MainWindow::openProject left save actions disabled");
         unsigned saveTriggers = 0, allTriggers = 0;
         QObject::connect(save, &QAction::triggered, [&] { ++saveTriggers; });
         QObject::connect(saveAll, &QAction::triggered, [&] { ++allTriggers; });
