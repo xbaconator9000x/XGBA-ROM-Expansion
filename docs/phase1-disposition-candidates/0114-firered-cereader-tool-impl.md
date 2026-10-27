@@ -25,7 +25,7 @@
 
 ## Dependency closure and review questions
 
-Native producers/consumers: include/cereader_tool.h, include/constants/trainer_tower.h, src/save.c, include/save.h, src/util.c, trainer-tower gameplay consumers, gSaveBlock1Ptr and gflib allocation helpers. External boundaries: flash physical sectors 30/31, raw mGBA FLASH1M file, compiler struct layout, original agbcc, editor/sidecar round trips. The [active-prefix dossier](../PHASE1_P0_FIRERED_TOWER_PREFIX_INTEGRITY_2026-10-27.md) records source-proven preconditions and deterministic synthetic counterexamples.
+Native producers/consumers: include/cereader_tool.h, include/constants/trainer_tower.h, src/save.c, include/save.h, src/util.c, src/ereader_screen.c remote-card producer, include/gba/isagbprint.h debug assertion macros, trainer-tower gameplay consumers, gSaveBlock1Ptr and gflib allocation helpers. External boundaries: flash physical sectors 30/31, raw mGBA FLASH1M file, compiler struct layout, original agbcc, editor/sidecar round trips. The [active-prefix dossier](../PHASE1_P0_FIRERED_TOWER_PREFIX_INTEGRITY_2026-10-27.md) records source-proven preconditions and deterministic synthetic counterexamples.
 
 **Negative evidence:** no complete native emulator or hardware execution of malformed sectors; no original agbcc linked-ROM comparison; no tested atomic recovery across a failed second-sector write; no demonstration that inactive-floor bytes are used by gameplay; no independent signoff. The source checker checks exact blobs and selected anchors but does **not** itself verify exhaustive whole-file semantics. This document is an analyst-prepared whole-file candidate for later external review, not a disposition approval.
 
