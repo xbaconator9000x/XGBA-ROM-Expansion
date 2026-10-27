@@ -7,6 +7,13 @@ on:
       - tools/phase1_firered_root_build_contract.py
       - docs/phase1-disposition-candidates/0114-firered-root-makefile-rom-geometry-proposed.md
       - .github/workflows/phase1-firered-root-build-contract.yml
+  pull_request:
+    branches:
+      - phase1/review-readiness-handoff-20261027
+    paths:
+      - tools/phase1_firered_root_build_contract.py
+      - docs/phase1-disposition-candidates/0114-firered-root-makefile-rom-geometry-proposed.md
+      - .github/workflows/phase1-firered-root-build-contract.yml
   workflow_dispatch:
 permissions:
   contents: read
