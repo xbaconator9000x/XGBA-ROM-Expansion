@@ -45,6 +45,24 @@ jobs:
           fi
           clang --version | head -1
           ld.lld --version
+      - name: Verify pinned Poryscript emitter optimized and unoptimized map-script output
+        working-directory: upstream-poryscript
+        run: go test ./emitter -run '^TestEmitMapScripts        run: |
+          python3 -m py_compile tools/verify_poryscript_compiled_map_table.py
+          python3 tools/verify_poryscript_compiled_map_table.py --self-test
+          python3 tools/verify_poryscript_compiled_map_table.py \
+            --poryscript upstream-poryscript \
+            --firered upstream-firered \
+            --output phase1-evidence/poryscript-compiled-map-table.json
+      - name: Archive bounded reproducible evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-poryscript-compiled-map-table
+          path: phase1-evidence/
+          if-no-files-found: warn
+          retention-days: 30
+ -count=1
       - name: Verify synthetic negative controls and pinned ARM source-to-relocation witness
         run: |
           python3 -m py_compile tools/verify_poryscript_compiled_map_table.py
