@@ -15,6 +15,8 @@ BLOBS = {
     "src/cereader_tool.c": "395be0bcbed8454e645a9f5670cde3024eda508e",
     "src/save.c": "36b960f375c92711aa49b99bdfe9c6b3a99d6b1c",
     "src/util.c": "b32799584937a120a03b08897886f08adc033fce",
+    "src/ereader_screen.c": "20ec25d0150084bc259de47038ac7d8c972dd268",
+    "include/gba/isagbprint.h": "9c79e03e8e95c02b17361073eff841bd59a8311c",
     "include/cereader_tool.h": "5cb5a9ebc32db23de07800ccce124bcb28d3ef15",
     "include/save.h": "87fb9b615b434b58823d15688056695acda9feab",
     "include/constants/trainer_tower.h": "ea0039ea1408c06b8c968cfde8e2628213b2a0dc",
@@ -39,6 +41,8 @@ ANCHORS = {
         r"memset\(buffer, 0, SECTOR_SIZE\)",
         r"memcpy\(buffer, ttdata, SEC30_SIZE\)",
         r"buffer\[1\] = GetTrainerHillUnkVal\(\)",
+        r"AGB_ASSERT_EX\(ttdata->dummy == 0",
+        r"AGB_ASSERT_EX\(ttdata->id == 0",
         r"memcpy\(buffer, \(u8 \*\)ttdata \+ SEC30_SIZE, SEC31_SIZE\)",
     ],
     "src/save.c": [
@@ -48,6 +52,15 @@ ANCHORS = {
         r"savData\s*=\s*&gSaveDataBuffer.data\[4\]",
         r"for\s*\(; i <= size; i\+\+\)",
         r"ProgramFlashSectorAndVerify\(sector, savDataBuffer\)",
+    ],
+    "src/ereader_screen.c": [
+        r"data->status = ValidateTrainerTowerData\(\(struct EReaderTrainerTowerSet \*\)gDecompressionBuffer\)",
+        r"CEReaderTool_SaveTrainerTower\(\(struct EReaderTrainerTowerSet \*\)gDecompressionBuffer\)",
+    ],
+    "include/gba/isagbprint.h": [
+        r"#ifdef NDEBUG",
+        r"#define AGB_ASSERT_EX\(exp, file, line\)",
+        r"#define AGB_ASSERT_EX\(exp, file, line\) \(exp\)",
     ],
     "src/util.c": [
         r"u32 CalcByteArraySum\(const u8 \* array, u32 size\)",
