@@ -28,9 +28,9 @@ F = "pret/pokefirered"
 M = "mgba-emu/mgba"
 ANCHORS = {
     (F, "src/load_save.c"): {48:"if (!IdentifyFlash())",50:"gFlashMemoryPresent = TRUE",55:"gFlashMemoryPresent = FALSE"},
-    (F, "src/agb_flash_1m.c"): {8:"&MX29L010",9:"&LE26FV10N1TS",10:"&DefaultFlash",21:"flashId = ReadFlashId();",26:"result = 1;",32:"if (flashId == (*setupInfo)->type.ids.joined)",34:"result = 0;",49:"return result;"},
-    (F, "src/agb_flash_le.c"): {12:"const struct FlashSetupInfo LE26FV10N1TS",20:"131072",22:"4096",24:"32",29:"0x62, 0x13"},
-    (F, "include/save.h"): {8:"#define SECTOR_DATA_SIZE 3968",9:"#define SECTOR_FOOTER_SIZE 128",11:"#define SECTOR_SIZE (SECTOR_DATA_SIZE + SECTOR_FOOTER_SIZE)",24:"#define NUM_SECTORS_PER_SLOT",29:"#define SECTOR_ID_TRAINER_TOWER_2",30:"#define SECTORS_COUNT"},
+    (F, "src/agb_flash_1m.c"): {8:"&MX29L010",9:"&LE26FV10N1TS",10:"&DefaultFlash",21:"flashId = ReadFlashId();",24:"result = 1;",31:"if (flashId == (*setupInfo)->type.ids.joined)",33:"result = 0;",48:"return result;"},
+    (F, "src/agb_flash_le.c"): {12:"const struct FlashSetupInfo LE26FV10N1TS",21:"131072",23:"4096",25:"32",29:"0x62, 0x13"},
+    (F, "include/save.h"): {8:"#define SECTOR_DATA_SIZE 3968",9:"#define SECTOR_FOOTER_SIZE 128",10:"#define SECTOR_SIZE (SECTOR_DATA_SIZE + SECTOR_FOOTER_SIZE)",24:"#define NUM_SECTORS_PER_SLOT",29:"#define SECTOR_ID_TRAINER_TOWER_2",30:"#define SECTORS_COUNT"},
     (M, "src/gba/overrides.c"): {133:'"BPRJ", GBA_SAVEDATA_FLASH1M',134:'"BPRE", GBA_SAVEDATA_FLASH1M',135:'"BPRP", GBA_SAVEDATA_FLASH1M',422:"bool isPokemon = false;",423:'"pokemon red version"',434:"if (isPokemon && !isKnownPokemon)",436:"override.savetype = GBA_SAVEDATA_FLASH1M;",440:"GBAOverrideFindConfig",442:"GBAOverrideFind(overrides, &override)",443:"GBAOverrideApply(gba, &override)"},
     (M, "src/gba/core.c"): {787:"if (gbacore->hasOverride)",788:"GBAOverrideApply(gba, &gbacore->override)",790:"GBAOverrideApplyDefaults(gba, gbacore->overrides)"},
     (M, "src/gba/memory.c"): {1064:"GBA_SAVEDATA_AUTODETECT",1065:"address == SAVEDATA_FLASH_BASE",1067:"GBASavedataInitFlash(&memory->savedata)"},
