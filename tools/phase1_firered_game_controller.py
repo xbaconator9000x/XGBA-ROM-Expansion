@@ -271,7 +271,7 @@ def main(a):
     # rather than report zero Flash mutations from an uninitialized baseline.
     bad_env = os.environ.copy()
     bad_env["XGBA_PHASE1_FORCE_MISSING_BASELINE"] = "1"
-    p = subprocess.run([a.probe, a.rom, str(cold), str(cold_keys), "180",
+    p = subprocess.run([a.probe, a.rom, str(cold), str(root / "no_input.keys"), "180",
                         a.status, a.counter, a.sb2],
                        capture_output=True, text=True, env=bad_env, timeout=120, check=False)
     assert p.returncode != 0 and "Flash1M baseline/final mapping unavailable" in p.stderr, (
