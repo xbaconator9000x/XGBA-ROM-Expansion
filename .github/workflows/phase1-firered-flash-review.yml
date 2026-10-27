@@ -1,0 +1,31 @@
+name: Phase 1 FireRed flash whole-file review (no approvals)
+on:
+  push:
+    branches:
+      - phase1/firered-flash-bank-timer-review-20261027
+  pull_request:
+    paths:
+      - 'docs/phase1-flash-review/**'
+      - 'tools/phase1_firered_flash_review_verify.py'
+      - '.github/workflows/phase1-firered-flash-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-source-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify pinned Git blobs, complete-file inventories, and negative controls
+        run: python tools/phase1_firered_flash_review_verify.py
+      - name: Archive source-only review evidence
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-firered-flash-review-evidence
+          path: docs/phase1-flash-review/verification-evidence.json
+          retention-days: 30
