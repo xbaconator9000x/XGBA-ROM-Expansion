@@ -21,7 +21,7 @@ def patterns(data):
     text = data.decode('utf-8', 'replace')
     findings = set()
     low = text.lower()
-    if ('chat' + 'gpt') in low or '<|im_start|>' in text or 'user knowledge memories' in low:
+    if ('chat' + 'gpt') in low or ('<|im' + '_start|>') in text or ('user' + ' knowledge ' + 'memories') in low:
         findings.add('dialogue_marker')
     if (re.search(r'"role"\s*:\s*"user"', text, re.I) and
             re.search(r'"role"\s*:\s*"assistant"', text, re.I)):
