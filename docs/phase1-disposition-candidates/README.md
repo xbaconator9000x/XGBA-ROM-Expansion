@@ -72,7 +72,7 @@
 | `pret/pokefirered:include/field_control_avatar.h` | [0053](0053-firered-field-input-api-header.md) | pending independent review |
 | `pret/pokefirered:include/config.h` | [0054](0054-firered-build-variant-config.md) | pending independent review |
 
-**Count: 58 distinct pinned upstream whole-file identities prepared / 14,834 = 0.3910%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
+**Count: 59 distinct pinned upstream whole-file identities prepared / 14,834 = 0.3977%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
 
 ## 27 October — corrected duplicate and script interpreter ABI closure
 
@@ -127,3 +127,7 @@ Four new distinct exact-blob whole-file analyst candidates (0034–0037) cover t
 ## 27 October — GBA graphics types, save-flash and DMA macro boundaries
 
 Three exact-hash complete-file analyst candidates (0038–0040) cover `include/gba/types.h`, `include/gba/flash_internal.h` and `include/gba/macro.h`. They distinguish graphics/OAM fixed-width fields, save-flash banking versus cartridge ROM mapping, and BIOS/DMA transfer counts. The `DmaCopyLarge`, `DmaFillLarge` and `DmaClearLarge` macros each perform a full first block transfer **before** checking remaining size, making `size >= block` an implicit caller precondition; no reachable runtime failure is asserted. **46/14,834 = 0.3101% prepared; 0/14,834 = 0.0000% independently approved; inventory 100%; FAIL_INCOMPLETE.** Four exact-head CI runs for `6a3da8af` passed prior to this batch. New exact-head CI requires separate verification.
+
+## 27 October — build-variant candidate reconciliation and integrity repair
+
+The exact pinned `pret/pokefirered:include/config.h` file is registered as [0054](0054-firered-build-variant-config.md), making **59 distinct complete-file analyst-prepared identities**. The previous register declaration incorrectly remained at 58 despite this row being present, causing the [register-integrity job #40434589547](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40434589547) to fail its count validation. This checkpoint corrects the declared count only; no reviewer verdict, source identity or authoritative gate is modified. **59/14,834 = 0.3977% prepared; 0/14,834 = 0.0000% independently approved; inventory 100%; FAIL_INCOMPLETE.** CI for this corrective commit requires separate exact-head confirmation.
