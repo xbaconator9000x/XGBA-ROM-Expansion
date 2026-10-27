@@ -21,3 +21,11 @@ The controller run is deliberately separate from PR #24 host-driven Flash progra
 ## Counting and gate
 
 New distinct machine-indexed source files: **0** (historical 14,721/14,721; 1,000 target shortfall 1,000). Newly registered complete-file reviews: **0**. Historical analyst-prepared candidates: **113** pending authoritative register reconciliation. Independent approvals: **0**. All Phase 1 gates **FAIL_INCOMPLETE**.
+
+## Exact-head PR #28 controller observation and next compiled callsite test
+
+CI [#40571479967](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40571479967) **passed at exact head** `7112f70f8d403d2078046c038caeb73edfcfbffd`. Each of the four deterministic 2,400-frame controller schedules preserved the physical save SHA256 and changed **zero** Flash bytes; all retained `gSaveFileStatus=1` and `gSaveCounter=0`. This is **negative evidence for these schedules only**, not a general failure of FireRed's save mechanism. It does not establish that the title menu was successfully navigated into the overworld.
+
+The next experiment retains all four input schedules, adds an instruction-level trace for the `menu_navigation` case from frame 181 to 2,400, and pins three actual compiled ELF entrypoints: `StartMenuSaveCallback`, `SaveDialogCB_DoSave`, `TrySavingData`. The trace uses the pinned mGBA `ARMCore` executing-PC convention (Thumb PC−4, ARM PC−8), counts entries, records first frame and the first `TrySavingData` argument, and has a fail-closed 400-million-instruction limit. It does not inject a save call or perform any host Flash write. If all counts are zero, the evidence supports only that the specific input schedule did not reach these entrypoints within the traced interval. A nonzero entry count alone does not prove successful Flash programming, sector integrity or a cold-boot player-state round trip.
+
+Additional pinned upstream identity: `pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982:src/start_menu.c` Git blob `88cc377cea556d3663aa5ea5f5bd4537cb29ea72`, alongside the existing pinned `src/save.c` blob. This is a focused partial dependency trace, **not** a new complete-file analyst review. The authoritatively published main-branch gate remains `FAIL_INCOMPLETE` with zero independently approved dispositions.

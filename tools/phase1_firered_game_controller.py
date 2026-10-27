@@ -58,13 +58,21 @@ def main(a):
         schedule.write_text("".join(f"{f} {keys:03x}\n" for f, keys in make_schedule(name)))
         before = sha(save)
         command = [a.probe, a.rom, str(save), str(schedule), "2400", a.status, a.counter, a.sb2]
-        p = subprocess.run(command, capture_output=True, text=True, timeout=240, check=False)
+        if name == "menu_navigation":
+            command.extend((a.start_menu_save, a.dialog_do_save, a.try_saving_data))
+        p = subprocess.run(command, capture_output=True, text=True, timeout=900, check=False)
         if p.returncode:
             raise RuntimeError(f"{name}: native probe rc={p.returncode}, stderr={p.stderr[-1500:]}")
         lines = [json.loads(line) for line in p.stdout.splitlines() if line.startswith('{"mode":"controller"')]
         assert len(lines) == 1, (name, p.stdout[-500:])
         d = lines[0]
         assert d["frames"] >= 2400 and d["host_flash_writes"] == 0, (name, d)
+        assert d["trace_mode"] == (name == "menu_navigation"), (name, d)
+        if name == "menu_navigation":
+            assert d["trace_steps"] > 0, (name, "missing instruction trace", d)
+            for key in ("start_menu_save_hits", "save_dialog_do_save_hits",
+                        "try_saving_data_entry_hits", "first_try_save_arg"):
+                assert key in d, (name, key)
         after = sha(save)
         record = {
             "case": name, "source_fixture": "synthetic_slot0",
@@ -79,7 +87,11 @@ def main(a):
         print(json.dumps({"case": name, "physical_save_changed": before != after,
                           "flash_changed_bytes": d["flash_changed_bytes"],
                           "first_flash_change_frame": d["first_flash_change_frame"],
-                          "save_status": d["save_status"], "save_counter": d["save_counter"]}),
+                          "save_status": d["save_status"], "save_counter": d["save_counter"],
+                          "trace_steps": d["trace_steps"],
+                          "start_menu_save_hits": d["start_menu_save_hits"],
+                          "save_dialog_do_save_hits": d["save_dialog_do_save_hits"],
+                          "try_saving_data_entry_hits": d["try_saving_data_entry_hits"]}),
               flush=True)
         results.append(record)
     (root / "controller_summary.json").write_text(json.dumps({
@@ -94,4 +106,6 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     for arg in ("rom", "fixtures", "probe", "status", "counter", "sb2", "output"):
         p.add_argument("--" + arg, required=True)
+    for arg in ("start_menu_save", "dialog_do_save", "try_saving_data"):
+        p.add_argument("--" + arg.replace("_", "-"), required=True)
     main(p.parse_args())

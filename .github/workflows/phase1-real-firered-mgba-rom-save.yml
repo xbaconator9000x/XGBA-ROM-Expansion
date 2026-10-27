@@ -43,6 +43,7 @@ jobs:
           test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
           git -C upstream/pokefirered hash-object include/save.h | grep -Fx 87fb9b615b434b58823d15688056695acda9feab
           git -C upstream/pokefirered hash-object src/save.c | grep -Fx 36b960f375c92711aa49b99bdfe9c6b3a99d6b1c
+          git -C upstream/pokefirered hash-object src/start_menu.c | grep -Fx 88cc377cea556d3663aa5ea5f5bd4537cb29ea72
           git -C upstream/pokefirered hash-object include/global.h | grep -Fx 77155b09014aa854fcf87260e6ad2969e222da53
       - name: Build real FireRed cartridge using pinned original agbcc
         run: |
@@ -191,11 +192,18 @@ jobs:
           status=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveFileStatus" {print "0x"$1;exit}')
           counter=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveCounter" {print "0x"$1;exit}')
           sb2=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveBlock2Ptr" {print "0x"$1;exit}')
+          start_menu_save=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="StartMenuSaveCallback" {print "0x"$1;exit}')
+          dialog_do_save=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="SaveDialogCB_DoSave" {print "0x"$1;exit}')
+          try_saving_data=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="TrySavingData" {print "0x"$1;exit}')
           test -n "$status" && test -n "$counter" && test -n "$sb2"
+          test -n "$start_menu_save" && test -n "$dialog_do_save" && test -n "$try_saving_data"
+          printf 'Compiled save callsites: start=%s dialog=%s try=%s\n' "$start_menu_save" "$dialog_do_save" "$try_saving_data"
           python3 tools/phase1_firered_game_controller.py \
             --rom upstream/pokefirered/pokefirered.gba \
             --fixtures evidence/fixtures --probe ./game-controller-probe \
             --status "$status" --counter "$counter" --sb2 "$sb2" \
+            --start-menu-save "$start_menu_save" --dialog-do-save "$dialog_do_save" \
+            --try-saving-data "$try_saving_data" \
             --output evidence/controller
           cp evidence/controller/*.json evidence/results/
       - name: Upload only text evidence, never source-built ROM or raw saves
