@@ -1,0 +1,77 @@
+{
+  "analyst_prepared_baseline": 113,
+  "independent_approvals": 0,
+  "inventory": 14834,
+  "new_source_verified_machine_records": 1000,
+  "phase1_gate": "FAIL_INCOMPLETE",
+  "schema": "xgba-phase1-machine-triage-integrity-v2",
+  "scope": "Exact pinned-source structural/lexical triage only; NOT semantic review or independent approval",
+  "shards": [
+    {
+      "count": 200,
+      "file": "batch-000000-000199.json",
+      "sha256": "288543408e74c3623d6cd3f8d36af5f1339159ab20462f7f18e4b3f0364e78e7"
+    },
+    {
+      "count": 300,
+      "file": "batch-000200-000499.json",
+      "sha256": "a86664c47de695f5ed83dd1187466cb149dafe20d214d0f113b51b7c765e0287"
+    },
+    {
+      "count": 500,
+      "file": "batch-000500-000999.json",
+      "sha256": "23ca6a1d0d36fd52cbd57fecedc6eea28918c4d1e6de393e0e5d1a52c83c7c53"
+    },
+    {
+      "count": 500,
+      "file": "batch-001000-001499.json",
+      "sha256": "77b3d9627dcdf506748a5bb918390ccdf6a95cfd7304573ca83d4c45aba8ce1b"
+    },
+    {
+      "count": 500,
+      "file": "batch-001500-001999.json",
+      "sha256": "4d69cafce3232ece7df465b4bb6f6df4f42d1d9daa34bb93f72a0318661c9e07"
+    },
+    {
+      "count": 250,
+      "file": "batch-002000-002249.json",
+      "sha256": "d25e907e793915347de4c47c54bd778f4b33148e59738199ee1f4300ac677b6c"
+    },
+    {
+      "count": 250,
+      "file": "batch-002250-002499.json",
+      "sha256": "fb6279cd9f57448bd5342774de2841dfc987d102ed4b7f623b1220405dff0d8b"
+    },
+    {
+      "count": 250,
+      "file": "batch-002500-002749.json",
+      "sha256": "8427538f4e61be9221a793874ecd20d8cbf7cf50916bd19db0fb58f83ba70afe"
+    },
+    {
+      "count": 250,
+      "file": "batch-002750-002999.json",
+      "sha256": "3feaad42ca96a2f7bfdccfb89d94cd046f390b3b5d52d633c12d5855bd711aff"
+    },
+    {
+      "count": 250,
+      "file": "batch-003000-003249.json",
+      "sha256": "50ab84ca14e22e6822d2e5a1bafdae31e98e10296a4c27e44fec3ebcc8aa75bc"
+    },
+    {
+      "count": 250,
+      "file": "batch-003250-003499.json",
+      "sha256": "2ee45b5221c67366591afe61a876c5cf4b2c229330e3977a4b970a564562166a"
+    },
+    {
+      "count": 250,
+      "file": "batch-003500-003749.json",
+      "sha256": "b0929e9c2cee9fd2bb1005e6c112e74976649da911f8134d62ec24b625000c57"
+    },
+    {
+      "count": 250,
+      "file": "batch-003750-003999.json",
+      "sha256": "3f6b5b410cc107417afa3e43ecf02f99e6fab54681f98448ed7af7b2926c422b"
+    }
+  ],
+  "unique_source_verified_machine_records": 4000
+}
