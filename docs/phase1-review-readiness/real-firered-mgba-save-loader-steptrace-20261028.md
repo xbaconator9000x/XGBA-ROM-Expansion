@@ -54,3 +54,19 @@ Negative evidence: no authentic in-game SaveGame invocation, no playable player-
 ### Mixed-counter cross-boundary risk (source-grounded, runtime outcome pending)
 
 The pinned `GetSaveValidStatus` updates the second slot's counter from **each checksum-valid sector**. In the deterministic `mixed_counters` fixture, the last sector in physical slot 1 carries counter 2 while the others carry 1, so `gSaveCounter=2`. The pinned `CopySaveSlotData` then computes `NUM_SECTORS_PER_SLOT * (gSaveCounter % NUM_SAVE_SLOTS)`, selecting **physical slot 0** despite the last valid counter having been read from physical slot 1. Therefore the source-derived payload marker is `0xA5`, not `0x5A`. This is a source-proven producer/consumer mismatch for deliberately inconsistent save counters, **not yet** a runtime-confirmed defect or a claim about normal game-generated saves. The five-fixture CI asserts this expected selection and will expose disagreement rather than conceal it.
+
+## Native five-fixture payload observations — CI #40552530270
+
+[Run #40552530270](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40552530270) at `0682b0ae7a0619e6143d4e603d12dec1e2e13e2b` **failed due to a wrong test oracle**: it expected `0x5A` for the mixed-counter case, while the real compiled FireRed/mGBA trace reported `0xA5`. This matches the pinned `GetSaveValidStatus` → `CopySaveSlotData` modulo-selection source reasoning. The CI log contains all five actual emulator trace records, despite the failing assertion; the later commit corrects the oracle rather than altering the ROM or fixtures.
+
+| Synthetic fixture | Observed frame | `gSaveFileStatus` | `gSaveCounter` | SaveBlock2 marker | Interpretation |
+| --- | ---: | ---: | ---: | --- | --- |
+| `slot0` | 197 | 1 | 0 | `0xA5` | Valid older slot copied |
+| `both` | 197 | 1 | 1 | `0x5A` | Newer slot copied |
+| `mixed_counters` | 197 | 1 | 2 | `0xA5` | Counter parity selects older physical slot |
+| `malformed_id14` | 197 | 255 | 0 | `0xA5` | Error status but older slot copied |
+| `older_slot_fallback` | 197 | 255 | 0 | `0xA5` | Damaged newer slot; older slot copied |
+
+Each trace observed one entry into `LoadGameSave`, `GetSaveValidStatus` and `CopySaveSlotData`; the relocated SaveBlock2 pointer was `33703304` (`0x02024A08`), and the payload was read via the actual emulator bus. The persistent `load_game_save_return_value=160` remains **unverified as a function return**. These are synthetic Flash input files and actual ROM/emulator *read/recovery* observations, **not game-initiated Flash writes or complete playable-save recovery**.
+
+The pinned FireRed `include/global.h` blob is `77155b09014aa854fcf87260e6ad2969e222da53` (SaveBlock2 `filler_B20` at `0xB20..0xF1F`). The next exact-head CI must pass with the corrected `mixed_counters` oracle. No independent approval is conferred; Phase 1 remains `FAIL_INCOMPLETE`.
