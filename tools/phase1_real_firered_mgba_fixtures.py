@@ -29,7 +29,7 @@ def emit(root, rom):
         "older_slot_fallback":(True,True,"signature",False),
     }
     for name,(old,new,corrupt,mixed) in variants.items():
-        b=bytearray(b"\\xFF"*(32*SECTOR))
+        b=bytearray(bytes([0xFF])*(32*SECTOR))
         if old:slot(b,0,0)
         if new:slot(b,1,1,corrupt,mixed)
         p=root/(name+".sav");p.write_bytes(b)
@@ -41,7 +41,7 @@ def emit(root, rom):
     altered[0xBD]=(-sum(altered[0xA0:0xBD])-0x19)&0xFF
     (root/"firered_header_changed.gba").write_bytes(altered)
     records.append({"name":"header_changed","sha256":hashlib.sha256(altered).hexdigest(),"size":len(altered),"original_game_code":"BPRE","altered_game_code":"ZZZZ","header_checksum_recalculated":True})
-    (root/"fixture_manifest.json").write_text(json.dumps({"source_rom_sha256":hashlib.sha256(original).hexdigest(),"cases":records,"phase1_gates":"FAIL_INCOMPLETE","independent_approvals":0},indent=2)+"\\n")
+    (root/"fixture_manifest.json").write_text(json.dumps({"source_rom_sha256":hashlib.sha256(original).hexdigest(),"cases":records,"phase1_gates":"FAIL_INCOMPLETE","independent_approvals":0},indent=2)+chr(10))
     print(json.dumps({"fixtures":len(records),"names":[x["name"] for x in records]}))
 if __name__=="__main__":
     p=argparse.ArgumentParser()
