@@ -10,6 +10,7 @@ on:
       - '.github/workflows/phase1-firered-mgba-flash-identification.yml'
       - 'tools/phase1_mgba_override_compiled_branch_matrix.py'
       - 'tools/phase1_mgba_flash_id_compiled_reader.py'
+      - 'tools/phase1_firered_mgba_compiled_flash_join.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -28,6 +29,8 @@ jobs:
         run: python tools/phase1_mgba_override_compiled_branch_matrix.py --output phase1-evidence/mgba-override-compiled.json
       - name: Compile pinned Flash ID reader with 11 bank/timing cases
         run: python tools/phase1_mgba_flash_id_compiled_reader.py --output phase1-evidence/mgba-flash-id-compiled.json
+      - name: Compile actual FireRed/mGBA Flash identification cross-boundary
+        run: python tools/phase1_firered_mgba_compiled_flash_join.py --output phase1-evidence/firered-mgba-flash-join.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -35,4 +38,5 @@ jobs:
           path: |
             phase1-evidence/mgba-override-compiled.json
             phase1-evidence/mgba-flash-id-compiled.json
+            phase1-evidence/firered-mgba-flash-join.json
           if-no-files-found: warn
