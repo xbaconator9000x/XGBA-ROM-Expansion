@@ -38,6 +38,7 @@ ANCHORS = {
         r"if\s*\(!ValidateTrainerTowerData\(ttdata\)\)",
         r"memset\(buffer, 0, SECTOR_SIZE\)",
         r"memcpy\(buffer, ttdata, SEC30_SIZE\)",
+        r"buffer\[1\] = GetTrainerHillUnkVal\(\)",
         r"memcpy\(buffer, \(u8 \*\)ttdata \+ SEC30_SIZE, SEC31_SIZE\)",
     ],
     "src/save.c": [
@@ -156,6 +157,10 @@ def synthetic_tests():
         result[str(n)] = record
     assert SET_HEADER + 4 * FLOOR_SIZE == 3976 and 4 * FLOOR_SIZE == 3968
     assert result["4"]["unchecked_floor_bytes"] == 3968
+    header = bytearray(make_set(4))
+    header[1] ^= 0x80  # Native writer uses this byte as a generation value.
+    header[2] ^= 0x40  # dummy is not checked by the load validator.
+    assert model_validate(header)
     original = make_set(8)
     original[SET_HEADER + 100:SET_HEADER + 102] = bytes((2, 5))
     pos = SET_HEADER
@@ -174,6 +179,7 @@ def synthetic_tests():
         "first_sector_struct_payload_bytes": 3976,
         "second_sector_struct_payload_bytes": 3968,
         "two_byte_swap_undetected_by_additive_checksums": True,
+        "header_id_dummy_mutation_not_checked_by_model": True,
         "evidence_kind": "synthetic_model_not_emulator",
     }
 
