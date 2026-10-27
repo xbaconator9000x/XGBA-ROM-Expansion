@@ -34,22 +34,41 @@ BINARY_EXTENSIONS={'.bin':'opaque_binary','.elf':'compiled_binary','.o':'compile
 TEXT_SOURCE_EXT={'.c','.h','.cpp','.hpp','.cc','.s','.asm','.py','.sh','.ld','.go','.rs'}
 TEXT_DATA_EXT={'.json','.md','.txt','.mk','.yaml','.yml','.toml','.ini','.csv','.inc','.xml','.qrc','.pro','.cmake','.js','.ts','.html','.css','.map'}
 def valid_png(data):
+    """Conservative PNG container validation; does not certify decoded pixels."""
     import struct,zlib
-    if not data.startswith(b'\x89PNG\r\n\x1a\n'):return False
-    pos=8;first=True
+    if not data.startswith(b'\\x89PNG\\r\\n\\x1a\\n'):return False
+    pos=8;first=True;seen_idat=False;seen_plte=False;idat_finished=False
+    color_type=None;bit_depth=None
     while pos+12<=len(data):
         n=struct.unpack('>I',data[pos:pos+4])[0]
         if n>len(data)-pos-12:return False
         tag=data[pos+4:pos+8];payload=data[pos+8:pos+8+n]
         crc=struct.unpack('>I',data[pos+8+n:pos+12+n])[0]
+        if not all(65<=b<=90 or 97<=b<=122 for b in tag) or not 65<=tag[2]<=90:return False
         if zlib.crc32(tag+payload)&0xffffffff!=crc:return False
         if first:
             if tag!=b'IHDR' or n!=13:return False
             width,height=struct.unpack('>II',payload[:8])
-            if not width or not height or payload[8] not in (1,2,4,8,16) or payload[9] not in (0,2,3,4,6):return False
+            bit_depth,color_type,compression,filter_method,interlace=payload[8:]
+            allowed={0:(1,2,4,8,16),2:(8,16),3:(1,2,4,8),4:(8,16),6:(8,16)}
+            if not width or not height or bit_depth not in allowed.get(color_type,()):return False
+            if compression!=0 or filter_method!=0 or interlace not in (0,1):return False
             first=False
+        elif tag==b'IHDR':
+            return False
+        elif tag==b'PLTE':
+            if seen_plte or seen_idat or color_type in (0,4) or n==0 or n%3 or n>768:return False
+            if color_type==3 and n//3>1<<bit_depth:return False
+            seen_plte=True
+        elif tag==b'IDAT':
+            if idat_finished or (color_type==3 and not seen_plte):return False
+            seen_idat=True
+        elif tag==b'IEND':
+            return n==0 and seen_idat and pos+12==len(data)
+        else:
+            if tag[0]<97:return False  # Unknown critical chunk cannot be interpreted.
+            if seen_idat:idat_finished=True
         pos+=12+n
-        if tag==b'IEND':return n==0 and pos==len(data)
     return False
 def valid_gba_header(data):
     return (len(data)>=0xc0 and data[0xb2]==0x96
