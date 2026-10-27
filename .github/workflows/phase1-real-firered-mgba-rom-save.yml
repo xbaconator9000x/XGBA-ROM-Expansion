@@ -4,9 +4,13 @@ on:
     branches:
       - phase1/firered-mgba-real-rom-boot-save-20261028
       - phase1/firered-mgba-save-loader-steptrace-20261028
+      - phase1/firered-game-controller-save-observation-20261028
     paths:
       - '.github/workflows/phase1-real-firered-mgba-rom-save.yml'
       - 'tests/phase1_real_firered_mgba_runtime.c'
+      - 'tests/phase1_firered_game_controller.c'
+      - 'tools/phase1_firered_game_controller.py'
+      - 'docs/phase1-review-readiness/firered-controller-save-observation-20261028.md'
       - 'tools/phase1_real_firered_mgba_fixtures.py'
       - 'tools/phase1_real_firered_mgba_adversarial.py'
       - 'docs/phase1-review-readiness/real-firered-mgba-runtime-20261028.md'
@@ -168,6 +172,32 @@ jobs:
               assert d["frames"] >= 180,(name,d)
           print("9 actual-emulator frame-advance cases verified; save correctness is NOT inferred")
           PY
+      - name: Observe input-driven real-ROM Flash changes without host writes
+        run: |
+          set -euo pipefail
+          python3 - <<'PYBUILD'
+          import json,shlex,subprocess
+          from pathlib import Path
+          entries=json.loads(Path("upstream/mgba/build/compile_commands.json").read_text())
+          perf=next(e for e in entries if e["file"].endswith("/src/platform/test/perf-main.c"))
+          flags=[arg for arg in shlex.split(perf["command"]) if arg.startswith(("-D","-I"))]
+          subprocess.run(["cc","-std=c11","-O2","-g","-Wall","-Wextra",*flags,
+              "-Iupstream/mgba/include","-Iupstream/mgba/build/include",
+              "tests/phase1_firered_game_controller.c",
+              "-Lupstream/mgba/build",
+              "-Wl,-rpath,"+str(Path("upstream/mgba/build").resolve()),
+              "-lmgba","-o","game-controller-probe"],check=True)
+          PYBUILD
+          status=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveFileStatus" {print "0x"$1;exit}')
+          counter=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveCounter" {print "0x"$1;exit}')
+          sb2=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveBlock2Ptr" {print "0x"$1;exit}')
+          test -n "$status" && test -n "$counter" && test -n "$sb2"
+          python3 tools/phase1_firered_game_controller.py \
+            --rom upstream/pokefirered/pokefirered.gba \
+            --fixtures evidence/fixtures --probe ./game-controller-probe \
+            --status "$status" --counter "$counter" --sb2 "$sb2" \
+            --output evidence/controller
+          cp evidence/controller/*.json evidence/results/
       - name: Upload only text evidence, never source-built ROM or raw saves
         if: always()
         uses: actions/upload-artifact@v4
