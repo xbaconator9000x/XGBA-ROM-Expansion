@@ -31,7 +31,7 @@ ANCHORS = {
     292: "if (end < GBA_SIZE_FLASH512) {",
     316: "if (end < eepromSize) {",
     321: "if (end < GBA_SIZE_EEPROM512) {",
-    154: "out->write(out, buffer, read);",
+    162: "out->write(out, buffer, read);",
     210: "read = savedata->vf->write(savedata->vf, buffer, read);",
     653: "size = savedata->vf->read(savedata->vf, &buffer, sizeof(buffer));",
     720: "GBASerializedSavedataFlagsTestFillFlashBank(flags, savedata->currentBank == &savedata->data[0x10000]);",
