@@ -71,8 +71,9 @@
 | `pret/pokefirered:include/overworld.h` | [0052](0052-firered-overworld-api-header.md) | pending independent review |
 | `pret/pokefirered:include/field_control_avatar.h` | [0053](0053-firered-field-input-api-header.md) | pending independent review |
 | `pret/pokefirered:include/config.h` | [0054](0054-firered-build-variant-config.md) | pending independent review |
+| `pret/pokefirered:include/gba/io_reg.h` | [0055](0055-firered-gba-io-register-contract.md) | pending independent review |
 
-**Count: 59 distinct pinned upstream whole-file identities prepared / 14,834 = 0.3977%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
+**Count: 60 distinct pinned upstream whole-file identities prepared / 14,834 = 0.4045%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
 
 ## 27 October — corrected duplicate and script interpreter ABI closure
 
@@ -131,3 +132,7 @@ Three exact-hash complete-file analyst candidates (0038–0040) cover `include/g
 ## 27 October — build-variant candidate reconciliation and integrity repair
 
 The exact pinned `pret/pokefirered:include/config.h` file is registered as [0054](0054-firered-build-variant-config.md), making **59 distinct complete-file analyst-prepared identities**. The previous register declaration incorrectly remained at 58 despite this row being present, causing the [register-integrity job #40434589547](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40434589547) to fail its count validation. This checkpoint corrects the declared count only; no reviewer verdict, source identity or authoritative gate is modified. **59/14,834 = 0.3977% prepared; 0/14,834 = 0.0000% independently approved; inventory 100%; FAIL_INCOMPLETE.** CI for this corrective commit requires separate exact-head confirmation.
+
+## 27 October — 60th candidate: GBA I/O register contract
+
+The complete pinned [GBA I/O register header](0055-firered-gba-io-register-contract.md) is analyst-prepared as the **60th distinct whole-file candidate**, with all 683 valued macros partitioned, pinned blob identity, volatile-access and aliasing obligations, and reviewer questions. No compiled, emulator or hardware access-width proof is asserted. **60/14,834 = 0.4045% prepared; 0/14,834 = 0.0000% independently approved; inventory 100%; FAIL_INCOMPLETE.** Exact-head CI remains to be verified.
