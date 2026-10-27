@@ -8,6 +8,7 @@ import argparse
 import hashlib
 import json
 import re
+import re
 import subprocess
 import tempfile
 import urllib.request
@@ -60,10 +61,16 @@ def fetch(repo, path):
         return response.read()
 
 def extract(source, signature):
-    pos = source.find(signature)
-    require(pos >= 0, "missing pinned function: " + signature)
-    brace = source.find("{", pos + len(signature))
-    require(brace >= 0, "missing function opening brace: " + signature)
+    brace = -1
+    pos = -1
+    for match in re.finditer(re.escape(signature), source):
+        candidate = match.end()
+        while candidate < len(source) and source[candidate].isspace():
+            candidate += 1
+        if candidate < len(source) and source[candidate] == "{":
+            pos, brace = match.start(), candidate
+            break
+    require(pos >= 0, "missing pinned function definition: " + signature)
     depth = 1
     for i in range(brace + 1, len(source)):
         if source[i] == "{":
