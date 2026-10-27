@@ -52,14 +52,14 @@ int main(int argc, char **argv) {
             traceEndPc = executing;
             if (loadReturnPc && executing == loadReturnPc) {
                 ++loadReturnHits;
-                loadReturnValue = (unsigned)cpu->gprs[ARM_R0] & 0xFFU;
+                loadReturnValue = (unsigned)cpu->gprs[0] & 0xFFU;
                 loadReturnPc = 0;
             }
             for (int j = 0; j < 3; ++j) {
                 if (executing == target[j]) {
                     ++hits[j];
                     if (j == 0) {
-                        loadSaveArg = (unsigned)cpu->gprs[ARM_R0] & 0xFFU;
+                        loadSaveArg = (unsigned)cpu->gprs[0] & 0xFFU;
                         loadReturnPc = (uint32_t)cpu->gprs[ARM_LR] & ~1U;
                     }
                 }
