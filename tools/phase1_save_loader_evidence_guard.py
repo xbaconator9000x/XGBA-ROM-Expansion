@@ -32,7 +32,7 @@ def require(condition, message):
         raise ValueError(message)
 
 def git_blob_sha1(raw):
-    return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\\0" + raw).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
 
 def function_body(source, definition, next_definition):
     start = source.find(definition)
@@ -49,11 +49,11 @@ def verify_pinned_sources(save_c_raw, save_h_raw):
     for status in ("#define SAVE_STATUS_EMPTY    0", "#define SAVE_STATUS_OK       1",
                    "#define NUM_SECTORS_PER_SLOT         14"):
         require(status in h, "missing pinned save ABI anchor: " + status)
-    valid = function_body(c, "static u8 GetSaveValidStatus(const struct SaveSectorLocation *locations)\\n{",
+    valid = function_body(c, "static u8 GetSaveValidStatus(const struct SaveSectorLocation *locations)\n{",
                           "static u8 TryLoadSaveSector(")
-    copy = function_body(c, "static u8 CopySaveSlotData(u16 sectorId, const struct SaveSectorLocation *locations)\\n{",
-                         "static u8 GetSaveValidStatus(const struct SaveSectorLocation *locations)\\n{")
-    loader = function_body(c, "u8 LoadGameSave(u8 saveType)\\n{", "u32 TryReadSpecialSaveSector(")
+    copy = function_body(c, "static u8 CopySaveSlotData(u16 sectorId, const struct SaveSectorLocation *locations)\n{",
+                         "static u8 GetSaveValidStatus(const struct SaveSectorLocation *locations)\n{")
+    loader = function_body(c, "u8 LoadGameSave(u8 saveType)\n{", "u32 TryReadSpecialSaveSector(")
     require(valid.count("locations[gSaveDataBufferPtr->id].size") == 2,
             "expected two unchecked save-slot index expressions")
     require("locations[id].size" in copy and "locations[id].data" in copy,
