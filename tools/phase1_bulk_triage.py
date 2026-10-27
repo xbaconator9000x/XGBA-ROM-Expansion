@@ -36,7 +36,7 @@ TEXT_DATA_EXT={'.json','.md','.txt','.mk','.yaml','.yml','.toml','.ini','.csv','
 def valid_png(data):
     """Conservative PNG container validation; does not certify decoded pixels."""
     import struct,zlib
-    if not data.startswith(b'\\x89PNG\\r\\n\\x1a\\n'):return False
+    if not data.startswith(b'\x89PNG\r\n\x1a\n'):return False
     pos=8;first=True;seen_idat=False;seen_plte=False;idat_finished=False
     color_type=None;bit_depth=None
     while pos+12<=len(data):
