@@ -35,14 +35,14 @@ PORY = """mapscripts XGBA_MapScripts {
         0x4001, 0x1235: XGBA_B
     ]
 }
-raw \`
+raw `
 XGBA_Transition:
     .byte 0x02
 XGBA_A:
     .byte 0x03
 XGBA_B:
     .byte 0x04
-\`
+`
 """
 # Two 5-byte outer entries + one-byte sentinel; two 8-byte conditional
 # records + two-byte sentinel; three raw one-byte script placeholders.
