@@ -196,6 +196,45 @@ def synthetic_tests():
         "evidence_kind": "synthetic_model_not_emulator",
     }
 
+
+def synthetic_torn_generation_cases():
+    """Model valid-sentinel sectors from different save generations.
+
+    Source-level predicates only; not evidence that flash actually tears.
+    """
+    split = SET_HEADER + 4 * FLOOR_SIZE
+    assert split == 3976 and SET_HEADER + 8 * FLOOR_SIZE == 7944
+
+    def generation(n, seed):
+        data = make_set(n)
+        for i in range(8):
+            pos = SET_HEADER + i * FLOOR_SIZE
+            data[pos + 100] = seed + i
+            data[pos + FLOOR_SIZE - 4:pos + FLOOR_SIZE] = (
+                sum(data[pos:pos + FLOOR_SIZE - 4]).to_bytes(4, "little")
+            )
+        data[4:8] = sum(data[SET_HEADER:SET_HEADER + n * FLOOR_SIZE]).to_bytes(4, "little")
+        assert model_validate(data)
+        return data
+
+    results = {}
+    for n in (1, 4, 5, 8):
+        old, new = generation(n, 16), generation(n, 64)
+        mixed = new[:split] + old[split:]
+        accepted = model_validate(mixed)
+        assert accepted == (n <= 4)
+        assert not model_validate(mixed, first_sentinel=False)
+        assert not model_validate(mixed, second_sentinel=False)
+        results[str(n)] = {
+            "first_sector_generation": "new",
+            "second_sector_generation": "old",
+            "both_sentinels_valid": True,
+            "active_floor_bytes_in_second_sector": max(0, n - 4) * FLOOR_SIZE,
+            "mixed_generation_accepted_by_modeled_predicates": accepted,
+            "either_missing_sentinel_rejected": True,
+        }
+    return results
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--source-dir", type=Path)
@@ -209,6 +248,7 @@ def main():
         "phase1_gate": "FAIL_INCOMPLETE",
         "independent_approvals_added": 0,
         "synthetic": synthetic_tests(),
+        "torn_generation_cases": synthetic_torn_generation_cases(),
     }
     if args.source_dir:
         report["pinned_sources"] = verify_sources(args.source_dir)
