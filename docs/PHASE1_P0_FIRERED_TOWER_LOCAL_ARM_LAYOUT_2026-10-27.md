@@ -1,0 +1,9 @@
+# Phase 1 P0 — Trainer Tower synthetic ARMv4T layout witness (27 October 2026)
+
+**Scope:** Local Clang 17 cross-target compilation of a minimal C mirror of four pinned FireRed structure declarations; not a complete FireRed/agbcc build, linked ROM, emulator execution or independent approval.
+
+**Pinned upstream:** pret/pokefirered at ce6406d8c2eaf46d543c8a2606de0c3cb1951982. Read-only source identities inspected: include/pokemon.h (Git blob 414dc41767295aed38f299e8495c5e2f8d25ddc9), include/cereader_tool.h (5cb5a9ebc32db23de07800ccce124bcb28d3ef15), include/constants/global.h (21c781a0d40aa8b303642bbf1eac9ac09ce2b5a9), include/constants/trainer_tower.h (ea0039ea1408c06b8c968cfde8e2628213b2a0dc), src/cereader_tool.c (395be0bcbed8454e645a9f5670cde3024eda508e).
+
+**Observed local compilation:** Clang 17 with target armv4t-none-eabi accepted static assertions for BattleTowerPokemon 44 bytes, TrainerTowerTrainer 328 bytes, TrainerTowerFloor 992 bytes, EReaderTrainerTowerSet 7944 bytes, floor checksum offset 988, and split offset 3976. The first four floors plus eight-byte header occupy 3976 bytes; the remaining four occupy 3968 bytes. Both are below the 4092-byte special-sector payload described by the pinned save.c inclusive copy loop. The local C mirror was hand-transcribed from inspected declarations, so this is corroborating ABI evidence, **not** a source-extracted or full-native compiled result. Existing special-sector dossier remains authoritative for exact-source checking.
+
+**Open obligations:** Commit a reproducible source-extracted compiler checker with pinned-blob and mutation controls; run it in exact-head CI; compare original agbcc and modern build objects; test linked-ROM sector read/write and emulator malformed-sector behaviour. This local witness cannot close those gates. No whole-file candidate or independent approval is added; analyst-prepared baseline 113, independently approved 0, Phase 1 FAIL_INCOMPLETE, Phase 2 untouched.
