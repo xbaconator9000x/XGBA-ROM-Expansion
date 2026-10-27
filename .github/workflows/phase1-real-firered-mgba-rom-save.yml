@@ -9,6 +9,7 @@ on:
       - 'tests/phase1_real_firered_mgba_runtime.c'
       - 'tools/phase1_real_firered_mgba_fixtures.py'
       - 'docs/phase1-review-readiness/real-firered-mgba-runtime-20261028.md'
+      - 'docs/phase1-review-readiness/real-firered-mgba-save-loader-steptrace-20261028.md'
   workflow_dispatch:
 permissions:
   contents: read
