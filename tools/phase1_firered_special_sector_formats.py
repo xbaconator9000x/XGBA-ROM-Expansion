@@ -63,22 +63,22 @@ ANCHORS = {
         ("buffer = AllocZeroed(SECTOR_SIZE);", 2),
     ],
     "fr:include/cereader_tool.h": [
-        ("struct TrainerTowerFloor", 1),
+        ("struct TrainerTowerFloor", 2),
         ("/* 0x3DC */ u32 checksum;", 1),
-        ("struct EReaderTrainerTowerSet", 2),
+        ("struct EReaderTrainerTowerSet", 5),
         ("struct TrainerTowerFloor floors[MAX_TRAINER_TOWER_FLOORS];", 1),
     ],
     "fr:src/hall_of_fame.c": [
         ("LoadGameSave(SAVE_HALL_OF_FAME)", 2),
         ("TrySavingData(SAVE_HALL_OF_FAME);", 1),
-        ("SECTOR_SIZE * NUM_HOF_SECTORS", 5),
+        ("SECTOR_SIZE * NUM_HOF_SECTORS", 4),
     ],
     "fr:include/constants/trainer_tower.h": [
         ("#define MAX_TRAINER_TOWER_FLOORS 8", 1),
         ("#define MAX_TRAINERS_PER_FLOOR  3", 1),
     ],
     "mg:src/gba/savedata.c": [
-        ("case GBA_SAVEDATA_FLASH1M:", 1),
+        ("case GBA_SAVEDATA_FLASH1M:", 4),
         ("return in->read(in, savedata->data, size) == size;", 1),
     ],
     "mg:include/mgba/internal/gba/memory.h": [
