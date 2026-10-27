@@ -25,3 +25,9 @@
 - Preserve distinct analyst-prepared whole-file and independently approved counts; do not claim either from this partial subsystem dossier.
 
 **Current Phase 1 decision: FAIL_INCOMPLETE. Phase 2 untouched.**
+
+## Exact-head CI result and negative-control strengthening
+
+At `ff6cc431841a4961853af530808100f47c7ca80b`, [CI #40604175206](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40604175206) **passed** (text artifact `12780755653`). Actual second controller-driven `TrySavingData` entry/return 1/1, return `SAVE_STATUS_OK=1`, counter 2, **862 Flash bytes changed**, physical `.sav` SHA changed, 14 checksum-valid rotated sectors in physical slot 0, prior slot 1 unchanged. A new emulator process recovered RED/PalletTown, counter 2 and 1,259 field-input hits without writing Flash. One-bit post-save checksum corruption produced native status **255**, counter **1**, older-slot recovery and 1,018 field-input hits. This is **not** actual in-flight power loss. Pinned FireRed `src/save.c` blob `36b960f375c92711aa49b99bdfe9c6b3a99d6b1c`; pinned mGBA `src/gba/savedata.c` blob `fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb`.
+
+This follow-up makes the observed older-slot fallback an **asserted regression requirement**, adds a Python syntax check and includes the new test/dossier paths in the workflow trigger list. **New head requires its own exact-head CI** before promotion; the previous green run remains valid for its immutable commit. All Phase 1 gates `FAIL_INCOMPLETE`, no independent approval.

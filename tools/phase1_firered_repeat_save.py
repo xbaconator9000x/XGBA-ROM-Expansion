@@ -148,6 +148,8 @@ def main(a):
                          f["saveblock1_layout_id"] == 78 and
                          f["saveblock2_player_name_u32"] == 0xFFBEBFCD and
                          f["field_get_player_input_hits"] > 0)
+    assert fallback_observed and f["save_status"] == 255, (
+        "Corrupted newest slot did not recover the older game-written slot", f)
     summary = {
         "first_save_slot1_ids": first_slot,
         "second_save_slot0_ids": second_slot,

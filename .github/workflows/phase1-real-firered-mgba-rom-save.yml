@@ -10,6 +10,8 @@ on:
       - 'tests/phase1_real_firered_mgba_runtime.c'
       - 'tests/phase1_firered_game_controller.c'
       - 'tools/phase1_firered_game_controller.py'
+      - 'tools/phase1_firered_repeat_save.py'
+      - 'docs/phase1-review-readiness/firered-repeated-save-powerloss-20261028.md'
       - 'docs/phase1-review-readiness/firered-controller-save-observation-20261028.md'
       - 'tools/phase1_real_firered_mgba_fixtures.py'
       - 'tools/phase1_real_firered_mgba_adversarial.py'
@@ -236,6 +238,7 @@ jobs:
             --output evidence/controller
           # A second controller-driven save, second cold boot, and checksum-corruption
           # negative control. Never claim a real interrupted write from this surrogate.
+          python3 -m py_compile tools/phase1_firered_repeat_save.py
           python3 tools/phase1_firered_repeat_save.py \
             --rom upstream/pokefirered/pokefirered.gba \
             --probe ./game-controller-probe --status "$status" --counter "$counter" --sb2 "$sb2" \
