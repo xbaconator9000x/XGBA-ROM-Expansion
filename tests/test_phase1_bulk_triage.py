@@ -41,10 +41,10 @@ class Tests(unittest.TestCase):
   def chunk(tag,payload):
    return struct.pack('>I',len(payload))+tag+payload+struct.pack('>I',zlib.crc32(tag+payload)&0xffffffff)
   ihdr=struct.pack('>IIBBBBB',1,1,8,2,0,0,0)
-  png=b'\\x89PNG\\r\\n\\x1a\\n'+chunk(b'IHDR',ihdr)+chunk(b'tEXt',b'EEPROM SaveSector')+chunk(b'IDAT',zlib.compress(b'\\x00\\x00\\x00\\x00'))+chunk(b'IEND',b'')
+  png=b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',ihdr)+chunk(b'tEXt',b'EEPROM SaveSector')+chunk(b'IDAT',zlib.compress(b'\x00\x00\x00\x00'))+chunk(b'IEND',b'')
   gba=bytearray(192);gba[0xb2]=0x96;gba[0xbd]=(-sum(gba[0xa0:0xbd])-0x19)&255
   gba=bytes(gba)+b'EEPROM SaveSector'
-  cases=[('image.png',png,'image_png'),('game.gba',gba,'compiled_rom'),('layout.bin',b'\\x00EEPROM\\x00','opaque_binary'),('layout.bin',b'EEPROM','unknown_binary'),('corrupt.png',png[:-1]+b'!', 'unknown_binary'),('bad.gba',b'\\x00'*192+b'EEPROM','unknown_binary'),('unknown.dat',b'\\x00EEPROM','unknown_binary')]
+  cases=[('image.png',png,'image_png'),('game.gba',gba,'compiled_rom'),('layout.bin',b'\x00EEPROM\x00','opaque_binary'),('layout.bin',b'EEPROM','unknown_binary'),('corrupt.png',png[:-1]+b'!', 'unknown_binary'),('bad.gba',b'\x00'*192+b'EEPROM','unknown_binary'),('unknown.dat',b'\x00EEPROM','unknown_binary')]
   for path,data,kind in cases:
    with self.subTest(path=path,kind=kind):
     s=t.typed_structure(path,data)
@@ -54,7 +54,7 @@ class Tests(unittest.TestCase):
     self.assertFalse(s['risk_flags_line_anchors'])
     self.assertEqual(s['whole_blob_sha256'],hashlib.sha256(data).hexdigest())
  def test_typed_text_anchors(self):
-  b=b'#include "x.h"\\n#ifdef X\\nEEPROM\\n#endif\\n'
+  b=b'#include "x.h"\n#ifdef X\nEEPROM\n#endif\n'
   s=t.typed_structure('sample.h',b)
   self.assertEqual(s['file_kind'],'text_source')
   self.assertEqual(s['source_lines'],4)
@@ -62,7 +62,7 @@ class Tests(unittest.TestCase):
   self.assertEqual(s['risk_flags_line_anchors']['save_state'],[3])
  def test_typed_integrity_negative_controls(self):
   import phase1_bulk_triage_integrity as integrity
-  data=b'\\x00EEPROM\\x00'
+  data=b'\x00EEPROM\x00'
   q={'repo':'pret/pokefirered','path':'layout.bin','blob_sha':t.git_blob(data),'evidence_sha256':'a'*64,'priority':'P2'}
   x={'identity':{'repository':q['repo'],'pinned_commit':t.PINS[q['repo']],'path':q['path'],'git_blob_sha1':q['blob_sha']},
      'evidence':{'dossier_sha256':q['evidence_sha256'],'snapshot_provenance_verified':True,'source_blob_reverified_this_run':True},
