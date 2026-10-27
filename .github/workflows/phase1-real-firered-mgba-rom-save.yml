@@ -234,6 +234,19 @@ jobs:
             --cb1-overworld "$cb1_overworld" --show-start-menu "$show_start_menu" \
             --field-get-player-input "$field_get_player_input" --gmain "$gmain" --sb1 "$sb1" \
             --output evidence/controller
+          # A second controller-driven save, second cold boot, and checksum-corruption
+          # negative control. Never claim a real interrupted write from this surrogate.
+          python3 tools/phase1_firered_repeat_save.py \
+            --rom upstream/pokefirered/pokefirered.gba \
+            --probe ./game-controller-probe --status "$status" --counter "$counter" --sb2 "$sb2" \
+            --start-menu-save "$start_menu_save" --dialog-do-save "$dialog_do_save" \
+            --try-saving-data "$try_saving_data" --title-task "$title_task" \
+            --init-main-menu "$init_main_menu" --execute-main-menu "$execute_main_menu" \
+            --return-to-field "$return_to_field" --continue-saved-game "$continue_saved_game" \
+            --return-field-local "$return_field_local" --overworld "$overworld" \
+            --cb1-overworld "$cb1_overworld" --show-start-menu "$show_start_menu" \
+            --field-get-player-input "$field_get_player_input" --gmain "$gmain" --sb1 "$sb1" \
+            --output evidence/controller
           cp evidence/controller/*.json evidence/results/
       - name: Upload only text evidence, never source-built ROM or raw saves
         if: always()
