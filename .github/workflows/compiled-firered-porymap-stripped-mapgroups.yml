@@ -1,0 +1,122 @@
+name: Phase 1 compiled Porymap-stripped FireRed map-groups ABI
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/compiled-firered-porymap-stripped-mapgroups.yml'
+      - 'docs/PHASE1_P0_PORYMAP_FIRERED_MAP_GROUPS_METADATA_ROUNDTRIP_2026-10-27.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  stripped-map-groups:
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install modern FireRed build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi libpng-dev build-essential
+      - name: Checkout immutable FireRed
+        uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream/pokefirered
+          persist-credentials: false
+      - name: Build original authored source and retain native object
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p stripped-mapgroups-evidence
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/pokefirered hash-object data/maps/map_groups.json)" = 8c382f504d208286161903244772c93138cd7662
+          test "$(git -C upstream/pokefirered hash-object tools/mapjson/mapjson.cpp)" = 8d8ec4e4e6e1c011b06f00819abe40bad10d19d5
+          make -C upstream/pokefirered -j2 GAME_VERSION=FIRERED MODERN=1 > stripped-mapgroups-evidence/original-build.log 2>&1 || { tail -90 stripped-mapgroups-evidence/original-build.log; exit 1; }
+          test -f upstream/pokefirered/pokefirered_modern.elf
+          mapfile -t objects < <(find upstream/pokefirered/build -type f -path '*/data/maps.o' | sort)
+          test "${#objects[@]}" -eq 1
+          echo "${objects[0]}" > stripped-mapgroups-evidence/object-path.txt
+          cp "${objects[0]}" stripped-mapgroups-evidence/maps-original.o
+          for f in connections.inc groups.inc headers.inc; do
+            cp "upstream/pokefirered/data/maps/$f" "stripped-mapgroups-evidence/original-$f"
+          done
+          cp upstream/pokefirered/include/constants/map_groups.h stripped-mapgroups-evidence/original-map_groups.h
+          sha256sum stripped-mapgroups-evidence/maps-original.o
+      - name: Model Porymap default metadata removal only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib
+          p=pathlib.Path('upstream/pokefirered/data/maps/map_groups.json')
+          d=json.loads(p.read_text())
+          order=d.pop('connections_include_order')
+          names=[n for group in d['group_order'] for n in d[group]]
+          assert len(d['group_order'])==43 and len(names)==len(set(names))==425
+          assert len(order)==len(set(order))==63
+          assert [n for n in names if n in set(order)]==order
+          p.write_text(json.dumps(d,indent=2)+'\n')
+          print('Porymap default source-field removal modeled; no Qt editor was executed')
+          PY
+          sleep 2
+          touch upstream/pokefirered/data/maps/map_groups.json
+      - name: Rebuild modern FireRed from stripped-key source and compare
+        shell: bash
+        run: |
+          set -euo pipefail
+          make -C upstream/pokefirered -j2 GAME_VERSION=FIRERED MODERN=1 > stripped-mapgroups-evidence/stripped-build.log 2>&1 || { tail -90 stripped-mapgroups-evidence/stripped-build.log; exit 1; }
+          test -f upstream/pokefirered/pokefirered_modern.elf
+          obj=$(cat stripped-mapgroups-evidence/object-path.txt)
+          cp "$obj" stripped-mapgroups-evidence/maps-stripped.o
+          for f in connections.inc groups.inc headers.inc; do
+            cp "upstream/pokefirered/data/maps/$f" "stripped-mapgroups-evidence/stripped-$f"
+          done
+          cp upstream/pokefirered/include/constants/map_groups.h stripped-mapgroups-evidence/stripped-map_groups.h
+          python3 - <<'PY'
+          import hashlib,json,pathlib,re,sys
+          out=pathlib.Path('stripped-mapgroups-evidence')
+          names=['maps-original.o','maps-stripped.o']
+          for stem in ('connections.inc','groups.inc','headers.inc','map_groups.h'):
+              names += ['original-'+stem,'stripped-'+stem]
+          hashes={n:hashlib.sha256((out/n).read_bytes()).hexdigest() for n in names}
+          def includes(name):
+              return re.findall(r'^\s*\.include\s+"[^"]+/([^/"]+)/connections\.inc"$',(out/name).read_text(),re.M)
+          original=includes('original-connections.inc')
+          stripped=includes('stripped-connections.inc')
+          d=json.loads(pathlib.Path('upstream/pokefirered/data/maps/map_groups.json').read_text())
+          natural=[n for group in d['group_order'] for n in d[group]]
+          assert len(original)==len(set(original))==425
+          assert len(stripped)==len(set(stripped))==425
+          assert stripped==natural, 'stripped-key generator did not follow group order'
+          assert set(original)==set(stripped)
+          report={
+            'source_pin':'ce6406d8c2eaf46d543c8a2606de0c3cb1951982',
+            'change':'remove connections_include_order only; model of Porymap default path',
+            'modern_compiled_both_variants':True,
+            'full_include_order_equal':original==stripped,
+            'maps_object_byte_equal':hashes['maps-original.o']==hashes['maps-stripped.o'],
+            'groups_inc_equal':hashes['original-groups.inc']==hashes['stripped-groups.inc'],
+            'headers_inc_equal':hashes['original-headers.inc']==hashes['stripped-headers.inc'],
+            'map_groups_h_equal':hashes['original-map_groups.h']==hashes['stripped-map_groups.h'],
+            'sha256':hashes,
+            'qt_roundtrip_executed':False,
+            'original_agbcc_tested':False,
+            'linked_rom_byte_equivalence_claimed':False,
+            'independent_approvals':0,
+            'phase1':'FAIL_INCOMPLETE'
+          }
+          (out/'comparison.json').write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({k:v for k,v in report.items() if k!='sha256'},indent=2))
+          if not all(report[k] for k in ('maps_object_byte_equal','groups_inc_equal','headers_inc_equal','map_groups_h_equal')):
+              print('Compiled/generated ABI changed: investigate; do not certify',file=sys.stderr)
+              sys.exit(2)
+          PY
+      - name: Retain compiled evidence without ROM binaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-porymap-stripped-native-map-groups
+          path: stripped-mapgroups-evidence/
+          retention-days: 90
+          if-no-files-found: warn
