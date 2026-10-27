@@ -53,7 +53,7 @@ def load(root):
     verify_anchors(result)
     for path,terms in ANCHORS.items():
         for term in terms:
-            changed=dict(result);changed[path]=changed[path].replace(term,"",1)
+            changed=dict(result);changed[path]=changed[path].replace(term,"")
             try:verify_anchors(changed)
             except ValueError:pass
             else:raise ValueError("Negative source mutation not rejected "+path+":"+term)
