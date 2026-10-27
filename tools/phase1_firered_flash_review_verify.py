@@ -17,6 +17,14 @@ SCHEMA = "xgba-phase1-firered-flash-wholefile-v1"
 FUNC = re.compile(r"^(?:static\s+)?(?:u8|u16|u32|void)\s+([A-Za-z_]\w*)\s*\([^;]*\)\s*$")
 BINARY = re.compile(r"^[0-9a-f]{40}$")
 
+EXPECTED_GLOBALS = {
+    "src/agb_flash.c": {"sTimerNum", "sTimerCount", "sTimerReg", "sSavedIme", "gFlashTimeoutFlag", "PollFlashStatus", "WaitForFlashWrite", "ProgramFlashSector", "gFlash", "ProgramFlashByte", "gFlashNumRemainingBytes", "EraseFlashChip", "EraseFlashSector", "gFlashMaxTime"},
+    "src/agb_flash_1m.c": {"AgbLibFlashVersion", "sSetupInfos"},
+    "src/agb_flash_mx.c": {"mxMaxTime", "MX29L010", "DefaultFlash"},
+    "src/agb_flash_le.c": {"leMaxTime", "LE26FV10N1TS"},
+}
+
+
 
 def blob_sha(data):
     return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
@@ -89,7 +97,7 @@ def verify(manifest, blobs):
         if rec.get("functions") != functions_of(lines):
             raise ValueError("Complete function inventory drift")
         symbols = rec.get("file_scope_symbols")
-        if not isinstance(symbols, list) or len({s["name"] for s in symbols}) != len(symbols):
+        if not isinstance(symbols, list) or {s["name"] for s in symbols} != EXPECTED_GLOBALS[path] or len({s["name"] for s in symbols}) != len(symbols):
             raise ValueError("Bad file-scope symbol inventory")
         for s in symbols:
             line_num = s["line"]
