@@ -71,7 +71,7 @@ def main(a):
         schedule.write_text("".join(f"{f} {keys:03x}\n" for f, keys in make_schedule(name)))
         before = sha(save)
         command = [a.probe, a.rom, str(save), str(schedule), "2400", a.status, a.counter, a.sb2]
-        if name in ("menu_navigation", "pallet_valid", "pallet_null_layout"):
+        if name in ("menu_navigation", "pallet_valid", "pallet_null_layout", "pallet_save_navigation"):
             command.extend((a.start_menu_save, a.dialog_do_save, a.try_saving_data,
                             a.title_task, a.init_main_menu, a.execute_main_menu,
                             a.return_to_field, a.continue_saved_game,
@@ -84,8 +84,8 @@ def main(a):
         assert len(lines) == 1, (name, p.stdout[-500:])
         d = lines[0]
         assert d["frames"] >= 2400 and d["host_flash_writes"] == 0, (name, d)
-        assert d["trace_mode"] == (name in ("menu_navigation", "pallet_valid", "pallet_null_layout")), (name, d)
-        if name == "menu_navigation":
+        assert d["trace_mode"] == (name in ("menu_navigation", "pallet_valid", "pallet_null_layout", "pallet_save_navigation")), (name, d)
+        if name in ("menu_navigation", "pallet_valid", "pallet_null_layout", "pallet_save_navigation"):
             assert d["trace_steps"] > 0, (name, "missing instruction trace", d)
             for key in ("start_menu_save_hits", "save_dialog_do_save_hits",
                         "try_saving_data_entry_hits", "first_try_save_arg",
