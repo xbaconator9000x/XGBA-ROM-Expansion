@@ -8,6 +8,7 @@ on:
       - '.github/workflows/phase1-real-firered-mgba-rom-save.yml'
       - 'tests/phase1_real_firered_mgba_runtime.c'
       - 'tools/phase1_real_firered_mgba_fixtures.py'
+      - 'tools/phase1_real_firered_mgba_adversarial.py'
       - 'docs/phase1-review-readiness/real-firered-mgba-runtime-20261028.md'
       - 'docs/phase1-review-readiness/real-firered-mgba-save-loader-steptrace-20261028.md'
   workflow_dispatch:
@@ -137,6 +138,15 @@ jobs:
               assert d["saveblock2_filler_marker"]==marker,(name,"wrong loaded payload marker",d)
           print("Native SaveBlock2 payload selection verified against five distinct synthetic fixtures; no in-game save-write claim")
           PYTRACE
+          # Real emulator observations of altered header and sector IDs 15/65535.
+          # A native signal/error is evidence of failure, NOT a safety PASS.
+          python3 tools/phase1_real_firered_mgba_adversarial.py \\
+            --probe ./real-rom-probe \\
+            --rom upstream/pokefirered/pokefirered.gba \\
+            --changed-rom evidence/fixtures/firered_header_changed.gba \\
+            --fixtures evidence/fixtures --output evidence/results \\
+            --status "$status" --counter "$counter" \\
+            --loader "$loader" --valid "$valid" --copy "$copy" --sb2 "$sb2"
           cp evidence/fixtures/empty.sav evidence/results/flash_program.sav
           timeout 120s ./real-rom-probe upstream/pokefirered/pokefirered.gba evidence/results/flash_program.sav program "$status" "$counter" | tee evidence/results/flash_program.json
           python3 - <<'PY'
