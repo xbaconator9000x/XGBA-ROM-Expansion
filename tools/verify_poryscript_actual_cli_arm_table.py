@@ -27,6 +27,11 @@ PS_BLOBS = {
 FR_BLOBS = {
     "asm/macros/map.inc": "83ef472c926ce767c9133ab9bd6922280b38bb2d",
     "src/script.c": "d0433bdda062b138e53d1a1d3184b4566ad7d9dc",
+    "tools/preproc/preproc.cpp": "20c2de51b635a5d59f2b4e1ecd93d8fc2748ebe1",
+    "tools/preproc/asm_file.cpp": "e649c2c3da79a2956993b9b1d9fbb67b1a900ad3",
+    "tools/preproc/Makefile": "606318944c63673ec2488bb2f89712a1cc4e4950",
+    "charmap.txt": "b9d0ed9de00d05fc303bb987a5aa634b19009b47",
+    "Makefile": "8b454dbd18eb0069fa5851d788697190890a5b37",
 }
 BASE = 0x08000000
 PORY = """mapscripts XGBA_MapScripts {
@@ -111,11 +116,16 @@ def elf_section(blob: bytes, name: str) -> tuple[tuple[int, ...], bytes]:
     raise ValueError("missing ELF section: " + name)
 
 
-def compile_assembly(assembly: str, root: Path) -> dict:
+def compile_assembly(assembly: str, root: Path, preproc: Path, charmap: Path) -> dict:
     asm, obj, linked = (root / "fixture.s", root / "fixture.o", root / "fixture.elf")
     asm.write_text(assembly, encoding="utf-8")
     try:
-        call(["arm-none-eabi-as", "-mcpu=arm7tdmi", "-o", str(obj), str(asm)])
+        preprocessed = call([str(preproc), str(asm), str(charmap)], cwd=preproc.parent)
+        require("XGBA_MapScripts: ; .global XGBA_MapScripts" in preprocessed,
+                "pinned FireRed preprocessor failed to export CLI global label")
+        normalized = root / "preprocessed.s"
+        normalized.write_text(preprocessed, encoding="utf-8")
+        call(["arm-none-eabi-as", "-mcpu=arm7tdmi", "-o", str(obj), str(normalized)])
     except subprocess.CalledProcessError:
         print("FAILED ASSEMBLY INPUT:\n" + assembly[:8000], file=sys.stderr)
         raise
@@ -159,6 +169,9 @@ def main() -> None:
     psrc, fsrc = pin(ps, PS_PIN, PS_BLOBS), pin(fr, FR_PIN, FR_BLOBS)
     require("func TestEmitMapScripts(" in psrc["emitter/emitter_test.go"],
             "pinned producer test missing")
+    require("GetGlobalLabel()" in fsrc["tools/preproc/preproc.cpp"] and
+            'std::printf("%s: ; .global %s\\n", s, s);' in fsrc["tools/preproc/preproc.cpp"],
+            "FireRed native global-label preprocessor contract changed")
     require("mapScripts += 5;" in fsrc["src/script.c"] and
             "varIndex1 = T1_READ_16(ptr);" in fsrc["src/script.c"],
             "FireRed reader stride/conditional semantics drifted")
@@ -212,7 +225,11 @@ def main() -> None:
             "",
         ])
         original = preamble + emitted
-        positive = compile_assembly(original, root)
+        call(["make", "-C", str(fr / "tools/preproc"), "-j2"])
+        preproc = fr / "tools/preproc/preproc"
+        charmap = fr / "charmap.txt"
+        require(preproc.is_file(), "pinned FireRed preprocessor not built")
+        positive = compile_assembly(original, root, preproc, charmap)
         validate(positive)
         mutations = [
             ("outer-tag", "MAP_SCRIPT_ON_TRANSITION, XGBA_Transition",
@@ -234,7 +251,7 @@ def main() -> None:
             case = root / ("mutation-" + str(index))
             case.mkdir()
             try:
-                validate(compile_assembly(changed, case))
+                validate(compile_assembly(changed, case, preproc, charmap))
             except (ValueError, subprocess.CalledProcessError):
                 continue
             raise ValueError("negative mutation escaped detection: " + label)
@@ -254,6 +271,8 @@ def main() -> None:
             "negative_controls_passed": len(mutations),
             "actual_poryscript_cli_executed": True,
             "actual_pinned_fire_red_macros_used": True,
+            "actual_pinned_fire_red_preprocessor_used": True,
+            "direct_gnu_assembler_rejected_poryscript_double_colon_global": True,
             "original_agbcc_or_stock_rom_equivalence": False,
             "mGBA_execution": False,
             "new_unique_machine_processed_files": 0,
