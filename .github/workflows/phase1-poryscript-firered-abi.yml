@@ -5,11 +5,13 @@ on:
       - 'phase1/**'
     paths:
       - 'tools/phase1_poryscript_firered_map_script_abi.py'
+      - 'tools/phase1_firered_dive_fallback_contract.py'
       - '.github/workflows/phase1-poryscript-firered-abi.yml'
   pull_request:
     paths:
       - 'tools/phase1_poryscript_firered_map_script_abi.py'
       - 'docs/PHASE1_P0_PORYSCRIPT_FIRERED_MAP_SCRIPT_ABI_2026-10-27.md'
+      - 'docs/PHASE1_P0_FIRERED_DIVE_SCRIPT_FALLBACK_2026-10-27.md'
       - 'docs/phase1-disposition-candidates/0009-poryscript-chunk.md'
       - 'docs/PHASE1_STATUS.md'
       - 'docs/phase1-disposition-candidates/README.md'
@@ -47,6 +49,12 @@ jobs:
             --poryscript upstream-poryscript \
             --firered upstream-firered \
             --output phase1-evidence/poryscript-firered-map-script-abi.json
+      - name: Verify type-6 dive-script fallback and 14 negative controls
+        run: |
+          python3 -m py_compile tools/phase1_firered_dive_fallback_contract.py
+          python3 tools/phase1_firered_dive_fallback_contract.py \
+            --firered upstream-firered \
+            --out phase1-evidence/firered-dive-fallback.json
       - name: Preserve fail-closed evidence
         if: always()
         uses: actions/upload-artifact@v4
