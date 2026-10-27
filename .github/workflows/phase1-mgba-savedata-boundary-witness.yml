@@ -1,0 +1,25 @@
+name: Phase 1 pinned mGBA savedata boundary witness (no approvals)
+on:
+  pull_request:
+    paths:
+      - 'tools/phase1_mgba_savedata_boundary_witness.py'
+      - 'tools/phase1_mgba_savedata_handoff_verify.py'
+      - 'docs/phase1-review-readiness/mgba-savedata-boundary-witness-20261027.md'
+      - '.github/workflows/phase1-mgba-savedata-boundary-witness.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-savedata-boundary-witness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax checks
+        run: python3 -m py_compile tools/phase1_mgba_savedata_boundary_witness.py tools/phase1_mgba_savedata_handoff_verify.py
+      - name: Fetch exact pinned mGBA source
+        run: |
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git /tmp/xgba-mgba-boundary
+          git -C /tmp/xgba-mgba-boundary checkout --quiet fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Execute pinned C function bodies against bounded mock VFile
+        run: python3 tools/phase1_mgba_savedata_boundary_witness.py --checkout /tmp/xgba-mgba-boundary
