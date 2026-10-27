@@ -108,7 +108,10 @@ def negative_controls(raw):
         src = raw[key].decode("utf-8")
         require(before in extract(src, signature), "missing mutation anchor: " + name)
         modified = dict(raw)
-        modified[key] = src.replace(before, after, 1).encode()
+        original_body = extract(src, signature)
+        changed_body = original_body.replace(before, after, 1)
+        require(changed_body != original_body, "mutation did not change function")
+        modified[key] = src.replace(original_body, changed_body, 1).encode()
         try:
             contract(modified)
         except RuntimeError:
