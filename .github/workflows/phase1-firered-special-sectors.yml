@@ -1,0 +1,45 @@
+name: Phase 1 pinned FireRed special flash-sector formats
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/phase1_firered_special_sector_formats.py'
+      - 'docs/PHASE1_P0_FIRERED_SPECIAL_FLASH_SECTOR_FORMATS_2026-10-27.md'
+      - '.github/workflows/phase1-firered-special-sectors.yml'
+permissions:
+  contents: read
+jobs:
+  pinned-special-sector-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout exact pinned FireRed
+        uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - name: Checkout exact pinned mGBA
+        uses: actions/checkout@v4
+        with:
+          repository: mgba-emu/mgba
+          ref: fd9dc5c2cbf234365068855851107e762fc6211b
+          path: upstream-mgba
+          persist-credentials: false
+      - name: Verify source identities, format arithmetic and negative mutation controls
+        run: |
+          python3 -m py_compile tools/phase1_firered_special_sector_formats.py
+          python3 tools/phase1_firered_special_sector_formats.py \
+            --firered upstream-firered \
+            --mgba upstream-mgba \
+            --out phase1-evidence/firered-special-sector-formats.json
+      - name: Upload pinned evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-firered-special-sector-formats
+          path: phase1-evidence/firered-special-sector-formats.json
+          if-no-files-found: warn
+          retention-days: 90
