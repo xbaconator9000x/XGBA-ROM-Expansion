@@ -1,0 +1,7 @@
+# Phase 1 next-1000 source-verified machine batch (not approvals)
+
+This checkpoint introduces a **two-shard parallel GitHub Actions pipeline** to source-verify the next 1,000 distinct pinned files, deterministic queue positions 1,000–1,999 after the 113 prepared-file exclusions. It builds on the [first verified 1,000](PHASE1_BULK_TRIAGE_1000_REVIEW_HANDOFF_2026-10-27.md) and the original [fail-closed bulk generator](../tools/phase1_bulk_triage.py).
+
+Each of two 500-file jobs fetches all five immutable upstream commits, validates exact Git tree and canonical blob identity, checks SHA-256-bound dossier provenance and records whole-file structural digests, includes, conditionals and lexical hazards. A dependent job checks all five shard ranges against the original deterministic 14,834-file queue, rejects overlap and false approvals, and commits only after both shards pass. It rebases against a newly fetched branch head and pushes without force; a conflict or non-fast-forward fails rather than overwrites work.
+
+**Pending until CI runs:** new source-verified count, artifact identities, exact-head CI and checkpoint commit. Baseline: 1,000 previously verified machine records; 113 analyst-prepared whole-file candidates; zero independent approvals; Phase 1 FAIL_INCOMPLETE. Machine triage is not full semantic understanding or runtime/compiler/editor certification. No Phase 2 implementation.

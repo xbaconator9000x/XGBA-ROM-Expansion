@@ -1,0 +1,58 @@
+name: Phase 1 guarded continuation dispatcher
+on:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+permissions:
+  actions: write
+  contents: read
+concurrency:
+  group: xgba-phase1-continuation-dispatcher
+  cancel-in-progress: false
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+    steps:
+      - name: Guarded pinned evidence continuation
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Dispatch only existing, predefined evidence builders. This is NOT
+          # an AI semantic reviewer or a Phase 1 signoff mechanism.
+          workflows=(phase1-census.yml function-dossiers.yml)
+          for workflow in "${workflows[@]}"; do
+            response=$(gh api "repos/$REPO/actions/workflows/$workflow/runs?per_page=10")
+            active=$(jq '[.workflow_runs[] | select(.status != "completed")] | length' <<<"$response")
+            if (( active > 0 )); then
+              echo "$workflow: already active; no duplicate dispatch"
+              continue
+            fi
+            last=$(jq -r '.workflow_runs[0].created_at // empty' <<<"$response")
+            # Do not continuously repeat a successful run against unchanged
+            # default-branch source. Only dispatch when evidence is absent,
+            # or latest run failed and requires one controlled retry.
+            conclusion=$(jq -r '.workflow_runs[0].conclusion // empty' <<<"$response")
+            head=$(gh api "repos/$REPO/commits/${{ github.event.repository.default_branch }}" --jq .sha)
+            last_head=$(jq -r '.workflow_runs[0].head_sha // empty' <<<"$response")
+            if [[ "$conclusion" == "success" && "$last_head" == "$head" ]]; then
+              echo "$workflow: evidence succeeded at current default-branch head; no-op"
+              continue
+            fi
+            # A source revision change may need new evidence; a failed run\n            # receives at most one dispatch attempt per cooldown window.\n            if [[ -n "$last" ]]; then
+              age=$(( ($(date -u +%s) - $(date -u -d "$last" +%s)) / 60 ))
+              if (( age < 60 )); then
+                echo "$workflow: retry cooldown ${age}m < 60m; no-op"
+                continue
+              fi
+            fi
+            echo "$workflow: dispatching evidence run (prior conclusion: ${conclusion:-none})"
+            gh workflow run "$workflow" --repo "$REPO" --ref "${{ github.event.repository.default_branch }}"
+          done
+      - name: Report non-certification boundary
+        run: |
+          echo 'Dispatcher can restart predefined evidence builders, not write semantic findings.'
+          echo 'No whole-file approvals, Phase 1 gate changes, or Phase 2 implementation.'

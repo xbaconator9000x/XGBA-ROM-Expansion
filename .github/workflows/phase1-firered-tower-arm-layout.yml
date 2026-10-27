@@ -1,0 +1,51 @@
+name: Phase 1 pinned Trainer Tower ARMv4T Clang ABI witness
+on:
+  push:
+    branches: ["phase1/**"]
+    paths:
+      - "tools/phase1_firered_tower_arm_layout.py"
+      - "tools/phase1_firered_tower_layout_model.py"
+      - ".github/workflows/phase1-firered-tower-arm-layout.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify source checker and compiler availability
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_firered_tower_layout_model.py tools/phase1_firered_tower_arm_layout.py
+          clang --version | head -1
+          readelf --version | head -1
+      - name: Fetch immutable pinned FireRed source
+        run: |
+          set -euo pipefail
+          git init -q "$RUNNER_TEMP/firered-pin"
+          git -C "$RUNNER_TEMP/firered-pin" remote add origin https://github.com/pret/pokefirered.git
+          git -C "$RUNNER_TEMP/firered-pin" -c protocol.version=2 fetch -q --filter=blob:none --depth=1 origin ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git -C "$RUNNER_TEMP/firered-pin" checkout -q --detach FETCH_HEAD
+          test "$(git -C "$RUNNER_TEMP/firered-pin" rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+      - name: Compile extracted pinned structures for ARMv4T
+        run: |
+          set -euo pipefail
+          python3 tools/phase1_firered_tower_arm_layout.py --source "$RUNNER_TEMP/firered-pin" --out audit-output/tower-arm-layout.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open("audit-output/tower-arm-layout.json"))
+          assert d["elf_machine"]=="ARM" and d["elf_class"]=="ELF32"
+          assert d["sec31_size"]==3968 and d["independent_approvals"]==0
+          assert d["phase1_gate"]=="FAIL_INCOMPLETE"
+          print("PINNED_SYNTHETIC_ARM_LAYOUT_PASS")
+          PY
+      - name: Retain bounded ARM object-layout evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-pinned-tower-arm-layout
+          path: audit-output/tower-arm-layout.json
+          if-no-files-found: warn
+          retention-days: 60

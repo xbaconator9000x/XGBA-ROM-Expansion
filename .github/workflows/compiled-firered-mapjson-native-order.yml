@@ -1,0 +1,112 @@
+name: Phase 1 FireRed native maps object connection-order equivalence
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/compiled-firered-mapjson-native-order.yml'
+permissions:
+  contents: read
+jobs:
+  native-order:
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned FireRed modern-build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi libpng-dev build-essential
+      - name: Checkout exact pinned FireRed
+        uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream/pokefirered
+          persist-credentials: false
+      - name: Verify unmodified authored source before compiling
+        run: |
+          set -euo pipefail
+          mkdir -p native-order-evidence
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/pokefirered hash-object data/maps/map_groups.json)" = 8c382f504d208286161903244772c93138cd7662
+          test "$(git -C upstream/pokefirered hash-object tools/mapjson/mapjson.cpp)" = 8d8ec4e4e6e1c011b06f00819abe40bad10d19d5
+          arm-none-eabi-gcc --version | head -1 | tee native-order-evidence/compiler.txt
+      - name: Compile original pinned modern FireRed from authored JSON
+        shell: bash
+        run: |
+          set -euo pipefail
+          make -C upstream/pokefirered -j2 GAME_VERSION=FIRERED MODERN=1 > native-order-evidence/authored-build.log 2>&1 || { tail -100 native-order-evidence/authored-build.log; exit 1; }
+          test -f upstream/pokefirered/pokefirered_modern.elf
+          mapfile -t objects < <(find upstream/pokefirered/build -type f -path '*/data/maps.o' | sort)
+          test "${#objects[@]}" -eq 1 || { printf 'maps.o candidates: %s\n' "${objects[*]}"; exit 2; }
+          cp "${objects[0]}" native-order-evidence/maps-authored.o
+          cp upstream/pokefirered/data/maps/connections.inc native-order-evidence/connections-authored.inc
+          echo "${objects[0]}" > native-order-evidence/maps-object-path.txt
+          sha256sum native-order-evidence/maps-authored.o native-order-evidence/connections-authored.inc
+      - name: Change only authored connection include ordering in disposable checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib
+          path = pathlib.Path('upstream/pokefirered/data/maps/map_groups.json')
+          d = json.loads(path.read_text())
+          names = [n for group in d['group_order'] for n in d[group]]
+          original = d['connections_include_order']
+          assert len(names) == 425 and len(original) == 63
+          assert len(set(names)) == 425 and len(set(original)) == 63
+          assert set(original) <= set(names)
+          d['connections_include_order'] = original + [n for n in names if n not in set(original)]
+          path.write_text(json.dumps(d, indent=2)+'\n')
+          PY
+          # Guarantee the changed JSON is newer than generated targets.
+          sleep 2
+          touch upstream/pokefirered/data/maps/map_groups.json
+      - name: Rebuild same modern maps object with synthetic completed order
+        shell: bash
+        run: |
+          set -euo pipefail
+          make -C upstream/pokefirered -j2 GAME_VERSION=FIRERED MODERN=1 > native-order-evidence/control-build.log 2>&1 || { tail -100 native-order-evidence/control-build.log; exit 1; }
+          obj=$(cat native-order-evidence/maps-object-path.txt)
+          test -f "$obj"
+          cp "$obj" native-order-evidence/maps-control.o
+          cp upstream/pokefirered/data/maps/connections.inc native-order-evidence/connections-control.inc
+          python3 - <<'PY'
+          import hashlib, json, pathlib, re
+          out=pathlib.Path('native-order-evidence')
+          names=['maps-authored.o','maps-control.o','connections-authored.inc','connections-control.inc']
+          hashes={n:hashlib.sha256((out/n).read_bytes()).hexdigest() for n in names}
+          def includes(name):
+              return re.findall(r'^\s*\.include\s+"[^"]+/([^/"]+)/connections\.inc"$',
+                                (out/name).read_text(), re.M)
+          authored=includes('connections-authored.inc')
+          control=includes('connections-control.inc')
+          assert len(authored)==len(set(authored))==425
+          assert len(control)==len(set(control))==425
+          d=json.loads(pathlib.Path('upstream/pokefirered/data/maps/map_groups.json').read_text())
+          ordered=d['connections_include_order'][:63]
+          assert [x for x in authored if x in set(ordered)]==ordered
+          assert [x for x in control if x in set(ordered)]==ordered
+          report={
+              'source_pin':'ce6406d8c2eaf46d543c8a2606de0c3cb1951982',
+              'original_source_unmodified_for_first_build':True,
+              'second_build_synthetic_order_only':True,
+              'modern_compiler_build':True,
+              'sha256':hashes,
+              'global_include_order_equal':authored==control,
+              'maps_object_byte_equal':hashes['maps-authored.o']==hashes['maps-control.o'],
+              'linked_rom_byte_equal':'NOT_TESTED',
+              'independent_approvals':0,
+              'phase1_complete':False,
+          }
+          (out/'comparison.json').write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+      - name: Preserve object bytes, build logs and comparison (no ROM binary)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-native-mapjson-connection-order
+          path: native-order-evidence/
+          retention-days: 90
+          if-no-files-found: warn

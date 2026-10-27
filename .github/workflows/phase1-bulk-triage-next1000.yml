@@ -1,0 +1,110 @@
+name: Phase 1 next 1000 pinned machine triage (no approvals)
+on:
+  push:
+    branches: ["phase1/**"]
+    paths:
+      - ".github/workflows/phase1-bulk-triage-next1000.yml"
+      - "tools/phase1_bulk_triage_integrity.py"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: phase1-next1000-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  shard:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {offset: 1000, last: 1499}
+          - {offset: 1500, last: 1999}
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test original fail-closed triage
+        run: python3 -m unittest discover -s tests -p test_phase1_bulk_triage.py -v
+      - name: Fetch five exact-pinned source trees
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/xgba-pins"
+          while read -r repo sha; do
+            target="$RUNNER_TEMP/xgba-pins/$(basename "$repo")"
+            git init -q "$target"
+            git -C "$target" remote add origin "https://github.com/$repo.git"
+            git -C "$target" -c protocol.version=2 fetch -q --filter=blob:none --depth=1 origin "$sha"
+            git -C "$target" config remote.origin.promisor true
+            git -C "$target" config remote.origin.partialclonefilter blob:none
+            git -C "$target" update-ref refs/heads/triage-pin "$sha"
+            git -C "$target" symbolic-ref HEAD refs/heads/triage-pin
+            test "$(git -C "$target" rev-parse HEAD)" = "$sha"
+          done <<'PINS'
+          pret/pokefirered ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          mgba-emu/mgba fd9dc5c2cbf234365068855851107e762fc6211b
+          huderlem/porymap 26b919d7ff4b54152de010abd5bf344af2ebe116
+          huderlem/poryscript c32481161c767b25a3425fa9f1f8729927ff3d55
+          pret/agbcc da598c1d918402c42c0c0d7128ba14567f3175e9
+          PINS
+      - name: Verify 500 source blobs and build structural records
+        shell: bash
+        env:
+          OFFSET: ${{ matrix.offset }}
+          LAST: ${{ matrix.last }}
+        run: |
+          set -euo pipefail
+          output="batch-$(printf '%06d' "$OFFSET")-$(printf '%06d' "$LAST").json"
+          python3 tools/phase1_bulk_triage.py --source-root "$RUNNER_TEMP/xgba-pins" --limit 500 --offset "$OFFSET" --output "$output"
+          python3 - "$output" "$OFFSET" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          assert d['selected_count']==500 and d['offset']==int(sys.argv[2]) and d['source_reverified'] is True
+          assert len({(x['identity']['repository'],x['identity']['path']) for x in d['records']})==500
+          assert all(x['whole_file_structure'] and x['independent_approval'] is False and x['prepared_whole_file_candidate'] is False for x in d['records'])
+          print('SHARD_PASS 500 source-verified records, no approvals')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phase1-triage-next1000-${{ matrix.offset }}
+          path: batch-*.json
+          retention-days: 90
+  reconcile:
+    needs: shard
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: phase1-triage-next1000-*
+          path: audit-output/next1000
+          merge-multiple: true
+      - name: Reconcile 2000 unique pinned identities and all fail-closed gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp audit-output/next1000/batch-001000-001499.json docs/phase1-machine-triage/
+          cp audit-output/next1000/batch-001500-001999.json docs/phase1-machine-triage/
+          python3 tools/phase1_bulk_triage_integrity.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phase1-next1000-verified
+          path: |
+            docs/phase1-machine-triage/batch-001000-001499.json
+            docs/phase1-machine-triage/batch-001500-001999.json
+            docs/phase1-machine-triage/integrity-000000-001999.json
+          retention-days: 90
+      - name: Commit machine-only checkpoint without force or concurrent overwrite
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/phase1-machine-triage/batch-001000-001499.json docs/phase1-machine-triage/batch-001500-001999.json docs/phase1-machine-triage/integrity-000000-001999.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Checkpoint next 1000 exact-pinned machine records (no approvals)'
+          git fetch origin "$GITHUB_REF_NAME"
+          git rebase "origin/$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"

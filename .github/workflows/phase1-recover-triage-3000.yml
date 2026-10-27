@@ -1,0 +1,53 @@
+name: Phase 1 recover verified 3000-3999 triage artifacts (no approvals)
+on:
+  push:
+    branches: ["phase1/firered-layout-writers-20261026"]
+    paths:
+      - ".github/workflows/phase1-recover-triage-3000.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: phase1-recover-triage-3000-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  recover:
+    if: github.ref == 'refs/heads/phase1/firered-layout-writers-20261026'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check recovery code and negative controls
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_recover_triage_artifacts.py tools/phase1_bulk_triage_integrity_range.py
+          python3 -m unittest discover -s tests -p test_phase1_recover_triage_artifacts.py -v
+      - name: Retrieve four existing CI artifacts by immutable digests
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 tools/phase1_recover_triage_artifacts.py --write --reconcile
+      - name: Commit only after exact-source cumulative integrity succeeds
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/phase1-machine-triage/batch-003*.json docs/phase1-machine-triage/integrity-000000-003999.json
+          if git diff --cached --quiet; then
+            echo 'Checkpoint already present; no duplicate commit'
+            exit 0
+          fi
+          git commit -m 'Reconcile 1000 previously verified pinned triage records (no approvals)'
+          git fetch origin "$GITHUB_REF_NAME"
+          git show "origin/$GITHUB_REF_NAME:docs/phase1-machine-triage/batch-config.json" > "$RUNNER_TEMP/remote-batch-config.json"
+          cmp docs/phase1-machine-triage/batch-config.json "$RUNNER_TEMP/remote-batch-config.json" || {
+            echo 'Concurrent batch configuration changed; aborting'
+            exit 1
+          }
+          git rebase "origin/$GITHUB_REF_NAME"
+          python3 tools/phase1_bulk_triage_integrity_range.py --upto 4000 --new-start 3000
+          git diff --exit-code -- docs/phase1-machine-triage/integrity-000000-003999.json
+          git push origin "HEAD:$GITHUB_REF_NAME"

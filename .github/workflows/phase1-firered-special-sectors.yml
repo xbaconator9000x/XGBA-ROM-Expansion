@@ -1,0 +1,72 @@
+name: Phase 1 pinned FireRed special flash-sector formats
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/phase1_firered_special_sector_formats.py'
+      - 'tools/phase1_firered_slot_counter_coherence.py'
+      - 'tools/phase1_firered_tower_layout_model.py'
+      - 'tools/phase1_firered_tower_arm_layout.py'
+      - 'docs/PHASE1_P0_FIRERED_TOWER_ARM_LAYOUT_2026-10-27.md'
+      - 'docs/PHASE1_P0_FIRERED_TOWER_LAYOUT_HOST_MODEL_2026-10-27.md'
+      - 'docs/PHASE1_P0_FIRERED_SPECIAL_FLASH_SECTOR_FORMATS_2026-10-27.md'
+      - '.github/workflows/phase1-firered-special-sectors.yml'
+permissions:
+  contents: read
+jobs:
+  pinned-special-sector-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout exact pinned FireRed
+        uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - name: Checkout exact pinned mGBA
+        uses: actions/checkout@v4
+        with:
+          repository: mgba-emu/mgba
+          ref: fd9dc5c2cbf234365068855851107e762fc6211b
+          path: upstream-mgba
+          persist-credentials: false
+      - name: Verify source identities, format arithmetic and negative mutation controls
+        run: |
+          python3 -m py_compile tools/phase1_firered_special_sector_formats.py
+          python3 tools/phase1_firered_special_sector_formats.py \
+            --firered upstream-firered \
+            --mgba upstream-mgba \
+            --out phase1-evidence/firered-special-sector-formats.json
+      - name: Verify counter-generation and slot-parity synthetic witnesses
+        run: |
+          python3 -m py_compile tools/phase1_firered_slot_counter_coherence.py
+          python3 tools/phase1_firered_slot_counter_coherence.py \
+            --source upstream-firered \
+            --out phase1-evidence/firered-slot-counter-coherence.json
+      - name: Compile source-extracted Trainer Tower host layout witness
+        run: |
+          python3 -m py_compile tools/phase1_firered_tower_layout_model.py
+          python3 tools/phase1_firered_tower_layout_model.py \
+            --source upstream-firered \
+            --out phase1-evidence/firered-trainer-tower-host-layout.json
+      - name: Compile exact-pinned ARMv4T Clang layout assertions
+        run: |
+          python3 -m py_compile tools/phase1_firered_tower_arm_layout.py
+          python3 tools/phase1_firered_tower_arm_layout.py \
+            --source upstream-firered \
+            --out phase1-evidence/firered-trainer-tower-armv4t-clang-layout.json
+      - name: Upload pinned evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-firered-special-sector-formats
+          path: |
+            phase1-evidence/firered-special-sector-formats.json
+            phase1-evidence/firered-slot-counter-coherence.json
+            phase1-evidence/firered-trainer-tower-host-layout.json
+            phase1-evidence/firered-trainer-tower-armv4t-clang-layout.json
+          if-no-files-found: warn
+          retention-days: 90

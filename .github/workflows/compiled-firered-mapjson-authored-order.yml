@@ -1,0 +1,196 @@
+name: Phase 1 compiled FireRed mapjson authored-order witness
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/compiled-firered-mapjson-authored-order.yml'
+permissions:
+  contents: read
+jobs:
+  pinned-generator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout exact pinned FireRed source
+        uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream
+          persist-credentials: false
+      - name: Verify exact source and input blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd upstream
+          test "$(git rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git hash-object tools/mapjson/mapjson.cpp)" = 8d8ec4e4e6e1c011b06f00819abe40bad10d19d5
+          test "$(git hash-object tools/mapjson/json11.cpp)" = fcacdbeb39c3110e4564f57a8f26b7bb34678a7e
+          test "$(git hash-object tools/mapjson/json11.h)" = c04c4362f9784006c7a45ad04729fab1c77dd1d9
+          test "$(git hash-object tools/mapjson/mapjson.h)" = 6e961a28ec0e2c6a017e7dda2e9d81f07e3e3ceb
+          test "$(git hash-object data/maps/map_groups.json)" = 8c382f504d208286161903244772c93138cd7662
+          test "$(git hash-object tools/mapjson/Makefile)" = 100e809c6c27e6c04d3b6f2406ff288922d80c13
+      - name: Compile unmodified pinned generator in two toolchain modes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/bin
+          cd upstream/tools/mapjson
+          g++ --version | head -1 | tee "$GITHUB_WORKSPACE/evidence/compiler.txt"
+          g++ -std=c++11 -Wall -O2 json11.cpp mapjson.cpp -o "$GITHUB_WORKSPACE/evidence/bin/mapjson-release"
+          g++ -std=c++11 -Wall -O0 -g -D_GLIBCXX_DEBUG json11.cpp mapjson.cpp -o "$GITHUB_WORKSPACE/evidence/bin/mapjson-debug"
+      - name: Execute original authored input and separately labeled synthetic control
+        shell: bash
+        run: |
+          set -euo pipefail
+          ulimit -c 0
+          python3 - <<'PY'
+          import json, pathlib
+          root = pathlib.Path('upstream/data/maps/map_groups.json')
+          data = json.loads(root.read_text())
+          names = [n for group in data['group_order'] for n in data[group]]
+          order = data['connections_include_order']
+          assert len(data['group_order']) == 43
+          assert len(names) == len(set(names)) == 425
+          assert len(order) == len(set(order)) == 63
+          assert set(order) <= set(names)
+          assert len(set(names) - set(order)) == 362
+          authored = {}
+          connection_shapes = {'missing': [], 'null': [], 'empty_array': [], 'nonempty_array': []}
+          for name in names:
+              m = json.loads((root.parent/name/'map.json').read_text())
+              raw = m.get('connections')
+              if 'connections' not in m: shape = 'missing'
+              elif raw is None: shape = 'null'
+              elif isinstance(raw, list) and len(raw) == 0: shape = 'empty_array'
+              elif isinstance(raw, list): shape = 'nonempty_array'
+              else: raise AssertionError((name, type(raw)))
+              connection_shapes[shape].append(name)
+              authored[name] = {'count': len(raw or []),
+                                'no_include': m.get('connections_no_include') in (True, 'TRUE')}
+          ordered = set(order)
+          nonempty = {name for name in names if authored[name]['count'] > 0}
+          no_include = {name for name in nonempty if authored[name]['no_include']}
+          coverage = {
+              'maps_total': len(names), 'explicit_order_total': len(order),
+              'omitted_order_total': len(names)-len(order),
+              'nonempty_connections_total': len(nonempty),
+              'nonempty_explicitly_ordered': len(nonempty & ordered),
+              'nonempty_omitted_from_order': len(nonempty - ordered),
+              'nonempty_no_include': len(no_include),
+              'nonempty_no_include_names': sorted(no_include),
+              'nonempty_no_include_omitted_from_order': len(no_include - ordered),
+              'nonempty_omitted_names': sorted(nonempty - ordered),
+              'connection_field_shapes': {k: len(v) for k,v in connection_shapes.items()},
+              'omitted_empty_array_names': sorted(set(connection_shapes['empty_array']) - ordered),
+              'omitted_null_names_count': len(set(connection_shapes['null']) - ordered),
+              'omitted_missing_names_count': len(set(connection_shapes['missing']) - ordered),
+          }
+          pathlib.Path('evidence/authored-connection-coverage.json').write_text(
+              json.dumps(coverage, indent=2, sort_keys=True)+'\n')
+          print('AUTHORED_CONNECTION_COVERAGE', json.dumps(coverage))
+          # Synthetic POSITIVE CONTROL ONLY, saved beside the authored input so
+          # map constants still resolve 425 sibling map.json files. The
+          # original pinned input remains untouched.
+          data['connections_include_order'] = order + [n for n in names if n not in set(order)]
+          pathlib.Path('upstream/data/maps/map_groups_xgba_complete_order_control.json').write_text(json.dumps(data))
+          PY
+          for mode in release-authored debug-authored debug-complete-control; do
+            mkdir -p "evidence/$mode/data/maps" "evidence/$mode/include/constants"
+            if [[ "$mode" == release-* ]]; then bin=mapjson-release; else bin=mapjson-debug; fi
+            if [[ "$mode" == *complete-control ]]; then
+              input="$GITHUB_WORKSPACE/upstream/data/maps/map_groups_xgba_complete_order_control.json"
+            else
+              input="$GITHUB_WORKSPACE/upstream/data/maps/map_groups.json"
+            fi
+            set +e
+            (
+              cd "evidence/$mode"
+              "$GITHUB_WORKSPACE/evidence/bin/$bin" groups firered "$input" data/maps include/constants
+            ) > "evidence/$mode/stdout.txt" 2> "evidence/$mode/stderr.txt"
+            rc=$?
+            set -e
+            echo "$rc" > "evidence/$mode/exit-code.txt"
+            echo "$mode exit=$rc"
+            find "evidence/$mode/data" "evidence/$mode/include" -type f -print0 | sort -z | xargs -0 -r sha256sum > "evidence/$mode/generated-sha256.txt"
+          done
+      - name: Assess output invariants without conflating control with authored input
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib, re
+          base = pathlib.Path('evidence')
+          results = {}
+          for name in ('release-authored','debug-authored','debug-complete-control'):
+              d = base/name
+              rc = int((d/'exit-code.txt').read_text())
+              outputs = {}
+              for path in ('data/maps/groups.inc','data/maps/connections.inc','data/maps/headers.inc',
+                           'data/maps/events.inc','include/constants/map_groups.h'):
+                  f = d/path
+                  outputs[path] = f.exists()
+              results[name] = {'exit_code': rc, 'outputs': outputs,
+                               'stderr_prefix': (d/'stderr.txt').read_text(errors='replace')[:1000]}
+          normal = base/'release-authored'
+          positive = base/'debug-complete-control'
+          # A positive control must actually run to completion; otherwise
+          # the debug-negative comparison is uninterpretable.
+          assert results['debug-complete-control']['exit_code'] == 0, results
+          assert all(results['debug-complete-control']['outputs'].values()), results
+          for name in ('release-authored','debug-complete-control'):
+              if results[name]['exit_code'] != 0: continue
+              inc = (base/name/'data/maps/connections.inc').read_text()
+              includes = re.findall(r'^\s*\.include\s+"[^"]+/([^/"]+)/connections\.inc"$', inc, re.M)
+              assert len(includes) == len(set(includes)) == 425, (name,len(includes))
+              results[name]['included_maps'] = len(includes)
+          coverage = json.loads((base/'authored-connection-coverage.json').read_text())
+          results['authored_connection_coverage'] = coverage
+          if results['release-authored']['exit_code'] == 0:
+              def included_names(directory):
+                  text = (directory/'data/maps/connections.inc').read_text()
+                  return re.findall(r'^\s*\.include\s+"[^"]+/([^/"]+)/connections\.inc"$', text, re.M)
+              original_order = included_names(normal)
+              control_order = included_names(positive)
+              results['release_vs_control_full_include_order_equal'] = original_order == control_order
+              ordered = json.loads(pathlib.Path('upstream/data/maps/map_groups.json').read_text())['connections_include_order']
+              nonempty = set(ordered)
+              results['release_vs_control_nonempty_order_equal'] = (
+                  [x for x in original_order if x in nonempty] ==
+                  [x for x in control_order if x in nonempty])
+              results['release_nonempty_order_matches_authored'] = (
+                  [x for x in original_order if x in nonempty] == ordered)
+              active = set(coverage['nonempty_omitted_names'])
+              results['release_vs_control_omitted_nonempty_order_equal'] = (
+                  [x for x in original_order if x in active] ==
+                  [x for x in control_order if x in active])
+              # Generated group/index constants and other unrelated output must
+              # not depend on global connection include order.
+              import hashlib
+              for p in ('data/maps/groups.inc','data/maps/headers.inc','data/maps/events.inc',
+                        'include/constants/map_groups.h'):
+                  a=(normal/p).read_bytes()
+                  b=(positive/p).read_bytes()
+                  assert a==b, f'Unexpected authored/control difference in {p}'
+              results['unrelated_generated_outputs_equal'] = True
+          (base/'summary.json').write_text(json.dumps(results, indent=2, sort_keys=True)+'\n')
+          print(json.dumps(results, indent=2))
+          PY
+      - name: Preserve compiler, stderr, exit codes, hashes and generated evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-pinned-mapjson-authored-order
+          path: |
+            evidence/compiler.txt
+            evidence/authored-connection-coverage.json
+            evidence/*/exit-code.txt
+            evidence/*/stderr.txt
+            evidence/*/stdout.txt
+            evidence/*/generated-sha256.txt
+            evidence/*/data/maps/*.inc
+            evidence/*/include/constants/map_groups.h
+            evidence/summary.json
+          retention-days: 90
+          if-no-files-found: warn

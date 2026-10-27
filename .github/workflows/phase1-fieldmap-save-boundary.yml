@@ -1,0 +1,47 @@
+name: Phase 1 pinned FireRed fieldmap and editor boundaries
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/verify_firered_mapview_save_boundary.py'
+      - 'tools/verify_firered_connection_fill_geometry.py'
+      - '.github/workflows/phase1-fieldmap-save-boundary.yml'
+permissions:
+  contents: read
+jobs:
+  pinned-mapview-boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout exact FireRed pin
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered fetch --quiet origin ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+      - name: Checkout exact Porymap pin
+        run: |
+          set -euo pipefail
+          git clone --quiet --filter=blob:none https://github.com/huderlem/porymap.git upstream/porymap
+          git -C upstream/porymap fetch --quiet origin 26b919d7ff4b54152de010abd5bf344af2ebe116
+          git -C upstream/porymap checkout --quiet --detach 26b919d7ff4b54152de010abd5bf344af2ebe116
+      - name: Check synthetic controls and source-anchored boundaries
+        run: |
+          python3 -m py_compile tools/verify_firered_mapview_save_boundary.py
+          python3 tools/verify_firered_mapview_save_boundary.py --self-test
+          python3 tools/verify_firered_mapview_save_boundary.py --root upstream/pokefirered
+          python3 -m py_compile tools/verify_firered_connection_fill_geometry.py
+          python3 tools/verify_firered_connection_fill_geometry.py --self-test
+          python3 tools/verify_firered_connection_fill_geometry.py --firered upstream/pokefirered --porymap upstream/porymap
+      - name: Preserve non-certifying witness
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-fieldmap-boundary-witnesses
+          path: |
+            audit-output/fieldmap_save_boundary.json
+            audit-output/connection_fill_geometry.json
+          retention-days: 90
+          if-no-files-found: warn

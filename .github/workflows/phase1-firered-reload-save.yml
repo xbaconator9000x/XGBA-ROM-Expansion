@@ -1,0 +1,43 @@
+name: Phase 1 pinned FireRed save-reload lifecycle
+on:
+  pull_request:
+    paths:
+      - 'tools/phase1_firered_reload_save_lifetime.py'
+      - 'docs/PHASE1_P0_FIRERED_RELOAD_SAVE_RAM_LIFETIME_2026-10-27.md'
+      - 'docs/phase1-disposition-candidates/0003-firered-reset-save-heap.md'
+      - 'docs/PHASE1_STATUS.md'
+      - '.github/workflows/phase1-firered-reload-save.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pinned-reload-save:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout audit branch
+        uses: actions/checkout@v4
+      - name: Checkout exact FireRed source
+        uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - name: Verify source checker syntax
+        run: python3 -m py_compile tools/phase1_firered_reload_save_lifetime.py
+      - name: Run pinned source and mutation checks
+        run: |
+          python3 tools/phase1_firered_reload_save_lifetime.py \
+            --source upstream-firered \
+            --output phase1-evidence/firered-reload-save-lifetime.json
+      - name: Preserve evidence, including on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-firered-reload-save
+          path: phase1-evidence/
+          if-no-files-found: warn
+          retention-days: 30
