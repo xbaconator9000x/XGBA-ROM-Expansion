@@ -66,12 +66,20 @@
 | `pret/pokefirered:data/script_cmd_table.inc` | [0047](0047-firered-script-command-dispatch-table.md) | pending independent review |
 | `pret/pokefirered:src/script.c` | [0048](0048-firered-script-interpreter-runtime.md) | pending independent review |
 | `pret/pokefirered:include/script.h` | [0049](0049-firered-script-context-abi-header.md) | pending independent review |
+| `pret/pokefirered:include/event_data.h` | [0050](0050-firered-event-data-api-header.md) | pending independent review |
+| `pret/pokefirered:include/fieldmap.h` | [0051](0051-firered-fieldmap-public-contract.md) | pending independent review |
+| `pret/pokefirered:include/overworld.h` | [0052](0052-firered-overworld-api-header.md) | pending independent review |
+| `pret/pokefirered:include/field_control_avatar.h` | [0053](0053-firered-field-input-api-header.md) | pending independent review |
 
-**Count: 54 distinct pinned upstream whole-file identities prepared / 14,834 = 0.3640%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
+**Count: 58 distinct pinned upstream whole-file identities prepared / 14,834 = 0.3910%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
 
 ## 27 October — corrected duplicate and script interpreter ABI closure
 
 Candidate [0028](0028-firered-map-script-types.md) and [0046](0046-firered-map-script-type-constants.md) cover the **same exact pinned** `include/constants/map_scripts.h` blob (`1353de360cf1e00b6efbb26ec59c4822c99b59bf`). Both documents remain available; only 0028 is registered as the distinct source identity. The prior claim of **52 distinct** files actually represented **51**. Three new distinct whole-file candidates (0047–0049) cover the native script dispatch table, interpreter implementation and public context header, bringing the corrected register to **54**. The new [integrity checker](../../tools/phase1_review_register_integrity.py) and CI workflow fail on duplicate identities, missing documents or incorrect totals. This is analyst preparation only: **0/14,834 independent approvals, FAIL_INCOMPLETE**. Exact-head CI remains to be verified.
+
+## 27 October — source-verified field map, event and warp interfaces
+
+Four additional **distinct** complete-file candidates (0050–0053) cover the pinned event-variable/flag header, native fieldmap collision and buffer constants, overworld warp/callback ABI, and field-input bitfields and dive trigger. Their exact upstream Git blobs were fetched and read in full. Source declarations are not executable reachability, compiled ABI equivalence, runtime certification or independent approval. **58/14,834 = 0.3910% analyst-prepared; 0/14,834 = 0.0000% approved; 100% inventoried; FAIL_INCOMPLETE.** The register integrity checker must pass at the new head before CI is claimed.
 
 ## Collision and acceptance safeguards
 Multiple filenames now reuse sequence numbers (including `0006` and `0015`–`0019`) for **different** pinned files. The integer alone is therefore **not a unique candidate ID**. Until filenames and references are migrated atomically, identify a candidate by **(upstream repository, pinned commit, exact path, Git blob SHA)**, and use the full filename for links. Do not count the sequence maximum as the number of distinct files or use it as an approval counter. A later registry migration may assign unique sequence numbers, preserving historical links.
