@@ -20,18 +20,22 @@ PINS = {
 }
 BLOBS = {
     ("pret/pokefirered", "src/agb_flash.c"): "08aeed1638e214a3cad8b28d103964ab24342fba",
+    ("pret/pokefirered", "src/agb_flash_mx.c"): "b4f710f36449c46946294d0df3d61d493d5c0d1f",
     ("mgba-emu/mgba", "src/gba/savedata.c"): "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
 }
 F = "pret/pokefirered"
 M = "mgba-emu/mgba"
 FUNCTIONS = [
     (F, "src/agb_flash.c", "void SwitchFlashBank(u8 bankNum)"),
+    (F, "src/agb_flash_mx.c", "u16 EraseFlashChip_MX(void)"),
     (M, "src/gba/savedata.c", "void GBASavedataWriteFlash(struct GBASavedata* savedata, uint16_t address, uint8_t value)"),
     (M, "src/gba/savedata.c", "void _flashSwitchBank(struct GBASavedata* savedata, int bank)"),
     (M, "src/gba/savedata.c", "void _flashErase(struct GBASavedata* savedata)"),
     (M, "src/gba/savedata.c", "void _flashEraseSector(struct GBASavedata* savedata, uint16_t sectorStart)"),
 ]
 ANCHORS = {
+    "EraseFlashChip_MX": ["FLASH_WRITE(0x5555, 0x80);", "FLASH_WRITE(0x5555, 0x10);",
+                          "result = WaitForFlashWrite(3, FLASH_BASE, 0xFF);"],
     "SwitchFlashBank": ["FLASH_WRITE(0x5555, 0xAA);", "FLASH_WRITE(0x2AAA, 0x55);",
                         "FLASH_WRITE(0x5555, 0xB0);", "FLASH_WRITE(0x0000, bankNum);"],
     "GBASavedataWriteFlash": ["savedata->currentBank[address] = value;",
@@ -94,6 +98,7 @@ def contract(raw):
 def negative_controls(raw):
     cases = [
         ("SwitchFlashBank", "FLASH_WRITE(0x5555, 0xB0);", "FLASH_WRITE(0x5555, 0xB1);"),
+        ("EraseFlashChip_MX", "FLASH_WRITE(0x5555, 0x10);", "FLASH_WRITE(0x5555, 0x11);"),
         ("GBASavedataWriteFlash", "if (address == 0 && value < 2)", "if (address == 0 && value < 3)"),
         ("GBASavedataWriteFlash", "savedata->currentBank[address] = value;", "savedata->currentBank[address+1] = value;"),
         ("_flashSwitchBank", "savedata->currentBank = &savedata->data[bank << 16];", "savedata->currentBank = &savedata->data[bank << 15];"),
@@ -142,7 +147,7 @@ def main():
                         str(cfile), "-o", str(binary)], check=True)
         output = subprocess.run([str(binary)], check=True, text=True, capture_output=True)
         result = json.loads(output.stdout)
-    require(result["compiled_pinned_functions"] == 5, "unexpected compiled function count")
+    require(result["compiled_pinned_functions"] == 6, "unexpected compiled function count")
     require(result["sector_programs"] == 32, "missing 32-sector coverage")
     result.update({
         "pins": PINS,
