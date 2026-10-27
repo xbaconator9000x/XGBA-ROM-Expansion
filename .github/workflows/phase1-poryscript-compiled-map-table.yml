@@ -5,6 +5,7 @@ on:
       - 'phase1/**'
     paths:
       - 'tools/verify_poryscript_compiled_map_table.py'
+      - 'docs/PHASE1_P0_PORYSCRIPT_COMPILED_MAP_TABLE_RELOCATIONS_2026-10-27.md'
       - '.github/workflows/phase1-poryscript-compiled-map-table.yml'
   pull_request:
     paths:
