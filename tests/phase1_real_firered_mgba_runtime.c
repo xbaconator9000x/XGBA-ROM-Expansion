@@ -4,6 +4,7 @@
 #include <mgba/core/core.h>
 #include <mgba/internal/gba/gba.h>
 #include <mgba/internal/gba/savedata.h>
+#include <mgba/internal/arm/arm.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,7 +15,8 @@ static void flash_write(struct mCore *core, unsigned offset, uint8_t value) {
     core->busWrite8(core, 0x0E000000U + offset, value);
 }
 int main(int argc, char **argv) {
-    if (argc != 6) fail("usage: probe ROM SAV MODE STATUS_ADDR COUNTER_ADDR");
+    if (argc != 6 && argc != 9) fail("usage: probe ROM SAV MODE STATUS_ADDR COUNTER_ADDR [LOAD_ADDR VALID_ADDR COPY_ADDR]");
+    if (!strcmp(argv[3], "trace") && argc != 9) fail("trace mode needs three ELF function addresses");
     const char *mode = argv[3];
     struct mCore *core = mCoreFind(argv[1]);
     if (!core) fail("mCoreFind did not recognize ROM");
@@ -31,12 +33,32 @@ int main(int argc, char **argv) {
     fprintf(stderr, "stage: save loaded\n");
     core->reset(core);
     fprintf(stderr, "stage: reset complete\n");
-    for (int i = 0; i < 180; ++i) {
-        core->runFrame(core);
-        if (i == 0) fprintf(stderr, "stage: first frame complete\n");
-    }
-    fprintf(stderr, "stage: 180 frames complete\n");
     struct GBA *gba = (struct GBA *)core->board;
+    unsigned hits[3] = {0, 0, 0};
+    unsigned long long steps = 0;
+    if (!strcmp(mode, "trace")) {
+        uint32_t target[3];
+        for (int j = 0; j < 3; ++j)
+            target[j] = (uint32_t)strtoul(argv[6 + j], NULL, 0) & ~1U;
+        /* Prefetched ARM PC is +8 in ARM mode and +4 in Thumb mode. */
+        while (core->frameCounter(core) < 180 && steps < 100000000ULL) {
+            struct ARMCore *cpu = gba->cpu;
+            uint32_t pc = (uint32_t)cpu->gprs[ARM_PC];
+            uint32_t executing = pc - (cpu->executionMode == MODE_THUMB ? 4U : 8U);
+            for (int j = 0; j < 3; ++j)
+                if (executing == target[j]) ++hits[j];
+            core->step(core);
+            ++steps;
+        }
+        if (core->frameCounter(core) < 180)
+            fail("100-million-instruction trace budget exhausted before frame 180");
+    } else {
+        for (int i = 0; i < 180; ++i) {
+            core->runFrame(core);
+            if (i == 0) fprintf(stderr, "stage: first frame complete\\n");
+        }
+    }
+    fprintf(stderr, "stage: 180 frames complete\\n");
     unsigned type = gba->memory.savedata.type;
     uint32_t statusAddr = (uint32_t)strtoul(argv[4], NULL, 0);
     uint32_t counterAddr = (uint32_t)strtoul(argv[5], NULL, 0);
@@ -64,8 +86,8 @@ int main(int argc, char **argv) {
         for (int i = 0; i < 3; ++i) core->runFrame(core);
     }
     if (!strcmp(mode, "verify") && before != 0x5A) fail("Flash1M byte not restored from physical save file");
-    printf("{\"mode\":\"%s\",\"frames\":%u,\"save_type\":%u,\"save_status\":%u,\"save_counter\":%u,\"flash_byte_40\":%u}\n",
-        mode, core->frameCounter(core), type, status, counter, before);
+    printf("{\\"mode\\":\\"%s\\",\\"frames\\":%u,\\"save_type\\":%u,\\"save_status\\":%u,\\"save_counter\\":%u,\\"flash_byte_40\\":%u,\\"trace_steps\\":%llu,\\"load_game_save_entry_hits\\":%u,\\"get_save_valid_status_entry_hits\\":%u,\\"copy_save_slot_data_entry_hits\\":%u}\\n",
+        mode, core->frameCounter(core), type, status, counter, before, steps, hits[0], hits[1], hits[2]);
     core->deinit(core);
     free(video);
     return 0;
