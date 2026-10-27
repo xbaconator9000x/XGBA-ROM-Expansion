@@ -14,12 +14,12 @@ PIN = "ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
 REPO = "pret/pokefirered"
 MANIFEST = Path("docs/phase1-flash-review/flash-wholefile-manifest.json")
 SCHEMA = "xgba-phase1-firered-flash-wholefile-v1"
-FUNC = re.compile(r"^(?:static\\s+)?(?:u8|u16|u32|void)\\s+([A-Za-z_]\\w*)\\s*\\([^;]*\\)\\s*$")
+FUNC = re.compile(r"^(?:static\s+)?(?:u8|u16|u32|void)\s+([A-Za-z_]\w*)\s*\([^;]*\)\s*$")
 BINARY = re.compile(r"^[0-9a-f]{40}$")
 
 
 def blob_sha(data):
-    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\\0" + data).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
 
 
 def lines_of(data):
@@ -27,7 +27,7 @@ def lines_of(data):
         text = data.decode("utf-8")
     except UnicodeDecodeError as exc:
         raise ValueError("Non-UTF-8 source") from exc
-    lines = text.split("\\n")
+    lines = text.split("\n")
     if lines[-1] == "":
         lines.pop()
     return lines
@@ -83,7 +83,7 @@ def verify(manifest, blobs):
         lines = lines_of(blobs[path])
         if rec.get("source_lines") != len(lines) or rec.get("nonblank_lines") != sum(bool(x.strip()) for x in lines):
             raise ValueError("Whole-file line inventory drift")
-        includes = re.findall(r'^#include "([^"]+)"', "\\n".join(lines), re.M)
+        includes = re.findall(r'^#include "([^"]+)"', "\n".join(lines), re.M)
         if rec.get("includes") != includes:
             raise ValueError("Include dependency drift")
         if rec.get("functions") != functions_of(lines):
@@ -96,7 +96,7 @@ def verify(manifest, blobs):
             if not isinstance(line_num, int) or not 1 <= line_num <= len(lines):
                 raise ValueError("Bad symbol line")
             line = lines[line_num - 1]
-            if not re.search(r"\\b" + re.escape(s["name"]) + r"\\b", line) or not line.startswith(("static ", "COMMON_DATA ", "const ")):
+            if not re.search(r"\b" + re.escape(s["name"]) + r"\b", line) or not line.startswith(("static ", "COMMON_DATA ", "const ")):
                 raise ValueError("File-scope symbol drift")
     expected_paths = {"src/agb_flash.c", "src/agb_flash_1m.c", "src/agb_flash_mx.c", "src/agb_flash_le.c"}
     if paths != expected_paths:
@@ -139,7 +139,7 @@ def negative_controls(manifest, blobs):
     mutated("forged line count", lambda m: m["records"][0].update(source_lines=1))
     mutated("missing include", lambda m: m["records"][0].update(includes=[]))
     mutated("wrong schema", lambda m: m.update(schema="xgba-phase2"))
-    mutated("altered source bytes", lambda m: None, lambda b: b.update({"src/agb_flash.c": b["src/agb_flash.c"] + b"\\n"}))
+    mutated("altered source bytes", lambda m: None, lambda b: b.update({"src/agb_flash.c": b["src/agb_flash.c"] + b"\n"}))
     mutated("truncated dependency", lambda m: None, lambda b: b.update({"src/save.c": b["src/save.c"][:-1]}))
     return cases
 
@@ -160,7 +160,7 @@ def main():
     result["negative_control_names"] = negatives
     result["pinned_revision"] = PIN
     print(json.dumps(result, sort_keys=True, indent=2))
-    Path("docs/phase1-flash-review/verification-evidence.json").write_text(json.dumps(result, sort_keys=True, indent=2) + "\\n", encoding="utf-8")
+    Path("docs/phase1-flash-review/verification-evidence.json").write_text(json.dumps(result, sort_keys=True, indent=2) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":
