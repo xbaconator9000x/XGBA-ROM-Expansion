@@ -42,24 +42,24 @@ jobs:
           huderlem/poryscript c32481161c767b25a3425fa9f1f8729927ff3d55
           pret/agbcc da598c1d918402c42c0c0d7128ba14567f3175e9
           PINS
-      - name: Generate 200 exact-blob-verified structural machine-triage records
+      - name: Generate 300 exact-blob-verified structural machine-triage records
         shell: bash
         run: |
           set -euo pipefail
-          python3 tools/phase1_bulk_triage.py --source-root "$RUNNER_TEMP/xgba-pins" --limit 200 --offset 0 --output docs/phase1-machine-triage/batch-000000-000199.json
+          python3 tools/phase1_bulk_triage.py --source-root "$RUNNER_TEMP/xgba-pins" --limit 300 --offset 200 --output docs/phase1-machine-triage/batch-000200-000499.json
           python3 - <<'PY'
           import json
           from pathlib import Path
-          d=json.loads(Path('docs/phase1-machine-triage/batch-000000-000199.json').read_text())
-          assert d['selected_count']==200 and d['source_reverified']
-          assert len({(r['identity']['repository'],r['identity']['path']) for r in d['records']})==200
+          d=json.loads(Path('docs/phase1-machine-triage/batch-000200-000499.json').read_text())
+          assert d['selected_count']==300 and d['source_reverified']
+          assert len({(r['identity']['repository'],r['identity']['path']) for r in d['records']})==300
           assert all(r['state']=='MACHINE_TRIAGED_NEEDS_WHOLE_FILE_SEMANTIC_REVIEW' and not r['independent_approval'] and not r['prepared_whole_file_candidate'] and r['whole_file_structure'] for r in d['records'])
-          print('BULK_TRIAGE_PASS 200 exact pinned blobs; 0 approvals; prepared count unchanged')
+          print('BULK_TRIAGE_PASS 300 exact pinned blobs; 0 approvals; prepared count unchanged')
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: phase1-machine-triage-200
-          path: docs/phase1-machine-triage/batch-000000-000199.json
+          name: phase1-machine-triage-300
+          path: docs/phase1-machine-triage/batch-000200-000499.json
           retention-days: 90
       - name: Commit verified machine-only checkpoint without force or rerun
         if: github.event_name == 'push'
@@ -68,7 +68,7 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add docs/phase1-machine-triage/batch-000000-000199.json
+          git add docs/phase1-machine-triage/batch-000200-000499.json
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'Checkpoint 200 pinned Phase 1 machine-triage records (no approvals)'
+          git commit -m 'Checkpoint 300 additional pinned Phase 1 machine-triage records (no approvals)'
           git push origin "HEAD:$GITHUB_REF_NAME"
