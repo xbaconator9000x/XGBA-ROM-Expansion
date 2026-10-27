@@ -1,0 +1,20 @@
+name: Phase 1 whole-file candidate register integrity
+
+on:
+  push:
+    branches: ["phase1/**"]
+    paths:
+      - "docs/phase1-disposition-candidates/**"
+      - "tools/phase1_review_register_integrity.py"
+      - ".github/workflows/phase1-review-register.yml"
+  workflow_dispatch:
+
+jobs:
+  register-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate fail-closed negative controls
+        run: python3 tools/phase1_review_register_integrity.py --self-test
+      - name: Validate unique identities, document links and count
+        run: python3 tools/phase1_review_register_integrity.py
