@@ -96,14 +96,14 @@ jobs:
           sb2=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveBlock2Ptr" {print "0x"$1;exit}')
           test -n "$loader" && test -n "$valid" && test -n "$copy" && test -n "$sb2"
           printf 'ELF trace targets: LoadGameSave=%s GetSaveValidStatus=%s CopySaveSlotData=%s\n' "$loader" "$valid" "$copy"
-          for case in slot0 malformed_id14 older_slot_fallback; do
+          for case in slot0 both mixed_counters malformed_id14 older_slot_fallback; do
             cp "evidence/fixtures/$case.sav" "evidence/results/trace_$case.sav"
             timeout 240s ./real-rom-probe upstream/pokefirered/pokefirered.gba "evidence/results/trace_$case.sav" trace "$status" "$counter" "$loader" "$valid" "$copy" "$sb2" | tee "evidence/results/trace_$case.json"
           done
           python3 - <<'PYTRACE'
           from pathlib import Path
           import json
-          for name in ("slot0","malformed_id14","older_slot_fallback"):
+          for name in ("slot0","both","mixed_counters","malformed_id14","older_slot_fallback"):
               lines=Path(f"evidence/results/trace_{name}.json").read_text().splitlines()
               records=[json.loads(line) for line in lines if line.strip().startswith('{"mode":"trace"')]
               assert len(records)==1,(name,"expected exactly one structured trace record",len(records))
@@ -116,7 +116,24 @@ jobs:
                   assert key in d,(name,key)
               for key in ("load_game_save_entry_hits","get_save_valid_status_entry_hits","copy_save_slot_data_entry_hits"):
                   assert key in d,(name,key)
-          print("Instruction-level save-loader PC entry observations recorded; no recovery claim inferred")
+          # Distinguish observed loaded payload from mere status/frame advance.
+          # These expectations are source-derived from pinned save.c slot selection,
+          # not approvals or evidence of a game-initiated write.
+          expected={
+              "slot0": (1,0,0xA5),
+              "both": (1,1,0x5A),
+              "mixed_counters": (1,2,0x5A),
+              "malformed_id14": (255,0,0xA5),
+              "older_slot_fallback": (255,0,0xA5),
+          }
+          for name,(status,counter,marker) in expected.items():
+              lines=Path(f"evidence/results/trace_{name}.json").read_text().splitlines()
+              d=next(json.loads(line) for line in lines if line.strip().startswith('{"mode":"trace"'))
+              assert (d["save_status"],d["save_counter"])==(status,counter),(name,"status/counter",d)
+              assert d["copy_save_slot_data_entry_hits"]>=1,(name,"copy not reached",d)
+              assert d["saveblock2_ptr"]>=0x02000000 and d["saveblock2_ptr"]<0x02040000,(name,"pointer",d)
+              assert d["saveblock2_filler_marker"]==marker,(name,"wrong loaded payload marker",d)
+          print("Native SaveBlock2 payload selection verified against five distinct synthetic fixtures; no in-game save-write claim")
           PYTRACE
           cp evidence/fixtures/empty.sav evidence/results/flash_program.sav
           timeout 120s ./real-rom-probe upstream/pokefirered/pokefirered.gba evidence/results/flash_program.sav program "$status" "$counter" | tee evidence/results/flash_program.json
