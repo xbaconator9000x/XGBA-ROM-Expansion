@@ -35,7 +35,7 @@ TEXT_SOURCE_EXT={'.c','.h','.cpp','.hpp','.cc','.s','.asm','.py','.sh','.ld','.g
 TEXT_DATA_EXT={'.json','.md','.txt','.mk','.yaml','.yml','.toml','.ini','.csv','.inc','.xml','.qrc','.pro','.cmake','.js','.ts','.html','.css','.map'}
 def valid_png(data):
     import struct,zlib
-    if not data.startswith(b'\\x89PNG\\r\\n\\x1a\\n'):return False
+    if not data.startswith(b'\x89PNG\r\n\x1a\n'):return False
     pos=8;first=True
     while pos+12<=len(data):
         n=struct.unpack('>I',data[pos:pos+4])[0]
@@ -56,13 +56,13 @@ def valid_gba_header(data):
             and data[0xbd]==((-sum(data[0xa0:0xbd])-0x19)&0xff))
 def file_kind(path,data):
     ext=Path(path).suffix.lower()
-    if ext=='.png' or data.startswith(b'\\x89PNG\\r\\n\\x1a\\n'):
+    if ext=='.png' or data.startswith(b'\x89PNG\r\n\x1a\n'):
         return 'image_png' if valid_png(data) else 'unknown_binary'
     if ext=='.gba':
         return 'compiled_rom' if valid_gba_header(data) else 'unknown_binary'
     if ext in BINARY_EXTENSIONS:
-        return BINARY_EXTENSIONS[ext] if (b'\\x00' in data or any(x>127 for x in data)) else 'unknown_binary'
-    if b'\\x00' in data:return 'unknown_binary'
+        return BINARY_EXTENSIONS[ext] if (b'\x00' in data or any(x>127 for x in data)) else 'unknown_binary'
+    if b'\x00' in data:return 'unknown_binary'
     try:data.decode('utf-8')
     except UnicodeDecodeError:return 'unknown_binary'
     if ext in TEXT_SOURCE_EXT:return 'text_source'
