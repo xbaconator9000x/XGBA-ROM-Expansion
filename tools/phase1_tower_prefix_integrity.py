@@ -82,7 +82,7 @@ def verify_sources(root):
     records = {}
     for name, expected in BLOBS.items():
         path = root / name
-        actual = subprocess.check_output(["git", "-C", str(root), "hash-object", str(path)], text=True).strip()
+        actual = subprocess.check_output(["git", "-C", str(root), "hash-object", name], text=True).strip()
         if actual != expected:
             raise ValueError(f"source blob mismatch {name}: {actual} != {expected}")
         source = path.read_text()
