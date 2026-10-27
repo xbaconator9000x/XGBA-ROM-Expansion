@@ -20,10 +20,21 @@ int main(int argc, char **argv) {
     if (!core) fail("mCoreFind did not recognize ROM");
     if (!core->init(core)) fail("mGBA core initialization failed");
     mCoreInitConfig(core, "xgba-phase1-real-rom");
+    fprintf(stderr, "stage: core initialized\n");
+    void *video = calloc(256U * 256U, 4);
+    if (!video) fail("video buffer allocation failed");
+    core->setVideoBuffer(core, video, 256);
     if (!mCoreLoadFile(core, argv[1])) fail("source-built ROM could not be loaded");
+    fprintf(stderr, "stage: ROM loaded\n");
     if (!mCoreLoadSaveFile(core, argv[2], false)) fail("save file could not be opened");
+    fprintf(stderr, "stage: save loaded\n");
     core->reset(core);
-    for (int i = 0; i < 180; ++i) core->runFrame(core);
+    fprintf(stderr, "stage: reset complete\n");
+    for (int i = 0; i < 180; ++i) {
+        core->runFrame(core);
+        if (i == 0) fprintf(stderr, "stage: first frame complete\n");
+    }
+    fprintf(stderr, "stage: 180 frames complete\n");
     struct GBA *gba = (struct GBA *)core->board;
     unsigned type = gba->memory.savedata.type;
     uint32_t statusAddr = (uint32_t)strtoul(argv[4], NULL, 0);
@@ -44,5 +55,6 @@ int main(int argc, char **argv) {
     printf("{\"mode\":\"%s\",\"frames\":%u,\"save_type\":%u,\"save_status\":%u,\"save_counter\":%u,\"flash_byte_40\":%u}\n",
         mode, core->frameCounter(core), type, status, counter, before);
     core->deinit(core);
+    free(video);
     return 0;
 }
