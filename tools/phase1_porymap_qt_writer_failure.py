@@ -17,6 +17,7 @@ PIN = "26b919d7ff4b54152de010abd5bf344af2ebe116"
 BLOBS = {
     "src/project.cpp": "d43b0949303433111d4478ad76117c2b3445dd13",
     "src/editor.cpp": "34112f6355b13d9381de7188624c36e5efeba151",
+    "src/mainwindow.cpp": "08ce1a7a599ef825967717b69626984cdc6d772b",
     "src/core/map.cpp": "47b279919bd4afcc76b88f9eeecd459b3452989f",
     "include/lib/orderedjson.h": "cb5139d37d955f2469ebd2eaaf089668b82884fe",
     "src/lib/orderedjson.cpp": "4d3a460c652541371a01132116e508db8c4c872c",
@@ -26,6 +27,7 @@ FUNCTIONS = {
     "groups_writer": ("src/project.cpp", "bool Project::saveMapGroups()"),
     "global_writer": ("src/project.cpp", "bool Project::saveGlobalData()"),
     "editor_save": ("src/editor.cpp", "bool Editor::save(bool currentOnly)"),
+    "gui_save": ("src/mainwindow.cpp", "bool MainWindow::save(bool currentOnly)"),
     "clean": ("src/core/map.cpp", "void Map::setClean()"),
     "serializer": ("include/lib/orderedjson.h", "void dump(QFile *file)"),
 }
@@ -97,6 +99,12 @@ def contract(files: dict[str, str]) -> dict:
     require("success = this->project->saveMap(this->map);" in parts["editor_save"]
             and "if (!this->project->saveGlobalData())" in parts["editor_save"],
             "editor Save Current call chain changed")
+    ordered(parts["gui_save"], [
+        "bool success = currentOnly ? this->editor->saveCurrent() : this->editor->saveAll();",
+        "if (!success) {",
+        'RecentErrorMessage::show(QStringLiteral("Failed to save some project changes."), this);',
+        "return success;",
+    ], "MainWindow save UI")
     require("void dump(QFile *file)" in files["include/lib/orderedjson.h"],
             "writer return type changed")
     # The independent Qt harness tests the serializer's success/failure device
@@ -111,6 +119,7 @@ def contract(files: dict[str, str]) -> dict:
         "mapgroups_writer_checks_stream_or_close": False,
         "serializer_return_type": "void",
         "editor_save_current_can_propagate_unchecked_success": True,
+        "gui_failure_message_conditioned_on_editor_false": True,
         "actual_gui_save_failure_observed": False,
         "independent_whole_file_approvals": 0,
         "phase1_gate": "FAIL_INCOMPLETE",
@@ -133,6 +142,8 @@ def negative_controls(files: dict[str, str]) -> list[str]:
          "saveMapGroups();", "global save propagation"),
         ("src/editor.cpp", "if (!this->project->saveGlobalData())",
          "if (false)", "editor save propagation"),
+        ("src/mainwindow.cpp", 'RecentErrorMessage::show(QStringLiteral("Failed to save some project changes."), this);',
+         'RecentErrorMessage::show(QStringLiteral("Saved."), this);', "GUI failure message"),
         ("src/core/map.cpp", "m_hasUnsavedDataChanges = false;",
          "m_hasUnsavedDataChanges = true;", "map clean flag"),
     ]
