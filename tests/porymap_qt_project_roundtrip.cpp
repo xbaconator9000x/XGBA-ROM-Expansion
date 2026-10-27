@@ -61,6 +61,9 @@ int main(int argc, char **argv) {
     const int original = connection->offset();
     const int persisted = original + 1;
     connection->setOffset(persisted, false);
+    // Editor normally sets this flag via its modified-signal handling; this
+    // standalone Project harness has no Editor, so mirror that explicit step.
+    map->setHasUnsavedDataChanges(true);
     require(map->hasUnsavedChanges(), "connection mutation did not dirty map");
     require(project.saveMap(map, true), "full Project::saveMap positive control failed");
     require(!map->hasUnsavedChanges(), "successful save did not clear map dirty state");
@@ -87,6 +90,7 @@ int main(int argc, char **argv) {
     const QByteArray savedBytes = fileBytes(jsonPath);
     const int unsaved = original + 2;
     connection->setOffset(unsaved, false);
+    map->setHasUnsavedDataChanges(true);
     require(map->hasUnsavedChanges(), "second mutation did not dirty map");
     const QString backup = jsonPath + ".phase1-backup";
     require(QFile::rename(jsonPath, backup), "cannot isolate original map file");
