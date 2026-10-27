@@ -13,6 +13,8 @@ BLOBS = {
     "src/fieldmap.c": "41567772299000ba5855419e5c39ad9373a34c20",
     "include/global.h": "77155b09014aa854fcf87260e6ad2969e222da53",
     "include/fieldmap.h": "639e329a9a0f721abd7e40001228859cb9466005",
+    "include/config.h": "db131b2717ab739e62e41c5054a798f045c0631d",
+    "Makefile": "8b454dbd18eb0069fa5851d788697190890a5b37",
 }
 MAP_VIEW_WORDS = 0x100
 RETAIL_SCAN_WORDS = 0x200
@@ -65,6 +67,12 @@ def inspect(root: pathlib.Path) -> dict:
     field = sources["src/fieldmap.c"]
     global_h = sources["include/global.h"]
     field_h = sources["include/fieldmap.h"]
+    config_h = sources["include/config.h"]
+    makefile = sources["Makefile"]
+    require(global_h, '#include "config.h"', "global header includes build configuration")
+    for frag in ["#if MODERN", "#ifndef UBFIX", "#define UBFIX"]:
+        require(config_h, frag, "modern build forces UBFIX")
+    require(makefile, "-DMODERN=$(MODERN)", "build mode passed to preprocessor")
     for frag, label in [
         ("u16 mapView[0x100];", "SaveBlock2 map-view array length"),
         ("/*0x898*/", "SaveBlock2 map-view start offset"),
@@ -115,6 +123,7 @@ def inspect(root: pathlib.Path) -> dict:
         "mapView_start_offset": "0x898", "mapView_end_exclusive": "0xA98",
         "retail_scan_end_exclusive": "0xC98",
         "model": "synthetic adjacent nonzero field makes retail scan nonempty while UBFIX scan remains empty",
+        "build_condition": "MODERN=1 forces UBFIX via include/config.h; MODERN=0 has no such automatic definition",
         "compiled_or_runtime_test": False,
         "independent_approval": False,
         "phase1": "FAIL_INCOMPLETE",
