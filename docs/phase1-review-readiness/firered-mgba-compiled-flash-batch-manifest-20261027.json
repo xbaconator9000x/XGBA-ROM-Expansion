@@ -1,0 +1,89 @@
+{
+  "schema": "xgba.phase1.dependency_connected_compiled_batch.v1",
+  "date": "2026-10-27",
+  "phase1_gate": "FAIL_INCOMPLETE",
+  "status": "compiled_source_function_stubs_only",
+  "batch": "firered-mgba-flash-header-id-join",
+  "source_identities": [
+    {
+      "repo": "mgba-emu/mgba",
+      "commit": "fd9dc5c2cbf234365068855851107e762fc6211b",
+      "path": "src/gba/overrides.c",
+      "git_blob_sha1": "566968162b29c90167199ef43f3d7a99248798e8",
+      "role": "ROM header and CRC override decision"
+    },
+    {
+      "repo": "mgba-emu/mgba",
+      "commit": "fd9dc5c2cbf234365068855851107e762fc6211b",
+      "path": "src/gba/savedata.c",
+      "git_blob_sha1": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "role": "Flash ID reader"
+    },
+    {
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/agb_flash_1m.c",
+      "git_blob_sha1": "e249fab9a350f3263e7df5f20ff301a6d008e3db",
+      "role": "Flash descriptor selection"
+    },
+    {
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/load_save.c",
+      "git_blob_sha1": "8b723dd044c6024b3671bb890b25b56a53f99ec5",
+      "role": "Flash present and timer decision"
+    },
+    {
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/agb_flash.c",
+      "git_blob_sha1": "08aeed1638e214a3cad8b28d103964ab24342fba",
+      "role": "source-only Flash unlock/ID command sequence and relocated RAM read order"
+    }
+  ],
+  "evidence": [
+    {
+      "script": "tools/phase1_mgba_override_compiled_branch_matrix.py",
+      "compiled_cases": 12
+    },
+    {
+      "script": "tools/phase1_mgba_flash_id_compiled_reader.py",
+      "compiled_cases": 11
+    },
+    {
+      "script": "tools/phase1_firered_mgba_compiled_flash_join.py",
+      "compiled_cases": 9
+    }
+  ],
+  "total_compiled_cases": 32,
+  "dependency_edges": [
+    "ROM header/CRC -> mGBA default override selection",
+    "mGBA Flash ID read -> stubbed save bus -> FireRed IdentifyFlash",
+    "FireRed IdentifyFlash -> CheckForFlashMemory -> timer/presence",
+    "FireRed ReadFlashId command sequence and high-byte/low-byte ordering (source-only, not compiled)"
+  ],
+  "unresolved_edges": [
+    "real mGBA ROM header load and override configuration",
+    "actual Flash unlock/write sequence and initialization timing",
+    "native mGBA executable boot of compiled FireRed ROM",
+    "real GBA Flash bus and cartridge hardware",
+    "save persistence and malformed sector recovery",
+    "original agbcc toolchain equivalence",
+    "independent source revision bound review",
+    "real FireRed ReadFlashId RAM-relocated THUMB routine and physical FLASH_WRITE bus"
+  ],
+  "negative_evidence": [
+    "Compiled function with dependency stubs is not native emulator runtime",
+    "Flash descriptor setup records are stubbed, not original full hardware descriptors",
+    "No newly machine-indexed unique source files; prior pool exhausted",
+    "FireRed ReadFlashId source pinned and checked but not compiled or executed"
+  ],
+  "accounting": {
+    "new_machine_processed_unique": 0,
+    "run_target": 1000,
+    "shortfall": 1000,
+    "new_analyst_prepared_complete_file_reviews": 0,
+    "registered_analyst_prepared_baseline": 113,
+    "independent_approvals": 0
+  }
+}
