@@ -95,6 +95,20 @@ int main(int argc, char **argv) {
         if (CopySaveSlotData(0, locations) != SAVE_STATUS_OK) return 93;
         puts("VALID_COPY_OK"); return 0;
     }
+    if (!strcmp(argv[1], "mixed-slot-last-new")) {
+        /* 13 old counter values and one newer last physical sector. */
+        fixture[13].counter = 10;
+        u8 s = GetSaveValidStatus(locations);
+        if (s != SAVE_STATUS_OK || gSaveCounter != 10) return 95;
+        puts("VALID_MIXED_COUNTER_LAST_NEW"); return 0;
+    }
+    if (!strcmp(argv[1], "mixed-slot-last-old")) {
+        /* 13 newer counter values and one older last physical sector. */
+        for (unsigned i = 0; i < 13; ++i) fixture[i].counter = 11;
+        u8 s = GetSaveValidStatus(locations);
+        if (s != SAVE_STATUS_OK || gSaveCounter != 2) return 96;
+        puts("VALID_MIXED_COUNTER_LAST_OLD"); return 0;
+    }
     if (!strcmp(argv[1], "invalid-status")) {
         fixture[0].id = 14;
         (void)GetSaveValidStatus(locations);
@@ -149,13 +163,13 @@ def run(args):
                                 str(path), "-o", str(exe)], capture_output=True, text=True)
         if build.returncode:
             raise ValueError("Host compilation failed: " + build.stderr[:1500])
-        for case in ("valid-status", "valid-copy", "invalid-status", "invalid-copy"):
+        for case in ("valid-status", "valid-copy", "mixed-slot-last-new", "mixed-slot-last-old", "invalid-status", "invalid-copy"):
             p = subprocess.run([str(exe), case], capture_output=True, text=True,
                                env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1"},
                                timeout=20)
             output = p.stdout + p.stderr
             diagnostic = bool(re.search(r"AddressSanitizer|runtime error:|UndefinedBehaviorSanitizer", output))
-            if case.startswith("valid"):
+            if case.startswith(("valid", "mixed")):
                 if p.returncode or "VALID_" not in output or diagnostic:
                     raise ValueError("Valid control failed: " + case + ": " + output[:500])
             elif p.returncode == 0 or not diagnostic:
