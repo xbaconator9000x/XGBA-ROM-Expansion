@@ -48,10 +48,26 @@ jobs:
       - name: Build actual pinned mGBA emulator core and headless perf frontend
         run: |
           set -euo pipefail
-          cmake -S upstream/mgba -B upstream/mgba/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_QT=OFF -DBUILD_SDL=OFF -DBUILD_PERF=ON -DBUILD_SHARED=ON -DUSE_FFMPEG=OFF -DUSE_LUA=OFF -DUSE_DISCORD_RPC=OFF > mgba-config.log 2>&1 || { tail -120 mgba-config.log; exit 1; }
+          cmake -S upstream/mgba -B upstream/mgba/build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_QT=OFF -DBUILD_SDL=OFF -DBUILD_PERF=ON -DBUILD_SHARED=ON -DUSE_FFMPEG=OFF -DUSE_LUA=OFF -DUSE_DISCORD_RPC=OFF > mgba-config.log 2>&1 || { tail -120 mgba-config.log; exit 1; }
           cmake --build upstream/mgba/build -j4 --target mgba-perf > mgba-build.log 2>&1 || { tail -120 mgba-build.log; exit 1; }
           test -x upstream/mgba/build/mgba-perf
-          cc -std=c11 -O2 -Wall -Wextra -Iupstream/mgba/include -Iupstream/mgba/build/include tests/phase1_real_firered_mgba_runtime.c -Lupstream/mgba/build -Wl,-rpath,"$PWD/upstream/mgba/build" -lmgba -o real-rom-probe
+          python3 - <<'PY'
+          import json,shlex,subprocess
+          from pathlib import Path
+          entries=json.loads(Path("upstream/mgba/build/compile_commands.json").read_text())
+          perf=next(e for e in entries if e["file"].endswith("/src/platform/test/perf-main.c"))
+          argv=shlex.split(perf["command"])
+          # mCore has conditional struct members. Compile with EXACTLY the same
+          # FEATURE_DEFINES as pinned mGBA or function pointers have wrong offsets.
+          flags=[arg for arg in argv if arg.startswith(("-D","-I"))]
+          print("Pinned emulator compile flags:",flags)
+          subprocess.run(["cc","-std=c11","-O2","-g","-Wall","-Wextra",*flags,
+              "-Iupstream/mgba/include","-Iupstream/mgba/build/include",
+              "tests/phase1_real_firered_mgba_runtime.c",
+              "-Lupstream/mgba/build",
+              "-Wl,-rpath,"+str(Path("upstream/mgba/build").resolve()),
+              "-lmgba","-o","real-rom-probe"],check=True)
+          PY
       - name: Boot source-built ROM under actual pinned emulator
         run: |
           set -euo pipefail
