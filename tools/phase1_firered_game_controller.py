@@ -30,7 +30,17 @@ def make_schedule(name):
         pulse(e, 1250, 0x8)
         for f in range(1330, 2300, 42):
             pulse(e, f, 0x1)
-    elif name in ("menu_navigation", "pallet_valid", "pallet_null_layout"):
+    elif name == "pallet_save_navigation":
+        # Source-pinned start menu with no Pokedex/Pokemon flags:
+        # BAG, PLAYER, SAVE, OPTION, EXIT => SAVE at cursor index 2.
+        for f in range(330, 1000, 60):
+            pulse(e, f, 0x1)
+        pulse(e, 1100, 0x8)
+        for f in (1200, 1260):
+            pulse(e, f, 0x80)
+        for f in (1540, 1680, 1820, 1960, 2100, 2260):
+            pulse(e, f, 0x1)
+    elif name in ("menu_navigation", "pallet_valid", "pallet_null_layout", "pallet_save_navigation"):
         for f in range(330, 1000, 60):
             pulse(e, f, 0x1)
         pulse(e, 1100, 0x8)
@@ -51,9 +61,10 @@ def main(a):
     assert entries["slot0"]["fixture_not_game_generated"]
     results = []
     for name in ("no_input", "title_continue", "repeated_confirm", "menu_navigation",
-                 "pallet_null_layout", "pallet_valid"):
+                 "pallet_null_layout", "pallet_valid", "pallet_save_navigation"):
         save = root / (name + ".sav")
-        fixture = name if name.startswith("pallet_") else "slot0"
+        fixture = ("pallet_valid" if name == "pallet_save_navigation" else
+                   name if name.startswith("pallet_") else "slot0")
         shutil.copyfile(Path(a.fixtures) / (fixture + ".sav"), save)
         assert sha(save) == entries[fixture]["sha256"]
         schedule = root / (name + ".keys")
@@ -96,6 +107,7 @@ def main(a):
             "native": d, "game_initiated_save_verified": False,
             "cold_boot_player_state_verified": False,
             "overworld_input_path_observed": bool(d["field_get_player_input_hits"] and d["callback2_overworld_frames"]),
+            "save_menu_index_two_attempted": name == "pallet_save_navigation",
             "interpretation": "Input-driven real-ROM observation. Changed Flash alone is insufficient to prove save callsite or complete game roundtrip.",
             "phase1_gate": "FAIL_INCOMPLETE", "independent_approval": False,
         }
