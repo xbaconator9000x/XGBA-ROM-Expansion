@@ -5,9 +5,12 @@ import argparse, hashlib, json, struct
 
 SECTOR=4096
 SIG=0x08012025
-def sector(index, counter, valid=True):
+def sector(index, counter, valid=True, marker=0):
     b=bytearray(SECTOR)
-    struct.pack_into("<HHII", b, 0xFF4, index, 0, SIG if valid else 0, counter)
+    # SaveBlock2 filler_B20 (offset 0xB80): distinct payload witness.
+    # A single aligned marker byte gives a 16-bit additive checksum of marker.
+    b[0xB80] = marker
+    struct.pack_into("<HHII", b, 0xFF4, index, marker, SIG if valid else 0, counter)
     return b
 
 def slot(data, physical, counter, corrupt=None, mixed=False):
@@ -15,7 +18,7 @@ def slot(data, physical, counter, corrupt=None, mixed=False):
         ident = 14 if corrupt == "id" and i == 6 else i
         good = not (corrupt == "signature" and i == 6)
         c = counter + (1 if mixed and i == 13 else 0)
-        data[(physical*14+i)*SECTOR:(physical*14+i+1)*SECTOR]=sector(ident,c,good)
+        data[(physical*14+i)*SECTOR:(physical*14+i+1)*SECTOR]=sector(ident,c,good,(0xA5 if physical == 0 else 0x5A) if i == 0 else 0)
 
 def emit(root, rom):
     root.mkdir(parents=True,exist_ok=True)

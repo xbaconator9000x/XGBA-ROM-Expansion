@@ -93,11 +93,12 @@ jobs:
           loader=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="LoadGameSave" {print "0x"$1;exit}')
           valid=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="GetSaveValidStatus" {print "0x"$1;exit}')
           copy=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CopySaveSlotData" {print "0x"$1;exit}')
-          test -n "$loader" && test -n "$valid" && test -n "$copy"
+          sb2=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveBlock2Ptr" {print "0x"$1;exit}')
+          test -n "$loader" && test -n "$valid" && test -n "$copy" && test -n "$sb2"
           printf 'ELF trace targets: LoadGameSave=%s GetSaveValidStatus=%s CopySaveSlotData=%s\n' "$loader" "$valid" "$copy"
           for case in slot0 malformed_id14 older_slot_fallback; do
             cp "evidence/fixtures/$case.sav" "evidence/results/trace_$case.sav"
-            timeout 240s ./real-rom-probe upstream/pokefirered/pokefirered.gba "evidence/results/trace_$case.sav" trace "$status" "$counter" "$loader" "$valid" "$copy" | tee "evidence/results/trace_$case.json"
+            timeout 240s ./real-rom-probe upstream/pokefirered/pokefirered.gba "evidence/results/trace_$case.sav" trace "$status" "$counter" "$loader" "$valid" "$copy" "$sb2" | tee "evidence/results/trace_$case.json"
           done
           python3 - <<'PYTRACE'
           from pathlib import Path
@@ -111,7 +112,7 @@ jobs:
               assert d["load_game_save_entry_hits"]>=1,(name,"save-loader not reached",d)
               assert d["get_save_valid_status_entry_hits"]>=1,(name,"save validation not reached",d)
               assert d["load_game_save_arg"]==0,(name,"not SAVE_NORMAL",d)
-              for key in ("load_game_save_return_hits","load_game_save_return_value","trace_end_pc","trace_frame_limit"):
+              for key in ("load_game_save_return_hits","load_game_save_return_value","trace_end_pc","trace_frame_limit","saveblock2_ptr","saveblock2_filler_marker"):
                   assert key in d,(name,key)
               for key in ("load_game_save_entry_hits","get_save_valid_status_entry_hits","copy_save_slot_data_entry_hits"):
                   assert key in d,(name,key)
