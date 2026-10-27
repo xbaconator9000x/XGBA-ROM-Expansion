@@ -22,6 +22,9 @@ SOURCES = {
                   "uint8_t GBASavedataReadFlash("),
 }
 
+BUS_SOURCE = ("pret/pokefirered", "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+              "src/agb_flash.c", "08aeed1638e214a3cad8b28d103964ab24342fba")
+
 PREFIX = r"""
 #include <assert.h>
 #include <stdbool.h>
@@ -178,6 +181,27 @@ def main():
         if blob_sha(raw) != expected:
             raise RuntimeError(f"Refusing non-pinned {repo}/{path}")
         functions[key] = extract(raw, needle)
+    repo, pin, path, expected = BUS_SOURCE
+    if args.upstream_dir:
+        bus_raw = (args.upstream_dir / repo.replace("/", "-") / path).read_bytes()
+    else:
+        bus_raw = urllib.request.urlopen(f"https://raw.githubusercontent.com/{repo}/{pin}/{path}", timeout=45).read()
+    if blob_sha(bus_raw) != expected:
+        raise RuntimeError("Refusing non-pinned FireRed Flash bus reader")
+    bus = extract(bus_raw, "u16 ReadFlashId(")
+    anchors = ["SetReadFlash1(readFlash1Buffer);",
+               "FLASH_WRITE(0x5555, 0xAA);",
+               "FLASH_WRITE(0x2AAA, 0x55);",
+               "FLASH_WRITE(0x5555, 0x90);",
+               "flashId = readFlash1(FLASH_BASE + 1) << 8;",
+               "flashId |= readFlash1(FLASH_BASE);",
+               "FLASH_WRITE(0x5555, 0xF0);"]
+    cursor = 0
+    for anchor in anchors:
+        index = bus.find(anchor, cursor)
+        if index < 0:
+            raise RuntimeError("FireRed Flash ID bus ordering drift: " + anchor)
+        cursor = index + len(anchor)
     if "ReadFlashId()" not in functions["fire_id"]:
         raise RuntimeError("FireRed Flash ID bus boundary changed")
     if "GBASavedataReadFlash" not in functions["mgba_read"]:
@@ -198,6 +222,10 @@ def main():
         "sources": {key: {"repository": val[0], "commit": val[1], "path": val[2], "blob": val[3],
                           "function_sha256": hashlib.sha256(functions[key].encode()).hexdigest()}
                     for key, val in SOURCES.items()},
+        "source_only_bus_reader": {"repository": repo, "commit": pin, "path": path,
+                                   "git_blob_sha1": expected,
+                                   "function_sha256": hashlib.sha256(bus.encode()).hexdigest(),
+                                   "compiled": False},
         "cases_passed": 9,
         "real_emulator_execution": False,
         "independent_approvals": 0,
