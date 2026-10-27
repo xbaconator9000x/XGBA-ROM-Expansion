@@ -16,7 +16,7 @@ static void flash_write(struct mCore *core, unsigned offset, uint8_t value) {
 }
 int main(int argc, char **argv) {
     if (argc != 6 && argc != 9 && argc != 10) fail("usage: probe ROM SAV MODE STATUS_ADDR COUNTER_ADDR [LOAD_ADDR VALID_ADDR COPY_ADDR [SAVEBLOCK2_PTR_ADDR]]");
-    if (!strcmp(argv[3], "trace") && argc != 9) fail("trace mode needs three ELF function addresses");
+    if (!strcmp(argv[3], "trace") && argc != 10) fail("trace mode needs three ELF function addresses");
     const char *mode = argv[3];
     struct mCore *core = mCoreFind(argv[1]);
     if (!core) fail("mCoreFind did not recognize ROM");
