@@ -1,0 +1,62 @@
+name: Phase 1 actual Poryscript CLI to GNU ARM map table
+on:
+  push:
+    branches:
+      - 'phase1/**'
+    paths:
+      - 'tools/verify_poryscript_actual_cli_arm_table.py'
+      - '.github/workflows/phase1-poryscript-real-cli-arm-table.yml'
+      - 'docs/PHASE1_P0_PORYSCRIPT_REAL_CLI_GNU_ARM_TABLE_2026-10-27.md'
+  pull_request:
+    paths:
+      - 'tools/verify_poryscript_actual_cli_arm_table.py'
+      - '.github/workflows/phase1-poryscript-real-cli-arm-table.yml'
+      - 'docs/PHASE1_P0_PORYSCRIPT_REAL_CLI_GNU_ARM_TABLE_2026-10-27.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  actual-poryscript-arm-table:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/poryscript
+          ref: c32481161c767b25a3425fa9f1f8729927ff3d55
+          path: upstream-poryscript
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - name: Install GNU ARM assembler and linker
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi
+          arm-none-eabi-as --version | head -1
+          go version
+      - name: Execute actual pinned CLI and compile original emitted map table
+        run: |
+          set -euo pipefail
+          mkdir -p phase1-evidence
+          python3 -m py_compile tools/verify_poryscript_actual_cli_arm_table.py
+          python3 tools/verify_poryscript_actual_cli_arm_table.py \
+            --poryscript upstream-poryscript \
+            --firered upstream-firered \
+            --output phase1-evidence/poryscript-real-cli-gnu-arm-table.json
+          python3 -m json.tool phase1-evidence/poryscript-real-cli-gnu-arm-table.json >/dev/null
+      - name: Archive exact-source and compiled evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-poryscript-real-cli-gnu-arm
+          path: phase1-evidence/
+          if-no-files-found: warn
+          retention-days: 60
