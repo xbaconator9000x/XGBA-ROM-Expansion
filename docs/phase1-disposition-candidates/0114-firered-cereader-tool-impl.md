@@ -5,7 +5,7 @@
 - Identity: pret/pokefirered:src/cereader_tool.c
 - Pinned upstream commit: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
 - Git blob SHA-1: 395be0bcbed8454e645a9f5670cde3024eda508e
-- Complete-file scope: **all 97 nonempty-or-code/comment source lines (file has 97 lines plus terminal newline)**, including includes, macros, static assertion, both public save/load wrappers, validators and stub. No excerpt is treated as whole-file proof.
+- Complete-file scope: **all 97 physical source lines (including blank lines, followed by a terminal newline)**, including includes, macros, static assertion, both public save/load wrappers, validators and stub. No excerpt is treated as whole-file proof.
 - Source: https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/cereader_tool.c
 
 ## Exhaustive source region inventory
