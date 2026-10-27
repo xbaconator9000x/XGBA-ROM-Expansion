@@ -1,0 +1,40 @@
+name: Phase 1 pinned FireRed root build contract
+on:
+  push:
+    branches:
+      - phase1/firered-root-build-rom-geometry-20261027
+    paths:
+      - tools/phase1_firered_root_build_contract.py
+      - docs/phase1-disposition-candidates/0114-firered-root-makefile-rom-geometry-proposed.md
+      - .github/workflows/phase1-firered-root-build-contract.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: pinned-firered
+          persist-credentials: false
+      - name: Verify Python syntax
+        run: python3 -m py_compile tools/phase1_firered_root_build_contract.py
+      - name: Verify exact upstream blobs and negative controls
+        run: python3 tools/phase1_firered_root_build_contract.py --firered pinned-firered
+      - name: Verify gate remains fail closed
+        run: |
+          python3 - <<'PY'
+          import json
+          g=json.load(open('semantic-snapshots/current/phase1_mapping_gate.json'))
+          assert g['decision']=='FAIL_INCOMPLETE'
+          assert g['approved_semantic_dispositions']==0
+          assert g['verified_source_manifest_entries']==14834
+          print('PASS: authoritative gate unchanged')
+          PY
