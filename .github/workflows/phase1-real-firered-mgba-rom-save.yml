@@ -3,11 +3,14 @@ on:
   push:
     branches:
       - phase1/firered-mgba-real-rom-boot-save-20261028
+      - phase1/firered-mgba-save-loader-steptrace-20261028
     paths:
       - '.github/workflows/phase1-real-firered-mgba-rom-save.yml'
       - 'tests/phase1_real_firered_mgba_runtime.c'
       - 'tools/phase1_real_firered_mgba_fixtures.py'
+      - 'tools/phase1_real_firered_mgba_adversarial.py'
       - 'docs/phase1-review-readiness/real-firered-mgba-runtime-20261028.md'
+      - 'docs/phase1-review-readiness/real-firered-mgba-save-loader-steptrace-20261028.md'
   workflow_dispatch:
 permissions:
   contents: read
@@ -36,6 +39,7 @@ jobs:
           test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
           git -C upstream/pokefirered hash-object include/save.h | grep -Fx 87fb9b615b434b58823d15688056695acda9feab
           git -C upstream/pokefirered hash-object src/save.c | grep -Fx 36b960f375c92711aa49b99bdfe9c6b3a99d6b1c
+          git -C upstream/pokefirered hash-object include/global.h | grep -Fx 77155b09014aa854fcf87260e6ad2969e222da53
       - name: Build real FireRed cartridge using pinned original agbcc
         run: |
           set -euo pipefail
@@ -86,6 +90,63 @@ jobs:
             cp "evidence/fixtures/$case.sav" "evidence/results/$case.sav"
             timeout 120s ./real-rom-probe upstream/pokefirered/pokefirered.gba "evidence/results/$case.sav" probe "$status" "$counter" | tee "evidence/results/$case.json"
           done
+          # Instruction-level PC entry witness. These are observations only:
+          # absence means the loader was not seen during this 180-frame window.
+          loader=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="LoadGameSave" {print "0x"$1;exit}')
+          valid=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="GetSaveValidStatus" {print "0x"$1;exit}')
+          copy=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CopySaveSlotData" {print "0x"$1;exit}')
+          sb2=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveBlock2Ptr" {print "0x"$1;exit}')
+          test -n "$loader" && test -n "$valid" && test -n "$copy" && test -n "$sb2"
+          printf 'ELF trace targets: LoadGameSave=%s GetSaveValidStatus=%s CopySaveSlotData=%s\n' "$loader" "$valid" "$copy"
+          for case in slot0 both mixed_counters malformed_id14 older_slot_fallback; do
+            cp "evidence/fixtures/$case.sav" "evidence/results/trace_$case.sav"
+            timeout 240s ./real-rom-probe upstream/pokefirered/pokefirered.gba "evidence/results/trace_$case.sav" trace "$status" "$counter" "$loader" "$valid" "$copy" "$sb2" | tee "evidence/results/trace_$case.json"
+          done
+          python3 - <<'PYTRACE'
+          from pathlib import Path
+          import json
+          for name in ("slot0","both","mixed_counters","malformed_id14","older_slot_fallback"):
+              lines=Path(f"evidence/results/trace_{name}.json").read_text().splitlines()
+              records=[json.loads(line) for line in lines if line.strip().startswith('{"mode":"trace"')]
+              assert len(records)==1,(name,"expected exactly one structured trace record",len(records))
+              d=records[0]
+              assert d["frames"]>=180 and d["trace_steps"]>0,(name,d)
+              assert d["load_game_save_entry_hits"]>=1,(name,"save-loader not reached",d)
+              assert d["get_save_valid_status_entry_hits"]>=1,(name,"save validation not reached",d)
+              assert d["load_game_save_arg"]==0,(name,"not SAVE_NORMAL",d)
+              for key in ("load_game_save_return_hits","load_game_save_return_value","trace_end_pc","trace_frame_limit","saveblock2_ptr","saveblock2_filler_marker"):
+                  assert key in d,(name,key)
+              for key in ("load_game_save_entry_hits","get_save_valid_status_entry_hits","copy_save_slot_data_entry_hits"):
+                  assert key in d,(name,key)
+          # Distinguish observed loaded payload from mere status/frame advance.
+          # These expectations are source-derived from pinned save.c slot selection,
+          # not approvals or evidence of a game-initiated write.
+          expected={
+              "slot0": (1,0,0xA5),
+              "both": (1,1,0x5A),
+              # Counter 2 selects physical slot 0 via gSaveCounter % 2, despite slot 1 being valid.
+              "mixed_counters": (1,2,0xA5),
+              "malformed_id14": (255,0,0xA5),
+              "older_slot_fallback": (255,0,0xA5),
+          }
+          for name,(status,counter,marker) in expected.items():
+              lines=Path(f"evidence/results/trace_{name}.json").read_text().splitlines()
+              d=next(json.loads(line) for line in lines if line.strip().startswith('{"mode":"trace"'))
+              assert (d["save_status"],d["save_counter"])==(status,counter),(name,"status/counter",d)
+              assert d["copy_save_slot_data_entry_hits"]>=1,(name,"copy not reached",d)
+              assert d["saveblock2_ptr"]>=0x02000000 and d["saveblock2_ptr"]<0x02040000,(name,"pointer",d)
+              assert d["saveblock2_filler_marker"]==marker,(name,"wrong loaded payload marker",d)
+          print("Native SaveBlock2 payload selection verified against five distinct synthetic fixtures; no in-game save-write claim")
+          PYTRACE
+          # Real emulator observations of altered header and sector IDs 15/65535.
+          # A native signal/error is evidence of failure, NOT a safety PASS.
+          python3 tools/phase1_real_firered_mgba_adversarial.py \
+            --probe ./real-rom-probe \
+            --rom upstream/pokefirered/pokefirered.gba \
+            --changed-rom evidence/fixtures/firered_header_changed.gba \
+            --fixtures evidence/fixtures --output evidence/results \
+            --status "$status" --counter "$counter" \
+            --loader "$loader" --valid "$valid" --copy "$copy" --sb2 "$sb2"
           cp evidence/fixtures/empty.sav evidence/results/flash_program.sav
           timeout 120s ./real-rom-probe upstream/pokefirered/pokefirered.gba evidence/results/flash_program.sav program "$status" "$counter" | tee evidence/results/flash_program.json
           python3 - <<'PY'
