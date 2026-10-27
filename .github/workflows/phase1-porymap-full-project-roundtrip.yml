@@ -1,0 +1,86 @@
+name: Phase 1 full pinned Porymap Qt project save/reopen
+on:
+  push:
+    branches:
+      - phase1/porymap-full-qt-project-roundtrip-20261028
+    paths:
+      - '.github/workflows/phase1-porymap-full-project-roundtrip.yml'
+      - 'tests/porymap_qt_project_roundtrip.cpp'
+      - 'docs/phase1-review-readiness/porymap-full-qt-project-roundtrip-20261028.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-project-roundtrip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clone immutable Porymap and FireRed project source
+        run: |
+          set -euo pipefail
+          git clone --quiet --filter=blob:none https://github.com/huderlem/porymap.git upstream-porymap
+          git -C upstream-porymap checkout --quiet --detach 26b919d7ff4b54152de010abd5bf344af2ebe116
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream-firered
+          git -C upstream-firered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream-porymap rev-parse HEAD)" = 26b919d7ff4b54152de010abd5bf344af2ebe116
+          test "$(git -C upstream-firered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git -C upstream-porymap hash-object src/project.cpp | grep -Fx d43b0949303433111d4478ad76117c2b3445dd13
+          git -C upstream-porymap hash-object src/core/map.cpp | grep -Fx 47b279919bd4afcc76b88f9eeecd459b3452989f
+          git -C upstream-porymap hash-object src/lib/orderedjson.cpp | grep -Fx 4d3a460c652541371a01132116e508db8c4c872c
+          python3 tools/phase1_porymap_qt_writer_failure.py --porymap upstream-porymap --output phase1-porymap-source.json
+      - name: Install pinned Porymap Qt build prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-base-dev-tools qmake6 libqt6svg6-dev libgl1-mesa-dev pkg-config g++
+      - name: Compile full pinned Porymap application with test entrypoint
+        run: |
+          set -euo pipefail
+          mkdir -p upstream-porymap/tests
+          cp tests/porymap_qt_project_roundtrip.cpp upstream-porymap/tests/
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("upstream-porymap/porymap.pro")
+          s=p.read_text()
+          assert s.count("src/main.cpp")==1
+          s=s.replace("src/main.cpp", "tests/porymap_qt_project_roundtrip.cpp")
+          Path("upstream-porymap/porymap-phase1.pro").write_text(s)
+          PY
+          (cd upstream-porymap && qmake6 porymap-phase1.pro -o Makefile && make -j4) > porymap-build.log 2>&1 || { tail -120 porymap-build.log; exit 1; }
+          test -x upstream-porymap/porymap
+      - name: Full Qt project save/reopen and injected write failure
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import shutil
+          from pathlib import Path
+          source=Path("upstream-firered")
+          dest=Path("phase1-project/pokefirered")
+          dest.parent.mkdir(parents=True,exist_ok=True)
+          shutil.copytree(source,dest,ignore=shutil.ignore_patterns(".git"))
+          assert (dest/"data/maps/PalletTown/map.json").is_file()
+          PY
+          mkdir -p phase1-evidence
+          QT_QPA_PLATFORM=offscreen timeout 180s upstream-porymap/porymap "$PWD/phase1-project/pokefirered" | tee phase1-evidence/full-qt-project.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("phase1-evidence/full-qt-project.json").read_text())
+          assert d["full_project_load"] and d["full_map_save_reload"]
+          assert d["project_save_returned_true_on_device_failure"]
+          assert d["map_dirty_after_device_failure"] is False
+          assert d["disk_content_preserved_after_injected_failure"]
+          assert d["phase1_gate"]=="FAIL_INCOMPLETE"
+          print("Pinned full Project save/reopen and injected write-failure boundary observed; no approval")
+          PY
+      - name: Archive text-only source and Qt runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-porymap-full-project-qt-text-evidence
+          path: |
+            phase1-evidence/*.json
+            phase1-porymap-source.json
+            porymap-build.log
+          if-no-files-found: warn
+          retention-days: 30
