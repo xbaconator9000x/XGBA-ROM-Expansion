@@ -1,0 +1,429 @@
+{
+  "schema": "xgba-phase1-firered-flash-wholefile-v1",
+  "phase": "Phase 1 source-only",
+  "authoritative_gate": "FAIL_INCOMPLETE",
+  "inventory": 14834,
+  "registered_prepared_baseline": 113,
+  "independent_approved": 0,
+  "source_pins": {
+    "pret/pokefirered": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
+  },
+  "records": [
+    {
+      "repository": "pret/pokefirered",
+      "pinned_commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/agb_flash.c",
+      "git_blob_sha1": "08aeed1638e214a3cad8b28d103964ab24342fba",
+      "source_lines": 297,
+      "nonblank_lines": 236,
+      "includes": [
+        "gba/gba.h",
+        "gba/flash_internal.h"
+      ],
+      "functions": [
+        {
+          "name": "SwitchFlashBank",
+          "start_line": 22,
+          "end_line": 28
+        },
+        {
+          "name": "ReadFlashId",
+          "start_line": 37,
+          "end_line": 63
+        },
+        {
+          "name": "FlashTimerIntr",
+          "start_line": 65,
+          "end_line": 69
+        },
+        {
+          "name": "SetFlashTimerIntr",
+          "start_line": 71,
+          "end_line": 80
+        },
+        {
+          "name": "StartFlashTimer",
+          "start_line": 82,
+          "end_line": 95
+        },
+        {
+          "name": "StopFlashTimer",
+          "start_line": 97,
+          "end_line": 104
+        },
+        {
+          "name": "ReadFlash1",
+          "start_line": 106,
+          "end_line": 109
+        },
+        {
+          "name": "SetReadFlash1",
+          "start_line": 111,
+          "end_line": 128
+        },
+        {
+          "name": "ReadFlash_Core",
+          "start_line": 132,
+          "end_line": 138
+        },
+        {
+          "name": "ReadFlash",
+          "start_line": 140,
+          "end_line": 174
+        },
+        {
+          "name": "VerifyFlashSector_Core",
+          "start_line": 176,
+          "end_line": 185
+        },
+        {
+          "name": "VerifyFlashSector",
+          "start_line": 187,
+          "end_line": 223
+        },
+        {
+          "name": "VerifyFlashSectorNBytes",
+          "start_line": 225,
+          "end_line": 259
+        },
+        {
+          "name": "ProgramFlashSectorAndVerify",
+          "start_line": 261,
+          "end_line": 278
+        },
+        {
+          "name": "ProgramFlashSectorAndVerifyNBytes",
+          "start_line": 280,
+          "end_line": 297
+        }
+      ],
+      "global_definitions": [
+        {
+          "line": 4,
+          "text": "static u8 sTimerNum;"
+        },
+        {
+          "line": 5,
+          "text": "static u16 sTimerCount;"
+        },
+        {
+          "line": 7,
+          "text": "static u16 sSavedIme;"
+        },
+        {
+          "line": 9,
+          "text": "COMMON_DATA u8 gFlashTimeoutFlag = 0;"
+        },
+        {
+          "line": 10,
+          "text": "COMMON_DATA u8 (*PollFlashStatus)(u8 *) = NULL;"
+        },
+        {
+          "line": 11,
+          "text": "COMMON_DATA u16 (*WaitForFlashWrite)(u8 phase, u8 *addr, u8 lastData) = NULL;"
+        },
+        {
+          "line": 12,
+          "text": "COMMON_DATA u16 (*ProgramFlashSector)(u16 sectorNum, void *src) = NULL;"
+        },
+        {
+          "line": 13,
+          "text": "COMMON_DATA const struct FlashType *gFlash = NULL;"
+        },
+        {
+          "line": 14,
+          "text": "COMMON_DATA u16 (*ProgramFlashByte)(u16 sectorNum, u32 offset, u8 data) = NULL;"
+        },
+        {
+          "line": 15,
+          "text": "COMMON_DATA u16 gFlashNumRemainingBytes = 0;"
+        },
+        {
+          "line": 16,
+          "text": "COMMON_DATA u16 (*EraseFlashChip)() = NULL;"
+        },
+        {
+          "line": 17,
+          "text": "COMMON_DATA u16 (*EraseFlashSector)(u16 sectorNum) = NULL;"
+        },
+        {
+          "line": 18,
+          "text": "COMMON_DATA const u16 *gFlashMaxTime = NULL;"
+        },
+        {
+          "line": 39,
+          "text": "u16 flashId;"
+        },
+        {
+          "line": 40,
+          "text": "u16 readFlash1Buffer[0x20];"
+        },
+        {
+          "line": 41,
+          "text": "u8 (*readFlash1)(u8 *);"
+        },
+        {
+          "line": 84,
+          "text": "const u16 *maxTime = &gFlashMaxTime[phase * 3];"
+        },
+        {
+          "line": 113,
+          "text": "u16 *src;"
+        },
+        {
+          "line": 114,
+          "text": "u16 i;"
+        },
+        {
+          "line": 142,
+          "text": "u8 *src;"
+        },
+        {
+          "line": 143,
+          "text": "u16 i;"
+        },
+        {
+          "line": 189,
+          "text": "u16 i;"
+        },
+        {
+          "line": 193,
+          "text": "u8 *tgt;"
+        },
+        {
+          "line": 194,
+          "text": "u16 size;"
+        },
+        {
+          "line": 195,
+          "text": "u32 (*verifyFlashSector_Core)(u8 *, u8 *, u32);"
+        },
+        {
+          "line": 227,
+          "text": "u16 i;"
+        },
+        {
+          "line": 231,
+          "text": "u8 *tgt;"
+        },
+        {
+          "line": 232,
+          "text": "u32 (*verifyFlashSector_Core)(u8 *, u8 *, u32);"
+        },
+        {
+          "line": 263,
+          "text": "u8 i;"
+        },
+        {
+          "line": 264,
+          "text": "u32 result;"
+        },
+        {
+          "line": 282,
+          "text": "u8 i;"
+        },
+        {
+          "line": 283,
+          "text": "u32 result;"
+        }
+      ],
+      "review_status": "proposed_complete_file_candidate_pending_independent_review",
+      "independent_approval": false
+    },
+    {
+      "repository": "pret/pokefirered",
+      "pinned_commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/agb_flash_1m.c",
+      "git_blob_sha1": "e249fab9a350f3263e7df5f20ff301a6d008e3db",
+      "source_lines": 86,
+      "nonblank_lines": 66,
+      "includes": [
+        "gba/gba.h",
+        "gba/flash_internal.h"
+      ],
+      "functions": [
+        {
+          "name": "IdentifyFlash",
+          "start_line": 13,
+          "end_line": 49
+        },
+        {
+          "name": "WaitForFlashWrite_Common",
+          "start_line": 51,
+          "end_line": 86
+        }
+      ],
+      "global_definitions": [
+        {
+          "line": 4,
+          "text": "static const char AgbLibFlashVersion[] = \"FLASH1M_V103\";"
+        },
+        {
+          "line": 6,
+          "text": "const struct FlashSetupInfo * const sSetupInfos[] ="
+        },
+        {
+          "line": 15,
+          "text": "u16 result;"
+        },
+        {
+          "line": 16,
+          "text": "u16 flashId;"
+        },
+        {
+          "line": 17,
+          "text": "const struct FlashSetupInfo * const *setupInfo;"
+        },
+        {
+          "line": 53,
+          "text": "u16 result = 0;"
+        },
+        {
+          "line": 54,
+          "text": "u8 status;"
+        }
+      ],
+      "review_status": "proposed_complete_file_candidate_pending_independent_review",
+      "independent_approval": false
+    },
+    {
+      "repository": "pret/pokefirered",
+      "pinned_commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/agb_flash_mx.c",
+      "git_blob_sha1": "b4f710f36449c46946294d0df3d61d493d5c0d1f",
+      "source_lines": 197,
+      "nonblank_lines": 151,
+      "includes": [
+        "gba/gba.h",
+        "gba/flash_internal.h"
+      ],
+      "functions": [
+        {
+          "name": "EraseFlashChip_MX",
+          "start_line": 58,
+          "end_line": 79
+        },
+        {
+          "name": "EraseFlashSector_MX",
+          "start_line": 81,
+          "end_line": 123
+        },
+        {
+          "name": "ProgramFlashByte_MX",
+          "start_line": 125,
+          "end_line": 148
+        },
+        {
+          "name": "ProgramByte",
+          "start_line": 150,
+          "end_line": 158
+        },
+        {
+          "name": "ProgramFlashSector_MX",
+          "start_line": 160,
+          "end_line": 197
+        }
+      ],
+      "global_definitions": [
+        {
+          "line": 4,
+          "text": "const u16 mxMaxTime[] ="
+        },
+        {
+          "line": 12,
+          "text": "const struct FlashSetupInfo MX29L010 ="
+        },
+        {
+          "line": 37,
+          "text": "const struct FlashSetupInfo DefaultFlash ="
+        },
+        {
+          "line": 60,
+          "text": "u16 result;"
+        },
+        {
+          "line": 61,
+          "text": "u16 readFlash1Buffer[0x20];"
+        },
+        {
+          "line": 83,
+          "text": "u16 numTries;"
+        },
+        {
+          "line": 84,
+          "text": "u16 result;"
+        },
+        {
+          "line": 85,
+          "text": "u8 *addr;"
+        },
+        {
+          "line": 86,
+          "text": "u16 readFlash1Buffer[0x20];"
+        },
+        {
+          "line": 127,
+          "text": "u8 *addr;"
+        },
+        {
+          "line": 128,
+          "text": "u16 readFlash1Buffer[0x20];"
+        },
+        {
+          "line": 162,
+          "text": "u16 result;"
+        },
+        {
+          "line": 163,
+          "text": "u8 *dest;"
+        },
+        {
+          "line": 164,
+          "text": "u16 readFlash1Buffer[0x20];"
+        }
+      ],
+      "review_status": "proposed_complete_file_candidate_pending_independent_review",
+      "independent_approval": false
+    },
+    {
+      "repository": "pret/pokefirered",
+      "pinned_commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/agb_flash_le.c",
+      "git_blob_sha1": "39d956e2778af564cf187ea732a019e46479ac12",
+      "source_lines": 31,
+      "nonblank_lines": 29,
+      "includes": [
+        "gba/gba.h",
+        "gba/flash_internal.h"
+      ],
+      "functions": [],
+      "global_definitions": [
+        {
+          "line": 4,
+          "text": "const u16 leMaxTime[] ="
+        },
+        {
+          "line": 12,
+          "text": "const struct FlashSetupInfo LE26FV10N1TS ="
+        }
+      ],
+      "review_status": "proposed_complete_file_candidate_pending_independent_review",
+      "independent_approval": false
+    }
+  ],
+  "dependency_blobs": [
+    {
+      "path": "include/gba/flash_internal.h",
+      "git_blob_sha1": "39e14ef73ce3d020427baada43ab165d34d04e8b"
+    },
+    {
+      "path": "src/save.c",
+      "git_blob_sha1": "36b960f375c92711aa49b99bdfe9c6b3a99d6b1c"
+    }
+  ],
+  "limitations": [
+    "This is source-contract and full-file analyst preparation, not native GBA hardware proof",
+    "No compiler/linker/Thumb relocation or save-file compatibility test is claimed",
+    "No reviewer attestation or gate transition is claimed"
+  ]
+}
