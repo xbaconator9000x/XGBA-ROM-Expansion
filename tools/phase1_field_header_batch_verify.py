@@ -110,7 +110,8 @@ def main() -> None:
             raise ValueError(f"Missing source pin in {e['document']}")
         check_inventory(p.read_text(encoding="utf-8"), doc)
         identity = f"| `pret/pokefirered:{e['path']}` |"
-        if register.count(identity) != 1 or register.count(f"({e['document']})") != 1:
+        matching_rows = [line for line in register.splitlines() if line.startswith(identity)]
+        if len(matching_rows) != 1 or f"]({e['document']})" not in matching_rows[0]:
             raise ValueError(f"Missing or duplicated register identity: {e['path']}")
     print(f"FIELD_HEADER_PINNED_SOURCE_PASS count={len(entries)} git_blobs=25 line_inventories=25")
     print("PHASE1_GATE=FAIL_INCOMPLETE independent_approvals_not_granted")
