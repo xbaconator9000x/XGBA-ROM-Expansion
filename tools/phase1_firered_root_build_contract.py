@@ -54,7 +54,7 @@ def verify_contract(files):
         has(files[path], r'^\s*ROM\s+\(rx\)\s*:\s*ORIGIN = 0x8000000, LENGTH = 32M$')
     has(m, r'^\s*\$\(FIX\) \$@ -t"\$\(TITLE\)" -c\$\(GAME_CODE\) -m\$\(MAKER_CODE\) -r\$\(GAME_REVISION\) --silent$')
     pad_to = int(re.search(r'--pad-to (0x[0-9a-fA-F]+)', m).group(1), 16)
-    origin = int(re.search(r'ORIGIN = (0x[0-9a-fA-F]+)', files['ld_script_modern.ld']).group(1), 16)
+    origin = int(re.search(r'ROM\s+\(rx\)\s*:\s*ORIGIN = (0x[0-9a-fA-F]+)', files['ld_script_modern.ld']).group(1), 16)
     assert pad_to - origin == 16 * 1024 * 1024
     return {'pad_target': hex(pad_to), 'rom_origin': hex(origin),
             'minimum_binary_span_from_pad': pad_to - origin,
