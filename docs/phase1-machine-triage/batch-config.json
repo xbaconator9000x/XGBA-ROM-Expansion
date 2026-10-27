@@ -1,9 +1,9 @@
 {
   "schema": "xgba-phase1-bulk-batch-v1",
-  "start": 8000,
+  "start": 9000,
   "count": 1000,
   "shard_size": 250,
-  "previous_verified_total": 8000,
+  "previous_verified_total": 9000,
   "analyst_prepared_baseline": 113,
   "independent_approvals": 0,
   "phase1_gate": "FAIL_INCOMPLETE"
