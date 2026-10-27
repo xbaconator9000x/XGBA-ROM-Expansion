@@ -73,8 +73,10 @@
 | `pret/pokefirered:include/config.h` | [0054](0054-firered-build-variant-config.md) | pending independent review |
 | `pret/pokefirered:include/gba/io_reg.h` | [0055](0055-firered-gba-io-register-contract.md) | pending independent review |
 | `pret/pokefirered:constants/gba_constants.inc` | [0056](0056-firered-assembly-gba-constants.md) | pending independent review |
+| `pret/pokefirered:src/gpu_regs.c` | [0057](0057-firered-gpu-register-buffer-runtime.md) | pending independent review |
+| `pret/pokefirered:include/gpu_regs.h` | [0058](0058-firered-gpu-regs-public-api.md) | pending independent review |
 
-**Count: 61 distinct pinned upstream whole-file identities prepared / 14,834 = 0.4112%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
+**Count: 63 distinct pinned upstream whole-file identities prepared / 14,834 = 0.4247%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
 
 ## 27 October — corrected duplicate and script interpreter ABI closure
 
@@ -141,3 +143,7 @@ The complete pinned [GBA I/O register header](0055-firered-gba-io-register-contr
 ## 27 October — 61st candidate: assembly hardware constant ABI cross-check
 
 The complete pinned [assembly GBA constants include](0056-firered-assembly-gba-constants.md) is analyst-prepared as the **61st distinct whole-file candidate**, covering 464 `.set` symbols and 158 numeric-equal shared offset aliases against the C I/O header. Asymmetric alias names and compiler/runtime semantics remain review obligations, not claimed defects. **61/14,834 = 0.4112% prepared; 0/14,834 = 0.0000% independently approved; inventory 100%; FAIL_INCOMPLETE.** Exact-head CI must be verified separately.
+
+## 27 October — GPU register buffering and public API closure
+
+Two complete pinned source files, [GPU register manager implementation](0057-firered-gpu-register-buffer-runtime.md) and [public header](0058-firered-gpu-regs-public-api.md), are now distinct analyst-prepared candidates. The implementation exposes a conditional 16-bit buffer boundary hazard for offset 95 and the header has one declaration without an identified definition; neither is claimed reachable in stock gameplay or a confirmed linker/runtime defect. **63/14,834 = 0.4247% prepared; 0/14,834 = 0.0000% independently approved; inventory 100%; FAIL_INCOMPLETE.** Exact-head CI remains to be checked.
