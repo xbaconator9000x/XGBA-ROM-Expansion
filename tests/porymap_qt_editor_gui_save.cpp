@@ -156,6 +156,27 @@ int main(int argc, char **argv) {
         require(diskOffset(routePath, otherDirection, otherTarget) == -(original + 1),
                 "failed current-only GUI save unexpectedly persisted mirror");
 
+        // Consequential edge case: the failed current-only save cleared the
+        // PalletTown dirty flag, while the mirrored Route1 edit remains dirty.
+        // Trigger the actual Save Project QAction again. Does it repair BOTH
+        // on-disk connections, or save only the remaining dirty mirror?
+        // Record either outcome; do not assume the source-level hazard.
+        std::cerr << "PHASE1_GUI_STAGE save_all_after_failed_current" << std::endl;
+        saveAll->trigger();
+        require(allTriggers == 2, "post-failure GUI Save Project QAction not triggered");
+        const int currentDiskAfterRetry = diskOffset(palletPath, direction, target);
+        const int mirrorDiskAfterRetry = diskOffset(routePath, otherDirection, otherTarget);
+        require(mirrorDiskAfterRetry == -(original + 2),
+                "Save Project failed to persist remaining dirty Route1 mirror");
+        require(currentDiskAfterRetry == original + 1 || currentDiskAfterRetry == original + 2,
+                "unexpected PalletTown disk state after Save Project retry");
+        const bool divergentDiskMirror = currentDiskAfterRetry != -mirrorDiskAfterRetry;
+        const bool currentDirtyAfterRetry = map->hasUnsavedChanges();
+        const bool mirrorDirtyAfterRetry = other->hasUnsavedChanges();
+        require(!mirrorDirtyAfterRetry, "Save Project did not clear persisted Route1 dirty state");
+        // If divergentDiskMirror is true, this is observed disk inconsistency,
+        // not just the earlier in-memory/disk mismatch.
+
         QJsonObject result;
         result["real_mainwindow_initialized"] = true;
         result["real_editor_map_loaded"] = true;
@@ -166,7 +187,13 @@ int main(int argc, char **argv) {
         result["failed_gui_save_disk_offset"] = diskOffset(palletPath, direction, target);
         result["failed_gui_save_in_memory_offset"] = conn->offset();
         result["failed_gui_save_cleared_dirty"] = !dirtyAfterFailedGuiSave;
-        result["failed_gui_save_mirror_remains_dirty"] = other->hasUnsavedChanges();
+        result["failed_gui_save_mirror_remains_dirty"] = true; // captured immediately after failure
+        result["save_all_after_failure_triggers"] = int(allTriggers);
+        result["post_failure_retry_current_disk_offset"] = currentDiskAfterRetry;
+        result["post_failure_retry_mirror_disk_offset"] = mirrorDiskAfterRetry;
+        result["post_failure_retry_disk_mirrors_divergent"] = divergentDiskMirror;
+        result["post_failure_retry_current_dirty"] = currentDirtyAfterRetry;
+        result["post_failure_retry_mirror_dirty"] = mirrorDirtyAfterRetry;
         result["failure_device"] = "/dev/full";
         result["phase1_gate"] = "FAIL_INCOMPLETE";
         result["independent_approval"] = false;

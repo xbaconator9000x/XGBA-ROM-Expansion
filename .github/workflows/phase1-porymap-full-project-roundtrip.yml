@@ -120,8 +120,12 @@ jobs:
           d=records[0]
           assert d["real_mainwindow_initialized"] and d["real_editor_map_loaded"]
           assert d["qaction_current_save_triggers"]==2
-          assert d["qaction_save_project_triggers"]==1
+          assert d["qaction_save_project_triggers"]==2
+          assert d["save_all_after_failure_triggers"]==2
           assert d["failed_gui_save_cleared_dirty"] and d["failed_gui_save_mirror_remains_dirty"]
+          assert d["post_failure_retry_mirror_dirty"] is False
+          assert d["post_failure_retry_mirror_disk_offset"]==-d["failed_gui_save_in_memory_offset"]
+          assert isinstance(d["post_failure_retry_disk_mirrors_divergent"],bool)
           assert d["failed_gui_save_disk_offset"]!=d["failed_gui_save_in_memory_offset"]
           assert d["phase1_gate"]=="FAIL_INCOMPLETE"
           Path("phase1-evidence/gui-save.json").write_text(json.dumps(d,indent=2,sort_keys=True)+"\n")
