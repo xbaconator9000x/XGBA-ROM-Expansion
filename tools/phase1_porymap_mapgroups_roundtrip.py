@@ -31,7 +31,7 @@ CHECKS = {
     "default_false": ("config", "this->preserveMatchingOnlyData = false;"),
     "config_override": ("config_impl", 'key == "preserve_matching_only_data"'),
     "load_removes": ("project", 'mapGroupsObj.remove("connections_include_order");'),
-    "load_condition": ("project", '// Chuck the "connections_include_order" field, this is only for matching.\\n    if (!projectConfig.preserveMatchingOnlyData) {'),
+    "load_condition": ("project", '// Chuck the "connections_include_order" field, this is only for matching.'),
     "load_retains_other_fields": ("project", "this->customMapGroupsData = mapGroupsObj;"),
     "save_appends_custom": ("project", "OrderedJson::append(&mapGroupsObj, this->customMapGroupsData);"),
     "save_global_calls_groups": ("project", "if (!saveMapGroups()) success = false;"),
@@ -52,6 +52,8 @@ def check_contract(sources: dict[str, str]) -> None:
     e = sources["editor"]
     g = sources["generator"]
     # Source-order checks exclude false positives from unrelated functions.
+    if "if (!projectConfig.preserveMatchingOnlyData) {" not in p[p.index(CHECKS["load_condition"][1]):p.index('mapGroupsObj.remove("connections_include_order");')]:
+        raise ValueError("Map-groups conditional removal guard changed")
     if not (p.index('mapGroupsObj.remove("connections_include_order");')
             < p.index("this->customMapGroupsData = mapGroupsObj;")):
         raise ValueError("Map-groups load order changed")
