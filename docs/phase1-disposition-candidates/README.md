@@ -70,6 +70,7 @@
 | `pret/pokefirered:include/fieldmap.h` | [0051](0051-firered-fieldmap-public-contract.md) | pending independent review |
 | `pret/pokefirered:include/overworld.h` | [0052](0052-firered-overworld-api-header.md) | pending independent review |
 | `pret/pokefirered:include/field_control_avatar.h` | [0053](0053-firered-field-input-api-header.md) | pending independent review |
+| `pret/pokefirered:include/config.h` | [0054](0054-firered-build-variant-config.md) | pending independent review |
 
 **Count: 58 distinct pinned upstream whole-file identities prepared / 14,834 = 0.3910%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
 
