@@ -19,16 +19,19 @@ static uint64_t digest(const void *data, size_t size) {
     return h;
 }
 int main(int argc, char **argv) {
-    if (argc != 8 && argc != 22) die("usage: controller ROM SAV EVENTS FRAMES STATUS_ADDR COUNTER_ADDR SB2_PTR_ADDR [START_MENU_SAVE DO_SAVE TRY_SAVING_DATA TITLE_TASK INIT_MAIN EXEC_MAIN RETURN_FIELD CONTINUE_GAME RETURN_FIELD_LOCAL OVERWORLD CB1_OVERWORLD SHOW_START_MENU FIELD_GET_PLAYER_INPUT GMAIN]");
+    if (argc != 8 && argc != 23) die("usage: controller ROM SAV EVENTS FRAMES STATUS_ADDR COUNTER_ADDR SB2_PTR_ADDR [START_MENU_SAVE DO_SAVE TRY_SAVING_DATA TITLE_TASK INIT_MAIN EXEC_MAIN RETURN_FIELD CONTINUE_GAME RETURN_FIELD_LOCAL OVERWORLD CB1_OVERWORLD SHOW_START_MENU FIELD_GET_PLAYER_INPUT GMAIN SB1_PTR_ADDR]");
     char *end;
     unsigned limit = (unsigned)strtoul(argv[4], &end, 10);
     if (*end || limit < 180 || limit > 5000) die("invalid frame budget");
-    const int tracing = argc == 22;
+    const int tracing = argc == 23;
     uint32_t targets[13] = {0};
     unsigned hits[13] = {0}, first_hit_frame[13] = {0};
     unsigned first_try_save_arg = 0xFFFFFFFFU;
     unsigned long long trace_steps = 0;
-    uint32_t gmain_addr = 0;
+    uint32_t gmain_addr = 0, sb1_ptr_addr = 0;
+    unsigned callback2_return_local_frames = 0, return_local_state_hist[16] = {0};
+    unsigned last_gmain_state = 0;
+    uint32_t last_callback2 = 0;
     unsigned callback2_overworld_frames = 0, new_start_key_frames = 0;
     unsigned new_start_key_overworld_frames = 0, first_callback2_overworld_frame = 0;
     if (tracing) {
@@ -45,6 +48,11 @@ int main(int argc, char **argv) {
                         (main_value >= 0x03000000UL && main_value < 0x03008000UL)))
             die("invalid compiled gMain address");
         gmain_addr = (uint32_t)main_value;
+        unsigned long sb1_value = strtoul(argv[22], &tail, 0);
+        if (*tail || !((sb1_value >= 0x02000000UL && sb1_value < 0x02040000UL) ||
+                        (sb1_value >= 0x03000000UL && sb1_value < 0x03008000UL)))
+            die("invalid compiled gSaveBlock1Ptr address");
+        sb1_ptr_addr = (uint32_t)sb1_value;
     }
     struct InputEvent events[1024];
     unsigned count = 0, prev = 0;
@@ -110,6 +118,12 @@ int main(int argc, char **argv) {
              * Read after emulated frame; do not infer key handling from host pulses. */
             uint32_t callback2 = core->busRead32(core, gmain_addr + 4U) & ~1U;
             uint16_t new_keys = core->busRead16(core, gmain_addr + 0x2EU);
+            last_callback2 = callback2;
+            last_gmain_state = core->busRead8(core, gmain_addr + 0x438U);
+            if (callback2 == targets[8]) {
+                ++callback2_return_local_frames;
+                if (last_gmain_state < 16) ++return_local_state_hist[last_gmain_state];
+            }
             if (callback2 == targets[9]) {
                 ++callback2_overworld_frames;
                 if (!first_callback2_overworld_frame) first_callback2_overworld_frame = frame + 1;
@@ -168,6 +182,9 @@ int main(int argc, char **argv) {
            "\"first_show_start_menu_frame\":%u,\"first_field_get_player_input_frame\":%u,"
            "\"callback2_overworld_frames\":%u,\"first_callback2_overworld_frame\":%u,"
            "\"new_start_key_frames\":%u,\"new_start_key_overworld_frames\":%u,"
+           "\"callback2_return_local_frames\":%u,\"return_local_state_hist\":[%u,%u,%u,%u,%u,%u,%u,%u],"
+           "\"last_gmain_state\":%u,\"last_callback2\":%u,"
+           "\"saveblock1_map_group\":%u,\"saveblock1_map_num\":%u,\"saveblock1_layout_id\":%u,"
            "\"game_save_callsite_verified\":false}\n",
            core->frameCounter(core), count, gba->memory.savedata.type,
            baseline_frame, changed_bytes, frames_with_changed_data,
@@ -185,7 +202,18 @@ int main(int argc, char **argv) {
            first_hit_frame[8], first_hit_frame[9], first_hit_frame[10],
            first_hit_frame[11], first_hit_frame[12],
            callback2_overworld_frames, first_callback2_overworld_frame,
-           new_start_key_frames, new_start_key_overworld_frames);
+           new_start_key_frames, new_start_key_overworld_frames,
+           callback2_return_local_frames,
+           return_local_state_hist[0], return_local_state_hist[1], return_local_state_hist[2],
+           return_local_state_hist[3], return_local_state_hist[4], return_local_state_hist[5],
+           return_local_state_hist[6], return_local_state_hist[7],
+           last_gmain_state, last_callback2,
+           (sb1_ptr_addr && core->busRead32(core, sb1_ptr_addr) >= 0x02000000U && core->busRead32(core, sb1_ptr_addr) < 0x02040000U)
+             ? core->busRead8(core, core->busRead32(core, sb1_ptr_addr) + 4U) : 255U,
+           (sb1_ptr_addr && core->busRead32(core, sb1_ptr_addr) >= 0x02000000U && core->busRead32(core, sb1_ptr_addr) < 0x02040000U)
+             ? core->busRead8(core, core->busRead32(core, sb1_ptr_addr) + 5U) : 255U,
+           (sb1_ptr_addr && core->busRead32(core, sb1_ptr_addr) >= 0x02000000U && core->busRead32(core, sb1_ptr_addr) < 0x02040000U)
+             ? core->busRead16(core, core->busRead32(core, sb1_ptr_addr) + 0x32U) : 0xFFFFU);
     core->setKeys(core, 0);
     core->deinit(core);
     free(baseline);

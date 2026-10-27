@@ -30,7 +30,7 @@ def make_schedule(name):
         pulse(e, 1250, 0x8)
         for f in range(1330, 2300, 42):
             pulse(e, f, 0x1)
-    elif name == "menu_navigation":
+    elif name in ("menu_navigation", "pallet_valid", "pallet_null_layout"):
         for f in range(330, 1000, 60):
             pulse(e, f, 0x1)
         pulse(e, 1100, 0x8)
@@ -50,20 +50,22 @@ def main(a):
     assert sha(a.rom) == manifest["source_rom_sha256"]
     assert entries["slot0"]["fixture_not_game_generated"]
     results = []
-    for name in ("no_input", "title_continue", "repeated_confirm", "menu_navigation"):
+    for name in ("no_input", "title_continue", "repeated_confirm", "menu_navigation",
+                 "pallet_null_layout", "pallet_valid"):
         save = root / (name + ".sav")
-        shutil.copyfile(Path(a.fixtures) / "slot0.sav", save)
-        assert sha(save) == entries["slot0"]["sha256"]
+        fixture = name if name.startswith("pallet_") else "slot0"
+        shutil.copyfile(Path(a.fixtures) / (fixture + ".sav"), save)
+        assert sha(save) == entries[fixture]["sha256"]
         schedule = root / (name + ".keys")
         schedule.write_text("".join(f"{f} {keys:03x}\n" for f, keys in make_schedule(name)))
         before = sha(save)
         command = [a.probe, a.rom, str(save), str(schedule), "2400", a.status, a.counter, a.sb2]
-        if name == "menu_navigation":
+        if name in ("menu_navigation", "pallet_valid", "pallet_null_layout"):
             command.extend((a.start_menu_save, a.dialog_do_save, a.try_saving_data,
                             a.title_task, a.init_main_menu, a.execute_main_menu,
                             a.return_to_field, a.continue_saved_game,
                             a.return_field_local, a.overworld, a.cb1_overworld,
-                            a.show_start_menu, a.field_get_player_input, a.gmain))
+                            a.show_start_menu, a.field_get_player_input, a.gmain, a.sb1))
         p = subprocess.run(command, capture_output=True, text=True, timeout=900, check=False)
         if p.returncode:
             raise RuntimeError(f"{name}: native probe rc={p.returncode}, stderr={p.stderr[-1500:]}")
@@ -71,7 +73,7 @@ def main(a):
         assert len(lines) == 1, (name, p.stdout[-500:])
         d = lines[0]
         assert d["frames"] >= 2400 and d["host_flash_writes"] == 0, (name, d)
-        assert d["trace_mode"] == (name == "menu_navigation"), (name, d)
+        assert d["trace_mode"] == (name in ("menu_navigation", "pallet_valid", "pallet_null_layout")), (name, d)
         if name == "menu_navigation":
             assert d["trace_steps"] > 0, (name, "missing instruction trace", d)
             for key in ("start_menu_save_hits", "save_dialog_do_save_hits",
@@ -82,15 +84,18 @@ def main(a):
                         "overworld_hits", "cb1_overworld_hits", "show_start_menu_hits",
                         "field_get_player_input_hits", "callback2_overworld_frames",
                         "first_callback2_overworld_frame", "new_start_key_frames",
-                        "new_start_key_overworld_frames"):
+                        "new_start_key_overworld_frames", "callback2_return_local_frames",
+                        "return_local_state_hist", "last_gmain_state", "last_callback2",
+                        "saveblock1_map_group", "saveblock1_map_num", "saveblock1_layout_id"):
                 assert key in d, (name, key)
         after = sha(save)
         record = {
-            "case": name, "source_fixture": "synthetic_slot0",
+            "case": name, "source_fixture": "synthetic_" + fixture,
             "input_schedule_sha256": sha(schedule), "before_sha256": before,
             "after_sha256": after, "physical_save_changed": before != after,
             "native": d, "game_initiated_save_verified": False,
             "cold_boot_player_state_verified": False,
+            "overworld_input_path_observed": bool(d["field_get_player_input_hits"] and d["callback2_overworld_frames"]),
             "interpretation": "Input-driven real-ROM observation. Changed Flash alone is insufficient to prove save callsite or complete game roundtrip.",
             "phase1_gate": "FAIL_INCOMPLETE", "independent_approval": False,
         }
@@ -116,7 +121,14 @@ def main(a):
                           "callback2_overworld_frames": d["callback2_overworld_frames"],
                           "first_callback2_overworld_frame": d["first_callback2_overworld_frame"],
                           "new_start_key_frames": d["new_start_key_frames"],
-                          "new_start_key_overworld_frames": d["new_start_key_overworld_frames"]}),
+                          "new_start_key_overworld_frames": d["new_start_key_overworld_frames"],
+                          "callback2_return_local_frames": d["callback2_return_local_frames"],
+                          "return_local_state_hist": d["return_local_state_hist"],
+                          "last_gmain_state": d["last_gmain_state"],
+                          "last_callback2": d["last_callback2"],
+                          "saveblock1_map_group": d["saveblock1_map_group"],
+                          "saveblock1_map_num": d["saveblock1_map_num"],
+                          "saveblock1_layout_id": d["saveblock1_layout_id"]}),
               flush=True)
         results.append(record)
     (root / "controller_summary.json").write_text(json.dumps({
@@ -135,6 +147,6 @@ if __name__ == "__main__":
                 "title_task", "init_main_menu", "execute_main_menu",
                 "return_to_field", "continue_saved_game", "return_field_local",
                 "overworld", "cb1_overworld", "show_start_menu",
-                "field_get_player_input", "gmain"):
+                "field_get_player_input", "gmain", "sb1"):
         p.add_argument("--" + arg.replace("_", "-"), required=True)
     main(p.parse_args())
