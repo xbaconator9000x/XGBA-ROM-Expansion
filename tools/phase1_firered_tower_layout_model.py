@@ -31,9 +31,9 @@ ANCHORS={
  "#define MAX_TRAINERS_PER_FLOOR  3"],
  "include/save.h":["#define SECTOR_DATA_SIZE 3968","#define SECTOR_FOOTER_SIZE 128",
  "u32 counter;"]}
-def blob(b):return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\\0"+b).hexdigest()
+def blob(b):return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
 def extract_struct(text,name):
-    pattern=r"struct\\s+"+re.escape(name)+r"\\s*\\{.*?\\};"
+    pattern=r"struct\s+"+re.escape(name)+r"\s*\{.*?\};"
     match=re.search(pattern,text,re.S)
     if not match:raise ValueError("Struct missing: "+name)
     return match.group(0)
@@ -67,22 +67,22 @@ def build_model(sources,compiler):
                       ("MAX_TRAINERS_PER_FLOOR","include/constants/trainer_tower.h"),
                       ("SECTOR_DATA_SIZE","include/save.h"),
                       ("SECTOR_FOOTER_SIZE","include/save.h")):
-        m=re.search(r"^#define\\s+"+name+r"\\s+(\\d+)\\s*$",sources[path],re.M)
+        m=re.search(r"^#define\s+"+name+r"\s+(\d+)\s*$",sources[path],re.M)
         if not m:raise ValueError("Unresolved source macro "+name)
         macros[name]=int(m.group(1))
-    definitions="\\n".join(extract_struct(sources[path],name) for path,name in (
+    definitions="\n".join(extract_struct(sources[path],name) for path,name in (
         ("include/pokemon.h","BattleTowerPokemon"),
         ("include/cereader_tool.h","TrainerTowerTrainer"),
         ("include/cereader_tool.h","TrainerTowerFloor"),
         ("include/cereader_tool.h","EReaderTrainerTowerSet"),
         ("include/save.h","SaveSector")))
-    prelude="#include <stdint.h>\\n#include <stddef.h>\\n#include <stdio.h>\\ntypedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;\\n"
-    prelude+="".join(f"#define {k} {v}\\n" for k,v in macros.items())
+    prelude="#include <stdint.h>\n#include <stddef.h>\n#include <stdio.h>\ntypedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;\n"
+    prelude+="".join(f"#define {k} {v}\n" for k,v in macros.items())
     main=r"""
 int main(void) {
-  printf("{\\"battle_mon\\":%zu,\\"trainer\\":%zu,\\"floor\\":%zu,\\"set\\":%zu,"
-         "\\"trainer_mons_offset\\":%zu,\\"floor_checksum_offset\\":%zu,"
-         "\\"sec30\\":%zu,\\"sec31\\":%zu,\\"counter_offset\\":%zu}\\n",
+  printf("{\"battle_mon\":%zu,\"trainer\":%zu,\"floor\":%zu,\"set\":%zu,"
+         "\"trainer_mons_offset\":%zu,\"floor_checksum_offset\":%zu,"
+         "\"sec30\":%zu,\"sec31\":%zu,\"counter_offset\":%zu}\n",
          sizeof(struct BattleTowerPokemon),sizeof(struct TrainerTowerTrainer),
          sizeof(struct TrainerTowerFloor),sizeof(struct EReaderTrainerTowerSet),
          offsetof(struct TrainerTowerTrainer,mons),
@@ -95,7 +95,7 @@ int main(void) {
 """
     with tempfile.TemporaryDirectory() as tmp:
         src=Path(tmp)/"layout.c";exe=Path(tmp)/"layout"
-        src.write_text(prelude+definitions+"\\n"+main)
+        src.write_text(prelude+definitions+"\n"+main)
         subprocess.run([compiler,"-std=gnu11","-Wall","-Wextra","-Werror",str(src),"-o",str(exe)],check=True)
         output=subprocess.check_output([str(exe)],text=True)
     observed=json.loads(output)
@@ -122,6 +122,6 @@ def main():
             "scope":"Host C ABI model of exact pinned struct declarations, not original agbcc, GBA binary or emulator execution",
             "independent_approvals":0,"phase1_gate":"FAIL_INCOMPLETE"}
     a.out.parent.mkdir(parents=True,exist_ok=True)
-    a.out.write_text(json.dumps(result,indent=2,sort_keys=True)+"\\n")
+    a.out.write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
     print(json.dumps(result,sort_keys=True))
 if __name__=="__main__":main()
