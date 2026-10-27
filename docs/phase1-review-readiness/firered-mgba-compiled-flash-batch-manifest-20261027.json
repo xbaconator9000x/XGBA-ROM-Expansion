@@ -32,6 +32,13 @@
       "path": "src/load_save.c",
       "git_blob_sha1": "8b723dd044c6024b3671bb890b25b56a53f99ec5",
       "role": "Flash present and timer decision"
+    },
+    {
+      "repo": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/agb_flash.c",
+      "git_blob_sha1": "08aeed1638e214a3cad8b28d103964ab24342fba",
+      "role": "source-only Flash unlock/ID command sequence and relocated RAM read order"
     }
   ],
   "evidence": [
@@ -52,7 +59,8 @@
   "dependency_edges": [
     "ROM header/CRC -> mGBA default override selection",
     "mGBA Flash ID read -> stubbed save bus -> FireRed IdentifyFlash",
-    "FireRed IdentifyFlash -> CheckForFlashMemory -> timer/presence"
+    "FireRed IdentifyFlash -> CheckForFlashMemory -> timer/presence",
+    "FireRed ReadFlashId command sequence and high-byte/low-byte ordering (source-only, not compiled)"
   ],
   "unresolved_edges": [
     "real mGBA ROM header load and override configuration",
@@ -61,12 +69,14 @@
     "real GBA Flash bus and cartridge hardware",
     "save persistence and malformed sector recovery",
     "original agbcc toolchain equivalence",
-    "independent source revision bound review"
+    "independent source revision bound review",
+    "real FireRed ReadFlashId RAM-relocated THUMB routine and physical FLASH_WRITE bus"
   ],
   "negative_evidence": [
     "Compiled function with dependency stubs is not native emulator runtime",
     "Flash descriptor setup records are stubbed, not original full hardware descriptors",
-    "No newly machine-indexed unique source files; prior pool exhausted"
+    "No newly machine-indexed unique source files; prior pool exhausted",
+    "FireRed ReadFlashId source pinned and checked but not compiled or executed"
   ],
   "accounting": {
     "new_machine_processed_unique": 0,
