@@ -53,7 +53,7 @@ def require(condition, message):
         raise ValueError(message)
 
 def git_blob_sha(data):
-    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\\0" + data).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
 
 def fetch(path):
     url = "https://raw.githubusercontent.com/" + UPSTREAM + "/" + REV + "/" + path
@@ -72,34 +72,34 @@ def contract(raw):
     make = raw["Makefile"].decode("utf-8")
     old = raw["ld_script.ld"].decode("utf-8")
     modern = raw["ld_script_modern.ld"].decode("utf-8")
-    struct = re.search(r"struct GFRomHeader\\s*\\{(.*?)\\};", gf, re.S)
-    init = re.search(r"static const struct GFRomHeader sGFRomHeader\\s*=\\s*\\{(.*?)\\};", gf, re.S)
+    struct = re.search(r"struct GFRomHeader\s*\{(.*?)\};", gf, re.S)
+    init = re.search(r"static const struct GFRomHeader sGFRomHeader\s*=\s*\{(.*?)\};", gf, re.S)
     require(struct is not None and init is not None, "missing complete GF header declarations")
     members = []
     for declaration in struct.group(1).split(";"):
         declaration = declaration.strip()
         if not declaration:
             continue
-        pointer = re.search(r"\\(\\*\\s*(\\w+)\\s*\\)", declaration)
-        match = pointer or re.search(r"(\\w+)\\s*(?:\\[\\s*\\d*\\s*\\])?\\s*$", declaration)
+        pointer = re.search(r"\(\*\s*(\w+)\s*\)", declaration)
+        match = pointer or re.search(r"(\w+)\s*(?:\[\s*\d*\s*\])?\s*$", declaration)
         require(match is not None, "unparsed GF header member")
         members.append(match.group(1))
     require(len(members) == 74 and len(set(members)) == 74, "GF header 74-member ABI changed")
-    assignments = re.findall(r"^\\s*\\.(\\w+)\\s*=", init.group(1), re.M)
+    assignments = re.findall(r"^\s*\.(\w+)\s*=", init.group(1), re.M)
     counts = Counter(assignments)
     require(set(counts) == set(members), "GF header initializer coverage mismatch")
     require(len(assignments) == 75 and all(n == (2 if name == "gameName" else 1)
                                             for name, n in counts.items()),
             "unexpected duplicate or missing designated initializer")
-    require(re.search(r"#ifdef FIRERED\\s*\\.gameName\\s*=\\s*\\\"pokemon red version\\\",\\s*#else\\s*\\.gameName\\s*=\\s*\\\"pokemon green version\\\",\\s*#endif",
+    require(re.search(r"#ifdef FIRERED\s*\.gameName\s*=\s*\"pokemon red version\",\s*#else\s*\.gameName\s*=\s*\"pokemon green version\",\s*#endif",
                       init.group(1)) is not None, "conditional game name variants changed")
     require('__attribute__((section(".text.consts")))' in gf,
             "GF header no longer explicitly placed in .text.consts")
     offsets = dict((member, (kind, field)) for member, kind, field in
-                   re.findall(r"^\\s*\\.(\\w+)\\s*=\\s*offsetof\\(struct\\s+(\\w+),\\s*(\\w+)\\)",
+                   re.findall(r"^\s*\.(\w+)\s*=\s*offsetof\(struct\s+(\w+),\s*(\w+)\)",
                               init.group(1), re.M))
     require(offsets == EXPECTED_OFFSETS, "save layout offsetof contract changed")
-    sizes = dict(re.findall(r"^\\s*\\.(\\w+)\\s*=\\s*sizeof\\(struct\\s+(\\w+)\\)",
+    sizes = dict(re.findall(r"^\s*\.(\w+)\s*=\s*sizeof\(struct\s+(\w+)\)",
                             init.group(1), re.M))
     require(sizes == EXPECTED_SIZES, "save layout sizeof contract changed")
     require("RomHeaderNintendoLogo:" in rom and ".space 156" in rom
@@ -185,7 +185,7 @@ def main():
         ],
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\\n")
+    args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
     print(json.dumps({"pinned_sources": len(raw), "members": summary["member_count"],
                       "negative_controls": len(negatives), "gate": "FAIL_INCOMPLETE"}))
 
