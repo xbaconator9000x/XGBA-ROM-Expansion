@@ -47,9 +47,9 @@ def geometry(direction: str, offset: int, width: int, height: int, cwidth: int, 
     problems = []
     if rect["width"] <= 0 or rect["height"] <= 0:
         problems.append("empty_or_negative_copy_extent")
-    if rect["x"] < 0 or rect["y"] < 0 or rect["x"] + rect["width"] > vw or rect["y"] + rect["height"] > vh:
+    if rect["x"] < 0 or rect["y"] < 0 or rect["x"] > vw or rect["y"] > vh or rect["x"] + rect["width"] > vw or rect["y"] + rect["height"] > vh:
         problems.append("destination_rectangle_outside_virtual_map")
-    if rect["src_x"] < 0 or rect["src_y"] < 0 or rect["src_x"] + rect["width"] > cwidth or rect["src_y"] + rect["height"] > cheight:
+    if rect["src_x"] < 0 or rect["src_y"] < 0 or rect["src_x"] > cwidth or rect["src_y"] > cheight or rect["src_x"] + rect["width"] > cwidth or rect["src_y"] + rect["height"] > cheight:
         problems.append("source_rectangle_outside_connected_layout")
     if vw * vh > VIRTUAL_LIMIT:
         problems.append("virtual_map_exceeds_static_buffer")
