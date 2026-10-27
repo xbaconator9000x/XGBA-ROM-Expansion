@@ -17,6 +17,8 @@ BLOBS = {
         "include/global.fieldmap.h": "e2828ec0cb1439718e830fbef4366770b3b77b1c",
         "tools/mapjson/mapjson.cpp": "8d8ec4e4e6e1c011b06f00819abe40bad10d19d5",
         "asm/macros/map.inc": "83ef472c926ce767c9133ab9bd6922280b38bb2d",
+        "include/gba/macro.h": "cc85353052a1b9e2ab07c49953cf47c9b595d755",
+        "include/gba/syscall.h": "22fdf09facfaa812bf11b13d1f3ff86271598511",
     },
     "porymap": {
         "include/core/mapconnection.h": "40713d3a26157fce7a36465858e8273c78dc12f6",
@@ -65,6 +67,8 @@ def self_test() -> None:
     assert south(-40) == (0, 33, -13)
     assert west(0) == (7, 0, 20)
     assert west(40) == (47, 0, -13)
+    assert (-12 & 0x1FFFFF) == 2097140
+    assert (-13 & 0x1FFFFF) == 2097139
     try:
         require("not an anchor", "CpuCopy16(src, dest, width * 2);", "negative control")
     except AssertionError:
@@ -98,6 +102,8 @@ def inspect(firered: pathlib.Path, porymap: pathlib.Path) -> dict:
         (f["src/fieldmap.c"], "width = VMap.Xsize - x;", "unclamped south width"),
         (f["src/fieldmap.c"], "height = VMap.Ysize - y;", "unclamped west/east height"),
         (f["src/fieldmap.c"], "CpuCopy16(src, dest, width * 2);", "native copy consumer"),
+        (f["include/gba/macro.h"], "#define CPU_COPY(src, dest, size, bit) CpuSet(src, dest, CPU_SET_##bit##BIT | ((size)/(bit/8) & 0x1FFFFF))", "masked BIOS copy control"),
+        (f["include/gba/syscall.h"], "void CpuSet(const void *src, void *dest, u32 control);", "BIOS copy declaration"),
         (f["src/fieldmap.c"], "y2 = cHeight - MAP_OFFSET;", "short north source"),
         (f["src/fieldmap.c"], "x2 = cWidth - MAP_OFFSET;", "short west source"),
     ]:
@@ -111,6 +117,8 @@ def inspect(firered: pathlib.Path, porymap: pathlib.Path) -> dict:
             "normal": west(0), "disjoint_positive": west(40),
         },
         "finding": "disjoint synthetic offsets reach negative width/height or source column outside connected map",
+        "negative_width_12_masked_cpuset_halfwords": (-12 & 0x1FFFFF),
+        "negative_width_12_masked_cpuset_bytes": 2 * (-12 & 0x1FFFFF),
         "stock_authored_reachability": "not established",
         "compiled_or_runtime_test": False,
         "independent_approval": False,
