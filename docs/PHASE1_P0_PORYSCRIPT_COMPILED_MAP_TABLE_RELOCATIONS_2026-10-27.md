@@ -7,15 +7,16 @@
 | Owner / pinned source | Git blob SHA-1 | Scope |
 | --- | --- | --- |
 | `huderlem/poryscript@c32481161c767b25a3425fa9f1f8729927ff3d55:emitter/emitter.go` | `d35843ef29929ead47351646d7a33dd5c692b850` | Producer writes `map_script`, `map_script_2` and their distinct terminators |
+| Same Poryscript commit, `emitter/emitter_test.go` | `4c3209166937384a0dc26fc83a0341a5dac48ca5` | Real optimized/unoptimized `TestEmitMapScripts` regression fixture |
 | `pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982:asm/macros/map.inc` | `83ef472c926ce767c9133ab9bd6922280b38bb2d` | Actual unmodified assembler macros extracted by the checker |
 | Same FireRed commit, `src/script.c` | `d0433bdda062b138e53d1a1d3184b4566ad7d9dc` | Native five-byte tag/pointer reader and eight-byte conditional-table reader |
 | Same FireRed commit, `include/constants/map_scripts.h` | `1353de360cf1e00b6efbb26ec59c4822c99b59bf` | Type 2 on-frame table and type 3 transition tags |
 
-These four files are **source anchors, not new machine-triage identities or completed whole-file reviews**. The existing nine-blob [source-level producer/consumer dossier](PHASE1_P0_PORYSCRIPT_FIRERED_MAP_SCRIPT_ABI_2026-10-27.md) remains separate.
+These five files are **source anchors, not new machine-triage identities or completed whole-file reviews**. The existing nine-blob [source-level producer/consumer dossier](PHASE1_P0_PORYSCRIPT_FIRERED_MAP_SCRIPT_ABI_2026-10-27.md) remains separate.
 
 ## Reproducible compiled result
 
-The [checker](../tools/verify_poryscript_compiled_map_table.py) verifies both exact upstream commits and all four Git blobs before extracting the **original FireRed map macros**. It then assembles a deliberately synthetic, Poryscript-emitter-shaped table using `clang --target=armv4t-none-eabi`, links with `ld.lld` at synthetic ROM address `0x08000000`, and reads ELF32 sections/REL relocations with Python standard-library code. The fixture has two outer tags (2 and 3), a one-byte outer zero sentinel, two type-2 conditional entries, and a two-byte conditional zero sentinel.
+The [checker](../tools/verify_poryscript_compiled_map_table.py) verifies both exact upstream commits and all five Git blobs before extracting the **original FireRed map macros**. It then assembles a deliberately synthetic, Poryscript-emitter-shaped table using `clang --target=armv4t-none-eabi`, links with `ld.lld` at synthetic ROM address `0x08000000`, and reads ELF32 sections/REL relocations with Python standard-library code. The fixture has two outer tags (2 and 3), a one-byte outer zero sentinel, two type-2 conditional entries, and a two-byte conditional zero sentinel.
 
 | Verified contract | Synthetic object/link result |
 | --- | --- |
@@ -29,6 +30,8 @@ The [checker](../tools/verify_poryscript_compiled_map_table.py) verifies both ex
 | Linked `.rodata` SHA-256 | `0f7c77fec5bec5b40f0405cd64c381e9c3b00c39288fdc8306f6c82abb2d8a27` |
 
 The compiled witness shows that these macro pointer relocations are **unaligned**, as expected from the packed five-byte outer records. FireRed's native consumer uses the `T2_READ_PTR` access path rather than an ordinary naturally aligned pointer-field struct. A future source editor or extended pointer format must preserve the reader's ABI or explicitly replace both producer and consumer. The ELF object/link proof does not demonstrate that arbitrary relocated ROM pointers are safe in the real engine.
+
+The dedicated CI also runs the **actual pinned Poryscript Go `TestEmitMapScripts` unit test**, which compares optimized and unoptimized emitted assembler with the pinned expected strings. That is a separate producer-side regression, not proof that this synthetic ARM fixture was emitted by the CLI.
 
 Nine deliberately mutated synthetic fixtures (tag, terminator widths, first-variable sentinel, variable, comparison, pointer target, script byte, pointer width) must all be rejected by the exact byte/relocation checker or the assembler/linker. These are **negative controls**, not nine independent runtime tests.
 
