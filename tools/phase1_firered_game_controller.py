@@ -61,7 +61,9 @@ def main(a):
         if name == "menu_navigation":
             command.extend((a.start_menu_save, a.dialog_do_save, a.try_saving_data,
                             a.title_task, a.init_main_menu, a.execute_main_menu,
-                            a.return_to_field, a.continue_saved_game))
+                            a.return_to_field, a.continue_saved_game,
+                            a.return_field_local, a.overworld, a.cb1_overworld,
+                            a.show_start_menu, a.field_get_player_input, a.gmain))
         p = subprocess.run(command, capture_output=True, text=True, timeout=900, check=False)
         if p.returncode:
             raise RuntimeError(f"{name}: native probe rc={p.returncode}, stderr={p.stderr[-1500:]}")
@@ -76,7 +78,11 @@ def main(a):
                         "try_saving_data_entry_hits", "first_try_save_arg",
                         "title_task_hits", "init_main_menu_hits",
                         "execute_main_menu_hits", "return_to_field_hits",
-                        "continue_saved_game_hits"):
+                        "continue_saved_game_hits", "return_field_local_hits",
+                        "overworld_hits", "cb1_overworld_hits", "show_start_menu_hits",
+                        "field_get_player_input_hits", "callback2_overworld_frames",
+                        "first_callback2_overworld_frame", "new_start_key_frames",
+                        "new_start_key_overworld_frames"):
                 assert key in d, (name, key)
         after = sha(save)
         record = {
@@ -101,7 +107,16 @@ def main(a):
                           "init_main_menu_hits": d["init_main_menu_hits"],
                           "execute_main_menu_hits": d["execute_main_menu_hits"],
                           "return_to_field_hits": d["return_to_field_hits"],
-                          "continue_saved_game_hits": d["continue_saved_game_hits"]}),
+                          "continue_saved_game_hits": d["continue_saved_game_hits"],
+                          "return_field_local_hits": d["return_field_local_hits"],
+                          "overworld_hits": d["overworld_hits"],
+                          "cb1_overworld_hits": d["cb1_overworld_hits"],
+                          "show_start_menu_hits": d["show_start_menu_hits"],
+                          "field_get_player_input_hits": d["field_get_player_input_hits"],
+                          "callback2_overworld_frames": d["callback2_overworld_frames"],
+                          "first_callback2_overworld_frame": d["first_callback2_overworld_frame"],
+                          "new_start_key_frames": d["new_start_key_frames"],
+                          "new_start_key_overworld_frames": d["new_start_key_overworld_frames"]}),
               flush=True)
         results.append(record)
     (root / "controller_summary.json").write_text(json.dumps({
@@ -118,6 +133,8 @@ if __name__ == "__main__":
         p.add_argument("--" + arg, required=True)
     for arg in ("start_menu_save", "dialog_do_save", "try_saving_data",
                 "title_task", "init_main_menu", "execute_main_menu",
-                "return_to_field", "continue_saved_game"):
+                "return_to_field", "continue_saved_game", "return_field_local",
+                "overworld", "cb1_overworld", "show_start_menu",
+                "field_get_player_input", "gmain"):
         p.add_argument("--" + arg.replace("_", "-"), required=True)
     main(p.parse_args())

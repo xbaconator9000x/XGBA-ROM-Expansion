@@ -48,6 +48,8 @@ jobs:
           git -C upstream/pokefirered hash-object src/main_menu.c | grep -Fx 5cef7c46ea5dcaccbdb3698909e9fc23e7d00b9c
           git -C upstream/pokefirered hash-object src/overworld.c | grep -Fx 339014da46ae8543143edc99ab72bf7496203a0d
           git -C upstream/pokefirered hash-object include/global.h | grep -Fx 77155b09014aa854fcf87260e6ad2969e222da53
+          git -C upstream/pokefirered hash-object include/main.h | grep -Fx 31b22a3faa75409125257396913689a6a37c98ac
+          git -C upstream/pokefirered hash-object src/field_control_avatar.c | grep -Fx b1b6465941133b927505be92d189a7c283e4722f
       - name: Build real FireRed cartridge using pinned original agbcc
         run: |
           set -euo pipefail
@@ -203,10 +205,18 @@ jobs:
           execute_main_menu=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="Task_ExecuteMainMenuSelection" {print "0x"$1;exit}')
           return_to_field=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CB2_ReturnToField" {print "0x"$1;exit}')
           continue_saved_game=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CB2_ContinueSavedGame" {print "0x"$1;exit}')
+          return_field_local=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CB2_ReturnToFieldLocal" {print "0x"$1;exit}')
+          overworld=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CB2_Overworld" {print "0x"$1;exit}')
+          cb1_overworld=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CB1_Overworld" {print "0x"$1;exit}')
+          show_start_menu=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="ShowStartMenu" {print "0x"$1;exit}')
+          field_get_player_input=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="FieldGetPlayerInput" {print "0x"$1;exit}')
+          gmain=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gMain" {print "0x"$1;exit}')
           test -n "$status" && test -n "$counter" && test -n "$sb2"
           test -n "$title_task" && test -n "$init_main_menu" && test -n "$execute_main_menu"
           test -n "$return_to_field" && test -n "$continue_saved_game"
           test -n "$start_menu_save" && test -n "$dialog_do_save" && test -n "$try_saving_data"
+          test -n "$return_field_local" && test -n "$overworld" && test -n "$cb1_overworld"
+          test -n "$show_start_menu" && test -n "$field_get_player_input" && test -n "$gmain"
           printf 'Compiled save callsites: start=%s dialog=%s try=%s\n' "$start_menu_save" "$dialog_do_save" "$try_saving_data"
           python3 tools/phase1_firered_game_controller.py \
             --rom upstream/pokefirered/pokefirered.gba \
@@ -217,6 +227,9 @@ jobs:
             --title-task "$title_task" --init-main-menu "$init_main_menu" \
             --execute-main-menu "$execute_main_menu" \
             --return-to-field "$return_to_field" --continue-saved-game "$continue_saved_game" \
+            --return-field-local "$return_field_local" --overworld "$overworld" \
+            --cb1-overworld "$cb1_overworld" --show-start-menu "$show_start_menu" \
+            --field-get-player-input "$field_get_player_input" --gmain "$gmain" \
             --output evidence/controller
           cp evidence/controller/*.json evidence/results/
       - name: Upload only text evidence, never source-built ROM or raw saves
