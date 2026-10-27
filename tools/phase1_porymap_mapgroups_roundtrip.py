@@ -23,6 +23,10 @@ BLOBS = {
     "generator": ("firered", "tools/mapjson/mapjson.cpp", "8d8ec4e4e6e1c011b06f00819abe40bad10d19d5"),
     "groups": ("firered", "data/maps/map_groups.json", "8c382f504d208286161903244772c93138cd7662"),
     "rules": ("firered", "map_data_rules.mk", "b32b85a91d9460642345ca983c37d165e820741f"),
+    "mainwindow": ("porymap", "src/mainwindow.cpp", "08ce1a7a599ef825967717b69626984cdc6d772b"),
+    "connection": ("porymap", "src/core/mapconnection.cpp", "d2d3f0460c6a52669ca8f6856bfe7ec3103cd9e4"),
+    "map": ("porymap", "src/core/map.cpp", "47b279919bd4afcc76b88f9eeecd459b3452989f"),
+    "editcommands": ("porymap", "src/core/editcommands.cpp", "684d98c7ea8b2c600a5fb8888831b95723e741f"),
 }
 
 # Exact source anchors, not approximate keyword counts. Any upstream change
@@ -42,6 +46,20 @@ CHECKS = {
     "generator_sort": ("generator", "sort(map_names.begin(), map_names.end()"),
     "generator_emits_includes": ("generator", '"/connections.inc'),
     "build_consumes_groups": ("rules", '$(MAPS_DIR)/map_groups.json'),
+    "project_emits_map_loaded": ("project", "emit mapLoaded(map);"),
+    "window_hooks_project": ("mainwindow", "connect(project, &Project::mapLoaded, this, &MainWindow::onMapLoaded);"),
+    "window_hooks_map": ("mainwindow", "connect(map, &Map::modified, [this, map] { markMapEdited(map); });"),
+    "window_marks_target_dirty": ("mainwindow", "map->setHasUnsavedDataChanges(true);"),
+    "mirror_lazy_load": ("connection", "return project ? project->loadMap(mapName) : nullptr;"),
+    "mirror_resolve_target": ("connection", "auto map = targetMap();"),
+    "mirror_offset_propagates": ("connection", "connection->setOffset(-offset, false);"),
+    "mirror_marks_target": ("connection", "m_parentMap->modify();"),
+    "map_emits_modified": ("map", "emit modified();"),
+    "map_dirty_check": ("map", "m_hasUnsavedDataChanges || !m_isPersistedToFile"),
+    "save_all_maps": ("project", "for (auto map : this->maps) {"),
+    "save_map_cleans": ("project", "map->setClean();"),
+    "mirror_default": ("config_impl", "this->mirrorConnectingMaps = true;"),
+    "mirror_command_snapshot": ("editcommands", "this->mirrored = porymapConfig.mirrorConnectingMaps;"),
 }
 
 def check_contract(sources: dict[str, str]) -> None:
@@ -51,6 +69,8 @@ def check_contract(sources: dict[str, str]) -> None:
     p = sources["project"]
     e = sources["editor"]
     g = sources["generator"]
+    w = sources["mainwindow"]
+    conn = sources["connection"]
     # Source-order checks exclude false positives from unrelated functions.
     if "if (!projectConfig.preserveMatchingOnlyData) {" not in p[p.index(CHECKS["load_condition"][1]):p.index('mapGroupsObj.remove("connections_include_order");')]:
         raise ValueError("Map-groups conditional removal guard changed")
@@ -63,6 +83,17 @@ def check_contract(sources: dict[str, str]) -> None:
     if not (e.index("success = this->project->saveMap(this->map);")
             < e.index("if (!this->project->saveGlobalData())")):
         raise ValueError("Editor current-save order changed")
+    if not (w.index("connect(project, &Project::mapLoaded, this, &MainWindow::onMapLoaded);")
+            < w.index("void MainWindow::onMapLoaded(Map *map)")):
+        raise ValueError("MainWindow map-loaded signal registration changed")
+    if not (conn.index("void MapConnection::setOffset(int offset, bool mirror)")
+            < conn.index("connection->setOffset(-offset, false);")
+            < conn.index("markMapEdited();", conn.index("void MapConnection::setOffset(int offset, bool mirror)"))):
+        raise ValueError("Mirrored target offset/dirty propagation changed")
+    if not (p.index("bool Project::saveAll()")
+            < p.index("for (auto map : this->maps) {", p.index("bool Project::saveAll()"))
+            < p.index("bool Project::saveMap(")):
+        raise ValueError("Save All loaded-map iteration changed")
     if not (g.index("if (connections_include_order.size() > 0)")
             < g.index("sort(map_names.begin(), map_names.end()")
             < g.index('"/connections.inc')):
@@ -138,6 +169,9 @@ def main() -> None:
         "first_ordered_map_group_position_zero_based": first_active,
         "last_ordered_map_group_position_zero_based": last_active,
         "metadata_lost_by_default_model": True,
+        "mirror_target_dirty_normal_gui_source_chain": True,
+        "save_current_is_not_two_map_transaction": True,
+        "qt_mirror_save_executed": False,
         "relative_order_of_63_ordered_maps_preserved_in_pinned_data": True,
         "compiled_equivalence_claimed": False,
         "qt_roundtrip_claimed": False,
