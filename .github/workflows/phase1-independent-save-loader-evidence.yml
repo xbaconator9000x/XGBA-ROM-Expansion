@@ -1,0 +1,46 @@
+name: Phase 1 independent FireRed save-loader evidence guard
+on:
+  push:
+    branches:
+      - phase1/independent-save-loader-evidence-guard-20261028
+    paths:
+      - '.github/workflows/phase1-independent-save-loader-evidence.yml'
+      - 'tools/phase1_save_loader_evidence_guard.py'
+      - 'tests/test_phase1_save_loader_evidence_guard.py'
+      - 'tests/evidence/phase1_real_rom_probe_40525408728.json'
+      - 'docs/phase1-review-readiness/real-firered-save-loader-evidence-gap-20261028.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-source-and-observation-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download complete exact-pinned FireRed save sources
+        run: |
+          set -euo pipefail
+          mkdir -p pinned
+          curl --fail --silent --show-error --location --retry 2 \
+            https://raw.githubusercontent.com/pret/pokefirered/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/save.c \
+            -o pinned/save.c
+          curl --fail --silent --show-error --location --retry 2 \
+            https://raw.githubusercontent.com/pret/pokefirered/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/include/save.h \
+            -o pinned/save.h
+          test "$(git hash-object pinned/save.c)" = 36b960f375c92711aa49b99bdfe9c6b3a99d6b1c
+          test "$(git hash-object pinned/save.h)" = 87fb9b615b434b58823d15688056695acda9feab
+      - name: Verify independent source anchors and nine real-CI observations
+        run: |
+          set -euo pipefail
+          python3 tools/phase1_save_loader_evidence_guard.py \
+            --save-c pinned/save.c \
+            --save-h pinned/save.h \
+            --observations tests/evidence/phase1_real_rom_probe_40525408728.json
+      - name: Run ten fail-closed evidence negative controls
+        run: |
+          python3 -m unittest discover -s tests -p 'test_phase1_save_loader_evidence_guard.py' -v
+      - name: Preserve non-completion boundary
+        run: |
+          grep -F 'FAIL_INCOMPLETE' docs/phase1-review-readiness/real-firered-save-loader-evidence-gap-20261028.md
+          echo 'No independent approvals, no loader reachability claim, no Phase 2'
