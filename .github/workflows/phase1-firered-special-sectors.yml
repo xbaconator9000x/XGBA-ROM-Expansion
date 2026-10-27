@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'tools/phase1_firered_special_sector_formats.py'
+      - 'tools/phase1_firered_slot_counter_coherence.py'
       - 'docs/PHASE1_P0_FIRERED_SPECIAL_FLASH_SECTOR_FORMATS_2026-10-27.md'
       - '.github/workflows/phase1-firered-special-sectors.yml'
 permissions:
@@ -35,11 +36,19 @@ jobs:
             --firered upstream-firered \
             --mgba upstream-mgba \
             --out phase1-evidence/firered-special-sector-formats.json
+      - name: Verify counter-generation and slot-parity synthetic witnesses
+        run: |
+          python3 -m py_compile tools/phase1_firered_slot_counter_coherence.py
+          python3 tools/phase1_firered_slot_counter_coherence.py \
+            --source upstream-firered \
+            --out phase1-evidence/firered-slot-counter-coherence.json
       - name: Upload pinned evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: phase1-firered-special-sector-formats
-          path: phase1-evidence/firered-special-sector-formats.json
+          path: |
+            phase1-evidence/firered-special-sector-formats.json
+            phase1-evidence/firered-slot-counter-coherence.json
           if-no-files-found: warn
           retention-days: 90
