@@ -11,12 +11,12 @@
 | 33–48 | Fourteen interrupt-flag bit masks, plus scanline and VBlank constants. |
 | 49–52 | `REG_BASE = 0x04000000`, the hardware I/O register base. |
 | 53–240 | **177 `OFFSET_REG_*` definitions** for display, sound, DMA, timers, serial, keypad, IRQ and WAITCNT, including intentional byte/halfword aliases. |
-| 241–428 | **178 `REG_*` assembly-address constants** formed from `REG_BASE + OFFSET_REG_*`. All referenced offset names exist in this file; unlike the C header these are numeric assembler symbols, not typed volatile lvalues. |
+| 241–428 | **177 `REG_*` assembly-address constants** formed from `REG_BASE + OFFSET_REG_*` (the 178th `REG_*` symbol is `REG_BASE` at line 51). All referenced offset names exist in this file; unlike the C header these are numeric assembler symbols, not typed volatile lvalues. |
 | 429–448 | Seventeen DMA mode, trigger, width, IRQ and enable constants. No DMA count/bounds validation is defined. |
 | 449–491 | Thirty-two OAM attribute-mode, affine, flip, shape and size constants. Size macros combine high/low attribute-bit placements, not independent buffer sizes. |
 | 492–513 | Eighteen BLDCNT target/effect masks. |
 
-The **remaining 31 symbols** outside the PSR (11), offsets (177), addresses (178), DMA (17), OAM (32) and blend (18) families comprise memory/RAM aliases, IRQ masks and scanline constants. Counts sum to **464**; every `REG_*` address expression's named offset resolves in the pinned include.
+The **remaining 31 symbols** outside the PSR (11), offsets (177), addresses (177), `REG_BASE` (1), DMA (17), OAM (32) and blend (18) families comprise memory/RAM aliases, IRQ masks and scanline constants. Counts sum to **464**; every `REG_*` address expression's named offset resolves in the pinned include.
 
 ## Cross-language source evidence
 
