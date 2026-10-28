@@ -20,6 +20,8 @@ on:
       - 'docs/phase1-review-readiness/firered-repeated-save-powerloss-20261028.md'
       - 'docs/phase1-review-readiness/firered-controller-save-observation-20261028.md'
       - 'tools/phase1_real_firered_mgba_fixtures.py'
+      - 'tools/phase1_firered_mixed_counter_native.py'
+      - 'docs/phase1-review-readiness/firered-mixed-counter-native-20261028.md'
       - 'tools/phase1_firered_continue_warp.py'
       - 'tools/phase1_real_firered_mgba_adversarial.py'
       - 'docs/phase1-review-readiness/real-firered-mgba-runtime-20261028.md'
@@ -197,6 +199,23 @@ jobs:
               assert d["frames"] >= 180,(name,d)
           print("9 actual-emulator frame-advance cases verified; save correctness is NOT inferred")
           PY
+      - name: Trace additional native mixed-counter physical-slot selection
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_firered_mixed_counter_native.py
+          status=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveFileStatus" {print "0x"$1;exit}')
+          counter=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveCounter" {print "0x"$1;exit}')
+          loader=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="LoadGameSave" {print "0x"$1;exit}')
+          valid=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="GetSaveValidStatus" {print "0x"$1;exit}')
+          copy=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CopySaveSlotData" {print "0x"$1;exit}')
+          sb2=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveBlock2Ptr" {print "0x"$1;exit}')
+          for symbol in "$status" "$counter" "$loader" "$valid" "$copy" "$sb2"; do test -n "$symbol"; done
+          python3 tools/phase1_firered_mixed_counter_native.py \
+            --probe ./real-rom-probe --rom upstream/pokefirered/pokefirered.gba \
+            --fixtures evidence/fixtures --output evidence/results \
+            --firered-source upstream/pokefirered \
+            --status "$status" --counter "$counter" --loader "$loader" \
+            --valid "$valid" --copy "$copy" --sb2 "$sb2"
       - name: Observe input-driven real-ROM Flash changes without host writes
         run: |
           set -euo pipefail

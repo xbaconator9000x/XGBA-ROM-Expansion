@@ -68,6 +68,9 @@ def emit(root, rom, source):
         "both":(True,True,None,False),
         "malformed_id14":(True,True,"id",False),
         "mixed_counters":(True,True,None,True),
+        "mixed_counter_tail0":(True,True,None,False),
+        "mixed_counter_tail1":(True,True,None,False),
+        "mixed_counter_tail3":(True,True,None,False),
         "malformed_id15":(True,True,"id15",False),
         "malformed_id65535":(True,True,"id65535",False),
         "older_slot_fallback":(True,True,"signature",False),
@@ -79,6 +82,14 @@ def emit(root, rom, source):
         b=bytearray(bytes([0xFF])*(32*SECTOR))
         if old:slot(b,0,0)
         if new:slot(b,1,1,corrupt,mixed)
+        if name == "mixed_counter_tail1":
+            # All 14 sectors remain checksum-valid: first 13 counter2, last counter1.
+            slot(b,1,2)
+            b[27*SECTOR:28*SECTOR] = sector(13,1)
+        elif name in ("mixed_counter_tail0", "mixed_counter_tail3"):
+            # Last physical sector alone changes counter; no checksum alteration.
+            tail = 0 if name.endswith("tail0") else 3
+            b[27*SECTOR:28*SECTOR] = sector(13,tail)
         if name.startswith("pallet_"):
             make_pallet_fixture(b, null_layout=(name=="pallet_null_layout"),
                                 continue_warp=(name=="pallet_continue_warp"))

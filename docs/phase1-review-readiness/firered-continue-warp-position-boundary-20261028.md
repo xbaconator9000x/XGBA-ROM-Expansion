@@ -35,3 +35,7 @@ These are **test assertions, not results**, until exact-head CI passes. A synthe
 4. Which additional game-created new-game fixture would remove the remaining synthetic-state limitation?
 
 All Phase 1 gates remain **FAIL_INCOMPLETE**; independent approvals remain **zero**. No Phase 2 work.
+
+## Exact-head native position-save result (2026-10-28)
+
+At PR #28 commit `84221729722c3d1cbe1bb77ea4ade63d01f50537`, [Actions #40639423640](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40639423640) **passed** (job `122653831180`, artifact `12795043754`). The pinned source-built FireRed/agbcc/mGBA test observed actual controller movement (11,10) to (12,16). The matched unsaved path left physical Flash unchanged and a fresh emulator recovered (11,10). The game-initiated Save path reached `TrySavingData` entry/return 1/1, returned `SAVE_STATUS_OK=1`, wrote counter1 physical slot1 with all 14 unique sector IDs and saved (12,16). A fresh emulator recovered exactly (12,16) without new Flash writes or save invocation. This verifies the **synthetic Continue-warp-initialized player's changed-position roundtrip**, not human-played new-game progression or hardware power-loss durability. All gates remain FAIL_INCOMPLETE; no independent approvals.
