@@ -21,6 +21,7 @@ on:
       - 'docs/phase1-review-readiness/firered-controller-save-observation-20261028.md'
       - 'tools/phase1_real_firered_mgba_fixtures.py'
       - 'tools/phase1_firered_mixed_counter_native.py'
+      - 'tools/phase1_firered_storage_init_order.py'
       - 'docs/phase1-review-readiness/firered-mixed-counter-native-20261028.md'
       - 'tools/phase1_firered_continue_warp.py'
       - 'tools/phase1_real_firered_mgba_adversarial.py'
@@ -71,6 +72,11 @@ jobs:
           python3 tools/phase1_firered_save_error_semantics.py \
             --source upstream/pokefirered \
             --output evidence/results/save_error_semantics.json
+      - name: Verify pinned early-boot storage pointer lifecycle and mutation controls
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_firered_storage_init_order.py
+          python3 tools/phase1_firered_storage_init_order.py --source upstream/pokefirered --output evidence/results/storage_init_order.json
       - name: Build real FireRed cartridge using pinned original agbcc
         run: |
           set -euo pipefail
