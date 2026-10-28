@@ -86,3 +86,30 @@ mapping persistence, and real power-failure durability.
 
 **Unresolved:** no actual storage power cut, no proven sync-success
 callback from VFile, no fsync guarantee, and no independent review.
+
+### Source-verified VFile mapping: visibility is not power-failure durability
+
+The pinned Linux file backend `src/util/vfs/vfs-fd.c` at
+`mgba-emu/mgba@fd9dc5c2cbf234365068855851107e762fc6211b`,
+Git blob `2535bd0fb76740745ae038d5523ead28658f1035`,
+uses `mmap(..., MAP_SHARED, ...)` for writable save mappings.
+Thus a second process can read page-cache-coherent .sav changes
+after `_exit` **even without** `GBASavedataClean` or `core->deinit`.
+A successful in-flight test proves *mapped-byte visibility and game
+fallback* under this Linux environment, **not persistence across
+host power loss**.
+
+The same pinned `_vfdSync` implementation returns immediately after
+`msync(buffer, size, MS_ASYNC)` when `_POSIX_MAPPED_FILES` is enabled,
+before the later `fsync(fd)` branch. Therefore a source-level
+`GBASavedataClean` sync-success observation would **not alone**
+establish durable media commit on that build. `_vfdUnmap` uses
+`msync(..., MS_SYNC)` before `munmap`, but the in-flight hook
+intentionally bypasses it. A hardware power-loss or fault-injected
+filesystem durability test is still missing.
+
+Reviewer questions: Which VFile backend/configuration is selected in
+each target environment? Does the mapped save require explicit durable
+`fsync` on the fd after `MS_ASYNC`? What evidence can establish the
+power-loss ordering of sectors on real hardware? Do not generalize
+the Linux `MAP_SHARED` observation to Android, Windows or GBA Flash.
