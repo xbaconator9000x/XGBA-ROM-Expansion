@@ -58,6 +58,15 @@ int main(int argc, char **argv) {
             for (int j = 0; j < 3; ++j) {
                 if (executing == target[j]) {
                     ++hits[j];
+                    /* Read the actual pinned IWRAM pointer at loader/copy entry.
+                     * A null storage pointer is evidence, not a reason to
+                     * substitute an invented destination or skip validation. */
+                    if (argc == 12 && (j == 0 || j == 2)) {
+                        uint32_t ptrAddr = (uint32_t)strtoul(argv[11], NULL, 0);
+                        fprintf(stderr, "PHASE1_STORAGE_AT_%s hit=%u ptr=0x%08x\\n",
+                                j == 0 ? "LOAD" : "COPY", hits[j],
+                                core->busRead32(core, ptrAddr));
+                    }
                     if (j == 0) {
                         loadSaveArg = (unsigned)cpu->gprs[0] & 0xFFU;
                         loadReturnPc = (uint32_t)cpu->gprs[ARM_LR] & ~1U;
