@@ -12,7 +12,8 @@ from pathlib import Path
 PIN="ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
 BLOBS={"src/save.c":"36b960f375c92711aa49b99bdfe9c6b3a99d6b1c",
        "src/cereader_tool.c":"395be0bcbed8454e645a9f5670cde3024eda508e",
-       "include/cereader_tool.h":"5cb5a9ebc32db23de07800ccce124bcb28d3ef15"}
+       "include/cereader_tool.h":"5cb5a9ebc32db23de07800ccce124bcb28d3ef15",
+       "src/util.c":"b32799584937a120a03b08897886f08adc033fce"}
 SAVE=("u32 TryReadSpecialSaveSector(u8 sectorId, u8 *dst)",
       "u32 TryWriteSpecialSaveSector(u8 sector, u8 *src)")
 TOWER=("static u8 GetTrainerHillUnkVal(void)",
@@ -76,6 +77,9 @@ def main():
         require(git("hash-object",p)==blob,"blob mismatch "+p)
     source_save=(a.source/"src/save.c").read_text()
     source_tower=(a.source/"src/cereader_tool.c").read_text()
+    source_util=(a.source/"src/util.c").read_text()
+    util=extract(source_util,"u32 CalcByteArraySum(const u8 * array, u32 size)")
+    require("result += array[i];" in util,"original byte sum drift")
     save="\n\n".join(extract(source_save,s) for s in SAVE)
     tower="\n\n".join(extract(source_tower,s) for s in TOWER)
     contract(save,tower)
@@ -98,10 +102,13 @@ def main():
     require(harness.count("PHASE1_PINNED_SPECIAL_SECTOR_FUNCTIONS")==1 and
             harness.count("PHASE1_PINNED_CEREADER_FUNCTIONS")==1,
             "test-only injection markers drift")
+    require(harness.count("PHASE1_PINNED_ORIGINAL_BYTE_SUM_FUNCTION")==1,
+            "byte-sum injection marker drift")
     require("PHASE1_DONE gate=" in harness,"test harness completion assertion missing")
     with tempfile.TemporaryDirectory() as td:
         root=Path(td); src=root/"combined.c"; exe=root/"combined"
-        src.write_text(harness.replace("PHASE1_PINNED_SPECIAL_SECTOR_FUNCTIONS",save)
+        src.write_text(harness.replace("PHASE1_PINNED_ORIGINAL_BYTE_SUM_FUNCTION",util)
+                              .replace("PHASE1_PINNED_SPECIAL_SECTOR_FUNCTIONS",save)
                               .replace("PHASE1_PINNED_CEREADER_FUNCTIONS",tower))
         build=subprocess.run(["cc","-std=gnu11","-O0","-Wall","-Wextra","-Werror","-Wno-sign-compare",
                               str(src),"-o",str(exe)],capture_output=True,text=True)
@@ -127,7 +134,8 @@ def main():
               "extracted_save_sha256":hashlib.sha256(save.encode()).hexdigest(),
               "extracted_cereader_sha256":hashlib.sha256(tower.encode()).hexdigest(),
               "original_function_bodies_unmodified":True,
-              "integrated_original_functions":len(SAVE)+len(TOWER),
+              "integrated_original_functions":len(SAVE)+len(TOWER)+1,
+              "original_util_c_byte_sum_sha256":hashlib.sha256(util.encode()).hexdigest(),
               "test_only_fake_physical_flash":True,
               "original_agbcc_arm_executed":False,"mgba_executed":False,
               "stock_gameplay_reachability_proved":False,

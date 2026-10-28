@@ -15,3 +15,7 @@ Six source-semantic and eight output mutations must fail closed. The harness pin
 ## Unresolved limits and interoperability
 
 This is **host C with a fake Flash backend**, not original-agbcc compiled ARM execution, mGBA, physical Flash timing, or an observed stock gameplay transaction. The original `ReadTrainerTowerAndValidate` returns FALSE, so the stock external path remains blocked; the simulated failure does not establish player reachability. Further work requires actual original-agbcc ARM/mGBA execution and independent whole-file review. Confirm applicable upstream licensing before redistribution; absent root license does not authorize copying assets. Never increment semantic approvals on the strength of this test.
+
+## Additional original utility reuse
+
+The byte-sum calculation used by the original validation functions is now also extracted unchanged from pinned `src/util.c` blob `b32799584937a120a03b08897886f08adc033fce`, rather than a parallel test shim. The physical-sector backend and allocator remain explicitly test-only. This increases the integrated original function set to eleven without introducing a new implementation.

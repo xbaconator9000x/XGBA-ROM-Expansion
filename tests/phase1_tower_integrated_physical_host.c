@@ -76,9 +76,7 @@ static void *AllocZeroed(size_t n) {
     void *p=calloc(1,n); check(p!=NULL,"allocation"); return p;
 }
 static void Free(void *p) { free(p); }
-static u32 CalcByteArraySum(const u8 *p,u32 n) {
-    u32 s=0; for(u32 i=0;i<n;i++) s+=p[i]; return s;
-}
+PHASE1_PINNED_ORIGINAL_BYTE_SUM_FUNCTION
 PHASE1_PINNED_SPECIAL_SECTOR_FUNCTIONS
 PHASE1_PINNED_CEREADER_FUNCTIONS
 static void reset_io(void) {
