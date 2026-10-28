@@ -180,6 +180,43 @@ int main(int argc, char **argv) {
         // If divergentDiskMirror is true, this is observed disk inconsistency,
         // not just the earlier in-memory/disk mismatch.
 
+        // Isolated single-map unsaved edit: unlike reciprocal connection
+        // mutations, this must not leave a second loaded map dirty.
+        // This probes the real GUI close path after a failed current-map Save.
+        require(!project->hasUnsavedChanges(),
+                "Save Project retry left unexpected dirty state; close test invalid");
+        QJsonObject custom = map->customAttributes();
+        custom.insert("xgba_phase1_unsaved_only", QStringLiteral("not-on-disk"));
+        map->setCustomAttributes(custom);
+        map->setHasUnsavedDataChanges(true);
+        require(map->hasUnsavedChanges() && project->hasUnsavedChanges(),
+                "isolated current-map edit was not marked dirty");
+        require(!other->hasUnsavedChanges(),
+                "isolated edit unexpectedly dirtied mirrored Route1");
+        const QByteArray diskBeforeSingleMapFailure = bytes(palletPath);
+        const QString singleMapBackup = palletPath + ".phase1-single-map-backup";
+        require(QFile::rename(palletPath, singleMapBackup),
+                "cannot isolate single-map disk baseline");
+        QFile fullSingle("/dev/full");
+        require(fullSingle.link(palletPath), "cannot inject single-map /dev/full");
+        require(QFileInfo(palletPath).isSymLink(),
+                "single-map failure injection was not a symlink");
+        std::cerr << "PHASE1_GUI_STAGE isolated_single_map_failed_save" << std::endl;
+        save->trigger();
+        require(saveTriggers == 3, "single-map GUI Save QAction not triggered");
+        const bool singleMapDirtyAfterFailure = map->hasUnsavedChanges();
+        const bool projectDirtyAfterFailure = project->hasUnsavedChanges();
+        require(QFile::remove(palletPath), "cannot remove single-map failure symlink");
+        require(QFile::rename(singleMapBackup, palletPath),
+                "cannot restore single-map disk baseline");
+        require(bytes(palletPath) == diskBeforeSingleMapFailure,
+                "single-map failed save changed physical JSON");
+        require(!singleMapDirtyAfterFailure,
+                "pinned single-map failure dirty-state hazard changed");
+        require(!projectDirtyAfterFailure,
+                "project still dirty; no-prompt close test would be invalid");
+        require(!bytes(palletPath).contains("xgba_phase1_unsaved_only"),
+                "isolated unsaved attribute unexpectedly persisted");
         QJsonObject result;
         result["real_mainwindow_initialized"] = true;
         result["real_editor_map_loaded"] = true;
@@ -197,9 +234,22 @@ int main(int argc, char **argv) {
         result["post_failure_retry_disk_mirrors_divergent"] = divergentDiskMirror;
         result["post_failure_retry_current_dirty"] = currentDirtyAfterRetry;
         result["post_failure_retry_mirror_dirty"] = mirrorDirtyAfterRetry;
+        result["single_map_failed_save_disk_unchanged"] = true;
+        result["single_map_failed_save_map_dirty"] = singleMapDirtyAfterFailure;
+        result["single_map_failed_save_project_dirty"] = projectDirtyAfterFailure;
+        result["single_map_unsaved_attribute_not_persisted"] = true;
+        result["single_map_gui_save_triggers"] = int(saveTriggers);
         result["failure_device"] = "/dev/full";
         result["phase1_gate"] = "FAIL_INCOMPLETE";
         result["independent_approval"] = false;
+        // QWidget::close invokes the actual MainWindow::closeEvent ->
+        // closeProject chain. The project is falsely clean, so a prompt
+        // should not occur; require accepted close and never auto-answer
+        // an unexpected modal SaveChangesMessage.
+        std::cerr << "PHASE1_GUI_STAGE close_after_failed_single_map_save" << std::endl;
+        const bool closeAccepted = window.close();
+        require(closeAccepted, "real MainWindow close event was rejected");
+        result["close_after_failed_single_map_save_accepted"] = closeAccepted;
         std::cout << "PHASE1_GUI_RESULT="
                   << QJsonDocument(result).toJson(QJsonDocument::Compact).constData()
                   << std::endl;

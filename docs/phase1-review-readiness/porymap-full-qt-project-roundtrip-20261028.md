@@ -39,3 +39,32 @@ The test requires the remaining dirty Route1 mirror to persist its second offset
 At `8d68348fa1b65581d317374c8e7354c86d2f93f9`, [CI #40604243040](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40604243040) **failed**, but the full pinned Qt application executed the new GUI retry and emitted a valid runtime result: after `/dev/full` failure, **Save Project persisted both PalletTown offset +2 and mirrored Route1 offset −2**, leaving no divergent disk pair and both maps clean. This agrees with pinned `src/project.cpp` blob `d43b0949303433111d4478ad76117c2b3445dd13`, lines 1315–1326: `Project::saveAll` saves **all loaded maps**, not only dirty maps. It does not erase the earlier verified hazard: the failed current-only save still returned apparent success and cleared its dirty flag before any retry.
 
 The CI assertion failed because the new harness populated the JSON field `failed_gui_save_disk_offset` **after** Save Project retry, reading the repaired offset +2 instead of the original post-failure offset +1; it compared this to in-memory +2 and incorrectly concluded that the earlier mismatch was absent. This is a **harness measurement timing bug**, not a Porymap product failure. The correction captures the failed-save disk snapshot **before** triggering Save Project and preserves separate post-retry fields. Do not claim this new commit green until exact-head CI passes. All Phase 1 gates `FAIL_INCOMPLETE`, zero independent approvals.
+
+## Isolated-map failed GUI Save → real MainWindow close (pending exact-head CI)
+
+The previous green mirrored-connection test left Route1 dirty after the
+PalletTown `/dev/full` failure, so it could not determine whether
+`MainWindow::closeProject` would warn when the **only** edited map's dirty
+flag had been falsely cleared. Pinned `src/mainwindow.cpp` blob
+`08ce1a7a599ef825967717b69626984cdc6d772b` checks
+`Project::hasUnsavedChanges()` before displaying the SaveChangesMessage,
+and `MainWindow::closeEvent` delegates to `closeProject`. Pinned
+`src/project.cpp` blob `d43b0949303433111d4478ad76117c2b3445dd13`
+checks loaded maps/layouts and project data flags. Pinned
+`src/core/map.cpp` blob `47b279919bd4afcc76b88f9eeecd459b3452989f`
+has `Map::setClean` clear `m_hasUnsavedDataChanges`.
+
+The new full pinned Qt GUI test follows the already green Save Project retry,
+then changes a PalletTown-only custom attribute and marks only that map
+dirty. It asserts that Route1 remains clean, injects `/dev/full` for the
+real current-map QAction, verifies the actual on-disk JSON stayed unchanged
+and the unsaved attribute never reached disk, checks map and project dirty
+flags, and finally invokes `QWidget::close()` to exercise the actual
+`MainWindow::closeEvent -> closeProject` chain. A project that is still
+dirty causes the test to fail closed **before** invoking a modal close
+dialog; no automatic dismissal or invented GUI result is permitted.
+
+**Pending:** this is a source-grounded test design, not a verified
+no-prompt-close result until the exact-head CI passes. The harness invokes
+QAction and QWidget::close programmatically, not a physical mouse click.
+All Phase 1 gates FAIL_INCOMPLETE; independent approvals zero.
