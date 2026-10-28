@@ -84,7 +84,7 @@ def parse(stdout, trace):
     enospc = []
     for idx in (2, 3):
         section = trace[positions[idx]:positions[idx+1]]
-        matches = re.findall(r'write\(\d+</dev/full>,[^\n]*\)\s+=\s+-1 ENOSPC\b', section)
+        matches = re.findall(r'write\(\d+</dev/full[^\n]*\)\s+=\s+-1 ENOSPC\b', section)
         require(matches, "no actual /dev/full ENOSPC syscall for " + STAGES[idx] +
                 "; trace section=" + repr(section[-6000:]))
         enospc.append(len(matches))
