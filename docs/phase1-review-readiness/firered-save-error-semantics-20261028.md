@@ -31,3 +31,9 @@ The prior green CI #40610367694 demonstrates three **in-flight emulator-process 
 - Can sector-ID bounds be proven for arbitrary corrupted inputs before the unchecked array access, or must the boundary be explicitly hardened?
 - How do asynchronous mapped-file visibility and host fsync/power-loss semantics differ from real Flash chip durability?
 - Are the complete upstream source files independently reviewed beyond the selected functions? **Not yet; no approvals.**
+
+## Real TrySavingData no-Flash return via pinned IWRAM fault (2026-10-28; pending CI)
+
+Pinned `pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982` `src/load_save.c` blob `8b723dd044c6024b3671bb890b25b56a53f99ec5` declares `COMMON_DATA bool32 gFlashMemoryPresent` and initializes it through `CheckForFlashMemory`. `src/save.c` blob `36b960f375c92711aa49b99bdfe9c6b3a99d6b1c` first guards `TrySavingData`: if `gFlashMemoryPresent != TRUE`, it sets `gSaveAttemptStatus=SAVE_STATUS_ERROR` and returns `SAVE_STATUS_ERROR` before `HandleSavingData`.
+
+A new native probe watches actual compiled `TrySavingData` entry after controller Save navigation, writes zero to the pinned **IWRAM bool32** immediately before that instruction, and restores the original TRUE at the genuine caller-return PC. It requires entry/return 1/1, R0 `0xFF`, unchanged game-written counter1 Flash and physical SHA, zero Flash mutation, and two rejected invalid-address controls. This is explicitly a **host RAM fault injection**, NOT input-only saving, real Flash hardware failure, or proof of physical power-loss durability. Unexpected callsites fail closed. Runtime **pending exact-head CI**, independent approvals zero, Phase 1 FAIL_INCOMPLETE.

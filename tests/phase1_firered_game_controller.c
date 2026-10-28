@@ -51,6 +51,12 @@ int main(int argc, char **argv) {
     uint32_t player_step_target = optional_pinned_address("XGBA_PHASE1_PLAYER_STEP_ADDR", 1);
     uint32_t object_events_addr = optional_pinned_address("XGBA_PHASE1_OBJECT_EVENTS_ADDR", 0);
     uint32_t camera_move_target = optional_pinned_address("XGBA_PHASE1_CAMERA_MOVE_ADDR", 1);
+    uint32_t flash_present_addr = optional_pinned_address("XGBA_PHASE1_FLASH_PRESENT_ADDR", 0);
+    const int inject_no_flash = getenv("XGBA_PHASE1_INJECT_NO_FLASH") != NULL;
+    if (inject_no_flash && !flash_present_addr)
+        die("no-Flash fault injection requires pinned gFlashMemoryPresent address");
+    unsigned no_flash_fault_entries = 0, no_flash_original = 0;
+    int no_flash_fault_active = 0;
     unsigned locked_overworld_frames = 0, player_step_hits = 0;
     unsigned player_step_direction_hits = 0, camera_move_hits = 0;
     unsigned player_object_changed_frames = 0, player_object_active_frames = 0;
@@ -146,6 +152,10 @@ int main(int argc, char **argv) {
                         first_try_save_return_value = (unsigned)cpu->gprs[0] & 0xFFU;
                     }
                     pending_try_save_return_pc = 0;
+                    if (no_flash_fault_active) {
+                        core->busWrite32(core, flash_present_addr, no_flash_original);
+                        no_flash_fault_active = 0;
+                    }
                 }
                 if (camera_move_target && executing == camera_move_target)
                     ++camera_move_hits;
@@ -158,6 +168,19 @@ int main(int argc, char **argv) {
                     if (executing == targets[j]) {
                         ++hits[j];
                         if (!first_hit_frame[j]) first_hit_frame[j] = frame + 1;
+                        if (j == 2 && inject_no_flash) {
+                            /* Explicit host IWRAM fault before genuine TrySavingData.
+                             * Never write Flash, never call game function from host. */
+                            if (no_flash_fault_active) die("nested TrySavingData fault");
+                            unsigned present = core->busRead32(core, flash_present_addr);
+                            if (present != 1U) die("expected Flash present before fault");
+                            no_flash_original = present;
+                            core->busWrite32(core, flash_present_addr, 0U);
+                            if (core->busRead32(core, flash_present_addr) != 0U)
+                                die("gFlashMemoryPresent RAM fault did not apply");
+                            no_flash_fault_active = 1;
+                            ++no_flash_fault_entries;
+                        }
                         if (j == 2 && first_try_save_arg == 0xFFFFFFFFU) {
                             first_try_save_arg = (unsigned)cpu->gprs[0] & 0xFFU;
                             uint32_t return_pc = (uint32_t)cpu->gprs[ARM_LR] & ~1U;
@@ -264,6 +287,7 @@ int main(int argc, char **argv) {
         }
         if (save->dirty && !first_dirty) first_dirty = frame + 1;
     }
+    if (no_flash_fault_active) die("faulted TrySavingData did not return");
     /* Fail closed: no Flash1M baseline means no valid zero-change observation.
      * The environment override is an explicit harness-only negative control;
      * it never writes emulator memory or the cartridge save device. */
@@ -331,6 +355,8 @@ int main(int argc, char **argv) {
            "\"player_object_first_x\":%d,\"player_object_first_y\":%d,"
            "\"player_object_last_x\":%d,\"player_object_last_y\":%d,"
            "\"player_object_last_action\":%u,\"player_object_last_behavior\":%u,"
+           "\"host_ram_fault_injection\":%s,\"no_flash_fault_entries\":%u,"
+           "\"no_flash_original\":%u,"
            "\"game_save_callsite_verified\":false}\n",
            core->frameCounter(core), count, gba->memory.savedata.type,
            baseline_frame, changed_bytes, frames_with_changed_data,
@@ -371,7 +397,8 @@ int main(int argc, char **argv) {
            player_object_is_player_frames,
            player_object_first_x, player_object_first_y,
            player_object_last_x, player_object_last_y,
-           player_object_last_action, player_object_last_behavior);
+           player_object_last_action, player_object_last_behavior,
+           inject_no_flash ? "true" : "false", no_flash_fault_entries, no_flash_original);
     core->setKeys(core, 0);
     core->deinit(core);
     free(baseline);
