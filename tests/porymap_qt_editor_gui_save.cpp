@@ -186,13 +186,27 @@ int main(int argc, char **argv) {
         require(!project->hasUnsavedChanges(),
                 "Save Project retry left unexpected dirty state; close test invalid");
         QJsonObject custom = map->customAttributes();
-        custom.insert("xgba_phase1_unsaved_only", QStringLiteral("not-on-disk"));
+        custom.insert("xgba_phase1_unsaved_only", QStringLiteral("persisted-v1"));
         map->setCustomAttributes(custom);
         map->setHasUnsavedDataChanges(true);
         require(map->hasUnsavedChanges() && project->hasUnsavedChanges(),
                 "isolated current-map edit was not marked dirty");
         require(!other->hasUnsavedChanges(),
                 "isolated edit unexpectedly dirtied mirrored Route1");
+        // Positive control: this exact custom attribute must be serialized
+        // by a successful real GUI Save, or its later loss proves nothing.
+        std::cerr << "PHASE1_GUI_STAGE isolated_single_map_positive_save" << std::endl;
+        save->trigger();
+        require(saveTriggers == 3, "single-map positive GUI Save not triggered");
+        require(bytes(palletPath).contains("persisted-v1"),
+                "single-map custom attribute not serialized by successful Save");
+        require(!map->hasUnsavedChanges() && !project->hasUnsavedChanges(),
+                "single-map positive GUI Save did not clean project");
+        custom.insert("xgba_phase1_unsaved_only", QStringLiteral("not-on-disk-v2"));
+        map->setCustomAttributes(custom);
+        map->setHasUnsavedDataChanges(true);
+        require(map->hasUnsavedChanges() && project->hasUnsavedChanges(),
+                "second isolated map edit not dirty");
         const QByteArray diskBeforeSingleMapFailure = bytes(palletPath);
         const QString singleMapBackup = palletPath + ".phase1-single-map-backup";
         require(QFile::rename(palletPath, singleMapBackup),
@@ -203,7 +217,7 @@ int main(int argc, char **argv) {
                 "single-map failure injection was not a symlink");
         std::cerr << "PHASE1_GUI_STAGE isolated_single_map_failed_save" << std::endl;
         save->trigger();
-        require(saveTriggers == 3, "single-map GUI Save QAction not triggered");
+        require(saveTriggers == 4, "single-map GUI Save QAction not triggered");
         const bool singleMapDirtyAfterFailure = map->hasUnsavedChanges();
         const bool projectDirtyAfterFailure = project->hasUnsavedChanges();
         require(QFile::remove(palletPath), "cannot remove single-map failure symlink");
@@ -215,8 +229,9 @@ int main(int argc, char **argv) {
                 "pinned single-map failure dirty-state hazard changed");
         require(!projectDirtyAfterFailure,
                 "project still dirty; no-prompt close test would be invalid");
-        require(!bytes(palletPath).contains("xgba_phase1_unsaved_only"),
-                "isolated unsaved attribute unexpectedly persisted");
+        require(bytes(palletPath).contains("persisted-v1") &&
+                !bytes(palletPath).contains("not-on-disk-v2"),
+                "failed GUI Save lost baseline or persisted unsaved edit");
         QJsonObject result;
         result["real_mainwindow_initialized"] = true;
         result["real_editor_map_loaded"] = true;
@@ -237,6 +252,7 @@ int main(int argc, char **argv) {
         result["single_map_failed_save_disk_unchanged"] = true;
         result["single_map_failed_save_map_dirty"] = singleMapDirtyAfterFailure;
         result["single_map_failed_save_project_dirty"] = projectDirtyAfterFailure;
+        result["single_map_positive_save_persisted"] = true;
         result["single_map_unsaved_attribute_not_persisted"] = true;
         result["single_map_gui_save_triggers"] = int(saveTriggers);
         result["failure_device"] = "/dev/full";

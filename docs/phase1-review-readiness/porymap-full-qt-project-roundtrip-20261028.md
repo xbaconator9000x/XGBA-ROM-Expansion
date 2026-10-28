@@ -68,3 +68,28 @@ dialog; no automatic dismissal or invented GUI result is permitted.
 no-prompt-close result until the exact-head CI passes. The harness invokes
 QAction and QWidget::close programmatically, not a physical mouse click.
 All Phase 1 gates FAIL_INCOMPLETE; independent approvals zero.
+
+## First isolated close-path CI: actual Qt result, stale harness assertion (2026-10-28)
+
+At `a9515c0c8f8f554bdf730be2910ca3865910e797`,
+[CI #40616686720](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40616686720)
+**failed**, but the full pinned Qt application compiled and executed all
+new GUI stages. Its native `PHASE1_GUI_RESULT` reported that an isolated
+PalletTown-only `/dev/full` current-map Save left the physical JSON
+unchanged while **both map and project dirty flags became false**,
+and `QWidget::close()` accepted the actual MainWindow close event.
+No Route1 mirror was dirty in this case.
+
+The job then failed a **stale Python harness assertion** expecting two
+current-map QAction triggers; the new isolated-map scenario correctly
+raised that count to three. This was a CI verifier bookkeeping defect,
+not an upstream Porymap compile or runtime crash. Because the exact-head
+job failed, the new GUI result is **observed but not yet green-certified**.
+
+The follow-up adds a stronger positive control: first save the isolated
+custom attribute successfully through the same real GUI QAction and
+assert it appears in physical `map.json`, then change its value and
+inject `/dev/full`. The second value must not appear on disk, while the
+previous value remains. The workflow now asserts all new result fields
+and the updated four-action count, rather than accepting a JSON record
+without checking the new evidence. Await its own exact-head CI.

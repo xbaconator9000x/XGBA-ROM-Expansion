@@ -119,7 +119,7 @@ jobs:
           assert len(records)==1,("expected one real GUI QAction witness",len(records))
           d=records[0]
           assert d["real_mainwindow_initialized"] and d["real_editor_map_loaded"]
-          assert d["qaction_current_save_triggers"]==2
+          assert d["qaction_current_save_triggers"]==4
           assert d["qaction_save_project_triggers"]==2
           assert d["save_all_after_failure_triggers"]==2
           assert d["failed_gui_save_cleared_dirty"] and d["failed_gui_save_mirror_remains_dirty"]
@@ -127,6 +127,13 @@ jobs:
           assert d["post_failure_retry_mirror_disk_offset"]==-d["failed_gui_save_in_memory_offset"]
           assert isinstance(d["post_failure_retry_disk_mirrors_divergent"],bool)
           assert d["failed_gui_save_disk_offset"]!=d["failed_gui_save_in_memory_offset"]
+          assert d["single_map_positive_save_persisted"] is True
+          assert d["single_map_failed_save_disk_unchanged"] is True
+          assert d["single_map_failed_save_map_dirty"] is False
+          assert d["single_map_failed_save_project_dirty"] is False
+          assert d["single_map_unsaved_attribute_not_persisted"] is True
+          assert d["single_map_gui_save_triggers"]==4
+          assert d["close_after_failed_single_map_save_accepted"] is True
           assert d["phase1_gate"]=="FAIL_INCOMPLETE"
           Path("phase1-evidence/gui-save.json").write_text(json.dumps(d,indent=2,sort_keys=True)+"\n")
           print("Real MainWindow QAction -> Editor -> Project save and mirrored dirty-state evidence; no approval")
