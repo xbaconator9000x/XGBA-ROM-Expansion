@@ -5,12 +5,16 @@ on:
       - phase1/tower-prefix-integrity-20261027
     paths:
       - 'tools/phase1_tower_compiled_stub.py'
+      - 'tests/phase1_tower_host_real_c.c'
+      - 'tests/phase1_tower_host_shim/global.h'
       - '.github/workflows/phase1-tower-prefix-integrity.yml'
       - 'docs/PHASE1_P0_FIRERED_TOWER_PREFIX_INTEGRITY_2026-10-27.md'
   pull_request:
     paths:
       - 'tools/phase1_tower_prefix_integrity.py'
       - 'tools/phase1_tower_compiled_stub.py'
+      - 'tests/phase1_tower_host_real_c.c'
+      - 'tests/phase1_tower_host_shim/global.h'
       - '.github/workflows/phase1-tower-prefix-integrity.yml'
       - 'docs/PHASE1_P0_FIRERED_TOWER_PREFIX_INTEGRITY_2026-10-27.md'
       - 'docs/phase1-disposition-candidates/0114-firered-cereader-tool-impl.md'
@@ -45,6 +49,70 @@ jobs:
         with:
           name: phase1-tower-prefix-integrity
           path: evidence/tower-prefix-integrity.json
+          if-no-files-found: warn
+
+
+  pinned-host-c-loader-failure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: pinned-firered
+          persist-credentials: false
+      - name: Pin actual complete upstream C and build test-only host ABI shims
+        run: |
+          set -euo pipefail
+          test "$(git -C pinned-firered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C pinned-firered hash-object src/cereader_tool.c)" = 395be0bcbed8454e645a9f5670cde3024eda508e
+          mkdir -p phase1-host-shims phase1-evidence
+          cp tests/phase1_tower_host_shim/global.h phase1-host-shims/global.h
+          for name in gflib.h util.h save.h cereader_tool.h; do
+            printf '#include "global.h"\n' > "phase1-host-shims/$name"
+          done
+          cc -std=gnu11 -O0 -Wall -Wextra -Werror -Wno-sign-compare \
+            -Iphase1-host-shims pinned-firered/src/cereader_tool.c \
+            tests/phase1_tower_host_real_c.c -o phase1-tower-host-c
+      - name: Execute actual pinned C loader/writer and reject six tampered result traces
+        run: |
+          set -euo pipefail
+          ./phase1-tower-host-c | tee phase1-evidence/tower-host-real-c.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          actual = Path("phase1-evidence/tower-host-real-c.txt").read_text().splitlines()
+          expected = [
+              "VALID_TWO_SECTOR_ROUNDTRIP bytes=7944",
+              "FIRST_SECTOR_MISSING destination_unchanged=7944",
+              "SECOND_SECTOR_MISSING partial_first_bytes=3976 preserved_second_bytes=3968",
+              "SECOND_SECTOR_CHECKSUM_FAILURE destination_mutated=7944",
+              "MIXED_GENERATION floors=4 accepted=1 mutated_bytes=7944",
+              "MIXED_GENERATION floors=5 accepted=0 mutated_bytes=7944",
+              "SECOND_SECTOR_WRITE_FAILURE first_sector_mutated=1 second_unchanged=1",
+              "HOST_C_PINNED_FUNCTIONS PASS cases=7 gate=FAIL_INCOMPLETE approvals=0",
+          ]
+          assert actual == expected, "host C execution missing or changed evidence"
+          mutations = [
+              actual[:-1],
+              actual[:2] + actual[3:],
+              actual[:4] + [actual[5], actual[4]] + actual[6:],
+              [x.replace("accepted=0", "accepted=1") for x in actual],
+              [x.replace("gate=FAIL_INCOMPLETE", "gate=PASS") for x in actual],
+              [x.replace("approvals=0", "approvals=1") for x in actual],
+          ]
+          assert len(mutations) == 6 and all(m != expected for m in mutations)
+          print("HOST_C_TRACE_NEGATIVE_CONTROLS rejected=6")
+          PY
+      - name: Retain text-only C execution evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-tower-host-real-c-text
+          path: phase1-evidence/tower-host-real-c.txt
           if-no-files-found: warn
 
   original-agbcc-linked-stub:
