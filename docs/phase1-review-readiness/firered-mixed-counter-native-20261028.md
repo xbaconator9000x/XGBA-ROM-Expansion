@@ -26,3 +26,35 @@ The new native runner checks source Git blobs and function anchors, fixture meta
 A passing run would demonstrate that the **last checksum-valid sector's counter**, rather than a consensus of all 14, can determine both reported save counter and physical slot selection. It would not prove that normal FireRed saves produce these mixed metadata combinations, that arbitrary malformed sectors are safe, or that physical power-loss persistence is guaranteed.
 
 Reviewers should assess whether counter unanimity is required by downstream consumers; whether rotation or interrupted-write order can produce comparable states; and whether additional native memory-safety instrumentation is needed for malformed IDs or partial sectors. This dossier is **partial subsystem evidence**, not a complete-file disposition or independent approval.
+
+## Exact-head certification and new parity-controlled all-sector counterexamples (2026-10-28)
+
+The preceding all-sector witness at `e8613eab8f07b88ee600acb16d9dc8b8ba05fde4`
+passed exact-head Actions [#40682511046](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40682511046),
+job `122796502242`, text artifact `12812574908` (digest
+`sha256:99bd0014f07048c5637e73addcd27b4fdbe35d72477dff7afd2cc13bcf9a2d54`).
+The actual pinned FireRed/agbcc/mGBA trace entered the compiled loader,
+validator and copy twice and recovered all 14 generation-distinct slot1
+markers `[90,129,130,131,132,133,134,135,136,137,138,139,140,237]`,
+counter 3, with unchanged physical Flash. This is a **synthetic**
+checksum-valid mixed-generation fixture, not natural torn-write evidence.
+
+**New experiment (pending its own exact-head CI):** two independent
+all-sector physical-slot counterexamples retain the same 28 per-sector
+payload markers but change the final slot1 sector counter to 0 or 2,
+while its first 13 counters remain 1. The source-derived last-sector
+counter/parity selection predicts **slot0** for both; a second title
+loader with initialized Pokémon storage must reconstruct all fourteen
+slot0 markers `[165,65,66,67,68,69,70,71,72,73,74,75,76,77]`,
+not the slot1 markers. The original tail3 slot1 case is preserved.
+Every profile must pass all physical checksum/ID/signature/counter
+checks, source-built native loader/validator/copy hits, unchanged Flash,
+per-sector offline and native trace mutations, and strict EWRAM pointer
+preconditions. This is **not** proof that naturally interrupted writes
+can generate the fixture, nor an independent semantic approval.
+
+Reviewer questions: does the loader ever reconcile generation identity
+across sectors, and which higher-level consumers assume that all
+fourteen payload sections originate from a single coherent save
+generation? Test the same parity counterexamples on any future
+extension path without assuming atomic save-block reconstruction.

@@ -17,6 +17,8 @@ PROFILES = {
     "mixed_counter_tail1": ([2] * 13 + [1], 1, 0x5A),
     "mixed_counter_tail3": ([1] * 13 + [3], 3, 0x5A),
     "mixed_counter_all_sectors": ([1] * 13 + [3], 3, 0x5A),
+    "mixed_counter_all_sectors_tail0": ([1] * 13 + [0], 0, 0xA5),
+    "mixed_counter_all_sectors_tail2": ([1] * 13 + [2], 2, 0xA5),
 }
 
 def require(condition, detail):
@@ -71,7 +73,9 @@ def check_trace(d, expected, all_sectors=False):
                 "second loader storage pointer not EWRAM")
         require(0x02000000 <= d.get("second_copy_storage_ptr", 0) < 0x02040000,
                 "second copy storage pointer not EWRAM")
-        expected_markers = [0x5A] + [0x80+i for i in range(1, 13)] + [0xED]
+        expected_markers = ([0x5A] + [0x80+i for i in range(1, 13)] + [0xED]
+                            if counter % 2 else
+                            [0xA5] + [0x40+i for i in range(1, 14)])
         require(d.get("saveblock_sector_markers") == expected_markers,
                 "native reconstructed 14-sector payload differs from physical slot1")
     return True
@@ -109,7 +113,7 @@ def main():
         raw = (fixtures / (name + ".sav")).read_bytes()
         require(hashlib.sha256(raw).hexdigest() == records[name]["sha256"],
                 name + " fixture manifest mismatch")
-        all_sectors = name == "mixed_counter_all_sectors"
+        all_sectors = name.startswith("mixed_counter_all_sectors")
         check_fixture(raw, profile, all_sectors)
         # Five independent negative controls for each physical fixture.
         for offset, fmt, value in (
