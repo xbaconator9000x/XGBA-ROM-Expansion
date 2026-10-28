@@ -14,14 +14,28 @@ PIN = "26b919d7ff4b54152de010abd5bf344af2ebe116"
 BLOB = "d43b0949303433111d4478ad76117c2b3445dd13"
 BEFORE = "    jsonDoc.dump(&mapFile);\n    mapFile.close();"
 AFTER = (
-    "    jsonDoc.dump(&mapFile);\n"
-    "    if (mapFilepath.contains(QStringLiteral(\"PalletTown/map.json\"))) {\n"
-    "        std::fprintf(stderr, \"PHASE1_PRIVATE_QFILE_ERROR status=%d\\n\", "
-    "static_cast<int>(mapFile.error()));\n"
-    "        std::fflush(stderr);\n"
-    "    }\n"
-    "    mapFile.close();"
+    '    jsonDoc.dump(&mapFile);\n'
+    '    const bool phase1ObserveMapFile = mapFilepath.contains(QStringLiteral("PalletTown/map.json"));\n'
+    '    const int phase1BeforeClose = static_cast<int>(mapFile.error());\n'
+    '    if (phase1ObserveMapFile) {\n'
+    '        std::fprintf(stderr, "PHASE1_PRIVATE_QFILE_ERROR status=%d\\n", phase1BeforeClose);\n'
+    '        std::fflush(stderr);\n'
+    '    }\n'
+    '    mapFile.close();\n'
+    '    const int phase1AfterClose = static_cast<int>(mapFile.error());'
 )
+POST_CLEAN_BEFORE = "    map->setClean();\n\n    if (!skipLayout"
+POST_CLEAN_AFTER = (
+    '    map->setClean();\n'
+    '    if (phase1ObserveMapFile) {\n'
+    '        std::fprintf(stderr, "PHASE1_PRIVATE_QFILE_FINAL before=%d after=%d dirty=%d\\n",\n'
+    '                     phase1BeforeClose, phase1AfterClose,\n'
+    '                     static_cast<int>(map->hasUnsavedChanges()));\n'
+    '        std::fflush(stderr);\n'
+    '    }\n\n    if (!skipLayout'
+)
+FINAL = re.compile(r"^PHASE1_PRIVATE_QFILE_FINAL before=(\d+) after=(\d+) dirty=(\d+)$")
+
 POSITIVE = "PHASE1_GUI_STAGE isolated_single_map_positive_save"
 NEGATIVES = ("PHASE1_GUI_STAGE injected_failure_gui_save",
              "PHASE1_GUI_STAGE isolated_single_map_failed_save")
@@ -43,9 +57,11 @@ def instrument(root):
     path = root/"src/project.cpp"
     content = path.read_text()
     require(content.count(BEFORE) == 1, "private map QFile site changed")
+    require(content.count(POST_CLEAN_BEFORE) == 1, "private map clean site changed")
     require("PHASE1_PRIVATE_QFILE_ERROR" not in content,
             "instrumentation already installed")
     modified = "#include <cstdio>\n" + content.replace(BEFORE, AFTER, 1)
+    modified = modified.replace(POST_CLEAN_BEFORE, POST_CLEAN_AFTER, 1)
     require(modified.count("mapFile.close();") == content.count("mapFile.close();"),
             "instrumentation changed close count")
     require(modified.count("map->setClean();") == content.count("map->setClean();"),
@@ -53,7 +69,8 @@ def instrument(root):
     path.write_text(modified)
     return {"pinned_source": PIN, "pristine_blob": BLOB,
             "test_only_instrumentation": True, "control_flow_modified": False,
-            "private_handle_observed_before_close": True}
+            "private_handle_observed_before_close": True,
+            "private_handle_observed_after_close_and_clean": True}
 
 def inspect(lines):
     stages = [i for i, s in enumerate(lines) if s.startswith(STAGE)]
@@ -66,45 +83,65 @@ def inspect(lines):
     def statuses(stage):
         i = lines.index(stage)
         later = next((j for j in stages if j > i), len(lines))
-        result = []
+        observed = []
+        final = []
         for line in lines[i+1:later]:
             m = ERROR.fullmatch(line.strip())
             if m:
-                result.append(int(m.group(1)))
-        require(len(result) == 1, "expected one private PalletTown QFile observation: " + stage)
-        return result
-    require(statuses(POSITIVE) == [0], "successful Save has nonzero QFile error")
-    failed = [statuses(stage)[0] for stage in NEGATIVES]
-    require(all(value != 0 for value in failed),
+                observed.append(int(m.group(1)))
+            m = FINAL.fullmatch(line.strip())
+            if m:
+                final.append(tuple(map(int, m.groups())))
+        require(len(observed) == 1 and len(final) == 1,
+                "expected paired private QFile before/after/clean observations: " + stage)
+        before, after, dirty = final[0]
+        require(before == observed[0], "private QFile before-close readings disagree")
+        require(dirty == 0, "actual map not clean after save return pathway")
+        return {"before": before, "after": after, "dirty_after_clean": dirty}
+    positive = statuses(POSITIVE)
+    require(positive["before"] == 0, "successful Save has nonzero QFile error")
+    failed = [statuses(stage) for stage in NEGATIVES]
+    require(all(value["before"] != 0 for value in failed),
             "actual failed GUI Save private QFile did not report error")
     require(lines.index(POSITIVE) < lines.index(NEGATIVES[1]) < lines.index(END),
             "stage chronology changed")
-    return {"positive_qfile_status": 0, "failed_qfile_statuses": failed,
-            "actual_private_handle_error_observed": True}
+    return {"positive_qfile_status": positive["before"],
+            "positive_qfile_after_close": positive["after"],
+            "failed_qfile_statuses": [v["before"] for v in failed],
+            "failed_qfile_after_close_statuses": [v["after"] for v in failed],
+            "actual_private_handle_error_observed": True,
+            "private_error_ignored_before_clean": True}
 
 def controls():
     good = [
         POSITIVE, "PHASE1_PRIVATE_QFILE_ERROR status=0",
-        NEGATIVES[0], "PHASE1_PRIVATE_QFILE_ERROR status=2",
-        NEGATIVES[1], "PHASE1_PRIVATE_QFILE_ERROR status=2",
+        "PHASE1_PRIVATE_QFILE_FINAL before=0 after=0 dirty=0",
+        NEGATIVES[0], "PHASE1_PRIVATE_QFILE_ERROR status=4",
+        "PHASE1_PRIVATE_QFILE_FINAL before=4 after=4 dirty=0",
+        NEGATIVES[1], "PHASE1_PRIVATE_QFILE_ERROR status=4",
+        "PHASE1_PRIVATE_QFILE_FINAL before=4 after=4 dirty=0",
         END
     ]
-    require(inspect(good)["actual_private_handle_error_observed"],
+    require(inspect(good)["private_error_ignored_before_clean"],
             "positive synthetic log failed")
     mutated = (
-        good[:3] + good[4:],
-        [x.replace("status=2", "status=0") for x in good],
-        [x.replace("status=0", "status=2") for x in good],
-        good[:4] + [good[4], good[4]] + good[5:],
+        good[:2] + good[3:],  # missing final
+        good[:5] + [good[5], good[5]] + good[6:],  # duplicate final
+        [x.replace("dirty=0", "dirty=1") for x in good],
+        [x.replace("before=4", "before=0") for x in good],
+        [x.replace("status=4", "status=0") for x in good],
+        [x.replace("status=0", "status=4") for x in good],
         [x.replace(NEGATIVES[0], "PHASE1_GUI_STAGE other") for x in good],
-        good[:4] + [END] + good[4:6],
+        good[:7] + [END] + good[7:9],
+        [x.replace("after=4", "after=bogus") for x in good],
+        good[:4] + good[5:],  # missing failed status
     )
     for i, case in enumerate(mutated):
         try:
             inspect(case)
         except ValueError:
             continue
-        raise AssertionError(f"private QFile trace mutation escaped: {i}")
+        raise AssertionError(f"private QFile sequence mutation escaped: {i}")
     return len(mutated)
 
 def main():
