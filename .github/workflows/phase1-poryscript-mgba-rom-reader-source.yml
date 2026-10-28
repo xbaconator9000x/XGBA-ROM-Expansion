@@ -1,0 +1,43 @@
+name: Phase 1 pinned FireRed mGBA reader source
+on:
+  push:
+    branches: ['phase1/**']
+    paths:
+      - tools/phase1_poryscript_mgba_rom_reader_source.py
+      - .github/workflows/phase1-poryscript-mgba-rom-reader-source.yml
+  pull_request:
+    paths:
+      - tools/phase1_poryscript_mgba_rom_reader_source.py
+      - docs/phase1-review-readiness/poryscript-mgba-rom-reader-source-20261029.md
+      - .github/workflows/phase1-poryscript-mgba-rom-reader-source.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: mgba-emu/mgba
+          ref: fd9dc5c2cbf234365068855851107e762fc6211b
+          path: upstream-mgba
+          persist-credentials: false
+      - name: Pinned source contract and twelve negative controls
+        run: |
+          python3 -m py_compile tools/phase1_poryscript_mgba_rom_reader_source.py
+          python3 tools/phase1_poryscript_mgba_rom_reader_source.py --firered upstream-firered --mgba upstream-mgba --output phase1-evidence/poryscript-mgba-rom-reader-source.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase1-poryscript-mgba-rom-reader-source
+          path: phase1-evidence/
+          if-no-files-found: warn
