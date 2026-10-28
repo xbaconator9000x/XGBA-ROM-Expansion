@@ -54,7 +54,9 @@ def contract(pm, ps, fr):
     save_end = pm.find("\n}\n", save_start)
     require(save_end > save_start, "Porymap saveMap boundary changed")
     save_body = pm[save_start:save_end]
-    require('scripts.inc' in save_body and 'appendTextFile(root + "/"' in save_body,
+    include_start = save_body.index("text = QString(")
+    require('scripts.inc' in save_body[include_start:include_start + 120] and
+            'appendTextFile(root + "/"' in save_body,
             "Porymap event_scripts.s include changed")
     require(ps.count(TARGET_LINE) == 1 and ps.count(RULE_LINE) == 1,
             "pinned documented Poryscript Make rule changed")
@@ -82,8 +84,10 @@ def negatives(pm, ps, fr):
         if index == 2:
             start = sources[0].index("bool Project::saveMap(")
             before, after = sources[0][:start], sources[0][start:]
-            require(old in after, "missing saveMap include mutation anchor")
-            sources[0] = before + after.replace(old, new, 1)
+            include_start = after.index("text = QString(")
+            prefix, include_tail = after[:include_start], after[include_start:]
+            require(old in include_tail[:120], "missing saveMap include mutation anchor")
+            sources[0] = before + prefix + include_tail.replace(old, new, 1)
         else:
             sources[which] = sources[which].replace(old, new, 1)
         try:
