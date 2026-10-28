@@ -15,8 +15,12 @@ STAGES = (
     "PHASE1_GUI_STAGE isolated_single_map_failed_save",
 )
 # strace -f -yy annotates the kernel fd target (the symlink resolves to /dev/full).
+# strace -yy identifies /dev/full as </dev/full<char 1:7>>.
 WRITE_ERROR = re.compile(
-    r'write\(\d+<[^>]*?/dev/full(?: \(deleted\))?>, .*?, (\d+)\)\s+= -1 ENOSPC'
+    r'(?P<pid>\d+)\s+write\(\d+</dev/full(?:<[^>\n]+>)?(?: \(deleted\))?>, .*?, (?P<requested>\d+)\)\s+= -1 ENOSPC\b'
+)
+DEMOTE_WRITE = re.compile(
+    r'(?P<before>write\(\d+</dev/full(?:<[^>\n]+>)?(?: \(deleted\))?>, .*?, )(?P<count>\d+)(?P<after>\)\s+= -1 ENOSPC\b)'
 )
 WRITE_ANY = re.compile(r'write\(')
 
@@ -31,19 +35,24 @@ def inspect(lines):
         hits = [i for i, line in enumerate(lines) if stage in line]
         require(len(hits) == 1, f"expected exactly one real GUI stage {stage}: {hits}")
         require(WRITE_ANY.search(lines[hits[0]]), "stage marker not emitted by traced process")
+        require(re.match(r'\s*\d+\s+write\(', lines[hits[0]]),
+                "stage marker lacks strace process identity")
         stage_indexes.append(hits[0])
     require(stage_indexes[0] < stage_indexes[1], "GUI stage order drift")
     results = []
     for i, (stage, start) in enumerate(zip(STAGES, stage_indexes)):
         end = stage_indexes[i+1] if i+1 < len(stage_indexes) else len(lines)
+        stage_pid = re.match(r'\s*(\d+)\s+write\(', lines[start]).group(1)
         errors = []
         for line in lines[start+1:end]:
             match = WRITE_ERROR.search(line)
-            if match and int(match.group(1)) > 1:
-                errors.append({"requested_bytes": int(match.group(1)),
+            if (match and match.group("pid") == stage_pid
+                    and int(match.group("requested")) > 1):
+                errors.append({"requested_bytes": int(match.group("requested")),
                                "syscall_excerpt": line[:350]})
-        require(errors, "no actual >1-byte /dev/full ENOSPC write after " + stage)
-        results.append({"stage": stage, "real_gui_action_precedes_kernel_error": True,
+        require(errors, "no actual >1-byte /dev/full ENOSPC write by GUI PID after " + stage)
+        results.append({"stage": stage, "gui_pid": stage_pid,
+                        "real_gui_action_precedes_kernel_error": True,
                         "enospc_writes": errors[:8], "enospc_count": len(errors)})
     return results
 
@@ -70,8 +79,8 @@ def main():
     altered = [line.replace("ENOSPC", "EIO") for line in lines]
     require(rejected(altered), "wrong errno negative escaped")
     checks += 1
-    altered = [re.sub(r'(write\(\d+<[^>]*?/dev/full[^>]*>, .*?, )\d+(\)\s+= -1 ENOSPC)',
-                      r'\g<1>1\g<2>', line) for line in lines]
+    altered = [DEMOTE_WRITE.sub(lambda m: m.group("before") + "1" + m.group("after"), line)
+               for line in lines]
     require(rejected(altered), "one-byte-only negative escaped")
     checks += 1
     altered = list(lines)
@@ -79,6 +88,13 @@ def main():
     second = next(i for i, line in enumerate(altered) if STAGES[1] in line)
     altered[first], altered[second] = altered[second], altered[first]
     require(rejected(altered), "stage-order negative escaped")
+    checks += 1
+    altered = [line.replace("</dev/full", "</tmp/dev/full") for line in lines]
+    require(rejected(altered), "impostor device path negative escaped")
+    checks += 1
+    altered = [re.sub(r'^\s*\d+(?=\s+write\(\d+</dev/full)', "999999", line)
+               for line in lines]
+    require(rejected(altered), "other-process ENOSPC negative escaped")
     checks += 1
     result = {"status": "NATIVE_PORYMAP_GUI_ENOSPC_SYSCALL_ATTRIBUTION",
               "actual_stage_records": records, "negative_controls_rejected": checks,
