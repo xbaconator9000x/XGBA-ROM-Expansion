@@ -16,9 +16,9 @@ STAGES = (
 )
 # strace -f -yy annotates the kernel fd target (the symlink resolves to /dev/full).
 WRITE_ERROR = re.compile(
-    r'write\\(\\d+<[^>]*?/dev/full(?: \\(deleted\\))?>, .*?, (\\d+)\\)\\s+= -1 ENOSPC'
+    r'write\(\d+<[^>]*?/dev/full(?: \(deleted\))?>, .*?, (\d+)\)\s+= -1 ENOSPC'
 )
-WRITE_ANY = re.compile(r'write\\(')
+WRITE_ANY = re.compile(r'write\(')
 
 def require(condition, message):
     if not condition:
@@ -70,8 +70,8 @@ def main():
     altered = [line.replace("ENOSPC", "EIO") for line in lines]
     require(rejected(altered), "wrong errno negative escaped")
     checks += 1
-    altered = [re.sub(r'(write\\(\\d+<[^>]*?/dev/full[^>]*>, .*?, )\\d+(\\)\\s+= -1 ENOSPC)',
-                      r'\\g<1>1\\g<2>', line) for line in lines]
+    altered = [re.sub(r'(write\(\d+<[^>]*?/dev/full[^>]*>, .*?, )\d+(\)\s+= -1 ENOSPC)',
+                      r'\g<1>1\g<2>', line) for line in lines]
     require(rejected(altered), "one-byte-only negative escaped")
     checks += 1
     altered = list(lines)
@@ -90,7 +90,7 @@ def main():
                               "No independent semantic approval; Phase 1 FAIL_INCOMPLETE"],
               "phase1_gate": "FAIL_INCOMPLETE", "independent_approvals": 0}
     a.output.parent.mkdir(parents=True, exist_ok=True)
-    a.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\\n")
+    a.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
     print(json.dumps({"status": result["status"],
                       "stages": [r["stage"] for r in records],
                       "negative_controls_rejected": checks}, sort_keys=True))
