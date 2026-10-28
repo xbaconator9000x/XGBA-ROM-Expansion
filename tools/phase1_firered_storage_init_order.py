@@ -79,7 +79,7 @@ def main():
     bodies = {
         "main": function(src["src/main.c"], "InitMainCallbacks"),
         "intro": function(src["src/intro.c"], "CB2_InitCopyrightScreenAfterBootup"),
-        "title": function(src["src/title_screen.c"], "Task_TitleScreenMain"),
+        "title": function(src["src/title_screen.c"], "SetTitleScreenScene_Cry"),
         "pointers": function(src["src/load_save.c"], "SetSaveBlocksPointers"),
         "addresses": function(src["src/save.c"], "UpdateSaveAddresses"),
         "copy": function(src["src/save.c"], "CopySaveSlotData"),
