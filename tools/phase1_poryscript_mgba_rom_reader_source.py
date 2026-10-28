@@ -37,6 +37,8 @@ def verify(fr,mg,h):
         for key in keys: need(key in s,"boundary drift %d: %s"%(i,key))
     need(fn(fr,"MapHeaderCheckScriptTable")[0].count("T1_READ_16(ptr)")==2,
          "conditional 16-bit count drift")
+    need(mg.split("#define LOAD_CART",1)[1].split("#define LOAD_SRAM",1)[0].count("(GBA_SIZE_ROM0 - 4)")==2,
+         "ROM32 bounds and actual load masks must both be preserved")
     need(fn(mg,"GBALoad16")[0].count("value = (address >> 1) & 0xFFFF;")==3,
          "three ROM16 out-of-range fallback branches drift")
 def mutate(fr,mg,h):
