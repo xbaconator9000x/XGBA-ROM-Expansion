@@ -90,6 +90,8 @@ int main(int argc, char **argv) {
     uint32_t storage = argc == 12 ? core->busRead32(core, (uint32_t)strtoul(argv[11], NULL, 0)) : 0;
     unsigned sectorMarkers[14] = {0};
     if (argc == 12) {
+        fprintf(stderr, "PHASE1_SAVE_POINTERS sb2=0x%08x sb1=0x%08x storage=0x%08x\\n",
+                saveBlock2, saveBlock1, storage);
         if (saveBlock2 < 0x02000000U || saveBlock2 >= 0x02040000U ||
             saveBlock1 < 0x02000000U || saveBlock1 >= 0x02040000U ||
             storage < 0x02000000U || storage >= 0x02040000U)
