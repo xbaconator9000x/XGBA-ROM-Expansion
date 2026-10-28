@@ -5,6 +5,7 @@ on:
       - phase1/tower-prefix-integrity-20261027
     paths:
       - 'tools/phase1_tower_compiled_stub.py'
+      - 'tools/phase1_tower_compiled_callers.py'
       - 'tests/phase1_tower_host_real_c.c'
       - 'tests/phase1_tower_host_shim/global.h'
       - '.github/workflows/phase1-tower-prefix-integrity.yml'
@@ -13,6 +14,7 @@ on:
     paths:
       - 'tools/phase1_tower_prefix_integrity.py'
       - 'tools/phase1_tower_compiled_stub.py'
+      - 'tools/phase1_tower_compiled_callers.py'
       - 'tests/phase1_tower_host_real_c.c'
       - 'tests/phase1_tower_host_shim/global.h'
       - '.github/workflows/phase1-tower-prefix-integrity.yml'
@@ -150,6 +152,14 @@ jobs:
             --source upstream/pokefirered \
             --elf upstream/pokefirered/pokefirered.elf \
             --output evidence/tower-compiled-stub.json
+      - name: Verify two original-agbcc linked Trainer Tower callsites and eleven negative controls
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_tower_compiled_callers.py
+          python3 tools/phase1_tower_compiled_callers.py \
+            --source upstream/pokefirered \
+            --elf upstream/pokefirered/pokefirered.elf \
+            --output evidence/tower-compiled-callers.json
       - name: Retain only text evidence, not ELF or ROM
         if: always()
         uses: actions/upload-artifact@v4
@@ -157,4 +167,5 @@ jobs:
           name: phase1-tower-original-agbcc-stub-text
           path: |
             evidence/tower-compiled-stub.json
+            evidence/tower-compiled-callers.json
           if-no-files-found: warn
