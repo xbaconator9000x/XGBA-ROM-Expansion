@@ -5,6 +5,7 @@ on:
       - 'phase1/**'
     paths:
       - 'tools/verify_poryscript_actual_cli_arm_table.py'
+      - 'tools/phase1_poryscript_consumer_bounds.py'
       - '.github/workflows/phase1-poryscript-real-cli-arm-table.yml'
       - 'docs/PHASE1_P0_PORYSCRIPT_REAL_CLI_GNU_ARM_TABLE_2026-10-27.md'
   pull_request:
@@ -46,7 +47,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p phase1-evidence
-          python3 -m py_compile tools/verify_poryscript_actual_cli_arm_table.py
+          python3 -m py_compile tools/verify_poryscript_actual_cli_arm_table.py tools/phase1_poryscript_consumer_bounds.py
           python3 tools/verify_poryscript_actual_cli_arm_table.py \
             --poryscript upstream-poryscript \
             --firered upstream-firered \

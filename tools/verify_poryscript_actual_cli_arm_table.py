@@ -16,6 +16,7 @@ import struct
 import subprocess
 import tempfile
 from pathlib import Path
+from phase1_poryscript_consumer_bounds import decode, run_negative_controls
 
 PS_PIN = "c32481161c767b25a3425fa9f1f8729927ff3d55"
 FR_PIN = "ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
@@ -173,7 +174,10 @@ def main() -> None:
             'std::printf("%s: ; .global %s\\n", s, s);' in fsrc["tools/preproc/preproc.cpp"],
             "FireRed native global-label preprocessor contract changed")
     require("mapScripts += 5;" in fsrc["src/script.c"] and
-            "varIndex1 = T1_READ_16(ptr);" in fsrc["src/script.c"],
+            "varIndex1 = T1_READ_16(ptr);" in fsrc["src/script.c"] and
+            "if (*mapScripts == 0)" in fsrc["src/script.c"] and
+            "if (!varIndex1)" in fsrc["src/script.c"] and
+            "return T2_READ_PTR(ptr);" in fsrc["src/script.c"],
             "FireRed reader stride/conditional semantics drifted")
     for tool in ("go", "arm-none-eabi-as", "arm-none-eabi-ld"):
         require(shutil.which(tool) is not None, "missing build tool: " + tool)
@@ -231,6 +235,8 @@ def main() -> None:
         require(preproc.is_file(), "pinned FireRed preprocessor not built")
         positive = compile_assembly(original, root, preproc, charmap)
         validate(positive)
+        consumer_layout = decode(positive["linked"])
+        consumer_negatives = run_negative_controls(positive["linked"])
         mutations = [
             ("outer-tag", "MAP_SCRIPT_ON_TRANSITION, XGBA_Transition",
              "4, XGBA_Transition"),
@@ -269,6 +275,9 @@ def main() -> None:
             "relocation_type": "R_ARM_ABS32",
             "optimized_and_unoptimized_equal": True,
             "negative_controls_passed": len(mutations),
+            "bounded_consumer_model": consumer_layout,
+            "bounded_consumer_negative_controls": consumer_negatives,
+            "bounded_model_is_not_native_malformed_table_execution": True,
             "actual_poryscript_cli_executed": True,
             "actual_pinned_fire_red_macros_used": True,
             "actual_pinned_fire_red_preprocessor_used": True,
