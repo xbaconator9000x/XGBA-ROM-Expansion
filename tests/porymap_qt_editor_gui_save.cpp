@@ -30,6 +30,22 @@ static QByteArray bytes(const QString &path) {
     require(f.open(QIODevice::ReadOnly), "cannot read map JSON");
     return f.readAll();
 }
+// Matched QFile control: the same symlink path must resolve to /dev/full,
+// and Qt must expose an actual device error before the GUI Save action.
+// This is not instrumentation of Project::saveMap's own QFile handle.
+static bool verifyFailureDevice(const QString &path) {
+    require(QFileInfo(path).canonicalFilePath() == QStringLiteral("/dev/full"),
+            "injected GUI save path does not resolve to /dev/full");
+    QFile direct(path);
+    require(direct.open(QIODevice::WriteOnly), "matched /dev/full QFile open failed");
+    const qint64 written = direct.write("X", 1);
+    const bool flushed = direct.flush();
+    const QFileDevice::FileError error = direct.error();
+    direct.close();
+    require((written < 0 || !flushed) && error != QFileDevice::NoError,
+            "matched /dev/full QFile did not report a write/flush device error");
+    return true;
+}
 static int diskOffset(const QString &path, const QString &direction, const QString &target) {
     QJsonParseError error;
     auto doc = QJsonDocument::fromJson(bytes(path), &error);
@@ -145,6 +161,7 @@ int main(int argc, char **argv) {
         QFile full("/dev/full");
         require(full.link(palletPath), "cannot inject /dev/full symlink");
         require(QFileInfo(palletPath).isSymLink(), "injected failure path not symlink");
+        const bool mirroredDeviceFailure = verifyFailureDevice(palletPath);
         std::cerr << "PHASE1_GUI_STAGE injected_failure_gui_save" << std::endl;
         save->trigger(); // Actual GUI save QAction on a failing output device.
         require(saveTriggers == 2, "GUI failure save action not triggered");
@@ -250,6 +267,7 @@ int main(int argc, char **argv) {
         require(fullSingle.link(palletPath), "cannot inject single-map /dev/full");
         require(QFileInfo(palletPath).isSymLink(),
                 "single-map failure injection was not a symlink");
+        const bool isolatedDeviceFailure = verifyFailureDevice(palletPath);
         std::cerr << "PHASE1_GUI_STAGE isolated_single_map_failed_save" << std::endl;
         save->trigger();
         require(saveTriggers == 4, "single-map GUI Save QAction not triggered");
@@ -294,6 +312,8 @@ int main(int argc, char **argv) {
         result["single_map_unsaved_attribute_not_persisted"] = true;
         result["single_map_gui_save_triggers"] = int(saveTriggers);
         result["failure_device"] = "/dev/full";
+        result["mirrored_matched_qfile_error"] = mirroredDeviceFailure;
+        result["isolated_matched_qfile_error"] = isolatedDeviceFailure;
         result["phase1_gate"] = "FAIL_INCOMPLETE";
         result["independent_approval"] = false;
         // QWidget::close invokes the actual MainWindow::closeEvent ->
@@ -306,6 +326,35 @@ int main(int argc, char **argv) {
         result["close_after_failed_single_map_save_accepted"] = closeAccepted;
         std::cout << "PHASE1_GUI_RESULT="
                   << QJsonDocument(result).toJson(QJsonDocument::Compact).constData()
+                  << std::endl;
+    }
+    // Cold-reopen with a newly constructed real MainWindow/Editor, after
+    // the falsely clean prior window has closed and been destroyed.
+    porymapConfig.addRecentProject(root);
+    porymapConfig.reopenOnLaunch = true;
+    porymapConfig.projectManuallyClosed = false;
+    porymapConfig.checkForUpdates = false;
+    porymapConfig.showProjectLoadingScreen = false;
+    require(porymapConfig.save(), "cannot configure cold editor reopen");
+    {
+        MainWindow coldWindow(nullptr);
+        coldWindow.initialize();
+        require(coldWindow.editor && coldWindow.editor->project,
+                "cold MainWindow did not load project");
+        require(coldWindow.editor->setMap("PalletTown"),
+                "cold Editor could not reopen PalletTown");
+        Map *reopened = coldWindow.editor->map;
+        require(reopened != nullptr, "cold editor map missing");
+        require(reopened->customAttributes().value("xgba_phase1_unsaved_only").toString()
+                    == QStringLiteral("persisted-v1"),
+                "cold editor did not recover prior persisted value");
+        QJsonObject coldResult;
+        coldResult["fresh_mainwindow_editor"] = true;
+        coldResult["recovered_prior_persisted_value"] = true;
+        coldResult["unsaved_failed_value_absent"] = true;
+        coldResult["phase1_gate"] = "FAIL_INCOMPLETE";
+        std::cout << "PHASE1_GUI_COLD_REOPEN="
+                  << QJsonDocument(coldResult).toJson(QJsonDocument::Compact).constData()
                   << std::endl;
     }
     delete porysplash;

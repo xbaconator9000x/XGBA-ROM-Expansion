@@ -128,6 +128,8 @@ jobs:
           assert isinstance(d["post_failure_retry_disk_mirrors_divergent"],bool)
           assert d["failed_gui_save_disk_offset"]!=d["failed_gui_save_in_memory_offset"]
           assert d["single_map_positive_save_persisted"] is True
+          assert d["mirrored_matched_qfile_error"] is True
+          assert d["isolated_matched_qfile_error"] is True
           assert d["dirty_close_cancel_prompt_observed"] is True
           assert d["dirty_close_cancel_rejected"] is True
           assert d["dirty_close_cancel_preserved_disk"] is True
@@ -138,6 +140,13 @@ jobs:
           assert d["single_map_gui_save_triggers"]==4
           assert d["close_after_failed_single_map_save_accepted"] is True
           assert d["phase1_gate"]=="FAIL_INCOMPLETE"
+          cold=[json.loads(line.split("=",1)[1]) for line in Path("phase1-evidence/gui-save.log").read_text().splitlines() if line.startswith("PHASE1_GUI_COLD_REOPEN=")]
+          assert len(cold)==1,("expected one fresh MainWindow/Editor reload",len(cold))
+          assert cold[0]["fresh_mainwindow_editor"] is True
+          assert cold[0]["recovered_prior_persisted_value"] is True
+          assert cold[0]["unsaved_failed_value_absent"] is True
+          assert cold[0]["phase1_gate"]=="FAIL_INCOMPLETE"
+          Path("phase1-evidence/gui-cold-reopen.json").write_text(json.dumps(cold[0],indent=2,sort_keys=True)+"\n")
           Path("phase1-evidence/gui-save.json").write_text(json.dumps(d,indent=2,sort_keys=True)+"\n")
           print("Real MainWindow QAction -> Editor -> Project save and mirrored dirty-state evidence; no approval")
           PY
