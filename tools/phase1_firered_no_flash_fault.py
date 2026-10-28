@@ -31,19 +31,43 @@ def main(a):
                a.counter, a.sb2] + [getattr(a, key) for key in TRACE_NAMES]
     env = os.environ.copy()
     env["XGBA_PHASE1_FLASH_PRESENT_ADDR"] = a.flash_present
+    env["XGBA_PHASE1_SAVE_ATTEMPT_STATUS_ADDR"] = a.attempt_status
     env["XGBA_PHASE1_INJECT_NO_FLASH"] = "1"
     # Fail-closed harness controls: missing and invalid RAM identity.
-    for label, invalid in (("missing", None), ("invalid", "0xDEADBEEF")):
+    for label, invalid in (("missing", None), ("invalid", "0xDEADBEEF"),
+                           ("wrong_in_range", a.sb1)):
         bad = env.copy()
         if invalid is None:
             bad.pop("XGBA_PHASE1_FLASH_PRESENT_ADDR")
         else:
             bad["XGBA_PHASE1_FLASH_PRESENT_ADDR"] = invalid
-        p = subprocess.run(command, env=bad, capture_output=True, text=True, timeout=30)
+        p = subprocess.run(command, env=bad, capture_output=True, text=True, timeout=900)
         assert p.returncode == 2, (label, p.returncode, p.stderr[-300:])
-        assert ("no-Flash fault injection requires" in p.stderr if invalid is None
-                else "invalid pinned field-control diagnostic address" in p.stderr)
+        expected_error = ("no-Flash fault injection requires" if invalid is None else
+                          "invalid pinned field-control diagnostic address" if label == "invalid" else
+                          "expected Flash present before fault")
+        assert expected_error in p.stderr, (label, p.stderr[-300:])
         assert sha(save) == before, ("negative control modified Flash", label)
+    # Same counter-1 fixture and controller schedule, with no host RAM fault.
+    positive_save = root / "no_flash_matched_positive.sav"
+    shutil.copyfile(original, positive_save)
+    positive_command = command.copy()
+    positive_command[2] = str(positive_save)
+    positive_env = env.copy()
+    positive_env.pop("XGBA_PHASE1_INJECT_NO_FLASH")
+    positive = subprocess.run(positive_command, env=positive_env,
+                              capture_output=True, text=True, timeout=900)
+    assert positive.returncode == 0, ("matched positive failed", positive.stderr[-600:])
+    positive_records = [json.loads(line) for line in positive.stdout.splitlines()
+                        if line.startswith('{"mode":"controller"')]
+    assert len(positive_records) == 1
+    good = positive_records[0]
+    assert good["try_saving_data_entry_hits"] == 1
+    assert good["try_saving_data_return_hits"] == 1
+    assert good["first_try_saving_data_return_value"] == 1
+    assert good["first_try_save_attempt_status"] == 1
+    assert good["save_counter"] == 2 and good["flash_changed_bytes"] > 0
+    assert sha(positive_save) != before and sha(save) == before
     p = subprocess.run(command, env=env, capture_output=True, text=True, timeout=900)
     if p.returncode:
         raise RuntimeError(f"no-Flash native probe rc={p.returncode}: {p.stderr[-1200:]}")
@@ -56,6 +80,8 @@ def main(a):
     assert n["try_saving_data_entry_hits"] == 1 and n["try_saving_data_return_hits"] == 1
     assert n["first_try_saving_data_return_value"] == 255, (
         "Expected pinned SAVE_STATUS_ERROR=0xFF", n["first_try_saving_data_return_value"])
+    assert n["first_try_save_attempt_status"] == 255
+    assert n["no_flash_restored"] is True
     assert n["flash_changed_bytes"] == 0 and n["host_flash_writes"] == 0
     assert n["save_counter"] == 1 and n["save_status"] == 1
     assert sha(save) == before, "Faulted save changed physical Flash bytes"
@@ -69,7 +95,11 @@ def main(a):
         "flash_changed_bytes": n["flash_changed_bytes"],
         "physical_save_unchanged": True,
         "counter": n["save_counter"],
-        "missing_and_invalid_address_negative_controls": True,
+        "missing_invalid_and_wrong_symbol_negative_controls": True,
+        "matched_no_injection_save_success": True,
+        "matched_positive_counter": good["save_counter"],
+        "gSaveAttemptStatus_at_return": n["first_try_save_attempt_status"],
+        "gFlashMemoryPresent_restored": n["no_flash_restored"],
         "source_provenance": {
             "firered_commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
             "src_load_save_c_blob": "8b723dd044c6024b3671bb890b25b56a53f99ec5",
@@ -86,7 +116,7 @@ def main(a):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    for key in ("rom", "probe", "status", "counter", "sb2", "output", "flash_present"):
+    for key in ("rom", "probe", "status", "counter", "sb2", "output", "flash_present", "attempt_status"):
         p.add_argument("--" + key.replace("_", "-"), required=True)
     for key in TRACE_NAMES:
         p.add_argument("--" + key.replace("_", "-"), required=True)
