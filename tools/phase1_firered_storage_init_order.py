@@ -20,10 +20,10 @@ def require(condition, message):
         raise AssertionError(message)
 
 def blob(raw):
-    return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\\0" + raw).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
 
 def function(source, name):
-    pat = r"(?m)^[^\\n;{}]*\\b" + re.escape(name) + r"\\s*\\([^;{}]*\\)\\s*\\{"
+    pat = r"(?m)^[^\n;{}]*\b" + re.escape(name) + r"\s*\([^;{}]*\)\s*\{"
     match = re.search(pat, source)
     require(match is not None, "missing function body: " + name)
     start = source.index("{", match.start())
@@ -136,7 +136,7 @@ def main():
         "independent_approvals": 0,
     }
     a.output.parent.mkdir(parents=True, exist_ok=True)
-    a.output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\\n")
+    a.output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
     print(json.dumps({"status": report["status"],
                       "negative_controls_rejected": len(mutants)}, sort_keys=True))
 
