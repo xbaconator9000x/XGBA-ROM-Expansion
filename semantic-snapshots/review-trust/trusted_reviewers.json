@@ -1,0 +1,5 @@
+{
+  "schema": "xgba.phase1.trusted_reviewers.v1",
+  "reviewers": [],
+  "note": "No independent reviewer keys are provisioned. The Phase 1 gate must reject all unsigned or self-asserted review dispositions."
+}

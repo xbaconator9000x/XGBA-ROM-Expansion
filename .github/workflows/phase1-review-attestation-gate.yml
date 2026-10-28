@@ -1,0 +1,36 @@
+name: Phase 1 independent-review attestation fail-closed gate
+on:
+  pull_request:
+    paths:
+      - 'tools/phase1_mapping_gate.py'
+      - 'tools/phase1_review_attestations.py'
+      - 'semantic-snapshots/review-trust/**'
+      - '.github/workflows/phase1-review-attestation-gate.yml'
+  push:
+    paths:
+      - 'tools/phase1_mapping_gate.py'
+      - 'tools/phase1_review_attestations.py'
+      - 'semantic-snapshots/review-trust/**'
+      - '.github/workflows/phase1-review-attestation-gate.yml'
+permissions:
+  contents: read
+jobs:
+  fail-closed-attestation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check source syntax and synthetic signed-review negative controls
+        run: |
+          python3 -m py_compile tools/phase1_mapping_gate.py tools/phase1_review_attestations.py
+          python3 tools/phase1_mapping_gate.py --self-test
+      - name: Validate pinned reviewer trust registry and prohibit owner self-review
+        env:
+          PYTHONPATH: tools
+        run: |
+          python3 - <<'PY'
+          from phase1_review_attestations import load_trust
+          trusted = load_trust()
+          assert "xbaconator9000x" not in trusted, "Repository owner must not self-review"
+          print(f"{len(trusted)} independently provisioned reviewer keys; no CSV self-approval")
+          PY
