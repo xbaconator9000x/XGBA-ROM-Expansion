@@ -1,0 +1,9 @@
+# Phase 1 — native mixed-counter storage-pointer diagnostic (2026-10-28)
+
+The exact-head [Actions #40674920189](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40674920189) failed its new all-14-sector case after three previously green cases succeeded. Its source-built mGBA probe printed `gSaveBlock2Ptr=0x02024588`, `gSaveBlock1Ptr=0x0202552c`, and **`gPokemonStoragePtr=0x00000000`** after 180 frames. No all-sector reconstruction was verified. Artifact 12810375724.
+
+Pinned upstream `pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982` `src/load_save.c` declares the three pointers in COMMON_DATA and `SetSaveBlocksPointers` sets them together using the same random offset; `src/title_screen.c` calls `SetSaveBlocksPointers` before `LoadGameSave(SAVE_NORMAL)` in the normal title transition. `src/save.c` `UpdateSaveAddresses` uses `gPokemonStoragePtr` for sectors 5–13, and `CopySaveSlotData` copies to those destinations. `src/main.c` initial callbacks set only SaveBlock1/2 pointers, not storage. A post-boot null pointer therefore cannot be dismissed as a harmless absent marker.
+
+New logging-only native probe captures the **actual compiled-ELF-derived storage pointer** at `LoadGameSave` and `CopySaveSlotData` entry, in addition to the existing end-of-window snapshot. It does not alter emulated RAM, source game, pointer validation or any marker assertions. This discriminates a pointer initialized only after load, a later clear, and an unexpected zero at both callsites. It does **not** establish root cause until exact-head runtime logs are inspected.
+
+All previous green save/loader evidence remains intact. The synthetic all-sector test stays fail-closed. Independent semantic approvals 0; authoritative Phase 1 gate FAIL_INCOMPLETE. No Phase 2 work.

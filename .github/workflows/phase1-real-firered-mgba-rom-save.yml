@@ -4,10 +4,26 @@ on:
     branches:
       - phase1/firered-mgba-real-rom-boot-save-20261028
       - phase1/firered-mgba-save-loader-steptrace-20261028
+      - phase1/firered-game-controller-save-observation-20261028
     paths:
       - '.github/workflows/phase1-real-firered-mgba-rom-save.yml'
       - 'tests/phase1_real_firered_mgba_runtime.c'
+      - 'tests/phase1_firered_game_controller.c'
+      - 'tests/phase1_firered_interrupt.h'
+      - 'tools/phase1_firered_game_controller.py'
+      - 'tools/phase1_firered_repeat_save.py'
+      - 'tools/phase1_firered_interrupted_save.py'
+      - 'tools/phase1_firered_position_roundtrip.py'
+      - 'tools/phase1_firered_no_flash_fault.py'
+      - 'tools/phase1_firered_save_error_semantics.py'
+      - 'docs/phase1-review-readiness/firered-save-error-semantics-20261028.md'
+      - 'docs/phase1-review-readiness/firered-repeated-save-powerloss-20261028.md'
+      - 'docs/phase1-review-readiness/firered-controller-save-observation-20261028.md'
       - 'tools/phase1_real_firered_mgba_fixtures.py'
+      - 'tools/phase1_firered_mixed_counter_native.py'
+      - 'tools/phase1_firered_storage_init_order.py'
+      - 'docs/phase1-review-readiness/firered-mixed-counter-native-20261028.md'
+      - 'tools/phase1_firered_continue_warp.py'
       - 'tools/phase1_real_firered_mgba_adversarial.py'
       - 'docs/phase1-review-readiness/real-firered-mgba-runtime-20261028.md'
       - 'docs/phase1-review-readiness/real-firered-mgba-save-loader-steptrace-20261028.md'
@@ -39,7 +55,28 @@ jobs:
           test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
           git -C upstream/pokefirered hash-object include/save.h | grep -Fx 87fb9b615b434b58823d15688056695acda9feab
           git -C upstream/pokefirered hash-object src/save.c | grep -Fx 36b960f375c92711aa49b99bdfe9c6b3a99d6b1c
+          git -C upstream/pokefirered hash-object src/start_menu.c | grep -Fx 88cc377cea556d3663aa5ea5f5bd4537cb29ea72
+          git -C upstream/pokefirered hash-object src/title_screen.c | grep -Fx 75f0e6743a2a84c906090df230bac7accb8dbe84
+          git -C upstream/pokefirered hash-object src/main_menu.c | grep -Fx 5cef7c46ea5dcaccbdb3698909e9fc23e7d00b9c
+          git -C upstream/pokefirered hash-object src/overworld.c | grep -Fx 339014da46ae8543143edc99ab72bf7496203a0d
           git -C upstream/pokefirered hash-object include/global.h | grep -Fx 77155b09014aa854fcf87260e6ad2969e222da53
+          git -C upstream/pokefirered hash-object data/maps/map_groups.json | grep -Fx 8c382f504d208286161903244772c93138cd7662
+          git -C upstream/pokefirered hash-object data/layouts/layouts.json | grep -Fx 41d0eb1b5e51fa75d535b5a098bae2bd650f710d
+          git -C upstream/pokefirered hash-object include/main.h | grep -Fx 31b22a3faa75409125257396913689a6a37c98ac
+          git -C upstream/pokefirered hash-object src/field_control_avatar.c | grep -Fx b1b6465941133b927505be92d189a7c283e4722f
+          git -C upstream/pokefirered hash-object src/overworld.c | grep -Fx 339014da46ae8543143edc99ab72bf7496203a0d
+      - name: Verify pinned save-error source semantics and tamper controls
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_firered_save_error_semantics.py
+          python3 tools/phase1_firered_save_error_semantics.py \
+            --source upstream/pokefirered \
+            --output evidence/results/save_error_semantics.json
+      - name: Verify pinned early-boot storage pointer lifecycle and mutation controls
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_firered_storage_init_order.py
+          python3 tools/phase1_firered_storage_init_order.py --source upstream/pokefirered --output evidence/results/storage_init_order.json
       - name: Build real FireRed cartridge using pinned original agbcc
         run: |
           set -euo pipefail
@@ -81,7 +118,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p evidence/fixtures evidence/results
-          python3 tools/phase1_real_firered_mgba_fixtures.py --rom upstream/pokefirered/pokefirered.gba --output evidence/fixtures
+          python3 tools/phase1_real_firered_mgba_fixtures.py --rom upstream/pokefirered/pokefirered.gba --firered-source upstream/pokefirered --output evidence/fixtures
           cp evidence/fixtures/fixture_manifest.json evidence/results/
           status=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveFileStatus" {print "0x"$1;exit}')
           counter=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveCounter" {print "0x"$1;exit}')
@@ -168,6 +205,191 @@ jobs:
               assert d["frames"] >= 180,(name,d)
           print("9 actual-emulator frame-advance cases verified; save correctness is NOT inferred")
           PY
+      - name: Trace additional native mixed-counter physical-slot selection
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_firered_mixed_counter_native.py
+          status=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveFileStatus" {print "0x"$1;exit}')
+          counter=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveCounter" {print "0x"$1;exit}')
+          loader=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="LoadGameSave" {print "0x"$1;exit}')
+          valid=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="GetSaveValidStatus" {print "0x"$1;exit}')
+          copy=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CopySaveSlotData" {print "0x"$1;exit}')
+          sb2=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveBlock2Ptr" {print "0x"$1;exit}')
+          sb1=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveBlock1Ptr" {print "0x"$1;exit}')
+          storage=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gPokemonStoragePtr" {print "0x"$1;exit}')
+          for symbol in "$status" "$counter" "$loader" "$valid" "$copy" "$sb2" "$sb1" "$storage"; do test -n "$symbol"; done
+          python3 tools/phase1_firered_mixed_counter_native.py \
+            --probe ./real-rom-probe --rom upstream/pokefirered/pokefirered.gba \
+            --fixtures evidence/fixtures --output evidence/results \
+            --firered-source upstream/pokefirered \
+            --status "$status" --counter "$counter" --loader "$loader" \
+            --valid "$valid" --copy "$copy" --sb2 "$sb2" --sb1 "$sb1" --storage "$storage"
+      - name: Observe input-driven real-ROM Flash changes without host writes
+        run: |
+          set -euo pipefail
+          python3 - <<'PYBUILD'
+          import json,shlex,subprocess
+          from pathlib import Path
+          entries=json.loads(Path("upstream/mgba/build/compile_commands.json").read_text())
+          perf=next(e for e in entries if e["file"].endswith("/src/platform/test/perf-main.c"))
+          flags=[arg for arg in shlex.split(perf["command"]) if arg.startswith(("-D","-I"))]
+          subprocess.run(["cc","-std=c11","-O2","-g","-Wall","-Wextra",*flags,
+              "-Iupstream/mgba/include","-Iupstream/mgba/build/include",
+              "tests/phase1_firered_game_controller.c",
+              "-Lupstream/mgba/build",
+              "-Wl,-rpath,"+str(Path("upstream/mgba/build").resolve()),
+              "-lmgba","-o","game-controller-probe"],check=True)
+          PYBUILD
+          status=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveFileStatus" {print "0x"$1;exit}')
+          counter=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveCounter" {print "0x"$1;exit}')
+          sb2=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveBlock2Ptr" {print "0x"$1;exit}')
+          start_menu_save=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="StartMenuSaveCallback" {print "0x"$1;exit}')
+          dialog_do_save=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="SaveDialogCB_DoSave" {print "0x"$1;exit}')
+          try_saving_data=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="TrySavingData" {print "0x"$1;exit}')
+          title_task=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="Task_TitleScreenMain" {print "0x"$1;exit}')
+          init_main_menu=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CB2_InitMainMenu" {print "0x"$1;exit}')
+          execute_main_menu=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="Task_ExecuteMainMenuSelection" {print "0x"$1;exit}')
+          return_to_field=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CB2_ReturnToField" {print "0x"$1;exit}')
+          continue_saved_game=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CB2_ContinueSavedGame" {print "0x"$1;exit}')
+          return_field_local=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CB2_ReturnToFieldLocal" {print "0x"$1;exit}')
+          overworld=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CB2_Overworld" {print "0x"$1;exit}')
+          cb1_overworld=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CB1_Overworld" {print "0x"$1;exit}')
+          show_start_menu=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="ShowStartMenu" {print "0x"$1;exit}')
+          field_get_player_input=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="FieldGetPlayerInput" {print "0x"$1;exit}')
+          gmain=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gMain" {print "0x"$1;exit}')
+          sb1=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveBlock1Ptr" {print "0x"$1;exit}')
+          test -n "$status" && test -n "$counter" && test -n "$sb2"
+          test -n "$title_task" && test -n "$init_main_menu" && test -n "$execute_main_menu"
+          test -n "$return_to_field" && test -n "$continue_saved_game"
+          test -n "$start_menu_save" && test -n "$dialog_do_save" && test -n "$try_saving_data"
+          test -n "$return_field_local" && test -n "$overworld" && test -n "$cb1_overworld"
+          test -n "$show_start_menu" && test -n "$field_get_player_input" && test -n "$gmain" && test -n "$sb1"
+          lock_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="sLockFieldControls" {print "0x"$1;exit}')
+          avatar_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gPlayerAvatar" {print "0x"$1;exit}')
+          player_step_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="player_step" {print "0x"$1;exit}')
+          object_events_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gObjectEvents" {print "0x"$1;exit}')
+          camera_move_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CameraMove" {print "0x"$1;exit}')
+          test -n "$lock_addr" && test -n "$avatar_addr" && test -n "$player_step_addr"
+          test -n "$object_events_addr" && test -n "$camera_move_addr"
+          export XGBA_PHASE1_LOCK_ADDR="$lock_addr"
+          export XGBA_PHASE1_AVATAR_ADDR="$avatar_addr"
+          export XGBA_PHASE1_PLAYER_STEP_ADDR="$player_step_addr"
+          export XGBA_PHASE1_OBJECT_EVENTS_ADDR="$object_events_addr"
+          export XGBA_PHASE1_CAMERA_MOVE_ADDR="$camera_move_addr"
+          init_avatar_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="InitPlayerAvatar" {print "0x"$1;exit}')
+          clear_avatar_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="ClearPlayerAvatarInfo" {print "0x"$1;exit}')
+          set_avatar_state_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="SetPlayerAvatarStateMask" {print "0x"$1;exit}')
+          test -n "$init_avatar_addr" && test -n "$clear_avatar_addr" && test -n "$set_avatar_state_addr"
+          export XGBA_PHASE1_INIT_AVATAR_ADDR="$init_avatar_addr"
+          export XGBA_PHASE1_CLEAR_AVATAR_ADDR="$clear_avatar_addr"
+          export XGBA_PHASE1_SET_AVATAR_STATE_ADDR="$set_avatar_state_addr"
+          # Pinned src/overworld.c: map-load case 4 creates the avatar;
+          # ReturnToFieldLocal instead resumes existing object events.
+          init_objects_local=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="InitObjectEventsLocal" {print "0x"$1;exit}')
+          cb2_load_map=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CB2_LoadMap" {print "0x"$1;exit}')
+          load_map_steps=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="LoadMapInStepsLocal" {print "0x"$1;exit}')
+          test -n "$init_objects_local" && test -n "$cb2_load_map" && test -n "$load_map_steps"
+          export XGBA_PHASE1_INIT_OBJECTS_LOCAL_ADDR="$init_objects_local"
+          export XGBA_PHASE1_CB2_LOAD_MAP_ADDR="$cb2_load_map"
+          export XGBA_PHASE1_LOAD_MAP_STEPS_ADDR="$load_map_steps"
+          # Negative control: reject an invalid diagnostic RAM address before ROM load.
+          set +e
+          XGBA_PHASE1_OBJECT_EVENTS_ADDR=0xDEADBEEF ./game-controller-probe unused.rom unused.sav unused.keys 180 "$status" "$counter" "$sb2" 2> invalid-object-events-address.log
+          invalid_object_rc=$?
+          set -e
+          test "$invalid_object_rc" -eq 2
+          grep -q "invalid pinned field-control diagnostic address" invalid-object-events-address.log
+          set +e
+          ./game-controller-probe unused.rom unused.sav unused.keys 180 "$status" "$counter" "$sb2" 2> valid-object-events-address.log
+          valid_object_rc=$?
+          set -e
+          test "$valid_object_rc" -eq 2
+          grep -q "cannot open input schedule" valid-object-events-address.log
+          printf 'Pinned field control: lock=%s avatar=%s player_step=%s\n' "$lock_addr" "$avatar_addr" "$player_step_addr"
+          printf 'Compiled save callsites: start=%s dialog=%s try=%s\n' "$start_menu_save" "$dialog_do_save" "$try_saving_data"
+          python3 tools/phase1_firered_game_controller.py \
+            --rom upstream/pokefirered/pokefirered.gba \
+            --fixtures evidence/fixtures --probe ./game-controller-probe \
+            --status "$status" --counter "$counter" --sb2 "$sb2" \
+            --start-menu-save "$start_menu_save" --dialog-do-save "$dialog_do_save" \
+            --try-saving-data "$try_saving_data" \
+            --title-task "$title_task" --init-main-menu "$init_main_menu" \
+            --execute-main-menu "$execute_main_menu" \
+            --return-to-field "$return_to_field" --continue-saved-game "$continue_saved_game" \
+            --return-field-local "$return_field_local" --overworld "$overworld" \
+            --cb1-overworld "$cb1_overworld" --show-start-menu "$show_start_menu" \
+            --field-get-player-input "$field_get_player_input" --gmain "$gmain" --sb1 "$sb1" \
+            --output evidence/controller
+          # A second controller-driven save, second cold boot, and checksum-corruption
+          # negative control. Never claim a real interrupted write from this surrogate.
+          python3 -m py_compile tools/phase1_firered_repeat_save.py
+          python3 tools/phase1_firered_repeat_save.py \
+            --rom upstream/pokefirered/pokefirered.gba \
+            --probe ./game-controller-probe --status "$status" --counter "$counter" --sb2 "$sb2" \
+            --start-menu-save "$start_menu_save" --dialog-do-save "$dialog_do_save" \
+            --try-saving-data "$try_saving_data" --title-task "$title_task" \
+            --init-main-menu "$init_main_menu" --execute-main-menu "$execute_main_menu" \
+            --return-to-field "$return_to_field" --continue-saved-game "$continue_saved_game" \
+            --return-field-local "$return_field_local" --overworld "$overworld" \
+            --cb1-overworld "$cb1_overworld" --show-start-menu "$show_start_menu" \
+            --field-get-player-input "$field_get_player_input" --gmain "$gmain" --sb1 "$sb1" \
+            --output evidence/controller
+          cp evidence/controller/*.json evidence/results/
+          # Cut third game-initiated save before TrySavingData returns.
+          # Three actual in-flight Flash states; fresh emulator fallback each.
+          python3 -m py_compile tools/phase1_firered_interrupted_save.py
+          python3 tools/phase1_firered_interrupted_save.py \
+            --rom upstream/pokefirered/pokefirered.gba \
+            --probe ./game-controller-probe --status "$status" --counter "$counter" --sb2 "$sb2" \
+            --start-menu-save "$start_menu_save" --dialog-do-save "$dialog_do_save" \
+            --try-saving-data "$try_saving_data" --title-task "$title_task" \
+            --init-main-menu "$init_main_menu" --execute-main-menu "$execute_main_menu" \
+            --return-to-field "$return_to_field" --continue-saved-game "$continue_saved_game" \
+            --return-field-local "$return_field_local" --overworld "$overworld" \
+            --cb1-overworld "$cb1_overworld" --show-start-menu "$show_start_menu" \
+            --field-get-player-input "$field_get_player_input" --gmain "$gmain" --sb1 "$sb1" \
+            --output evidence/controller
+          # Game-driven player movement, real Save, on-disk x/y, and cold-boot
+          # recovery; unsaved-movement negative control must not persist.
+          # Pinned IWRAM no-Flash fault at genuine TrySavingData entry.
+          # Host RAM injection is NOT controller-only saving or hardware failure.
+          flash_present=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gFlashMemoryPresent" {print "0x"$1;exit}')
+          save_attempt_status=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveAttemptStatus" {print "0x"$1;exit}')
+          test -n "$flash_present" && test -n "$save_attempt_status"
+          git -C upstream/pokefirered hash-object src/load_save.c | grep -Fx 8b723dd044c6024b3671bb890b25b56a53f99ec5
+          python3 -m py_compile tools/phase1_firered_no_flash_fault.py
+          python3 tools/phase1_firered_no_flash_fault.py             --rom upstream/pokefirered/pokefirered.gba             --probe ./game-controller-probe --status "$status" --counter "$counter" --sb2 "$sb2"             --flash-present "$flash_present" --attempt-status "$save_attempt_status"             --start-menu-save "$start_menu_save" --dialog-do-save "$dialog_do_save"             --try-saving-data "$try_saving_data" --title-task "$title_task"             --init-main-menu "$init_main_menu" --execute-main-menu "$execute_main_menu"             --return-to-field "$return_to_field" --continue-saved-game "$continue_saved_game"             --return-field-local "$return_field_local" --overworld "$overworld"             --cb1-overworld "$cb1_overworld" --show-start-menu "$show_start_menu"             --field-get-player-input "$field_get_player_input" --gmain "$gmain" --sb1 "$sb1"             --output evidence/controller
+          # Source-pinned synthetic Continue warp forces map-loader avatar
+          # creation; this is a distinct negative/positive precondition test,
+          # not a substitute for the real game-written position roundtrip.
+          git -C upstream/pokefirered hash-object include/save_location.h | grep -Fx 2d2cb197494b663dcb8e687f9f7267576bdc3c34
+          python3 -m py_compile tools/phase1_firered_continue_warp.py
+          python3 tools/phase1_firered_continue_warp.py \
+            --rom upstream/pokefirered/pokefirered.gba \
+            --probe ./game-controller-probe --status "$status" --counter "$counter" --sb2 "$sb2" \
+            --fixtures evidence/fixtures \
+            --start-menu-save "$start_menu_save" --dialog-do-save "$dialog_do_save" \
+            --try-saving-data "$try_saving_data" --title-task "$title_task" \
+            --init-main-menu "$init_main_menu" --execute-main-menu "$execute_main_menu" \
+            --return-to-field "$return_to_field" --continue-saved-game "$continue_saved_game" \
+            --return-field-local "$return_field_local" --overworld "$overworld" \
+            --cb1-overworld "$cb1_overworld" --show-start-menu "$show_start_menu" \
+            --field-get-player-input "$field_get_player_input" --gmain "$gmain" --sb1 "$sb1" \
+            --output evidence/controller
+          python3 -m py_compile tools/phase1_firered_position_roundtrip.py
+          python3 tools/phase1_firered_position_roundtrip.py \
+            --rom upstream/pokefirered/pokefirered.gba \
+            --probe ./game-controller-probe --status "$status" --counter "$counter" --sb2 "$sb2" \
+            --fixtures evidence/fixtures \
+            --start-menu-save "$start_menu_save" --dialog-do-save "$dialog_do_save" \
+            --try-saving-data "$try_saving_data" --title-task "$title_task" \
+            --init-main-menu "$init_main_menu" --execute-main-menu "$execute_main_menu" \
+            --return-to-field "$return_to_field" --continue-saved-game "$continue_saved_game" \
+            --return-field-local "$return_field_local" --overworld "$overworld" \
+            --cb1-overworld "$cb1_overworld" --show-start-menu "$show_start_menu" \
+            --field-get-player-input "$field_get_player_input" --gmain "$gmain" --sb1 "$sb1" \
+            --output evidence/controller
+          cp evidence/controller/*.json evidence/results/
       - name: Upload only text evidence, never source-built ROM or raw saves
         if: always()
         uses: actions/upload-artifact@v4

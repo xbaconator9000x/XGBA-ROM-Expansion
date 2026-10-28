@@ -1,0 +1,9 @@
+# Phase 1 — source-grounded second loader for 14-sector native witness
+
+At exact-head [Actions #40674920189](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40674920189), the first boot loader produced `gSaveBlock2Ptr=0x02024588`, `gSaveBlock1Ptr=0x0202552c`, but `gPokemonStoragePtr=0`. This is a **real early-boot precondition**, not grounds to accept missing markers.
+
+The pinned upstream source explains the sequence: `src/main.c:InitMainCallbacks` sets SaveBlock1/2 pointers but **not** storage; `src/intro.c:CB2_InitCopyrightScreenAfterBootup` calls `LoadGameSave` before the title screen; `src/title_screen.c:Task_TitleScreenMain` calls `SetSaveBlocksPointers` (which sets all three together, per `src/load_save.c`) and then **calls `LoadGameSave` again**. Thus the first boot loader is unsuitable for proving storage sectors 5–13; the second loader is the relevant native test.
+
+The test now sends actual mGBA START/A key pulses using the previously source-built controller schedule pattern, traces the real second `LoadGameSave` and `CopySaveSlotData` entries, requires nonzero EWRAM storage pointers at both, and then checks all 14 EWRAM markers. The original three 180-frame mixed-counter cases retain their existing fast path. No game RAM/Flash is host-modified, and missing second loader or any marker remains a hard failure. Three additional negative mutations reject fabricated second-loader pointer/hit observations.
+
+This is still a synthetic checksum-valid mixed-generation fixture, not naturally torn Flash, hardware durability or human gameplay. Immutable FireRed pin `ce6406d8c2eaf46d543c8a2606de0c3cb1951982`, agbcc `da598c1d918402c42c0c0d7128ba14567f3175e9`, mGBA `fd9dc5c2cbf234365068855851107e762fc6211b`. Independent approvals 0; gate FAIL_INCOMPLETE.
