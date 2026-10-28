@@ -6,8 +6,10 @@ on:
     paths:
       - 'tools/verify_poryscript_actual_cli_arm_table.py'
       - 'tools/phase1_poryscript_reader_host.py'
+      - 'tools/phase1_poryscript_dispatch_host.py'
       - 'tools/phase1_poryscript_original_agbcc_reader.py'
       - 'tests/phase1_poryscript_reader_host.c'
+      - 'tests/phase1_poryscript_dispatch_host.c'
       - 'tools/phase1_poryscript_consumer_bounds.py'
       - '.github/workflows/phase1-poryscript-real-cli-arm-table.yml'
       - 'docs/PHASE1_P0_PORYSCRIPT_REAL_CLI_GNU_ARM_TABLE_2026-10-27.md'
@@ -15,8 +17,10 @@ on:
     paths:
       - 'tools/verify_poryscript_actual_cli_arm_table.py'
       - 'tools/phase1_poryscript_reader_host.py'
+      - 'tools/phase1_poryscript_dispatch_host.py'
       - 'tools/phase1_poryscript_original_agbcc_reader.py'
       - 'tests/phase1_poryscript_reader_host.c'
+      - 'tests/phase1_poryscript_dispatch_host.c'
       - '.github/workflows/phase1-poryscript-real-cli-arm-table.yml'
       - 'docs/PHASE1_P0_PORYSCRIPT_REAL_CLI_GNU_ARM_TABLE_2026-10-27.md'
   workflow_dispatch:
@@ -53,6 +57,37 @@ jobs:
         with:
           name: phase1-poryscript-host-c-reader-text
           path: phase1-evidence/poryscript-pinned-host-c-reader.json
+          if-no-files-found: warn
+
+  pinned-host-c-dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: pinned-firered
+          persist-credentials: false
+      - name: Execute unchanged pinned map-script dispatch and 11 source mutations
+        run: |
+          set -euo pipefail
+          mkdir -p phase1-evidence
+          python3 -m py_compile tools/phase1_poryscript_dispatch_host.py
+          python3 tools/phase1_poryscript_dispatch_host.py \
+            --firered pinned-firered \
+            --test tests/phase1_poryscript_dispatch_host.c \
+            --output phase1-evidence/poryscript-pinned-dispatch-host.json
+          python3 -m json.tool phase1-evidence/poryscript-pinned-dispatch-host.json >/dev/null
+      - name: Archive text-only pinned dispatch evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-poryscript-host-c-dispatch-text
+          path: phase1-evidence/poryscript-pinned-dispatch-host.json
           if-no-files-found: warn
 
   actual-poryscript-arm-table:
