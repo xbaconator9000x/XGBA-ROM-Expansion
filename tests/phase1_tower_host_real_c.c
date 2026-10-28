@@ -84,9 +84,57 @@ static void verify_writer_failure(void) {
     check(sector[0][0]==8 && sector[1][0]==0,"first write committed second not");
     printf("SECOND_SECTOR_WRITE_FAILURE first_sector_mutated=1 second_unchanged=1\n");
 }
+static void verify_first_writer_failure_preserves_both(void) {
+    struct EReaderTrainerTowerSet old, newer;
+    u8 before[2][SECTOR_SIZE];
+    reset_io(); make_valid(&old,8,31); make_valid(&newer,8,73);
+    check(CEReaderTool_SaveTrainerTower(&old)==TRUE,"baseline first-write fixture");
+    memcpy(before,sector,sizeof before);
+    memset(writes,0,sizeof writes);
+    write_ok[0]=false;
+    check(CEReaderTool_SaveTrainerTower(&newer)==FALSE,"first write rejected");
+    check(writes[0]==1 && writes[1]==0,"second write not attempted");
+    check(memcmp(sector,before,sizeof before)==0,"both sectors preserved on first write failure");
+    printf("FIRST_SECTOR_WRITE_FAILURE both_sectors_unchanged=1 second_write_attempts=0\n");
+}
+static void verify_second_writer_retry(void) {
+    struct EReaderTrainerTowerSet old, newer, d;
+    u8 old_second[SECTOR_SIZE];
+    reset_io(); make_valid(&old,8,33); make_valid(&newer,8,79);
+    check(CEReaderTool_SaveTrainerTower(&old)==TRUE,"old complete generation");
+    memcpy(old_second,sector[1],SECTOR_SIZE);
+    write_ok[1]=false;
+    check(CEReaderTool_SaveTrainerTower(&newer)==FALSE,"new second writer fails");
+    check(memcmp(sector[1],old_second,SECTOR_SIZE)==0,"old second retained");
+    memset(&d,0xCC,sizeof d);
+    check(CEReaderTool_LoadTrainerTower(&d)==FALSE,"mixed eight-floor generation rejected");
+    check(memcmp(&d,sector[0],3976)==0,"failed load copied new first");
+    check(memcmp((u8*)&d+3976,old_second,3968)==0,"failed load copied old second");
+    write_ok[1]=true;
+    check(CEReaderTool_SaveTrainerTower(&newer)==TRUE,"retry writes both");
+    memset(&d,0xCC,sizeof d);
+    check(CEReaderTool_LoadTrainerTower(&d)==TRUE,"retry recovers valid generation");
+    newer.id=1;
+    check(memcmp(&newer,&d,sizeof d)==0,"retry exact generation recovered");
+    printf("SECOND_SECTOR_WRITE_RETRY failed_load_mutated=7944 retry_recovered=7944\n");
+}
+static void verify_second_reader_retry(void) {
+    struct EReaderTrainerTowerSet a,d;
+    reset_io(); make_valid(&a,8,47);
+    check(CEReaderTool_SaveTrainerTower(&a)==TRUE,"reader retry baseline");
+    present[1]=false; memset(&d,0xCC,sizeof d);
+    check(CEReaderTool_LoadTrainerTower(&d)==FALSE,"missing second first read");
+    check(memcmp(&d,sector[0],3976)==0,"first half mutated on first read");
+    present[1]=true;
+    check(CEReaderTool_LoadTrainerTower(&d)==TRUE,"second read retry");
+    a.id=1;
+    check(memcmp(&a,&d,sizeof d)==0,"retry overwrote stale partial destination");
+    printf("SECOND_SECTOR_READ_RETRY initial_partial=3976 retry_recovered=7944\n");
+}
 int main(void) {
     verify_success(); verify_first_read_failure(); verify_second_read_failure(); verify_checksum_failure(); verify_mixed(4,true); verify_mixed(5,false); verify_writer_failure();
+    verify_first_writer_failure_preserves_both(); verify_second_writer_retry(); verify_second_reader_retry();
     check(ReadTrainerTowerAndValidate()==FALSE,"stock stub false");
-    printf("HOST_C_PINNED_FUNCTIONS PASS cases=7 gate=FAIL_INCOMPLETE approvals=0\n");
+    printf("HOST_C_PINNED_FUNCTIONS PASS cases=10 gate=FAIL_INCOMPLETE approvals=0\n");
     return 0;
 }

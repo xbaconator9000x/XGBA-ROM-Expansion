@@ -93,3 +93,30 @@ Seven scenarios require: full 7,944-byte valid save/load with writer header byte
 **Limitations:** this is native host C execution of pinned function bodies, **not** original-agbcc/ARM compiled execution, emulator Flash, sentinel validation by the real `TryReadSpecialSaveSector`, real hardware power loss, or normal stock gameplay reachability. The fake sector functions intentionally isolate caller-owned destination mutation. The original linked stock stub still returns FALSE; its earlier separate original-agbcc test remains the only linked-ARM witness. Source-only observations and host-runtime evidence must not be conflated. Independent semantic approvals remain zero; all Phase 1 gates remain `FAIL_INCOMPLETE`.
 
 **Reviewer questions:** Does an enabled e-Reader path ever use the caller-owned destination after a failed load? Does any extension require a two-sector atomic transaction or rollback? Can the compiled ARM and emulator Flash paths independently reproduce partial destination mutation without changing stock game control flow? Which sidecar importer must reject a valid-sentinel mixed-generation four-floor payload?
+
+## New sequential two-sector recovery controls (2026-10-28; exact-head CI pending)
+
+Using the **unchanged pinned** src/cereader_tool.c compiled into the
+already-isolated host-C special-sector shim, three additional scenarios
+exercise the temporal state left by failures rather than repeating the
+previous standalone seven cases:
+
+- **First-sector write failure after an old complete generation:** the
+  writer must return FALSE, never attempt sector 31, and leave both old
+  physical sector images unchanged.
+- **Second-sector write failure followed by a retry:** the first new
+  sector is committed, the old second remains, an eight-floor load
+  returns FALSE **after copying both generations into the destination**,
+  then a successful two-sector retry must reconstruct all 7,944 bytes
+  from the new generation.
+- **Second-sector read failure followed by retry:** the first failed
+  read mutates 3,976 destination bytes; restoring the second sector and
+  retrying must overwrite the partial destination and recover the full
+  7,944-byte payload.
+
+Three additional output mutations reject false claims about write
+attempts, preserved sectors or successful retry. These are host-C
+function executions with fake sector I/O, **not** native Flash,
+emulated gameplay, hardware durability or stock e-Reader reachability.
+The original-agbcc linked ReadTrainerTowerAndValidate stub still returns
+FALSE. No semantic approval or Phase 2 work.

@@ -80,7 +80,7 @@ jobs:
           cc -std=gnu11 -O0 -Wall -Wextra -Werror -Wno-sign-compare \
             -Iphase1-host-shims pinned-firered/src/cereader_tool.c \
             tests/phase1_tower_host_real_c.c -o phase1-tower-host-c
-      - name: Execute actual pinned C loader/writer and reject six tampered result traces
+      - name: Execute pinned C two-sector failure and recovery plus tampered traces
         run: |
           set -euo pipefail
           ./phase1-tower-host-c | tee phase1-evidence/tower-host-real-c.txt
@@ -95,7 +95,10 @@ jobs:
               "MIXED_GENERATION floors=4 accepted=1 mutated_bytes=7944",
               "MIXED_GENERATION floors=5 accepted=0 mutated_bytes=7944",
               "SECOND_SECTOR_WRITE_FAILURE first_sector_mutated=1 second_unchanged=1",
-              "HOST_C_PINNED_FUNCTIONS PASS cases=7 gate=FAIL_INCOMPLETE approvals=0",
+              "FIRST_SECTOR_WRITE_FAILURE both_sectors_unchanged=1 second_write_attempts=0",
+              "SECOND_SECTOR_WRITE_RETRY failed_load_mutated=7944 retry_recovered=7944",
+              "SECOND_SECTOR_READ_RETRY initial_partial=3976 retry_recovered=7944",
+              "HOST_C_PINNED_FUNCTIONS PASS cases=10 gate=FAIL_INCOMPLETE approvals=0",
           ]
           assert actual == expected, "host C execution missing or changed evidence"
           mutations = [
@@ -105,9 +108,12 @@ jobs:
               [x.replace("accepted=0", "accepted=1") for x in actual],
               [x.replace("gate=FAIL_INCOMPLETE", "gate=PASS") for x in actual],
               [x.replace("approvals=0", "approvals=1") for x in actual],
+              [x.replace("both_sectors_unchanged=1", "both_sectors_unchanged=0") for x in actual],
+              [x.replace("retry_recovered=7944", "retry_recovered=0") for x in actual],
+              [x.replace("second_write_attempts=0", "second_write_attempts=1") for x in actual],
           ]
-          assert len(mutations) == 6 and all(m != expected for m in mutations)
-          print("HOST_C_TRACE_NEGATIVE_CONTROLS rejected=6")
+          assert len(mutations) == 9 and all(m != expected for m in mutations)
+          print("HOST_C_TRACE_NEGATIVE_CONTROLS rejected=9")
           PY
       - name: Retain text-only C execution evidence
         if: always()
