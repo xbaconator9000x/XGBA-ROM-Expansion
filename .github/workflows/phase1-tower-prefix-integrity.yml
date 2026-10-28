@@ -1,8 +1,16 @@
 name: Phase 1 pinned Trainer Tower partial-floor integrity boundary
 on:
+  push:
+    branches:
+      - phase1/tower-prefix-integrity-20261027
+    paths:
+      - 'tools/phase1_tower_compiled_stub.py'
+      - '.github/workflows/phase1-tower-prefix-integrity.yml'
+      - 'docs/PHASE1_P0_FIRERED_TOWER_PREFIX_INTEGRITY_2026-10-27.md'
   pull_request:
     paths:
       - 'tools/phase1_tower_prefix_integrity.py'
+      - 'tools/phase1_tower_compiled_stub.py'
       - '.github/workflows/phase1-tower-prefix-integrity.yml'
       - 'docs/PHASE1_P0_FIRERED_TOWER_PREFIX_INTEGRITY_2026-10-27.md'
       - 'docs/phase1-disposition-candidates/0114-firered-cereader-tool-impl.md'
@@ -37,4 +45,48 @@ jobs:
         with:
           name: phase1-tower-prefix-integrity
           path: evidence/tower-prefix-integrity.json
+          if-no-files-found: warn
+
+  original-agbcc-linked-stub:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install original FireRed compiler and linker prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi libpng-dev build-essential
+      - name: Pin exact FireRed and original agbcc source
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git clone --quiet --filter=blob:none https://github.com/pret/agbcc.git upstream/agbcc
+          git -C upstream/agbcc checkout --quiet --detach da598c1d918402c42c0c0d7128ba14567f3175e9
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/agbcc rev-parse HEAD)" = da598c1d918402c42c0c0d7128ba14567f3175e9
+          git -C upstream/pokefirered hash-object src/cereader_tool.c | grep -Fx 395be0bcbed8454e645a9f5670cde3024eda508e
+          git -C upstream/pokefirered hash-object src/trainer_tower.c | grep -Fx 732b3f2ed31ed95d6476b9e111d53f759c448d81
+      - name: Build actual pinned FireRed ELF using original agbcc
+        run: |
+          set -euo pipefail
+          (cd upstream/agbcc && ./build.sh && ./install.sh ../pokefirered) > agbcc.log 2>&1 || { tail -100 agbcc.log; exit 1; }
+          make -C upstream/pokefirered -j2 GAME_VERSION=FIRERED MODERN=0 > firered.log 2>&1 || { tail -120 firered.log; exit 1; }
+          test -s upstream/pokefirered/pokefirered.elf
+      - name: Verify actual linked Trainer Tower stub and seven tamper controls
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_tower_compiled_stub.py
+          python3 tools/phase1_tower_compiled_stub.py \
+            --source upstream/pokefirered \
+            --elf upstream/pokefirered/pokefirered.elf \
+            --output evidence/tower-compiled-stub.json
+      - name: Retain only text evidence, not ELF or ROM
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-tower-original-agbcc-stub-text
+          path: |
+            evidence/tower-compiled-stub.json
           if-no-files-found: warn
