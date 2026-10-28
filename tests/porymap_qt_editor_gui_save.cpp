@@ -16,6 +16,9 @@
 #include <QJsonObject>
 #include <QJsonParseError>
 #include <QStandardPaths>
+#include <QTimer>
+#include <QMessageBox>
+#include <QAbstractButton>
 #include <iostream>
 #include <cstdlib>
 
@@ -202,6 +205,38 @@ int main(int argc, char **argv) {
                 "single-map custom attribute not serialized by successful Save");
         require(!map->hasUnsavedChanges() && !project->hasUnsavedChanges(),
                 "single-map positive GUI Save did not clean project");
+        // Positive control for the close warning: an actually dirty map must
+        // show the pinned SaveChangesMessage and Cancel must reject closing.
+        // The timer only interacts with the real modal QMessageBox after it opens.
+        custom.insert("xgba_phase1_unsaved_only", QStringLiteral("dirty-close-control"));
+        map->setCustomAttributes(custom);
+        map->setHasUnsavedDataChanges(true);
+        require(map->hasUnsavedChanges() && project->hasUnsavedChanges(),
+                "dirty close positive control was not marked dirty");
+        const QByteArray diskBeforeDirtyClose = bytes(palletPath);
+        bool dirtyClosePromptObserved = false;
+        QTimer::singleShot(0, &window, [&] {
+            for (QWidget *widget : QApplication::topLevelWidgets()) {
+                auto *dialog = qobject_cast<QMessageBox*>(widget);
+                if (!dialog || !dialog->isVisible() ||
+                    !dialog->text().contains("modified, save changes?"))
+                    continue;
+                QAbstractButton *cancel = dialog->button(QMessageBox::Cancel);
+                require(cancel != nullptr, "dirty-close dialog lacked Cancel");
+                dirtyClosePromptObserved = true;
+                cancel->click(); // Real GUI Cancel button, no save and no auto-approval.
+                return;
+            }
+        });
+        std::cerr << "PHASE1_GUI_STAGE dirty_close_cancel_positive_control" << std::endl;
+        const bool dirtyCloseAccepted = window.close();
+        require(dirtyClosePromptObserved && !dirtyCloseAccepted,
+                "dirty project close did not show cancellable warning");
+        require(map->hasUnsavedChanges() && project->hasUnsavedChanges(),
+                "Cancel close incorrectly cleaned project");
+        require(bytes(palletPath) == diskBeforeDirtyClose,
+                "Cancel close unexpectedly wrote map JSON");
+
         custom.insert("xgba_phase1_unsaved_only", QStringLiteral("not-on-disk-v2"));
         map->setCustomAttributes(custom);
         map->setHasUnsavedDataChanges(true);
@@ -253,6 +288,9 @@ int main(int argc, char **argv) {
         result["single_map_failed_save_map_dirty"] = singleMapDirtyAfterFailure;
         result["single_map_failed_save_project_dirty"] = projectDirtyAfterFailure;
         result["single_map_positive_save_persisted"] = true;
+        result["dirty_close_cancel_prompt_observed"] = dirtyClosePromptObserved;
+        result["dirty_close_cancel_rejected"] = !dirtyCloseAccepted;
+        result["dirty_close_cancel_preserved_disk"] = true;
         result["single_map_unsaved_attribute_not_persisted"] = true;
         result["single_map_gui_save_triggers"] = int(saveTriggers);
         result["failure_device"] = "/dev/full";

@@ -128,6 +128,9 @@ jobs:
           assert isinstance(d["post_failure_retry_disk_mirrors_divergent"],bool)
           assert d["failed_gui_save_disk_offset"]!=d["failed_gui_save_in_memory_offset"]
           assert d["single_map_positive_save_persisted"] is True
+          assert d["dirty_close_cancel_prompt_observed"] is True
+          assert d["dirty_close_cancel_rejected"] is True
+          assert d["dirty_close_cancel_preserved_disk"] is True
           assert d["single_map_failed_save_disk_unchanged"] is True
           assert d["single_map_failed_save_map_dirty"] is False
           assert d["single_map_failed_save_project_dirty"] is False

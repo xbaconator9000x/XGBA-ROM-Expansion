@@ -93,3 +93,9 @@ inject `/dev/full`. The second value must not appear on disk, while the
 previous value remains. The workflow now asserts all new result fields
 and the updated four-action count, rather than accepting a JSON record
 without checking the new evidence. Await its own exact-head CI.
+
+## Actual dirty-close warning positive control (2026-10-28; pending exact-head CI)
+
+The previously green isolated-map `/dev/full` scenario demonstrates false-clean state followed by accepted `MainWindow::close`. This follow-up adds a **real Qt GUI positive control** before that failed save: mark only PalletTown dirty with a changed custom attribute, invoke `QWidget::close()`, observe the actual `SaveChangesMessage` modal, activate its real Cancel button through a single-shot Qt event-loop callback, and require the close event be rejected while the map remains dirty and disk bytes unchanged. It then continues the previously verified failed-save/false-clean/accepted-close scenario. This tests both sides of the same `MainWindow::closeEvent -> closeProject -> Project::hasUnsavedChanges` branch, not merely source predictions.
+
+Pinned `huderlem/porymap@26b919d7ff4b54152de010abd5bf344af2ebe116`: `src/mainwindow.cpp` blob `08ce1a7a599ef825967717b69626984cdc6d772b` owns the close gate; `src/ui/message.cpp` blob `8dfe553c2794370b210ac09aebfc7c42c03a080b` implements `SaveChangesMessage::show` as a modal `QMessageBox::exec` with Cancel. The harness neither patches upstream Porymap nor claims that clicking a synthetic UI button is human interaction. If the modal never appears, the positive control fails rather than manufacturing a warning. **Pending exact-head CI; no independent approval, Phase 1 FAIL_INCOMPLETE.**
