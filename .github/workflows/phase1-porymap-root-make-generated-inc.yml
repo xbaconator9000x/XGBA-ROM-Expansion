@@ -1,0 +1,67 @@
+name: Phase 1 original FireRed root Makefile Poryscript integration
+on:
+  push:
+    branches:
+      - phase1/porymap-full-qt-project-roundtrip-20261028
+    paths:
+      - '.github/workflows/phase1-porymap-root-make-generated-inc.yml'
+      - 'tools/phase1_porymap_root_make_integration.py'
+      - 'docs/phase1-review-readiness/porymap-root-make-generated-inc-20261029.md'
+  pull_request:
+    paths:
+      - '.github/workflows/phase1-porymap-root-make-generated-inc.yml'
+      - 'tools/phase1_porymap_root_make_integration.py'
+      - 'docs/phase1-review-readiness/porymap-root-make-generated-inc-20261029.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-root-make-event-object:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: pinned-firered
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/poryscript
+          ref: c32481161c767b25a3425fa9f1f8729927ff3d55
+          path: pinned-poryscript
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/porymap
+          ref: 26b919d7ff4b54152de010abd5bf344af2ebe116
+          path: pinned-porymap
+          persist-credentials: false
+      - name: Install existing GNU ARM assembler
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi build-essential
+      - name: Execute original root Makefile generated target and data/event_scripts.o
+        run: |
+          set -euo pipefail
+          mkdir -p phase1-evidence
+          python3 -m py_compile tools/phase1_porymap_root_make_integration.py
+          python3 tools/phase1_porymap_root_make_integration.py \
+            --firered pinned-firered \
+            --poryscript pinned-poryscript \
+            --porymap pinned-porymap \
+            --output phase1-evidence/root-make-generated-inc.json
+          python3 -m json.tool phase1-evidence/root-make-generated-inc.json >/dev/null
+      - name: Archive text-only source and object identities
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-root-make-generated-inc-text
+          path: phase1-evidence/*.json
+          if-no-files-found: warn
+          retention-days: 30
