@@ -131,9 +131,11 @@ int main(int argc, char **argv) {
                     }
                 }
                 core->step(core);
-                phase1_maybe_interrupt(cut_after, hits[2], try_save_return_hits,
-                    pending_try_save_return_pc, trace_steps, frame + 1, gba,
-                    core->busRead32(core, (uint32_t)strtoul(argv[6], NULL, 0)));
+                if (cut_after && hits[2] && !try_save_return_hits &&
+                    pending_try_save_return_pc && trace_steps % 2048ULL == 0)
+                    phase1_maybe_interrupt(cut_after, hits[2], try_save_return_hits,
+                        pending_try_save_return_pc, trace_steps, frame + 1, gba,
+                        core->busRead32(core, (uint32_t)strtoul(argv[6], NULL, 0)));
             }
         } else {
             core->runFrame(core);
