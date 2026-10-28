@@ -58,6 +58,8 @@ def contract(save,tower):
             ("size = SECTOR_COUNTER_OFFSET - 1;",save)]
     for needle,body in checks:
         require(needle in body,"source contract drift "+needle)
+    require(save.count("size = SECTOR_COUNTER_OFFSET - 1;")==2,
+            "both special-sector copy extents must remain pinned")
     return True
 
 def main():
