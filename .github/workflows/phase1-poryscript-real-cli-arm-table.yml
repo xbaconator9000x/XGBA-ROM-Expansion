@@ -6,6 +6,7 @@ on:
     paths:
       - 'tools/verify_poryscript_actual_cli_arm_table.py'
       - 'tools/phase1_poryscript_reader_host.py'
+      - 'tools/phase1_poryscript_original_agbcc_reader.py'
       - 'tests/phase1_poryscript_reader_host.c'
       - 'tools/phase1_poryscript_consumer_bounds.py'
       - '.github/workflows/phase1-poryscript-real-cli-arm-table.yml'
@@ -14,6 +15,7 @@ on:
     paths:
       - 'tools/verify_poryscript_actual_cli_arm_table.py'
       - 'tools/phase1_poryscript_reader_host.py'
+      - 'tools/phase1_poryscript_original_agbcc_reader.py'
       - 'tests/phase1_poryscript_reader_host.c'
       - '.github/workflows/phase1-poryscript-real-cli-arm-table.yml'
       - 'docs/PHASE1_P0_PORYSCRIPT_REAL_CLI_GNU_ARM_TABLE_2026-10-27.md'
@@ -97,3 +99,43 @@ jobs:
           path: phase1-evidence/
           if-no-files-found: warn
           retention-days: 60
+
+  original-agbcc-linked-reader:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install original compiler and GNU ARM binutils
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi libpng-dev build-essential
+      - name: Pin source-built FireRed and original agbcc
+        run: |
+          set -euo pipefail
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git pinned-firered
+          git -C pinned-firered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git clone --quiet --filter=blob:none https://github.com/pret/agbcc.git pinned-agbcc
+          git -C pinned-agbcc checkout --quiet --detach da598c1d918402c42c0c0d7128ba14567f3175e9
+          test "$(git -C pinned-firered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C pinned-agbcc rev-parse HEAD)" = da598c1d918402c42c0c0d7128ba14567f3175e9
+          test "$(git -C pinned-firered hash-object src/script.c)" = d0433bdda062b138e53d1a1d3184b4566ad7d9dc
+          (cd pinned-agbcc && ./build.sh && ./install.sh ../pinned-firered) > agbcc.log 2>&1 || { tail -100 agbcc.log; exit 1; }
+          make -C pinned-firered -j2 GAME_VERSION=FIRERED MODERN=0 > firered.log 2>&1 || { tail -120 firered.log; exit 1; }
+          test -s pinned-firered/pokefirered.elf
+      - name: Verify actual original-agbcc linked reader functions and seven tamper controls
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_poryscript_original_agbcc_reader.py
+          python3 tools/phase1_poryscript_original_agbcc_reader.py \
+            --source pinned-firered \
+            --elf pinned-firered/pokefirered.elf \
+            --output phase1-evidence/poryscript-original-agbcc-readers.json
+      - name: Archive text-only compiled reader evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-poryscript-original-agbcc-reader-text
+          path: phase1-evidence/poryscript-original-agbcc-readers.json
+          if-no-files-found: warn
