@@ -7,6 +7,7 @@ on:
       - '.github/workflows/phase1-porymap-full-project-roundtrip.yml'
       - 'tests/porymap_qt_project_roundtrip.cpp'
       - 'tests/porymap_qt_editor_gui_save.cpp'
+      - 'tools/phase1_porymap_gui_syscall_attribution.py'
       - 'docs/phase1-review-readiness/porymap-full-qt-project-roundtrip-20261028.md'
   workflow_dispatch:
 permissions:
@@ -36,7 +37,7 @@ jobs:
       - name: Install pinned Porymap Qt build prerequisites
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-base-dev-tools qmake6 libqt6svg6-dev libgl1-mesa-dev pkg-config g++ gdb
+          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-base-dev-tools qmake6 libqt6svg6-dev libgl1-mesa-dev pkg-config g++ gdb strace
       - name: Compile full pinned Porymap application with test entrypoint
         run: |
           set -euo pipefail
@@ -103,7 +104,7 @@ jobs:
           PY
           mkdir -p phase1-evidence/gui-config
           set +e
-          XDG_CONFIG_HOME="$PWD/phase1-evidence/gui-config" QT_QPA_PLATFORM=offscreen timeout 180s upstream-porymap/porymap-phase1-gui "$PWD/phase1-project-gui/pokefirered" | tee phase1-evidence/gui-save.log
+          XDG_CONFIG_HOME="$PWD/phase1-evidence/gui-config" QT_QPA_PLATFORM=offscreen strace -f -yy -s 256 -e trace=openat,write,close -o phase1-evidence/gui-strace.log timeout 180s upstream-porymap/porymap-phase1-gui "$PWD/phase1-project-gui/pokefirered" | tee phase1-evidence/gui-save.log
           gui_rc=${PIPESTATUS[0]}
           set -e
           if [ "$gui_rc" -ne 0 ]; then
@@ -112,6 +113,12 @@ jobs:
             tail -100 phase1-evidence/gui-gdb.log
             exit "$gui_rc"
           fi
+          # Kernel syscall evidence: distinguish matched 1-byte QFile control
+          # from full JSON writes issued AFTER each real GUI Save QAction.
+          python3 -m py_compile tools/phase1_porymap_gui_syscall_attribution.py
+          python3 tools/phase1_porymap_gui_syscall_attribution.py \
+            --trace phase1-evidence/gui-strace.log \
+            --output phase1-evidence/gui-syscall-attribution.json
           # Fresh process: pinned Qt graphics state is not safe to reinitialize
           # with a second MainWindow in the same process.
           XDG_CONFIG_HOME="$PWD/phase1-evidence/gui-config" QT_QPA_PLATFORM=offscreen timeout 90s upstream-porymap/porymap-phase1-gui "$PWD/phase1-project-gui/pokefirered" --cold-reopen | tee -a phase1-evidence/gui-save.log
