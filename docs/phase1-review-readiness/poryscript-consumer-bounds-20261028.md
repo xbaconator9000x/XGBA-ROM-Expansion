@@ -22,3 +22,10 @@ Poryscript `c32481161c767b25a3425fa9f1f8729927ff3d55`; FireRed `ce6406d8c2eaf46d
 - Which full-file dependencies require complete independent semantic dispositions?
 
 No complete-file approvals, XGBA-expanded-ROM compatibility or Phase 2 implementation is claimed.
+
+
+## Pinned FireRed C reader function execution on host (2026-10-28; pending CI)
+
+A distinct test extracts the **exact complete C function bodies** `MapHeaderGetScriptTable` and `MapHeaderCheckScriptTable` from pinned `pret/pokefirered@ce6406d8.../src/script.c` (Git blob `d0433bdda062b138e53d1a1d3184b4566ad7d9dc`), without rewriting their instructions. A test-only host C harness supplies `gMapHeader`, `VarGet`, `T1_READ_16` and a 32-bit ROM-address-to-host-pointer translator for the previously linked 32-byte Poryscript map-table fixture. The two actual source-extracted FireRed reader bodies are compiled by host `cc` and exercised in nine cases: null map-script header; transition and frame-table pointer lookup; unknown tag reaching the outer sentinel; unmatched conditional values reaching the inner sentinel; first and second conditional matches returning distinct script targets; early outer sentinel; and early conditional sentinel. Six source-extraction mutations and four output-evidence mutations are fail-closed.
+
+**Scope:** this is executable pinned FireRed C reader semantics with host shims, **not** original-agbcc compiled ROM or mGBA execution. The host pointer translator validates fixture pointer ranges for test safety; the original FireRed reader does **not** implement that bound. Deliberately unterminated/out-of-bounds tables are not executed in this test, and native malformed-table memory safety remains unproven. The prior GNU ARM table/relocation witness and nine host bounded-decoder negatives remain separate evidence. No new semantic approval or Phase 2 implementation is claimed. Reviewer follow-up: instrument compiled ARM reader against valid linked ROM map table, then bounded emulator malformed-data experiments with explicit memory guard and no universal safety inference.
