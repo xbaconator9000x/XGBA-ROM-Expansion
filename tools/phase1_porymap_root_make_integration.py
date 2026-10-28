@@ -51,7 +51,7 @@ def main():
  for i,(n,old,new) in enumerate(mutations):
   sources=[make,readme,project]
   check(old in sources[n],"mutation anchor missing "+str(i))
-  sources[n]=sources[n].replace(old,new,1)
+  sources[n]=sources[n].replace(old,new) if i==2 else sources[n].replace(old,new,1)
   try: source_contract(*sources)
   except RuntimeError: continue
   raise RuntimeError("source mutation escaped "+str(i))
