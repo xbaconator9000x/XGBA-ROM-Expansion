@@ -70,6 +70,15 @@ def main(a):
         "avatar_last_running": m["avatar_last_running"],
         "avatar_last_transition": m["avatar_last_transition"],
         "avatar_last_object_event_id": m["avatar_last_object_event_id"],
+        "camera_move_hits": m["camera_move_hits"],
+        "player_object_changed_frames": m["player_object_changed_frames"],
+        "player_object_active_frames": m["player_object_active_frames"],
+        "player_object_camera_tracked_frames": m["player_object_camera_tracked_frames"],
+        "player_object_is_player_frames": m["player_object_is_player_frames"],
+        "player_object_first_xy": [m["player_object_first_x"], m["player_object_first_y"]],
+        "player_object_last_xy": [m["player_object_last_x"], m["player_object_last_y"]],
+        "player_object_last_action": m["player_object_last_action"],
+        "player_object_last_behavior": m["player_object_last_behavior"],
     }
     print(json.dumps(diagnostic, sort_keys=True), flush=True)
     assert m["new_direction_key_overworld_frames"] > 0 and m["held_direction_key_overworld_frames"] > 0, (

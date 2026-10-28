@@ -237,10 +237,20 @@ jobs:
           lock_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="sLockFieldControls" {print "0x"$1;exit}')
           avatar_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gPlayerAvatar" {print "0x"$1;exit}')
           player_step_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="player_step" {print "0x"$1;exit}')
+          object_events_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gObjectEvents" {print "0x"$1;exit}')
+          camera_move_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CameraMove" {print "0x"$1;exit}')
           test -n "$lock_addr" && test -n "$avatar_addr" && test -n "$player_step_addr"
+          test -n "$object_events_addr" && test -n "$camera_move_addr"
           export XGBA_PHASE1_LOCK_ADDR="$lock_addr"
           export XGBA_PHASE1_AVATAR_ADDR="$avatar_addr"
           export XGBA_PHASE1_PLAYER_STEP_ADDR="$player_step_addr"
+          export XGBA_PHASE1_OBJECT_EVENTS_ADDR="$object_events_addr"
+          export XGBA_PHASE1_CAMERA_MOVE_ADDR="$camera_move_addr"
+          # Negative control: reject an invalid diagnostic RAM address before ROM load.
+          if XGBA_PHASE1_OBJECT_EVENTS_ADDR=0xDEADBEEF ./game-controller-probe 2> invalid-object-events-address.log; then
+            echo "Invalid object-events address unexpectedly accepted"; exit 1
+          fi
+          grep -q "invalid pinned field-control diagnostic address" invalid-object-events-address.log
           printf 'Pinned field control: lock=%s avatar=%s player_step=%s\n' "$lock_addr" "$avatar_addr" "$player_step_addr"
           printf 'Compiled save callsites: start=%s dialog=%s try=%s\n' "$start_menu_save" "$dialog_do_save" "$try_saving_data"
           python3 tools/phase1_firered_game_controller.py \

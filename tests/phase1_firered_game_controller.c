@@ -49,8 +49,15 @@ int main(int argc, char **argv) {
     uint32_t lock_addr = optional_pinned_address("XGBA_PHASE1_LOCK_ADDR", 0);
     uint32_t avatar_addr = optional_pinned_address("XGBA_PHASE1_AVATAR_ADDR", 0);
     uint32_t player_step_target = optional_pinned_address("XGBA_PHASE1_PLAYER_STEP_ADDR", 1);
+    uint32_t object_events_addr = optional_pinned_address("XGBA_PHASE1_OBJECT_EVENTS_ADDR", 0);
+    uint32_t camera_move_target = optional_pinned_address("XGBA_PHASE1_CAMERA_MOVE_ADDR", 1);
     unsigned locked_overworld_frames = 0, player_step_hits = 0;
-    unsigned player_step_direction_hits = 0;
+    unsigned player_step_direction_hits = 0, camera_move_hits = 0;
+    unsigned player_object_changed_frames = 0, player_object_active_frames = 0;
+    unsigned player_object_camera_tracked_frames = 0, player_object_is_player_frames = 0;
+    int player_object_first_x = -32768, player_object_first_y = -32768;
+    int player_object_last_x = -32768, player_object_last_y = -32768;
+    unsigned player_object_last_action = 255, player_object_last_behavior = 255;
     unsigned avatar_first_flags = 255, avatar_last_flags = 255;
     unsigned avatar_last_running = 255, avatar_last_transition = 255;
     unsigned avatar_last_object_event_id = 255;
@@ -140,6 +147,8 @@ int main(int argc, char **argv) {
                     }
                     pending_try_save_return_pc = 0;
                 }
+                if (camera_move_target && executing == camera_move_target)
+                    ++camera_move_hits;
                 if (player_step_target && executing == player_step_target) {
                     ++player_step_hits;
                     if (((unsigned)cpu->gprs[0] & 0xFFU) != 0)
@@ -190,6 +199,31 @@ int main(int argc, char **argv) {
                     avatar_last_running = core->busRead8(core, avatar_addr + 2U);
                     avatar_last_transition = core->busRead8(core, avatar_addr + 3U);
                     avatar_last_object_event_id = core->busRead8(core, avatar_addr + 5U);
+                }
+                /* Pinned global.fieldmap.h ObjectEvent size 0x24; coords +0x10,
+                 * bitfields active at +0, trackedByCamera at +1, isPlayer at +2.
+                 * Observe the real player object before blaming input or camera.
+                 * These reads are diagnostic only; no emulated memory writes. */
+                if (object_events_addr && avatar_addr) {
+                    unsigned id = core->busRead8(core, avatar_addr + 5U);
+                    if (id < 16U) {
+                        uint32_t obj = object_events_addr + id * 0x24U;
+                        int ox = (int16_t)core->busRead16(core, obj + 0x10U);
+                        int oy = (int16_t)core->busRead16(core, obj + 0x12U);
+                        if (player_object_first_x == -32768) {
+                            player_object_first_x = ox;
+                            player_object_first_y = oy;
+                        } else if (ox != player_object_first_x || oy != player_object_first_y) {
+                            ++player_object_changed_frames;
+                        }
+                        player_object_last_x = ox;
+                        player_object_last_y = oy;
+                        player_object_active_frames += !!(core->busRead8(core, obj) & 1U);
+                        player_object_camera_tracked_frames += !!(core->busRead8(core, obj + 1U) & 0x80U);
+                        player_object_is_player_frames += !!(core->busRead8(core, obj + 2U) & 1U);
+                        player_object_last_action = core->busRead8(core, obj + 0x1CU);
+                        player_object_last_behavior = core->busRead8(core, obj + 0x1EU);
+                    }
                 }
                 uint16_t held_keys = core->busRead16(core, gmain_addr + 0x2CU);
                 if (new_keys & (0x10U | 0x20U | 0x40U | 0x80U))
@@ -291,6 +325,12 @@ int main(int argc, char **argv) {
            "\"avatar_first_flags\":%u,\"avatar_last_flags\":%u,"
            "\"avatar_last_running\":%u,\"avatar_last_transition\":%u,"
            "\"avatar_last_object_event_id\":%u,"
+           "\"camera_move_hits\":%u,\"player_object_changed_frames\":%u,"
+           "\"player_object_active_frames\":%u,\"player_object_camera_tracked_frames\":%u,"
+           "\"player_object_is_player_frames\":%u,"
+           "\"player_object_first_x\":%d,\"player_object_first_y\":%d,"
+           "\"player_object_last_x\":%d,\"player_object_last_y\":%d,"
+           "\"player_object_last_action\":%u,\"player_object_last_behavior\":%u,"
            "\"game_save_callsite_verified\":false}\n",
            core->frameCounter(core), count, gba->memory.savedata.type,
            baseline_frame, changed_bytes, frames_with_changed_data,
@@ -325,7 +365,13 @@ int main(int argc, char **argv) {
            held_direction_key_overworld_frames, locked_overworld_frames,
            player_step_hits, player_step_direction_hits,
            avatar_first_flags, avatar_last_flags, avatar_last_running,
-           avatar_last_transition, avatar_last_object_event_id);
+           avatar_last_transition, avatar_last_object_event_id,
+           camera_move_hits, player_object_changed_frames,
+           player_object_active_frames, player_object_camera_tracked_frames,
+           player_object_is_player_frames,
+           player_object_first_x, player_object_first_y,
+           player_object_last_x, player_object_last_y,
+           player_object_last_action, player_object_last_behavior);
     core->setKeys(core, 0);
     core->deinit(core);
     free(baseline);
