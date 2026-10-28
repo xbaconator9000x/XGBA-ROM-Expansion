@@ -56,6 +56,13 @@ jobs:
           git -C upstream/pokefirered hash-object data/layouts/layouts.json | grep -Fx 41d0eb1b5e51fa75d535b5a098bae2bd650f710d
           git -C upstream/pokefirered hash-object include/main.h | grep -Fx 31b22a3faa75409125257396913689a6a37c98ac
           git -C upstream/pokefirered hash-object src/field_control_avatar.c | grep -Fx b1b6465941133b927505be92d189a7c283e4722f
+      - name: Verify pinned save-error source semantics and tamper controls
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_firered_save_error_semantics.py
+          python3 tools/phase1_firered_save_error_semantics.py \
+            --source upstream/pokefirered \
+            --output evidence/results/save_error_semantics.json
       - name: Build real FireRed cartridge using pinned original agbcc
         run: |
           set -euo pipefail

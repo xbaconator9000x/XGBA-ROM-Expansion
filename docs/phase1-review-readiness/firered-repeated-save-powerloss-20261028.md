@@ -136,3 +136,13 @@ wrong physical slot, or mismatched x/y all fail closed.
 **Pending:** this paragraph documents a test design, NOT a passed result.
 The initial playable counter0 fixture remains synthetic; this does not
 establish human-played new-game progression or physical power-loss durability.
+
+## Save-error source branch verification (pending exact-head CI)
+
+A separate fail-closed checker now covers pinned `TrySavingData`,
+`TryWriteSector`, full-slot counter rollback, `SAVE_NORMAL` serialization,
+the revision-0 versus revision-10 compiler branch, and the unchecked
+sector-ID indexing boundary. It checks seven immutable upstream Git blobs,
+six function bodies, and five source-tampering negative controls. See
+`docs/phase1-review-readiness/firered-save-error-semantics-20261028.md`.
+This is source-only evidence, not a game-executed error return.

@@ -117,7 +117,10 @@ def main(a):
             "firered_commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
             "include_global_h_blob": "77155b09014aa854fcf87260e6ad2969e222da53",
             "src_save_c_blob": "36b960f375c92711aa49b99bdfe9c6b3a99d6b1c",
-            "src_fieldmap_c_pos_update": "UpdatePlayerPosition",
+            "src_fieldmap_c_blob": "41567772299000ba5855419e5c39ad9373a34c20",
+            "src_fieldmap_c_pos_update": "CameraMove",
+            "src_field_camera_c_blob": "88f94bff08ef951523facf2b579fbc3d4d8455b2",
+            "src_field_camera_c_caller": "CameraUpdate",
         },
     }
     (root / "position_roundtrip_summary.json").write_text(
