@@ -60,6 +60,7 @@ jobs:
           git -C upstream/pokefirered hash-object data/layouts/layouts.json | grep -Fx 41d0eb1b5e51fa75d535b5a098bae2bd650f710d
           git -C upstream/pokefirered hash-object include/main.h | grep -Fx 31b22a3faa75409125257396913689a6a37c98ac
           git -C upstream/pokefirered hash-object src/field_control_avatar.c | grep -Fx b1b6465941133b927505be92d189a7c283e4722f
+          git -C upstream/pokefirered hash-object src/overworld.c | grep -Fx 339014da46ae8543143edc99ab72bf7496203a0d
       - name: Verify pinned save-error source semantics and tamper controls
         run: |
           set -euo pipefail
@@ -254,6 +255,15 @@ jobs:
           export XGBA_PHASE1_INIT_AVATAR_ADDR="$init_avatar_addr"
           export XGBA_PHASE1_CLEAR_AVATAR_ADDR="$clear_avatar_addr"
           export XGBA_PHASE1_SET_AVATAR_STATE_ADDR="$set_avatar_state_addr"
+          # Pinned src/overworld.c: map-load case 4 creates the avatar;
+          # ReturnToFieldLocal instead resumes existing object events.
+          init_objects_local=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="InitObjectEventsLocal" {print "0x"$1;exit}')
+          cb2_load_map=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CB2_LoadMap" {print "0x"$1;exit}')
+          load_map_steps=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="LoadMapInStepsLocal" {print "0x"$1;exit}')
+          test -n "$init_objects_local" && test -n "$cb2_load_map" && test -n "$load_map_steps"
+          export XGBA_PHASE1_INIT_OBJECTS_LOCAL_ADDR="$init_objects_local"
+          export XGBA_PHASE1_CB2_LOAD_MAP_ADDR="$cb2_load_map"
+          export XGBA_PHASE1_LOAD_MAP_STEPS_ADDR="$load_map_steps"
           # Negative control: reject an invalid diagnostic RAM address before ROM load.
           set +e
           XGBA_PHASE1_OBJECT_EVENTS_ADDR=0xDEADBEEF ./game-controller-probe unused.rom unused.sav unused.keys 180 "$status" "$counter" "$sb2" 2> invalid-object-events-address.log

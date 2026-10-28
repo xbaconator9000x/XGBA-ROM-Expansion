@@ -54,6 +54,9 @@ int main(int argc, char **argv) {
     uint32_t init_avatar_target = optional_pinned_address("XGBA_PHASE1_INIT_AVATAR_ADDR", 1);
     uint32_t clear_avatar_target = optional_pinned_address("XGBA_PHASE1_CLEAR_AVATAR_ADDR", 1);
     uint32_t set_avatar_state_target = optional_pinned_address("XGBA_PHASE1_SET_AVATAR_STATE_ADDR", 1);
+    uint32_t init_objects_local_target = optional_pinned_address("XGBA_PHASE1_INIT_OBJECTS_LOCAL_ADDR", 1);
+    uint32_t load_map_target = optional_pinned_address("XGBA_PHASE1_CB2_LOAD_MAP_ADDR", 1);
+    uint32_t load_map_steps_target = optional_pinned_address("XGBA_PHASE1_LOAD_MAP_STEPS_ADDR", 1);
     uint32_t flash_present_addr = optional_pinned_address("XGBA_PHASE1_FLASH_PRESENT_ADDR", 0);
     uint32_t save_attempt_status_addr = optional_pinned_address("XGBA_PHASE1_SAVE_ATTEMPT_STATUS_ADDR", 0);
     const int inject_no_flash = getenv("XGBA_PHASE1_INJECT_NO_FLASH") != NULL;
@@ -69,6 +72,7 @@ int main(int argc, char **argv) {
     unsigned player_object_changed_frames = 0, player_object_active_frames = 0;
     unsigned player_object_camera_tracked_frames = 0, player_object_is_player_frames = 0;
     unsigned init_avatar_hits = 0, clear_avatar_hits = 0, set_avatar_state_hits = 0;
+    unsigned init_objects_local_hits = 0, cb2_load_map_hits = 0, load_map_steps_hits = 0;
     unsigned avatar_controllable_frames = 0, avatar_prevent_step_frames = 0;
     int player_object_first_x = -32768, player_object_first_y = -32768;
     int player_object_last_x = -32768, player_object_last_y = -32768;
@@ -179,6 +183,12 @@ int main(int argc, char **argv) {
                     ++clear_avatar_hits;
                 if (set_avatar_state_target && executing == set_avatar_state_target)
                     ++set_avatar_state_hits;
+                if (init_objects_local_target && executing == init_objects_local_target)
+                    ++init_objects_local_hits;
+                if (load_map_target && executing == load_map_target)
+                    ++cb2_load_map_hits;
+                if (load_map_steps_target && executing == load_map_steps_target)
+                    ++load_map_steps_hits;
                 if (player_step_target && executing == player_step_target) {
                     ++player_step_hits;
                     if (((unsigned)cpu->gprs[0] & 0xFFU) != 0)
@@ -379,6 +389,7 @@ int main(int argc, char **argv) {
            "\"player_object_last_x\":%d,\"player_object_last_y\":%d,"
            "\"player_object_last_action\":%u,\"player_object_last_behavior\":%u,"
            "\"init_avatar_hits\":%u,\"clear_avatar_hits\":%u,\"set_avatar_state_hits\":%u,"
+           "\"init_objects_local_hits\":%u,\"cb2_load_map_hits\":%u,\"load_map_steps_hits\":%u,"
            "\"avatar_controllable_frames\":%u,\"avatar_prevent_step_frames\":%u,"
            "\"host_ram_fault_injection\":%s,\"no_flash_fault_entries\":%u,"
            "\"no_flash_original\":%u,\"no_flash_restored\":%s,\"first_try_save_attempt_status\":%u,"
@@ -424,6 +435,7 @@ int main(int argc, char **argv) {
            player_object_last_x, player_object_last_y,
            player_object_last_action, player_object_last_behavior,
            init_avatar_hits, clear_avatar_hits, set_avatar_state_hits,
+           init_objects_local_hits, cb2_load_map_hits, load_map_steps_hits,
            avatar_controllable_frames, avatar_prevent_step_frames,
            inject_no_flash ? "true" : "false", no_flash_fault_entries, no_flash_original,
            no_flash_restored ? "true" : "false", first_try_save_attempt_status);
