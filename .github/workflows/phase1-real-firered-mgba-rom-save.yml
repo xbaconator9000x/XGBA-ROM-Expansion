@@ -337,17 +337,17 @@ jobs:
           # not a substitute for the real game-written position roundtrip.
           git -C upstream/pokefirered hash-object include/save_location.h | grep -Fx 2d2cb197494b663dcb8e687f9f7267576bdc3c34
           python3 -m py_compile tools/phase1_firered_continue_warp.py
-          python3 tools/phase1_firered_continue_warp.py \\
-            --rom upstream/pokefirered/pokefirered.gba \\
-            --probe ./game-controller-probe --status "$status" --counter "$counter" --sb2 "$sb2" \\
-            --fixtures evidence/fixtures \\
-            --start-menu-save "$start_menu_save" --dialog-do-save "$dialog_do_save" \\
-            --try-saving-data "$try_saving_data" --title-task "$title_task" \\
-            --init-main-menu "$init_main_menu" --execute-main-menu "$execute_main_menu" \\
-            --return-to-field "$return_to_field" --continue-saved-game "$continue_saved_game" \\
-            --return-field-local "$return_field_local" --overworld "$overworld" \\
-            --cb1-overworld "$cb1_overworld" --show-start-menu "$show_start_menu" \\
-            --field-get-player-input "$field_get_player_input" --gmain "$gmain" --sb1 "$sb1" \\
+          python3 tools/phase1_firered_continue_warp.py \
+            --rom upstream/pokefirered/pokefirered.gba \
+            --probe ./game-controller-probe --status "$status" --counter "$counter" --sb2 "$sb2" \
+            --fixtures evidence/fixtures \
+            --start-menu-save "$start_menu_save" --dialog-do-save "$dialog_do_save" \
+            --try-saving-data "$try_saving_data" --title-task "$title_task" \
+            --init-main-menu "$init_main_menu" --execute-main-menu "$execute_main_menu" \
+            --return-to-field "$return_to_field" --continue-saved-game "$continue_saved_game" \
+            --return-field-local "$return_field_local" --overworld "$overworld" \
+            --cb1-overworld "$cb1_overworld" --show-start-menu "$show_start_menu" \
+            --field-get-player-input "$field_get_player_input" --gmain "$gmain" --sb1 "$sb1" \
             --output evidence/controller
           python3 -m py_compile tools/phase1_firered_position_roundtrip.py
           python3 tools/phase1_firered_position_roundtrip.py \
