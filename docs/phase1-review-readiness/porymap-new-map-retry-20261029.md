@@ -1,6 +1,6 @@
 # Phase 1 — pinned Porymap new-map retry/persisted-flag closure (2026-10-29)
 
-**SOURCE-ONLY hypothesis and dependency proof; exact-head CI required. FAIL_INCOMPLETE; 0/14,834 independent approvals.**
+**SOURCE-ONLY dependency proof verified at exact-head CI; FAIL_INCOMPLETE; 0/14,834 independent approvals.**
 
 ## Immutable dependencies
 
@@ -27,3 +27,7 @@ The original Porymap root LGPL-3.0 and bundled permissive third-party notices mu
 | `include/core/map.h` | persisted flag inline getter/setter | full header and all mutators |
 
 **No whole-file disposition, no semantic approval, no Phase 2.**
+
+## Executed source checkpoint
+
+The original pinned `Project::saveMap`, `Map::setClean` and `Map::hasUnsavedChanges` source closure, with 15 scoped fail-closed mutations, passed exact-head PR CI at `b33db09f417157f6ebf2f4a2da336ee81066af7c` ([run #40789524754](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40789524754)). This remains a source-only contract; actual native Qt Project behaviour is independently recorded in `porymap-new-map-native-qt-retry-20261029.md`.
