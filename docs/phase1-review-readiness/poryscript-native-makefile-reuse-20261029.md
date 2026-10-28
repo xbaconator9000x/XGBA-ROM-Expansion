@@ -1,6 +1,6 @@
 # Phase 1 — reuse pinned FireRed's native Poryscript assembly path (2026-10-29)
 
-**Status: PENDING exact-head CI; FAIL_INCOMPLETE; independently approved 0/14,834. Partial-file evidence only.**
+**Status: prior exact-head CI failed on an overstrong bypass assumption; corrective CI pending; FAIL_INCOMPLETE; independently approved 0/14,834. Partial-file evidence only.**
 
 ## Decision: reuse, not rebuild
 
@@ -32,3 +32,7 @@ The interoperability decision is to **retain Poryscript's source language and Fi
 5. Verify licensing of each upstream component before any distributed integration. Independently review complete source files before incrementing approvals.
 
 **Per-file scope:** FireRed \`Makefile\`, \`tools/preproc/preproc.cpp\`, \`asm/macros/map.inc\`, \`src/script.c\`; Poryscript \`main.go\`, \`emitter/emitter.go\`, \`emitter/emitter_test.go\` — **partial contract-level investigation only**, not whole-file semantic dispositions. New complete-file approvals: 0. All Phase 1 gates remain \`FAIL_INCOMPLETE\`.
+
+## Actual first CI failure and correction
+
+Exact-head [Actions #40705312692](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40705312692) failed after compiling the positive full native recipe: the additional *negative* assumption that omitting both native preprocessor passes must make the CPP-mediated fixture fail was false. The earlier direct-GAS negative did not include the C preprocessor, so it could not justify that stronger assertion. This is a **test assumption error**, not evidence that upstream tools are defective or that bypassed bytes are ABI-equivalent. The correction records whether the CPP-mediated bypass assembles and its object hash, without calling it safe, and instead tests a source-grounded `.4byte` to `.2byte` macro mutation through the complete pinned pipeline. No previous failed run is green-certified.

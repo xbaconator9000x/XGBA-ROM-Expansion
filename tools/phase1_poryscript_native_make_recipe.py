@@ -136,13 +136,25 @@ def main():
             "relocations": relocations,
         }
         validate(result)
-        # Executable negative: the CLI's double-colon global label is NOT
-        # accepted by the raw assembler without FireRed's preprocessor.
+        # Negative observation: unlike the earlier direct-GAS experiment,
+        # the CPP-mediated bypass may assemble. Record, never invent rejection.
         raw_obj = tmp / "without-pinned-preproc.o"
         skipped = pipeline(source, fr, raw_obj, original=False)
-        require(skipped.returncode != 0, "missing native preprocessor escaped")
-        require(not raw_obj.exists() or raw_obj.stat().st_size == 0,
-                "bypassed preprocessor unexpectedly emitted an object")
+        bypass_assembled = skipped.returncode == 0
+        bypass_object_sha256 = (hashlib.sha256(raw_obj.read_bytes()).hexdigest()
+                                if bypass_assembled else None)
+        # New executable negative: mutate the ORIGINAL FireRed macro's pointer
+        # width, then run the SAME full pinned pipeline and require ABI drift.
+        original_text = source.read_text()
+        require(".4byte \\script" in original_text, "pinned macro mutation anchor absent")
+        source.write_text(original_text.replace(".4byte \\script", ".2byte \\script", 1))
+        bad_obj = tmp / "wrong-width.o"
+        altered = pipeline(source, fr, bad_obj)
+        macro_negative_rejected = altered.returncode != 0
+        if not macro_negative_rejected:
+            macro_negative_rejected = (
+                elf_section(bad_obj.read_bytes(), ".rodata")[1] != EXPECTED_RAW)
+        require(macro_negative_rejected, "native macro width mutation escaped")
     evidence = {
         "class": "PINNED_PORYSCRIPT_ACTUAL_FIRERED_MAKEFILE_NATIVE_ASSEMBLY_PIPELINE",
         "firered_commit": FR_PIN, "poryscript_commit": PS_PIN,
@@ -156,7 +168,9 @@ def main():
         "raw_section_sha256": hashlib.sha256(EXPECTED_RAW).hexdigest(),
         "relocation_offsets": list(RELOC_OFFSETS),
         "source_mutations_rejected": negatives,
-        "missing_preprocessor_executable_negative_rejected": True,
+        "cpp_mediated_preprocessor_bypass_assembled": bypass_assembled,
+        "cpp_mediated_bypass_object_sha256": bypass_object_sha256,
+        "native_macro_width_executable_negative_rejected": macro_negative_rejected,
         "pinned_makefile_recipe_reused_without_upstream_edits": True,
         "full_rom_link_or_mgba_reader_execution": False,
         "license_clearance_for_distributed_rom_or_tools": False,
@@ -169,7 +183,7 @@ def main():
         require(d["linked_section_sha256"] ==
                 hashlib.sha256(EXPECTED_LINKED).hexdigest(), "linked bytes drifted")
         require(d["source_mutations_rejected"] == 8 and
-                d["missing_preprocessor_executable_negative_rejected"],
+                d["native_macro_width_executable_negative_rejected"],
                 "negative evidence missing")
         require(d["full_rom_link_or_mgba_reader_execution"] is False,
                 "native runtime claim escaped")
@@ -179,7 +193,7 @@ def main():
         {"independent_approvals": 1},
         {"linked_section_sha256": "0" * 64},
         {"source_mutations_rejected": 7},
-        {"missing_preprocessor_executable_negative_rejected": False},
+        {"native_macro_width_executable_negative_rejected": False},
         {"full_rom_link_or_mgba_reader_execution": True},
     )
     for index, edit in enumerate(evidence_mutations):
