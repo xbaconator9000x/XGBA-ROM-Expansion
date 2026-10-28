@@ -247,6 +247,13 @@ jobs:
           export XGBA_PHASE1_PLAYER_STEP_ADDR="$player_step_addr"
           export XGBA_PHASE1_OBJECT_EVENTS_ADDR="$object_events_addr"
           export XGBA_PHASE1_CAMERA_MOVE_ADDR="$camera_move_addr"
+          init_avatar_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="InitPlayerAvatar" {print "0x"$1;exit}')
+          clear_avatar_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="ClearPlayerAvatarInfo" {print "0x"$1;exit}')
+          set_avatar_state_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="SetPlayerAvatarStateMask" {print "0x"$1;exit}')
+          test -n "$init_avatar_addr" && test -n "$clear_avatar_addr" && test -n "$set_avatar_state_addr"
+          export XGBA_PHASE1_INIT_AVATAR_ADDR="$init_avatar_addr"
+          export XGBA_PHASE1_CLEAR_AVATAR_ADDR="$clear_avatar_addr"
+          export XGBA_PHASE1_SET_AVATAR_STATE_ADDR="$set_avatar_state_addr"
           # Negative control: reject an invalid diagnostic RAM address before ROM load.
           set +e
           XGBA_PHASE1_OBJECT_EVENTS_ADDR=0xDEADBEEF ./game-controller-probe unused.rom unused.sav unused.keys 180 "$status" "$counter" "$sb2" 2> invalid-object-events-address.log

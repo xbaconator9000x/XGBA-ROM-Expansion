@@ -51,6 +51,9 @@ int main(int argc, char **argv) {
     uint32_t player_step_target = optional_pinned_address("XGBA_PHASE1_PLAYER_STEP_ADDR", 1);
     uint32_t object_events_addr = optional_pinned_address("XGBA_PHASE1_OBJECT_EVENTS_ADDR", 0);
     uint32_t camera_move_target = optional_pinned_address("XGBA_PHASE1_CAMERA_MOVE_ADDR", 1);
+    uint32_t init_avatar_target = optional_pinned_address("XGBA_PHASE1_INIT_AVATAR_ADDR", 1);
+    uint32_t clear_avatar_target = optional_pinned_address("XGBA_PHASE1_CLEAR_AVATAR_ADDR", 1);
+    uint32_t set_avatar_state_target = optional_pinned_address("XGBA_PHASE1_SET_AVATAR_STATE_ADDR", 1);
     uint32_t flash_present_addr = optional_pinned_address("XGBA_PHASE1_FLASH_PRESENT_ADDR", 0);
     uint32_t save_attempt_status_addr = optional_pinned_address("XGBA_PHASE1_SAVE_ATTEMPT_STATUS_ADDR", 0);
     const int inject_no_flash = getenv("XGBA_PHASE1_INJECT_NO_FLASH") != NULL;
@@ -65,6 +68,8 @@ int main(int argc, char **argv) {
     unsigned player_step_direction_hits = 0, camera_move_hits = 0;
     unsigned player_object_changed_frames = 0, player_object_active_frames = 0;
     unsigned player_object_camera_tracked_frames = 0, player_object_is_player_frames = 0;
+    unsigned init_avatar_hits = 0, clear_avatar_hits = 0, set_avatar_state_hits = 0;
+    unsigned avatar_controllable_frames = 0, avatar_prevent_step_frames = 0;
     int player_object_first_x = -32768, player_object_first_y = -32768;
     int player_object_last_x = -32768, player_object_last_y = -32768;
     unsigned player_object_last_action = 255, player_object_last_behavior = 255;
@@ -168,6 +173,12 @@ int main(int argc, char **argv) {
                 }
                 if (camera_move_target && executing == camera_move_target)
                     ++camera_move_hits;
+                if (init_avatar_target && executing == init_avatar_target)
+                    ++init_avatar_hits;
+                if (clear_avatar_target && executing == clear_avatar_target)
+                    ++clear_avatar_hits;
+                if (set_avatar_state_target && executing == set_avatar_state_target)
+                    ++set_avatar_state_hits;
                 if (player_step_target && executing == player_step_target) {
                     ++player_step_hits;
                     if (((unsigned)cpu->gprs[0] & 0xFFU) != 0)
@@ -227,6 +238,9 @@ int main(int argc, char **argv) {
                 if (avatar_addr) {
                     unsigned flags = core->busRead8(core, avatar_addr);
                     if (avatar_first_flags == 255) avatar_first_flags = flags;
+                    /* Pinned global.fieldmap.h: controllable = bit 5; preventStep = +6. */
+                    avatar_controllable_frames += !!(flags & 0x20U);
+                    avatar_prevent_step_frames += !!core->busRead8(core, avatar_addr + 6U);
                     avatar_last_flags = flags;
                     avatar_last_running = core->busRead8(core, avatar_addr + 2U);
                     avatar_last_transition = core->busRead8(core, avatar_addr + 3U);
@@ -364,6 +378,8 @@ int main(int argc, char **argv) {
            "\"player_object_first_x\":%d,\"player_object_first_y\":%d,"
            "\"player_object_last_x\":%d,\"player_object_last_y\":%d,"
            "\"player_object_last_action\":%u,\"player_object_last_behavior\":%u,"
+           "\"init_avatar_hits\":%u,\"clear_avatar_hits\":%u,\"set_avatar_state_hits\":%u,"
+           "\"avatar_controllable_frames\":%u,\"avatar_prevent_step_frames\":%u,"
            "\"host_ram_fault_injection\":%s,\"no_flash_fault_entries\":%u,"
            "\"no_flash_original\":%u,\"no_flash_restored\":%s,\"first_try_save_attempt_status\":%u,"
            "\"game_save_callsite_verified\":false}\n",
@@ -407,6 +423,8 @@ int main(int argc, char **argv) {
            player_object_first_x, player_object_first_y,
            player_object_last_x, player_object_last_y,
            player_object_last_action, player_object_last_behavior,
+           init_avatar_hits, clear_avatar_hits, set_avatar_state_hits,
+           avatar_controllable_frames, avatar_prevent_step_frames,
            inject_no_flash ? "true" : "false", no_flash_fault_entries, no_flash_original,
            no_flash_restored ? "true" : "false", first_try_save_attempt_status);
     core->setKeys(core, 0);
