@@ -40,6 +40,9 @@ int main(int argc, char **argv) {
     uint32_t last_callback2 = 0;
     unsigned callback2_overworld_frames = 0, new_start_key_frames = 0;
     unsigned new_start_key_overworld_frames = 0, first_callback2_overworld_frame = 0;
+    unsigned new_direction_key_overworld_frames = 0, held_direction_key_overworld_frames = 0;
+    unsigned position_changed_frames = 0, first_position_change_frame = 0;
+    int first_overworld_x = -32768, first_overworld_y = -32768;
     if (tracing) {
         for (unsigned i = 0; i < 13; ++i) {
             char *tail;
@@ -154,6 +157,23 @@ int main(int argc, char **argv) {
             if (callback2 == targets[9]) {
                 ++callback2_overworld_frames;
                 if (!first_callback2_overworld_frame) first_callback2_overworld_frame = frame + 1;
+                uint16_t held_keys = core->busRead16(core, gmain_addr + 0x2CU);
+                if (new_keys & (0x10U | 0x20U | 0x40U | 0x80U))
+                    ++new_direction_key_overworld_frames;
+                if (held_keys & (0x10U | 0x20U | 0x40U | 0x80U))
+                    ++held_direction_key_overworld_frames;
+                uint32_t current_sb1 = core->busRead32(core, sb1_ptr_addr);
+                if (current_sb1 >= 0x02000000U && current_sb1 < 0x02040000U) {
+                    int x = (int16_t)core->busRead16(core, current_sb1);
+                    int y = (int16_t)core->busRead16(core, current_sb1 + 2U);
+                    if (first_overworld_x == -32768) {
+                        first_overworld_x = x;
+                        first_overworld_y = y;
+                    } else if (x != first_overworld_x || y != first_overworld_y) {
+                        ++position_changed_frames;
+                        if (!first_position_change_frame) first_position_change_frame = frame + 1;
+                    }
+                }
             }
             if (new_keys & 0x0008U) {
                 ++new_start_key_frames;
@@ -229,6 +249,9 @@ int main(int argc, char **argv) {
            "\"last_gmain_state\":%u,\"last_callback2\":%u,"
            "\"saveblock1_map_group\":%u,\"saveblock1_map_num\":%u,\"saveblock1_layout_id\":%u,"
            "\"saveblock1_pos_x\":%d,\"saveblock1_pos_y\":%d,"
+           "\"first_overworld_pos_x\":%d,\"first_overworld_pos_y\":%d,"
+           "\"position_changed_frames\":%u,\"first_position_change_frame\":%u,"
+           "\"new_direction_key_overworld_frames\":%u,\"held_direction_key_overworld_frames\":%u,"
            "\"game_save_callsite_verified\":false}\n",
            core->frameCounter(core), count, gba->memory.savedata.type,
            baseline_frame, changed_bytes, frames_with_changed_data,
@@ -257,7 +280,10 @@ int main(int argc, char **argv) {
            saveblock1_valid ? core->busRead8(core, saveblock1 + 5U) : 255U,
            saveblock1_valid ? core->busRead16(core, saveblock1 + 0x32U) : 0xFFFFU,
            saveblock1_valid ? (int16_t)core->busRead16(core, saveblock1) : -32768,
-           saveblock1_valid ? (int16_t)core->busRead16(core, saveblock1 + 2U) : -32768);
+           saveblock1_valid ? (int16_t)core->busRead16(core, saveblock1 + 2U) : -32768,
+           first_overworld_x, first_overworld_y, position_changed_frames,
+           first_position_change_frame, new_direction_key_overworld_frames,
+           held_direction_key_overworld_frames);
     core->setKeys(core, 0);
     core->deinit(core);
     free(baseline);

@@ -40,11 +40,11 @@ def make_schedule(name):
     elif name in ("pallet_move_save", "pallet_move_no_save", "pallet_stationary_coldboot"):
         # Genuine controller navigation; no host RAM/Flash edits. Movement
         # occurs after the pinned title->overworld transition (~frame 632).
-        for f in range(330, 1000, 60):
-            pulse(e, f, 0x1)
+        for f in range(330, 720, 60):
+            pulse(e, f, 0x1)  # Title/Continue, then release for field control
         if name != "pallet_stationary_coldboot":
-            for f in (1005, 1030, 1055):
-                pulse(e, f, 0x10, width=16)  # RIGHT, three ordinary held inputs
+            pulse(e, 780, 0x10, width=96)  # RIGHT held while overworld active
+            pulse(e, 900, 0x80, width=96)  # DOWN held, avoid blocked tiles
         if name == "pallet_move_save":
             pulse(e, 1100, 0x8)
             for f in (1200, 1260):

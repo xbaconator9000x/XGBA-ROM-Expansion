@@ -146,3 +146,25 @@ sector-ID indexing boundary. It checks seven immutable upstream Git blobs,
 six function bodies, and five source-tampering negative controls. See
 `docs/phase1-review-readiness/firered-save-error-semantics-20261028.md`.
 This is source-only evidence, not a game-executed error return.
+
+## First x/y test failed closed; controller movement diagnostic (2026-10-28)
+
+Exact-head [CI #40616288179](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40616288179)
+at `3e27327561499c6872d62cd4b4a30ee75daac7d3` **failed** in
+the new x/y test, not in the previously green save/interrupt tests.
+The source-only seven-blob/six-function/five-tamper checker **passed**.
+The native no-save controller case had status1 counter1, 1,767
+`FieldGetPlayerInput` hits, zero Flash changes and no
+`TrySavingData`, but final `SaveBlock1.pos` was still (11,10), equal
+to the physical first-save coordinates. This does not establish
+movement, and is **not** a player-position roundtrip pass.
+
+The previous movement schedule used three 16-frame RIGHT pulses near
+frames 1005/1030/1055, possibly too short or blocked. The new
+investigation replaces them with distinct 96-frame RIGHT and DOWN holds
+after title Continue, separates earlier A pulses, and records **actual
+gMain held/new directional keys during CB2_Overworld**, first/last
+SaveBlock1 positions and first position-change frame. It fails closed
+if keys are not received or coordinates do not change. The result
+must be read from the new exact-head CI, not inferred from the test
+design. All Phase 1 gates FAIL_INCOMPLETE, zero independent approvals.

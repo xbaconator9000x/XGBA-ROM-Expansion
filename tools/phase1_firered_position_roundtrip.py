@@ -53,7 +53,21 @@ def main(a):
     moved = run(a, "position_move_without_save", unsaved, "pallet_move_no_save", 2400)
     m = moved["native"]
     moved_xy = (m["saveblock1_pos_x"], m["saveblock1_pos_y"])
-    assert moved_xy != start_xy, ("Movement inputs did not move player", start_xy, moved_xy)
+    diagnostic = {
+        "case": "position_move_without_save",
+        "saved_initial_xy": list(start_xy), "runtime_final_xy": list(moved_xy),
+        "first_overworld_xy": [m["first_overworld_pos_x"], m["first_overworld_pos_y"]],
+        "new_direction_key_overworld_frames": m["new_direction_key_overworld_frames"],
+        "held_direction_key_overworld_frames": m["held_direction_key_overworld_frames"],
+        "position_changed_frames": m["position_changed_frames"],
+        "first_position_change_frame": m["first_position_change_frame"],
+        "field_input_hits": m["field_get_player_input_hits"],
+    }
+    print(json.dumps(diagnostic, sort_keys=True), flush=True)
+    assert m["new_direction_key_overworld_frames"] > 0 and m["held_direction_key_overworld_frames"] > 0, (
+        "Directional controller keys were not registered in overworld", diagnostic)
+    assert moved_xy != start_xy and m["position_changed_frames"] > 0, (
+        "Directional inputs registered but no saved-position movement", diagnostic)
     assert m["save_counter"] == 1 and m["try_saving_data_entry_hits"] == 0
     assert m["flash_changed_bytes"] == 0 and not moved["physical_save_changed"]
     assert unsaved.read_bytes() == original
