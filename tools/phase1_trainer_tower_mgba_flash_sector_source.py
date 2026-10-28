@@ -30,6 +30,8 @@ def check(save,reader,flash,header):
         need(k in flash,"mGBA Flash implementation drift: "+k)
     need(flash.count("case FLASH_COMMAND_SWITCH_BANK:")>=2,
          "Flash bank command dispatch drift")
+    need(flash.count("savedata->currentBank = &savedata->data[bank << 16];")==2,
+         "both mGBA currentBank restoration and bank switch mappings must match")
     need("FLASH_COMMAND_SWITCH_BANK = 0xB0" in header,"bank command opcode drift")
     need("FLASH_COMMAND_ERASE_SECTOR = 0x30" in header,"erase command opcode drift")
     return {"sector_30":{"bank":1,"bank_local_sector":14,"file_offset_hex":"0x1e000"},
