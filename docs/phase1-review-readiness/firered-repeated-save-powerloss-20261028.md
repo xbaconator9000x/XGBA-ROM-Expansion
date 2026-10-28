@@ -63,3 +63,26 @@ defines rotating sectors and the game-save call path.
 Do not infer results from successful compilation alone. No new
 complete-file analyst review or independent approval; all Phase 1
 gates remain FAIL_INCOMPLETE. Phase 2 untouched.
+
+### Pinned mGBA flush lifecycle and durability boundary
+
+Additional pinned source closure:
+`mgba-emu/mgba@fd9dc5c2cbf234365068855851107e762fc6211b`
+`src/gba/gba.c` blob `c30bd943909dc00df0b5b9932e6d9ddb6e1c404e`
+calls `GBASavedataClean` from `GBAFrameEnded`.
+`include/mgba/internal/defines.h` blob
+`67b8ec8fd2f51ee2c0c6231443af752158397b03`
+defines `mSAVEDATA_CLEANUP_THRESHOLD=15`: a newly dirty save
+is marked seen, then `mSavedataClean` requests cleanup only after
+**more than 15 frames** without a new dirty write. Pinned
+`src/gba/savedata.c` blob
+`fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb`
+calls `vf->sync` only on that cleanup path with a writable mapping.
+The in-flight hook now records the actual mGBA `dirty` flags and
+`dirtAge` at interruption, without asserting that those flags prove
+or disprove physical durability. This differentiates emulated Flash
+programming, emulator-managed sync eligibility, host shared-memory
+mapping persistence, and real power-failure durability.
+
+**Unresolved:** no actual storage power cut, no proven sync-success
+callback from VFile, no fsync guarantee, and no independent review.

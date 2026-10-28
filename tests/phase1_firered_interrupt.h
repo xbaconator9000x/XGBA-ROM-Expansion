@@ -48,8 +48,10 @@ static void phase1_maybe_interrupt(unsigned cut, unsigned entries, unsigned retu
            "\"valid_counter3_sectors\":%u,\"frame\":%u,"
            "\"trace_steps\":%llu,\"try_save_entries\":%u,"
            "\"try_save_returns\":%u,\"counter\":3,"
-           "\"no_host_writes\":true,\"no_graceful_close\":true}\n",
-           cut,n,frame,steps,entries,returns);
+           "\"no_host_writes\":true,\"no_graceful_close\":true,"
+           "\"dirty_flags\":%d,\"dirty_age\":%u}\n",
+           cut,n,frame,steps,entries,returns,
+           gba->memory.savedata.dirty, gba->memory.savedata.dirtAge);
     fflush(stdout);
     _exit(86);
 }
