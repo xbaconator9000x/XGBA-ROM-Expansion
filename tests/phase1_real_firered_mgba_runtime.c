@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
     unsigned status = core->busRead16(core, statusAddr);
     unsigned counter = core->busRead32(core, counterAddr);
     unsigned before = gba->memory.savedata.data ? gba->memory.savedata.data[0x40] : 0xFF;
-    uint32_t saveBlock2 = argc == 10 ? core->busRead32(core, (uint32_t)strtoul(argv[9], NULL, 0)) : 0;
+    uint32_t saveBlock2 = argc >= 10 ? core->busRead32(core, (uint32_t)strtoul(argv[9], NULL, 0)) : 0;
     unsigned fillerMarker = (saveBlock2 >= 0x02000000U && saveBlock2 < 0x02040000U)
         ? core->busRead8(core, saveBlock2 + 0xB80U) : 0xFFFFFFFFU;
     uint32_t saveBlock1 = argc == 12 ? core->busRead32(core, (uint32_t)strtoul(argv[10], NULL, 0)) : 0;
