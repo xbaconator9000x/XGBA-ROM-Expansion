@@ -64,6 +64,13 @@ def check_trace(d, expected, all_sectors=False):
                 "SaveBlock1 pointer outside EWRAM")
         require(0x02000000 <= d.get("pokemon_storage_ptr", 0) < 0x02040000,
                 "storage pointer outside EWRAM")
+        require(d.get("load_game_save_entry_hits", 0) >= 2, "second title loader not observed")
+        require(d.get("copy_save_slot_data_entry_hits", 0) >= 2, "second title copy not observed")
+        require(d.get("storage_ready_copy_hits", 0) >= 1, "no initialized-storage copy")
+        require(0x02000000 <= d.get("second_loader_storage_ptr", 0) < 0x02040000,
+                "second loader storage pointer not EWRAM")
+        require(0x02000000 <= d.get("second_copy_storage_ptr", 0) < 0x02040000,
+                "second copy storage pointer not EWRAM")
         expected_markers = [0x5A] + [0x80+i for i in range(1, 13)] + [0xED]
         require(d.get("saveblock_sector_markers") == expected_markers,
                 "native reconstructed 14-sector payload differs from physical slot1")
@@ -151,6 +158,13 @@ def main():
                     "native trace mutation accepted")
             controls += 1
         if all_sectors:
+            for field in ("second_loader_storage_ptr", "second_copy_storage_ptr",
+                          "storage_ready_copy_hits"):
+                altered = dict(d)
+                altered[field] = 0
+                require(rejected(lambda record=altered: check_trace(record, profile, True)),
+                        "second-load pointer/control mutation escaped")
+                controls += 1
             for i in range(14):
                 altered = dict(d)
                 altered["saveblock_sector_markers"] = list(d["saveblock_sector_markers"])

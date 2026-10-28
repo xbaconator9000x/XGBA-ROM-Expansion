@@ -39,13 +39,30 @@ int main(int argc, char **argv) {
     uint32_t traceEndPc = 0, loadReturnPc = 0;
     unsigned loadSaveArg = 0xFFFFFFFFU, loadReturnValue = 0xFFFFFFFFU, loadReturnHits = 0;
     unsigned traceFrameLimit = 0;
+    unsigned secondLoadStorage = 0, secondCopyStorage = 0, storageReadyCopyHits = 0;
     if (!strcmp(mode, "trace")) {
         uint32_t target[3];
         for (int j = 0; j < 3; ++j)
             target[j] = (uint32_t)strtoul(argv[6 + j], NULL, 0) & ~1U;
         /* Prefetched ARM PC is +8 in ARM mode and +4 in Thumb mode. */
-        traceFrameLimit = 720; /* observe save-loader return, not just boot */
-        while (core->frameCounter(core) < traceFrameLimit && steps < 100000000ULL) {
+        /* The first boot copyright callback calls LoadGameSave before the
+         * title task's SetSaveBlocksPointers. Its storage pointer is NULL.
+         * For the all-sector witness, exercise the real title transition
+         * (START, then A pulses) and require a SECOND loader/copy with
+         * initialized storage. The three earlier profiles stay unchanged. */
+        traceFrameLimit = argc == 12 ? 1800 : 720;
+        unsigned lastInputFrame = 0xFFFFFFFFU;
+        while (core->frameCounter(core) < traceFrameLimit &&
+               steps < (argc == 12 ? 350000000ULL : 100000000ULL)) {
+            if (argc == 12) {
+                unsigned frame = core->frameCounter(core);
+                if (frame != lastInputFrame) {
+                    unsigned keys = frame >= 260 && frame < 262 ? 0x8U :
+                        frame >= 330 && frame < 810 && (frame - 330) % 60 < 2 ? 0x1U : 0U;
+                    core->setKeys(core, keys);
+                    lastInputFrame = frame;
+                }
+            }
             struct ARMCore *cpu = gba->cpu;
             uint32_t pc = (uint32_t)cpu->gprs[ARM_PC];
             uint32_t executing = pc - (cpu->executionMode == MODE_THUMB ? 4U : 8U);
@@ -63,9 +80,13 @@ int main(int argc, char **argv) {
                      * substitute an invented destination or skip validation. */
                     if (argc == 12 && (j == 0 || j == 2)) {
                         uint32_t ptrAddr = (uint32_t)strtoul(argv[11], NULL, 0);
-                        fprintf(stderr, "PHASE1_STORAGE_AT_%s hit=%u ptr=0x%08x\\n",
-                                j == 0 ? "LOAD" : "COPY", hits[j],
-                                core->busRead32(core, ptrAddr));
+                        uint32_t actual = core->busRead32(core, ptrAddr);
+                        fprintf(stderr, "PHASE1_STORAGE_AT_%s hit=%u ptr=0x%08x\n",
+                                j == 0 ? "LOAD" : "COPY", hits[j], actual);
+                        if (j == 0 && hits[j] == 2) secondLoadStorage = actual;
+                        if (j == 2 && hits[j] == 2) secondCopyStorage = actual;
+                        if (j == 2 && actual >= 0x02000000U && actual < 0x02040000U)
+                            ++storageReadyCopyHits;
                     }
                     if (j == 0) {
                         loadSaveArg = (unsigned)cpu->gprs[0] & 0xFFU;
@@ -75,10 +96,14 @@ int main(int argc, char **argv) {
             }
             core->step(core);
             ++steps;
-            if (core->frameCounter(core) >= 180 && loadReturnHits > 0) break;
+            if (core->frameCounter(core) >= 180 &&
+                (argc == 12 ? (loadReturnHits >= 2 && storageReadyCopyHits > 0)
+                            : (loadReturnHits > 0))) break;
         }
         if (core->frameCounter(core) < 180)
             fail("trace budget exhausted before frame 180");
+        if (argc == 12 && (loadReturnHits < 2 || storageReadyCopyHits == 0))
+            fail("second source-built title loader with initialized storage was not observed");
     } else {
         for (int i = 0; i < 180; ++i) {
             core->runFrame(core);
@@ -137,8 +162,8 @@ int main(int argc, char **argv) {
         mode, core->frameCounter(core), type, status, counter, before, steps, hits[0], hits[1], hits[2],
         loadSaveArg, loadReturnHits, loadReturnValue, traceEndPc, traceFrameLimit, saveBlock2, fillerMarker);
     if (argc == 12) {
-        printf(",\"saveblock1_ptr\":%u,\"pokemon_storage_ptr\":%u,\"saveblock_sector_markers\":[",
-               saveBlock1, storage);
+        printf(",\"saveblock1_ptr\":%u,\"pokemon_storage_ptr\":%u,\"second_loader_storage_ptr\":%u,\"second_copy_storage_ptr\":%u,\"storage_ready_copy_hits\":%u,\"saveblock_sector_markers\":[",
+               saveBlock1, storage, secondLoadStorage, secondCopyStorage, storageReadyCopyHits);
         for (unsigned i = 0; i < 14; ++i)
             printf("%s%u", i ? "," : "", sectorMarkers[i]);
         printf("]");
