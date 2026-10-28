@@ -90,6 +90,7 @@ def main():
         else: raise ValueError("writer mutation escaped " + name)
     flags = subprocess.check_output(["pkg-config", "--cflags", "--libs", "Qt6Core"],
                                     text=True).split()
+    a.output.parent.mkdir(parents=True, exist_ok=True)
     executable = a.output.parent / "phase1_porymap_orderedjson_native"
     compile = subprocess.run(
         ["g++", "-std=c++17", "-fPIC", "-O0", "-Wall", "-Wextra",
