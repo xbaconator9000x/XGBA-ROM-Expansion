@@ -172,6 +172,45 @@ def main():
     require(source_neg == 5 and transcript_neg == 10, "negative-control count wrong")
     require(evidence["independent_approvals"] == 0 and
             evidence["phase1_gate"] == "FAIL_INCOMPLETE", "approval overclaim")
+    def validate_evidence(record):
+        require(record["phase1_gate"] == "FAIL_INCOMPLETE" and
+                record["independent_approvals"] == 0 and
+                record["whole_file_approvals"] == 0, "approval/gate overclaim")
+        require(record["original_writer_false_success_returns"] == 5 and
+                record["positive_json_files_validated"] == 5, "native result count drift")
+        require(record["source_mutations_rejected"] == 5 and
+                record["transcript_mutations_rejected"] == 10, "negative-control drift")
+        require(record["unchanged_original_project_function_bodies_compiled"] == list(NAMES),
+                "original source scope drift")
+        require(set(record["actual_linux_enospc_syscalls_by_writer"]) == set(NAMES) and
+                all(v > 0 for v in record["actual_linux_enospc_syscalls_by_writer"].values()),
+                "native syscall evidence missing")
+        require(record["real_project_constructor_or_gui_executed"] is False and
+                record["upstream_porymap_patched"] is False and
+                record["test_only_empty_project_data_and_config"] is True,
+                "execution/provenance overclaim")
+    validate_evidence(evidence)
+    mutations = [
+        {"phase1_gate": "PASS"},
+        {"independent_approvals": 1},
+        {"whole_file_approvals": 1},
+        {"original_writer_false_success_returns": 4},
+        {"positive_json_files_validated": 4},
+        {"source_mutations_rejected": 4},
+        {"transcript_mutations_rejected": 9},
+        {"unchanged_original_project_function_bodies_compiled": list(NAMES[:4])},
+        {"actual_linux_enospc_syscalls_by_writer": {**observed, NAMES[0]: 0}},
+        {"real_project_constructor_or_gui_executed": True},
+        {"upstream_porymap_patched": True},
+        {"test_only_empty_project_data_and_config": False},
+    ]
+    for i, changed in enumerate(mutations):
+        try:
+            validate_evidence({**evidence, **changed})
+        except ValueError:
+            continue
+        raise ValueError("evidence mutation escaped: " + str(i))
+    evidence["evidence_mutations_rejected"] = len(mutations)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n")
     print(json.dumps(evidence, sort_keys=True))
