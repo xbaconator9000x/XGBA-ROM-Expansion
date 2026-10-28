@@ -60,8 +60,11 @@ def mutate(fr,mg,h):
       ("(GBA_SIZE_ROM0 - 4)","(GBA_SIZE_ROM0 - 8)"),
       ("Out of bounds ROM Load32","Unchecked ROM Load32"),
       ("value |= (((address & ~3) + 2) >> 1) << 16;","value |= 0xFFFF0000;")],8):
-        need(old in mg,"macro negative target absent")
-        try: verify(fr,mg.replace(old,new,1),h)
+        prefix,rest=mg.split("#define LOAD_CART",1)
+        macro,suffix=rest.split("#define LOAD_SRAM",1)
+        need(old in macro,"macro negative target absent")
+        changed=prefix+"#define LOAD_CART"+macro.replace(old,new,1)+"#define LOAD_SRAM"+suffix
+        try: verify(fr,changed,h)
         except ValueError: continue
         raise AssertionError("escaped macro mutation %d"%i)
     try: verify(fr,mg,h.replace("GBA_SIZE_ROM0 = 0x02000000","GBA_SIZE_ROM0 = 0x04000000",1))
