@@ -113,3 +113,26 @@ each target environment? Does the mapped save require explicit durable
 `fsync` on the fd after `MS_ASYNC`? What evidence can establish the
 power-loss ordering of sectors on real hardware? Do not generalize
 the Linux `MAP_SHARED` observation to Android, Windows or GBA Flash.
+
+## Native player-position roundtrip investigation (pending exact-head CI)
+
+The new `tools/phase1_firered_position_roundtrip.py` checks a state change
+that prior RED/PalletTown-only tests did not distinguish: player **x/y**.
+Pinned FireRed `include/global.h` blob `77155b09014aa854fcf87260e6ad2969e222da53`
+defines `SaveBlock1.pos` at offsets 0 and 2; pinned `src/save.c` blob
+`36b960f375c92711aa49b99bdfe9c6b3a99d6b1c` maps sector ID 1 to
+the first SaveBlock1 chunk. The source-built emulator reads relocated
+`gSaveBlock1Ptr` through the bus, and the runner independently decodes
+the checksum-valid physical sector ID 1, not a host-edited save payload.
+
+The controller-only experiment separately requires (a) movement without
+saving changes RAM x/y but not the physical save, (b) a cold boot reverts
+unsaved movement, (c) movement followed by actual `TrySavingData` with
+return `SAVE_STATUS_OK` persists different x/y to counter2 Flash,
+and (d) a fresh process recovers exactly those persisted x/y without
+further Flash changes. Missing movement, unexpected save, failed checksum,
+wrong physical slot, or mismatched x/y all fail closed.
+
+**Pending:** this paragraph documents a test design, NOT a passed result.
+The initial playable counter0 fixture remains synthetic; this does not
+establish human-played new-game progression or physical power-loss durability.

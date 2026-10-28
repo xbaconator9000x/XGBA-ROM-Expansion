@@ -198,6 +198,8 @@ int main(int argc, char **argv) {
         ? core->busRead8(core, sb2 + 0xB80U) : 0xFFFFFFFFU;
     uint32_t player_name_word = (sb2 >= 0x02000000U && sb2 < 0x0203F000U)
         ? core->busRead32(core, sb2) : 0xFFFFFFFFU;
+    uint32_t saveblock1 = sb1_ptr_addr ? core->busRead32(core, sb1_ptr_addr) : 0;
+    int saveblock1_valid = saveblock1 >= 0x02000000U && saveblock1 < 0x02040000U;
     printf("{\"mode\":\"controller\",\"frames\":%u,\"input_events\":%u,"
            "\"save_type\":%u,\"baseline_frame\":%u,\"flash_changed_bytes\":%u,"
            "\"frames_with_changed_flash\":%u,\"first_flash_change_frame\":%u,"
@@ -226,6 +228,7 @@ int main(int argc, char **argv) {
            "\"callback2_return_local_frames\":%u,\"return_local_state_hist\":[%u,%u,%u,%u,%u,%u,%u,%u],"
            "\"last_gmain_state\":%u,\"last_callback2\":%u,"
            "\"saveblock1_map_group\":%u,\"saveblock1_map_num\":%u,\"saveblock1_layout_id\":%u,"
+           "\"saveblock1_pos_x\":%d,\"saveblock1_pos_y\":%d,"
            "\"game_save_callsite_verified\":false}\n",
            core->frameCounter(core), count, gba->memory.savedata.type,
            baseline_frame, changed_bytes, frames_with_changed_data,
@@ -250,12 +253,11 @@ int main(int argc, char **argv) {
            return_local_state_hist[3], return_local_state_hist[4], return_local_state_hist[5],
            return_local_state_hist[6], return_local_state_hist[7],
            last_gmain_state, last_callback2,
-           (sb1_ptr_addr && core->busRead32(core, sb1_ptr_addr) >= 0x02000000U && core->busRead32(core, sb1_ptr_addr) < 0x02040000U)
-             ? core->busRead8(core, core->busRead32(core, sb1_ptr_addr) + 4U) : 255U,
-           (sb1_ptr_addr && core->busRead32(core, sb1_ptr_addr) >= 0x02000000U && core->busRead32(core, sb1_ptr_addr) < 0x02040000U)
-             ? core->busRead8(core, core->busRead32(core, sb1_ptr_addr) + 5U) : 255U,
-           (sb1_ptr_addr && core->busRead32(core, sb1_ptr_addr) >= 0x02000000U && core->busRead32(core, sb1_ptr_addr) < 0x02040000U)
-             ? core->busRead16(core, core->busRead32(core, sb1_ptr_addr) + 0x32U) : 0xFFFFU);
+           saveblock1_valid ? core->busRead8(core, saveblock1 + 4U) : 255U,
+           saveblock1_valid ? core->busRead8(core, saveblock1 + 5U) : 255U,
+           saveblock1_valid ? core->busRead16(core, saveblock1 + 0x32U) : 0xFFFFU,
+           saveblock1_valid ? (int16_t)core->busRead16(core, saveblock1) : -32768,
+           saveblock1_valid ? (int16_t)core->busRead16(core, saveblock1 + 2U) : -32768);
     core->setKeys(core, 0);
     core->deinit(core);
     free(baseline);

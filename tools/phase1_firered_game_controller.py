@@ -37,6 +37,20 @@ def make_schedule(name):
         pulse(e, 1250, 0x8)
         for f in range(1330, 2300, 42):
             pulse(e, f, 0x1)
+    elif name in ("pallet_move_save", "pallet_move_no_save", "pallet_stationary_coldboot"):
+        # Genuine controller navigation; no host RAM/Flash edits. Movement
+        # occurs after the pinned title->overworld transition (~frame 632).
+        for f in range(330, 1000, 60):
+            pulse(e, f, 0x1)
+        if name != "pallet_stationary_coldboot":
+            for f in (1005, 1030, 1055):
+                pulse(e, f, 0x10, width=16)  # RIGHT, three ordinary held inputs
+        if name == "pallet_move_save":
+            pulse(e, 1100, 0x8)
+            for f in (1200, 1260):
+                pulse(e, f, 0x80)
+            for f in range(1540, 3150, 40):
+                pulse(e, f, 0x1)
     elif name == "pallet_save_dense_confirm":
         # Same two-step Save cursor, but dense A pulses across both Yes prompts
         # and slow text. These are ordinary controller inputs, never direct calls.
