@@ -71,9 +71,9 @@ def check(project, mapping, header):
         need(header.count(anchor) == 1, "map header persisted API drift")
     # The exact original call expressions must be unguarded statements,
     # not checked return values. No regex across arbitrary callers.
-    need(len(re.findall(r"(?m)^\\s+saveTextFile\\(", save)) == 2,
+    need(len(re.findall(r"(?m)^\s+saveTextFile\(", save)) == 2,
          "new-map text write return handling changed")
-    need(len(re.findall(r"(?m)^\\s+appendTextFile\\(", save)) == 1,
+    need(len(re.findall(r"(?m)^\s+appendTextFile\(", save)) == 1,
          "new-map append return handling changed")
     offsets = [save.index(x) for x in PROJECT_ANCHORS]
     need(offsets == sorted(offsets), "new-map collateral/clean/layout order changed")
