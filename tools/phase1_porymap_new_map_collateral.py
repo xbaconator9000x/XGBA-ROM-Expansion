@@ -43,7 +43,7 @@ def check(project, header):
         require(save.count(a) == 1, "missing/duplicate new-map save anchor: " + a)
     positions = [save.index(a) for a in anchors]
     require(positions == sorted(positions), "new-map collateral/map/layout order changed")
-    require(save.rstrip().endswith("return true;\\n}"), "final save success return changed")
+    require(save.rstrip().endswith("return true;\n}"), "final save success return changed")
     require("if (projectConfig.createMapTextFileEnabled)" in save,
             "optional new-map text branch missing")
     require('text = QString("\\n\\t.include \\"%1/scripts.inc\\"\\n").arg(folderPath);' in save,
