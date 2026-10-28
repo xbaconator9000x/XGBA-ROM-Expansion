@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import json
 import re
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -21,7 +22,8 @@ PINS = {
                    {"README.md": "c77e022eb86e74a41b184daac5953d14c72cacc3",
                     "LICENSE.md": "bc574ff56a7df993996053c7b2afec43e80bdd64"}),
     "firered": ("ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
-                {"Makefile": "8b454dbd18eb0069fa5851d788697190890a5b37"}),
+                {"Makefile": "8b454dbd18eb0069fa5851d788697190890a5b37",
+                 "tools/preproc/preproc.cpp": "20c2de51b635a5d59f2b4e1ecd93d8fc2748ebe1"}),
 }
 TARGET_LINE = "AUTO_GEN_TARGETS += $(patsubst %.pory,%.inc,$(shell find data/ -type f -name '*.pory'))"
 RULE_LINE = "data/%.inc: data/%.pory; $(SCRIPT) -i $< -o $@ -fc tools/poryscript/font_config.json -cc tools/poryscript/command_config.json"
@@ -108,6 +110,9 @@ def main():
     ps = sources["poryscript"]["README.md"]
     fr = sources["firered"]["Makefile"]
     contract(pm, ps, fr)
+    require("case Directive::Include:" in sources["firered"]["tools/preproc/preproc.cpp"] and
+            "GetGlobalLabel()" in sources["firered"]["tools/preproc/preproc.cpp"],
+            "FireRed original include/global-label preprocessor contract changed")
     source_negative_count = negatives(pm, ps, fr)
     for exe in ("go", "make", "arm-none-eabi-as", "arm-none-eabi-nm"):
         require(shutil.which(exe) is not None, "missing original tool: " + exe)
@@ -147,9 +152,29 @@ def main():
         event = root / "data/event_scripts.s"
         event.write_text('.include "data/maps/XGBAProbe/scripts.inc"\n')
         obj = root / "event_scripts.o"
-        assembled = command(["arm-none-eabi-as", "-mcpu=arm7tdmi", "-I", ".", "-o",
-                             str(obj), str(event)], cwd=root)
-        require(assembled.returncode == 0, "GNU ARM .include consumption failed: " + assembled.stderr[-3000:])
+        # A direct GNU as invocation is deliberately not the FireRed pipeline:
+        # Poryscript emits :: labels and the original preproc expands includes
+        # and translates them before CPP and GNU ARM assembly.
+        direct = command(["arm-none-eabi-as", "-mcpu=arm7tdmi", "-I", ".", "-o",
+                          str(root / "direct.o"), str(event)], cwd=root)
+        require(direct.returncode != 0, "direct GNU as unexpectedly accepted original :: labels")
+        firered = args.firered.resolve()
+        built_preproc = command(["make", "-C", str(firered / "tools/preproc"), "-j2"])
+        require(built_preproc.returncode == 0,
+                "original FireRed preproc build failed: " + built_preproc.stderr[-3000:])
+        preproc = firered / "tools/preproc/preproc"
+        require(preproc.is_file(), "original FireRed preproc binary missing")
+        ch = firered / "charmap.txt"
+        command_line = (" ".join(shlex.quote(str(x)) for x in (preproc, event, ch)) +
+                        " | cc -E -I " + shlex.quote(str(firered / "include")) + " -" +
+                        " | " + " ".join(shlex.quote(str(x)) for x in (preproc, "-ie", event, ch)) +
+                        " | arm-none-eabi-as -mcpu=arm7tdmi --defsym FIRERED=1" +
+                        " --defsym REVISION=0 --defsym ENGLISH=1 --defsym MODERN=0" +
+                        " -o " + shlex.quote(str(obj)) + " -")
+        assembled = command(["bash", "-o", "pipefail", "-c", command_line], cwd=root)
+        require(assembled.returncode == 0,
+                "original preproc/CPP/preproc/GNU ARM include consumption failed: " +
+                assembled.stderr[-3000:])
         symbols = command(["arm-none-eabi-nm", str(obj)])
         require(symbols.returncode == 0 and "XGBAProbe_MapScripts" in symbols.stdout,
                 "compiled event_scripts object missing generated symbol")
@@ -179,6 +204,8 @@ def main():
         "documented_make_rule_executed": True,
         "generated_inc_nonempty_and_symbol_present": True,
         "gnu_arm_consumed_generated_inc": True,
+        "direct_gnu_as_without_original_preproc_rejected": True,
+        "original_firered_preproc_built_and_reused": True,
         "no_change_make_dry_run_avoided_regeneration": True,
         "missing_rule_failed": True,
         "malformed_source_failed": True,
@@ -195,7 +222,8 @@ def main():
     def validate(d):
         require(d["source_mutations_rejected"] == 8, "source negatives missing")
         for key in ("documented_make_rule_executed", "generated_inc_nonempty_and_symbol_present",
-                    "gnu_arm_consumed_generated_inc", "no_change_make_dry_run_avoided_regeneration",
+                    "gnu_arm_consumed_generated_inc", "direct_gnu_as_without_original_preproc_rejected",
+                    "original_firered_preproc_built_and_reused", "no_change_make_dry_run_avoided_regeneration",
                     "missing_rule_failed", "malformed_source_failed", "recovery_byte_identical"):
             require(d[key] is True, "executable evidence missing: " + key)
         require(d["full_firered_rom_build_or_mgba_execution"] is False and
@@ -207,6 +235,8 @@ def main():
     changes = [{"source_mutations_rejected": 7}, {"documented_make_rule_executed": False},
                {"generated_inc_nonempty_and_symbol_present": False},
                {"gnu_arm_consumed_generated_inc": False},
+               {"direct_gnu_as_without_original_preproc_rejected": False},
+               {"original_firered_preproc_built_and_reused": False},
                {"no_change_make_dry_run_avoided_regeneration": False},
                {"missing_rule_failed": False}, {"malformed_source_failed": False},
                {"recovery_byte_identical": False},
