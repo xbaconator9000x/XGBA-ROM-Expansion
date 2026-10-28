@@ -90,7 +90,9 @@ def check(project, mapping, header):
 def negatives(project, mapping, header):
     count = 0
     for anchor in PROJECT_ANCHORS:
-        changed = project.replace(anchor, "PHASE1_MUTATED", 1)
+        scoped = body(project, "bool Project::saveMap(Map *map, bool skipLayout)")
+        need(anchor in scoped, "missing scoped project mutation anchor")
+        changed = project.replace(scoped, scoped.replace(anchor, "PHASE1_MUTATED", 1), 1)
         need(changed != project, "missing project mutation anchor")
         try:
             check(changed, mapping, header)
@@ -99,7 +101,11 @@ def negatives(project, mapping, header):
         else:
             raise AssertionError("project source mutation escaped: " + anchor)
     for anchor in MAP_ANCHORS:
-        changed = mapping.replace(anchor, "PHASE1_MUTATED", 1)
+        signature = ("void Map::setClean()" if anchor != "!m_isPersistedToFile"
+                     else "bool Map::hasUnsavedChanges() const")
+        scoped = body(mapping, signature)
+        need(anchor in scoped, "missing scoped map mutation anchor")
+        changed = mapping.replace(scoped, scoped.replace(anchor, "PHASE1_MUTATED", 1), 1)
         need(changed != mapping, "missing map mutation anchor")
         try:
             check(project, changed, header)
