@@ -81,7 +81,10 @@ def main():
         else: raise ValueError("serializer source mutation escaped " + token)
     for name in WRITERS:
         old = extract(project, name)
-        modified = project.replace(old, old.replace("return true;", "return false;", 1), 1)
+        last = old.rfind("return true;")
+        require(last >= 0, "writer success return missing: " + name)
+        mutated = old[:last] + old[last:].replace("return true;", "return false;", 1)
+        modified = project.replace(old, mutated, 1)
         try: source_contract(h, modified)
         except ValueError: source_neg += 1
         else: raise ValueError("writer mutation escaped " + name)
