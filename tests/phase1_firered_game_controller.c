@@ -13,6 +13,17 @@
 
 struct InputEvent { unsigned frame, keys; };
 static void die(const char *s) { fprintf(stderr, "ERROR: %s\n", s); exit(2); }
+static uint32_t optional_pinned_address(const char *name, int code) {
+    const char *raw = getenv(name);
+    if (!raw) return 0;
+    char *tail;
+    unsigned long v = strtoul(raw, &tail, 0);
+    if (*tail || (code ? (v < 0x08000000UL || v >= 0x0A000000UL)
+                       : !((v >= 0x02000000UL && v < 0x02040000UL) ||
+                           (v >= 0x03000000UL && v < 0x03008000UL))))
+        die("invalid pinned field-control diagnostic address");
+    return (uint32_t)v & (code ? ~1U : ~0U);
+}
 #include "phase1_firered_interrupt.h"
 static uint64_t digest(const void *data, size_t size) {
     const unsigned char *p = data;
@@ -35,6 +46,14 @@ int main(int argc, char **argv) {
     unsigned first_try_save_return_value = 0xFFFFFFFFU;
     unsigned long long trace_steps = 0;
     uint32_t gmain_addr = 0, sb1_ptr_addr = 0;
+    uint32_t lock_addr = optional_pinned_address("XGBA_PHASE1_LOCK_ADDR", 0);
+    uint32_t avatar_addr = optional_pinned_address("XGBA_PHASE1_AVATAR_ADDR", 0);
+    uint32_t player_step_target = optional_pinned_address("XGBA_PHASE1_PLAYER_STEP_ADDR", 1);
+    unsigned locked_overworld_frames = 0, player_step_hits = 0;
+    unsigned player_step_direction_hits = 0;
+    unsigned avatar_first_flags = 255, avatar_last_flags = 255;
+    unsigned avatar_last_running = 255, avatar_last_transition = 255;
+    unsigned avatar_last_object_event_id = 255;
     unsigned callback2_return_local_frames = 0, return_local_state_hist[16] = {0};
     unsigned last_gmain_state = 0;
     uint32_t last_callback2 = 0;
@@ -121,6 +140,11 @@ int main(int argc, char **argv) {
                     }
                     pending_try_save_return_pc = 0;
                 }
+                if (player_step_target && executing == player_step_target) {
+                    ++player_step_hits;
+                    if (((unsigned)cpu->gprs[0] & 0xFFU) != 0)
+                        ++player_step_direction_hits;
+                }
                 for (unsigned j = 0; j < 13; ++j) {
                     if (executing == targets[j]) {
                         ++hits[j];
@@ -157,6 +181,16 @@ int main(int argc, char **argv) {
             if (callback2 == targets[9]) {
                 ++callback2_overworld_frames;
                 if (!first_callback2_overworld_frame) first_callback2_overworld_frame = frame + 1;
+                if (lock_addr && core->busRead8(core, lock_addr))
+                    ++locked_overworld_frames;
+                if (avatar_addr) {
+                    unsigned flags = core->busRead8(core, avatar_addr);
+                    if (avatar_first_flags == 255) avatar_first_flags = flags;
+                    avatar_last_flags = flags;
+                    avatar_last_running = core->busRead8(core, avatar_addr + 2U);
+                    avatar_last_transition = core->busRead8(core, avatar_addr + 3U);
+                    avatar_last_object_event_id = core->busRead8(core, avatar_addr + 5U);
+                }
                 uint16_t held_keys = core->busRead16(core, gmain_addr + 0x2CU);
                 if (new_keys & (0x10U | 0x20U | 0x40U | 0x80U))
                     ++new_direction_key_overworld_frames;
@@ -252,6 +286,11 @@ int main(int argc, char **argv) {
            "\"first_overworld_pos_x\":%d,\"first_overworld_pos_y\":%d,"
            "\"position_changed_frames\":%u,\"first_position_change_frame\":%u,"
            "\"new_direction_key_overworld_frames\":%u,\"held_direction_key_overworld_frames\":%u,"
+           "\"locked_overworld_frames\":%u,\"player_step_hits\":%u,"
+           "\"player_step_nonzero_direction_hits\":%u,"
+           "\"avatar_first_flags\":%u,\"avatar_last_flags\":%u,"
+           "\"avatar_last_running\":%u,\"avatar_last_transition\":%u,"
+           "\"avatar_last_object_event_id\":%u,"
            "\"game_save_callsite_verified\":false}\n",
            core->frameCounter(core), count, gba->memory.savedata.type,
            baseline_frame, changed_bytes, frames_with_changed_data,
@@ -283,7 +322,10 @@ int main(int argc, char **argv) {
            saveblock1_valid ? (int16_t)core->busRead16(core, saveblock1 + 2U) : -32768,
            first_overworld_x, first_overworld_y, position_changed_frames,
            first_position_change_frame, new_direction_key_overworld_frames,
-           held_direction_key_overworld_frames);
+           held_direction_key_overworld_frames, locked_overworld_frames,
+           player_step_hits, player_step_direction_hits,
+           avatar_first_flags, avatar_last_flags, avatar_last_running,
+           avatar_last_transition, avatar_last_object_event_id);
     core->setKeys(core, 0);
     core->deinit(core);
     free(baseline);

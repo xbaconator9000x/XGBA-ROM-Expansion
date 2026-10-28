@@ -234,6 +234,14 @@ jobs:
           test -n "$start_menu_save" && test -n "$dialog_do_save" && test -n "$try_saving_data"
           test -n "$return_field_local" && test -n "$overworld" && test -n "$cb1_overworld"
           test -n "$show_start_menu" && test -n "$field_get_player_input" && test -n "$gmain" && test -n "$sb1"
+          lock_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="sLockFieldControls" {print "0x"$1;exit}')
+          avatar_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gPlayerAvatar" {print "0x"$1;exit}')
+          player_step_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="player_step" {print "0x"$1;exit}')
+          test -n "$lock_addr" && test -n "$avatar_addr" && test -n "$player_step_addr"
+          export XGBA_PHASE1_LOCK_ADDR="$lock_addr"
+          export XGBA_PHASE1_AVATAR_ADDR="$avatar_addr"
+          export XGBA_PHASE1_PLAYER_STEP_ADDR="$player_step_addr"
+          printf 'Pinned field control: lock=%s avatar=%s player_step=%s\n' "$lock_addr" "$avatar_addr" "$player_step_addr"
           printf 'Compiled save callsites: start=%s dialog=%s try=%s\n' "$start_menu_save" "$dialog_do_save" "$try_saving_data"
           python3 tools/phase1_firered_game_controller.py \
             --rom upstream/pokefirered/pokefirered.gba \

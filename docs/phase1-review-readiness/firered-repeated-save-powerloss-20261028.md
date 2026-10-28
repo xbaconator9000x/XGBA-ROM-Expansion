@@ -168,3 +168,35 @@ SaveBlock1 positions and first position-change frame. It fails closed
 if keys are not received or coordinates do not change. The result
 must be read from the new exact-head CI, not inferred from the test
 design. All Phase 1 gates FAIL_INCOMPLETE, zero independent approvals.
+
+## Held directions registered, but no camera position change (2026-10-28)
+
+At `3f260ca238ab2f2c76755b7d91eaa61e10216e10`,
+[CI #40616759445](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40616759445)
+**failed closed** in the new player-movement assertion. Unlike the
+earlier short-pulse test, the actual `gMain` registers **192 held
+direction frames and 2 new directional presses while CB2_Overworld is
+active**, and `FieldGetPlayerInput` executes 1,767 times. Yet
+`gSaveBlock1Ptr->pos` remains (11,10), with **zero** position-change
+frames and no game save or Flash writes. The controller schedule itself
+is not sufficient to establish movement; do not infer a position
+roundtrip or simply extend the held-key duration again.
+
+Pinned `src/overworld.c` blob `339014da46ae8543143edc99ab72bf7496203a0d`
+shows `DoCB1_Overworld` calls `FieldGetPlayerInput` before testing
+`ArePlayerFieldControlsLocked()`, and only calls `player_step`
+when unlocked and no other field event consumes input. Pinned
+`src/script.c` blob `d0433bdda062b138e53d1a1d3184b4566ad7d9dc`
+defines `sLockFieldControls`; pinned
+`include/global.fieldmap.h` blob
+`e2828ec0cb1439718e830fbef4366770b3b77b1c` defines
+`gPlayerAvatar` flags/running/tile-transition/object-event offsets.
+Pinned `src/field_player_avatar.c` blob
+`ef086dda3a6bf2d175861d6a7be1831790208ecb` owns `player_step`.
+
+The next exact-head test reads these **actual compiled ELF symbols**,
+records locked frames, `player_step` entry and nonzero-direction
+hits, and avatar flags/transition state, while preserving the fail-closed
+movement assertion. It must distinguish locked field controls,
+missing player-step dispatch, and avatar/collision failures before
+changing synthetic fixtures or declaring playable movement.

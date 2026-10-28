@@ -62,6 +62,14 @@ def main(a):
         "position_changed_frames": m["position_changed_frames"],
         "first_position_change_frame": m["first_position_change_frame"],
         "field_input_hits": m["field_get_player_input_hits"],
+        "locked_overworld_frames": m["locked_overworld_frames"],
+        "player_step_hits": m["player_step_hits"],
+        "player_step_nonzero_direction_hits": m["player_step_nonzero_direction_hits"],
+        "avatar_first_flags": m["avatar_first_flags"],
+        "avatar_last_flags": m["avatar_last_flags"],
+        "avatar_last_running": m["avatar_last_running"],
+        "avatar_last_transition": m["avatar_last_transition"],
+        "avatar_last_object_event_id": m["avatar_last_object_event_id"],
     }
     print(json.dumps(diagnostic, sort_keys=True), flush=True)
     assert m["new_direction_key_overworld_frames"] > 0 and m["held_direction_key_overworld_frames"] > 0, (
