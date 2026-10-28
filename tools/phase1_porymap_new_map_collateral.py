@@ -50,7 +50,8 @@ def check(project, header):
             "new-map event-script include generation changed")
     require('text += QString("\\t.include \\"%1/text.inc\\"\\n").arg(folderPath);' in save,
             "optional event-script text include changed")
-    require("if (!" + script not in save and "if (!" + event not in save,
+    require("if (!" + script not in save and "if (!" + text not in save and
+            "if (!" + event not in save,
             "new-map collateral return now checked; re-review")
     for name in ("saveTextFile", "appendTextFile"):
         b = extract(project, name)
