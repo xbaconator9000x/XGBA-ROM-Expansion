@@ -9,9 +9,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 struct InputEvent { unsigned frame, keys; };
 static void die(const char *s) { fprintf(stderr, "ERROR: %s\n", s); exit(2); }
+#include "phase1_firered_interrupt.h"
 static uint64_t digest(const void *data, size_t size) {
     const unsigned char *p = data;
     uint64_t h = UINT64_C(14695981039346656037);
@@ -20,6 +22,7 @@ static uint64_t digest(const void *data, size_t size) {
 }
 int main(int argc, char **argv) {
     if (argc != 8 && argc != 23) die("usage: controller ROM SAV EVENTS FRAMES STATUS_ADDR COUNTER_ADDR SB2_PTR_ADDR [START_MENU_SAVE DO_SAVE TRY_SAVING_DATA TITLE_TASK INIT_MAIN EXEC_MAIN RETURN_FIELD CONTINUE_GAME RETURN_FIELD_LOCAL OVERWORLD CB1_OVERWORLD SHOW_START_MENU FIELD_GET_PLAYER_INPUT GMAIN SB1_PTR_ADDR]");
+    unsigned cut_after = phase1_cut_selector(argc);
     char *end;
     unsigned limit = (unsigned)strtoul(argv[4], &end, 10);
     if (*end || limit < 180 || limit > 5000) die("invalid frame budget");
@@ -128,6 +131,9 @@ int main(int argc, char **argv) {
                     }
                 }
                 core->step(core);
+                phase1_maybe_interrupt(cut_after, hits[2], try_save_return_hits,
+                    pending_try_save_return_pc, trace_steps, frame + 1, gba,
+                    core->busRead32(core, (uint32_t)strtoul(argv[6], NULL, 0)));
             }
         } else {
             core->runFrame(core);

@@ -9,8 +9,10 @@ on:
       - '.github/workflows/phase1-real-firered-mgba-rom-save.yml'
       - 'tests/phase1_real_firered_mgba_runtime.c'
       - 'tests/phase1_firered_game_controller.c'
+      - 'tests/phase1_firered_interrupt.h'
       - 'tools/phase1_firered_game_controller.py'
       - 'tools/phase1_firered_repeat_save.py'
+      - 'tools/phase1_firered_interrupted_save.py'
       - 'docs/phase1-review-readiness/firered-repeated-save-powerloss-20261028.md'
       - 'docs/phase1-review-readiness/firered-controller-save-observation-20261028.md'
       - 'tools/phase1_real_firered_mgba_fixtures.py'
@@ -240,6 +242,21 @@ jobs:
           # negative control. Never claim a real interrupted write from this surrogate.
           python3 -m py_compile tools/phase1_firered_repeat_save.py
           python3 tools/phase1_firered_repeat_save.py \
+            --rom upstream/pokefirered/pokefirered.gba \
+            --probe ./game-controller-probe --status "$status" --counter "$counter" --sb2 "$sb2" \
+            --start-menu-save "$start_menu_save" --dialog-do-save "$dialog_do_save" \
+            --try-saving-data "$try_saving_data" --title-task "$title_task" \
+            --init-main-menu "$init_main_menu" --execute-main-menu "$execute_main_menu" \
+            --return-to-field "$return_to_field" --continue-saved-game "$continue_saved_game" \
+            --return-field-local "$return_field_local" --overworld "$overworld" \
+            --cb1-overworld "$cb1_overworld" --show-start-menu "$show_start_menu" \
+            --field-get-player-input "$field_get_player_input" --gmain "$gmain" --sb1 "$sb1" \
+            --output evidence/controller
+          cp evidence/controller/*.json evidence/results/
+          # Cut third game-initiated save before TrySavingData returns.
+          # Three actual in-flight Flash states; fresh emulator fallback each.
+          python3 -m py_compile tools/phase1_firered_interrupted_save.py
+          python3 tools/phase1_firered_interrupted_save.py \
             --rom upstream/pokefirered/pokefirered.gba \
             --probe ./game-controller-probe --status "$status" --counter "$counter" --sb2 "$sb2" \
             --start-menu-save "$start_menu_save" --dialog-do-save "$dialog_do_save" \

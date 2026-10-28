@@ -31,3 +31,35 @@
 At `ff6cc431841a4961853af530808100f47c7ca80b`, [CI #40604175206](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40604175206) **passed** (text artifact `12780755653`). Actual second controller-driven `TrySavingData` entry/return 1/1, return `SAVE_STATUS_OK=1`, counter 2, **862 Flash bytes changed**, physical `.sav` SHA changed, 14 checksum-valid rotated sectors in physical slot 0, prior slot 1 unchanged. A new emulator process recovered RED/PalletTown, counter 2 and 1,259 field-input hits without writing Flash. One-bit post-save checksum corruption produced native status **255**, counter **1**, older-slot recovery and 1,018 field-input hits. This is **not** actual in-flight power loss. Pinned FireRed `src/save.c` blob `36b960f375c92711aa49b99bdfe9c6b3a99d6b1c`; pinned mGBA `src/gba/savedata.c` blob `fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb`.
 
 This follow-up makes the observed older-slot fallback an **asserted regression requirement**, adds a Python syntax check and includes the new test/dossier paths in the workflow trigger list. **New head requires its own exact-head CI** before promotion; the previous green run remains valid for its immutable commit. All Phase 1 gates `FAIL_INCOMPLETE`, no independent approval.
+
+## Third genuine game save — in-flight emulator-process interruption experiment
+
+**New experiment; exact-head CI not yet verified.** Source-built pinned
+FireRed/agbcc/mGBA starts from the already game-written counter-2 Flash
+save and navigates the real Save menu via controller input. The test
+observes checksum-valid counter-3 sectors in the mGBA mapped Flash1M
+image during actual `TrySavingData`, polling every 2,048 instructions.
+After 1, 7 or 13 complete new sectors in physical slot 1, the test
+immediately calls `_exit(86)` **before the game save returns**.
+There are no host Flash bus writes and no graceful emulator deinit.
+
+The runner independently reads the resulting physical .sav, requires
+counter-2 physical slot 0 byte-for-byte unchanged, verifies the new
+sector count matches the in-memory observation, then cold-boots each
+interrupted file in a new emulator process. The expected fallback is
+counter 2, RED in Pallet Town, playable field input and no new writes.
+A threshold of 14 is deliberately rejected as a negative control,
+because a completed 14-sector save is not an in-flight interruption.
+
+**Limit:** abrupt emulator process exit is not hardware power loss or
+a filesystem durability guarantee. Pinned mGBA `src/gba/savedata.c`
+blob `fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb` maps Flash
+with writable VFile mapping and can later sync through
+`GBASavedataClean`. Host OS page-cache writeback can persist mapped
+changes even when the emulator exits abruptly. Pinned FireRed
+`src/save.c` blob `36b960f375c92711aa49b99bdfe9c6b3a99d6b1c`
+defines rotating sectors and the game-save call path.
+
+Do not infer results from successful compilation alone. No new
+complete-file analyst review or independent approval; all Phase 1
+gates remain FAIL_INCOMPLETE. Phase 2 untouched.
