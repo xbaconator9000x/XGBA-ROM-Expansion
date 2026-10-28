@@ -33,7 +33,7 @@ def check(pm,ps,fr):
  files=extract(pm,"findScriptsFiles","QStringList")
  require('return ".pory";' in ext and 'return ".inc";' in ext,"Porymap extensions changed")
  require('saveTextFile(fullPath + "/scripts" + this->getScriptFileExtension(projectConfig.usePoryScript), text);' in save,"script creation changed")
- require('scripts.inc' in save and 'text.inc' in save and 'appendTextFile(root + "/"' in save,"event script include changed")
+ require(any('text = QString(' in line and 'scripts.inc' in line for line in save.splitlines()) and 'text.inc' in save and 'appendTextFile(root + "/"' in save,"event script include changed")
  require('mapscripts %1_MapScripts {}' in defaults,"default Poryscript syntax changed")
  require('filters.append(s + getScriptFileExtension(true));' in files,"Porymap .pory search changed")
  require('./poryscript -i data/scripts/myscript.pory -o data/scripts/myscript.inc' in ps,"Poryscript CLI command changed")
@@ -59,7 +59,13 @@ def controls(pm,ps,fr):
  for idx,(kind,old,new) in enumerate(changes):
   a,b,c=pm,ps,dict(fr)
   if kind=="pm":
-   require(old in a,"missing Porymap mutation"); a=a.replace(old,new,1)
+   require(old in a,"missing Porymap mutation")
+   if idx==1:
+    body=extract(a,"saveMap","bool")
+    start=body.index("text = QString(")
+    changed=body[:start]+body[start:].replace("scripts.inc","scripts.pory",1)
+    a=a.replace(body,changed,1)
+   else: a=a.replace(old,new,1)
   elif kind=="ps":
    require(old in b,"missing Poryscript mutation"); b=b.replace(old,new,1)
   elif kind=="fr":
