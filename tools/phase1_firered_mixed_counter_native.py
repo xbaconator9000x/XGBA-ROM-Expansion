@@ -23,7 +23,7 @@ def require(condition, detail):
         raise AssertionError(detail)
 
 def git_blob(raw):
-    return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\\0" + raw).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
 
 def check_fixture(raw, profile):
     counters, _, _ = profile
@@ -151,7 +151,7 @@ def main():
             "No independent semantic approval; all Phase 1 gates FAIL_INCOMPLETE.",
         ], "phase1_gate": "FAIL_INCOMPLETE", "independent_approvals": 0,
     }
-    (out / "mixed_counter_native.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\\n")
+    (out / "mixed_counter_native.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
 
 if __name__ == "__main__":
     main()
