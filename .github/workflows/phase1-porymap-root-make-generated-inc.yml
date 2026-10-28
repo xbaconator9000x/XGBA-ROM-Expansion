@@ -45,7 +45,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi build-essential
+          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi build-essential libpng-dev pkg-config
       - name: Execute original root Makefile generated target and data/event_scripts.o
         run: |
           set -euo pipefail
