@@ -69,7 +69,26 @@ def check_output(stdout):
         "synthetic_rom=true physical_hardware=false persistent_sav=false "
         "phase1_gate=FAIL_INCOMPLETE approvals=0 checks=14"),
         "scope or assertion count changed")
-    require(len(lines) == len(REQUIRED) + 1, "unexpected runtime transcript")
+    # The original mGBA core emits deterministic Flash diagnostics on stdout.
+    # Preserve them as native evidence rather than suppressing emulator logging.
+    diagnostics = {
+        "GBA Savedata: Performing flash bank switch to bank 1": 1,
+        "GBA Savedata: Performing flash bank switch to bank 0": 1,
+        "GBA Savedata: Performing flash sector erase at 0xe000": 2,
+        "GBA Savedata: Performing flash sector erase at 0xf000": 2,
+        "GBA Savedata: Performing unknown sector-size erase at 0xe000": 2,
+        "GBA Savedata: Performing unknown sector-size erase at 0xf000": 2,
+        "GBA Savedata: Bad flash write: 0xe007 = 00": 1,
+        "GBA Savedata: Bad flash bank switch": 1,
+    }
+    observed = [line for line in lines if line.startswith("GBA Savedata: ")]
+    for label, count in diagnostics.items():
+        require(observed.count(label) == count,
+                "missing/changed original mGBA Flash diagnostic: " + label)
+    require(len(observed) == sum(diagnostics.values()),
+            "unexpected mGBA diagnostic")
+    require(len(lines) == len(REQUIRED) + 1 + len(observed),
+            "unexpected runtime transcript")
     return len(passed)
 def negatives(src, stdout):
     source_count = 0
@@ -97,6 +116,8 @@ def negatives(src, stdout):
         stdout.replace("approvals=0", "approvals=1", 1),
         stdout.replace("checks=14", "checks=13", 1),
         stdout + "PASS " + REQUIRED[0] + "\n",
+        stdout.replace("GBA Savedata: Bad flash bank switch",
+                       "GBA Savedata: Bank 2 accepted", 1),
     ]
     count = 0
     for modified in mutations:
