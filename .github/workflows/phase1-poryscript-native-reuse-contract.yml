@@ -1,0 +1,59 @@
+name: Phase 1 pinned Poryscript FireRed native Makefile reuse contract
+on:
+  push:
+    branches:
+      - 'phase1/**'
+    paths:
+      - 'tools/phase1_poryscript_native_make_recipe.py'
+      - '.github/workflows/phase1-poryscript-native-reuse-contract.yml'
+  pull_request:
+    paths:
+      - 'tools/phase1_poryscript_native_make_recipe.py'
+      - '.github/workflows/phase1-poryscript-native-reuse-contract.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-native-makefile-reuse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: pinned-firered
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/poryscript
+          ref: c32481161c767b25a3425fa9f1f8729927ff3d55
+          path: pinned-poryscript
+          persist-credentials: false
+      - name: Install existing GNU ARM binutils
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi
+          arm-none-eabi-as --version | head -1
+          go version
+      - name: Execute pinned source Makefile assembly recipe and fail-closed controls
+        run: |
+          set -euo pipefail
+          mkdir -p phase1-evidence
+          python3 -m py_compile tools/phase1_poryscript_native_make_recipe.py
+          python3 tools/phase1_poryscript_native_make_recipe.py \
+            --firered pinned-firered \
+            --poryscript pinned-poryscript \
+            --output phase1-evidence/poryscript-native-makefile-reuse.json
+          python3 -m json.tool phase1-evidence/poryscript-native-makefile-reuse.json >/dev/null
+      - name: Archive text-only native recipe evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-poryscript-native-makefile-reuse-text
+          path: phase1-evidence/poryscript-native-makefile-reuse.json
+          if-no-files-found: error
