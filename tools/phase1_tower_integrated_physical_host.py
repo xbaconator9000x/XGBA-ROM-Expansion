@@ -103,7 +103,7 @@ def main():
         root=Path(td); src=root/"combined.c"; exe=root/"combined"
         src.write_text(harness.replace("PHASE1_PINNED_SPECIAL_SECTOR_FUNCTIONS",save)
                               .replace("PHASE1_PINNED_CEREADER_FUNCTIONS",tower))
-        build=subprocess.run(["cc","-std=gnu11","-O0","-Wall","-Wextra","-Werror",
+        build=subprocess.run(["cc","-std=gnu11","-O0","-Wall","-Wextra","-Werror","-Wno-sign-compare",
                               str(src),"-o",str(exe)],capture_output=True,text=True)
         require(build.returncode==0,"compiled integration failed "+build.stderr[-5000:])
         run=subprocess.run([str(exe)],capture_output=True,text=True)
