@@ -49,6 +49,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: phase1-porymap-native-text-writer-enospc-text
-          path: phase1-evidence/*.json
+          path: |
+            phase1-evidence/*.json
+            phase1-evidence/*.log
           if-no-files-found: warn
           retention-days: 30
