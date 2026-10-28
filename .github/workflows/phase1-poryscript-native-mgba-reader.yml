@@ -1,0 +1,90 @@
+name: Phase 1 original-agbcc Poryscript reader native mGBA
+on:
+  push:
+    branches:
+      - phase1/poryscript-real-cli-arm-map-table-20261027
+    paths:
+      - 'tests/phase1_poryscript_native/**'
+      - 'tools/phase1_poryscript_native_table_export.py'
+      - 'tools/phase1_poryscript_native_mgba_reader.py'
+      - 'docs/phase1-review-readiness/poryscript-original-agbcc-native-mgba-20261029.md'
+      - '.github/workflows/phase1-poryscript-native-mgba-reader.yml'
+  pull_request:
+    paths:
+      - 'tests/phase1_poryscript_native/**'
+      - 'tools/phase1_poryscript_native_table_export.py'
+      - 'tools/phase1_poryscript_native_mgba_reader.py'
+      - 'docs/phase1-review-readiness/poryscript-original-agbcc-native-mgba-20261029.md'
+      - '.github/workflows/phase1-poryscript-native-mgba-reader.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-arm-reader-in-pinned-mgba:
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/agbcc
+          ref: da598c1d918402c42c0c0d7128ba14567f3175e9
+          path: upstream-agbcc
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/poryscript
+          ref: c32481161c767b25a3425fa9f1f8729927ff3d55
+          path: upstream-poryscript
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: mgba-emu/mgba
+          ref: fd9dc5c2cbf234365068855851107e762fc6211b
+          path: upstream-mgba
+          persist-credentials: false
+      - name: Install original FireRed toolchain dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi libpng-dev build-essential cmake
+      - name: Build original agbcc and pristine FireRed ROM
+        run: |
+          set -euo pipefail
+          (cd upstream-agbcc && ./build.sh && ./install.sh ../upstream-firered) > phase1-agbcc-build.log 2>&1 || { tail -100 phase1-agbcc-build.log; exit 1; }
+          make -C upstream-firered -j2 > phase1-firered-build.log 2>&1 || { tail -100 phase1-firered-build.log; exit 1; }
+          test -f upstream-firered/pokefirered.elf
+          test -f upstream-firered/pokefirered.gba
+      - name: Generate actual Poryscript CLI table using original FireRed preprocessor and GNU ARM
+        run: |
+          set -euo pipefail
+          mkdir -p phase1-evidence
+          python3 tools/phase1_poryscript_native_table_export.py --poryscript upstream-poryscript --firered upstream-firered --output phase1-evidence/generated-map-table.bin > phase1-table-build.log 2>&1 || { tail -100 phase1-table-build.log; exit 1; }
+      - name: Build unchanged pinned mGBA core with test-only ARM entry harness
+        run: |
+          set -euo pipefail
+          cmake -S tests/phase1_poryscript_native -B build-phase1-reader -DCMAKE_BUILD_TYPE=Debug > phase1-mgba-configure.log 2>&1 || { tail -100 phase1-mgba-configure.log; exit 1; }
+          cmake --build build-phase1-reader --target phase1_original_reader_native --parallel 2 > phase1-mgba-build.log 2>&1 || { tail -100 phase1-mgba-build.log; exit 1; }
+      - name: Execute native original-agbcc reader and fail-closed transcript controls
+        run: |
+          set -euo pipefail
+          python3 tools/phase1_poryscript_native_mgba_reader.py --firered upstream-firered --mgba upstream-mgba --poryscript upstream-poryscript --elf upstream-firered/pokefirered.elf --rom upstream-firered/pokefirered.gba --table phase1-evidence/generated-map-table.bin --executable build-phase1-reader/phase1_original_reader_native --log phase1-evidence/native-reader.log --output phase1-evidence/native-reader.json
+      - name: Preserve text evidence only, never distribute ROM or ELF
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-original-agbcc-poryscript-native-mgba
+          path: |
+            phase1-evidence/*.json
+            phase1-evidence/*.log
+            phase1-agbcc-build.log
+            phase1-firered-build.log
+            phase1-table-build.log
+            phase1-mgba-configure.log
+            phase1-mgba-build.log
+          if-no-files-found: warn
