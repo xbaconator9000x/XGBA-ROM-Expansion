@@ -16,6 +16,7 @@ PROFILES = {
     "mixed_counter_tail0": ([1] * 13 + [0], 0, 0xA5),
     "mixed_counter_tail1": ([2] * 13 + [1], 1, 0x5A),
     "mixed_counter_tail3": ([1] * 13 + [3], 3, 0x5A),
+    "mixed_counter_all_sectors": ([1] * 13 + [3], 3, 0x5A),
 }
 
 def require(condition, detail):
@@ -25,7 +26,7 @@ def require(condition, detail):
 def git_blob(raw):
     return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
 
-def check_fixture(raw, profile):
+def check_fixture(raw, profile, all_sectors=False):
     counters, _, _ = profile
     require(len(raw) == 32 * SECTOR, "physical Flash1M length changed")
     for slot in (0, 1):
@@ -33,16 +34,19 @@ def check_fixture(raw, profile):
             base = (slot * 14 + i) * SECTOR
             ident, check, signature, counter = struct.unpack_from("<HHII", raw, base + 0xFF4)
             expected_counter = 0 if slot == 0 else counters[i]
-            expected_marker = (0xA5 if slot == 0 else 0x5A) if i == 0 else 0
+            expected_marker = ((0xA5 if slot == 0 else 0x5A) if i == 0
+                               else ((0x40+i if slot == 0 else
+                                      (0xED if i == 13 else 0x80+i))
+                                     if all_sectors else 0))
             require(ident == i, f"sector ID drift slot={slot} i={i}: {ident}")
             require(signature == SIGNATURE, f"signature drift slot={slot} i={i}")
             require(counter == expected_counter, f"counter drift slot={slot} i={i}: {counter}")
-            require(raw[base + 0xB80] == expected_marker, f"payload marker drift slot={slot} i={i}")
+            require(raw[base + (0xB80 if i == 0 else 0x100)] == expected_marker, f"payload marker drift slot={slot} i={i}")
             # All other payload bytes are zero in this deliberately synthetic fixture.
             require(check == expected_marker, f"checksum drift slot={slot} i={i}")
     return True
 
-def check_trace(d, expected):
+def check_trace(d, expected, all_sectors=False):
     _, counter, marker = expected
     require(d.get("mode") == "trace", "missing native trace mode")
     require(d.get("frames", 0) >= 180 and d.get("trace_steps", 0) > 0, "native execution missing")
@@ -55,6 +59,14 @@ def check_trace(d, expected):
     require(d.get("saveblock2_filler_marker") == marker, "wrong physical payload slot")
     require(0x02000000 <= d.get("saveblock2_ptr", 0) < 0x02040000,
             "SaveBlock2 pointer outside EWRAM")
+    if all_sectors:
+        require(0x02000000 <= d.get("saveblock1_ptr", 0) < 0x02040000,
+                "SaveBlock1 pointer outside EWRAM")
+        require(0x02000000 <= d.get("pokemon_storage_ptr", 0) < 0x02040000,
+                "storage pointer outside EWRAM")
+        expected_markers = [0x5A] + [0x80+i for i in range(1, 13)] + [0xED]
+        require(d.get("saveblock_sector_markers") == expected_markers,
+                "native reconstructed 14-sector payload differs from physical slot1")
     return True
 
 def rejected(callback):
@@ -67,7 +79,7 @@ def rejected(callback):
 def main():
     ap = argparse.ArgumentParser()
     for name in ("probe", "rom", "fixtures", "output", "status", "counter",
-                 "loader", "valid", "copy", "sb2", "firered-source"):
+                 "loader", "valid", "copy", "sb2", "sb1", "storage", "firered-source"):
         ap.add_argument("--" + name, required=True)
     a = ap.parse_args()
     source = Path(a.firered_source)
@@ -90,7 +102,8 @@ def main():
         raw = (fixtures / (name + ".sav")).read_bytes()
         require(hashlib.sha256(raw).hexdigest() == records[name]["sha256"],
                 name + " fixture manifest mismatch")
-        check_fixture(raw, profile)
+        all_sectors = name == "mixed_counter_all_sectors"
+        check_fixture(raw, profile, all_sectors)
         # Five independent negative controls for each physical fixture.
         for offset, fmt, value in (
             (27 * SECTOR + 0xFFC, "<I", 77),     # last sector counter
@@ -101,21 +114,31 @@ def main():
         ):
             altered = bytearray(raw)
             struct.pack_into(fmt, altered, offset, value)
-            require(rejected(lambda data=altered: check_fixture(data, profile)),
+            require(rejected(lambda data=altered: check_fixture(data, profile, all_sectors)),
                     "offline mutation accepted")
             controls += 1
+        if all_sectors:
+            for physical in (0, 1):
+                for i in range(1, 14):
+                    altered = bytearray(raw)
+                    altered[(physical*14+i)*SECTOR+0x100] ^= 1
+                    require(rejected(lambda data=altered: check_fixture(data, profile, True)),
+                            "per-sector physical payload mutation escaped")
+                    controls += 1
         sav = out / ("trace_" + name + ".sav")
         sav.write_bytes(raw)
         before = hashlib.sha256(sav.read_bytes()).hexdigest()
         command = [a.probe, a.rom, str(sav), "trace", a.status, a.counter,
                    a.loader, a.valid, a.copy, a.sb2]
+        if all_sectors:
+            command.extend([a.sb1, a.storage])
         proc = subprocess.run(command, text=True, capture_output=True, timeout=240, check=False)
         require(proc.returncode == 0, f"{name}: native rc={proc.returncode}: {proc.stderr[-600:]}")
         traces = [json.loads(line) for line in proc.stdout.splitlines()
                   if line.startswith('{"mode":"trace"')]
         require(len(traces) == 1, f"{name}: expected one actual native trace")
         d = traces[0]
-        check_trace(d, profile)
+        check_trace(d, profile, all_sectors)
         require(hashlib.sha256(sav.read_bytes()).hexdigest() == before,
                 name + ": native loader unexpectedly changed physical Flash")
         for key, value in (
@@ -124,9 +147,17 @@ def main():
         ):
             altered = dict(d)
             altered[key] = value
-            require(rejected(lambda record=altered: check_trace(record, profile)),
+            require(rejected(lambda record=altered: check_trace(record, profile, all_sectors)),
                     "native trace mutation accepted")
             controls += 1
+        if all_sectors:
+            for i in range(14):
+                altered = dict(d)
+                altered["saveblock_sector_markers"] = list(d["saveblock_sector_markers"])
+                altered["saveblock_sector_markers"][i] ^= 1
+                require(rejected(lambda record=altered: check_trace(record, profile, True)),
+                        "per-sector native memory mutation escaped")
+                controls += 1
         cases.append({
             "case": name, "physical_slot0_counters": [0] * 14,
             "physical_slot1_counters": profile[0], "native_status": d["save_status"],
@@ -136,6 +167,8 @@ def main():
             "native_validator_entries": d["get_save_valid_status_entry_hits"],
             "native_copy_entries": d["copy_save_slot_data_entry_hits"],
             "physical_flash_unchanged": True, "synthetic_fixture": True,
+            "all_14_payload_sections_observed": all_sectors,
+            "native_sector_markers": d.get("saveblock_sector_markers") if all_sectors else None,
         })
         print(json.dumps(cases[-1], sort_keys=True), flush=True)
     report = {

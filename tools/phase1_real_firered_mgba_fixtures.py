@@ -71,6 +71,7 @@ def emit(root, rom, source):
         "mixed_counter_tail0":(True,True,None,False),
         "mixed_counter_tail1":(True,True,None,False),
         "mixed_counter_tail3":(True,True,None,False),
+        "mixed_counter_all_sectors":(True,True,None,False),
         "malformed_id15":(True,True,"id15",False),
         "malformed_id65535":(True,True,"id65535",False),
         "older_slot_fallback":(True,True,"signature",False),
@@ -90,6 +91,17 @@ def emit(root, rom, source):
             # Last physical sector alone changes counter; no checksum alteration.
             tail = 0 if name.endswith("tail0") else 3
             b[27*SECTOR:28*SECTOR] = sector(13,tail)
+        if name == "mixed_counter_all_sectors":
+            # Generation-distinct per-section payload, not just a sector0 marker.
+            # Slot1 has 13 counter1 sectors and a counter3 last sector.
+            struct.pack_into("<I", b, 27*SECTOR+0xFFC, 3)
+            for physical in (0, 1):
+                for i in range(1, 14):
+                    base = (physical*14+i)*SECTOR
+                    marker = (0x40+i if physical == 0 else
+                              (0xED if i == 13 else 0x80+i))
+                    b[base+0x100] = marker
+                    struct.pack_into("<H", b, base+0xFF6, marker)
         if name.startswith("pallet_"):
             make_pallet_fixture(b, null_layout=(name=="pallet_null_layout"),
                                 continue_warp=(name=="pallet_continue_warp"))

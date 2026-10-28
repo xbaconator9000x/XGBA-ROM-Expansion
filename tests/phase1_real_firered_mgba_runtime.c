@@ -15,8 +15,8 @@ static void flash_write(struct mCore *core, unsigned offset, uint8_t value) {
     core->busWrite8(core, 0x0E000000U + offset, value);
 }
 int main(int argc, char **argv) {
-    if (argc != 6 && argc != 9 && argc != 10) fail("usage: probe ROM SAV MODE STATUS_ADDR COUNTER_ADDR [LOAD_ADDR VALID_ADDR COPY_ADDR [SAVEBLOCK2_PTR_ADDR]]");
-    if (!strcmp(argv[3], "trace") && argc != 10) fail("trace mode needs three ELF function addresses");
+    if (argc != 6 && argc != 9 && argc != 10 && argc != 12) fail("usage: probe ROM SAV MODE STATUS_ADDR COUNTER_ADDR [LOAD_ADDR VALID_ADDR COPY_ADDR [SAVEBLOCK2_PTR_ADDR]]");
+    if (!strcmp(argv[3], "trace") && argc != 10 && argc != 12) fail("trace mode needs three ELF function addresses");
     const char *mode = argv[3];
     struct mCore *core = mCoreFind(argv[1]);
     if (!core) fail("mCoreFind did not recognize ROM");
@@ -86,6 +86,21 @@ int main(int argc, char **argv) {
     uint32_t saveBlock2 = argc == 10 ? core->busRead32(core, (uint32_t)strtoul(argv[9], NULL, 0)) : 0;
     unsigned fillerMarker = (saveBlock2 >= 0x02000000U && saveBlock2 < 0x02040000U)
         ? core->busRead8(core, saveBlock2 + 0xB80U) : 0xFFFFFFFFU;
+    uint32_t saveBlock1 = argc == 12 ? core->busRead32(core, (uint32_t)strtoul(argv[10], NULL, 0)) : 0;
+    uint32_t storage = argc == 12 ? core->busRead32(core, (uint32_t)strtoul(argv[11], NULL, 0)) : 0;
+    unsigned sectorMarkers[14] = {0};
+    if (argc == 12) {
+        if (saveBlock2 < 0x02000000U || saveBlock2 >= 0x02040000U ||
+            saveBlock1 < 0x02000000U || saveBlock1 >= 0x02040000U ||
+            storage < 0x02000000U || storage >= 0x02040000U)
+            fail("source-linked saveblock/storage pointers outside EWRAM");
+        sectorMarkers[0] = fillerMarker;
+        for (unsigned i = 1; i < 14; ++i) {
+            uint32_t base = i <= 4 ? saveBlock1 : storage;
+            uint32_t chunk = i <= 4 ? i - 1 : i - 5;
+            sectorMarkers[i] = core->busRead8(core, base + chunk * 0xF80U + 0x100U);
+        }
+    }
     if (!strcmp(mode, "program")) {
         if (type != GBA_SAVEDATA_FLASH1M) fail("expected Flash1M before program");
         /* Host-driven probe: finish any interrupted game-side Flash command,
@@ -107,9 +122,17 @@ int main(int argc, char **argv) {
         for (int i = 0; i < 3; ++i) core->runFrame(core);
     }
     if (!strcmp(mode, "verify") && before != 0x5A) fail("Flash1M byte not restored from physical save file");
-    printf("{\"mode\":\"%s\",\"frames\":%u,\"save_type\":%u,\"save_status\":%u,\"save_counter\":%u,\"flash_byte_40\":%u,\"trace_steps\":%llu,\"load_game_save_entry_hits\":%u,\"get_save_valid_status_entry_hits\":%u,\"copy_save_slot_data_entry_hits\":%u,\"load_game_save_arg\":%u,\"load_game_save_return_hits\":%u,\"load_game_save_return_value\":%u,\"trace_end_pc\":%u,\"trace_frame_limit\":%u,\"saveblock2_ptr\":%u,\"saveblock2_filler_marker\":%u}\n",
+    printf("{\"mode\":\"%s\",\"frames\":%u,\"save_type\":%u,\"save_status\":%u,\"save_counter\":%u,\"flash_byte_40\":%u,\"trace_steps\":%llu,\"load_game_save_entry_hits\":%u,\"get_save_valid_status_entry_hits\":%u,\"copy_save_slot_data_entry_hits\":%u,\"load_game_save_arg\":%u,\"load_game_save_return_hits\":%u,\"load_game_save_return_value\":%u,\"trace_end_pc\":%u,\"trace_frame_limit\":%u,\"saveblock2_ptr\":%u,\"saveblock2_filler_marker\":%u",
         mode, core->frameCounter(core), type, status, counter, before, steps, hits[0], hits[1], hits[2],
         loadSaveArg, loadReturnHits, loadReturnValue, traceEndPc, traceFrameLimit, saveBlock2, fillerMarker);
+    if (argc == 12) {
+        printf(",\"saveblock1_ptr\":%u,\"pokemon_storage_ptr\":%u,\"saveblock_sector_markers\":[",
+               saveBlock1, storage);
+        for (unsigned i = 0; i < 14; ++i)
+            printf("%s%u", i ? "," : "", sectorMarkers[i]);
+        printf("]");
+    }
+    printf("}\n");
     core->deinit(core);
     free(video);
     return 0;

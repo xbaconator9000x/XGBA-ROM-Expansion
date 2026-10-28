@@ -209,13 +209,15 @@ jobs:
           valid=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="GetSaveValidStatus" {print "0x"$1;exit}')
           copy=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="CopySaveSlotData" {print "0x"$1;exit}')
           sb2=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveBlock2Ptr" {print "0x"$1;exit}')
-          for symbol in "$status" "$counter" "$loader" "$valid" "$copy" "$sb2"; do test -n "$symbol"; done
+          sb1=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gSaveBlock1Ptr" {print "0x"$1;exit}')
+          storage=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gPokemonStoragePtr" {print "0x"$1;exit}')
+          for symbol in "$status" "$counter" "$loader" "$valid" "$copy" "$sb2" "$sb1" "$storage"; do test -n "$symbol"; done
           python3 tools/phase1_firered_mixed_counter_native.py \
             --probe ./real-rom-probe --rom upstream/pokefirered/pokefirered.gba \
             --fixtures evidence/fixtures --output evidence/results \
             --firered-source upstream/pokefirered \
             --status "$status" --counter "$counter" --loader "$loader" \
-            --valid "$valid" --copy "$copy" --sb2 "$sb2"
+            --valid "$valid" --copy "$copy" --sb2 "$sb2" --sb1 "$sb1" --storage "$storage"
       - name: Observe input-driven real-ROM Flash changes without host writes
         run: |
           set -euo pipefail
