@@ -38,12 +38,12 @@ def check(project, header):
         "mapFile.close();",
         "map->setClean();",
         "if (!skipLayout && !saveLayout(map->layout()))",
-        "return true;",
     )
     for a in anchors:
         require(save.count(a) == 1, "missing/duplicate new-map save anchor: " + a)
     positions = [save.index(a) for a in anchors]
     require(positions == sorted(positions), "new-map collateral/map/layout order changed")
+    require(save.rstrip().endswith("return true;\\n}"), "final save success return changed")
     require("if (projectConfig.createMapTextFileEnabled)" in save,
             "optional new-map text branch missing")
     require('text = QString("\\n\\t.include \\"%1/scripts.inc\\"\\n").arg(folderPath);' in save,
@@ -69,7 +69,9 @@ def check(project, header):
 
 def source_controls(project, header):
     changes = [
-        (project.replace("if (!map->isPersistedToFile())", "if (map->isPersistedToFile())", 1), header),
+        (project.replace(extract(project, "saveMap"),
+                         extract(project, "saveMap").replace("if (!map->isPersistedToFile())",
+                                                               "if (map->isPersistedToFile())", 1), 1), header),
         (project.replace('saveTextFile(fullPath + "/scripts"', 'if (!saveTextFile(fullPath + "/scripts"', 1), header),
         (project.replace('saveTextFile(fullPath + "/text"', 'if (!saveTextFile(fullPath + "/text"', 1), header),
         (project.replace('appendTextFile(root + "/"', 'if (!appendTextFile(root + "/"', 1), header),
