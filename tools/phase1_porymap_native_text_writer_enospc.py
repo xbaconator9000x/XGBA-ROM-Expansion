@@ -42,24 +42,26 @@ def check(source):
 
 def source_mutations(source):
     mutations = [
-        ('file.open(QIODevice::WriteOnly)', 'file.open(QIODevice::ReadOnly)'),
-        ('file.open(QIODevice::Append)', 'file.open(QIODevice::WriteOnly)'),
-        ('file.write(text.toUtf8());', 'if (file.write(text.toUtf8()) < 0) return false;'),
-        ('file.write(text.toUtf8());', 'file.flush();'),
-        ('return true;', 'return false;'),
-        ('QFile file(path);', 'QFile file("/dev/null");'),
+        ("saveTextFile", 'file.open(QIODevice::WriteOnly)', 'file.open(QIODevice::ReadOnly)'),
+        ("appendTextFile", 'file.open(QIODevice::Append)', 'file.open(QIODevice::WriteOnly)'),
+        ("saveTextFile", 'file.write(text.toUtf8());', 'if (file.write(text.toUtf8()) < 0) return false;'),
+        ("appendTextFile", 'file.write(text.toUtf8());', 'file.flush();'),
+        ("saveTextFile", 'return true;', 'return false;'),
+        ("appendTextFile", 'QFile file(path);', 'QFile file("/dev/null");'),
     ]
     count = 0
-    for old, new in mutations:
-        require(old in source, "mutation anchor missing " + old)
-        modified = source.replace(old, new, 1)
+    for name, old, new in mutations:
+        body = extract(source, name)
+        require(old in body, "mutation anchor missing in " + name + ": " + old)
+        changed_body = body.replace(old, new, 1)
+        modified = source.replace(body, changed_body, 1)
         require(modified != source, "ineffective source mutation")
         try:
             check(modified)
         except ValueError:
             count += 1
         else:
-            raise ValueError("source mutation escaped: " + old)
+            raise ValueError("source mutation escaped: " + name + ": " + old)
     return count
 
 def parse(stdout, trace):
