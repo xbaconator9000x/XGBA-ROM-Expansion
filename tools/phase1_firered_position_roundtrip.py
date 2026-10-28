@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Phase 1: native controller movement -> game-written Flash -> cold-boot x/y.
 
-Initial playable PalletTown save was synthetic; starting counter1 slot was
-subsequently written by actual TrySavingData. All movement uses mGBA keys.
+The source-pinned Pallet Town Continue-warp fixture is synthetic.
+Movement, the first real save, and cold boot use controller input only.
 """
 import argparse
 import json
@@ -39,17 +39,21 @@ def assert_native_xy(native, xy, name):
 def main(a):
     root = Path(a.output)
     root.mkdir(parents=True, exist_ok=True)
-    first = root / "pallet_save_dense_confirm.sav"
-    first_proof = json.loads((root / "pallet_save_dense_confirm.json").read_text())
-    assert first_proof["native"]["first_try_saving_data_return_value"] == 1
-    assert first_proof["native"]["save_counter"] == 1
-    original = first.read_bytes()
-    start_xy = saved_xy(original, 1, 1)
+    fixture = Path(a.fixtures) / "pallet_continue_warp.sav"
+    original = fixture.read_bytes()
+    assert len(original) == 131072
+    # Source-defined SaveBlock2.specialSaveWarpFlags bit0, and SaveBlock1.continueGameWarp.
+    assert original[9] & 1, "Continue-warp precondition missing"
+    assert struct.unpack_from("<bbbBhh", original, SECTOR_SIZE + 0x0C) == (3, 0, -1, 0, 11, 10)
+    plain = (Path(a.fixtures) / "pallet_valid.sav").read_bytes()
+    assert (plain[9] & 1) == 0, "No-warp negative fixture unexpectedly set warp bit"
+    assert plain != original
+    start_xy = (11, 10)
 
-    # Negative control: controller movement without Save MUST change runtime
-    # position, but MUST NOT change physical Flash. Fresh boot reverts position.
+    # Negative control: movement without Save changes runtime coordinates only.
+    # A fresh process reloads the original synthetic fixture.
     unsaved = root / "position_move_without_save.sav"
-    shutil.copyfile(first, unsaved)
+    shutil.copyfile(fixture, unsaved)
     moved = run(a, "position_move_without_save", unsaved, "pallet_move_no_save", 2400)
     m = moved["native"]
     moved_xy = (m["saveblock1_pos_x"], m["saveblock1_pos_y"])
@@ -89,11 +93,14 @@ def main(a):
         "player_object_last_behavior": m["player_object_last_behavior"],
     }
     print(json.dumps(diagnostic, sort_keys=True), flush=True)
+    (root / "position_move_without_save_diagnostic.json").write_text(json.dumps(diagnostic, indent=2, sort_keys=True) + "\n")
     assert m["new_direction_key_overworld_frames"] > 0 and m["held_direction_key_overworld_frames"] > 0, (
         "Directional controller keys were not registered in overworld", diagnostic)
     assert moved_xy != start_xy and m["position_changed_frames"] > 0, (
         "Directional inputs registered but no saved-position movement", diagnostic)
-    assert m["save_counter"] == 1 and m["try_saving_data_entry_hits"] == 0
+    assert m["save_counter"] == 0 and m["try_saving_data_entry_hits"] == 0
+    assert m["cb2_load_map_hits"] > 0 and m["init_avatar_hits"] > 0
+    assert m["avatar_controllable_frames"] > 0 and m["player_object_active_frames"] > 0
     assert m["flash_changed_bytes"] == 0 and not moved["physical_save_changed"]
     assert unsaved.read_bytes() == original
 
@@ -102,54 +109,58 @@ def main(a):
     unsaved_cold = run(a, "position_unsaved_coldboot", unsaved_reload,
                        "pallet_stationary_coldboot", 2400)
     assert_native_xy(unsaved_cold["native"], start_xy, "unsaved cold boot")
-    assert unsaved_cold["native"]["save_counter"] == 1
+    assert unsaved_cold["native"]["save_counter"] == 0
     assert unsaved_cold["native"]["try_saving_data_entry_hits"] == 0
     assert unsaved_cold["native"]["flash_changed_bytes"] == 0
     assert not unsaved_cold["physical_save_changed"]
 
-    # Positive case: the same movement followed by the actual controller Save
-    # must commit changed coordinates to physical sector ID1 in counter2 slot0.
+    # Positive: the same initialized movement followed by genuine controller Save
+    # must commit changed coordinates to physical sector ID1 in counter1 slot1.
     saved = root / "position_move_then_save.sav"
-    shutil.copyfile(first, saved)
+    shutil.copyfile(fixture, saved)
     changed = run(a, "position_move_then_save", saved, "pallet_move_save", 3200)
     n = changed["native"]
     assert n["start_menu_save_hits"] >= 1 and n["save_dialog_do_save_hits"] >= 1
     assert n["try_saving_data_entry_hits"] >= 1 and n["try_saving_data_return_hits"] >= 1
     assert n["first_try_saving_data_return_value"] == 1
-    assert n["save_counter"] == 2 and n["flash_changed_bytes"] > 0
+    assert n["save_counter"] == 1 and n["flash_changed_bytes"] > 0
+    assert n["cb2_load_map_hits"] > 0 and n["init_avatar_hits"] > 0
+    assert n["position_changed_frames"] > 0 and n["avatar_controllable_frames"] > 0
     assert changed["physical_save_changed"] and saved.read_bytes() != original
     flash = saved.read_bytes()
-    assert flash[14 * SECTOR_SIZE:] == original[14 * SECTOR_SIZE:], (
-        "New save modified previous complete slot")
-    saved_pos = saved_xy(flash, 0, 2)
+    assert flash[:14 * SECTOR_SIZE] == original[:14 * SECTOR_SIZE], (
+        "Game-written slot1 modified original synthetic slot0")
+    saved_pos = saved_xy(flash, 1, 1)
     assert saved_pos != start_xy, ("Save did not preserve a changed player position", saved_pos, start_xy)
     assert_native_xy(n, saved_pos, "game-written SaveBlock1")
 
     # New emulator, input-only Continue, NO movement and NO save: recovery
-    # must select counter2 and reproduce the precise game-written coordinates.
+    # must select counter1 and reproduce the precise game-written coordinates.
     fresh = root / "position_move_save_coldboot.sav"
     shutil.copyfile(saved, fresh)
     cold = run(a, "position_move_save_coldboot", fresh,
                "pallet_stationary_coldboot", 2400)
     r = cold["native"]
-    assert (r["save_status"], r["save_counter"]) == (1, 2)
+    assert (r["save_status"], r["save_counter"]) == (1, 1)
     assert_native_xy(r, saved_pos, "cold-boot recovered position")
     assert r["try_saving_data_entry_hits"] == 0 and r["flash_changed_bytes"] == 0
     assert not cold["physical_save_changed"]
     assert fresh.read_bytes() == flash
 
     summary = {
-        "initial_counter1_saved_xy": list(start_xy),
+        "initial_synthetic_warp_xy": list(start_xy),
         "unsaved_runtime_xy": list(moved_xy),
         "unsaved_coldboot_xy": [unsaved_cold["native"]["saveblock1_pos_x"],
                                unsaved_cold["native"]["saveblock1_pos_y"]],
-        "game_written_counter2_saved_xy": list(saved_pos),
-        "fresh_coldboot_counter2_xy": [r["saveblock1_pos_x"], r["saveblock1_pos_y"]],
+        "game_written_counter1_saved_xy": list(saved_pos),
+        "fresh_coldboot_counter1_xy": [r["saveblock1_pos_x"], r["saveblock1_pos_y"]],
         "game_save_try_saving_data_return_ok": True,
         "unsaved_movement_did_not_persist": True,
         "fresh_emulator_player_xy_roundtrip": True,
         "no_host_flash_writes": True,
         "initial_playable_fixture_synthetic": True,
+        "source_proven_continue_warp_precondition": True,
+        "native_game_written_sector_ids": verify_game_written_slot(flash, 1, 1),
         "independent_approval": False,
         "phase1_gate": "FAIL_INCOMPLETE",
         "source_provenance": {
@@ -169,7 +180,7 @@ def main(a):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    for k in ("rom", "probe", "status", "counter", "sb2", "output"):
+    for k in ("rom", "probe", "status", "counter", "sb2", "fixtures", "output"):
         p.add_argument("--" + k, required=True)
     for k in TRACE_NAMES:
         p.add_argument("--" + k.replace("_", "-"), required=True)

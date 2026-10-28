@@ -353,6 +353,7 @@ jobs:
           python3 tools/phase1_firered_position_roundtrip.py \
             --rom upstream/pokefirered/pokefirered.gba \
             --probe ./game-controller-probe --status "$status" --counter "$counter" --sb2 "$sb2" \
+            --fixtures evidence/fixtures \
             --start-menu-save "$start_menu_save" --dialog-do-save "$dialog_do_save" \
             --try-saving-data "$try_saving_data" --title-task "$title_task" \
             --init-main-menu "$init_main_menu" --execute-main-menu "$execute_main_menu" \
