@@ -61,7 +61,7 @@ static int diskOffset(const QString &path, const QString &direction, const QStri
 int main(int argc, char **argv) {
     QApplication app(argc, argv);
     QStandardPaths::setTestModeEnabled(true);
-    require(argc == 2, "usage: porymap-phase1-gui PROJECT_ROOT");
+    require(argc == 2 || (argc == 3 && QString::fromLocal8Bit(argv[2]) == QStringLiteral("--cold-reopen")), "usage: porymap-phase1-gui PROJECT_ROOT [--cold-reopen]");
     porysplash = new PorymapLoadingScreen;
     const QString root = QString::fromLocal8Bit(argv[1]);
     require(QFileInfo(root).isDir(), "missing pinned project");
@@ -88,6 +88,43 @@ int main(int argc, char **argv) {
     porymapConfig.shownInGameReloadMessage = true;
     require(porymapConfig.save(), "could not persist startup recent-project config");
     require(porymapConfig.getRecentProject() == root, "recent project not configured");
+    // A second MainWindow in the same process crashed at
+    // Editor::setCollisionGraphics (CI #40628177777). Use a fresh process.
+    if (argc == 3) {
+        // Cold-reopen with a newly constructed real MainWindow/Editor, after
+        // the falsely clean prior window has closed and been destroyed.
+        porymapConfig.addRecentProject(root);
+        porymapConfig.reopenOnLaunch = true;
+        porymapConfig.projectManuallyClosed = false;
+        porymapConfig.checkForUpdates = false;
+        porymapConfig.showProjectLoadingScreen = false;
+        require(porymapConfig.save(), "cannot configure cold editor reopen");
+        {
+            MainWindow coldWindow(nullptr);
+            coldWindow.initialize();
+            require(coldWindow.editor && coldWindow.editor->project,
+                    "cold MainWindow did not load project");
+            require(coldWindow.editor->setMap("PalletTown"),
+                    "cold Editor could not reopen PalletTown");
+            Map *reopened = coldWindow.editor->map;
+            require(reopened != nullptr, "cold editor map missing");
+            require(reopened->customAttributes().value("xgba_phase1_unsaved_only").toString()
+                        == QStringLiteral("persisted-v1"),
+                    "cold editor did not recover prior persisted value");
+            QJsonObject coldResult;
+            coldResult["fresh_mainwindow_editor"] = true;
+            coldResult["recovered_prior_persisted_value"] = true;
+            coldResult["unsaved_failed_value_absent"] = true;
+            coldResult["phase1_gate"] = "FAIL_INCOMPLETE";
+            std::cout << "PHASE1_GUI_COLD_REOPEN="
+                      << QJsonDocument(coldResult).toJson(QJsonDocument::Compact).constData()
+                      << std::endl;
+        }
+        delete porysplash;
+        porysplash = nullptr;
+        return 0;
+    }
+
     {
         MainWindow window(nullptr);
         std::cerr << "PHASE1_GUI_STAGE real_open_project_begin" << std::endl;
@@ -326,35 +363,6 @@ int main(int argc, char **argv) {
         result["close_after_failed_single_map_save_accepted"] = closeAccepted;
         std::cout << "PHASE1_GUI_RESULT="
                   << QJsonDocument(result).toJson(QJsonDocument::Compact).constData()
-                  << std::endl;
-    }
-    // Cold-reopen with a newly constructed real MainWindow/Editor, after
-    // the falsely clean prior window has closed and been destroyed.
-    porymapConfig.addRecentProject(root);
-    porymapConfig.reopenOnLaunch = true;
-    porymapConfig.projectManuallyClosed = false;
-    porymapConfig.checkForUpdates = false;
-    porymapConfig.showProjectLoadingScreen = false;
-    require(porymapConfig.save(), "cannot configure cold editor reopen");
-    {
-        MainWindow coldWindow(nullptr);
-        coldWindow.initialize();
-        require(coldWindow.editor && coldWindow.editor->project,
-                "cold MainWindow did not load project");
-        require(coldWindow.editor->setMap("PalletTown"),
-                "cold Editor could not reopen PalletTown");
-        Map *reopened = coldWindow.editor->map;
-        require(reopened != nullptr, "cold editor map missing");
-        require(reopened->customAttributes().value("xgba_phase1_unsaved_only").toString()
-                    == QStringLiteral("persisted-v1"),
-                "cold editor did not recover prior persisted value");
-        QJsonObject coldResult;
-        coldResult["fresh_mainwindow_editor"] = true;
-        coldResult["recovered_prior_persisted_value"] = true;
-        coldResult["unsaved_failed_value_absent"] = true;
-        coldResult["phase1_gate"] = "FAIL_INCOMPLETE";
-        std::cout << "PHASE1_GUI_COLD_REOPEN="
-                  << QJsonDocument(coldResult).toJson(QJsonDocument::Compact).constData()
                   << std::endl;
     }
     delete porysplash;

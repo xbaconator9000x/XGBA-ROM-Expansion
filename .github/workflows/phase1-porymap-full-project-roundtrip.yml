@@ -112,6 +112,9 @@ jobs:
             tail -100 phase1-evidence/gui-gdb.log
             exit "$gui_rc"
           fi
+          # Fresh process: pinned Qt graphics state is not safe to reinitialize
+          # with a second MainWindow in the same process.
+          XDG_CONFIG_HOME="$PWD/phase1-evidence/gui-config" QT_QPA_PLATFORM=offscreen timeout 90s upstream-porymap/porymap-phase1-gui "$PWD/phase1-project-gui/pokefirered" --cold-reopen | tee -a phase1-evidence/gui-save.log
           python3 - <<'PY'
           import json
           from pathlib import Path
