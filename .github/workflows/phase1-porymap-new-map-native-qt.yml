@@ -1,0 +1,83 @@
+name: Phase 1 original Porymap native Qt new-map retry
+on:
+  push:
+    branches:
+      - phase1/porymap-full-qt-project-roundtrip-20261028
+    paths:
+      - 'tests/porymap_qt_new_map_collateral.cpp'
+      - 'tools/phase1_porymap_new_map_qt_retry.py'
+      - 'docs/phase1-review-readiness/porymap-new-map-native-qt-retry-20261029.md'
+      - '.github/workflows/phase1-porymap-new-map-native-qt.yml'
+  pull_request:
+    paths:
+      - 'tests/porymap_qt_new_map_collateral.cpp'
+      - 'tools/phase1_porymap_new_map_qt_retry.py'
+      - 'docs/phase1-review-readiness/porymap-new-map-native-qt-retry-20261029.md'
+      - '.github/workflows/phase1-porymap-new-map-native-qt.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-original-project-new-map:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/porymap
+          ref: 26b919d7ff4b54152de010abd5bf344af2ebe116
+          path: upstream-porymap
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - name: Install original Porymap Qt build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-base-dev-tools qmake6 libqt6svg6-dev libgl1-mesa-dev pkg-config g++ strace
+      - name: Compile unchanged pinned Porymap with test-only new-map entrypoint
+        run: |
+          set -euo pipefail
+          git -C upstream-porymap hash-object src/project.cpp | grep -Fx d43b0949303433111d4478ad76117c2b3445dd13
+          git -C upstream-porymap hash-object src/core/map.cpp | grep -Fx 47b279919bd4afcc76b88f9eeecd459b3452989f
+          mkdir -p upstream-porymap/tests
+          cp tests/porymap_qt_new_map_collateral.cpp upstream-porymap/tests/
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("upstream-porymap/porymap.pro")
+          s=p.read_text()
+          assert s.count("src/main.cpp")==1
+          s=s.replace("src/main.cpp","tests/porymap_qt_new_map_collateral.cpp")
+          s += "\nTARGET = porymap-phase1-new-map\n"
+          Path("upstream-porymap/porymap-phase1-new-map.pro").write_text(s)
+          PY
+          (cd upstream-porymap && qmake6 porymap-phase1-new-map.pro -o Makefile.phase1new && make -f Makefile.phase1new -j4) > phase1-new-map-build.log 2>&1 || { tail -100 phase1-new-map-build.log; exit 1; }
+          test -x upstream-porymap/porymap-phase1-new-map
+      - name: Execute two distinct original Qt new-map failure and retry cases
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import shutil
+          from pathlib import Path
+          src=Path("upstream-firered")
+          dest=Path("phase1-project/pokefirered")
+          dest.parent.mkdir(parents=True,exist_ok=True)
+          shutil.copytree(src,dest,ignore=shutil.ignore_patterns(".git"))
+          assert (dest/"data/maps/PalletTown/map.json").is_file()
+          PY
+          mkdir -p phase1-evidence
+          QT_QPA_PLATFORM=offscreen timeout 180s upstream-porymap/porymap-phase1-new-map "$PWD/phase1-project/pokefirered" > phase1-evidence/native-new-map.log 2>&1 || { tail -100 phase1-evidence/native-new-map.log; exit 1; }
+          python3 tools/phase1_porymap_new_map_qt_retry.py --porymap upstream-porymap --firered upstream-firered --log phase1-evidence/native-new-map.log --output phase1-evidence/native-new-map.json
+      - name: Preserve native transcript and build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-porymap-native-new-map-retry
+          path: |
+            phase1-evidence/
+            phase1-new-map-build.log
+          if-no-files-found: warn
