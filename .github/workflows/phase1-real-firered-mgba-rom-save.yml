@@ -20,6 +20,7 @@ on:
       - 'docs/phase1-review-readiness/firered-repeated-save-powerloss-20261028.md'
       - 'docs/phase1-review-readiness/firered-controller-save-observation-20261028.md'
       - 'tools/phase1_real_firered_mgba_fixtures.py'
+      - 'tools/phase1_firered_continue_warp.py'
       - 'tools/phase1_real_firered_mgba_adversarial.py'
       - 'docs/phase1-review-readiness/real-firered-mgba-runtime-20261028.md'
       - 'docs/phase1-review-readiness/real-firered-mgba-save-loader-steptrace-20261028.md'
@@ -331,6 +332,23 @@ jobs:
           git -C upstream/pokefirered hash-object src/load_save.c | grep -Fx 8b723dd044c6024b3671bb890b25b56a53f99ec5
           python3 -m py_compile tools/phase1_firered_no_flash_fault.py
           python3 tools/phase1_firered_no_flash_fault.py             --rom upstream/pokefirered/pokefirered.gba             --probe ./game-controller-probe --status "$status" --counter "$counter" --sb2 "$sb2"             --flash-present "$flash_present" --attempt-status "$save_attempt_status"             --start-menu-save "$start_menu_save" --dialog-do-save "$dialog_do_save"             --try-saving-data "$try_saving_data" --title-task "$title_task"             --init-main-menu "$init_main_menu" --execute-main-menu "$execute_main_menu"             --return-to-field "$return_to_field" --continue-saved-game "$continue_saved_game"             --return-field-local "$return_field_local" --overworld "$overworld"             --cb1-overworld "$cb1_overworld" --show-start-menu "$show_start_menu"             --field-get-player-input "$field_get_player_input" --gmain "$gmain" --sb1 "$sb1"             --output evidence/controller
+          # Source-pinned synthetic Continue warp forces map-loader avatar
+          # creation; this is a distinct negative/positive precondition test,
+          # not a substitute for the real game-written position roundtrip.
+          git -C upstream/pokefirered hash-object include/save_location.h | grep -Fx 2d2cb197494b663dcb8e687f9f7267576bdc3c34
+          python3 -m py_compile tools/phase1_firered_continue_warp.py
+          python3 tools/phase1_firered_continue_warp.py \\
+            --rom upstream/pokefirered/pokefirered.gba \\
+            --probe ./game-controller-probe --status "$status" --counter "$counter" --sb2 "$sb2" \\
+            --fixtures evidence/fixtures \\
+            --start-menu-save "$start_menu_save" --dialog-do-save "$dialog_do_save" \\
+            --try-saving-data "$try_saving_data" --title-task "$title_task" \\
+            --init-main-menu "$init_main_menu" --execute-main-menu "$execute_main_menu" \\
+            --return-to-field "$return_to_field" --continue-saved-game "$continue_saved_game" \\
+            --return-field-local "$return_field_local" --overworld "$overworld" \\
+            --cb1-overworld "$cb1_overworld" --show-start-menu "$show_start_menu" \\
+            --field-get-player-input "$field_get_player_input" --gmain "$gmain" --sb1 "$sb1" \\
+            --output evidence/controller
           python3 -m py_compile tools/phase1_firered_position_roundtrip.py
           python3 tools/phase1_firered_position_roundtrip.py \
             --rom upstream/pokefirered/pokefirered.gba \

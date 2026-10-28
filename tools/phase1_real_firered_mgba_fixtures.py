@@ -27,7 +27,7 @@ def checksum(data, size):
     total = sum(struct.unpack_from("<I", data, i)[0] for i in range(0, size, 4)) & 0xFFFFFFFF
     return ((total >> 16) + total) & 0xFFFF
 
-def make_pallet_fixture(data, null_layout=False):
+def make_pallet_fixture(data, null_layout=False, continue_warp=False):
     # Still synthetic, not a game-generated player save.
     slot(data, 0, 0)
     sb2 = memoryview(data)[:SECTOR]
@@ -36,6 +36,13 @@ def make_pallet_fixture(data, null_layout=False):
     sb1 = memoryview(data)[SECTOR:2*SECTOR]
     struct.pack_into("<hh", sb1, 0, 11, 10)
     struct.pack_into("<bbbBhh", sb1, 4, 3, 0, -1, 0, 11, 10)
+    if continue_warp:
+        # Pinned global.h SaveBlock2+0x009 and SaveBlock1+0x000C;
+        # save_location.h CONTINUE_GAME_WARP bit 0. This deliberately
+        # selects CB2_LoadMap rather than the ordinary ReturnToFieldLocal.
+        sb2[9] |= 1
+        struct.pack_into("<bbbBhh", sb1, 0x0C, 3, 0, -1, 0, 11, 10)
+        struct.pack_into("<H", sb2, 0xFF6, checksum(sb2, 0xF24))
     struct.pack_into("<H", sb1, 0x32, 0 if null_layout else 78)
     struct.pack_into("<H", sb1, 0xFF6, checksum(sb1, SECTOR_DATA_SIZE))
 
@@ -66,13 +73,15 @@ def emit(root, rom, source):
         "older_slot_fallback":(True,True,"signature",False),
         "pallet_valid":(True,False,None,False),
         "pallet_null_layout":(True,False,None,False),
+        "pallet_continue_warp":(True,False,None,False),
     }
     for name,(old,new,corrupt,mixed) in variants.items():
         b=bytearray(bytes([0xFF])*(32*SECTOR))
         if old:slot(b,0,0)
         if new:slot(b,1,1,corrupt,mixed)
         if name.startswith("pallet_"):
-            make_pallet_fixture(b, null_layout=(name=="pallet_null_layout"))
+            make_pallet_fixture(b, null_layout=(name=="pallet_null_layout"),
+                                continue_warp=(name=="pallet_continue_warp"))
         p=root/(name+".sav");p.write_bytes(b)
         records.append({"name":name,"sha256":hashlib.sha256(b).hexdigest(),"size":len(b),"fixture_not_game_generated":True,
                         "authored_pallet_map": authored if name.startswith("pallet_") else None})
