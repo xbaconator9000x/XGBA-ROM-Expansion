@@ -20,8 +20,21 @@ def reject(changed, expected):
         raise AssertionError("forged P0 packet accepted")
 
 def main():
-    records, shards = load_shards(SHARDS)
-    integrity = validate_integrity(SHARDS, shards, len(records))
+    # Pull-request merge checkouts contain main-only batch-config.json, which is
+    # not an upstream source-reconciled shard. Isolate the five exact pinned shards.
+    with tempfile.TemporaryDirectory() as safe_tmp:
+        safe = Path(safe_tmp)
+        for name in (
+            "batch-000000-000199.json",
+            "batch-000200-000499.json",
+            "batch-000500-000999.json",
+            "batch-001000-001499.json",
+            "batch-001500-001999.json",
+            "integrity-000000-001999.json",
+        ):
+            (safe / name).write_bytes((SHARDS / name).read_bytes())
+        records, shards = load_shards(safe)
+        integrity = validate_integrity(safe, shards, len(records))
     complete = packets(records, shards, max_packets=200, integrity_sha256=integrity)
     assert complete["review_packets"] == 200
     assert complete["verified_machine_triage_records"] == 2000
@@ -80,7 +93,7 @@ def main():
     # Source-triage shard corruption must invalidate the immutable integrity manifest.
     with tempfile.TemporaryDirectory() as tmp:
         dst = Path(tmp)
-        for f in SHARDS.glob("batch-*.json"):
+        for f in SHARDS.glob("batch-[0-9]*-[0-9]*.json"):
             (dst / f.name).write_bytes(f.read_bytes())
         original = (SHARDS / "integrity-000000-001999.json").read_bytes()
         (dst / "integrity-000000-001999.json").write_bytes(original)
