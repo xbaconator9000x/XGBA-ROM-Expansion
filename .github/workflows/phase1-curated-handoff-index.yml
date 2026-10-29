@@ -1,0 +1,19 @@
+name: Phase 1 curated P0 analyst handoff reconciliation (no approvals)
+on:
+  push:
+    branches:
+      - phase1/review-readiness-handoff-20261027
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  curated-index:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Reconcile all 29 pinned curated identities, reject 12 forgeries
+        run: python3 tools/phase1_curated_handoff_index_verify.py
