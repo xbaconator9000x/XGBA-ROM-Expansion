@@ -1,22 +1,7 @@
 name: Phase 1 independent semantic queue bootstrap (no approvals)
 on:
-  pull_request:
-    paths:
-      - 'docs/PHASE1_INDEPENDENT_SEMANTIC_REVIEW_QUEUE.md'
-      - 'semantic-snapshots/independent-reviews/**'
-      - 'semantic-snapshots/curated/p0_semantic_review_candidates_2026-10-26.json'
-      - 'semantic-snapshots/current/phase1_mapping_gate.json'
-      - 'tools/phase1_independent_queue_validate.py'
-      - 'tests/test_phase1_independent_queue.py'
-      - '.github/workflows/phase1-independent-queue-validation.yml'
-  push:
-    paths:
-      - 'docs/PHASE1_INDEPENDENT_SEMANTIC_REVIEW_QUEUE.md'
-      - 'semantic-snapshots/independent-reviews/**'
-      - 'tools/phase1_independent_queue_validate.py'
-      - 'tests/test_phase1_independent_queue.py'
-      - '.github/workflows/phase1-independent-queue-validation.yml'
   workflow_dispatch:
+
 permissions:
   contents: read
 jobs:

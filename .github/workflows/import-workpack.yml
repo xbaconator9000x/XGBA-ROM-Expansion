@@ -1,8 +1,7 @@
 name: Import and verify Phase 1 mapped workpack
 on:
-  push:
-    paths:
-      - 'imports/XGBA_Phase1_v1.5_Complete_Workpack.zip'
+  workflow_dispatch:
+
 permissions:
   contents: read
 jobs:

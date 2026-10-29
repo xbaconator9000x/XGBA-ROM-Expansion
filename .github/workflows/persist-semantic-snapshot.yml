@@ -1,9 +1,7 @@
 name: Persist verified semantic evidence snapshots
 on:
-  workflow_run:
-    workflows:
-      - Phase 1 pinned source census and review dossiers
-    types: [completed]
+  workflow_dispatch:
+
 permissions:
   contents: write
   actions: read

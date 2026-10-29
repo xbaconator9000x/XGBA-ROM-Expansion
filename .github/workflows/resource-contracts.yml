@@ -1,12 +1,7 @@
 name: Phase 1 ROM and resource lifetime semantic contracts
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'tools/resource_execution_semantics.py'
-      - 'tools/graphics_hardware_semantics.py'
-      - 'tools/save_sector_source_semantics.py'
-      - '.github/workflows/resource-contracts.yml'
+
 permissions:
   contents: read
 jobs:

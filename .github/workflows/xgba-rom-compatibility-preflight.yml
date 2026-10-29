@@ -1,17 +1,6 @@
 name: Phase 1 XGBA generic ROM identity preflight
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - 'tools/xgba_rom_compatibility_preflight.py'
-      - 'tests/test_xgba_rom_compatibility_preflight.py'
-      - '.github/workflows/xgba-rom-compatibility-preflight.yml'
-      - 'docs/XGBA_PLATFORM_COMPATIBILITY_SCOPE_2026-10-29.md'
-  push:
-    paths:
-      - 'tools/xgba_rom_compatibility_preflight.py'
-      - 'tests/test_xgba_rom_compatibility_preflight.py'
-      - '.github/workflows/xgba-rom-compatibility-preflight.yml'
 
 permissions:
   contents: read

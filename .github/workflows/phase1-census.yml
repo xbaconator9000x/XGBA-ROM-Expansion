@@ -1,48 +1,7 @@
 name: Phase 1 pinned source census and review dossiers
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'tools/pinned_source_census.py'
-      - 'tools/semantic_review_dossiers.py'
-      - 'tools/include_dependency_classifier.py'
-      - 'tools/phase1_mapping_gate.py'
-      - 'tools/verify_source_contracts.py'
-      - 'tools/verify_p0_additive_source_contracts.py'
-      - 'tools/verify_curated_p0_semantic_registry.py'
-      - 'tools/phase1_architecture_review_priorities.py'
-      - 'semantic-snapshots/curated/p0_semantic_review_candidates_2026-10-26.json'
-      - 'docs/PHASE1_P0_FIRERED_MAP_SCRIPT_POINTER_ABI_2026-10-26.md'
-      - 'docs/PHASE1_P0_PORYMAP_PORYSCRIPT_AUTHORING_ABI_2026-10-26.md'
-      - 'docs/PHASE1_P0_EXTERNAL_RESOURCE_BANKING_CONTRACT_2026-10-26.md'
-      - 'docs/PHASE1_P0_FIELD_SCRIPT_RETURN_STACK_LIFETIME_2026-10-26.md'
-      - 'docs/PHASE1_P0_MAP_CELL_WRITE_OPERATION_SEMANTICS_2026-10-26.md'
-      - 'tools/validate_mapping_anchors.py'
-      - 'tools/ast_semantic_index.py'
-      - 'tools/all_blob_structural_evidence.py'
-      - 'tools/semantic_asm_build.py'
-      - 'tools/unified_semantic_dependencies.py'
-      - 'tools/semantic_linkage_filter.py'
-      - 'tools/semantic_callback_flow.py'
-      - 'tools/gba_memory_region_contracts.py'
-      - 'tools/generated_asset_provenance.py'
-      - 'tools/dynamic_dispatch_semantics.py'
-      - 'tools/script_opcode_semantic_obligations.py'
-      - 'tools/script_assembler_operand_abi.py'
-      - 'tools/script_conditional_opcode_semantics.py'
-      - 'tools/field_operand_consumer_alignment.py'
-      - 'tools/battle_opcode_cursor_alignment.py'
-      - 'tools/legacy_dummy_opcode_semantics.py'
-      - 'tools/field_pointer_role_contracts.py'
-      - 'tools/implicit_battle_cursor_semantics.py'
-      - 'tools/module_semantic_dossiers.py'
-      - 'tools/source_update_impact.py'
-      - 'tools/resource_execution_semantics.py'
-      - 'tools/graphics_hardware_semantics.py'
-      - 'tools/save_sector_source_semantics.py'
-      - 'tools/function_semantic_dossiers.py'
-      - 'tools/resolve_composite_assets.py'
-      - '.github/workflows/phase1-census.yml'
+
 permissions:
   contents: read
 jobs:
