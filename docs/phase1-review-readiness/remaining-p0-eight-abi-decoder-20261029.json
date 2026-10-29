@@ -1,0 +1,505 @@
+{
+  "schema": "xgba.phase1.remaining_p0_partial_analyst_batch.v6",
+  "date": "2026-10-29",
+  "source_packet": "docs/phase1-review-readiness/packet-0000-0099.json",
+  "source_packet_blob_sha1": "a48c12900acc7e0211a8071119763e2b5de4b1a4",
+  "previous_partial_indices": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    19,
+    20,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    33,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    45,
+    46,
+    47,
+    51,
+    52,
+    54,
+    55,
+    58,
+    60,
+    63,
+    64
+  ],
+  "new_partial_indices": [
+    35,
+    36,
+    53,
+    65,
+    67,
+    68,
+    69,
+    70
+  ],
+  "partial_source_inspected": 8,
+  "curated_29_source_inspected": 29,
+  "remaining_p0_partial_total": 54,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "machine_dossier_sha256_note": "Unverified digest copied from pinned machine packet; not independently checked against original machine dossier.",
+  "records": [
+    {
+      "packet_index": 35,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "include/global.berry.h",
+        "git_blob_sha1": "148bbc957b7e80a0f7adc7ffa22d16f70f2f6a35",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/include/global.berry.h"
+      },
+      "machine_dossier_sha256_unverified": "b9477dacbb65f5f4975f0358d3b36b70911fe32f63f77568a1b17e23cbe300a4",
+      "line_anchors": [
+        {
+          "line": 5,
+          "text": "#define BERRY_NAME_COUNT 7"
+        },
+        {
+          "line": 46,
+          "text": "struct EnigmaBerry"
+        },
+        {
+          "line": 52,
+          "text": "u32 checksum;"
+        },
+        {
+          "line": 63,
+          "text": "struct BerryTree"
+        }
+      ],
+      "responsibilities": "Berry and Enigma Berry structures declare name, flavour and yield fields and checksum-bearing data.",
+      "dependency_edges": [
+        "include/global.h",
+        "src/berry.c"
+      ],
+      "unresolved": [
+        "Verify layout/bitfield compiler ABI, Enigma checksum consumers, and save-block writers.",
+        "Machine dossier original bytes and SHA256 not independently retrieved or verified",
+        "Whole-file semantic coverage, downstream consumers, licensing and distinct reviewer verdict pending"
+      ],
+      "reviewer_questions": [
+        "Independently read complete exact pinned file, including inactive branches and error paths",
+        "Trace all real callers/consumers, ABI, compiler and runtime preconditions",
+        "Verify original machine dossier bytes/SHA256 and applicable upstream license notices",
+        "Issue distinct identity-bound verdict only after complete evidence reconciliation"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 36,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "docs/_sources/manual/project-files.rst.txt",
+        "git_blob_sha1": "e9e0e652f1586d9f2860fb87494b1a0abeb330ff",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/docs/_sources/manual/project-files.rst.txt"
+      },
+      "machine_dossier_sha256_unverified": "193c100057a0d8f96539cdbbe382d79fb78437180eb9647d3a6deac376f10a11",
+      "line_anchors": [
+        {
+          "line": 11,
+          "text": "The filepath that Porymap expects for each file can be overridden on the ``Files`` tab of ``Options > Project Settings``. A new path can be specified by entering it in the text box or choosing it with the |button-folder| button. Paths are expected to be relative to the root project folder. If no path is specified, or if the file/folder specified does not exist, then the default path will be used instead. The name of each setting in this section is listed in the table below under ``Setting``."
+        },
+        {
+          "line": 30,
+          "text": "data/event_scripts.s, no, yes, ``data_event_scripts``, \"only appends new script files to end of file\""
+        },
+        {
+          "line": 31,
+          "text": "data/maps/map_groups.json, yes, yes, ``json_map_groups``, \"for populating the map list\""
+        },
+        {
+          "line": 113,
+          "text": "``define_mask_behavior``, ``METATILE_ATTR_BEHAVIOR_MASK``, \"optionally read to get settings on ``Tilesets`` tab\""
+        }
+      ],
+      "responsibilities": "Porymap documentation declares file read/write ownership, fallback project paths and append-only event_scripts.s semantics.",
+      "dependency_edges": [
+        "src/project.cpp",
+        "src/config.cpp"
+      ],
+      "unresolved": [
+        "Verify documented fallback and file override behaviour against executable Qt code, especially failed writes.",
+        "Machine dossier original bytes and SHA256 not independently retrieved or verified",
+        "Whole-file semantic coverage, downstream consumers, licensing and distinct reviewer verdict pending"
+      ],
+      "reviewer_questions": [
+        "Independently read complete exact pinned file, including inactive branches and error paths",
+        "Trace all real callers/consumers, ABI, compiler and runtime preconditions",
+        "Verify original machine dossier bytes/SHA256 and applicable upstream license notices",
+        "Issue distinct identity-bound verdict only after complete evidence reconciliation"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 53,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "src/ui/divingmappixmapitem.cpp",
+        "git_blob_sha1": "550e003766e6421b6dd30e197fd70ca6e23c83c6",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/src/ui/divingmappixmapitem.cpp"
+      },
+      "machine_dossier_sha256_unverified": "d1bd1e8d2322cdbf3b0b7e96c34c7b70d236b053da9d84ef02ad7afe741cda51",
+      "line_anchors": [
+        {
+          "line": 4,
+          "text": "DivingMapPixmapItem::DivingMapPixmapItem(MapConnection *connection, NoScrollComboBox *combo)"
+        },
+        {
+          "line": 13,
+          "text": "connect(m_connection, &MapConnection::targetMapNameChanged, this, &DivingMapPixmapItem::onTargetMapChanged);"
+        },
+        {
+          "line": 16,
+          "text": "DivingMapPixmapItem::~DivingMapPixmapItem() {"
+        },
+        {
+          "line": 24,
+          "text": "if (!porymapConfig.showDiveEmergeMaps)"
+        },
+        {
+          "line": 35,
+          "text": "void DivingMapPixmapItem::onTargetMapChanged() {"
+        }
+      ],
+      "responsibilities": "Diving-map pixmap item binds a MapConnection signal to repaint and combo text; destructor clears combo text.",
+      "dependency_edges": [
+        "include/ui/divingmappixmapitem.h",
+        "src/editor.cpp"
+      ],
+      "unresolved": [
+        "Check QObject/graphics-item lifetime, connection pointer ownership, and combo lifetime under map deletion.",
+        "Machine dossier original bytes and SHA256 not independently retrieved or verified",
+        "Whole-file semantic coverage, downstream consumers, licensing and distinct reviewer verdict pending"
+      ],
+      "reviewer_questions": [
+        "Independently read complete exact pinned file, including inactive branches and error paths",
+        "Trace all real callers/consumers, ABI, compiler and runtime preconditions",
+        "Verify original machine dossier bytes/SHA256 and applicable upstream license notices",
+        "Issue distinct identity-bound verdict only after complete evidence reconciliation"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 65,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/arm/debugger/cli-debugger.c",
+        "git_blob_sha1": "7e23640470a16d4dc09dc0479cedacdf7c91f4cf",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/arm/debugger/cli-debugger.c"
+      },
+      "machine_dossier_sha256_unverified": "4fa115331162bed03e9c9cbfe70ec00f88410b4863586634e4f44d742c382eaa",
+      "line_anchors": [
+        {
+          "line": 25,
+          "text": "static struct CLIDebuggerCommandSummary _armCommands[] = {"
+        },
+        {
+          "line": 22,
+          "text": "static void _disassembleMode(struct CLIDebugger*, struct CLIDebugVector*, enum ExecutionMode mode);"
+        },
+        {
+          "line": 141,
+          "text": "if (ARMDecodeThumbCombine(&info, &info2, &combined)) {"
+        },
+        {
+          "line": 188,
+          "text": "ssize_t id = ARMDebuggerSetSoftwareBreakpoint(debugger->d.p->platform, &debugger->d, address, MODE_ARM);"
+        },
+        {
+          "line": 207,
+          "text": "void ARMCLIDebuggerCreate(struct CLIDebuggerSystem* debugger) {"
+        }
+      ],
+      "responsibilities": "ARM CLI debugger provides mode-specific disassembly and software breakpoints; Thumb disassembly may read two halfwords.",
+      "dependency_edges": [
+        "include/mgba/internal/arm/debugger/debugger.h",
+        "src/arm/debugger/debugger.c"
+      ],
+      "unresolved": [
+        "Test instruction-boundary read side effects and breakpoint mode correctness; CLI only, not CPU execution.",
+        "Machine dossier original bytes and SHA256 not independently retrieved or verified",
+        "Whole-file semantic coverage, downstream consumers, licensing and distinct reviewer verdict pending"
+      ],
+      "reviewer_questions": [
+        "Independently read complete exact pinned file, including inactive branches and error paths",
+        "Trace all real callers/consumers, ABI, compiler and runtime preconditions",
+        "Verify original machine dossier bytes/SHA256 and applicable upstream license notices",
+        "Issue distinct identity-bound verdict only after complete evidence reconciliation"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 67,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/arm/debugger/memory-debugger.c",
+        "git_blob_sha1": "f1a76224e1942ddfe56f7314b46616239205d6fe",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/arm/debugger/memory-debugger.c"
+      },
+      "machine_dossier_sha256_unverified": "4d2d30b65daa09b8519f8dcf8ca739d9bf1e160b1a45d0cdf3809015d2e6b0b0",
+      "line_anchors": [
+        {
+          "line": 17,
+          "text": "#define FIND_DEBUGGER(DEBUGGER, CPU) \\"
+        },
+        {
+          "line": 38,
+          "text": "#define CREATE_WATCHPOINT_READ_SHIM(NAME, WIDTH, RETURN, TYPES, ...) \\"
+        },
+        {
+          "line": 15,
+          "text": "static void _checkWatchpoints(struct ARMDebugger* debugger, uint32_t address, enum mWatchpointType type, uint32_t newValue, int width);"
+        },
+        {
+          "line": 138,
+          "text": "void ARMDebuggerInstallMemoryShim(struct ARMDebugger* debugger) {"
+        },
+        {
+          "line": 151,
+          "text": "void ARMDebuggerRemoveMemoryShim(struct ARMDebugger* debugger) {"
+        }
+      ],
+      "responsibilities": "ARM debugger installs memory-operation shims, reports conditional watchpoints and restores original callbacks.",
+      "dependency_edges": [
+        "include/mgba/internal/arm/debugger/memory-debugger.h",
+        "src/arm/debugger/debugger.c"
+      ],
+      "unresolved": [
+        "Check multiple-transfer address ordering, watchpoint read side effects, and install/remove lifecycle.",
+        "Machine dossier original bytes and SHA256 not independently retrieved or verified",
+        "Whole-file semantic coverage, downstream consumers, licensing and distinct reviewer verdict pending"
+      ],
+      "reviewer_questions": [
+        "Independently read complete exact pinned file, including inactive branches and error paths",
+        "Trace all real callers/consumers, ABI, compiler and runtime preconditions",
+        "Verify original machine dossier bytes/SHA256 and applicable upstream license notices",
+        "Issue distinct identity-bound verdict only after complete evidence reconciliation"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 68,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/arm/decoder-arm.c",
+        "git_blob_sha1": "074c04314a2a6d4c1c0133d38f128ab0e90d7b1d",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/arm/decoder-arm.c"
+      },
+      "machine_dossier_sha256_unverified": "c89dae86be2d3950707b164cc683909bf10ffead0cd3c9c9e1329f659c8eda35",
+      "line_anchors": [
+        {
+          "line": 12,
+          "text": "#define ADDR_MODE_1_SHIFT(OP) \\"
+        },
+        {
+          "line": 72,
+          "text": "#define ADDR_MODE_2_ROR \\"
+        },
+        {
+          "line": 90,
+          "text": "#define DEFINE_DECODER_ARM(NAME, MNEMONIC, BODY) \\"
+        },
+        {
+          "line": 179,
+          "text": "#define DEFINE_LOAD_STORE_DECODER_EX_ARM(NAME, MNEMONIC, ADDRESSING_MODE, ADDRESSING_DECODING, CYCLES, TYPE, OTHER_AFFECTED) \\"
+        }
+      ],
+      "responsibilities": "ARM decoder macro families extract operand addressing modes, register shifts and branch metadata.",
+      "dependency_edges": [
+        "include/mgba/internal/arm/decoder.h",
+        "src/arm/decoder.c"
+      ],
+      "unresolved": [
+        "Check zero-shift special cases and instruction decoding across ARM ISA families with compiled fixtures.",
+        "Machine dossier original bytes and SHA256 not independently retrieved or verified",
+        "Whole-file semantic coverage, downstream consumers, licensing and distinct reviewer verdict pending"
+      ],
+      "reviewer_questions": [
+        "Independently read complete exact pinned file, including inactive branches and error paths",
+        "Trace all real callers/consumers, ABI, compiler and runtime preconditions",
+        "Verify original machine dossier bytes/SHA256 and applicable upstream license notices",
+        "Issue distinct identity-bound verdict only after complete evidence reconciliation"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 69,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/arm/decoder-thumb.c",
+        "git_blob_sha1": "e96ae839613f846fbb477a6ddefc284a745c8e0d",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/arm/decoder-thumb.c"
+      },
+      "machine_dossier_sha256_unverified": "585228eef510e0acd6cf7df901a04d63bca7f71bcc82e320b28d463ff9b7016f",
+      "line_anchors": [
+        {
+          "line": 12,
+          "text": "#define DEFINE_THUMB_DECODER(NAME, MNEMONIC, BODY) \\"
+        },
+        {
+          "line": 30,
+          "text": "#define DEFINE_IMMEDIATE_5_DECODER_MEM_THUMB(NAME, MNEMONIC, FORMAT, WIDTH, AFFECTED) \\"
+        },
+        {
+          "line": 52,
+          "text": "DEFINE_IMMEDIATE_5_DECODER_MEM_THUMB(STRH1, STR, STORE, 2, 2)"
+        },
+        {
+          "line": 122,
+          "text": "#define DEFINE_DECODER_WITH_HIGH_EX_THUMB(NAME, H1, H2, MNEMONIC, AFFECTED, CPSR) \\"
+        }
+      ],
+      "responsibilities": "Thumb decoder macro families decode register/immediate/load-store operands and high-register branch metadata.",
+      "dependency_edges": [
+        "include/mgba/internal/arm/decoder.h",
+        "src/arm/decoder.c"
+      ],
+      "unresolved": [
+        "Check high-register/PC metadata and paired Thumb BL decoding with compiled fixtures.",
+        "Machine dossier original bytes and SHA256 not independently retrieved or verified",
+        "Whole-file semantic coverage, downstream consumers, licensing and distinct reviewer verdict pending"
+      ],
+      "reviewer_questions": [
+        "Independently read complete exact pinned file, including inactive branches and error paths",
+        "Trace all real callers/consumers, ABI, compiler and runtime preconditions",
+        "Verify original machine dossier bytes/SHA256 and applicable upstream license notices",
+        "Issue distinct identity-bound verdict only after complete evidence reconciliation"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 70,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/arm/decoder.c",
+        "git_blob_sha1": "21ea0e872c32689b46f7ab746d871a7a1070c97c",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/arm/decoder.c"
+      },
+      "machine_dossier_sha256_unverified": "c2fdc6d4229837ff35c4786c446ecf25eef97fa1f11bc57f037c31f284581961",
+      "line_anchors": [
+        {
+          "line": 12,
+          "text": "#ifdef ENABLE_DEBUGGERS"
+        },
+        {
+          "line": 13,
+          "text": "#define ADVANCE(AMOUNT) \\"
+        },
+        {
+          "line": 23,
+          "text": "static int _decodeRegisterList(int list, char* buffer, int blen);"
+        },
+        {
+          "line": 25,
+          "text": "static int _decodePCRelative(uint32_t address, const struct mDebuggerSymbols* symbols, uint32_t pc, bool thumbBranch, char* buffer, int blen);"
+        },
+        {
+          "line": 29,
+          "text": "static const char* _armConditions[] = {"
+        }
+      ],
+      "responsibilities": "ARM/Thumb disassembly formatting maps registers, condition codes and PC-relative symbol lookups behind debugger feature flag.",
+      "dependency_edges": [
+        "include/mgba/internal/arm/decoder.h",
+        "src/arm/debugger/cli-debugger.c"
+      ],
+      "unresolved": [
+        "Check zero/short output buffers and symbol-table availability, including ENABLE_DEBUGGERS-off builds.",
+        "Machine dossier original bytes and SHA256 not independently retrieved or verified",
+        "Whole-file semantic coverage, downstream consumers, licensing and distinct reviewer verdict pending"
+      ],
+      "reviewer_questions": [
+        "Independently read complete exact pinned file, including inactive branches and error paths",
+        "Trace all real callers/consumers, ABI, compiler and runtime preconditions",
+        "Verify original machine dossier bytes/SHA256 and applicable upstream license notices",
+        "Issue distinct identity-bound verdict only after complete evidence reconciliation"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    }
+  ]
+}

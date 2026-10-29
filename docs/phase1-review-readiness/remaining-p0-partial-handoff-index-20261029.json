@@ -10,7 +10,8 @@
     "docs/phase1-review-readiness/remaining-p0-eight-interop-20261029.json",
     "docs/phase1-review-readiness/remaining-p0-eight-cart-editor-20261029.json",
     "docs/phase1-review-readiness/remaining-p0-eight-arm-20261029.json",
-    "docs/phase1-review-readiness/remaining-p0-eight-porymap-20261029.json"
+    "docs/phase1-review-readiness/remaining-p0-eight-porymap-20261029.json",
+    "docs/phase1-review-readiness/remaining-p0-eight-abi-decoder-20261029.json"
   ],
   "batch_sizes": [
     6,
@@ -18,15 +19,16 @@
     8,
     8,
     8,
+    8,
     8
   ],
-  "remaining_p0_partial_source_inspected": 46,
-  "remaining_p0_without_partial_source_inspection": 263,
+  "remaining_p0_partial_source_inspected": 54,
+  "remaining_p0_without_partial_source_inspection": 255,
   "curated_p0_partial_source_inspected": 29,
-  "total_p0_partial_source_inspected": 75,
+  "total_p0_partial_source_inspected": 83,
   "whole_file_semantic_approved": 0,
   "independent_p0_approved": 0,
   "independent_total_approved": 0,
   "phase1_gate": "FAIL_INCOMPLETE",
-  "reviewer_handoff": "46 disjoint remaining-P0 exact-source SHA-pinned partial analyst dossiers (eight ARM debugger/interpreter and eight Porymap events/connections added). Original source anchors verified, machine dossier SHA256 unverified, licensing and full-file semantic review pending. Zero independent approvals; all NEEDS_REVIEW."
+  "reviewer_handoff": "54 disjoint remaining P0 partial source dossiers, including 8 new FireRed berry ABI, Porymap project-file docs/diving UI, and original mGBA ARM debugger/decoder files. Original pinned Git blob identities and source anchors checked; machine SHA256 and licensing unverified; NEEDS_REVIEW; zero independent approvals."
 }
