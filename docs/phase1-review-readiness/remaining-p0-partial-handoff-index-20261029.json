@@ -14,7 +14,8 @@
     "docs/phase1-review-readiness/remaining-p0-eight-abi-decoder-20261029.json",
     "docs/phase1-review-readiness/remaining-p0-eight-gb-cpu-20261029.json",
     "docs/phase1-review-readiness/remaining-p0-eight-gba-runtime-20261029.json",
-    "docs/phase1-review-readiness/remaining-p0-eight-crossboundary-20261029.json"
+    "docs/phase1-review-readiness/remaining-p0-eight-crossboundary-20261029.json",
+    "docs/phase1-review-readiness/remaining-p0-eight-gb-debugger-20261029.json"
   ],
   "batch_sizes": [
     6,
@@ -26,15 +27,16 @@
     8,
     8,
     8,
+    8,
     8
   ],
-  "remaining_p0_partial_source_inspected": 78,
-  "remaining_p0_without_partial_source_inspection": 231,
+  "remaining_p0_partial_source_inspected": 86,
+  "remaining_p0_without_partial_source_inspection": 223,
   "curated_p0_partial_source_inspected": 29,
-  "total_p0_partial_source_inspected": 107,
+  "total_p0_partial_source_inspected": 115,
   "whole_file_semantic_approved": 0,
   "independent_p0_approved": 0,
   "independent_total_approved": 0,
   "phase1_gate": "FAIL_INCOMPLETE",
-  "reviewer_handoff": "78 disjoint other-P0 partial source dossiers including eight FireRed/Poryscript/mGBA cross-boundary files; exact source blobs and anchors checked, machine SHA/licensing/full coverage and distinct reviewer pending. All NEEDS_REVIEW."
+  "reviewer_handoff": "86 disjoint other-P0 partial source dossiers including eight mGBA GB/SM83 and shared scripting/debugger files; original pinned file notices and MPL-2.0 LICENSE identity recorded, but full licensing review, original machine dossier SHA256 verification, whole-file closure and distinct reviewer remain pending. GB savestates are NOT GBA Flash evidence. All NEEDS_REVIEW."
 }

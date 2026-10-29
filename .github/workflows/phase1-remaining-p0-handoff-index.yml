@@ -15,5 +15,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Reconcile 22 disjoint P0 source dossiers and 220 negatives
+      - name: Reconcile 86 disjoint other-P0 source dossiers and 860 negatives
         run: python3 tools/phase1_remaining_p0_handoff_index_verify.py
