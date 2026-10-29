@@ -28,3 +28,10 @@ endif()
 target_compile_definitions(phase1_tower_mgba_flash PRIVATE ${_mgba_defs})
 target_include_directories(phase1_tower_mgba_flash PRIVATE
   "${MGBA_ROOT}/include" "${CMAKE_BINARY_DIR}/pinned-mgba/include")
+
+# Test-only direct entry into unchanged original-agbcc linked FireRed stub.
+add_executable(phase1_tower_original_arm_stub "${CMAKE_CURRENT_SOURCE_DIR}/phase1_tower_original_arm_stub.c")
+target_link_libraries(phase1_tower_original_arm_stub PRIVATE mgba)
+target_compile_definitions(phase1_tower_original_arm_stub PRIVATE ${_mgba_defs})
+target_include_directories(phase1_tower_original_arm_stub PRIVATE
+  "${MGBA_ROOT}/include" "${CMAKE_BINARY_DIR}/pinned-mgba/include")
