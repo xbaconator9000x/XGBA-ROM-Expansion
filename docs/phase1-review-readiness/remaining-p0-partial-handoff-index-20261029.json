@@ -13,7 +13,8 @@
     "docs/phase1-review-readiness/remaining-p0-eight-porymap-20261029.json",
     "docs/phase1-review-readiness/remaining-p0-eight-abi-decoder-20261029.json",
     "docs/phase1-review-readiness/remaining-p0-eight-gb-cpu-20261029.json",
-    "docs/phase1-review-readiness/remaining-p0-eight-gba-runtime-20261029.json"
+    "docs/phase1-review-readiness/remaining-p0-eight-gba-runtime-20261029.json",
+    "docs/phase1-review-readiness/remaining-p0-eight-crossboundary-20261029.json"
   ],
   "batch_sizes": [
     6,
@@ -24,15 +25,16 @@
     8,
     8,
     8,
+    8,
     8
   ],
-  "remaining_p0_partial_source_inspected": 70,
-  "remaining_p0_without_partial_source_inspection": 239,
+  "remaining_p0_partial_source_inspected": 78,
+  "remaining_p0_without_partial_source_inspection": 231,
   "curated_p0_partial_source_inspected": 29,
-  "total_p0_partial_source_inspected": 99,
+  "total_p0_partial_source_inspected": 107,
   "whole_file_semantic_approved": 0,
   "independent_p0_approved": 0,
   "independent_total_approved": 0,
   "phase1_gate": "FAIL_INCOMPLETE",
-  "reviewer_handoff": "70 disjoint other-P0 source-only partial analyst dossiers; latest eight original mGBA GBA core/BIOS/audio/DMA/IO/overrides/savedata files. Source blobs and line anchors checked; machine dossier SHA, licensing, complete source coverage and distinct reviewer pending. NEEDS_REVIEW; no independent approvals."
+  "reviewer_handoff": "78 disjoint other-P0 partial source dossiers including eight FireRed/Poryscript/mGBA cross-boundary files; exact source blobs and anchors checked, machine SHA/licensing/full coverage and distinct reviewer pending. All NEEDS_REVIEW."
 }
