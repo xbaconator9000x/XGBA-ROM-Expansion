@@ -45,7 +45,7 @@ def validate(index, intake, batches):
             assert r["independent_reviewer"] is None and r["machine_dossier_sha1"] is None
             assert r["analyst_status"] == "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL"
             assert r.get("whole_file_semantic_coverage") is not True
-            assert r["license_status"].startswith("PENDING_")
+            assert r["license_status"].startswith("PENDING_") or r["license_status"] == "MPL_2_0_SOURCE_NOTICE_PRESENT_REUSE_REVIEW_PENDING"
             assert r["unresolved"] and r["dependency_edges"]
     assert batch_count == 24 and seen == set(range(1,30))
     return True
