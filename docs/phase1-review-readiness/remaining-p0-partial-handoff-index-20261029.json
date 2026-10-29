@@ -1,0 +1,26 @@
+{
+  "schema": "xgba.phase1.remaining_p0_partial_handoff_index.v1",
+  "date": "2026-10-29",
+  "packet": "docs/phase1-review-readiness/packet-0000-0099.json",
+  "packet_blob_sha1": "a48c12900acc7e0211a8071119763e2b5de4b1a4",
+  "curated_index": "docs/phase1-review-readiness/curated-partial-handoff-index-20261029.json",
+  "batches": [
+    "docs/phase1-review-readiness/remaining-p0-six-source-20261029.json",
+    "docs/phase1-review-readiness/remaining-p0-eight-source-20261029.json",
+    "docs/phase1-review-readiness/remaining-p0-eight-interop-20261029.json"
+  ],
+  "batch_sizes": [
+    6,
+    8,
+    8
+  ],
+  "remaining_p0_partial_source_inspected": 22,
+  "remaining_p0_without_partial_source_inspection": 287,
+  "curated_p0_partial_source_inspected": 29,
+  "total_p0_partial_source_inspected": 51,
+  "whole_file_semantic_approved": 0,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "phase1_gate": "FAIL_INCOMPLETE",
+  "reviewer_handoff": "All 22 are exact-pinned partial analyst observations; original machine dossier bytes/SHA256, full-file semantics, dependencies and licensing require a genuinely distinct independent reviewer. No APPROVED receipts."
+}
