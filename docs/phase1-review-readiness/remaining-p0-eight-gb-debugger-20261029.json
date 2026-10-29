@@ -1,0 +1,708 @@
+{
+  "schema": "xgba.phase1.remaining_p0_partial_analyst_batch.v10",
+  "date": "2026-10-29",
+  "source_packet": "docs/phase1-review-readiness/packet-0000-0099.json",
+  "source_packet_blob_sha1": "a48c12900acc7e0211a8071119763e2b5de4b1a4",
+  "previous_partial_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    45,
+    46,
+    47,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    58,
+    59,
+    60,
+    61,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    82,
+    83,
+    84,
+    85,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97,
+    98,
+    99
+  ],
+  "new_partial_indices": [
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80
+  ],
+  "partial_source_inspected": 8,
+  "curated_29_source_inspected": 29,
+  "remaining_p0_partial_total": 86,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "machine_dossier_sha256_note": "Machine SHA256 strings copied from packet and NOT independently verified against dossier bytes.",
+  "license_note": "Pinned original mGBA file MPL-2.0 notices and LICENSE blob verified; licensing clearance still pending independent file/dependency review.",
+  "records": [
+    {
+      "packet_index": 73,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/core/scripting.c",
+        "git_blob_sha1": "7ccb51e897685ce24b37dabc76beb27427331b4f",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/core/scripting.c"
+      },
+      "machine_dossier_sha256_unverified": "9975d4c10ec523f164e9e0292ae795ccb8522343d7b926c233bee159de08abc8",
+      "whole_source_sha256_from_machine_packet_unverified": "8bb8d2ca9a744b51a96d5258b7a1cec49b724f92ae843a1504b22d4ae9d138b1",
+      "line_anchors": [
+        {
+          "line": 81,
+          "text": "struct mScriptBridge* mScriptBridgeCreate(void) {"
+        },
+        {
+          "line": 93,
+          "text": "void mScriptBridgeInstallEngine(struct mScriptBridge* sb, struct mScriptEngine* se) {"
+        },
+        {
+          "line": 133,
+          "text": "bool mScriptBridgeLoadScript(struct mScriptBridge* sb, const char* name) {"
+        },
+        {
+          "line": 414,
+          "text": "static struct mScriptValue* _mScriptCoreSaveState(struct mCore* core, int32_t flags) {"
+        },
+        {
+          "line": 427,
+          "text": "static int _mScriptCoreSaveStateFile(struct mCore* core, const char* path, int flags) {"
+        },
+        {
+          "line": 437,
+          "text": "static int _mScriptCoreLoadStateFile(struct mCore* core, const char* path, int flags) {"
+        }
+      ],
+      "responsibilities": "Shared mGBA scripting bridge: engine registration, VFile script loading, debugger integration, core memory adapters, and script-exposed savestate operations.",
+      "dependency_edges": [
+        "include/mgba/core/scripting.h",
+        "include/mgba/core/core.h",
+        "include/mgba/core/serialize.h",
+        "src/debugger/gdb-stub.c"
+      ],
+      "unresolved": [
+        "Trace script engine ownership and VFile close on every failed load.",
+        "Trace script savestate buffer and file close failures and conditional GBA compile flags.",
+        "Full-file source, build consumer closure, original machine dossier bytes and distinct external reviewer still required."
+      ],
+      "reviewer_questions": [
+        "Independently read entire exact pinned source including all conditional and error branches",
+        "Verify original machine dossier bytes and SHA256, not merely copied packet digest",
+        "Trace callers/callees, native platform boundaries, build and save semantics",
+        "Confirm MPL-2.0 file notice and pinned LICENSE scope and any third-party exceptions",
+        "Only a distinct human/external reviewer may submit source-hash-bound approval"
+      ],
+      "license_evidence": {
+        "pinned_repository": "mgba-emu/mgba",
+        "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "file_notice_lines": [
+          3,
+          4,
+          5
+        ],
+        "file_notice": "Mozilla Public License, v. 2.0."
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "SHARED_MGBA_DEBUGGER_OR_SCRIPT_HOST_NOT_STOCK_GAMEPLAY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    },
+    {
+      "packet_index": 74,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/debugger/gdb-stub.c",
+        "git_blob_sha1": "843d98ccb09d629604090b76544d3bdc3e39ed80",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/debugger/gdb-stub.c"
+      },
+      "machine_dossier_sha256_unverified": "89ed9cd32468d3ab007c406efd13dcff7c0592a704b7970b023c528151dd2ee0",
+      "whole_source_sha256_from_machine_packet_unverified": "bc43966d46469144a97801666afee5bce816fce92e5337a5cc8af51ecb82ded3",
+      "line_anchors": [
+        {
+          "line": 129,
+          "text": "static void _gdbStubPoll(struct mDebuggerModule* debugger) {"
+        },
+        {
+          "line": 249,
+          "text": "static void _continue(struct GDBStub* stub, const char* message) {"
+        },
+        {
+          "line": 283,
+          "text": "static void _writeMemoryBinary(struct GDBStub* stub, const char* message) {"
+        },
+        {
+          "line": 317,
+          "text": "static void _writeMemory(struct GDBStub* stub, const char* message) {"
+        },
+        {
+          "line": 342,
+          "text": "static void _readMemory(struct GDBStub* stub, const char* message) {"
+        },
+        {
+          "line": 610,
+          "text": "static void _setBreakpoint(struct GDBStub* stub, const char* message) {"
+        }
+      ],
+      "responsibilities": "GDB remote stub: polling, continue/step control, binary and hex memory writes, bounded memory reads, and breakpoint installation.",
+      "dependency_edges": [
+        "include/mgba/internal/debugger/gdb-stub.h",
+        "include/mgba/internal/arm/debugger/debugger.h",
+        "include/mgba/internal/gba/memory.h"
+      ],
+      "unresolved": [
+        "Review complete GDB packet parser length and checksum handling and debugger module callback ownership.",
+        "Test malformed packet sizes and breakpoint removal with compiled native stub; no execution is claimed.",
+        "Full-file source, build consumer closure, original machine dossier bytes and distinct external reviewer still required."
+      ],
+      "reviewer_questions": [
+        "Independently read entire exact pinned source including all conditional and error branches",
+        "Verify original machine dossier bytes and SHA256, not merely copied packet digest",
+        "Trace callers/callees, native platform boundaries, build and save semantics",
+        "Confirm MPL-2.0 file notice and pinned LICENSE scope and any third-party exceptions",
+        "Only a distinct human/external reviewer may submit source-hash-bound approval"
+      ],
+      "license_evidence": {
+        "pinned_repository": "mgba-emu/mgba",
+        "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "file_notice_lines": [
+          3,
+          4,
+          5
+        ],
+        "file_notice": "Mozilla Public License, v. 2.0."
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "SHARED_MGBA_DEBUGGER_OR_SCRIPT_HOST_NOT_STOCK_GAMEPLAY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    },
+    {
+      "packet_index": 75,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gb/core.c",
+        "git_blob_sha1": "fb8a40cfc6831d5fcf3916a910c8875deb4d7853",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gb/core.c"
+      },
+      "machine_dossier_sha256_unverified": "87b536b5e85e5fe13bc3ebe2a8bdc4005b6f678fc945ff268cc3d6d6c8c1ae4e",
+      "whole_source_sha256_from_machine_packet_unverified": "55d053d0499fa3cb6d4de700c935a750e8b59997f1b1ac84b9962919cf410404",
+      "line_anchors": [
+        {
+          "line": 111,
+          "text": "static bool _GBCoreInit(struct mCore* core) {"
+        },
+        {
+          "line": 488,
+          "text": "static bool _GBCoreLoadROM(struct mCore* core, struct VFile* vf) {"
+        },
+        {
+          "line": 498,
+          "text": "static bool _GBCoreLoadSave(struct mCore* core, struct VFile* vf) {"
+        },
+        {
+          "line": 568,
+          "text": "static void _GBCoreReset(struct mCore* core) {"
+        },
+        {
+          "line": 769,
+          "text": "static bool _GBCoreLoadState(struct mCore* core, const void* state) {"
+        },
+        {
+          "line": 773,
+          "text": "static bool _GBCoreSaveState(struct mCore* core, void* state) {"
+        }
+      ],
+      "responsibilities": "Game Boy mCore adapter: SM83 board allocation, ROM/save loading, reset, and savestate entry points.",
+      "dependency_edges": [
+        "include/mgba/gb/core.h",
+        "src/gb/gb.c",
+        "src/gb/serialize.c"
+      ],
+      "unresolved": [
+        "GB temporary save loader returns true with TODO rather than verified success.",
+        "This GB/SM83 adapter cannot establish FireRed GBA Flash or ARM save behaviour.",
+        "Full-file source, build consumer closure, original machine dossier bytes and distinct external reviewer still required."
+      ],
+      "reviewer_questions": [
+        "Independently read entire exact pinned source including all conditional and error branches",
+        "Verify original machine dossier bytes and SHA256, not merely copied packet digest",
+        "Trace callers/callees, native platform boundaries, build and save semantics",
+        "Confirm MPL-2.0 file notice and pinned LICENSE scope and any third-party exceptions",
+        "Only a distinct human/external reviewer may submit source-hash-bound approval"
+      ],
+      "license_evidence": {
+        "pinned_repository": "mgba-emu/mgba",
+        "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "file_notice_lines": [
+          3,
+          4,
+          5
+        ],
+        "file_notice": "Mozilla Public License, v. 2.0."
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "GAME_BOY_SM83_ONLY_NOT_GBA_FLASH",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    },
+    {
+      "packet_index": 76,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gb/gb.c",
+        "git_blob_sha1": "3e8457cde68335c3b7605d49bb014f5e6ef3ddc8",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gb/gb.c"
+      },
+      "machine_dossier_sha256_unverified": "2b938bae5cc7cbea4aa7297cb348c66ae84f8c3166f4c25ecd5d80ae6fb25899",
+      "whole_source_sha256_from_machine_packet_unverified": "dc8e4c9d664ae29016978a84e79250af7fb46b22ecb1445ac43db1ad0f2c18ae",
+      "line_anchors": [
+        {
+          "line": 187,
+          "text": "bool GBLoadROM(struct GB* gb, struct VFile* vf) {"
+        },
+        {
+          "line": 276,
+          "text": "bool GBLoadSave(struct GB* gb, struct VFile* vf) {"
+        },
+        {
+          "line": 391,
+          "text": "void GBSramClean(struct GB* gb, uint32_t frameCount) {"
+        },
+        {
+          "line": 630,
+          "text": "void GBReset(struct SM83Core* cpu) {"
+        },
+        {
+          "line": 965,
+          "text": "void GBUpdateIRQs(struct GB* gb) {"
+        },
+        {
+          "line": 991,
+          "text": "void GBProcessEvents(struct SM83Core* cpu) {"
+        }
+      ],
+      "responsibilities": "Game Boy board lifecycle: ROM and SRAM VFile setup, dirty SRAM cleaning, SM83 reset, IRQ and timed event dispatch.",
+      "dependency_edges": [
+        "include/mgba/internal/gb/gb.h",
+        "src/gb/memory.c",
+        "src/gb/mbc.c",
+        "src/gb/core.c"
+      ],
+      "unresolved": [
+        "Trace SRAM mapping/unmapping and VFile ownership on reset and failure paths.",
+        "Do not treat Game Boy SRAM flush semantics as GBA Flash persistence evidence.",
+        "Full-file source, build consumer closure, original machine dossier bytes and distinct external reviewer still required."
+      ],
+      "reviewer_questions": [
+        "Independently read entire exact pinned source including all conditional and error branches",
+        "Verify original machine dossier bytes and SHA256, not merely copied packet digest",
+        "Trace callers/callees, native platform boundaries, build and save semantics",
+        "Confirm MPL-2.0 file notice and pinned LICENSE scope and any third-party exceptions",
+        "Only a distinct human/external reviewer may submit source-hash-bound approval"
+      ],
+      "license_evidence": {
+        "pinned_repository": "mgba-emu/mgba",
+        "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "file_notice_lines": [
+          3,
+          4,
+          5
+        ],
+        "file_notice": "Mozilla Public License, v. 2.0."
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "GAME_BOY_SM83_ONLY_NOT_GBA_FLASH",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    },
+    {
+      "packet_index": 77,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gb/mbc.c",
+        "git_blob_sha1": "5eb3c55ec3e3ecb1bd2f3bf741d1bc1269a1fbcc",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gb/mbc.c"
+      },
+      "machine_dossier_sha256_unverified": "48fd1bb8dc695b83c6aa1f81f1e577b49ca2e9003b825b14615c42f2607de4fb",
+      "whole_source_sha256_from_machine_packet_unverified": "b4016ca39c2edee1bc6a74e933a04b71eda4dd87b10d784a2f7ac10093a44a56",
+      "line_anchors": [
+        {
+          "line": 27,
+          "text": "void GBMBCSwitchBank(struct GB* gb, int bank) {"
+        },
+        {
+          "line": 267,
+          "text": "void GBMBCSwitchSramBank(struct GB* gb, int bank) {"
+        },
+        {
+          "line": 317,
+          "text": "void GBMBCInit(struct GB* gb) {"
+        },
+        {
+          "line": 599,
+          "text": "void GBMBCReset(struct GB* gb) {"
+        },
+        {
+          "line": 633,
+          "text": "void _GBMBCAppendSaveSuffix(struct GB* gb, const void* buffer, size_t size) {"
+        },
+        {
+          "line": 648,
+          "text": "void GBMBCRTCRead(struct GB* gb) {"
+        }
+      ],
+      "responsibilities": "Game Boy cartridge MBC detection, ROM and SRAM bank switching, RTC save suffix and RTC read/write handling.",
+      "dependency_edges": [
+        "include/mgba/internal/gb/mbc.h",
+        "src/gb/mbc/mbc.c",
+        "src/gb/gb.c"
+      ],
+      "unresolved": [
+        "Verify invalid bank masking and zero-sized SRAM handling across cartridge types.",
+        "Trace RTC VFile partial read/write and remap failures; not a FireRed Flash transaction.",
+        "Full-file source, build consumer closure, original machine dossier bytes and distinct external reviewer still required."
+      ],
+      "reviewer_questions": [
+        "Independently read entire exact pinned source including all conditional and error branches",
+        "Verify original machine dossier bytes and SHA256, not merely copied packet digest",
+        "Trace callers/callees, native platform boundaries, build and save semantics",
+        "Confirm MPL-2.0 file notice and pinned LICENSE scope and any third-party exceptions",
+        "Only a distinct human/external reviewer may submit source-hash-bound approval"
+      ],
+      "license_evidence": {
+        "pinned_repository": "mgba-emu/mgba",
+        "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "file_notice_lines": [
+          3,
+          4,
+          5
+        ],
+        "file_notice": "Mozilla Public License, v. 2.0."
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "GAME_BOY_SM83_ONLY_NOT_GBA_FLASH",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    },
+    {
+      "packet_index": 78,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gb/mbc/mbc.c",
+        "git_blob_sha1": "999589068431ec7b38b5fd159aaf0b0f24a44275",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gb/mbc/mbc.c"
+      },
+      "machine_dossier_sha256_unverified": "3539db22c345d161f4ce68119e41f58e1a9410377f933f84af94b76d526d6da4",
+      "whole_source_sha256_from_machine_packet_unverified": "a28bc58d16353e65f23e9b008ed9ac8c85b14ea23663b8dd0fee18412ebce5cb",
+      "line_anchors": [
+        {
+          "line": 14,
+          "text": "void _GBMBCLatchRTC(struct mRTCSource* rtc, uint8_t* rtcRegs, time_t* rtcLastLatch) {"
+        },
+        {
+          "line": 65,
+          "text": "static void _GBMBC1Update(struct GB* gb) {"
+        },
+        {
+          "line": 176,
+          "text": "void _GBMBC3(struct GB* gb, uint16_t address, uint8_t value) {"
+        },
+        {
+          "line": 263,
+          "text": "void _GBMBC6(struct GB* gb, uint16_t address, uint8_t value) {"
+        },
+        {
+          "line": 345,
+          "text": "static void _GBMBC6MapChip(struct GB* gb, int half, uint8_t value) {"
+        },
+        {
+          "line": 355,
+          "text": "void _GBMBC7(struct GB* gb, uint16_t address, uint8_t value) {"
+        }
+      ],
+      "responsibilities": "Game Boy MBC1/2/3/5/6/7 and RTC state transitions, bank and cartridge-chip selection.",
+      "dependency_edges": [
+        "src/gb/mbc.c",
+        "include/mgba/internal/gb/mbc.h",
+        "include/mgba/internal/gb/gb.h"
+      ],
+      "unresolved": [
+        "Review MBC6 half-bank Flash and MBC7 EEPROM logic against GB cartridge fixtures.",
+        "GB MBC6 cartridge Flash is distinct from FireRed GBA Flash1M and must not be conflated.",
+        "Full-file source, build consumer closure, original machine dossier bytes and distinct external reviewer still required."
+      ],
+      "reviewer_questions": [
+        "Independently read entire exact pinned source including all conditional and error branches",
+        "Verify original machine dossier bytes and SHA256, not merely copied packet digest",
+        "Trace callers/callees, native platform boundaries, build and save semantics",
+        "Confirm MPL-2.0 file notice and pinned LICENSE scope and any third-party exceptions",
+        "Only a distinct human/external reviewer may submit source-hash-bound approval"
+      ],
+      "license_evidence": {
+        "pinned_repository": "mgba-emu/mgba",
+        "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "file_notice_lines": [
+          3,
+          4,
+          5
+        ],
+        "file_notice": "Mozilla Public License, v. 2.0."
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "GAME_BOY_SM83_ONLY_NOT_GBA_FLASH",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    },
+    {
+      "packet_index": 79,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gb/memory.c",
+        "git_blob_sha1": "efb3f05ccd63ebcc641220a640a4db3ea6095cdf",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gb/memory.c"
+      },
+      "machine_dossier_sha256_unverified": "b47fbca8bf6bf6e8c525d43861c9cfe33965544c075e713d32d410468b56405c",
+      "whole_source_sha256_from_machine_packet_unverified": "5ec38442f7444d62485f1b6c77e4a4ffa232a90c14839c48b7aa97bfb11dac7e",
+      "line_anchors": [
+        {
+          "line": 145,
+          "text": "void GBMemoryInit(struct GB* gb) {"
+        },
+        {
+          "line": 179,
+          "text": "void GBMemoryReset(struct GB* gb) {"
+        },
+        {
+          "line": 349,
+          "text": "void GBStore8(struct SM83Core* cpu, uint16_t address, int8_t value) {"
+        },
+        {
+          "line": 559,
+          "text": "void GBMemoryDMA(struct GB* gb, uint16_t base) {"
+        },
+        {
+          "line": 748,
+          "text": "void GBMemorySerialize(const struct GB* gb, struct GBSerializedState* state) {"
+        },
+        {
+          "line": 884,
+          "text": "void GBMemoryDeserialize(struct GB* gb, const struct GBSerializedState* state) {"
+        }
+      ],
+      "responsibilities": "Game Boy SM83 memory callbacks, WRAM reset, CPU bus restrictions, OAM DMA scheduler and savestate memory serialization.",
+      "dependency_edges": [
+        "include/mgba/internal/gb/memory.h",
+        "src/gb/gb.c",
+        "src/gb/serialize.c"
+      ],
+      "unresolved": [
+        "Trace DMA event descheduling and bus-blocking timing against GB hardware and savestate restoration.",
+        "No native GB DMA or GBA ARM execution is established by source inspection.",
+        "Full-file source, build consumer closure, original machine dossier bytes and distinct external reviewer still required."
+      ],
+      "reviewer_questions": [
+        "Independently read entire exact pinned source including all conditional and error branches",
+        "Verify original machine dossier bytes and SHA256, not merely copied packet digest",
+        "Trace callers/callees, native platform boundaries, build and save semantics",
+        "Confirm MPL-2.0 file notice and pinned LICENSE scope and any third-party exceptions",
+        "Only a distinct human/external reviewer may submit source-hash-bound approval"
+      ],
+      "license_evidence": {
+        "pinned_repository": "mgba-emu/mgba",
+        "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "file_notice_lines": [
+          3,
+          4,
+          5
+        ],
+        "file_notice": "Mozilla Public License, v. 2.0."
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "GAME_BOY_SM83_ONLY_NOT_GBA_FLASH",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    },
+    {
+      "packet_index": 80,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gb/serialize.c",
+        "git_blob_sha1": "8f874d8eb820f7589ad39f003e4ce47ea6f0e145",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gb/serialize.c"
+      },
+      "machine_dossier_sha256_unverified": "b194872944ec87594c27d87700c329b77c10b062fc90db4ac57ccdd4b46bb7cc",
+      "whole_source_sha256_from_machine_packet_unverified": "7ad4835ff2f73c0537ebc3c5ca4fd22f0e17aa3c8a49d3139f8f0b1f790cc20a",
+      "line_anchors": [
+        {
+          "line": 19,
+          "text": "void GBSerialize(struct GB* gb, struct GBSerializedState* state) {"
+        },
+        {
+          "line": 72,
+          "text": "bool GBDeserialize(struct GB* gb, const struct GBSerializedState* state) {"
+        },
+        {
+          "line": 233,
+          "text": "void GBSGBSerialize(struct GB* gb, struct GBSerializedState* state) {"
+        },
+        {
+          "line": 266,
+          "text": "void GBSGBDeserialize(struct GB* gb, const struct GBSerializedState* state) {"
+        }
+      ],
+      "responsibilities": "Game Boy savestate magic/version, CRC checks, board/timing serialization and Super Game Boy state restoration.",
+      "dependency_edges": [
+        "include/mgba/internal/gb/serialize.h",
+        "src/gb/memory.c",
+        "src/gb/core.c"
+      ],
+      "unresolved": [
+        "Trace all version rejection and partial-deserialization side effects before accepting corrupted state.",
+        "GB savestates and SGB fields do not prove FireRed GBA save persistence or physical Flash.",
+        "Full-file source, build consumer closure, original machine dossier bytes and distinct external reviewer still required."
+      ],
+      "reviewer_questions": [
+        "Independently read entire exact pinned source including all conditional and error branches",
+        "Verify original machine dossier bytes and SHA256, not merely copied packet digest",
+        "Trace callers/callees, native platform boundaries, build and save semantics",
+        "Confirm MPL-2.0 file notice and pinned LICENSE scope and any third-party exceptions",
+        "Only a distinct human/external reviewer may submit source-hash-bound approval"
+      ],
+      "license_evidence": {
+        "pinned_repository": "mgba-emu/mgba",
+        "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "file_notice_lines": [
+          3,
+          4,
+          5
+        ],
+        "file_notice": "Mozilla Public License, v. 2.0."
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "GAME_BOY_SM83_ONLY_NOT_GBA_FLASH",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    }
+  ]
+}

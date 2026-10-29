@@ -1,0 +1,19 @@
+name: Phase 1 pinned mGBA GB SM83 and shared debugger partial dossiers
+on:
+  push:
+    branches:
+      - phase1/review-readiness-handoff-20261027
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  gb-debugger-partial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify eight exact pinned source blobs, MPL notice, 128 negatives and zero approvals
+        run: python3 tools/phase1_remaining_p0_eight_gb_debugger_verify.py
