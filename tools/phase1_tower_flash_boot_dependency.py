@@ -21,10 +21,10 @@ CHECKS={
  ("src/save.c","u32 TryReadSpecialSaveSector(u8 sectorId, u8 *dst)"):(
   "SECTOR_ID_TRAINER_TOWER_1","SECTOR_ID_TRAINER_TOWER_2",
   "ReadFlash(sectorId, 0, (u8 *)&gSaveDataBuffer, SECTOR_SIZE);",
-  "SPECIAL_SECTOR_SENTINEL","dst[i] = savData[i];"),
+  "if (*(u32 *)(&gSaveDataBuffer.data[0]) != SPECIAL_SECTOR_SENTINEL)","dst[i] = savData[i];"),
  ("src/save.c","u32 TryWriteSpecialSaveSector(u8 sector, u8 *src)"):(
   "SECTOR_ID_TRAINER_TOWER_1","SECTOR_ID_TRAINER_TOWER_2",
-  "SPECIAL_SECTOR_SENTINEL","savData[i] = src[i];",
+  "*(u32 *)(savDataBuffer) = SPECIAL_SECTOR_SENTINEL;","savData[i] = src[i];",
   "ProgramFlashSectorAndVerify(sector, savDataBuffer)"),
  ("src/agb_flash.c","void ReadFlash(u16 sectorNum, u32 offset, void *dest, u32 size)"):(
   "gFlash->romSize","SwitchFlashBank(sectorNum / SECTORS_PER_BANK);",
