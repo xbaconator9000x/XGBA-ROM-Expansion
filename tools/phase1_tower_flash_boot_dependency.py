@@ -28,15 +28,15 @@ CHECKS={
   "ProgramFlashSectorAndVerify(sector, savDataBuffer)"),
  ("src/agb_flash.c","void ReadFlash(u16 sectorNum, u32 offset, void *dest, u32 size)"):(
   "gFlash->romSize","SwitchFlashBank(sectorNum / SECTORS_PER_BANK);",
-  "readFlash_Core_Buffer","readFlash_Core(src, dest, size);"),
+  "funcDest = readFlash_Core_Buffer;","readFlash_Core(src, dest, size);"),
  ("src/agb_flash.c","u32 VerifyFlashSector(u16 sectorNum, u8 *src)"):(
   "gFlash->romSize","SwitchFlashBank(sectorNum / SECTORS_PER_BANK);",
-  "verifyFlashSector_Core_Buffer","gFlash->sector.size"),
+  "funcDest = verifyFlashSector_Core_Buffer;","gFlash->sector.size"),
  ("src/agb_flash.c","u32 ProgramFlashSectorAndVerify(u16 sectorNum, u8 *src)"):(
   "i < 3","ProgramFlashSector(sectorNum, src);",
   "VerifyFlashSector(sectorNum, src);"),
  ("src/agb_flash.c","void StartFlashTimer(u8 phase)"):(
-  "gFlashMaxTime","sTimerReg","REG_IME"),
+  "gFlashMaxTime","sTimerReg[1] = 0;","sSavedIme = REG_IME;"),
  ("src/agb_flash_1m.c","u16 IdentifyFlash(void)"):(
   "ReadFlashId();","ProgramFlashSector = (*setupInfo)->programFlashSector;",
   "WaitForFlashWrite = (*setupInfo)->WaitForFlashWrite;",
