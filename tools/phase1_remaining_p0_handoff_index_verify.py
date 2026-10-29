@@ -35,11 +35,11 @@ def main():
     idx = json.loads(INDEX.read_text(encoding="utf-8"))
     assert idx["phase1_gate"] == "FAIL_INCOMPLETE"
     assert idx["independent_p0_approved"] == idx["independent_total_approved"] == idx["whole_file_semantic_approved"] == 0
-    assert idx["remaining_p0_partial_source_inspected"] == 22
-    assert idx["remaining_p0_without_partial_source_inspection"] == 287
-    assert idx["total_p0_partial_source_inspected"] == 51
+    assert idx["remaining_p0_partial_source_inspected"] == 30
+    assert idx["remaining_p0_without_partial_source_inspection"] == 279
+    assert idx["total_p0_partial_source_inspected"] == 59
     assert idx["curated_p0_partial_source_inspected"] == 29
-    assert idx["batch_sizes"] == [6, 8, 8]
+    assert idx["batch_sizes"] == [6, 8, 8, 8]
     raw = (ROOT / idx["packet"]).read_bytes()
     assert git_blob(raw) == idx["packet_blob_sha1"]
     packets = json.loads(raw)["packets"]
@@ -79,10 +79,10 @@ def main():
             bad = copy.deepcopy(record)
             bad["line_anchors"] = []
             reject(bad, packets[i]); negatives += 1
-    assert len(seen) == 22
-    assert sorted(seen) == [1,2,3,4,5,6,7,8,9,10,11,12,13,14,16,25,33,38,43,55,58,60]
-    assert negatives == 220
-    print("P0_HANDOFF_INDEX_PASS partial=22 curated=29 total_partial=51 negatives=220 approved_p0=0/338 approved_total=0/14834 gate=FAIL_INCOMPLETE")
+    assert len(seen) == 30
+    assert sorted(seen) == [1,2,3,4,5,6,7,8,9,10,11,12,13,14,16,23,24,25,27,29,33,38,39,40,43,54,55,58,60,63]
+    assert negatives == 300
+    print("P0_HANDOFF_INDEX_PASS partial=30 curated=29 total_partial=59 negatives=300 approved_p0=0/338 approved_total=0/14834 gate=FAIL_INCOMPLETE")
 
 if __name__ == "__main__":
     main()
