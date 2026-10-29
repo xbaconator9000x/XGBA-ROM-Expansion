@@ -141,7 +141,7 @@ int main(int argc,char **argv) {
         QFile touched(json);
         need(touched.open(QIODevice::WriteOnly|QIODevice::Append),
              "watched_json_append_open");
-        need(touched.write("\\n",1)==1 && touched.flush(),
+        need(touched.write("\n",1)==1 && touched.flush(),
              "watched_json_append_flush");
         touched.close();
         QElapsedTimer elapsed;
