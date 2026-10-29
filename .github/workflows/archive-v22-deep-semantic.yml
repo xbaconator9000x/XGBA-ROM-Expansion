@@ -1,14 +1,7 @@
 name: Persist six-domain Phase 1 v2.2 semantic evidence
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - '.github/workflows/archive-v22-deep-semantic.yml'
-  workflow_run:
-    workflows:
-      - Phase 1 pinned source census and review dossiers
-    types:
-      - completed
+
 permissions:
   actions: read
   contents: write

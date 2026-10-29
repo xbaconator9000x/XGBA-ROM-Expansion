@@ -1,9 +1,7 @@
 name: Persist combined Phase 1 v1.9 evidence
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - '.github/workflows/archive-v19-all-evidence.yml'
+
 permissions:
   actions: read
   contents: write

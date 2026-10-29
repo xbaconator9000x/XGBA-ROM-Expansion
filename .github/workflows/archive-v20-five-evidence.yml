@@ -1,11 +1,7 @@
 name: Persist five-pipeline Phase 1 v2.0 semantic evidence
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - Phase 1 compiled Porymap Qt semantic evidence
-    types:
-      - completed
+
 permissions:
   actions: read
   contents: write

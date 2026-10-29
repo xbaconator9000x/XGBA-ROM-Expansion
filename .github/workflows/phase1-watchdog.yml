@@ -1,12 +1,6 @@
 name: Phase 1 audit watchdog
 on:
-  schedule:
-    - cron: "*/15 * * * *"
   workflow_dispatch:
-  push:
-    paths:
-      - 'tools/phase1_watchdog.py'
-      - '.github/workflows/phase1-watchdog.yml'
 
 permissions:
   actions: read

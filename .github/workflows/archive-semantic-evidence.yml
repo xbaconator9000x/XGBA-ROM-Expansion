@@ -1,11 +1,7 @@
 name: Persist Phase 1 semantic evidence release
 
 on:
-  workflow_run:
-    workflows:
-      - Phase 1 pinned source census and review dossiers
-    types:
-      - completed
+  workflow_dispatch:
 
 permissions:
   actions: read

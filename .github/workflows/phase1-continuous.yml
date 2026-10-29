@@ -1,13 +1,6 @@
 name: Phase 1 resumable pinned evidence queue
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "*/15 * * * *"
-  push:
-    paths:
-      - 'tools/phase1_continuous.py'
-      - 'tests/test_phase1_continuous.py'
-      - '.github/workflows/phase1-continuous.yml'
 
 permissions:
   actions: write
