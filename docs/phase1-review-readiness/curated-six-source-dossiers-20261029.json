@@ -115,10 +115,10 @@
       "ordinal": 17,
       "source": {
         "repository": "huderlem/porymap",
-        "revision": "26b919d7",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
         "path": "src/core/bitpacker.cpp",
         "git_blob_sha1": "34f86b4e3910021613a1d090746ae53a1c6782a2",
-        "url": "https://github.com/huderlem/porymap/blob/26b919d7/src/core/bitpacker.cpp"
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/src/core/bitpacker.cpp"
       },
       "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
       "scope": "Source declarations/function bodies and named dependency edges only; not whole-file semantic approval",
@@ -147,10 +147,10 @@
       "ordinal": 21,
       "source": {
         "repository": "huderlem/poryscript",
-        "revision": "c3248116",
+        "revision": "c32481161c767b25a3425fa9f1f8729927ff3d55",
         "path": "emitter/chunk.go",
         "git_blob_sha1": "bb3a6514988eb2699022551d3dbfe2bdce260377",
-        "url": "https://github.com/huderlem/poryscript/blob/c3248116/emitter/chunk.go"
+        "url": "https://github.com/huderlem/poryscript/blob/c32481161c767b25a3425fa9f1f8729927ff3d55/emitter/chunk.go"
       },
       "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
       "scope": "Source declarations/function bodies and named dependency edges only; not whole-file semantic approval",
@@ -181,10 +181,10 @@
       "ordinal": 29,
       "source": {
         "repository": "pret/agbcc",
-        "revision": "da598c1d",
+        "revision": "da598c1d918402c42c0c0d7128ba14567f3175e9",
         "path": "gcc_arm/config/arm/t-arm-elf",
         "git_blob_sha1": "b57eeca9805d5aeb0ba20e08948758cb27da82fd",
-        "url": "https://github.com/pret/agbcc/blob/da598c1d/gcc_arm/config/arm/t-arm-elf"
+        "url": "https://github.com/pret/agbcc/blob/da598c1d918402c42c0c0d7128ba14567f3175e9/gcc_arm/config/arm/t-arm-elf"
       },
       "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
       "scope": "Source declarations/function bodies and named dependency edges only; not whole-file semantic approval",
