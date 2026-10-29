@@ -1,0 +1,68 @@
+name: Phase 1 pinned Porymap Poryscript executable generated include
+on:
+  push:
+    branches:
+      - phase1/porymap-full-qt-project-roundtrip-20261028
+    paths:
+      - '.github/workflows/phase1-porymap-native-generated-inc.yml'
+      - 'tools/phase1_porymap_native_generated_inc.py'
+      - 'docs/phase1-review-readiness/porymap-native-generated-inc-20261029.md'
+  pull_request:
+    paths:
+      - '.github/workflows/phase1-porymap-native-generated-inc.yml'
+      - 'tools/phase1_porymap_native_generated_inc.py'
+      - 'docs/phase1-review-readiness/porymap-native-generated-inc-20261029.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-poryscript-generated-include:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/porymap
+          ref: 26b919d7ff4b54152de010abd5bf344af2ebe116
+          path: upstream-porymap
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/poryscript
+          ref: c32481161c767b25a3425fa9f1f8729927ff3d55
+          path: upstream-poryscript
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - name: Install existing GNU ARM assembler
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi
+          go version
+      - name: Execute original Poryscript Make rule and GNU ARM include
+        run: |
+          set -euo pipefail
+          mkdir -p phase1-evidence
+          python3 -m py_compile tools/phase1_porymap_native_generated_inc.py
+          python3 tools/phase1_porymap_native_generated_inc.py \
+            --porymap upstream-porymap \
+            --poryscript upstream-poryscript \
+            --firered upstream-firered \
+            --output phase1-evidence/porymap-native-generated-inc.json
+          python3 -m json.tool phase1-evidence/porymap-native-generated-inc.json >/dev/null
+      - name: Archive text-only executable dependency evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-porymap-native-generated-inc-text
+          path: phase1-evidence/*.json
+          if-no-files-found: warn
+          retention-days: 30

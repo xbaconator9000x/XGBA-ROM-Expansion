@@ -1,0 +1,189 @@
+name: Phase 1 full pinned Porymap Qt project save/reopen
+on:
+  push:
+    branches:
+      - phase1/porymap-full-qt-project-roundtrip-20261028
+    paths:
+      - '.github/workflows/phase1-porymap-full-project-roundtrip.yml'
+      - 'tests/porymap_qt_project_roundtrip.cpp'
+      - 'tests/porymap_qt_editor_gui_save.cpp'
+      - 'tools/phase1_porymap_gui_syscall_attribution.py'
+      - 'tools/phase1_porymap_private_qfile_probe.py'
+      - 'docs/phase1-review-readiness/porymap-full-qt-project-roundtrip-20261028.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-project-roundtrip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clone immutable Porymap and FireRed project source
+        run: |
+          set -euo pipefail
+          git clone --quiet --filter=blob:none https://github.com/huderlem/porymap.git upstream-porymap
+          git -C upstream-porymap checkout --quiet --detach 26b919d7ff4b54152de010abd5bf344af2ebe116
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream-firered
+          git -C upstream-firered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream-porymap rev-parse HEAD)" = 26b919d7ff4b54152de010abd5bf344af2ebe116
+          test "$(git -C upstream-firered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git -C upstream-porymap hash-object src/project.cpp | grep -Fx d43b0949303433111d4478ad76117c2b3445dd13
+          git -C upstream-porymap hash-object src/mainwindow.cpp | grep -Fx 08ce1a7a599ef825967717b69626984cdc6d772b
+          git -C upstream-porymap hash-object src/editor.cpp | grep -Fx 34112f6355b13d9381de7188624c36e5efeba151
+          git -C upstream-porymap hash-object src/core/mapconnection.cpp | grep -Fx d2d3f0460c6a52669ca8f6856bfe7ec3103cd9e4
+          git -C upstream-porymap hash-object src/core/map.cpp | grep -Fx 47b279919bd4afcc76b88f9eeecd459b3452989f
+          git -C upstream-porymap hash-object src/lib/orderedjson.cpp | grep -Fx 4d3a460c652541371a01132116e508db8c4c872c
+          python3 tools/phase1_porymap_qt_writer_failure.py --porymap upstream-porymap --output phase1-porymap-source.json
+      - name: Install pinned Porymap Qt build prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-base-dev-tools qmake6 libqt6svg6-dev libgl1-mesa-dev pkg-config g++ gdb strace
+      - name: Install source-pinned, logging-only private QFile observation in test binary
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_porymap_private_qfile_probe.py
+          python3 tools/phase1_porymap_private_qfile_probe.py \
+            --instrument upstream-porymap \
+            --output phase1-private-qfile-instrumentation.json
+      - name: Compile full pinned Porymap application with test entrypoint
+        run: |
+          set -euo pipefail
+          mkdir -p upstream-porymap/tests
+          cp tests/porymap_qt_project_roundtrip.cpp upstream-porymap/tests/
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("upstream-porymap/porymap.pro")
+          s=p.read_text()
+          assert s.count("src/main.cpp")==1
+          s=s.replace("src/main.cpp", "tests/porymap_qt_project_roundtrip.cpp")
+          Path("upstream-porymap/porymap-phase1.pro").write_text(s)
+          PY
+          (cd upstream-porymap && qmake6 porymap-phase1.pro -o Makefile && make -j4) > porymap-build.log 2>&1 || { tail -120 porymap-build.log; exit 1; }
+          test -x upstream-porymap/porymap
+      - name: Full Qt project save/reopen and injected write failure
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import shutil
+          from pathlib import Path
+          source=Path("upstream-firered")
+          dest=Path("phase1-project/pokefirered")
+          dest.parent.mkdir(parents=True,exist_ok=True)
+          shutil.copytree(source,dest,ignore=shutil.ignore_patterns(".git"))
+          assert (dest/"data/maps/PalletTown/map.json").is_file()
+          PY
+          mkdir -p phase1-evidence
+          QT_QPA_PLATFORM=offscreen timeout 180s upstream-porymap/porymap "$PWD/phase1-project/pokefirered" | tee phase1-evidence/full-qt-project.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("phase1-evidence/full-qt-project.json").read_text())
+          assert d["full_project_load"] and d["full_map_save_reload"]
+          assert d["project_save_returned_true_on_device_failure"]
+          assert d["map_dirty_after_device_failure"] is False
+          assert d["disk_content_preserved_after_injected_failure"]
+          assert d["phase1_gate"]=="FAIL_INCOMPLETE"
+          print("Pinned full Project save/reopen and injected write-failure boundary observed; no approval")
+          PY
+      - name: Exercise real MainWindow QAction Editor save and mirrored connection failure
+        run: |
+          set -euo pipefail
+          cp tests/porymap_qt_editor_gui_save.cpp upstream-porymap/tests/
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("upstream-porymap/porymap.pro")
+          s=p.read_text()
+          assert s.count("src/main.cpp")==1
+          s=s.replace("src/main.cpp", "tests/porymap_qt_editor_gui_save.cpp")
+          s += "\nTARGET = porymap-phase1-gui\n"
+          Path("upstream-porymap/porymap-phase1-gui.pro").write_text(s)
+          PY
+          (cd upstream-porymap && qmake6 porymap-phase1-gui.pro -o Makefile.phase1gui && make -f Makefile.phase1gui -j4) > porymap-gui-build.log 2>&1 || { tail -120 porymap-gui-build.log; exit 1; }
+          test -x upstream-porymap/porymap-phase1-gui
+          python3 - <<'PY'
+          import shutil
+          from pathlib import Path
+          source=Path("upstream-firered")
+          dest=Path("phase1-project-gui/pokefirered")
+          dest.parent.mkdir(parents=True,exist_ok=True)
+          shutil.copytree(source,dest,ignore=shutil.ignore_patterns(".git"))
+          assert (dest/"data/maps/PalletTown/map.json").is_file()
+          PY
+          mkdir -p phase1-evidence/gui-config
+          set +e
+          XDG_CONFIG_HOME="$PWD/phase1-evidence/gui-config" QT_QPA_PLATFORM=offscreen strace -f -yy -s 256 -e trace=openat,write,close -o phase1-evidence/gui-strace.log timeout 180s upstream-porymap/porymap-phase1-gui "$PWD/phase1-project-gui/pokefirered" 2>phase1-evidence/gui-stderr.log | tee phase1-evidence/gui-save.log
+          gui_rc=${PIPESTATUS[0]}
+          set -e
+          if [ "$gui_rc" -ne 0 ]; then
+            echo "Real GUI harness exited $gui_rc; capturing native gdb backtrace (not a PASS)"
+            XDG_CONFIG_HOME="$PWD/phase1-evidence/gui-config" QT_QPA_PLATFORM=offscreen timeout 90s gdb -batch -ex "set pagination off" -ex run -ex "thread apply all bt 16" --args upstream-porymap/porymap-phase1-gui "$PWD/phase1-project-gui/pokefirered" > phase1-evidence/gui-gdb.log 2>&1 || true
+            tail -100 phase1-evidence/gui-gdb.log
+            exit "$gui_rc"
+          fi
+          # Kernel syscall evidence: distinguish matched 1-byte QFile control
+          # from full JSON writes issued AFTER each real GUI Save QAction.
+          python3 -m py_compile tools/phase1_porymap_gui_syscall_attribution.py
+          python3 tools/phase1_porymap_gui_syscall_attribution.py \
+            --trace phase1-evidence/gui-strace.log \
+            --output phase1-evidence/gui-syscall-attribution.json
+          # The test-only instrumentation observes the actual private
+          # Project::saveMap QFile object before close, unlike syscall inference.
+          python3 tools/phase1_porymap_private_qfile_probe.py \
+            --trace phase1-evidence/gui-stderr.log \
+            --output phase1-evidence/gui-private-qfile.json
+          # Fresh process: pinned Qt graphics state is not safe to reinitialize
+          # with a second MainWindow in the same process.
+          XDG_CONFIG_HOME="$PWD/phase1-evidence/gui-config" QT_QPA_PLATFORM=offscreen timeout 90s upstream-porymap/porymap-phase1-gui "$PWD/phase1-project-gui/pokefirered" --cold-reopen | tee -a phase1-evidence/gui-save.log
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          records=[json.loads(line.split("=",1)[1]) for line in Path("phase1-evidence/gui-save.log").read_text().splitlines() if line.startswith("PHASE1_GUI_RESULT=")]
+          assert len(records)==1,("expected one real GUI QAction witness",len(records))
+          d=records[0]
+          assert d["real_mainwindow_initialized"] and d["real_editor_map_loaded"]
+          assert d["qaction_current_save_triggers"]==4
+          assert d["qaction_save_project_triggers"]==2
+          assert d["save_all_after_failure_triggers"]==2
+          assert d["failed_gui_save_cleared_dirty"] and d["failed_gui_save_mirror_remains_dirty"]
+          assert d["post_failure_retry_mirror_dirty"] is False
+          assert d["post_failure_retry_mirror_disk_offset"]==-d["failed_gui_save_in_memory_offset"]
+          assert isinstance(d["post_failure_retry_disk_mirrors_divergent"],bool)
+          assert d["failed_gui_save_disk_offset"]!=d["failed_gui_save_in_memory_offset"]
+          assert d["single_map_positive_save_persisted"] is True
+          assert d["mirrored_matched_qfile_error"] is True
+          assert d["isolated_matched_qfile_error"] is True
+          assert d["dirty_close_cancel_prompt_observed"] is True
+          assert d["dirty_close_cancel_rejected"] is True
+          assert d["dirty_close_cancel_preserved_disk"] is True
+          assert d["single_map_failed_save_disk_unchanged"] is True
+          assert d["single_map_failed_save_map_dirty"] is False
+          assert d["single_map_failed_save_project_dirty"] is False
+          assert d["single_map_unsaved_attribute_not_persisted"] is True
+          assert d["single_map_gui_save_triggers"]==4
+          assert d["close_after_failed_single_map_save_accepted"] is True
+          assert d["phase1_gate"]=="FAIL_INCOMPLETE"
+          cold=[json.loads(line.split("=",1)[1]) for line in Path("phase1-evidence/gui-save.log").read_text().splitlines() if line.startswith("PHASE1_GUI_COLD_REOPEN=")]
+          assert len(cold)==1,("expected one fresh MainWindow/Editor reload",len(cold))
+          assert cold[0]["fresh_mainwindow_editor"] is True
+          assert cold[0]["recovered_prior_persisted_value"] is True
+          assert cold[0]["unsaved_failed_value_absent"] is True
+          assert cold[0]["phase1_gate"]=="FAIL_INCOMPLETE"
+          Path("phase1-evidence/gui-cold-reopen.json").write_text(json.dumps(cold[0],indent=2,sort_keys=True)+"\n")
+          Path("phase1-evidence/gui-save.json").write_text(json.dumps(d,indent=2,sort_keys=True)+"\n")
+          print("Real MainWindow QAction -> Editor -> Project save and mirrored dirty-state evidence; no approval")
+          PY
+      - name: Archive text-only source and Qt runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-porymap-full-project-qt-text-evidence
+          path: |
+            phase1-evidence/*.json
+            phase1-evidence/*.log
+            phase1-porymap-source.json
+            phase1-private-qfile-instrumentation.json
+            porymap-build.log
+            porymap-gui-build.log
+          if-no-files-found: warn
+          retention-days: 30

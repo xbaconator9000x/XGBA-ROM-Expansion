@@ -1,0 +1,59 @@
+name: Phase 1 pinned Porymap Qt QSaveFile adapter boundary
+on:
+  push:
+    branches:
+      - phase1/porymap-full-qt-project-roundtrip-20261028
+    paths:
+      - '.github/workflows/phase1-porymap-qsavefile-adapter-boundary.yml'
+      - 'tests/phase1_porymap_qsavefile_device.cpp'
+      - 'tools/phase1_porymap_qsavefile_adapter_boundary.py'
+      - 'docs/phase1-review-readiness/porymap-qsavefile-adapter-boundary-20261029.md'
+  pull_request:
+    paths:
+      - '.github/workflows/phase1-porymap-qsavefile-adapter-boundary.yml'
+      - 'tests/phase1_porymap_qsavefile_device.cpp'
+      - 'tools/phase1_porymap_qsavefile_adapter_boundary.py'
+      - 'docs/phase1-review-readiness/porymap-qsavefile-adapter-boundary-20261029.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-qt-adapter-boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clone immutable Porymap source
+        run: |
+          set -euo pipefail
+          git clone --quiet --filter=blob:none https://github.com/huderlem/porymap.git upstream-porymap
+          git -C upstream-porymap checkout --quiet --detach 26b919d7ff4b54152de010abd5bf344af2ebe116
+          test "$(git -C upstream-porymap rev-parse HEAD)" = 26b919d7ff4b54152de010abd5bf344af2ebe116
+          git -C upstream-porymap hash-object include/lib/orderedjson.h | grep -Fx cb5139d37d955f2469ebd2eaaf089668b82884fe
+          git -C upstream-porymap hash-object src/project.cpp | grep -Fx d43b0949303433111d4478ad76117c2b3445dd13
+          git -C upstream-porymap hash-object LICENSE.md | grep -Fx 65c5ca88a67c30becee01c5a8816d964b03862f9
+      - name: Install existing Qt Core compiler dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends qt6-base-dev pkg-config g++
+      - name: Compile and execute actual Qt QSaveFile and QTextStream boundary
+        run: |
+          set -euo pipefail
+          mkdir -p phase1-evidence
+          g++ -std=c++17 -fPIC -O0 -Wall -Wextra -Werror             -I upstream-porymap/include             $(pkg-config --cflags Qt6Core)             tests/phase1_porymap_qsavefile_device.cpp             -o phase1-qsavefile-device $(pkg-config --libs Qt6Core)
+          ./phase1-qsavefile-device | tee phase1-evidence/qt-qsavefile-device.log
+      - name: Pin source and reject semantic and compiled evidence mutations
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_porymap_qsavefile_adapter_boundary.py
+          python3 tools/phase1_porymap_qsavefile_adapter_boundary.py             --porymap upstream-porymap             --trace phase1-evidence/qt-qsavefile-device.log             --output phase1-evidence/qt-qsavefile-boundary.json
+      - name: Archive text-only boundary evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-porymap-qsavefile-adapter-text
+          path: |
+            phase1-evidence/*.json
+            phase1-evidence/*.log
+          if-no-files-found: warn
+          retention-days: 30
