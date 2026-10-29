@@ -1,11 +1,7 @@
 name: Persist Phase 1 v2.9 exact cartridge adapter preflight and narrowed ROM drift
 on:
-  workflow_run:
-    workflows:
-      - Phase 1 compiled FireRed classic versus modern ABI
-    types:
-      - completed
   workflow_dispatch:
+
 permissions:
   actions: read
   contents: write

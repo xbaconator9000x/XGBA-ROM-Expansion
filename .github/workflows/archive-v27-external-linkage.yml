@@ -1,11 +1,7 @@
 name: Persist Phase 1 v2.7 compiled FireRed linker and relocation semantics
 on:
-  workflow_run:
-    workflows:
-      - Phase 1 compiled FireRed classic versus modern ABI
-    types:
-      - completed
   workflow_dispatch:
+
 permissions:
   actions: read
   contents: write
