@@ -1,0 +1,753 @@
+{
+  "schema": "xgba.phase1.second_packet_firered_centers_caves_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+  "source_packet_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0000-0199-20261030.json",
+  "new_partial_indices": [
+    131,
+    133,
+    134,
+    135,
+    136,
+    138,
+    139,
+    140
+  ],
+  "prior_second_packet_indices": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    130,
+    132,
+    137,
+    141
+  ],
+  "other_p0_partial_total": 120,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 149,
+  "other_p0_without_partial": 189,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Eight pinned authored FireRed script source partials, NOT compiled, native, stock gameplay, .sav persistence, physical Flash, licensing clearance or independent approval.",
+  "records": [
+    {
+      "packet_index": 131,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/CeladonCity/scripts.inc",
+        "git_blob_sha1": "901a7a392e2193c4a84d1d9a58e18e97845db971",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/CeladonCity/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "bee1687d0cc8c8f51644ae9919f1093cb764279763e31ab74219ced98d584f01",
+      "whole_source_sha256_from_packet": "73c4199f8fbe1dfc540694e4c01e351389c0c35a935db5119205956385e9976a",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "CeladonCity_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CeladonCity_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_CELADON_CITY"
+        },
+        {
+          "line": 27,
+          "text": "CeladonCity_EventScript_SoftboiledTutor::"
+        },
+        {
+          "line": 28,
+          "text": "\tgoto EventScript_SoftboiledTutor"
+        },
+        {
+          "line": 45,
+          "text": "\tplaymoncry SPECIES_POLIWRATH, CRY_MODE_NORMAL"
+        },
+        {
+          "line": 80,
+          "text": "\tfamechecker FAMECHECKER_ERIKA, 0"
+        },
+        {
+          "line": 103,
+          "text": "\tend"
+        }
+      ],
+      "source_observations": "Transition world-map flag; NPC and tutor scripts, Poliwrath cry/movement and famechecker signs.",
+      "required_source_tokens": [
+        "CeladonCity_OnTransition",
+        "FLAG_WORLD_MAP_CELADON_CITY",
+        "EventScript_SoftboiledTutor",
+        "playmoncry"
+      ],
+      "dependency_edges": [
+        "map.json event references",
+        "event.inc macro encoding",
+        "SoftboiledTutor external handler",
+        "famechecker and movement engine"
+      ],
+      "unresolved": [
+        "Compiled source-to-map table and linker address closure not established",
+        "Referenced engine handlers and map.json consumers require independent full review",
+        "No native execution, stock gameplay, save persistence or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently read complete pinned source and inactive paths",
+        "Resolve map.json, macros, assembler, linker and runtime dependencies",
+        "Check original machine dossier bytes and SHA256 against receipt",
+        "Independently resolve asset and derivative licensing",
+        "Sign durable receipt only after full distinct-source review"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 133,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/CeladonCity_PokemonCenter_1F/scripts.inc",
+        "git_blob_sha1": "14a76d95fcf322e67c4b7e43266754c1491cfeb5",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/CeladonCity_PokemonCenter_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "94a722662bb81d1f859eb4b9067560e75a297298d9f7aca39521742c266e56d1",
+      "whole_source_sha256_from_packet": "7c1fbc956eb12b75734cc4a56173d016466cab81efd1a4b5c172caff82e5eba6",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "CeladonCity_PokemonCenter_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CeladonCity_PokemonCenter_1F_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume"
+        },
+        {
+          "line": 7,
+          "text": "\tsetrespawn HEAL_LOCATION_CELADON_CITY"
+        },
+        {
+          "line": 13,
+          "text": "\tcall EventScript_PkmnCenterNurse"
+        },
+        {
+          "line": 27,
+          "text": "\tend"
+        }
+      ],
+      "source_observations": "Celadon heal respawn, CableClub resume, shared nurse and NPC dialogue.",
+      "required_source_tokens": [
+        "MAP_SCRIPT_ON_RESUME",
+        "CableClub_OnResume",
+        "HEAL_LOCATION_CELADON_CITY",
+        "EventScript_PkmnCenterNurse"
+      ],
+      "dependency_edges": [
+        "heal location constant and implementation",
+        "CableClub_OnResume shared callback",
+        "shared nurse handler",
+        "map.json NPC bindings"
+      ],
+      "unresolved": [
+        "Compiled source-to-map table and linker address closure not established",
+        "Referenced engine handlers and map.json consumers require independent full review",
+        "No native execution, stock gameplay, save persistence or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently read complete pinned source and inactive paths",
+        "Resolve map.json, macros, assembler, linker and runtime dependencies",
+        "Check original machine dossier bytes and SHA256 against receipt",
+        "Independently resolve asset and derivative licensing",
+        "Sign durable receipt only after full distinct-source review"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 134,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/CeladonCity_PokemonCenter_2F/scripts.inc",
+        "git_blob_sha1": "531f8ac3e563d276c2908d3c36a7cf90ddf7d3cb",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/CeladonCity_PokemonCenter_2F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "9a21e203888b8b7bd7bb171e4c054109f2b693dddd595cd4682b2defbe335537",
+      "whole_source_sha256_from_packet": "77ec7d25390c5efce69bd312d8a8d84dc7bb6807f38c56c0bd26615e8e59d677",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "CeladonCity_PokemonCenter_2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CableClub_OnTransition"
+        },
+        {
+          "line": 8,
+          "text": "@ The below 3 are unused and leftover from RS"
+        },
+        {
+          "line": 10,
+          "text": "\tcall CableClub_EventScript_Colosseum"
+        },
+        {
+          "line": 14,
+          "text": "\tcall CableClub_EventScript_TradeCenter"
+        },
+        {
+          "line": 18,
+          "text": "\tcall CableClub_EventScript_RecordCorner"
+        },
+        {
+          "line": 19,
+          "text": "\tend"
+        }
+      ],
+      "source_observations": "Four shared CableClub hooks and three legacy RS-labelled link stubs.",
+      "required_source_tokens": [
+        "MAP_SCRIPT_ON_FRAME_TABLE",
+        "CableClub_OnWarp",
+        "CableClub_OnTransition",
+        "unused and leftover from RS"
+      ],
+      "dependency_edges": [
+        "CableClub frame/warp tables",
+        "CableClub load/transition callbacks",
+        "map.json warp bindings",
+        "global link event handlers"
+      ],
+      "unresolved": [
+        "Compiled source-to-map table and linker address closure not established",
+        "Referenced engine handlers and map.json consumers require independent full review",
+        "No native execution, stock gameplay, save persistence or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently read complete pinned source and inactive paths",
+        "Resolve map.json, macros, assembler, linker and runtime dependencies",
+        "Check original machine dossier bytes and SHA256 against receipt",
+        "Independently resolve asset and derivative licensing",
+        "Sign durable receipt only after full distinct-source review"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 135,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/CeruleanCave_1F/scripts.inc",
+        "git_blob_sha1": "f3de0a8ff44ee9ea1fa3f31c6c37df9108362b35",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/CeruleanCave_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "fa53d59bbfb2092eadbbddc6c4141a97a055365170b14a3db6af296de8c47cca",
+      "whole_source_sha256_from_packet": "a7565c850cc5ce3279f80e773e98404f50923ed2889a98902d785192b09ac4f3",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "CeruleanCave_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CeruleanCave_1F_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_CERULEAN_CAVE_1F"
+        },
+        {
+          "line": 7,
+          "text": "\tend"
+        }
+      ],
+      "source_observations": "Transition-only script sets cave 1F world-map flag.",
+      "required_source_tokens": [
+        "MAP_SCRIPT_ON_TRANSITION",
+        "CeruleanCave_1F_OnTransition",
+        "FLAG_WORLD_MAP_CERULEAN_CAVE_1F",
+        ".byte 0"
+      ],
+      "dependency_edges": [
+        "map.json script binding",
+        "world map flag constant",
+        "setworldmapflag opcode",
+        "script generator and linker"
+      ],
+      "unresolved": [
+        "Compiled source-to-map table and linker address closure not established",
+        "Referenced engine handlers and map.json consumers require independent full review",
+        "No native execution, stock gameplay, save persistence or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently read complete pinned source and inactive paths",
+        "Resolve map.json, macros, assembler, linker and runtime dependencies",
+        "Check original machine dossier bytes and SHA256 against receipt",
+        "Independently resolve asset and derivative licensing",
+        "Sign durable receipt only after full distinct-source review"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 136,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/CeruleanCave_B1F/scripts.inc",
+        "git_blob_sha1": "63a110bb4ebed6db57d625f7038ddf8b0275b1dc",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/CeruleanCave_B1F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "ed025aa81f3b03f541aea6f23daf752d45861b7541a34a795837186c56067188",
+      "whole_source_sha256_from_packet": "c454a14b2ea0868fe3ba3e3e47918b3201625113e9c381b673787ce1522f144a",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "CeruleanCave_B1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, CeruleanCave_B1F_OnResume"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CeruleanCave_B1F_OnTransition"
+        },
+        {
+          "line": 17,
+          "text": "\tcall_if_unset FLAG_FOUGHT_MEWTWO, CeruleanCave_B1F_EventScript_ShowMewtwo"
+        },
+        {
+          "line": 30,
+          "text": "\tplaymoncry SPECIES_MEWTWO, CRY_MODE_ENCOUNTER"
+        },
+        {
+          "line": 39,
+          "text": "\tspecial StartLegendaryBattle"
+        },
+        {
+          "line": 46,
+          "text": "\tsetflag FLAG_FOUGHT_MEWTWO"
+        },
+        {
+          "line": 51,
+          "text": "\tsetflag FLAG_FOUGHT_MEWTWO"
+        },
+        {
+          "line": 58,
+          "text": "\tend"
+        }
+      ],
+      "source_observations": "Mewtwo resume outcome, caught-object removal, encounter flags, run/defeat branches.",
+      "required_source_tokens": [
+        "FLAG_SYS_SPECIAL_WILD_BATTLE",
+        "GetBattleOutcome",
+        "FLAG_FOUGHT_MEWTWO",
+        "StartLegendaryBattle"
+      ],
+      "dependency_edges": [
+        "GetBattleOutcome special",
+        "legendary battle state",
+        "static object removal",
+        "quest log and map.json"
+      ],
+      "unresolved": [
+        "Compiled source-to-map table and linker address closure not established",
+        "Referenced engine handlers and map.json consumers require independent full review",
+        "No native execution, stock gameplay, save persistence or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently read complete pinned source and inactive paths",
+        "Resolve map.json, macros, assembler, linker and runtime dependencies",
+        "Check original machine dossier bytes and SHA256 against receipt",
+        "Independently resolve asset and derivative licensing",
+        "Sign durable receipt only after full distinct-source review"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 138,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/CeruleanCity_PokemonCenter_1F/scripts.inc",
+        "git_blob_sha1": "9850fd25c5727c2a89e10a31705c807a7cb2cbbb",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/CeruleanCity_PokemonCenter_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "8f25d7be84895f090ef43598a11d294690c83f2f56578eaab911097ae5d547c8",
+      "whole_source_sha256_from_packet": "0bafd8c7b7b2260e7b513da8222944c509594d288bc4da45b1607bfedac0b7d8",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "CeruleanCity_PokemonCenter_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CeruleanCity_PokemonCenter_1F_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume"
+        },
+        {
+          "line": 7,
+          "text": "\tsetrespawn HEAL_LOCATION_CERULEAN_CITY"
+        },
+        {
+          "line": 13,
+          "text": "\tcall EventScript_PkmnCenterNurse"
+        },
+        {
+          "line": 28,
+          "text": "\tfamechecker FAMECHECKER_BILL, 1"
+        },
+        {
+          "line": 35,
+          "text": "\tend"
+        }
+      ],
+      "source_observations": "Cerulean heal respawn, CableClub resume, nurse and Bill famechecker dialogue.",
+      "required_source_tokens": [
+        "CableClub_OnResume",
+        "HEAL_LOCATION_CERULEAN_CITY",
+        "EventScript_PkmnCenterNurse",
+        "FAMECHECKER_BILL"
+      ],
+      "dependency_edges": [
+        "heal respawn implementation",
+        "CableClub shared callback",
+        "nurse event handler",
+        "famechecker and NPC map.json"
+      ],
+      "unresolved": [
+        "Compiled source-to-map table and linker address closure not established",
+        "Referenced engine handlers and map.json consumers require independent full review",
+        "No native execution, stock gameplay, save persistence or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently read complete pinned source and inactive paths",
+        "Resolve map.json, macros, assembler, linker and runtime dependencies",
+        "Check original machine dossier bytes and SHA256 against receipt",
+        "Independently resolve asset and derivative licensing",
+        "Sign durable receipt only after full distinct-source review"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 139,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/CeruleanCity_PokemonCenter_2F/scripts.inc",
+        "git_blob_sha1": "48f6412f78c28d1cacd02d426b2b3552805b366f",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/CeruleanCity_PokemonCenter_2F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "1296f02217931d0d519efb0339e04a934fcd39df504386b7062fd107d8bd4aa6",
+      "whole_source_sha256_from_packet": "8f049dd0042ffd02ef627d0eac2d3887c966a0742fc73e14da4763566d2a4e68",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "CeruleanCity_PokemonCenter_2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CableClub_OnTransition"
+        },
+        {
+          "line": 8,
+          "text": "@ The below 3 are unused and leftover from RS"
+        },
+        {
+          "line": 10,
+          "text": "\tcall CableClub_EventScript_Colosseum"
+        },
+        {
+          "line": 14,
+          "text": "\tcall CableClub_EventScript_TradeCenter"
+        },
+        {
+          "line": 18,
+          "text": "\tcall CableClub_EventScript_RecordCorner"
+        },
+        {
+          "line": 19,
+          "text": "\tend"
+        }
+      ],
+      "source_observations": "Shared CableClub frame/warp/load/transition hooks and three legacy RS-labelled stubs.",
+      "required_source_tokens": [
+        "MAP_SCRIPT_ON_FRAME_TABLE",
+        "CableClub_OnWarp",
+        "CableClub_OnLoad",
+        "unused and leftover from RS"
+      ],
+      "dependency_edges": [
+        "CableClub frame/warp tables",
+        "CableClub load/transition callbacks",
+        "map.json warp bindings",
+        "global link event handlers"
+      ],
+      "unresolved": [
+        "Compiled source-to-map table and linker address closure not established",
+        "Referenced engine handlers and map.json consumers require independent full review",
+        "No native execution, stock gameplay, save persistence or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently read complete pinned source and inactive paths",
+        "Resolve map.json, macros, assembler, linker and runtime dependencies",
+        "Check original machine dossier bytes and SHA256 against receipt",
+        "Independently resolve asset and derivative licensing",
+        "Sign durable receipt only after full distinct-source review"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 140,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/CinnabarIsland/scripts.inc",
+        "git_blob_sha1": "3df941f11b52e8972be3d59a7ff1f012f20f4396",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/CinnabarIsland/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "d4947b56ee3ae243850c44b00192ab8992ac90ca9dd2b2279cf2dd873b490425",
+      "whole_source_sha256_from_packet": "58ee5ed2f19deb369e24ff9b1cd4009b872ce1d49ed2e8fe453bf70a668e6a8b",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "CinnabarIsland_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CinnabarIsland_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, CinnabarIsland_OnFrame"
+        },
+        {
+          "line": 7,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_CINNABAR_ISLAND"
+        },
+        {
+          "line": 8,
+          "text": "\tcall CinnabarIsland_EventScript_CheckUnlockGym"
+        },
+        {
+          "line": 9,
+          "text": "\tcall_if_eq VAR_MAP_SCENE_CINNABAR_ISLAND, 1, CinnabarIsland_EventScript_ReadyObjectsSailToOneIsland"
+        },
+        {
+          "line": 11,
+          "text": "\tcall_if_eq VAR_MAP_SCENE_CINNABAR_ISLAND_2, 1, CinnabarIsland_EventScript_ReadyObjectsSailToOneIslandFromPokeCenter"
+        },
+        {
+          "line": 14,
+          "text": "CinnabarIsland_EventScript_ReadyObjectsSailToOneIslandFromPokeCenter::"
+        },
+        {
+          "line": 22,
+          "text": "CinnabarIsland_EventScript_ReadyObjectsSailToOneIsland::"
+        },
+        {
+          "line": 41,
+          "text": "\tgoto_if_set FLAG_HIDE_POKEMON_MANSION_B1F_SECRET_KEY, CinnabarIsland_EventScript_UnlockGym"
+        },
+        {
+          "line": 49,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_CINNABAR_ISLAND_2, 1, CinnabarIsland_EventScript_ExitPokeCenterForOneIsland"
+        },
+        {
+          "line": 50,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_CINNABAR_ISLAND, 1, CinnabarIsland_EventScript_BillScene"
+        },
+        {
+          "line": 51,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_CINNABAR_ISLAND, 3, CinnabarIsland_EventScript_ReturnFromSeviiIslands"
+        },
+        {
+          "line": 61,
+          "text": "\tcall CinnabarIsland_EventScript_SailToOneIsland"
+        },
+        {
+          "line": 102,
+          "text": "\tgoto_if_eq VAR_RESULT, YES, CinnabarIsland_EventScript_AgreeSailToOneIsland"
+        },
+        {
+          "line": 103,
+          "text": "\tgoto_if_eq VAR_RESULT, NO, CinnabarIsland_EventScript_DeclineSailToOneIsland"
+        },
+        {
+          "line": 128,
+          "text": "CinnabarIsland_EventScript_AgreeSailToOneIsland::"
+        },
+        {
+          "line": 131,
+          "text": "\tcall CinnabarIsland_EventScript_SailToOneIsland"
+        },
+        {
+          "line": 135,
+          "text": "CinnabarIsland_EventScript_DeclineSailToOneIsland::"
+        },
+        {
+          "line": 191,
+          "text": "CinnabarIsland_EventScript_SailToOneIsland::"
+        }
+      ],
+      "source_observations": "Cinnabar gym unlock by Secret Key flag; Bill/Sevii scene transitions and boat movement.",
+      "required_source_tokens": [
+        "FLAG_HIDE_POKEMON_MANSION_B1F_SECRET_KEY",
+        "VAR_MAP_SCENE_CINNABAR_ISLAND",
+        "EventScript_SailToOneIsland",
+        "EventScript_CheckUnlockGym"
+      ],
+      "dependency_edges": [
+        "secret key and gym door event flags",
+        "scene variable persistence",
+        "Seagallop shared sailing script",
+        "map.json NPC positions and warps"
+      ],
+      "unresolved": [
+        "Compiled source-to-map table and linker address closure not established",
+        "Referenced engine handlers and map.json consumers require independent full review",
+        "No native execution, stock gameplay, save persistence or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently read complete pinned source and inactive paths",
+        "Resolve map.json, macros, assembler, linker and runtime dependencies",
+        "Check original machine dossier bytes and SHA256 against receipt",
+        "Independently resolve asset and derivative licensing",
+        "Sign durable receipt only after full distinct-source review"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}
