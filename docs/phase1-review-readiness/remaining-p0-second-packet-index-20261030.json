@@ -1,0 +1,24 @@
+{
+  "schema": "xgba.phase1.remaining_p0_second_packet_handoff_index.v1",
+  "date": "2026-10-30",
+  "first_packet": "docs/phase1-review-readiness/packet-0000-0099.json",
+  "first_packet_blob_sha1": "a48c12900acc7e0211a8071119763e2b5de4b1a4",
+  "first_packet_completed_partial": 100,
+  "second_packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+  "second_packet_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+  "second_packet_partial_file": "docs/phase1-review-readiness/remaining-p0-four-libretro-qt-20261030.json",
+  "second_packet_indices": [
+    100,
+    103,
+    106,
+    107
+  ],
+  "curated_p0_partial": 29,
+  "other_p0_partial": 104,
+  "total_p0_partial": 133,
+  "other_p0_without_partial": 205,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "phase1_gate": "FAIL_INCOMPLETE",
+  "reviewer_handoff": "Four original mGBA libretro/Qt partial analyst dossiers, exact source blob and line anchors; source and original machine dossier SHA256 must be independently verified. No native execution, save durability, gameplay or independent approval."
+}
