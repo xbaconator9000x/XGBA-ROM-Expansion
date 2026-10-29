@@ -33,7 +33,8 @@ def validate(data, entry):
     assert (src["repository"], src["revision"], src["path"], src["git_blob_sha1"]) == PINNED[entry["ordinal"]], "registry identity mismatch"
     assert entry["analyst_status"] == "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL"
     assert entry["whole_file_semantic_coverage"] is False
-    assert entry["license_status"] == "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    expected_license = "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION" if entry["ordinal"] == 28 else "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    assert entry["license_status"] == expected_license
     assert entry["dependency_edges"] and entry["unresolved"]
     lines = data.decode("utf-8").splitlines()
     assert len(entry["line_anchors"]) >= 4
