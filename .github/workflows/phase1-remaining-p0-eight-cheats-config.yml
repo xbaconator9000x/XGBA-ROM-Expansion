@@ -1,0 +1,19 @@
+name: Phase 1 pinned Porymap config and mGBA GBX cart cheat partial dossiers
+on:
+  push:
+    branches:
+      - phase1/review-readiness-handoff-20261027
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  cheats-config-partial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify eight pinned source blobs, two licenses, 144 negatives and zero approvals
+        run: python3 tools/phase1_remaining_p0_eight_cheats_config_verify.py
