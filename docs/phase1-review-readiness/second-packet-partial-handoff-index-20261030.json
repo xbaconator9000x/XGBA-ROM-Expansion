@@ -1,0 +1,33 @@
+{
+  "schema": "xgba.phase1.second_packet_partial_handoff_index.v1",
+  "date": "2026-10-30",
+  "packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+  "packet_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+  "original_machine_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0000-0199-20261030.json",
+  "first_packet_index": "docs/phase1-review-readiness/remaining-p0-partial-handoff-index-20261029.json",
+  "batches": [
+    "docs/phase1-review-readiness/remaining-p0-four-libretro-qt-20261030.json",
+    "docs/phase1-review-readiness/remaining-p0-four-python-qt-20261030.json",
+    "docs/phase1-review-readiness/remaining-p0-four-firered-map-scripts-20261030.json",
+    "docs/phase1-review-readiness/remaining-p0-eight-firered-centers-caves-20261030.json",
+    "docs/phase1-review-readiness/remaining-p0-eight-firered-sevii-20261030.json"
+  ],
+  "batch_sizes": [
+    4,
+    4,
+    4,
+    8,
+    8
+  ],
+  "second_packet_partial_source_inspected": 28,
+  "first_packet_partial_source_inspected": 100,
+  "remaining_p0_partial_source_inspected": 128,
+  "remaining_p0_without_partial_source_inspection": 181,
+  "curated_p0_partial_source_inspected": 29,
+  "total_p0_partial_source_inspected": 157,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "whole_file_semantic_approved": 0,
+  "phase1_gate": "FAIL_INCOMPLETE",
+  "scope_note": "28 disjoint second packet source-only partial analyst records (indices 100-107 and 130-149), original 200 machine dossiers rehashed by separate exact-head verifier; no independent full-file semantics or license clearance."
+}
