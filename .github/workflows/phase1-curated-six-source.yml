@@ -3,15 +3,7 @@ on:
   push:
     branches:
       - phase1/review-readiness-handoff-20261027
-    paths:
-      - 'tools/phase1_curated_six_source_verify.py'
-      - 'docs/phase1-review-readiness/curated-six-source-dossiers-20261029.json'
-      - '.github/workflows/phase1-curated-six-source.yml'
   pull_request:
-    paths:
-      - 'tools/phase1_curated_six_source_verify.py'
-      - 'docs/phase1-review-readiness/curated-six-source-dossiers-20261029.json'
-      - '.github/workflows/phase1-curated-six-source.yml'
 permissions:
   contents: read
 jobs:
