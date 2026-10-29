@@ -1,0 +1,41 @@
+name: Phase 1 pinned Porymap GUI new-map explicit save source closure
+on:
+  push:
+    branches:
+      - phase1/porymap-full-qt-project-roundtrip-20261028
+    paths:
+      - 'tools/phase1_porymap_gui_newmap_save_boundary.py'
+      - 'docs/phase1-review-readiness/porymap-gui-newmap-save-source-20261029.md'
+      - '.github/workflows/phase1-porymap-gui-newmap-save-source.yml'
+  pull_request:
+    paths:
+      - 'tools/phase1_porymap_gui_newmap_save_boundary.py'
+      - 'docs/phase1-review-readiness/porymap-gui-newmap-save-source-20261029.md'
+      - '.github/workflows/phase1-porymap-gui-newmap-save-source.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-gui-newmap-source-closure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/porymap
+          ref: 26b919d7ff4b54152de010abd5bf344af2ebe116
+          path: upstream-porymap
+          persist-credentials: false
+      - name: Verify original GUI signal-dialog-project-editor-save closure and source negatives
+        run: |
+          set -euo pipefail
+          mkdir -p phase1-evidence
+          python3 tools/phase1_porymap_gui_newmap_save_boundary.py --porymap upstream-porymap --output phase1-evidence/porymap-gui-newmap-save-source.json | tee phase1-evidence/porymap-gui-newmap-save-source.log
+      - name: Preserve only text source evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-porymap-gui-newmap-save-source
+          path: phase1-evidence/
+          if-no-files-found: warn
