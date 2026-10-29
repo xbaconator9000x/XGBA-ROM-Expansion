@@ -11,6 +11,7 @@ FILES = {
     "gate": "semantic-snapshots/current/phase1_mapping_gate.json",
     "queue": "semantic-snapshots/independent-reviews/queue.json",
     "curated": "semantic-snapshots/curated/p0_semantic_review_candidates_2026-10-26.json",
+    "intake": "semantic-snapshots/independent-reviews/curated-p0-intake-20261029.json",
 }
 
 
@@ -31,7 +32,7 @@ class QueueBootstrapTests(unittest.TestCase):
     def test_positive(self):
         self.assertEqual(self.check(copy.deepcopy(self.original)), [])
 
-    def test_twelve_fail_closed_mutations(self):
+    def test_sixteen_fail_closed_mutations(self):
         edits = [
             ("wrong total", lambda d: d["queue"].update(total_target=14833)),
             ("false total approval", lambda d: d["queue"].update(total_approved=1)),
@@ -45,6 +46,10 @@ class QueueBootstrapTests(unittest.TestCase):
             ("missing curated file", lambda d: d["curated"]["candidate_files"].pop()),
             ("duplicate source identity", lambda d: d["curated"]["candidate_files"].__setitem__(1, copy.deepcopy(d["curated"]["candidate_files"][0]))),
             ("wrong pinned blob", lambda d: d["curated"]["candidate_files"][0].update(expected_git_blob_sha1="unverified")),
+            ("invented reviewer", lambda d: d["intake"]["records"][0].update(independent_reviewer="imaginary")),
+            ("invented approval", lambda d: d["intake"]["records"][0].update(independent_review_verdict="APPROVED")),
+            ("changed intake SHA", lambda d: d["intake"]["records"][0]["identity"].update(git_blob_sha1="0"*40)),
+            ("missing intake record", lambda d: d["intake"]["records"].pop()),
         ]
         for name, edit in edits:
             with self.subTest(name=name):

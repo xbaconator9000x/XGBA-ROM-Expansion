@@ -86,6 +86,59 @@ def validate(root):
         issues.append("invalid evidence document blob pin")
     if (root / "semantic-snapshots/independent-reviews/approved.json").exists():
         issues.append("unverified approval receipt file found")
+    intake_path = root / "semantic-snapshots/independent-reviews/curated-p0-intake-20261029.json"
+    try:
+        intake = json.loads(intake_path.read_text())
+    except (OSError, ValueError) as exc:
+        issues.append("missing or malformed curated intake: " + str(exc))
+        return issues
+    if intake.get("schema") != "xgba.phase1.curated_p0_independent_review_intake.v1":
+        issues.append("intake schema mismatch")
+    if intake.get("source_registry_blob_sha1") != "b6269c9a4ddf164643e3202ffb0497e27160bcca":
+        issues.append("intake registry pin mismatch")
+    if intake.get("record_count") != 29 or intake.get("partial_source_inspected_count") != 5 or intake.get("registry_only_count") != 24:
+        issues.append("intake count mismatch")
+    if intake.get("independent_approved_count") != 0 or intake.get("gate") != "FAIL_INCOMPLETE":
+        issues.append("intake cannot claim approvals or completed gate")
+    records = intake.get("records", [])
+    if not isinstance(records, list) or len(records) != 29:
+        issues.append("intake must have 29 per-file records")
+        records = []
+    inspected = 0
+    for i, record in enumerate(records):
+        if not isinstance(record, dict) or i >= len(files):
+            issues.append("invalid intake record index " + str(i))
+            continue
+        f = files[i]
+        expected_identity = {
+            "repository": f.get("repository"), "revision": f.get("revision"),
+            "path": f.get("source_path"), "git_blob_sha1": f.get("expected_git_blob_sha1"),
+        }
+        if record.get("identity") != expected_identity or record.get("ordinal") != i + 1:
+            issues.append("intake source identity mismatch: " + str(i))
+        if (record.get("independent_reviewer") is not None
+                or record.get("independent_review_receipt") is not None
+                or record.get("independent_review_verdict") != "NEEDS_REVIEW"
+                or record.get("whole_file_semantic_coverage") is not False
+                or record.get("machine_dossier_sha1") is not None):
+            issues.append("intake invented reviewer, whole-file coverage or dossier: " + str(i))
+        claim = record.get("partial_source_claim")
+        if claim is not None:
+            inspected += 1
+            lines = claim.get("source_lines", {})
+            if (record.get("analyst_preparation") != "PARTIAL_PINNED_SOURCE_INSPECTION"
+                    or record.get("source_hash_validation") != "GITHUB_CONTENTS_BLOB_MATCHED"
+                    or not isinstance(lines.get("start"), int)
+                    or not isinstance(lines.get("end"), int)
+                    or lines["start"] < 1 or lines["end"] < lines["start"]
+                    or not claim.get("dependency_edges")
+                    or not claim.get("unresolved")
+                    or claim.get("source_url") != f.get("upstream_blob_url") + "#L" + str(lines["start"]) + "-L" + str(lines["end"])):
+                issues.append("incomplete partial source evidence: " + str(i))
+        elif record.get("analyst_preparation") != "REGISTRY_ONLY_NOT_SOURCE_INSPECTED" or record.get("source_hash_validation") != "REGISTRY_PIN_ONLY":
+            issues.append("uninspected file misrepresented: " + str(i))
+    if inspected != 5:
+        issues.append("exactly five partial source observations required in bootstrap")
     return issues
 
 
