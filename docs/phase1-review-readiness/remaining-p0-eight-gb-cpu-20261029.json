@@ -1,0 +1,497 @@
+{
+  "schema": "xgba.phase1.remaining_p0_partial_analyst_batch.v7",
+  "date": "2026-10-29",
+  "source_packet": "docs/phase1-review-readiness/packet-0000-0099.json",
+  "source_packet_blob_sha1": "a48c12900acc7e0211a8071119763e2b5de4b1a4",
+  "previous_partial_indices": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    19,
+    20,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    33,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    45,
+    46,
+    47,
+    51,
+    52,
+    53,
+    54,
+    55,
+    58,
+    60,
+    63,
+    64,
+    65,
+    67,
+    68,
+    69,
+    70
+  ],
+  "new_partial_indices": [
+    17,
+    18,
+    21,
+    22,
+    59,
+    66,
+    71,
+    72
+  ],
+  "partial_source_inspected": 8,
+  "curated_29_source_inspected": 29,
+  "remaining_p0_partial_total": 62,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "machine_dossier_sha256_note": "Copied from pinned machine packet, not independently verified against original machine dossier bytes.",
+  "records": [
+    {
+      "packet_index": 17,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/gb/serialize.h",
+        "git_blob_sha1": "72fe9c43683456e029073622393ecd069bb3b82f",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/gb/serialize.h"
+      },
+      "machine_dossier_sha256_unverified": "dddcb132e61362bafd2d6162b24e1beb800b817d4ba85e6b3d50064b9706adf8",
+      "line_anchors": [
+        {
+          "line": 224,
+          "text": "struct GBSerializedPSGState {"
+        },
+        {
+          "line": 302,
+          "text": "struct GBSerializedState {"
+        },
+        {
+          "line": 303,
+          "text": "uint32_t versionMagic;"
+        },
+        {
+          "line": 304,
+          "text": "uint32_t romCrc32;"
+        }
+      ],
+      "responsibilities": "GB savestate structure declares version/ROM CRC, master cycles and PSG timing state; not GBA Flash persistence.",
+      "dependency_edges": [
+        "src/gb/serialize.c",
+        "src/gb/core.c"
+      ],
+      "unresolved": [
+        "Verify all field version migration and load compatibility before claiming savestate safety.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, licensing and genuinely distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read entire exact pinned source, including inactive and error paths",
+        "Independently trace producers, consumers, build and runtime ABI",
+        "Verify original machine dossier SHA256 and license notices",
+        "Only a distinct reviewer may submit source-hash-bound approval"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 18,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/sm83/sm83.h",
+        "git_blob_sha1": "7f0fabd7a2eb421e53331f14b7b86dee77521964",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/sm83/sm83.h"
+      },
+      "machine_dossier_sha256_unverified": "6e236fa657a88fb766246328e8a50816a6325cf9c0b72a6dc47ecaec8ede8fc7",
+      "line_anchors": [
+        {
+          "line": 40,
+          "text": "enum SM83ExecutionState {"
+        },
+        {
+          "line": 53,
+          "text": "struct SM83Memory {"
+        },
+        {
+          "line": 68,
+          "text": "struct SM83InterruptHandler {"
+        },
+        {
+          "line": 128,
+          "text": "struct SM83Core {"
+        }
+      ],
+      "responsibilities": "SM83 core header declares execution state, memory callbacks, interrupts and register-file ABI for Game Boy CPU.",
+      "dependency_edges": [
+        "src/sm83/sm83.c",
+        "src/gb/gb.c"
+      ],
+      "unresolved": [
+        "Check register-endian layout and halt/stop/interrupt transitions in native Game Boy execution.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, licensing and genuinely distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read entire exact pinned source, including inactive and error paths",
+        "Independently trace producers, consumers, build and runtime ABI",
+        "Verify original machine dossier SHA256 and license notices",
+        "Only a distinct reviewer may submit source-hash-bound approval"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 21,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/gb/memory.h",
+        "git_blob_sha1": "9bee51724f119677b64db05deff8161511d5c2a0",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/gb/memory.h"
+      },
+      "machine_dossier_sha256_unverified": "574a4df671b8d1aca8af177e70711f221d00821cef0d472e747e3d0b81ca1df3",
+      "line_anchors": [
+        {
+          "line": 78,
+          "text": "enum GBMBC7MachineState {"
+        },
+        {
+          "line": 193,
+          "text": "struct GBMBC6State {"
+        },
+        {
+          "line": 198,
+          "text": "struct GBMBC7State {"
+        },
+        {
+          "line": 294,
+          "text": "struct GBMemory {"
+        }
+      ],
+      "responsibilities": "Game Boy memory header models MBC bank controllers, RTC and cartridge state including MBC6/MBC7.",
+      "dependency_edges": [
+        "src/gb/memory.c",
+        "src/gb/mbc/mbc.c"
+      ],
+      "unresolved": [
+        "Trace cartridge bank and RTC state serialization; this is GB, not GBA Flash1M.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, licensing and genuinely distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read entire exact pinned source, including inactive and error paths",
+        "Independently trace producers, consumers, build and runtime ABI",
+        "Verify original machine dossier SHA256 and license notices",
+        "Only a distinct reviewer may submit source-hash-bound approval"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 22,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/gba/audio.h",
+        "git_blob_sha1": "fba5090bf62ded213f2834890cd283e1133c38ce",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/gba/audio.h"
+      },
+      "machine_dossier_sha256_unverified": "d51e66f04c9677ccb352d293afbb41312431539dc47613b24c01f2d8269665ca",
+      "line_anchors": [
+        {
+          "line": 19,
+          "text": "#define GBA_AUDIO_FIFO_SIZE 8"
+        },
+        {
+          "line": 32,
+          "text": "struct GBAAudioFIFO {"
+        },
+        {
+          "line": 59,
+          "text": "struct GBAAudio {"
+        },
+        {
+          "line": 33,
+          "text": "uint32_t fifo[GBA_AUDIO_FIFO_SIZE];"
+        }
+      ],
+      "responsibilities": "GBA audio header declares FIFO ring buffers, DMA source, timer selection and PSG/mixer state.",
+      "dependency_edges": [
+        "src/gba/audio.c",
+        "src/gba/dma.c"
+      ],
+      "unresolved": [
+        "Trace timer-triggered FIFO refill, sample alignment and DMA interop; source only.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, licensing and genuinely distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read entire exact pinned source, including inactive and error paths",
+        "Independently trace producers, consumers, build and runtime ABI",
+        "Verify original machine dossier SHA256 and license notices",
+        "Only a distinct reviewer may submit source-hash-bound approval"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 59,
+      "source": {
+        "repository": "huderlem/poryscript",
+        "revision": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+        "path": "parser/formattext_test.go",
+        "git_blob_sha1": "0f1e90ad71fb07e3b72988172dc6a486fc3669c8",
+        "url": "https://github.com/huderlem/poryscript/blob/c32481161c767b25a3425fa9f1f8729927ff3d55/parser/formattext_test.go"
+      },
+      "machine_dossier_sha256_unverified": "4b21d05b5fe92eedaebf9e4373b35526d8b67868ed7c2944529c6f91b68c9f8c",
+      "line_anchors": [
+        {
+          "line": 8,
+          "text": "func TestFormatText(t *testing.T) {"
+        },
+        {
+          "line": 90,
+          "text": "func TestValidateLineWidths(t *testing.T) {"
+        },
+        {
+          "line": 331,
+          "text": "func TestProcessControlCodes(t *testing.T) {"
+        },
+        {
+          "line": 457,
+          "text": "func TestCompileReplacementsInvalidRegex(t *testing.T) {"
+        }
+      ],
+      "responsibilities": "Poryscript Go tests exercise text formatting, line width, control codes and replacement regex validation.",
+      "dependency_edges": [
+        "parser/formattext.go",
+        "parser/parser.go"
+      ],
+      "unresolved": [
+        "Check test fixtures against production parser paths; passing tests are not independent runtime ABI evidence.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, licensing and genuinely distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read entire exact pinned source, including inactive and error paths",
+        "Independently trace producers, consumers, build and runtime ABI",
+        "Verify original machine dossier SHA256 and license notices",
+        "Only a distinct reviewer may submit source-hash-bound approval"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 66,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/arm/debugger/debugger.c",
+        "git_blob_sha1": "d5e443ddc3d1af686cfb276a7f89dd489bfa9bac",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/arm/debugger/debugger.c"
+      },
+      "machine_dossier_sha256_unverified": "0baba7b8e8fbf5e486a55f8852a8bcd02bc389014db90d8126a3bb7c7fc27410",
+      "line_anchors": [
+        {
+          "line": 22,
+          "text": "static bool ARMDecodeCombined(struct ARMCore* cpu, struct ARMInstructionInfo* info) {"
+        },
+        {
+          "line": 34,
+          "text": "static bool ARMDebuggerUpdateStackTraceInternal(struct mDebuggerPlatform* d, uint32_t pc) {"
+        },
+        {
+          "line": 90,
+          "text": "bool isCall = info.branchType & ARM_BRANCH_LINKED;"
+        },
+        {
+          "line": 116,
+          "text": "bool isExceptionReturn = _ARMModeHasSPSR(cpu->cpsr.priv) && info.affectsCPSR && info.op1.reg == ARM_PC;"
+        }
+      ],
+      "responsibilities": "ARM debugger stack-trace logic decodes combined Thumb instructions, call/return and exception-frame transitions.",
+      "dependency_edges": [
+        "src/arm/debugger/memory-debugger.c",
+        "src/arm/decoder.c"
+      ],
+      "unresolved": [
+        "Trace instruction-PC prefetch and stack frame lifetime; no stock-gameplay reachability inferred.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, licensing and genuinely distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read entire exact pinned source, including inactive and error paths",
+        "Independently trace producers, consumers, build and runtime ABI",
+        "Verify original machine dossier SHA256 and license notices",
+        "Only a distinct reviewer may submit source-hash-bound approval"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 71,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/arm/isa-arm.c",
+        "git_blob_sha1": "af697fa0866fd7511cc430d4a2261704918e15bf",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/arm/isa-arm.c"
+      },
+      "machine_dossier_sha256_unverified": "44a019048049057453379fe6de9ce7b9c76b9f6c9ed015c392a19f71b202a350",
+      "line_anchors": [
+        {
+          "line": 12,
+          "text": "#define PSR_USER_MASK   0xF0000000"
+        },
+        {
+          "line": 17,
+          "text": "static inline void _shiftLSL(struct ARMCore* cpu, uint32_t opcode) {"
+        },
+        {
+          "line": 122,
+          "text": "static inline void _shiftROR(struct ARMCore* cpu, uint32_t opcode) {"
+        },
+        {
+          "line": 156,
+          "text": "static inline void _immediate(struct ARMCore* cpu, uint32_t opcode) {"
+        }
+      ],
+      "responsibilities": "ARM ISA execution macros implement shifts, rotate, PSR masks and operand evaluation.",
+      "dependency_edges": [
+        "src/arm/isa-thumb.c",
+        "src/arm/decoder-arm.c"
+      ],
+      "unresolved": [
+        "Compile/test edge shifts and CPSR flags in unchanged emulator before any native behaviour claim.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, licensing and genuinely distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read entire exact pinned source, including inactive and error paths",
+        "Independently trace producers, consumers, build and runtime ABI",
+        "Verify original machine dossier SHA256 and license notices",
+        "Only a distinct reviewer may submit source-hash-bound approval"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 72,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/arm/isa-thumb.c",
+        "git_blob_sha1": "30fcfde9d614dc631c7fd9945bbda3ba99d4f55c",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/arm/isa-thumb.c"
+      },
+      "machine_dossier_sha256_unverified": "c8ef9ff3b98d39160d5a0e458f77b7110f942be562098a90a651de949cd84e4a",
+      "line_anchors": [
+        {
+          "line": 50,
+          "text": "#define THUMB_PREFETCH_CYCLES (1 + cpu->memory.activeSeqCycles16)"
+        },
+        {
+          "line": 58,
+          "text": "#define DEFINE_INSTRUCTION_THUMB(NAME, BODY) \\"
+        },
+        {
+          "line": 293,
+          "text": "#define DEFINE_LOAD_STORE_MULTIPLE_THUMB(NAME, RN, LS, DIRECTION, PRE_BODY, WRITEBACK) \\"
+        },
+        {
+          "line": 324,
+          "text": "#define DEFINE_CONDITIONAL_BRANCH_THUMB(COND) \\"
+        }
+      ],
+      "responsibilities": "Thumb ISA execution macros define flags, prefetch cycles, load/store multiple and conditional branches.",
+      "dependency_edges": [
+        "src/arm/isa-arm.c",
+        "src/arm/decoder-thumb.c"
+      ],
+      "unresolved": [
+        "Check branch timing and register writeback against compiled native emulator cases.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, licensing and genuinely distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read entire exact pinned source, including inactive and error paths",
+        "Independently trace producers, consumers, build and runtime ABI",
+        "Verify original machine dossier SHA256 and license notices",
+        "Only a distinct reviewer may submit source-hash-bound approval"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    }
+  ]
+}
