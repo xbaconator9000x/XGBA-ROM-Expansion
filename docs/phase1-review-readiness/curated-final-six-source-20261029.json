@@ -1,0 +1,376 @@
+{
+  "schema": "xgba.phase1.curated_p0_analyst_batch.v2",
+  "date": "2026-10-29",
+  "phase": "Phase 1 only",
+  "origin": "analyst source evidence, not independent review",
+  "source_blobs_inspected": 6,
+  "prior_registry_only": 6,
+  "p0_independent_approved": 0,
+  "total_independent_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "records": [
+    {
+      "ordinal": 4,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "include/global.h",
+        "git_blob_sha1": "77155b09014aa854fcf87260e6ad2969e222da53",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/include/global.h"
+      },
+      "source_anchors": [
+        "#include \"global.fieldmap.h\"",
+        "struct SaveBlock2",
+        "/*0x898*/ u16 mapView[0x100];",
+        "struct RamScriptData",
+        "struct SaveBlock1",
+        "/*0x0032*/ u16 mapLayoutId;"
+      ],
+      "line_anchors": [
+        {
+          "line": 270,
+          "text": "#include \"global.fieldmap.h\""
+        },
+        {
+          "line": 327,
+          "text": "struct SaveBlock2"
+        },
+        {
+          "line": 352,
+          "text": "/*0x898*/ u16 mapView[0x100];"
+        },
+        {
+          "line": 434,
+          "text": "struct RamScriptData"
+        },
+        {
+          "line": 759,
+          "text": "struct SaveBlock1"
+        },
+        {
+          "line": 771,
+          "text": "/*0x0032*/ u16 mapLayoutId;"
+        }
+      ],
+      "responsibilities": "Original save block layout carries 0x100-word mapView in SaveBlock2, and SaveBlock1 contains mapLayoutId, location and party/event state; fieldmap header provides map ABI declarations.",
+      "dependency_edges": [
+        "include/global.fieldmap.h",
+        "src/fieldmap.c SaveMapView",
+        "src/load_save.c save pointer relocation",
+        "src/save.c sector layout"
+      ],
+      "unresolved": [
+        "Source offsets are annotated not compiler-verified structure layout",
+        "No full 835-line header disposition"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "ordinal": 7,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "src/scrcmd.c",
+        "git_blob_sha1": "97b695ee2f6fca80a3b78f52f6a444f696fe5814",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/scrcmd.c"
+      },
+      "source_anchors": [
+        "bool8 ScrCmd_special(struct ScriptContext * ctx)",
+        "bool8 ScrCmd_call(struct ScriptContext * ctx)",
+        "ScriptCall(ctx, scrptr);",
+        "bool8 ScrCmd_setmetatile(struct ScriptContext * ctx)",
+        "MapGridSetMetatileIdAt(x, y, metatileId);",
+        "MapGridSetMetatileIdAt(x, y, metatileId | MAPGRID_COLLISION_MASK);"
+      ],
+      "line_anchors": [
+        {
+          "line": 99,
+          "text": "bool8 ScrCmd_special(struct ScriptContext * ctx)"
+        },
+        {
+          "line": 146,
+          "text": "bool8 ScrCmd_call(struct ScriptContext * ctx)"
+        },
+        {
+          "line": 149,
+          "text": "ScriptCall(ctx, scrptr);"
+        },
+        {
+          "line": 2103,
+          "text": "bool8 ScrCmd_setmetatile(struct ScriptContext * ctx)"
+        },
+        {
+          "line": 2113,
+          "text": "MapGridSetMetatileIdAt(x, y, metatileId);"
+        },
+        {
+          "line": 2115,
+          "text": "MapGridSetMetatileIdAt(x, y, metatileId | MAPGRID_COLLISION_MASK);"
+        }
+      ],
+      "responsibilities": "Original field script handlers dispatch native specials and calls; setmetatile resolves four halfword operands, offsets by MAP_OFFSET and conditionally ORs collision mask before grid mutation.",
+      "dependency_edges": [
+        "src/script.c ScriptCall and operand readers",
+        "data/script_cmd_table.inc opcode 0xA2",
+        "src/fieldmap.c grid setters",
+        "include/global.fieldmap.h collision mask"
+      ],
+      "unresolved": [
+        "No full 2265-line command implementation review",
+        "No native malformed opcode or collision runtime test"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "ordinal": 15,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps.s",
+        "git_blob_sha1": "fc88d8fc2521e92db22264bf6cf33966fda977ba",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps.s"
+      },
+      "source_anchors": [
+        "#include \"constants/global.h\"",
+        ".include \"data/layouts/layouts.inc\"",
+        ".include \"data/layouts/layouts_table.inc\"",
+        ".include \"data/maps/headers.inc\"",
+        ".include \"data/maps/groups.inc\"",
+        ".include \"data/maps/connections.inc\""
+      ],
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "#include \"constants/global.h\""
+        },
+        {
+          "line": 13,
+          "text": ".include \"data/layouts/layouts.inc\""
+        },
+        {
+          "line": 14,
+          "text": ".include \"data/layouts/layouts_table.inc\""
+        },
+        {
+          "line": 15,
+          "text": ".include \"data/maps/headers.inc\""
+        },
+        {
+          "line": 16,
+          "text": ".include \"data/maps/groups.inc\""
+        },
+        {
+          "line": 17,
+          "text": ".include \"data/maps/connections.inc\""
+        }
+      ],
+      "responsibilities": "Original assembler root includes layouts, layout table, map headers, groups and connections in fixed source order; actual generated include bytes and native linked addresses are separate evidence.",
+      "dependency_edges": [
+        "Makefile generated maps inputs",
+        "data/layouts/layouts_table.inc",
+        "data/maps/headers.inc",
+        "data/maps/groups.inc",
+        "data/maps/connections.inc",
+        "Porymap map connections export"
+      ],
+      "unresolved": [
+        "No generated target content or compiled map geometry verified in this dossier",
+        "No end-to-end map transition runtime proof"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "ordinal": 23,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/gba.c",
+        "git_blob_sha1": "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/gba.c"
+      },
+      "source_anchors": [
+        "void GBAReset(struct ARMCore* cpu) {",
+        "if (gba->romVf && gba->romVf->size(gba->romVf) > GBA_SIZE_ROM0) {",
+        "gba->romVf->seek(gba->romVf, 0xAC, SEEK_SET);",
+        "if (ident == 'M') {",
+        "GBAMatrixReset(gba);",
+        "GBASavedataClean(&gba->memory.savedata, gba->video.frameCounter);"
+      ],
+      "line_anchors": [
+        {
+          "line": 234,
+          "text": "void GBAReset(struct ARMCore* cpu) {"
+        },
+        {
+          "line": 297,
+          "text": "if (gba->romVf && gba->romVf->size(gba->romVf) > GBA_SIZE_ROM0) {"
+        },
+        {
+          "line": 299,
+          "text": "gba->romVf->seek(gba->romVf, 0xAC, SEEK_SET);"
+        },
+        {
+          "line": 302,
+          "text": "if (ident == 'M') {"
+        },
+        {
+          "line": 303,
+          "text": "GBAMatrixReset(gba);"
+        },
+        {
+          "line": 969,
+          "text": "GBASavedataClean(&gba->memory.savedata, gba->video.frameCounter);"
+        }
+      ],
+      "responsibilities": "mGBA reset probes oversized ROM header marker at 0xAC to enable Matrix mapper; end-of-frame invokes savedata clean/flush lifecycle. Marker check is source-proven, not proof any oversized ROM is safe.",
+      "dependency_edges": [
+        "src/gba/cart/matrix.c",
+        "src/gba/memory.c ROM mask",
+        "src/gba/savedata.c clean",
+        "src/arm/arm.c reset"
+      ],
+      "unresolved": [
+        "No native oversized malformed ROM mapping proof",
+        "No physical Flash or filesystem durability proof"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "ordinal": 25,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/dma.c",
+        "git_blob_sha1": "da2a800ba48cb32d6e10e42c3b3527ef406bad22",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/dma.c"
+      },
+      "source_anchors": [
+        "void GBADMAUpdate(struct GBA* gba) {",
+        "if (sourceRegion == GBA_REGION_ROM2_EX && (memory->savedata.type == GBA_SAVEDATA_EEPROM || memory->savedata.type == GBA_SAVEDATA_EEPROM512)) {",
+        "info->latch = GBASavedataReadEEPROM(&memory->savedata);",
+        "GBASavedataWriteEEPROM(&memory->savedata, info->latch, info->nextCount);",
+        "info->nextSource += info->sourceOffset;"
+      ],
+      "line_anchors": [
+        {
+          "line": 233,
+          "text": "void GBADMAUpdate(struct GBA* gba) {"
+        },
+        {
+          "line": 297,
+          "text": "if (sourceRegion == GBA_REGION_ROM2_EX && (memory->savedata.type == GBA_SAVEDATA_EEPROM || memory->savedata.type == GBA_SAVEDATA_EEPROM512)) {"
+        },
+        {
+          "line": 298,
+          "text": "info->latch = GBASavedataReadEEPROM(&memory->savedata);"
+        },
+        {
+          "line": 310,
+          "text": "GBASavedataWriteEEPROM(&memory->savedata, info->latch, info->nextCount);"
+        },
+        {
+          "line": 318,
+          "text": "info->nextSource += info->sourceOffset;"
+        }
+      ],
+      "responsibilities": "DMA transfer path special-cases 16-bit ROM2_EX EEPROM read/write and autodetection, with separate width and source/destination region timing; 32-bit path does not follow EEPROM branch.",
+      "dependency_edges": [
+        "src/gba/savedata.c EEPROM state machine",
+        "src/gba/memory.c ROM2_EX mapping",
+        "mGBA timing scheduler",
+        "DMA channel control registers"
+      ],
+      "unresolved": [
+        "No native DMA3 EEPROM transfer timing test",
+        "No complete DMA scheduler/cross-region verification"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "ordinal": 27,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/serialize.c",
+        "git_blob_sha1": "a307a51e751f412c64a7378323c56758304ebe85",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/serialize.c"
+      },
+      "source_anchors": [
+        "MGBA_EXPORT const uint32_t GBASavestateVersion = 0x0000000B;",
+        "void GBASerialize(struct GBA* gba, struct GBASerializedState* state) {",
+        "STORE_32(gba->romCrc32, 0, &state->romCrc32);",
+        "bool GBADeserialize(struct GBA* gba, const struct GBASerializedState* state) {",
+        "mLOG(GBA_STATE, WARN, \"Old savestate: expected %08X, got %08X, continuing anyway\", GBASavestateMagic + GBASavestateVersion, ucheck);",
+        "mLOG(GBA_STATE, WARN, \"Savestate is for a different game\");"
+      ],
+      "line_anchors": [
+        {
+          "line": 18,
+          "text": "MGBA_EXPORT const uint32_t GBASavestateVersion = 0x0000000B;"
+        },
+        {
+          "line": 27,
+          "text": "void GBASerialize(struct GBA* gba, struct GBASerializedState* state) {"
+        },
+        {
+          "line": 30,
+          "text": "STORE_32(gba->romCrc32, 0, &state->romCrc32);"
+        },
+        {
+          "line": 96,
+          "text": "bool GBADeserialize(struct GBA* gba, const struct GBASerializedState* state) {"
+        },
+        {
+          "line": 108,
+          "text": "mLOG(GBA_STATE, WARN, \"Old savestate: expected %08X, got %08X, continuing anyway\", GBASavestateMagic + GBASavestateVersion, ucheck);"
+        },
+        {
+          "line": 132,
+          "text": "mLOG(GBA_STATE, WARN, \"Savestate is for a different game\");"
+        }
+      ],
+      "responsibilities": "Savestate v11 serializes CPU registers, ROM CRC and prefetch; deserialize distinguishes newer/invalid/older versions and emits warnings for older states; game-title mismatch sets error, with additional checks outside this scope.",
+      "dependency_edges": [
+        "src/arm/arm.c CPU prefetch",
+        "src/gba/memory.c ROM mapping",
+        "src/gba/cart/matrix.c state restore",
+        "src/gba/savedata.c state serialization"
+      ],
+      "unresolved": [
+        "No full savestate restoration safety proof",
+        "No native stale-ROM CRC acceptance test"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    }
+  ]
+}
