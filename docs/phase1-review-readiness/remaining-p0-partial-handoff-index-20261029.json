@@ -12,7 +12,8 @@
     "docs/phase1-review-readiness/remaining-p0-eight-arm-20261029.json",
     "docs/phase1-review-readiness/remaining-p0-eight-porymap-20261029.json",
     "docs/phase1-review-readiness/remaining-p0-eight-abi-decoder-20261029.json",
-    "docs/phase1-review-readiness/remaining-p0-eight-gb-cpu-20261029.json"
+    "docs/phase1-review-readiness/remaining-p0-eight-gb-cpu-20261029.json",
+    "docs/phase1-review-readiness/remaining-p0-eight-gba-runtime-20261029.json"
   ],
   "batch_sizes": [
     6,
@@ -22,15 +23,16 @@
     8,
     8,
     8,
+    8,
     8
   ],
-  "remaining_p0_partial_source_inspected": 62,
-  "remaining_p0_without_partial_source_inspection": 247,
+  "remaining_p0_partial_source_inspected": 70,
+  "remaining_p0_without_partial_source_inspection": 239,
   "curated_p0_partial_source_inspected": 29,
-  "total_p0_partial_source_inspected": 91,
+  "total_p0_partial_source_inspected": 99,
   "whole_file_semantic_approved": 0,
   "independent_p0_approved": 0,
   "independent_total_approved": 0,
   "phase1_gate": "FAIL_INCOMPLETE",
-  "reviewer_handoff": "62 disjoint other-P0 source-only partial analyst dossiers, including new Game Boy savestate/SM83/MBC, GBA audio, Poryscript text tests and original mGBA ARM/Thumb ISA. Exact pinned Git blobs/anchors checked; machine dossier SHA256, full-file semantics and licensing pending; NEEDS_REVIEW; no independent approvals."
+  "reviewer_handoff": "70 disjoint other-P0 source-only partial analyst dossiers; latest eight original mGBA GBA core/BIOS/audio/DMA/IO/overrides/savedata files. Source blobs and line anchors checked; machine dossier SHA, licensing, complete source coverage and distinct reviewer pending. NEEDS_REVIEW; no independent approvals."
 }
