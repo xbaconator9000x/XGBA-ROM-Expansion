@@ -1,0 +1,413 @@
+{
+  "schema": "xgba.phase1.second_packet_firered_154_157_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+  "source_packet_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0000-0199-20261030.json",
+  "new_partial_indices": [
+    154,
+    155,
+    156,
+    157
+  ],
+  "prior_second_packet_indices": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149,
+    150,
+    151,
+    152,
+    153
+  ],
+  "other_p0_partial_total": 136,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 165,
+  "other_p0_without_partial": 173,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Four disjoint original FireRed authored source-only analyst partials; original machine bytes rehashed separately; no compiled/native/stock gameplay, .sav/physical Flash, independent license clearance or approvals.",
+  "records": [
+    {
+      "packet_index": 154,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FourIsland/scripts.inc",
+        "git_blob_sha1": "9abec8cad034eac3d2e26576695c47ab1111f6b0",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FourIsland/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "7fef3a35dffc20f2471a1c3104508d642ad11218eb79f1b04319bf873cdd5610",
+      "whole_source_sha256_from_packet": "e9d41ce813c9c853df0ccd4d54dc03f3b0bd2a18f75645f32fa19785372d7e76",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FourIsland_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, FourIsland_OnTransition"
+        },
+        {
+          "line": 8,
+          "text": "\tcall_if_eq VAR_MAP_SCENE_FOUR_ISLAND, 0, FourIsland_EventScript_ShowRival"
+        },
+        {
+          "line": 17,
+          "text": "\tgoto_if_unset FLAG_PENDING_DAYCARE_EGG, FourIsland_EventScript_EndSetDayCareManPos"
+        },
+        {
+          "line": 23,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_FOUR_ISLAND, 0, FourIsland_EventScript_RivalScene"
+        },
+        {
+          "line": 48,
+          "text": "\tsetvar VAR_MAP_SCENE_FOUR_ISLAND, 1"
+        },
+        {
+          "line": 76,
+          "text": "\tspecialvar VAR_RESULT, GetDaycareState"
+        },
+        {
+          "line": 90,
+          "text": "\tclearflag FLAG_PENDING_DAYCARE_EGG"
+        },
+        {
+          "line": 110,
+          "text": "\tspecial GiveEggFromDaycare"
+        }
+      ],
+      "source_observations": "Four Island transition world map flag, rival scene and day-care pending egg position; egg rejection and receipt use distinct special calls, party-size gate and flag reset, not verified save persistence.",
+      "required_source_tokens": [
+        "FLAG_PENDING_DAYCARE_EGG",
+        "GiveEggFromDaycare",
+        "RejectEggFromDayCare",
+        "VAR_MAP_SCENE_FOUR_ISLAND"
+      ],
+      "dependency_edges": [
+        "DayCare egg/party state and save serialization",
+        "rival scene flags and map.json NPC positions",
+        "map frame table and VAR_MAP_SCENE semantics",
+        "QuestLog_CutRecording and link flags"
+      ],
+      "unresolved": [
+        "Authored script to generated map table, assembler/linker and runtime consumer not closed",
+        "External handlers, map flags and asset/derivative licensing require independent full-source review",
+        "No compiled, native gameplay, .sav persistence or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Read every exact pinned source line and inactive branch independently",
+        "Verify original compressed machine dossier bytes and SHA256",
+        "Resolve generated map table and actual engine consumers",
+        "Reconcile original script asset and derivative licensing",
+        "Only a genuinely distinct reviewer may sign a durable receipt"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 155,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FourIsland_IcefallCave_1F/scripts.inc",
+        "git_blob_sha1": "38c893de1df48766aa7841a9864bc2ee0bdd2830",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FourIsland_IcefallCave_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "101f213e90fd57a6cb8e7da00d863b586efdaddb6c7de85eafe38ac673d42bb1",
+      "whole_source_sha256_from_packet": "bbd6ea036ca2baa41dfb33d0897403990a52dcf6c591eb33e5b73e4466140cc2",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FourIsland_IcefallCave_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, FourIsland_IcefallCave_1F_OnResume"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, FourIsland_IcefallCave_1F_OnLoad"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, FourIsland_IcefallCave_1F_OnFrame"
+        },
+        {
+          "line": 8,
+          "text": "\tsetstepcallback STEP_CB_ICE"
+        },
+        {
+          "line": 12,
+          "text": "\tspecial SetIcefallCaveCrackedIceMetatiles"
+        },
+        {
+          "line": 16,
+          "text": "\tmap_script_2 VAR_TEMP_1, 1, FourIsland_IcefallCave_1F_EventScript_FallDownHole"
+        },
+        {
+          "line": 22,
+          "text": "\tapplymovement LOCALID_PLAYER, FourIsland_IcefallCave_1F_Movement_SetInvisible"
+        },
+        {
+          "line": 26,
+          "text": "\twarphole MAP_FOUR_ISLAND_ICEFALL_CAVE_B1F"
+        },
+        {
+          "line": 32,
+          "text": "\tset_invisible"
+        }
+      ],
+      "source_observations": "Icefall Cave 1F resume ice step callback, on-load cracked-ice metatile refresh and temp-var frame-triggered invisible fall into B1F; authored source only.",
+      "required_source_tokens": [
+        "STEP_CB_ICE",
+        "SetIcefallCaveCrackedIceMetatiles",
+        "VAR_TEMP_1",
+        "warphole MAP_FOUR_ISLAND_ICEFALL_CAVE_B1F"
+      ],
+      "dependency_edges": [
+        "ice step callback and cracked metatile engine",
+        "VAR_TEMP_1 producer on movement",
+        "map.json B1F warp target and layout",
+        "warphole/visibility interpreter state"
+      ],
+      "unresolved": [
+        "Authored script to generated map table, assembler/linker and runtime consumer not closed",
+        "External handlers, map flags and asset/derivative licensing require independent full-source review",
+        "No compiled, native gameplay, .sav persistence or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Read every exact pinned source line and inactive branch independently",
+        "Verify original compressed machine dossier bytes and SHA256",
+        "Resolve generated map table and actual engine consumers",
+        "Reconcile original script asset and derivative licensing",
+        "Only a genuinely distinct reviewer may sign a durable receipt"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 156,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FourIsland_IcefallCave_Back/scripts.inc",
+        "git_blob_sha1": "07fa58a3dadf13c7fac43a5bc4e997e5d5b40efe",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FourIsland_IcefallCave_Back/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "fb2de3e1bc4392a4565765e862373d1a207814e5afa56a423ac0c07662b48d80",
+      "whole_source_sha256_from_packet": "e83b7285e7772152d7ef1c0660868244387be9669ea13c5d51a34d3dd95d5dd6",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FourIsland_IcefallCave_Back_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, FourIsland_IcefallCave_Back_OnTransition"
+        },
+        {
+          "line": 6,
+          "text": "\tcall_if_eq VAR_MAP_SCENE_ICEFALL_CAVE_BACK, 1, FourIsland_IcefallCave_Back_EventScript_HideLorelei"
+        },
+        {
+          "line": 10,
+          "text": "\tsetflag FLAG_HIDE_ICEFALL_CAVE_LORELEI"
+        },
+        {
+          "line": 13,
+          "text": "FourIsland_IcefallCave_Back_EventScript_LoreleiRocketsScene::"
+        },
+        {
+          "line": 48,
+          "text": "\ttrainerbattle_no_intro TRAINER_TEAM_ROCKET_GRUNT_45, FourIsland_IcefallCave_Back_Text_GruntDefeat"
+        },
+        {
+          "line": 59,
+          "text": "\tplaymoncry SPECIES_LAPRAS, CRY_MODE_ENCOUNTER"
+        },
+        {
+          "line": 65,
+          "text": "\tmsgbox FourIsland_IcefallCave_Back_Text_OkayRocketWareHouseFiveIsland"
+        },
+        {
+          "line": 73,
+          "text": "\tremoveobject LOCALID_ICEFALL_ROCKET1"
+        },
+        {
+          "line": 83,
+          "text": "\tsetflag FLAG_HIDE_RUIN_VALLEY_SCIENTIST"
+        },
+        {
+          "line": 85,
+          "text": "\tsetvar VAR_MAP_SCENE_ICEFALL_CAVE_BACK, 1"
+        },
+        {
+          "line": 108,
+          "text": "FourIsland_IcefallCave_Back_Movement_UnusedPushRight::"
+        },
+        {
+          "line": 189,
+          "text": "FourIsland_IcefallCave_Back_EventScript_Lorelei::"
+        }
+      ],
+      "source_observations": "Icefall Cave Back Lorelei/Rocket scripted battle and scene flag changes; Lapras cry and three Rocket removals; movement labels explicitly unused remain source-only, no battle reachability claim.",
+      "required_source_tokens": [
+        "TRAINER_TEAM_ROCKET_GRUNT_45",
+        "SPECIES_LAPRAS",
+        "FLAG_HIDE_RUIN_VALLEY_SCIENTIST",
+        "VAR_MAP_SCENE_ICEFALL_CAVE_BACK"
+      ],
+      "dependency_edges": [
+        "trainer battle outcome and event continuation",
+        "map.json NPC local IDs and trigger coordinates",
+        "scene flag persistence and Lorelei house state",
+        "movement byte encoding and cry sound engine"
+      ],
+      "unresolved": [
+        "Authored script to generated map table, assembler/linker and runtime consumer not closed",
+        "External handlers, map flags and asset/derivative licensing require independent full-source review",
+        "No compiled, native gameplay, .sav persistence or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Read every exact pinned source line and inactive branch independently",
+        "Verify original compressed machine dossier bytes and SHA256",
+        "Resolve generated map table and actual engine consumers",
+        "Reconcile original script asset and derivative licensing",
+        "Only a genuinely distinct reviewer may sign a durable receipt"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 157,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FourIsland_IcefallCave_Entrance/scripts.inc",
+        "git_blob_sha1": "c0051b9b9e3d775e08bcd33f01dc2156ca40f821",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FourIsland_IcefallCave_Entrance/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "535ef8b15731498c62df7a4b71ec183921b39054b513a4ee26b1d62aa161052f",
+      "whole_source_sha256_from_packet": "3b86b1a14f73b1911b4805935d97922933b531a579122a00d65c8a876616ba91",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FourIsland_IcefallCave_Entrance_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, FourIsland_IcefallCave_Entrance_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 5,
+          "text": "FourIsland_IcefallCave_Entrance_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_FOUR_ISLAND_ICEFALL_CAVE_ENTRANCE"
+        },
+        {
+          "line": 7,
+          "text": "\tend"
+        }
+      ],
+      "source_observations": "Entrance has transition-only world map flag and script terminator; no evidence of ice callback or gameplay execution in this file.",
+      "required_source_tokens": [
+        "FourIsland_IcefallCave_Entrance_MapScripts",
+        "MAP_SCRIPT_ON_TRANSITION",
+        "FLAG_WORLD_MAP_FOUR_ISLAND_ICEFALL_CAVE_ENTRANCE",
+        ".byte 0"
+      ],
+      "dependency_edges": [
+        "world map flag definition and persistence",
+        "map.json transition reference",
+        "map script assembler macro expansion",
+        "runtime transition callback dispatcher"
+      ],
+      "unresolved": [
+        "Authored script to generated map table, assembler/linker and runtime consumer not closed",
+        "External handlers, map flags and asset/derivative licensing require independent full-source review",
+        "No compiled, native gameplay, .sav persistence or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Read every exact pinned source line and inactive branch independently",
+        "Verify original compressed machine dossier bytes and SHA256",
+        "Resolve generated map table and actual engine consumers",
+        "Reconcile original script asset and derivative licensing",
+        "Only a genuinely distinct reviewer may sign a durable receipt"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}
