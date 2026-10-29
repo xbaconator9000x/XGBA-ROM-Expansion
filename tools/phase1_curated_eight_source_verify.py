@@ -20,7 +20,7 @@ PINNED = {
 }
 
 def opcode_table_check(content):
-    table = re.findall(r"^\\s*\\.4byte\\s+(ScrCmd_\\w+)\\s+@\\s+0x([0-9a-fA-F]+)\\s*$", content, re.M)
+    table = re.findall(r"^\s*\.4byte\s+(ScrCmd_\w+)\s+@\s+0x([0-9a-fA-F]+)\s*$", content, re.M)
     assert len(table) == 213, "expected exactly 0x00..0xD4 annotated opcodes"
     assert [int(code, 16) for _, code in table] == list(range(213)), "opcode numbering not contiguous"
     assert table[4][0] == "ScrCmd_call" and table[0x25][0] == "ScrCmd_special"
