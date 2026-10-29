@@ -1,0 +1,517 @@
+{
+  "schema": "xgba.phase1.remaining_p0_partial_analyst_batch.v5",
+  "date": "2026-10-29",
+  "source_packet": "docs/phase1-review-readiness/packet-0000-0099.json",
+  "source_packet_blob_sha1": "a48c12900acc7e0211a8071119763e2b5de4b1a4",
+  "previous_partial_indices": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    19,
+    20,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    33,
+    38,
+    39,
+    40,
+    43,
+    54,
+    55,
+    58,
+    60,
+    63,
+    64
+  ],
+  "new_partial_indices": [
+    37,
+    41,
+    42,
+    45,
+    46,
+    47,
+    51,
+    52
+  ],
+  "partial_source_inspected": 8,
+  "curated_29_source_inspected": 29,
+  "remaining_p0_partial_total": 46,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "machine_dossier_sha256_note": "Unverified digest from pinned packet only, not reviewed machine dossier.",
+  "records": [
+    {
+      "packet_index": 37,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "include/core/editcommands.h",
+        "git_blob_sha1": "5dc4bf0cd2092251ed705daa95cde369815aa4f8",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/include/core/editcommands.h"
+      },
+      "machine_dossier_sha256_unverified": "e1c5a61442941f250d8006f95a72530717042bac9c21f66d1bc9e4f1b6702cab",
+      "line_anchors": [
+        {
+          "line": 59,
+          "text": "class PaintMetatile : public QUndoCommand {"
+        },
+        {
+          "line": 65,
+          "text": "void undo() override;"
+        },
+        {
+          "line": 68,
+          "text": "bool mergeWith(const QUndoCommand *command) override;"
+        },
+        {
+          "line": 99,
+          "text": "class PaintBorder : public QUndoCommand {"
+        },
+        {
+          "line": 124,
+          "text": "class BucketFillMetatile : public PaintMetatile {"
+        }
+      ],
+      "responsibilities": "QUndoCommand classes define map paint, collision, border and fill undo/redo contracts with command IDs and merge policies.",
+      "dependency_edges": [
+        "src/core/editcommands.cpp",
+        "src/editor.cpp",
+        "include/core/maplayout.h"
+      ],
+      "unresolved": [
+        "Command merge and redo can affect persisted map state; native undo-stack roundtrip not tested.",
+        "Machine dossier bytes/SHA256 not retrieved or verified",
+        "Whole-file source/consumer closure, MPL 2.0 notices and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read full exact pinned source, including inactive and error branches",
+        "Trace producer/consumer and Qt ownership/undo/save contracts",
+        "Verify machine dossier bytes/SHA256 and upstream license notices",
+        "Obtain distinct reviewer verdict for this blob only"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 41,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "include/ui/divingmappixmapitem.h",
+        "git_blob_sha1": "0a4a32c1b3f543db44ab3fdc1fda9a84a9b10513",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/include/ui/divingmappixmapitem.h"
+      },
+      "machine_dossier_sha256_unverified": "b08806fa6641471f3db3b877b95e59809334a053a2012027f0a46aa4c161b645",
+      "line_anchors": [
+        {
+          "line": 11,
+          "text": "class DivingMapPixmapItem : public QObject, public QGraphicsPixmapItem {"
+        },
+        {
+          "line": 17,
+          "text": "MapConnection* connection() const { return m_connection; }"
+        },
+        {
+          "line": 18,
+          "text": "void updatePixmap();"
+        },
+        {
+          "line": 25,
+          "text": "static QPixmap getBasePixmap(MapConnection* connection);"
+        },
+        {
+          "line": 28,
+          "text": "void onTargetMapChanged();"
+        }
+      ],
+      "responsibilities": "Diving map pixmap item retains connection pointer and exposes update/target-map change hooks for connection rendering.",
+      "dependency_edges": [
+        "src/ui/divingmappixmapitem.cpp",
+        "src/editor.cpp",
+        "include/core/mapconnection.h"
+      ],
+      "unresolved": [
+        "Connection pointer lifetime and target-map invalidation need Qt event-loop tests.",
+        "Machine dossier bytes/SHA256 not retrieved or verified",
+        "Whole-file source/consumer closure, MPL 2.0 notices and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read full exact pinned source, including inactive and error branches",
+        "Trace producer/consumer and Qt ownership/undo/save contracts",
+        "Verify machine dossier bytes/SHA256 and upstream license notices",
+        "Obtain distinct reviewer verdict for this blob only"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 42,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "include/ui/eventframes.h",
+        "git_blob_sha1": "3858e54e0cad349c901fd274d79426c7c212b3b8",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/include/ui/eventframes.h"
+      },
+      "machine_dossier_sha256_unverified": "ef6cd381c2364391e898ce5acc28ecd45922c3045b8ae30386f7d04cbbace525",
+      "line_anchors": [
+        {
+          "line": 17,
+          "text": "class EventFrame : public QFrame {"
+        },
+        {
+          "line": 25,
+          "text": "void initCustomAttributesTable();"
+        },
+        {
+          "line": 30,
+          "text": "void invalidateConnections();"
+        },
+        {
+          "line": 129,
+          "text": "class WarpFrame : public EventFrame {"
+        },
+        {
+          "line": 221,
+          "text": "class HiddenItemFrame : public EventFrame {"
+        }
+      ],
+      "responsibilities": "Editor event frame classes expose object, warp, trigger, sign and hidden-item UI fields with connection/value invalidation.",
+      "dependency_edges": [
+        "src/ui/eventframes.cpp",
+        "src/core/events.cpp",
+        "src/editor.cpp"
+      ],
+      "unresolved": [
+        "UI fields do not prove emitted event JSON or runtime script semantics; need editor save/reopen tests.",
+        "Machine dossier bytes/SHA256 not retrieved or verified",
+        "Whole-file source/consumer closure, MPL 2.0 notices and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read full exact pinned source, including inactive and error branches",
+        "Trace producer/consumer and Qt ownership/undo/save contracts",
+        "Verify machine dossier bytes/SHA256 and upstream license notices",
+        "Obtain distinct reviewer verdict for this blob only"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 45,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "src/core/editcommands.cpp",
+        "git_blob_sha1": "684d98c7ea8b2c600a5fb8888831b95723e741f3",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/src/core/editcommands.cpp"
+      },
+      "machine_dossier_sha256_unverified": "f901caa9718fd2e69343dcb3105a1e0e5705d2fea1a5cf49a88fdde0ad4474b5",
+      "line_anchors": [
+        {
+          "line": 8,
+          "text": "int getEventTypeMask(const QList<Event *> &events) {"
+        },
+        {
+          "line": 27,
+          "text": "int getConnectionDirectionMask(const QList<QString> &directions) {"
+        },
+        {
+          "line": 64,
+          "text": "void PaintMetatile::redo() {"
+        },
+        {
+          "line": 130,
+          "text": "void PaintBorder::undo() {"
+        },
+        {
+          "line": 158,
+          "text": "void ShiftMetatiles::redo() {"
+        }
+      ],
+      "responsibilities": "Original map-edit undo/redo implementations apply metatile, border and shift operations and compute event/connection direction masks.",
+      "dependency_edges": [
+        "include/core/editcommands.h",
+        "src/core/map.cpp",
+        "src/editor.cpp"
+      ],
+      "unresolved": [
+        "No native cross-map edit and save failure rollback test; cached render invalidation unverified.",
+        "Machine dossier bytes/SHA256 not retrieved or verified",
+        "Whole-file source/consumer closure, MPL 2.0 notices and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read full exact pinned source, including inactive and error branches",
+        "Trace producer/consumer and Qt ownership/undo/save contracts",
+        "Verify machine dossier bytes/SHA256 and upstream license notices",
+        "Obtain distinct reviewer verdict for this blob only"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 46,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "src/core/events.cpp",
+        "git_blob_sha1": "194a7ab17096d754295990e649a0c5c3ab816c78",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/src/core/events.cpp"
+      },
+      "machine_dossier_sha256_unverified": "04513b120708ab6eef9f6bf519e77b9dfac58e388d0389b679aa873e86edebad",
+      "line_anchors": [
+        {
+          "line": 8,
+          "text": "Event* Event::create(Event::Type type) {"
+        },
+        {
+          "line": 27,
+          "text": "int Event::getPixelX() const {"
+        },
+        {
+          "line": 62,
+          "text": "void Event::modify() {"
+        },
+        {
+          "line": 66,
+          "text": "QString Event::groupToJsonKey(Event::Group group) {"
+        }
+      ],
+      "responsibilities": "Event factory instantiates typed map events; shared geometry, modification and group-to-JSON naming routines define editor event representation.",
+      "dependency_edges": [
+        "include/core/events.h",
+        "src/project.cpp",
+        "src/ui/eventframes.cpp"
+      ],
+      "unresolved": [
+        "No complete event serialization or FireRed script interpreter coverage; invalid group/default paths need review.",
+        "Machine dossier bytes/SHA256 not retrieved or verified",
+        "Whole-file source/consumer closure, MPL 2.0 notices and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read full exact pinned source, including inactive and error branches",
+        "Trace producer/consumer and Qt ownership/undo/save contracts",
+        "Verify machine dossier bytes/SHA256 and upstream license notices",
+        "Obtain distinct reviewer verdict for this blob only"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 47,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "src/core/map.cpp",
+        "git_blob_sha1": "47b279919bd4afcc76b88f9eeecd459b3452989f",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/src/core/map.cpp"
+      },
+      "machine_dossier_sha256_unverified": "1e47909570dfa7f97b30f806a34a501f78cc52b25f669c18cecdaf351da07c63",
+      "line_anchors": [
+        {
+          "line": 14,
+          "text": "bool Map::m_fileWatchingEnabled = true;"
+        },
+        {
+          "line": 52,
+          "text": "void Map::setLayout(Layout *layout) {"
+        },
+        {
+          "line": 70,
+          "text": "QRect Map::getConnectionRect(const QString &direction, Layout * fromLayout) const {"
+        },
+        {
+          "line": 97,
+          "text": "QPixmap Map::renderConnection(const QString &direction, Layout * fromLayout) {"
+        },
+        {
+          "line": 207,
+          "text": "QString Map::getJsonFilepath(const QString &mapName) {"
+        }
+      ],
+      "responsibilities": "Map model tracks file watching, layout assignment, connection geometry/rendering and canonical map.json path construction.",
+      "dependency_edges": [
+        "include/core/map.h",
+        "src/project.cpp",
+        "src/editor.cpp"
+      ],
+      "unresolved": [
+        "File watcher reattachment and cross-map connection persistence require real Qt MainWindow concurrent-warning testing.",
+        "Machine dossier bytes/SHA256 not retrieved or verified",
+        "Whole-file source/consumer closure, MPL 2.0 notices and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read full exact pinned source, including inactive and error branches",
+        "Trace producer/consumer and Qt ownership/undo/save contracts",
+        "Verify machine dossier bytes/SHA256 and upstream license notices",
+        "Obtain distinct reviewer verdict for this blob only"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 51,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "src/ui/connectionpixmapitem.cpp",
+        "git_blob_sha1": "db05ffabdf817a376b78da1bb02b4ad037ae4e02",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/src/ui/connectionpixmapitem.cpp"
+      },
+      "machine_dossier_sha256_unverified": "131a1e697f95d5439f720ebdf2e5744a8a4fa0e3e6c607cfa0db7e90aa5928fb",
+      "line_anchors": [
+        {
+          "line": 8,
+          "text": "ConnectionPixmapItem::ConnectionPixmapItem(MapConnection* connection)"
+        },
+        {
+          "line": 29,
+          "text": "void ConnectionPixmapItem::render(bool ignoreCache) {"
+        },
+        {
+          "line": 56,
+          "text": "QVariant ConnectionPixmapItem::itemChange(GraphicsItemChange change, const QVariant &value)"
+        },
+        {
+          "line": 86,
+          "text": "void ConnectionPixmapItem::updatePos() {"
+        },
+        {
+          "line": 137,
+          "text": "void ConnectionPixmapItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {"
+        }
+      ],
+      "responsibilities": "Qt graphics connection item renders adjacent maps, tracks item position changes and updates connection offset from scene movement.",
+      "dependency_edges": [
+        "include/ui/connectionpixmapitem.h",
+        "src/editor.cpp",
+        "src/core/map.cpp"
+      ],
+      "unresolved": [
+        "Drag offset clamping and undo/save/reopen behaviour not established by source alone.",
+        "Machine dossier bytes/SHA256 not retrieved or verified",
+        "Whole-file source/consumer closure, MPL 2.0 notices and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read full exact pinned source, including inactive and error branches",
+        "Trace producer/consumer and Qt ownership/undo/save contracts",
+        "Verify machine dossier bytes/SHA256 and upstream license notices",
+        "Obtain distinct reviewer verdict for this blob only"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 52,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "src/ui/connectionslistitem.cpp",
+        "git_blob_sha1": "b773f752f678454fbde055884d30a14310fc32f4",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/src/ui/connectionslistitem.cpp"
+      },
+      "machine_dossier_sha256_unverified": "64517690b92defddaf2db3c860ddef876623085fc31d450ee74b78287e074c16",
+      "line_anchors": [
+        {
+          "line": 8,
+          "text": "ConnectionsListItem::ConnectionsListItem(QWidget *parent, MapConnection * connection, const QStringList &mapNames) :"
+        },
+        {
+          "line": 67,
+          "text": "void ConnectionsListItem::updateUI() {"
+        },
+        {
+          "line": 101,
+          "text": "void ConnectionsListItem::commitDirection() {"
+        },
+        {
+          "line": 118,
+          "text": "void ConnectionsListItem::commitMap(const QString &mapName) {"
+        },
+        {
+          "line": 128,
+          "text": "void ConnectionsListItem::commitRemove() {"
+        }
+      ],
+      "responsibilities": "Connection list widget commits direction, target map, offset and removal edits through original MapConnection model.",
+      "dependency_edges": [
+        "include/ui/connectionslistitem.h",
+        "src/editor.cpp",
+        "src/core/mapconnection.cpp"
+      ],
+      "unresolved": [
+        "Widget edits need native event-loop and fresh-process persistence checks, including invalid target map.",
+        "Machine dossier bytes/SHA256 not retrieved or verified",
+        "Whole-file source/consumer closure, MPL 2.0 notices and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read full exact pinned source, including inactive and error branches",
+        "Trace producer/consumer and Qt ownership/undo/save contracts",
+        "Verify machine dossier bytes/SHA256 and upstream license notices",
+        "Obtain distinct reviewer verdict for this blob only"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    }
+  ]
+}
