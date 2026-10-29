@@ -1,0 +1,41 @@
+name: Phase 1 pinned Porymap new-map file-watcher source closure
+on:
+  push:
+    branches: [phase1/porymap-full-qt-project-roundtrip-20261028]
+    paths:
+      - 'tools/phase1_porymap_new_map_filewatcher_source.py'
+      - 'docs/phase1-review-readiness/porymap-new-map-filewatcher-20261029.md'
+      - '.github/workflows/phase1-porymap-new-map-filewatcher.yml'
+  pull_request:
+    paths:
+      - 'tools/phase1_porymap_new_map_filewatcher_source.py'
+      - 'docs/phase1-review-readiness/porymap-new-map-filewatcher-20261029.md'
+      - '.github/workflows/phase1-porymap-new-map-filewatcher.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-porymap-watcher-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/porymap
+          ref: 26b919d7ff4b54152de010abd5bf344af2ebe116
+          path: upstream-porymap
+          persist-credentials: false
+      - name: Pinned source lifecycle and fail-closed negative controls
+        run: |
+          set -euo pipefail
+          python3 tools/phase1_porymap_new_map_filewatcher_source.py --porymap upstream-porymap --output phase1-evidence/porymap-new-map-filewatcher.json | tee phase1-filewatcher-source.log
+      - name: Retain text evidence only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-porymap-new-map-filewatcher-source
+          path: |
+            phase1-evidence/porymap-new-map-filewatcher.json
+            phase1-filewatcher-source.log
+          if-no-files-found: warn
