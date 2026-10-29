@@ -309,7 +309,8 @@
       "source_anchors": [
         "DECL_BITFIELD(GBADMARegister, uint16_t);",
         "struct GBADMA {",
-        "void GBADMAUpdate(struct GBA* gba);"
+        "void GBADMAUpdate(struct GBA* gba);",
+        "uint16_t GBADMAWriteCNT_HI(struct GBA* gba, int dma, uint16_t control);"
       ],
       "line_anchors": [
         {
@@ -323,6 +324,10 @@
         {
           "line": 70,
           "text": "void GBADMAUpdate(struct GBA* gba);"
+        },
+        {
+          "line": 64,
+          "text": "uint16_t GBADMAWriteCNT_HI(struct GBA* gba, int dma, uint16_t control);"
         }
       ],
       "responsibilities": "Defines DMA channel register/control state and update entrypoint; EEPROM special path is implemented in src/gba/dma.c, not proven by header declarations.",
