@@ -8,7 +8,7 @@
   "registry_only_count": 24,
   "independent_approved_count": 0,
   "gate": "FAIL_INCOMPLETE",
-  "note": "Analyst-prepared intake only. The 5 scoped source observations are not whole-file dispositions; the other 24 are registry-only. No independent reviewer identity or machine dossier verification is supplied. No approvals are implied.",
+  "note": "Analyst-prepared intake only. All 29 exact pinned Git blobs were rechecked via GitHub Contents; 5 have scoped source observations and 24 remain without source semantic inspection. No whole-file semantic disposition, machine dossier review, independent reviewer or approval is implied.",
   "records": [
     {
       "ordinal": 1,
@@ -31,7 +31,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -55,7 +55,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -122,7 +122,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -146,7 +146,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -172,7 +172,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -197,7 +197,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -261,7 +261,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -285,7 +285,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -308,7 +308,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -332,7 +332,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -355,7 +355,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -378,7 +378,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -401,7 +401,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -465,7 +465,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -488,7 +488,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -513,7 +513,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -577,7 +577,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -601,7 +601,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -625,7 +625,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -690,7 +690,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -715,7 +715,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -739,7 +739,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -763,7 +763,7 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     },
     {
@@ -786,8 +786,10 @@
       "independent_review_receipt": null,
       "whole_file_semantic_coverage": false,
       "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
-      "source_hash_validation": "REGISTRY_PIN_ONLY",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
       "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
     }
-  ]
+  ],
+  "source_blob_verified_count": 29,
+  "source_blob_verification_method": "Pinned GitHub Contents API full-file blob SHA comparison, 2026-10-29; metadata verification only, not whole-file semantic interpretation"
 }

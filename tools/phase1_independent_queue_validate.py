@@ -96,7 +96,7 @@ def validate(root):
         issues.append("intake schema mismatch")
     if intake.get("source_registry_blob_sha1") != "b6269c9a4ddf164643e3202ffb0497e27160bcca":
         issues.append("intake registry pin mismatch")
-    if intake.get("record_count") != 29 or intake.get("partial_source_inspected_count") != 5 or intake.get("registry_only_count") != 24:
+    if intake.get("record_count") != 29 or intake.get("partial_source_inspected_count") != 5 or intake.get("registry_only_count") != 24 or intake.get("source_blob_verified_count") != 29:
         issues.append("intake count mismatch")
     if intake.get("independent_approved_count") != 0 or intake.get("gate") != "FAIL_INCOMPLETE":
         issues.append("intake cannot claim approvals or completed gate")
@@ -135,8 +135,10 @@ def validate(root):
                     or not claim.get("unresolved")
                     or claim.get("source_url") != f.get("upstream_blob_url") + "#L" + str(lines["start"]) + "-L" + str(lines["end"])):
                 issues.append("incomplete partial source evidence: " + str(i))
-        elif record.get("analyst_preparation") != "REGISTRY_ONLY_NOT_SOURCE_INSPECTED" or record.get("source_hash_validation") != "REGISTRY_PIN_ONLY":
+        elif record.get("analyst_preparation") != "REGISTRY_ONLY_NOT_SOURCE_INSPECTED" or record.get("source_hash_validation") != "GITHUB_CONTENTS_BLOB_MATCHED":
             issues.append("uninspected file misrepresented: " + str(i))
+    if any(rec.get("source_hash_validation") != "GITHUB_CONTENTS_BLOB_MATCHED" for rec in records):
+        issues.append("pinned source hash verification incomplete")
     if inspected != 5:
         issues.append("exactly five partial source observations required in bootstrap")
     return issues

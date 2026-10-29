@@ -32,7 +32,7 @@ class QueueBootstrapTests(unittest.TestCase):
     def test_positive(self):
         self.assertEqual(self.check(copy.deepcopy(self.original)), [])
 
-    def test_sixteen_fail_closed_mutations(self):
+    def test_seventeen_fail_closed_mutations(self):
         edits = [
             ("wrong total", lambda d: d["queue"].update(total_target=14833)),
             ("false total approval", lambda d: d["queue"].update(total_approved=1)),
@@ -50,6 +50,7 @@ class QueueBootstrapTests(unittest.TestCase):
             ("invented approval", lambda d: d["intake"]["records"][0].update(independent_review_verdict="APPROVED")),
             ("changed intake SHA", lambda d: d["intake"]["records"][0]["identity"].update(git_blob_sha1="0"*40)),
             ("missing intake record", lambda d: d["intake"]["records"].pop()),
+            ("unverified source blob", lambda d: d["intake"]["records"][1].update(source_hash_validation="REGISTRY_PIN_ONLY")),
         ]
         for name, edit in edits:
             with self.subTest(name=name):
