@@ -1,0 +1,433 @@
+{
+  "schema": "xgba.phase1.remaining_p0_partial_analyst_batch.v2",
+  "date": "2026-10-29",
+  "source_packet": "docs/phase1-review-readiness/packet-0000-0099.json",
+  "source_packet_blob_sha1": "a48c12900acc7e0211a8071119763e2b5de4b1a4",
+  "previous_partial_indices": [
+    1,
+    2,
+    6,
+    10,
+    14,
+    16,
+    3,
+    25,
+    33,
+    38,
+    43,
+    55,
+    58,
+    60
+  ],
+  "new_partial_indices": [
+    4,
+    5,
+    7,
+    8,
+    9,
+    11,
+    12,
+    13
+  ],
+  "partial_source_inspected": 8,
+  "curated_29_source_inspected": 29,
+  "remaining_p0_partial_total": 22,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "machine_dossier_sha256_note": "Packet digest copied for identity only; no independent machine dossier byte/SHA verification.",
+  "records": [
+    {
+      "packet_index": 4,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/core/core.h",
+        "git_blob_sha1": "64ddf851ef00ab09416a9c1c9b5a88798fcd6fc8",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/core/core.h"
+      },
+      "machine_dossier_sha256_unverified": "0fb39db4601aad348aa35a4adbb7a4a41b05a26128957595547a95bc72208a87",
+      "line_anchors": [
+        {
+          "line": 37,
+          "text": "struct mCore {"
+        },
+        {
+          "line": 56,
+          "text": "bool (*init)(struct mCore*);"
+        },
+        {
+          "line": 89,
+          "text": "bool (*loadROM)(struct mCore*, struct VFile* vf);"
+        },
+        {
+          "line": 90,
+          "text": "bool (*loadSave)(struct mCore*, struct VFile* vf);"
+        },
+        {
+          "line": 102,
+          "text": "void (*runFrame)(struct mCore*);"
+        }
+      ],
+      "responsibilities": "mCore vtable exposes ROM/save loading, BIOS selection, reset and frame execution, providing the reusable emulator abstraction; declarations do not prove save persistence.",
+      "dependency_edges": [
+        "src/core/core.c",
+        "src/gba/core.c",
+        "src/gb/core.c"
+      ],
+      "unresolved": [
+        "No full function-pointer implementation dispatch review",
+        "No cold-boot stock game save/reload evidence"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 5,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/arm/macros.h",
+        "git_blob_sha1": "4832f054611044e63f1e2393fe4072f48004545a",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/arm/macros.h"
+      },
+      "machine_dossier_sha256_unverified": "6508e54c65f1b871f5998bb17dbf6204a73e9428e4ff57734e50e0d1e4dbf558",
+      "line_anchors": [
+        {
+          "line": 11,
+          "text": "#define LOAD_64 LOAD_64LE"
+        },
+        {
+          "line": 12,
+          "text": "#define LOAD_32 LOAD_32LE"
+        },
+        {
+          "line": 13,
+          "text": "#define LOAD_16 LOAD_16LE"
+        },
+        {
+          "line": 15,
+          "text": "#define STORE_32 STORE_32LE"
+        },
+        {
+          "line": 16,
+          "text": "#define STORE_16 STORE_16LE"
+        }
+      ],
+      "responsibilities": "ARM byte/halfword/word/doubleword LOAD/STORE macros map to explicit little-endian helpers; exact host alignment and alias behavior is not established here.",
+      "dependency_edges": [
+        "include/mgba-util/common.h",
+        "src/arm/arm.c",
+        "include/mgba/internal/arm/isa-inlines.h"
+      ],
+      "unresolved": [
+        "No cross-host endian/alignment runtime validation",
+        "No full macro expansion compilation evidence"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 7,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/gb/gb.h",
+        "git_blob_sha1": "ed34c5f24fce0de609f360107a73bb9779585189",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/gb/gb.h"
+      },
+      "machine_dossier_sha256_unverified": "8e5ddf05b9c662c0ba2541da2eea6bbf0e4c28f90c89fdc88ba435c5af08ca2b",
+      "line_anchors": [
+        {
+          "line": 90,
+          "text": "struct GB {"
+        },
+        {
+          "line": 94,
+          "text": "struct GBMemory memory;"
+        },
+        {
+          "line": 166,
+          "text": "void GBReset(struct SM83Core* cpu);"
+        },
+        {
+          "line": 176,
+          "text": "bool GBLoadROM(struct GB* gb, struct VFile* vf);"
+        },
+        {
+          "line": 187,
+          "text": "void GBSavedataMask(struct GB* gb, struct VFile* vf, bool writeback);"
+        }
+      ],
+      "responsibilities": "mGBA Game Boy core defines separate SM83 CPU and memory/video/timer state with ROM, save and SRAM mask APIs; it must not be conflated with the GBA/ARM path.",
+      "dependency_edges": [
+        "src/gb/gb.c",
+        "src/gb/memory.c",
+        "include/mgba/internal/sm83/sm83.h"
+      ],
+      "unresolved": [
+        "Game Boy mapper/GBX behavior outside GBA expansion scope requires distinct review",
+        "No Game Boy native restart test"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 8,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/gba/serialize.h",
+        "git_blob_sha1": "0192cd90ffeeb1d435cd51915325783bf18fb85c",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/gba/serialize.h"
+      },
+      "machine_dossier_sha256_unverified": "22fa87dd646d852ba2e90510a0d1e6afaf46cffa54ea92900a704e62942c9be8",
+      "line_anchors": [
+        {
+          "line": 315,
+          "text": "DECL_BITFIELD(GBASerializedSavedataFlags, uint8_t);"
+        },
+        {
+          "line": 316,
+          "text": "DECL_BITS(GBASerializedSavedataFlags, FlashState, 0, 2);"
+        },
+        {
+          "line": 317,
+          "text": "DECL_BIT(GBASerializedSavedataFlags, FlashBank, 4);"
+        },
+        {
+          "line": 320,
+          "text": "DECL_BITFIELD(GBASerializedMiscFlags, uint32_t);"
+        },
+        {
+          "line": 333,
+          "text": "struct GBASerializedState {"
+        }
+      ],
+      "responsibilities": "GBA serialized-state ABI includes bitfield flags for video, savedata Flash bank/state and misc IRQ/halt state; ABI compatibility requires implementation-level version and size checks.",
+      "dependency_edges": [
+        "src/gba/serialize.c",
+        "src/gba/savedata.c",
+        "include/mgba/internal/gba/video.h"
+      ],
+      "unresolved": [
+        "No whole-struct layout/version audit",
+        "No native cross-version savestate migration test"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 9,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/arm/isa-inlines.h",
+        "git_blob_sha1": "ebda28e411f627c6cd1570aff6f29a3b79a60840",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/arm/isa-inlines.h"
+      },
+      "machine_dossier_sha256_unverified": "22099dfd7b67ee163af3dd04afe6aed7b70f059d9df2ebb14f713aeec91f58db",
+      "line_anchors": [
+        {
+          "line": 13,
+          "text": "#define ARM_COND_EQ (cpu->cpsr.z)"
+        },
+        {
+          "line": 21,
+          "text": "#define ARM_COND_HI (cpu->cpsr.c && !cpu->cpsr.z)"
+        },
+        {
+          "line": 73,
+          "text": "static inline int32_t ARMWritePC(struct ARMCore* cpu) {"
+        },
+        {
+          "line": 75,
+          "text": "cpu->memory.setActiveRegion(cpu, pc);"
+        },
+        {
+          "line": 83,
+          "text": "static inline int32_t ThumbWritePC(struct ARMCore* cpu) {"
+        }
+      ],
+      "responsibilities": "ARM inline instruction helpers encode CPSR condition predicates and reset the active region/prefetch when writing PC; this affects ROM remapping and direct-entry tests.",
+      "dependency_edges": [
+        "src/arm/arm.c",
+        "src/gba/memory.c",
+        "include/mgba/internal/arm/arm.h"
+      ],
+      "unresolved": [
+        "No native stale-prefetch mapper counterexample",
+        "No full ARM/Thumb timing proof"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 11,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/gba/video.h",
+        "git_blob_sha1": "289689446a6cf2334f8f478e35b376c9e87aa736",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/gba/video.h"
+      },
+      "machine_dossier_sha256_unverified": "0723c5fade118b9999f0203af025b2761e867341653af8cbbc3cf0fae5811c32",
+      "line_anchors": [
+        {
+          "line": 118,
+          "text": "DECL_BITFIELD(GBARegisterDISPCNT, uint16_t);"
+        },
+        {
+          "line": 119,
+          "text": "DECL_BITS(GBARegisterDISPCNT, Mode, 0, 3);"
+        },
+        {
+          "line": 124,
+          "text": "DECL_BIT(GBARegisterDISPCNT, ForcedBlank, 7);"
+        },
+        {
+          "line": 134,
+          "text": "DECL_BITFIELD(GBARegisterDISPSTAT, uint16_t);"
+        },
+        {
+          "line": 143,
+          "text": "DECL_BITFIELD(GBARegisterBGCNT, uint16_t);"
+        }
+      ],
+      "responsibilities": "GBA video header specifies display control and status register bitfields, background priorities and forced blank; declarations are not rendered-frame evidence.",
+      "dependency_edges": [
+        "src/gba/video.c",
+        "src/gba/renderers/video-software.c",
+        "include/mgba/internal/gba/io.h"
+      ],
+      "unresolved": [
+        "No pixel-level native renderer validation",
+        "No independent bitfield packing ABI signoff"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 12,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/arm/decoder.h",
+        "git_blob_sha1": "f6e19769884054b42b5fb77988b156d48b1c6489",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/arm/decoder.h"
+      },
+      "machine_dossier_sha256_unverified": "69bf00c7af7ef592cc5d115ebd892095fc4b55150a6690e299fcafec047f9f3e",
+      "line_anchors": [
+        {
+          "line": 21,
+          "text": "#define ARM_OPERAND_NONE                0x00000000"
+        },
+        {
+          "line": 28,
+          "text": "#define ARM_OPERAND_1                   0x000000FF"
+        },
+        {
+          "line": 54,
+          "text": "#define ARM_OPERAND_MEMORY (ARM_OPERAND_MEMORY_1 | ARM_OPERAND_MEMORY_2 | ARM_OPERAND_MEMORY_3 | ARM_OPERAND_MEMORY_4)"
+        },
+        {
+          "line": 56,
+          "text": "#define ARM_MEMORY_REGISTER_BASE     0x0001"
+        },
+        {
+          "line": 63,
+          "text": "#define ARM_MEMORY_WRITEBACK         0x0080"
+        }
+      ],
+      "responsibilities": "ARM decoder operand metadata uses per-slot bit masks and memory addressing flags; this is debugger/disassembly representation, not the executed CPU decoder itself.",
+      "dependency_edges": [
+        "src/arm/decoder.c",
+        "src/arm/decoder-arm.c",
+        "src/arm/decoder-thumb.c"
+      ],
+      "unresolved": [
+        "No full ARM/Thumb opcode semantic review",
+        "No compiled decoder coverage parity"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 13,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "include/mainwindow.h",
+        "git_blob_sha1": "a4d3a731b030d28d26f2e824a32bee1f7ec4c7b5",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/include/mainwindow.h"
+      },
+      "machine_dossier_sha256_unverified": "21684f40690a139d9af9c8d64e8fb56499d408bbf181f64d8d9c797f340f36f4",
+      "line_anchors": [
+        {
+          "line": 49,
+          "text": "class MainWindow : public QMainWindow"
+        },
+        {
+          "line": 183,
+          "text": "public slots:"
+        },
+        {
+          "line": 194,
+          "text": "bool save(bool currentOnly = false);"
+        },
+        {
+          "line": 304,
+          "text": "void reloadScriptEngine();"
+        },
+        {
+          "line": 404,
+          "text": "void showFileWatcherWarning();"
+        }
+      ],
+      "responsibilities": "Porymap MainWindow declares GUI save, script-engine reload and file-watcher warning handlers; implementation-level signal ordering and modal reload behavior remain unverified.",
+      "dependency_edges": [
+        "src/mainwindow.cpp",
+        "src/editor.cpp",
+        "src/project.cpp"
+      ],
+      "unresolved": [
+        "No simultaneous modal-warning runtime proof",
+        "No crash-safe multi-map save/reload"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    }
+  ]
+}
