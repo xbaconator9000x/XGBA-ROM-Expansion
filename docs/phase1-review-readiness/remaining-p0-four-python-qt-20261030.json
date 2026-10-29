@@ -1,0 +1,358 @@
+{
+  "schema": "xgba.phase1.remaining_p0_second_packet_partial_analyst.v2",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+  "source_packet_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0000-0199-20261030.json",
+  "previous_second_packet_indices": [
+    100,
+    103,
+    106,
+    107
+  ],
+  "new_partial_indices": [
+    101,
+    102,
+    104,
+    105
+  ],
+  "other_p0_partial_total": 108,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 137,
+  "other_p0_without_partial": 201,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Partial source analyst only. Original compressed machine dossier bytes previously rehashed by exact-head CI; not independent full-file semantics, licensing clearance, native execution, stock gameplay, .sav durability or physical Flash.",
+  "records": [
+    {
+      "packet_index": 101,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/platform/python/mgba/core.py",
+        "git_blob_sha1": "22965b3f9c75c03b9156457aee73d89f3f202d10",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/platform/python/mgba/core.py"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "e3b17a509aa350fc5c90bb330d897d0ba4b8254f53990da25afed8e0b4f0e4bc",
+      "whole_source_sha256_from_packet": "3813a0c572cacbd76d1bc39596044dbd6c09479b338897a6d854dfb855a2aa43",
+      "line_anchors": [
+        {
+          "line": 12,
+          "text": "def find(path):"
+        },
+        {
+          "line": 40,
+          "text": "def needs_reset(func):"
+        },
+        {
+          "line": 49,
+          "text": "def protected(func):"
+        },
+        {
+          "line": 160,
+          "text": "    def _init(cls, native):"
+        },
+        {
+          "line": 169,
+          "text": "    def _detect(cls, core):"
+        },
+        {
+          "line": 193,
+          "text": "    def load_bios(self, vfile, id=0):"
+        },
+        {
+          "line": 246,
+          "text": "    def reset(self):"
+        },
+        {
+          "line": 263,
+          "text": "        self._core.step(self._core)"
+        }
+      ],
+      "responsibilities": "Python CFFI core discovery, ownership/protection, callback registration, ROM/save load, reset, frame execution and raw savestate interfaces.",
+      "dependency_edges": [
+        "src/platform/python/mgba/gba.py -> Core subclass and reset lifecycle",
+        "CFFI _pylib -> mCore C callbacks and mCoreLoadFile",
+        "src/platform/python/mgba/memory.py -> Python core memory accessor"
+      ],
+      "unresolved": [
+        "Native mCore ownership and callback lifetime under exception/unload",
+        "Whether load_save transfers VFile ownership and persistence guarantees",
+        "Protection context reentrancy and Python exception behavior"
+      ],
+      "reviewer_questions": [
+        "Verify all Python wrapper paths against pinned C ABI and exception cleanup",
+        "Trace save VFile ownership, close and persistence across reset/restart",
+        "Test nested protected contexts without assuming a defect",
+        "Resolve build-time CFFI binding and platform flags",
+        "Independently verify licensing and complete 393-line source"
+      ],
+      "platform_scope": "PYTHON_CFFI_CORE_WRAPPER_NOT_NATIVE_GAMEPLAY",
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "file_notice": "MPL-2.0_NOTICE_PRESENT"
+      },
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION",
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 102,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/platform/python/mgba/gba.py",
+        "git_blob_sha1": "91ac3254e7109f7260fa12f0f66cfd75060631bb",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/platform/python/mgba/gba.py"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "3b2a05ec3c6d63038275de85e6f653fc567af216ef2055bad442c486ff92b5c7",
+      "whole_source_sha256_from_packet": "8314a97f61b601901338580524b4b7941952e395be8b22a0a263158b983555e5",
+      "line_anchors": [
+        {
+          "line": 14,
+          "text": "class GBA(Core):"
+        },
+        {
+          "line": 33,
+          "text": "    def __init__(self, native):"
+        },
+        {
+          "line": 51,
+          "text": "    def _load(self):"
+        },
+        {
+          "line": 56,
+          "text": "class GBAMemory(Memory):"
+        },
+        {
+          "line": 67,
+          "text": "        self.rom0 = Memory(core, romSize, lib.GBA_BASE_ROM0)"
+        },
+        {
+          "line": 71,
+          "text": "        self.sram = Memory(core, lib.GBA_SIZE_SRAM, lib.GBA_BASE_SRAM)"
+        },
+        {
+          "line": 104,
+          "text": "    def __getitem__(self, index):"
+        },
+        {
+          "line": 110,
+          "text": "        sprite.constitute(tiles, 0 if map_1d else 0x20)"
+        }
+      ],
+      "responsibilities": "Python GBA subclass builds ARM CPU and video/sprite adapters and exposes BIOS, WRAM, IO, ROM windows and SRAM memory accessors.",
+      "dependency_edges": [
+        "src/platform/python/mgba/core.py -> Core._load and protected reset",
+        "src/platform/python/mgba/memory.py -> Memory proxy read/write",
+        "src/platform/python/mgba/arm.py -> ARMCore wrapper"
+      ],
+      "unresolved": [
+        "GBA save memory proxy uses GBA_SIZE_SRAM naming, not Flash durability proof",
+        "Negative sprite indexing and CFFI bounds behavior not exercised",
+        "ROM window aliasing, native core ownership and backend save type"
+      ],
+      "reviewer_questions": [
+        "Trace Python SRAM proxy to original mGBA GBA save controller",
+        "Check ROM bank address mapping and read/write dispatch",
+        "Inspect negative sprite index handling in native CFFI boundary",
+        "Validate GBA vs GB platform distinctions and source license",
+        "Independently inspect full 111-line source and machine dossier"
+      ],
+      "platform_scope": "PYTHON_GBA_MEMORY_VIEW_NOT_FLASH_PERSISTENCE",
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "file_notice": "MPL-2.0_NOTICE_PRESENT"
+      },
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION",
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 104,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/platform/qt/IOViewer.cpp",
+        "git_blob_sha1": "17f938ca5d0ffbb4cd69e2f04d9f440d34f2658f",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/platform/qt/IOViewer.cpp"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "2a15de0368a18849ec86c9d90746e54d63012d39ba7b86aa5229a48da0ff9338",
+      "whole_source_sha256_from_packet": "dca1ceeb5680adae1ec79171e4a0523f00c2f129deaab4c52f4543986101a245",
+      "line_anchors": [
+        {
+          "line": 30,
+          "text": "QHash<mPlatform, QList<IOViewer::RegisterDescription>> IOViewer::s_registers;"
+        },
+        {
+          "line": 32,
+          "text": "const QList<IOViewer::RegisterDescription>& IOViewer::registerDescriptions(mPlatform platform) {"
+        },
+        {
+          "line": 1564,
+          "text": "IOViewer::IOViewer(std::shared_ptr<CoreController> controller, QWidget* parent)"
+        },
+        {
+          "line": 1604,
+          "text": "\tconnect(m_ui.buttonBox, &QDialogButtonBox::clicked, this, &IOViewer::buttonPressed);"
+        },
+        {
+          "line": 1657,
+          "text": "void IOViewer::updateRegister() {"
+        },
+        {
+          "line": 1679,
+          "text": "void IOViewer::bitFlipped() {"
+        },
+        {
+          "line": 1688,
+          "text": "void IOViewer::writeback() {"
+        },
+        {
+          "line": 1704,
+          "text": "void IOViewer::selectRegister(int address) {"
+        },
+        {
+          "line": 1723,
+          "text": "\tint i = 0;"
+        },
+        {
+          "line": 1743,
+          "text": "\t\t\tconnect(sbox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), [this, &ri](int v) {"
+        },
+        {
+          "line": 1798,
+          "text": "void IOViewer::buttonPressed(QAbstractButton* button) {"
+        }
+      ],
+      "responsibilities": "Original Qt IO register description tables, platform-specific register selection, CoreController interrupter, rawRead, busWrite and dynamic field widget update.",
+      "dependency_edges": [
+        "src/platform/qt/CoreController.h -> Interrupter/thread core",
+        "src/platform/qt/IOViewer.h -> RegisterDescription and signals",
+        "include/mgba/internal/gba/io.h -> GBA register names",
+        "include/mgba/internal/gb/io.h -> GB register names"
+      ],
+      "unresolved": [
+        "Large platform conditional register tables not fully interpreted",
+        "Qt lambda reference capture and combo itemData mapping require lifetime tests",
+        "Host busWrite is not proof of physical GBA register behavior"
+      ],
+      "reviewer_questions": [
+        "Review entire 1809-line register description table and platform conditionals",
+        "Trace CoreController interruption and read/write synchronization",
+        "Test dynamic widget lifecycle and callback captures with Qt runtime",
+        "Verify GBA vs GB register widths and mask bounds",
+        "Independently verify license and compiled Qt moc path"
+      ],
+      "platform_scope": "QT_REGISTER_VIEWER_HOST_UI_NOT_PHYSICAL_GBA_IO",
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "file_notice": "MPL-2.0_NOTICE_PRESENT"
+      },
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION",
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 105,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/platform/qt/OverrideView.ui",
+        "git_blob_sha1": "c6be6967a56f88f7171381e0873b540a7455e515",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/platform/qt/OverrideView.ui"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "8f0f978a4fc5227a85e457d3a8163fb8879ec475fbdcc47128d7bb63a6e8c9e9",
+      "whole_source_sha256_from_packet": "d6774aca04fd429e0a73836b44a7be75a9d8b64f0bb62f79af461a9b4910a0f8",
+      "line_anchors": [
+        {
+          "line": 20,
+          "text": "   <string>Game Overrides</string>"
+        },
+        {
+          "line": 28,
+          "text": "     <widget class=\"QWidget\" name=\"tabGBA\">"
+        },
+        {
+          "line": 118,
+          "text": "             <widget class=\"QComboBox\" name=\"savetype\">"
+        },
+        {
+          "line": 136,
+          "text": "                <string>Flash 512kb</string>"
+        },
+        {
+          "line": 141,
+          "text": "                <string>Flash 1Mb</string>"
+        },
+        {
+          "line": 199,
+          "text": "            <property name=\"tristate\">"
+        },
+        {
+          "line": 225,
+          "text": "     <widget class=\"QWidget\" name=\"tabGB\">"
+        },
+        {
+          "line": 238,
+          "text": "        <widget class=\"QComboBox\" name=\"gbModel\">"
+        },
+        {
+          "line": 538,
+          "text": "    <widget class=\"QDialogButtonBox\" name=\"buttonBox\">"
+        }
+      ],
+      "responsibilities": "Qt Designer UI XML declares separate GBA and GB override tabs, save-type choices, hardware options, model and palette controls.",
+      "dependency_edges": [
+        "src/platform/qt/OverrideView.cpp -> runtime signals/slots and selected override semantics",
+        "src/platform/qt/OverrideView.h -> generated Ui wrapper",
+        "Qt uic -> generated widget class from OverrideView.ui"
+      ],
+      "unresolved": [
+        "UI choices alone do not establish override application or Flash persistence",
+        "No per-file MPL notice at top of original XML; repository LICENSE scope needs review",
+        "Generated uic output and Qt runtime state not inspected"
+      ],
+      "reviewer_questions": [
+        "Trace each save-type option to original override implementation",
+        "Verify generated uic control names and combo enum mapping",
+        "Test GUI selected save type across fresh-process restart",
+        "Independently reconcile XML licensing without assuming file notice",
+        "Review all 548 source lines including GB-specific controls"
+      ],
+      "platform_scope": "QT_DESIGNER_OVERRIDE_UI_DECLARATION_NOT_RUNTIME_SAVE",
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "file_notice": "NO_FILE_LEVEL_NOTICE_IN_XML"
+      },
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION",
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}
