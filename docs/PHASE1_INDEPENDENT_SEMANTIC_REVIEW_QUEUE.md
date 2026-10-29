@@ -3,7 +3,7 @@
 Status: ACTIVE QUEUED WORKSTREAM; **no approvals inferred**. This is separate from the 30/30 evidence re-verification queue and must not modify its receipts.
 
 ## Priority and throughput
-Start immediately with the 338 pinned P0 candidates, first the 29 curated source-interpreted files, then remaining P0, then other 14,834 inventory entries by dependency/risk. Review independent files in parallel, grouping by module without bypassing dependencies. Every execution should take the largest safe batch the runtime permits, checkpoint unfinished work, and select the next eligible candidates. Do not count a review as approved simply because a batch completed.
+Start immediately with the 338 pinned P0 candidates, first the 29 curated source-interpreted files, then remaining P0, then the other **14,496** inventory entries by dependency/risk. Review independent files in parallel, grouping by module without bypassing dependencies. Every execution should take the largest safe batch the runtime permits, checkpoint unfinished work, and select the next eligible candidates. Do not count a review as approved simply because a batch completed.
 
 ## Per-file immutable review record
 Use `semantic-snapshots/independent-reviews/` for review records keyed by exact repository, source path and Git blob SHA. Each record must include: source identity and blob SHA; machine dossier SHA; precise responsibilities and behavior; callers/callees and dependency contracts; runtime/compiler/linker/save/editor implications as applicable; evidence references with exact line ranges and hashes; source-interpreter identity; *distinct* independent reviewer identity; reviewer objections and resolution; explicit verdict APPROVED / REJECTED / NEEDS_EVIDENCE; validation command/results; date and audit trail.
@@ -23,3 +23,5 @@ Only independently verified, source-hash-pinned APPROVED records count toward 14
 4. Reconcile source changes, resolve rejected records, and evaluate final cross-file gates.
 
 **Completion is measured in independently approved semantic dispositions, not file scans, queue receipts or documentation volume.**
+
+Bootstrap validation is deliberately fail-closed at zero approvals; when a distinct reviewer submits real source-hash-pinned approvals, extend the validator to inspect and verify those receipts before advancing the queue. The validation workflow is not an independent reviewer.
