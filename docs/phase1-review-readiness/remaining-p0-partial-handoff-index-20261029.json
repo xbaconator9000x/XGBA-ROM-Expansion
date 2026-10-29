@@ -8,21 +8,23 @@
     "docs/phase1-review-readiness/remaining-p0-six-source-20261029.json",
     "docs/phase1-review-readiness/remaining-p0-eight-source-20261029.json",
     "docs/phase1-review-readiness/remaining-p0-eight-interop-20261029.json",
-    "docs/phase1-review-readiness/remaining-p0-eight-cart-editor-20261029.json"
+    "docs/phase1-review-readiness/remaining-p0-eight-cart-editor-20261029.json",
+    "docs/phase1-review-readiness/remaining-p0-eight-arm-20261029.json"
   ],
   "batch_sizes": [
     6,
     8,
     8,
+    8,
     8
   ],
-  "remaining_p0_partial_source_inspected": 30,
-  "remaining_p0_without_partial_source_inspection": 279,
+  "remaining_p0_partial_source_inspected": 38,
+  "remaining_p0_without_partial_source_inspection": 271,
   "curated_p0_partial_source_inspected": 29,
-  "total_p0_partial_source_inspected": 59,
+  "total_p0_partial_source_inspected": 67,
   "whole_file_semantic_approved": 0,
   "independent_p0_approved": 0,
   "independent_total_approved": 0,
   "phase1_gate": "FAIL_INCOMPLETE",
-  "reviewer_handoff": "30 disjoint remaining-P0 pinned partial source observations, including eight new mGBA cartridge/ARM and Porymap map-connection declarations. No complete-file independent review; machine dossier digests unverified; source/compiled/runtime/licensing dependencies pending. All NEEDS_REVIEW; approvals 0."
+  "reviewer_handoff": "38 disjoint remaining-P0 SHA-pinned partial analyst source observations including eight ARM debugger/interpreter files; exact original source identity, no machine dossier SHA verification, no whole-file coverage, no independent approvals. All NEEDS_REVIEW."
 }
