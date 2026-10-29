@@ -15,10 +15,12 @@ AG = "da598c1d918402c42c0c0d7128ba14567f3175e9"
 MG = "fd9dc5c2cbf234365068855851107e762fc6211b"
 BLOBS = {"src/save.c": "36b960f375c92711aa49b99bdfe9c6b3a99d6b1c",
          "src/load_save.c": "8b723dd044c6024b3671bb890b25b56a53f99ec5",
+         "src/main.c": "542b0f5d16dd93107523d11163bfcb70a42b707a",
          "src/agb_flash_1m.c": "e249fab9a350f3263e7df5f20ff301a6d008e3db"}
-SYMBOLS = ("CheckForFlashMemory", "TryWriteSpecialSaveSector",
+SYMBOLS = ("InitIntrHandlers", "CheckForFlashMemory", "TryWriteSpecialSaveSector",
            "TryReadSpecialSaveSector", "gFlashMemoryPresent", "gFlash")
-EXPECTED = ("original_flash_detection_and_callbacks",
+EXPECTED = ("original_irq_vector_and_timer_dispatch",
+            "original_flash_detection_and_callbacks",
             "original_arm_sector30_write", "original_arm_sector31_write",
             "original_arm_sector30_readback", "original_arm_sector31_readback",
             "invalid_sector_no_flash_mutation")
@@ -38,11 +40,11 @@ def git(root, *args):
 def verify(log):
     need("FAIL " not in log, "native failure")
     arm = re.findall(r"^ARM (\w+) steps=(\d+) result=0x([0-9a-f]{8})$", log, re.M)
-    names = ("CheckForFlashMemory", "WriteSector30", "WriteSector31",
+    names = ("InitIntrHandlers", "CheckForFlashMemory", "WriteSector30", "WriteSector31",
              "ReadSector30", "ReadSector31", "RejectSector29")
     need(tuple(x[0] for x in arm) == names, "native ARM calls/order")
     need(all(0 < int(x[1]) <= 12000000 for x in arm), "bounded return")
-    need(tuple(int(x[2], 16) for x in arm[1:]) == (1, 1, 1, 1, 255),
+    need(tuple(int(x[2], 16) for x in arm[2:]) == (1, 1, 1, 1, 255),
          "original return values")
     passed = tuple(x[5:] for x in log.splitlines() if x.startswith("PASS "))
     need(passed == EXPECTED, "native assertions")
@@ -61,6 +63,8 @@ def negatives(log):
         log.replace("persistent_sav=false", "persistent_sav=true", 1),
         log.replace("phase1_gate=FAIL_INCOMPLETE", "phase1_gate=PASS", 1),
         log.replace("approvals=0", "approvals=1", 1),
+        log.replace("PASS original_irq_vector_and_timer_dispatch", "FAIL original_irq_vector_and_timer_dispatch", 1),
+        log.replace("ARM InitIntrHandlers", "ARM WrongInitializer", 1),
         log.replace("PASS original_arm_sector30_write", "FAIL original_arm_sector30_write", 1),
         log.replace("PASS original_arm_sector31_readback", "PASS wrong_readback", 1),
         log.replace("ARM WriteSector31", "ARM WrongFunction", 1),
@@ -93,9 +97,9 @@ def main():
                              re.escape(name) + r"$", nm)
         need(len(matches) == 1, "missing/duplicate ELF symbol " + name)
         addresses.append(int(matches[0], 16))
-    for address in addresses[:3]:
+    for address in addresses[:4]:
         need(0x08000000 <= address < 0x0A000000, "ARM function not in ROM")
-    for address in addresses[3:]:
+    for address in addresses[4:]:
         need(0x02000000 <= address < 0x04000000, "Flash global not in RAM")
     cmd = [str(a.executable.resolve()), str(a.rom.resolve())] + [
         hex(x) for x in addresses]

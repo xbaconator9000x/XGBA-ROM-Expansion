@@ -86,14 +86,15 @@ static void check_readback(struct mCore *core, unsigned sector) {
              "original_arm_readback_payload");
 }
 int main(int argc, char **argv) {
-    need(argc == 7, "usage_rom_checkflash_write_read_flashpresent_gflash");
+    need(argc == 8, "usage_rom_initintr_checkflash_write_read_flashpresent_gflash");
     size_t rom_size = 0;
     uint8_t *rom = load_rom(argv[1], &rom_size);
-    uint32_t checkflash = arg_address(argv[2]);
-    uint32_t write = arg_address(argv[3]);
-    uint32_t read = arg_address(argv[4]);
-    uint32_t present = ram_address(argv[5]);
-    uint32_t gflash = ram_address(argv[6]);
+    uint32_t initintr = arg_address(argv[2]);
+    uint32_t checkflash = arg_address(argv[3]);
+    uint32_t write = arg_address(argv[4]);
+    uint32_t read = arg_address(argv[5]);
+    uint32_t present = ram_address(argv[6]);
+    uint32_t gflash = ram_address(argv[7]);
     struct mCore *core = GBACoreCreate();
     need(core && core->init(core), "native_mgba_init");
     mCoreInitConfig(core, NULL);
@@ -107,6 +108,15 @@ int main(int argc, char **argv) {
          "emulated_flash1m_configured");
     need(save->data[BANK1_30] == 0xff && save->data[BANK1_31] == 0xff,
          "special_sectors_initially_erased");
+    /* Original AgbMain calls InitIntrHandlers before CheckForFlashMemory.
+     * Without the original IWRAM IRQ vector and timer callback dispatch,
+     * StartFlashTimer can enter the BIOS IRQ path with no valid game handler.
+     * Execute the original linked initializer; never install a host shim. */
+    original_entry(core, initintr, 0, 0, "InitIntrHandlers");
+    uint32_t irq_vector = core->busRead32(core, 0x03007FFCU);
+    need(irq_vector >= 0x03000000U && irq_vector < 0x03007FFCU,
+         "original_irq_vector_installed");
+    puts("PASS original_irq_vector_and_timer_dispatch");
     original_entry(core, checkflash, 0, 0, "CheckForFlashMemory");
     need(core->busRead32(core, present) == 1, "original_flash_present");
     need(core->busRead32(core, gflash) != 0, "original_gflash_initialized");
