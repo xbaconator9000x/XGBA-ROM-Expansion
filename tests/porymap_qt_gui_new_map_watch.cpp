@@ -15,6 +15,9 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QFileSystemWatcher>
+#include <QElapsedTimer>
+#include <QEventLoop>
+#include <QThread>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLineEdit>
@@ -128,6 +131,26 @@ int main(int argc,char **argv) {
         need(!watcher->files().contains(json),"new_map_watcher_not_auto_rearmed");
         need(project->watchFile(json),"manual_watch_recovery");
         need(watcher->files().contains(json),"manual_watch_attached");
+        // Actual Linux/Qt event delivery, distinct from watcher registration.
+        // Append legal JSON whitespace, leaving map contents semantically unchanged.
+        int delivered=0;
+        QObject::connect(watcher,&QFileSystemWatcher::fileChanged,
+                         &window,[&](const QString &path) {
+            if (path==json) ++delivered;
+        });
+        QFile touched(json);
+        need(touched.open(QIODevice::WriteOnly|QIODevice::Append),
+             "watched_json_append_open");
+        need(touched.write("\\n",1)==1 && touched.flush(),
+             "watched_json_append_flush");
+        touched.close();
+        QElapsedTimer elapsed;
+        elapsed.start();
+        while (delivered==0 && elapsed.elapsed()<4000) {
+            QCoreApplication::processEvents(QEventLoop::AllEvents,50);
+            QThread::msleep(10);
+        }
+        need(delivered>0,"actual_original_qt_filechanged_signal");
         QJsonObject out;
         out["original_mainwindow_qaction"]=true;
         out["original_newmapdialog_accept"]=true;
@@ -139,7 +162,7 @@ int main(int argc,char **argv) {
         out["manual_watch_recovery"]=true;
         out["native_qt6"]=true;
         out["synthetic_new_map"]=true;
-        out["file_changed_signal_tested"]=false;
+        out["file_changed_signal_tested"]=true;
         out["stock_gameplay"]=false;
         out["phase1_gate"]="FAIL_INCOMPLETE";
         out["independent_approvals"]=0;

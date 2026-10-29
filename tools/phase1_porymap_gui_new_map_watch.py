@@ -9,8 +9,8 @@ BLOBS={"src/mainwindow.cpp":"08ce1a7a599ef825967717b69626984cdc6d772b",
 "src/ui/newmapdialog.cpp":"c8a028025bf1a9aabb8fd96cccf3d0a76214bb0e"}
 TRUE=("original_mainwindow_qaction","original_newmapdialog_accept","new_map_unpersisted_until_save",
 "matched_qfile_enospc","gui_false_clean_missing_script_on_retry","watch_missing_before_save",
-"watch_not_auto_rearmed_after_save","manual_watch_recovery","native_qt6","synthetic_new_map")
-FALSE=("file_changed_signal_tested","stock_gameplay")
+"watch_not_auto_rearmed_after_save","manual_watch_recovery","native_qt6","synthetic_new_map","file_changed_signal_tested")
+FALSE=("stock_gameplay",)
 def need(ok,msg):
     if not ok: raise ValueError(msg)
 def git(root,*args):
