@@ -28,7 +28,7 @@ def verify_extended(raw,rec,packet):
  assert lic["license_path"]==path and lic["license_git_blob_sha1"]==sha
  assert notice.decode() in lic["observed_repository_license"]
  if repo=="mgba-emu/mgba":
-  assert b"Mozilla Public License" in raw and lic["file_notice"]=="Mozilla Public License, v. 2.0."
+  assert b"Mozilla Public" in raw and b"License, v. 2.0." in raw and lic["file_notice"]=="Mozilla Public License, v. 2.0."
  else:
   assert lic["file_notice"]=="NOT_PRESENT_IN_SCOPED_SOURCE_HEADER"
 def reject(raw,rec,packet):
