@@ -23,8 +23,8 @@ def symbols(elf):
     return out
 def check(log):
     rows=[x for x in log.splitlines() if x.startswith("CASE ")]
-    need(len(rows)==4,"native case count changed")
-    tags=[(3,0),(2,0),(99,0),(99,1)]
+    need(len(rows)==6,"native case count changed")
+    tags=[(3,0),(2,0),(99,0),(99,1),(99,2),(99,3)]
     parsed=[]
     for line,(tag,bad) in zip(rows,tags):
         m=re.fullmatch(r"CASE tag=(\d+) malformed=(\d+) returned=(\d+) steps=(\d+) result=0x([0-9a-f]{8}) table=0x([0-9a-f]{8})",line)
@@ -36,7 +36,15 @@ def check(log):
             need(ret==1,"valid reader return missing")
             need(result==(table+29 if tag==3 else table+11 if tag==2 else 0),
                  "original reader pointer result")
-        parsed.append({"tag":tag,"malformed":bool(bad),"returned":bool(ret),"steps":steps,"result":result,"table":table})
+        else:
+            need(result==0,"malformed unmatched tag pointer changed")
+            if bad==1:
+                need(ret==0 and steps==500,"unterminated table must exhaust test budget")
+            else:
+                need(ret==1 and steps<500,"synthetic sentinel beyond table not reached")
+        parsed.append({"tag":tag,"malformed_case":bad,"returned":bool(ret),"steps":steps,"result":result,"table":table})
+    need(parsed[4]["steps"]<parsed[5]["steps"]<parsed[3]["steps"],
+         "synthetic sentinel traversal ordering")
     summary="SUMMARY native_mgba=true original_agbcc_arm=true actual_poryscript_cli_table=true synthetic_direct_entry=true stock_reachability=false physical_flash=false phase1_gate=FAIL_INCOMPLETE approvals=0"
     need(log.count(summary)==1,"native scope changed")
     need("FAIL " not in log,"native assertion failure")
@@ -46,11 +54,16 @@ def negatives(log):
         log.replace("tag=3","tag=4",1),
         log.replace("returned=1","returned=0",1),
         log.replace("malformed=1","malformed=0",1),
+        log.replace("malformed=2","malformed=0",1),
+        log.replace("malformed=3","malformed=2",1),
+        log.replace("steps=500","steps=499",1),
+        log.replace("returned=0","returned=1",1),
         log.replace("steps=","steps=999",1),
         log.replace("native_mgba=true","native_mgba=false",1),
         log.replace("original_agbcc_arm=true","original_agbcc_arm=false",1),
         log.replace("actual_poryscript_cli_table=true","actual_poryscript_cli_table=false",1),
         log.replace("stock_reachability=false","stock_reachability=true",1),
+        log.replace("synthetic_direct_entry=true","synthetic_direct_entry=false",1),
         log.replace("phase1_gate=FAIL_INCOMPLETE","phase1_gate=PASS",1),
         log.replace("approvals=0","approvals=1",1),
     ]
@@ -94,5 +107,5 @@ def main():
          "physical_hardware":False,"phase1_gate":"FAIL_INCOMPLETE",
          "independent_approvals":0}
     a.output.write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
-    print("PINNED_NATIVE_READER_PASS cases=4 negatives=%d gate=FAIL_INCOMPLETE approvals=0"%count)
+    print("PINNED_NATIVE_READER_PASS cases=6 negatives=%d gate=FAIL_INCOMPLETE approvals=0"%count)
 if __name__=="__main__":main()
