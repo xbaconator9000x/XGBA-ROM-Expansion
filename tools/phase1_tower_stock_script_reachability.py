@@ -46,16 +46,32 @@ ANCHORS={
 }
 def need(ok,why):
  if not ok: raise ValueError(why)
+SCOPE={
+ "lobby_choice":("TrainerTower_Lobby_EventScript_ChooseChallenge::","TrainerTower_Lobby_EventScript_DeclineChallenge::"),
+ "macro":(".macro ttower_startchallenge",".endm"),
+ "dispatcher":("static void (*const sTrainerTowerFunctions[])(void) = {","void GetTrainerTowerOpponentName(u8 *dest)"),
+ "setup":("static void SetUpTrainerTowerDataStruct(void)\n{","static void FreeTrainerTowerDataStruct(void)\n{"),
+ "challenge":("static void StartTrainerTowerChallenge(void)\n{","static void GetOwnerState(void)\n{"),
+ "stub":("bool32 ReadTrainerTowerAndValidate(void)\n{",None)
+}
+def region(s,label):
+ if label not in SCOPE:return (0,len(s))
+ start,end=SCOPE[label]
+ i=s.find(start)
+ need(i>=0,"missing source scope "+label)
+ j=s.find(end,i+len(start)) if end else len(s)
+ need(j>i,"missing end scope "+label)
+ if label=="macro":j+=len(end)
+ return (i,j)
 def check(s):
  for label,(path,anchors) in ANCHORS.items():
-  text=s[path]
-  positions=[text.find(x) for x in anchors]
-  need(all(i>=0 for i in positions),"missing scoped anchor "+label)
-  if label in ("lobby_choice","macro","dispatcher","setup","challenge","stub"):
-   need(positions==sorted(positions),"source ordering drift "+label)
+  i,j=region(s[path],label)
+  fragment=s[path][i:j]
+  positions=[fragment.find(x) for x in anchors]
+  need(all(k>=0 for k in positions),"missing scoped anchor "+label)
+  need(positions==sorted(positions),"source ordering drift "+label)
   if label=="stub":
-   tail=text[positions[0]:]
-   need(tail.split("}",1)[0].count("return FALSE;")==1,"stub FALSE changed")
+   need(fragment.split("}",1)[0].count("return FALSE;")==1,"stub FALSE changed")
  need(s["data/maps/TrainerTower_Lobby/scripts.inc"].count("ttower_startchallenge")==1,"lobby macro count")
  return True
 def negatives(s):
@@ -63,7 +79,10 @@ def negatives(s):
  for label,(path,anchors) in ANCHORS.items():
   for anchor in anchors:
    changed=dict(s)
-   changed[path]=s[path].replace(anchor,"PHASE1_NEGATIVE",1)
+   i,j=region(s[path],label)
+   frag=s[path][i:j]
+   need(anchor in frag,"ineffective scoped mutation")
+   changed[path]=s[path][:i]+frag.replace(anchor,"PHASE1_NEGATIVE",1)+s[path][j:]
    need(changed[path]!=s[path],"ineffective negative")
    try: check(changed)
    except ValueError: n+=1
