@@ -1,0 +1,595 @@
+{
+  "schema": "xgba.phase1.second_packet_qt_wii_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+  "source_packet_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0000-0199-20261030.json",
+  "new_partial_indices": [
+    108,
+    109,
+    110,
+    111,
+    128
+  ],
+  "prior_second_packet_indices": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149,
+    150,
+    151,
+    152,
+    153,
+    154,
+    155,
+    156,
+    157,
+    158,
+    159,
+    160,
+    161,
+    162,
+    163,
+    164,
+    165,
+    166,
+    167,
+    168,
+    169,
+    170,
+    171,
+    172,
+    173,
+    174,
+    175,
+    176,
+    177,
+    178,
+    179,
+    180,
+    181,
+    182,
+    183,
+    184,
+    185,
+    186,
+    187,
+    188,
+    189,
+    190,
+    191,
+    192,
+    193,
+    194,
+    195,
+    196,
+    197,
+    198,
+    199
+  ],
+  "other_p0_partial_total": 183,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 212,
+  "other_p0_without_partial": 126,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Four pinned 7k-line Qt translation XML catalogs and original Wii frontend; 5 partial analyst source-only dossiers. Original machine SHA256 verified in prior byte receipt. Qt TS->QM->resource->QTranslator is static source/build rule only, not executed. Wii frontend is not FireRed GBA hardware, save or stock gameplay.",
+  "records": [
+    {
+      "packet_index": 108,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/platform/qt/ts/mgba-de.ts",
+        "git_blob_sha1": "be33a304fbc4b1caa87c5a61eececf2b41d090c9",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/platform/qt/ts/mgba-de.ts"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "14a195fd4ee27cd1df3a9ae9278dc73b0f98950bcdad569e36b79cee61861f06",
+      "whole_source_sha256_from_packet": "ac0fb1f3617318b143413059eb44c813bc9b6eb3c13bb13932c5d932efce521f",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+        },
+        {
+          "line": 2,
+          "text": "<!DOCTYPE TS>"
+        },
+        {
+          "line": 3,
+          "text": "<TS version=\"2.1\" language=\"de_DE\" sourcelanguage=\"en_US\">"
+        },
+        {
+          "line": 4,
+          "text": "<context>"
+        },
+        {
+          "line": 5,
+          "text": "    <name>LibraryTree</name>"
+        },
+        {
+          "line": 7,
+          "text": "        <location filename=\"../library/LibraryModel.cpp\" line=\"428\"/>"
+        },
+        {
+          "line": 8,
+          "text": "        <source>Name</source>"
+        },
+        {
+          "line": 9,
+          "text": "        <translation type=\"unfinished\">Name</translation>"
+        },
+        {
+          "line": 3000,
+          "text": "        <source>Timing</source>"
+        },
+        {
+          "line": 7080,
+          "text": "    <name>QShortcut</name>"
+        }
+      ],
+      "required_source_tokens": [
+        "<TS version=",
+        "<context>",
+        "<message>",
+        "<translation",
+        "IOViewer.cpp",
+        "%1"
+      ],
+      "source_observations": "German Qt Linguist TS asset: context/message locations, unfinished entries, %1 substitution and IOViewer labels are authored XML; not verified compiled QM or UI display.",
+      "dependency_edges": [
+        "Qt Linguist TS catalog to conditional CMake TS_FILES glob",
+        "qt_add_translation/qt5_add_translation to generated QM (not executed)",
+        "generated ts.qrc resource registration conditional on Qt LinguistTools",
+        "Qt QTranslator locale-specific resource loader in main.cpp"
+      ],
+      "unresolved": [
+        "Full 7k-line XML catalog, plural/placeholder and entity semantics require independent review",
+        "Qt LinguistTools presence, Qt5/Qt6 compiled QM and resource bundle not executed or inspected",
+        "No file-level license header in XML; upstream MPL-2.0 repository notice alone is not independent translation licensing clearance",
+        "No native Qt GUI locale or game/emulator runtime observation"
+      ],
+      "reviewer_questions": [
+        "Read complete pinned TS asset, including unfinished/plural entries and XML entities",
+        "Verify exact original machine dossier bytes and SHA256",
+        "Build pinned Qt5/Qt6 Linguist QM, generated ts.qrc and actual QTranslator loading",
+        "Reconcile translation authorship/licensing and attribution",
+        "Obtain genuinely distinct full-source reviewer receipt before APPROVED"
+      ],
+      "platform_scope": "QT_LINGUIST_TRANSLATION_ASSET_SOURCE_ONLY_NOT_COMPILED",
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "root_license_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "file_notice": "NO_FILE_LEVEL_LICENSE_HEADER_IN_TS_XML",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_TRANSLATION_AUTHORSHIP_AND_MPL_RECONCILIATION",
+      "evidence_class": "PINNED_TRANSLATION_ASSET_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 109,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/platform/qt/ts/mgba-en.ts",
+        "git_blob_sha1": "0bceb6ef8c75b4e182104fde000fd860a65e56fa",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/platform/qt/ts/mgba-en.ts"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "7e4a0ffd5255a1dc3d073c2542fcfb7ee2b515154107147a5d1394ac2fca08f7",
+      "whole_source_sha256_from_packet": "7b37c8ffff63e623e6170e2d576526c33cb47ed4ba3735bec4c8b3dd2c754703",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+        },
+        {
+          "line": 2,
+          "text": "<!DOCTYPE TS>"
+        },
+        {
+          "line": 3,
+          "text": "<TS version=\"2.1\" language=\"en\" sourcelanguage=\"en_US\">"
+        },
+        {
+          "line": 4,
+          "text": "<context>"
+        },
+        {
+          "line": 5,
+          "text": "    <name>LibraryTree</name>"
+        },
+        {
+          "line": 7,
+          "text": "        <location filename=\"../library/LibraryModel.cpp\" line=\"428\"/>"
+        },
+        {
+          "line": 8,
+          "text": "        <source>Name</source>"
+        },
+        {
+          "line": 9,
+          "text": "        <translation type=\"unfinished\"></translation>"
+        },
+        {
+          "line": 3000,
+          "text": "        <translation type=\"unfinished\"></translation>"
+        },
+        {
+          "line": 7080,
+          "text": "        <source>Control</source>"
+        }
+      ],
+      "required_source_tokens": [
+        "<TS version=",
+        "<context>",
+        "<message>",
+        "<translation",
+        "IOViewer.cpp",
+        "%1"
+      ],
+      "source_observations": "English Qt TS catalog contains unfinished translations, including empty fallback entries; source strings and runtime fallback require Qt loader verification.",
+      "dependency_edges": [
+        "Qt Linguist TS catalog to conditional CMake TS_FILES glob",
+        "qt_add_translation/qt5_add_translation to generated QM (not executed)",
+        "generated ts.qrc resource registration conditional on Qt LinguistTools",
+        "Qt QTranslator locale-specific resource loader in main.cpp"
+      ],
+      "unresolved": [
+        "Full 7k-line XML catalog, plural/placeholder and entity semantics require independent review",
+        "Qt LinguistTools presence, Qt5/Qt6 compiled QM and resource bundle not executed or inspected",
+        "No file-level license header in XML; upstream MPL-2.0 repository notice alone is not independent translation licensing clearance",
+        "No native Qt GUI locale or game/emulator runtime observation"
+      ],
+      "reviewer_questions": [
+        "Read complete pinned TS asset, including unfinished/plural entries and XML entities",
+        "Verify exact original machine dossier bytes and SHA256",
+        "Build pinned Qt5/Qt6 Linguist QM, generated ts.qrc and actual QTranslator loading",
+        "Reconcile translation authorship/licensing and attribution",
+        "Obtain genuinely distinct full-source reviewer receipt before APPROVED"
+      ],
+      "platform_scope": "QT_LINGUIST_TRANSLATION_ASSET_SOURCE_ONLY_NOT_COMPILED",
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "root_license_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "file_notice": "NO_FILE_LEVEL_LICENSE_HEADER_IN_TS_XML",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_TRANSLATION_AUTHORSHIP_AND_MPL_RECONCILIATION",
+      "evidence_class": "PINNED_TRANSLATION_ASSET_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 110,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/platform/qt/ts/mgba-es.ts",
+        "git_blob_sha1": "8724ecc0c3893449ff0aae18a22b5340b7840b43",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/platform/qt/ts/mgba-es.ts"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "0bd237fc6f926fdb71c4f26e60efa5e1598414706497e610c478c58167202fdb",
+      "whole_source_sha256_from_packet": "98c47858f460689994bc7655860254a6e93c214d597b22486e9def69453a39cc",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+        },
+        {
+          "line": 2,
+          "text": "<!DOCTYPE TS>"
+        },
+        {
+          "line": 3,
+          "text": "<TS version=\"2.1\" language=\"es\" sourcelanguage=\"en_US\">"
+        },
+        {
+          "line": 4,
+          "text": "<context>"
+        },
+        {
+          "line": 5,
+          "text": "    <name>LibraryTree</name>"
+        },
+        {
+          "line": 7,
+          "text": "        <location filename=\"../library/LibraryModel.cpp\" line=\"428\"/>"
+        },
+        {
+          "line": 8,
+          "text": "        <source>Name</source>"
+        },
+        {
+          "line": 9,
+          "text": "        <translation>Nombre</translation>"
+        },
+        {
+          "line": 3000,
+          "text": "        <source>Timing</source>"
+        },
+        {
+          "line": 7080,
+          "text": "</context>"
+        }
+      ],
+      "required_source_tokens": [
+        "<TS version=",
+        "<context>",
+        "<message>",
+        "<translation",
+        "IOViewer.cpp",
+        "%1"
+      ],
+      "source_observations": "Spanish Qt TS catalog includes translated library and IOViewer messages; placeholder/locale behavior and actual generated QM remain unexecuted.",
+      "dependency_edges": [
+        "Qt Linguist TS catalog to conditional CMake TS_FILES glob",
+        "qt_add_translation/qt5_add_translation to generated QM (not executed)",
+        "generated ts.qrc resource registration conditional on Qt LinguistTools",
+        "Qt QTranslator locale-specific resource loader in main.cpp"
+      ],
+      "unresolved": [
+        "Full 7k-line XML catalog, plural/placeholder and entity semantics require independent review",
+        "Qt LinguistTools presence, Qt5/Qt6 compiled QM and resource bundle not executed or inspected",
+        "No file-level license header in XML; upstream MPL-2.0 repository notice alone is not independent translation licensing clearance",
+        "No native Qt GUI locale or game/emulator runtime observation"
+      ],
+      "reviewer_questions": [
+        "Read complete pinned TS asset, including unfinished/plural entries and XML entities",
+        "Verify exact original machine dossier bytes and SHA256",
+        "Build pinned Qt5/Qt6 Linguist QM, generated ts.qrc and actual QTranslator loading",
+        "Reconcile translation authorship/licensing and attribution",
+        "Obtain genuinely distinct full-source reviewer receipt before APPROVED"
+      ],
+      "platform_scope": "QT_LINGUIST_TRANSLATION_ASSET_SOURCE_ONLY_NOT_COMPILED",
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "root_license_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "file_notice": "NO_FILE_LEVEL_LICENSE_HEADER_IN_TS_XML",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_TRANSLATION_AUTHORSHIP_AND_MPL_RECONCILIATION",
+      "evidence_class": "PINNED_TRANSLATION_ASSET_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 111,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/platform/qt/ts/mgba-fr.ts",
+        "git_blob_sha1": "71eeb77f8e9427782dd425d7329c179457f3ab0f",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/platform/qt/ts/mgba-fr.ts"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "6cc5212f42a976617ef07a03e332ec3e211c04ffd7ce113ebff0289dfaff4005",
+      "whole_source_sha256_from_packet": "cff31f45540b3524f7ae4b16de58849e3cd8a00a1819c949f5e0ac4634722c77",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+        },
+        {
+          "line": 2,
+          "text": "<!DOCTYPE TS>"
+        },
+        {
+          "line": 3,
+          "text": "<TS version=\"2.1\" language=\"fr_FR\" sourcelanguage=\"en_US\">"
+        },
+        {
+          "line": 4,
+          "text": "<context>"
+        },
+        {
+          "line": 5,
+          "text": "    <name>LibraryTree</name>"
+        },
+        {
+          "line": 7,
+          "text": "        <location filename=\"../library/LibraryModel.cpp\" line=\"428\"/>"
+        },
+        {
+          "line": 8,
+          "text": "        <source>Name</source>"
+        },
+        {
+          "line": 9,
+          "text": "        <translation>Nom</translation>"
+        },
+        {
+          "line": 3000,
+          "text": "        <location filename=\"../IOViewer.cpp\" line=\"1419\"/>"
+        },
+        {
+          "line": 7080,
+          "text": "        <location filename=\"../utils.cpp\" line=\"33\"/>"
+        }
+      ],
+      "required_source_tokens": [
+        "<TS version=",
+        "<context>",
+        "<message>",
+        "<translation",
+        "IOViewer.cpp",
+        "%1"
+      ],
+      "source_observations": "French Qt TS catalog contains entity-escaped translations and IOViewer source references; parsing and build-loader edges require native Qt closure.",
+      "dependency_edges": [
+        "Qt Linguist TS catalog to conditional CMake TS_FILES glob",
+        "qt_add_translation/qt5_add_translation to generated QM (not executed)",
+        "generated ts.qrc resource registration conditional on Qt LinguistTools",
+        "Qt QTranslator locale-specific resource loader in main.cpp"
+      ],
+      "unresolved": [
+        "Full 7k-line XML catalog, plural/placeholder and entity semantics require independent review",
+        "Qt LinguistTools presence, Qt5/Qt6 compiled QM and resource bundle not executed or inspected",
+        "No file-level license header in XML; upstream MPL-2.0 repository notice alone is not independent translation licensing clearance",
+        "No native Qt GUI locale or game/emulator runtime observation"
+      ],
+      "reviewer_questions": [
+        "Read complete pinned TS asset, including unfinished/plural entries and XML entities",
+        "Verify exact original machine dossier bytes and SHA256",
+        "Build pinned Qt5/Qt6 Linguist QM, generated ts.qrc and actual QTranslator loading",
+        "Reconcile translation authorship/licensing and attribution",
+        "Obtain genuinely distinct full-source reviewer receipt before APPROVED"
+      ],
+      "platform_scope": "QT_LINGUIST_TRANSLATION_ASSET_SOURCE_ONLY_NOT_COMPILED",
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "root_license_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "file_notice": "NO_FILE_LEVEL_LICENSE_HEADER_IN_TS_XML",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_TRANSLATION_AUTHORSHIP_AND_MPL_RECONCILIATION",
+      "evidence_class": "PINNED_TRANSLATION_ASSET_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 128,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/platform/wii/main.c",
+        "git_blob_sha1": "1003a8d9e578a48ba7dbfdea956e2086e9e1b868",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/platform/wii/main.c"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "35ce854e6393f6ef9eb6de2ad27f78df15a1ecae178a9f71c975db89ecb99958",
+      "whole_source_sha256_from_packet": "c3c43ed2ee06e606935c98750a67a061e182e197cea27094926a8dfbaede91e1",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "/* Copyright (c) 2013-2015 Jeffrey Pfau"
+        },
+        {
+          "line": 3,
+          "text": " * This Source Code Form is subject to the terms of the Mozilla Public"
+        },
+        {
+          "line": 4,
+          "text": " * License, v. 2.0. If a copy of the MPL was not distributed with this"
+        },
+        {
+          "line": 5,
+          "text": " * file, You can obtain one at http://mozilla.org/MPL/2.0/. */"
+        },
+        {
+          "line": 8,
+          "text": "#include <fat.h>"
+        },
+        {
+          "line": 13,
+          "text": "#include <wiiuse/wpad.h>"
+        },
+        {
+          "line": 258,
+          "text": "int main(int argc, char* argv[]) {"
+        },
+        {
+          "line": 259,
+          "text": "\tVIDEO_Init();"
+        },
+        {
+          "line": 264,
+          "text": "\tWPAD_Init();"
+        },
+        {
+          "line": 1372,
+          "text": "void _setup(struct mGUIRunner* runner) {"
+        },
+        {
+          "line": 1373,
+          "text": "\trunner->core->setPeripheral(runner->core, mPERIPH_ROTATION, &rotation);"
+        },
+        {
+          "line": 1491,
+          "text": "\tif (mCoreConfigGetUIntValue(&runner->config, \"screenMode\", &mode) && mode < SM_MAX) {"
+        },
+        {
+          "line": 1737,
+          "text": "\tint mode = screenMode | (filterMode << 1);"
+        },
+        {
+          "line": 1741,
+          "text": "\tmCoreConfigSetUIntValue(&runner->config, \"screenMode\", screenMode);"
+        }
+      ],
+      "required_source_tokens": [
+        "VIDEO_Init();",
+        "WPAD_Init();",
+        "AUDIO_Init(0);",
+        "mInputBindKey",
+        "mCoreConfigGetUIntValue",
+        "mCoreConfigSetUIntValue"
+      ],
+      "source_observations": "Pinned Wii frontend initializes GX/video, WPAD and audio, binds Wii/GameCube input to emulator keys, and reads/writes screen/filter configuration. Platform-specific Wii libogc and controller dependencies remain unresolved; no Wii build or runtime was performed.",
+      "dependency_edges": [
+        "libogc/WPAD/GX and optional WIIDRC build dependencies",
+        "mGUIRunner core input/peripheral/AV stream interface",
+        "mCoreConfig persisted screenMode/filter keys",
+        "Wii controller axis/button translation and display/audio callbacks"
+      ],
+      "unresolved": [
+        "No devkitPPC/libogc compiled, linked or physical Wii runtime witness",
+        "No Wii save backend or FireRed stock gameplay closure",
+        "Conditional WIIDRC and pixel-format branches not exhaustively reviewed",
+        "MPL notice present, but dependency/redistribution license clearance remains pending"
+      ],
+      "reviewer_questions": [
+        "Independently read full 1882-line pinned Wii frontend including conditional branches",
+        "Rehash original compressed machine dossier SHA256",
+        "Trace pinned Wii CMake/devkitPPC/libogc ABI and executable output",
+        "Review MPL-2.0 plus Wii dependency licensing and redistribution terms",
+        "Only distinct external full-source reviewer can approve"
+      ],
+      "platform_scope": "WII_HOST_FRONTEND_SOURCE_ONLY_NOT_COMPILED",
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "root_license_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "file_notice": "MPL_2_0_SOURCE_HEADER_LINES_1_TO_5",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_MPL_AND_WII_DEPENDENCY_LICENSING",
+      "evidence_class": "PINNED_WII_FRONTEND_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}
