@@ -1,0 +1,983 @@
+{
+  "schema": "xgba.phase1.second_packet_firered_190_199_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+  "source_packet_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0000-0199-20261030.json",
+  "new_partial_indices": [
+    190,
+    191,
+    192,
+    193,
+    194,
+    195,
+    196,
+    197,
+    198,
+    199
+  ],
+  "prior_second_packet_indices": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149,
+    150,
+    151,
+    152,
+    153,
+    154,
+    155,
+    156,
+    157,
+    158,
+    159,
+    160,
+    161,
+    162,
+    163,
+    164,
+    165,
+    166,
+    167,
+    168,
+    169,
+    170,
+    171,
+    172,
+    173,
+    174,
+    175,
+    176,
+    177,
+    178,
+    179,
+    180,
+    181,
+    182,
+    183,
+    184,
+    185,
+    186,
+    187,
+    188,
+    189
+  ],
+  "other_p0_partial_total": 178,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 207,
+  "other_p0_without_partial": 131,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Ten new FireRed authored source-only partials. League scene0->1->2 and Champion->HallOfFame source edges; Mansion floors0..3 shared switch selector. No compiled or gameplay claims.",
+  "records": [
+    {
+      "packet_index": 190,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PokemonLeague_BrunosRoom/scripts.inc",
+        "git_blob_sha1": "1e71f2edefce951f1a016fbd1cd17413fe65994d",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PokemonLeague_BrunosRoom/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "cbcf38c158bc90f708369b628185d6a5d1b2d911b5b6e8f96bf818566fd1c357",
+      "whole_source_sha256_from_packet": "d1de5447c4968e608082afedb1512319f11287555f92ce92cd3cc2229c76009a",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "PokemonLeague_BrunosRoom_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, PokemonLeague_BrunosRoom_OnResume"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, PokemonLeague_BrunosRoom_OnLoad"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, PokemonLeague_BrunosRoom_OnWarp"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, PokemonLeague_BrunosRoom_OnFrame"
+        },
+        {
+          "line": 14,
+          "text": "\tcall_if_set FLAG_DEFEATED_BRUNO, PokemonLeague_BrunosRoom_EventScript_SetDoorOpen"
+        },
+        {
+          "line": 35,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_POKEMON_LEAGUE, 1, PokemonLeague_BrunosRoom_EventScript_EnterRoom"
+        },
+        {
+          "line": 41,
+          "text": "\tsetvar VAR_MAP_SCENE_POKEMON_LEAGUE, 2"
+        },
+        {
+          "line": 71,
+          "text": "\ttrainerbattle_no_intro TRAINER_ELITE_FOUR_BRUNO, PokemonLeague_BrunosRoom_Text_Defeat"
+        },
+        {
+          "line": 75,
+          "text": "\ttrainerbattle_no_intro TRAINER_ELITE_FOUR_BRUNO_2, PokemonLeague_BrunosRoom_Text_Defeat"
+        },
+        {
+          "line": 89,
+          "text": "\tsetflag FLAG_DEFEATED_BRUNO"
+        }
+      ],
+      "required_source_tokens": [
+        "FLAG_DEFEATED_BRUNO",
+        "VAR_MAP_SCENE_POKEMON_LEAGUE",
+        "TRAINER_ELITE_FOUR_BRUNO_2",
+        "PokemonLeague_EventScript_OpenDoor"
+      ],
+      "source_observations": "Bruno room consumes League scene1, advances to scene2 and gates door/battle and rematch by defeated/RS link flags.",
+      "dependency_edges": [
+        "Lorelei room scene1 writer",
+        "Bruno scene2 writer and Agatha consumer",
+        "standard/rematch trainer selection",
+        "defeated flag and League door"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original authored script include does not establish compiled preprocessor/assembler/linker or map table closure",
+        "Generated map header/map.json, native handlers, state/save consumers and event reachability require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 191,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PokemonLeague_ChampionsRoom/scripts.inc",
+        "git_blob_sha1": "a3c532d6edee9b24722568f0950098519717c338",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PokemonLeague_ChampionsRoom/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "288572d349a4b638cf1ec758e6182e79495722201c6d6b56a813279a66d175d2",
+      "whole_source_sha256_from_packet": "41d2f054b4569798cd3e11e848f3ac3da62781db22320241ef18efb6604f72f3",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "PokemonLeague_ChampionsRoom_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, PokemonLeague_ChampionsRoom_OnWarp"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, PokemonLeague_ChampionsRoom_OnResume"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, PokemonLeague_ChampionsRoom_OnFrame"
+        },
+        {
+          "line": 43,
+          "text": "\tmap_script_2 VAR_TEMP_1, 0, PokemonLeague_ChampionsRoom_EventScript_EnterRoom"
+        },
+        {
+          "line": 49,
+          "text": "\tsetflag FLAG_TEMP_2"
+        },
+        {
+          "line": 63,
+          "text": "\tsetflag FLAG_DEFEATED_CHAMP"
+        },
+        {
+          "line": 75,
+          "text": "\tspecialvar VAR_RESULT, GetStarterSpecies"
+        },
+        {
+          "line": 93,
+          "text": "\twarp MAP_POKEMON_LEAGUE_HALL_OF_FAME, 5, 12"
+        }
+      ],
+      "required_source_tokens": [
+        "FLAG_DEFEATED_CHAMP",
+        "MAP_POKEMON_LEAGUE_HALL_OF_FAME",
+        "GetStarterSpecies",
+        "PokemonLeague_ChampionsRoom_EventScript_EnterRoom"
+      ],
+      "source_observations": "Champion room runs rival battle and Oak scene, sets defeated-champion flag, then warps to Hall of Fame.",
+      "dependency_edges": [
+        "Lance room and Champion entry",
+        "rival battle and defeated flag",
+        "Oak entrance and GetStarterSpecies",
+        "Hall of Fame destination warp"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original authored script include does not establish compiled preprocessor/assembler/linker or map table closure",
+        "Generated map header/map.json, native handlers, state/save consumers and event reachability require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 192,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PokemonLeague_HallOfFame/scripts.inc",
+        "git_blob_sha1": "1b2431bc0a60aca25eeae587d95551dc29b613bc",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PokemonLeague_HallOfFame/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "6e6c35932bce3c77954968019bc70548ec67592d9c27c9d0ac6b6cba873d8165",
+      "whole_source_sha256_from_packet": "cdd15328720aae302433909003a895b8afab553dc8da9c729d64e7a74b67784b",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "PokemonLeague_HallOfFame_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, PokemonLeague_HallOfFame_OnFrame"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, PokemonLeague_HallOfFame_OnWarp"
+        },
+        {
+          "line": 7,
+          "text": "\tmap_script_2 VAR_TEMP_1, 0, PokemonLeague_HallOfFame_EventScript_TurnPlayerNorth"
+        },
+        {
+          "line": 15,
+          "text": "\tmap_script_2 VAR_TEMP_1, 0, PokemonLeague_HallOfFame_EventScript_EnterRoom"
+        },
+        {
+          "line": 21,
+          "text": "\tapplymovement LOCALID_PLAYER, PokemonLeague_HallOfFame_Movement_EnterRoom"
+        },
+        {
+          "line": 37,
+          "text": "\tcall EventScript_SetDefeatedEliteFourFlagsVars"
+        },
+        {
+          "line": 38,
+          "text": "\tsetrespawn HEAL_LOCATION_PALLET_TOWN"
+        },
+        {
+          "line": 40,
+          "text": "\tspecial EnterHallOfFame"
+        }
+      ],
+      "required_source_tokens": [
+        "EnterHallOfFame",
+        "HEAL_LOCATION_PALLET_TOWN",
+        "EventScript_SetDefeatedEliteFourFlagsVars",
+        "FLDEFF_HALL_OF_FAME_RECORD"
+      ],
+      "source_observations": "Hall of Fame receives Champion warp, records League completion flags, sets Pallet respawn and invokes Hall of Fame special.",
+      "dependency_edges": [
+        "Champion room warp target",
+        "Hall of Fame field effect",
+        "Elite Four defeated flags writer",
+        "Pallet respawn and EnterHallOfFame special"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original authored script include does not establish compiled preprocessor/assembler/linker or map table closure",
+        "Generated map header/map.json, native handlers, state/save consumers and event reachability require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 193,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PokemonLeague_LancesRoom/scripts.inc",
+        "git_blob_sha1": "6d31155e71b3b9658b641622a423fd72daa00250",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PokemonLeague_LancesRoom/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "11ead8fd74c11b9c6d84037c74c10a4337cd16b626cc7baf2e3a58f5d9c6ac91",
+      "whole_source_sha256_from_packet": "796a87867040647f4f0cf22eb516455b296f5a1b967378797528421421f55830",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "PokemonLeague_LancesRoom_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, PokemonLeague_LancesRoom_OnResume"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, PokemonLeague_LancesRoom_OnLoad"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, PokemonLeague_LancesRoom_OnWarp"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, PokemonLeague_LancesRoom_OnFrame"
+        },
+        {
+          "line": 15,
+          "text": "\tcall_if_set FLAG_DEFEATED_LANCE, PokemonLeague_LancesRoom_EventScript_SetDoorOpen"
+        },
+        {
+          "line": 35,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_POKEMON_LEAGUE, 3, PokemonLeague_LancesRoom_EventScript_EnterRoom"
+        },
+        {
+          "line": 47,
+          "text": "\tsetvar VAR_MAP_SCENE_POKEMON_LEAGUE, 4"
+        },
+        {
+          "line": 125,
+          "text": "\ttrainerbattle_no_intro TRAINER_ELITE_FOUR_LANCE, PokemonLeague_LancesRoom_Text_Defeat"
+        },
+        {
+          "line": 129,
+          "text": "\ttrainerbattle_no_intro TRAINER_ELITE_FOUR_LANCE_2, PokemonLeague_LancesRoom_Text_Defeat"
+        }
+      ],
+      "required_source_tokens": [
+        "VAR_MAP_SCENE_POKEMON_LEAGUE",
+        "FLAG_DEFEATED_LANCE",
+        "TRAINER_ELITE_FOUR_LANCE_2",
+        "PokemonLeague_EventScript_SetDoorOpenLance"
+      ],
+      "source_observations": "Lance room consumes League scene3 and advances to scene4 with door metatiles and standard/rematch battle branches.",
+      "dependency_edges": [
+        "Agatha scene3 writer",
+        "Lance scene4 writer",
+        "entry door metatile changes",
+        "RS link rematch selection"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original authored script include does not establish compiled preprocessor/assembler/linker or map table closure",
+        "Generated map header/map.json, native handlers, state/save consumers and event reachability require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 194,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PokemonLeague_LoreleisRoom/scripts.inc",
+        "git_blob_sha1": "3da4d3fea7a4a53178e75d1fe33b20a6abc77d6f",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PokemonLeague_LoreleisRoom/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "3640a19444e40632366be1068680d5b6e9c625d6d7a7a9e27c808544518d638a",
+      "whole_source_sha256_from_packet": "62206bd5b51860c75293bf53021a845ee1495cae5ea28703c78ca142b7c32e15",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "PokemonLeague_LoreleisRoom_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, PokemonLeague_LoreleisRoom_OnResume"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, PokemonLeague_LoreleisRoom_OnLoad"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, PokemonLeague_LoreleisRoom_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, PokemonLeague_LoreleisRoom_OnWarp"
+        },
+        {
+          "line": 6,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, PokemonLeague_LoreleisRoom_OnFrame"
+        },
+        {
+          "line": 15,
+          "text": "\tcall_if_set FLAG_DEFEATED_LORELEI, PokemonLeague_LoreleisRoom_EventScript_SetDoorOpen"
+        },
+        {
+          "line": 40,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_POKEMON_LEAGUE, 0, PokemonLeague_LoreleisRoom_EventScript_EnterRoom"
+        },
+        {
+          "line": 46,
+          "text": "\tsetvar VAR_MAP_SCENE_POKEMON_LEAGUE, 1"
+        },
+        {
+          "line": 76,
+          "text": "\ttrainerbattle_no_intro TRAINER_ELITE_FOUR_LORELEI, PokemonLeague_LoreleisRoom_Text_Defeat"
+        },
+        {
+          "line": 80,
+          "text": "\ttrainerbattle_no_intro TRAINER_ELITE_FOUR_LORELEI_2, PokemonLeague_LoreleisRoom_Text_Defeat"
+        },
+        {
+          "line": 89,
+          "text": "\tsetflag FLAG_DEFEATED_LORELEI"
+        }
+      ],
+      "required_source_tokens": [
+        "FLAG_DEFEATED_LORELEI",
+        "VAR_MAP_SCENE_POKEMON_LEAGUE",
+        "TRAINER_ELITE_FOUR_LORELEI_2",
+        "PokemonLeague_EventScript_OpenDoor"
+      ],
+      "source_observations": "Lorelei room consumes initial League scene0, advances to scene1 and gates door opening by defeated flag.",
+      "dependency_edges": [
+        "League scene0 and Bruno scene1",
+        "Lorelei standard/rematch battle",
+        "defeated flag writer",
+        "League door and map transition"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original authored script include does not establish compiled preprocessor/assembler/linker or map table closure",
+        "Generated map header/map.json, native handlers, state/save consumers and event reachability require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 195,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PokemonMansion_1F/scripts.inc",
+        "git_blob_sha1": "7e2a67e52e21131a5058957f39ad6840a55447cc",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PokemonMansion_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "eaa3cedec43eed581d719f641cbc981ec74a7e3287ee4dd024f50e6cc101f962",
+      "whole_source_sha256_from_packet": "f9d6da663e5580e97def94c944d5a3472b6f4e822caa562a95b615f1e448fd03",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "PokemonMansion_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, PokemonMansion_1F_OnLoad"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, PokemonMansion_1F_OnTransition"
+        },
+        {
+          "line": 15,
+          "text": "\tlockall"
+        },
+        {
+          "line": 16,
+          "text": "\tsetvar VAR_0x8004, 0"
+        },
+        {
+          "line": 17,
+          "text": "\tcall PokemonMansion_EventScript_SecretSwitch"
+        },
+        {
+          "line": 19,
+          "text": "\tspecial DrawWholeMapView"
+        },
+        {
+          "line": 25,
+          "text": "\ttrainerbattle_single TRAINER_SCIENTIST_TED, PokemonMansion_1F_Text_TedIntro, PokemonMansion_1F_Text_TedDefeat"
+        }
+      ],
+      "required_source_tokens": [
+        "PokemonMansion_EventScript_SecretSwitch",
+        "VAR_0x8004",
+        "DrawWholeMapView",
+        "TRAINER_SCIENTIST_TED"
+      ],
+      "source_observations": "Mansion 1F uses shared secret-switch handler with selector0, redraws map and exposes trainer encounters.",
+      "dependency_edges": [
+        "shared secret-switch handler selector0",
+        "map load/transition callbacks",
+        "DrawWholeMapView metatile consumer",
+        "Mansion 1F trainer events"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original authored script include does not establish compiled preprocessor/assembler/linker or map table closure",
+        "Generated map header/map.json, native handlers, state/save consumers and event reachability require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 196,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PokemonMansion_2F/scripts.inc",
+        "git_blob_sha1": "b2f686148094bf40f8b1f1451b9ad7c1f1fb7411",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PokemonMansion_2F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "7eec29dd8cfcae4a2bc16bed7047e3d92e30c6a54a18870f1def4ac63de35b44",
+      "whole_source_sha256_from_packet": "562a72b9965ec681851f0095ece4d7153131792cc972389fb0446bac4de7432e",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "PokemonMansion_2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, PokemonMansion_2F_OnLoad"
+        },
+        {
+          "line": 10,
+          "text": "\tlockall"
+        },
+        {
+          "line": 11,
+          "text": "\tsetvar VAR_0x8004, 1"
+        },
+        {
+          "line": 12,
+          "text": "\tcall PokemonMansion_EventScript_SecretSwitch"
+        },
+        {
+          "line": 14,
+          "text": "\tspecial DrawWholeMapView"
+        },
+        {
+          "line": 20,
+          "text": "\tmsgbox PokemonMansion_1F_Text_NewMonDiscoveredInGuyanaJungle, MSGBOX_SIGN"
+        },
+        {
+          "line": 28,
+          "text": "\ttrainerbattle_single TRAINER_BURGLAR_ARNIE, PokemonMansion_1F_Text_ArnieIntro, PokemonMansion_1F_Text_ArnieDefeat"
+        }
+      ],
+      "required_source_tokens": [
+        "PokemonMansion_EventScript_SecretSwitch",
+        "VAR_0x8004",
+        "DrawWholeMapView",
+        "TRAINER_BURGLAR_ARNIE"
+      ],
+      "source_observations": "Mansion 2F uses shared secret-switch handler with selector1, redraws map and includes Mew diary text.",
+      "dependency_edges": [
+        "shared secret-switch selector1",
+        "map load callback",
+        "Mew diary text assets",
+        "Mansion 2F trainer events"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original authored script include does not establish compiled preprocessor/assembler/linker or map table closure",
+        "Generated map header/map.json, native handlers, state/save consumers and event reachability require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 197,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PokemonMansion_3F/scripts.inc",
+        "git_blob_sha1": "83dd077dd024f2b296d25c01ba5a122f288e40e1",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PokemonMansion_3F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "45fdbfbc6cc88bf5bb7fd3617a12d0ba2847f559ebc8de3d20103b46b7c7a510",
+      "whole_source_sha256_from_packet": "da06fb1af43eecb922cdf5b70e8776366397b7b6456cd855871f182e00bc3ec7",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "PokemonMansion_3F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, PokemonMansion_3F_OnLoad"
+        },
+        {
+          "line": 10,
+          "text": "\tlockall"
+        },
+        {
+          "line": 11,
+          "text": "\tsetvar VAR_0x8004, 2"
+        },
+        {
+          "line": 12,
+          "text": "\tcall PokemonMansion_EventScript_SecretSwitch"
+        },
+        {
+          "line": 14,
+          "text": "\tspecial DrawWholeMapView"
+        },
+        {
+          "line": 20,
+          "text": "\tmsgbox PokemonMansion_1F_Text_MewGaveBirthToMewtwo, MSGBOX_SIGN"
+        },
+        {
+          "line": 24,
+          "text": "\ttrainerbattle_single TRAINER_BURGLAR_SIMON, PokemonMansion_1F_Text_SimonIntro, PokemonMansion_1F_Text_SimonDefeat"
+        }
+      ],
+      "required_source_tokens": [
+        "PokemonMansion_EventScript_SecretSwitch",
+        "VAR_0x8004",
+        "DrawWholeMapView",
+        "TRAINER_BURGLAR_SIMON"
+      ],
+      "source_observations": "Mansion 3F uses shared secret-switch handler with selector2 and contains Mewtwo birth diary text.",
+      "dependency_edges": [
+        "shared secret-switch selector2",
+        "map load callback",
+        "Mewtwo diary text assets",
+        "Mansion 3F trainer events"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original authored script include does not establish compiled preprocessor/assembler/linker or map table closure",
+        "Generated map header/map.json, native handlers, state/save consumers and event reachability require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 198,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PokemonMansion_B1F/scripts.inc",
+        "git_blob_sha1": "d4429afe17530bb289aa42c0a4ca61210edd0e63",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PokemonMansion_B1F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "7c4819f8aca50cd4c32840f506441d579bfd8e8bc0877d36cf817ed1d50d82f4",
+      "whole_source_sha256_from_packet": "7ac39b6051667cd7eb05c05bb0c4b47483445080f4fc36560cee96d35676cd26",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "PokemonMansion_B1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, PokemonMansion_B1F_OnLoad"
+        },
+        {
+          "line": 10,
+          "text": "\tlockall"
+        },
+        {
+          "line": 11,
+          "text": "\tsetvar VAR_0x8004, 3"
+        },
+        {
+          "line": 12,
+          "text": "\tcall PokemonMansion_EventScript_SecretSwitch"
+        },
+        {
+          "line": 14,
+          "text": "\tspecial DrawWholeMapView"
+        },
+        {
+          "line": 20,
+          "text": "\tmsgbox PokemonMansion_B1F_Text_MewtwoIsFarTooPowerful, MSGBOX_SIGN"
+        },
+        {
+          "line": 24,
+          "text": "\ttrainerbattle_single TRAINER_BURGLAR_LEWIS, PokemonMansion_B1F_Text_LewisIntro, PokemonMansion_B1F_Text_LewisDefeat"
+        }
+      ],
+      "required_source_tokens": [
+        "PokemonMansion_EventScript_SecretSwitch",
+        "VAR_0x8004",
+        "DrawWholeMapView",
+        "TRAINER_BURGLAR_LEWIS"
+      ],
+      "source_observations": "Mansion B1F uses shared secret-switch handler with selector3 and includes Mewtwo strength diary text.",
+      "dependency_edges": [
+        "shared secret-switch selector3",
+        "map load callback",
+        "Mewtwo diary text assets",
+        "Mansion B1F trainer events"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original authored script include does not establish compiled preprocessor/assembler/linker or map table closure",
+        "Generated map header/map.json, native handlers, state/save consumers and event reachability require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 199,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PokemonTower_1F/scripts.inc",
+        "git_blob_sha1": "11973713622e9a46ba994b0d4b0bca2a26480930",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PokemonTower_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "9c959db587334b118fba529ada9b68f5a9938d36df76b0c48fb2e5a7afc6aa4e",
+      "whole_source_sha256_from_packet": "ce33cb730cff618eb61ce347376aec5b3a9e421baa02b8ab77aeba4e9ebe43d1",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "PokemonTower_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, PokemonTower_1F_OnTransition"
+        },
+        {
+          "line": 10,
+          "text": "\tmsgbox PokemonTower_1F_Text_SenseSpiritsUpToMischief, MSGBOX_NPC"
+        },
+        {
+          "line": 14,
+          "text": "\tmsgbox PokemonTower_1F_Text_GrowlitheWhyDidYouDie, MSGBOX_NPC"
+        },
+        {
+          "line": 24,
+          "text": "\tcheckplayergender"
+        },
+        {
+          "line": 26,
+          "text": "\tmsgbox PokemonTower_1F_Text_ComeToPayRespectsGirl"
+        },
+        {
+          "line": 31,
+          "text": "\tmsgbox PokemonTower_1F_Text_ComeToPayRespectsSon"
+        },
+        {
+          "line": 36,
+          "text": "\tmsgbox PokemonTower_1F_Text_ErectedInMemoryOfDeadMons, MSGBOX_NPC"
+        }
+      ],
+      "required_source_tokens": [
+        "PokemonTower_1F_MapScripts",
+        "checkplayergender",
+        "PokemonTower_1F_Text_ComeToPayRespectsGirl",
+        "PokemonTower_1F_Text_ComeToPayRespectsSon"
+      ],
+      "source_observations": "Pokémon Tower 1F has transition script and gender-conditional mourning dialogue, not a battle or save proof.",
+      "dependency_edges": [
+        "Tower transition callback",
+        "gender-conditional dialogue",
+        "NPC text assets",
+        "map header/event consumer"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original authored script include does not establish compiled preprocessor/assembler/linker or map table closure",
+        "Generated map header/map.json, native handlers, state/save consumers and event reachability require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}

@@ -18,7 +18,8 @@
     "docs/phase1-review-readiness/remaining-p0-four-firered-indigo-lavender-20261030.json",
     "docs/phase1-review-readiness/remaining-p0-four-firered-mtember-mtmoon-20261030.json",
     "docs/phase1-review-readiness/remaining-p0-eight-firered-navel-oneisland-20261030.json",
-    "docs/phase1-review-readiness/remaining-p0-eight-firered-pallet-pewter-agatha-20261030.json"
+    "docs/phase1-review-readiness/remaining-p0-eight-firered-pallet-pewter-agatha-20261030.json",
+    "docs/phase1-review-readiness/remaining-p0-ten-firered-league-mansion-20261030.json"
   ],
   "batch_sizes": [
     4,
@@ -33,17 +34,18 @@
     4,
     4,
     8,
-    8
+    8,
+    10
   ],
-  "second_packet_partial_source_inspected": 68,
+  "second_packet_partial_source_inspected": 78,
   "first_packet_partial_source_inspected": 100,
-  "remaining_p0_partial_source_inspected": 168,
-  "remaining_p0_without_partial_source_inspection": 141,
+  "remaining_p0_partial_source_inspected": 178,
+  "remaining_p0_without_partial_source_inspection": 131,
   "curated_p0_partial_source_inspected": 29,
-  "total_p0_partial_source_inspected": 197,
+  "total_p0_partial_source_inspected": 207,
   "independent_p0_approved": 0,
   "independent_total_approved": 0,
   "whole_file_semantic_approved": 0,
   "phase1_gate": "FAIL_INCOMPLETE",
-  "scope_note": "68 disjoint second packet source-only partial analyst records (indices 100-107 and 130-189); 200 original machine dossiers separately rehashed; no whole-file independent review, licensing clearance, compiled/native gameplay or physical Flash."
+  "scope_note": "78 disjoint second packet source-only partial analyst records (indices 100-107 and 130-199); 200 original machine dossiers separately rehashed; no whole-file independent review, licensing clearance, compiled/native gameplay or physical Flash."
 }
