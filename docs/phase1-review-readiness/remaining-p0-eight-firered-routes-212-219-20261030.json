@@ -1,0 +1,787 @@
+{
+  "schema": "xgba.phase1.third_packet_firered_routes_212_219_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0200-0299.json",
+  "source_packet_blob_sha1": "c998c2ea8c887968e586b1792c5207ecb5286839",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0200-0299-20261030.json",
+  "new_partial_indices": [
+    212,
+    213,
+    214,
+    215,
+    216,
+    217,
+    218,
+    219
+  ],
+  "other_p0_partial_total": 203,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 232,
+  "other_p0_without_partial": 106,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Eight further disjoint original FireRed source-only route and city scripts; no whole-file semantic, compiled, gameplay, .sav, physical Flash, independent licensing or approval.",
+  "records": [
+    {
+      "packet_index": 212,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/Route23/scripts.inc",
+        "git_blob_sha1": "d3912a16f1c601356820e6914a1cb234f67a515a",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/Route23/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "8cf8f9c2be81ed91c3cb7ad32f83388e122fd0f51276976389a9b0f08eadfd7b",
+      "whole_source_sha256_from_packet": "c8f109eb87df8be7bd99337ec562d478e0f365f7106a2773f1dbcdb5a431fec2",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "Route23_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, Route23_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "Route23_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tclearflag FLAG_HIDE_VICTORY_ROAD_3F_BOULDER"
+        },
+        {
+          "line": 67,
+          "text": "\tgoto Route23_EventScript_BadgeGuard"
+        },
+        {
+          "line": 70,
+          "text": "Route23_EventScript_CascadeBadgeGuardTrigger::"
+        },
+        {
+          "line": 72,
+          "text": "\tsetvar VAR_TEMP_1, 2"
+        },
+        {
+          "line": 120,
+          "text": "\tsetvar VAR_TEMP_1, 8"
+        },
+        {
+          "line": 121,
+          "text": "\tsetvar VAR_0x8009, LOCALID_EARTH_BADGE_GUARD"
+        },
+        {
+          "line": 123,
+          "text": "\tgoto Route23_EventScript_BadgeGuardTrigger"
+        },
+        {
+          "line": 126,
+          "text": "Route23_EventScript_VictoryRoadGateSign::"
+        }
+      ],
+      "required_source_tokens": [
+        "Route23_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, Route23_OnTransition",
+        "Route23_OnTransition::",
+        "clearflag FLAG_HIDE_VICTORY_ROAD_3F_BOULDER",
+        "goto Route23_EventScript_BadgeGuard"
+      ],
+      "source_observations": "Route23 transition resets Victory Road boulder hide flags and scene variables; seven badge guard variants pass badge selector and object ID to shared handlers. Original pinned authored source only; no compiled execution, save or physical Flash witness.",
+      "dependency_edges": [
+        "Victory Road boulder scene reset",
+        "Route23_EventScript_BadgeGuard shared implementation",
+        "VAR_TEMP_1 and VAR_0x8009 badge selector",
+        "Route23 coordinate trigger map.json"
+      ],
+      "unresolved": [
+        "Generated map table and original assembler/linker symbol closure not demonstrated",
+        "Native opcode/special execution and event/map object wiring not reproduced",
+        "Original FireRed authored asset and derivative licensing unresolved",
+        "No natural stock gameplay, native .sav persistence or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line and all inactive/error branches at the pinned source blob",
+        "Rehash the original compressed machine dossier and source SHA256",
+        "Trace map.json, event_scripts.s, generated map table, linker and native consumer",
+        "Independently reconcile original asset/derivative licensing",
+        "Sign a genuinely distinct full-file review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 213,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/Route25_SeaCottage/scripts.inc",
+        "git_blob_sha1": "b4eb77a2f85373b4b1f6604c232cb4f5e4da0d19",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/Route25_SeaCottage/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "b21a3193b9f20ae4b8e188c5189f05975d317b8c2ad403da46e27acccbdb1352",
+      "whole_source_sha256_from_packet": "41e7058fc1aa79245b890bc086a49da80035f981237528fc4414faeef997fb38",
+      "line_anchors": [
+        {
+          "line": 4,
+          "text": "Route25_SeaCottage_MapScripts::"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, Route25_SeaCottage_OnTransition"
+        },
+        {
+          "line": 8,
+          "text": "Route25_SeaCottage_OnTransition::"
+        },
+        {
+          "line": 13,
+          "text": "Route25_SeaCottage_EventScript_HideClefairyBill::"
+        },
+        {
+          "line": 140,
+          "text": "Route25_SeaCottage_Movement_BillEnterTeleporter::"
+        },
+        {
+          "line": 144,
+          "text": "Route25_SeaCottage_EventScript_Computer::"
+        },
+        {
+          "line": 146,
+          "text": "\tgoto_if_set RETURN_AFTER_SS_TICKET, Route25_SeaCottage_EventScript_OpenBillsMonList"
+        },
+        {
+          "line": 278,
+          "text": "\tgoto Route25_SeaCottage_EventScript_BillsMonList"
+        },
+        {
+          "line": 281,
+          "text": "Route25_SeaCottage_EventScript_ExitBillsMonList::"
+        },
+        {
+          "line": 285,
+          "text": "Route25_SeaCottage_Movement_BillWalkToMiddleOfRoom::"
+        },
+        {
+          "line": 294,
+          "text": "Route25_SeaCottage_Movement_BillExitTeleporter::"
+        }
+      ],
+      "required_source_tokens": [
+        "Route25_SeaCottage_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, Route25_SeaCottage_OnTransition",
+        "Route25_SeaCottage_OnTransition::",
+        "Route25_SeaCottage_EventScript_HideClefairyBill::",
+        "Route25_SeaCottage_Movement_BillEnterTeleporter::"
+      ],
+      "source_observations": "Sea Cottage Bill rescue uses teleporter state and gender-specific dialogue; S.S. Ticket checks bag space before setting flags; PC marks seen Eeveelutions. Original pinned authored source only; no compiled execution, save or physical Flash witness.",
+      "dependency_edges": [
+        "FLAG_HELPED_BILL_IN_SEA_COTTAGE",
+        "BILL_IN_TELEPORTER teleporter state",
+        "ITEM_SS_TICKET item-space and inventory",
+        "SetSeenMon native special and Pokédex save"
+      ],
+      "unresolved": [
+        "Generated map table and original assembler/linker symbol closure not demonstrated",
+        "Native opcode/special execution and event/map object wiring not reproduced",
+        "Original FireRed authored asset and derivative licensing unresolved",
+        "No natural stock gameplay, native .sav persistence or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line and all inactive/error branches at the pinned source blob",
+        "Rehash the original compressed machine dossier and source SHA256",
+        "Trace map.json, event_scripts.s, generated map table, linker and native consumer",
+        "Independently reconcile original asset/derivative licensing",
+        "Sign a genuinely distinct full-file review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 214,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/Route4_PokemonCenter_1F/scripts.inc",
+        "git_blob_sha1": "d0098c04387563e06138ccc2fcef468ec6b1d989",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/Route4_PokemonCenter_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "f120be1ec4c486a408f5205ee0fffcf1e1ca9f7ff03bd75967f0ce1fa65ed8b3",
+      "whole_source_sha256_from_packet": "477f1daae58c6c03ecc9e0e84af190511a96748267dc1f9c0e7c9a60ea476c1c",
+      "line_anchors": [
+        {
+          "line": 3,
+          "text": "Route4_PokemonCenter_1F_MapScripts::"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, Route4_PokemonCenter_1F_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume"
+        },
+        {
+          "line": 8,
+          "text": "Route4_PokemonCenter_1F_OnTransition::"
+        },
+        {
+          "line": 55,
+          "text": "Route4_PokemonCenter_1F_EventScript_BuyMagikarpParty::"
+        },
+        {
+          "line": 58,
+          "text": "\tgoto_if_eq VAR_RESULT, NO, Route4_PokemonCenter_1F_EventScript_EndPurchaseMagikarp"
+        },
+        {
+          "line": 62,
+          "text": "\tspecial ChangePokemonNickname"
+        },
+        {
+          "line": 127,
+          "text": "Route4_PokemonCenter_1F_EventScript_NoRoomForMagikarp::"
+        },
+        {
+          "line": 134,
+          "text": "Route4_PokemonCenter_1F_EventScript_Nurse::"
+        },
+        {
+          "line": 141,
+          "text": "Route4_PokemonCenter_1F_EventScript_Youngster::"
+        },
+        {
+          "line": 145,
+          "text": "Route4_PokemonCenter_1F_EventScript_Newspaper::"
+        }
+      ],
+      "required_source_tokens": [
+        "Route4_PokemonCenter_1F_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, Route4_PokemonCenter_1F_OnTransition",
+        "map_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume",
+        "Route4_PokemonCenter_1F_OnTransition::",
+        "Route4_PokemonCenter_1F_EventScript_BuyMagikarpParty::"
+      ],
+      "source_observations": "Route4 Center Magikarp purchase branches on money and party/PC capacity, charges through PayForMagikarp and sets purchase flag after gift path. Original pinned authored source only; no compiled execution, save or physical Flash witness.",
+      "dependency_edges": [
+        "CheckMoney and gift storage native specials",
+        "FLAG_BOUGHT_MAGIKARP save consumer",
+        "EventScript_GetGiftMonPartySlot",
+        "ChangeBoxPokemonNickname and box state"
+      ],
+      "unresolved": [
+        "Generated map table and original assembler/linker symbol closure not demonstrated",
+        "Native opcode/special execution and event/map object wiring not reproduced",
+        "Original FireRed authored asset and derivative licensing unresolved",
+        "No natural stock gameplay, native .sav persistence or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line and all inactive/error branches at the pinned source blob",
+        "Rehash the original compressed machine dossier and source SHA256",
+        "Trace map.json, event_scripts.s, generated map table, linker and native consumer",
+        "Independently reconcile original asset/derivative licensing",
+        "Sign a genuinely distinct full-file review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 215,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/Route4_PokemonCenter_2F/scripts.inc",
+        "git_blob_sha1": "83a70af1102dc634b6620db6205dfa0616065faa",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/Route4_PokemonCenter_2F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "19846367db7d7e67b0d5a61741d1614fe82dd2edd25a68e99ce0fab2d5b0707e",
+      "whole_source_sha256_from_packet": "2a9e228da51219a47354f3770d09257c77f68a37c30ba01414326470af958757",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "Route4_PokemonCenter_2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CableClub_OnTransition"
+        },
+        {
+          "line": 9,
+          "text": "Route4_PokemonCenter_2F_EventScript_Colosseum::"
+        },
+        {
+          "line": 13,
+          "text": "Route4_PokemonCenter_2F_EventScript_TradeCenter::"
+        },
+        {
+          "line": 17,
+          "text": "Route4_PokemonCenter_2F_EventScript_RecordCorner::"
+        }
+      ],
+      "required_source_tokens": [
+        "Route4_PokemonCenter_2F_MapScripts::",
+        "map_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame",
+        "map_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp",
+        "map_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad",
+        "map_script MAP_SCRIPT_ON_TRANSITION, CableClub_OnTransition"
+      ],
+      "source_observations": "Route4 Center 2F registers shared CableClub lifecycle and RS-leftover Colosseum, TradeCenter and RecordCorner entry labels. Original pinned authored source only; no compiled execution, save or physical Flash witness.",
+      "dependency_edges": [
+        "CableClub_OnFrame",
+        "CableClub_OnWarp",
+        "CableClub_OnLoad",
+        "CableClub_EventScript_RecordCorner"
+      ],
+      "unresolved": [
+        "Generated map table and original assembler/linker symbol closure not demonstrated",
+        "Native opcode/special execution and event/map object wiring not reproduced",
+        "Original FireRed authored asset and derivative licensing unresolved",
+        "No natural stock gameplay, native .sav persistence or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line and all inactive/error branches at the pinned source blob",
+        "Rehash the original compressed machine dossier and source SHA256",
+        "Trace map.json, event_scripts.s, generated map table, linker and native consumer",
+        "Independently reconcile original asset/derivative licensing",
+        "Sign a genuinely distinct full-file review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 216,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SSAnne_Exterior/scripts.inc",
+        "git_blob_sha1": "4f6d2fd0a349041e2b41c5eb0a5c8ac4b4f73dac",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SSAnne_Exterior/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "4e1498e2611332f5b71dfd90801f3ac18272182a3b7e8fcba608d329f28d34a8",
+      "whole_source_sha256_from_packet": "9d6464b9972ff2744d35e69124484829253f28706f5b07a0b3fb23c2fe00c3e1",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SSAnne_Exterior_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SSAnne_Exterior_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, SSAnne_Exterior_OnFrame"
+        },
+        {
+          "line": 6,
+          "text": "SSAnne_Exterior_OnTransition::"
+        },
+        {
+          "line": 24,
+          "text": "\tapplymovement LOCALID_PLAYER, SSAnne_Exterior_Movement_Exit"
+        },
+        {
+          "line": 26,
+          "text": "\tsetvar VAR_MAP_SCENE_VERMILION_CITY, 2"
+        },
+        {
+          "line": 27,
+          "text": "\tsetvar VAR_VERMILION_CITY_TICKET_CHECK_TRIGGER, 0"
+        },
+        {
+          "line": 38,
+          "text": "SSAnne_Exterior_WalkInPlaceDown::"
+        },
+        {
+          "line": 39,
+          "text": "\tapplymovement LOCALID_PLAYER, Common_Movement_WalkInPlaceFasterDown"
+        },
+        {
+          "line": 43,
+          "text": "SSAnne_Exterior_Movement_Exit::"
+        },
+        {
+          "line": 55,
+          "text": "SSAnne_Exterior_Movement_WalkDown::"
+        }
+      ],
+      "required_source_tokens": [
+        "SSAnne_Exterior_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, SSAnne_Exterior_OnTransition",
+        "map_script MAP_SCRIPT_ON_FRAME_TABLE, SSAnne_Exterior_OnFrame",
+        "SSAnne_Exterior_OnTransition::",
+        "applymovement LOCALID_PLAYER, SSAnne_Exterior_Movement_Exit"
+      ],
+      "source_observations": "S.S. Anne exterior frame scene triggers departure cutscene, removes ship object, advances Vermilion scene and warps player back. Original pinned authored source only; no compiled execution, save or physical Flash witness.",
+      "dependency_edges": [
+        "VAR_MAP_SCENE_VERMILION_CITY",
+        "DoSSAnneDepartureCutscene native special",
+        "LOCALID_SS_ANNE object removal",
+        "MAP_VERMILION_CITY warp and map table"
+      ],
+      "unresolved": [
+        "Generated map table and original assembler/linker symbol closure not demonstrated",
+        "Native opcode/special execution and event/map object wiring not reproduced",
+        "Original FireRed authored asset and derivative licensing unresolved",
+        "No natural stock gameplay, native .sav persistence or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line and all inactive/error branches at the pinned source blob",
+        "Rehash the original compressed machine dossier and source SHA256",
+        "Trace map.json, event_scripts.s, generated map table, linker and native consumer",
+        "Independently reconcile original asset/derivative licensing",
+        "Sign a genuinely distinct full-file review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 217,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SafariZone_Center/scripts.inc",
+        "git_blob_sha1": "d3cb3af0861dbffd1436eaa8fea7eab3598f0986",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SafariZone_Center/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "a3aa27f3bf8a6fc4eb51c7e5618a2e643ae1a11b0c2eaeedd352853f3daa1715",
+      "whole_source_sha256_from_packet": "572e2c21717edf1d920e81c37173b5ca70cebbbfe1ba48e4a1b021ec66bfc36c",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SafariZone_Center_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SafariZone_Center_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 5,
+          "text": "SafariZone_Center_OnTransition::"
+        },
+        {
+          "line": 10,
+          "text": "\tmsgbox SafariZone_Center_Text_RestHouse, MSGBOX_SIGN"
+        },
+        {
+          "line": 11,
+          "text": "\tend"
+        },
+        {
+          "line": 13,
+          "text": "SafariZone_Center_EventScript_TrainerTips::"
+        },
+        {
+          "line": 15,
+          "text": "\tend"
+        },
+        {
+          "line": 17,
+          "text": "SafariZone_Center_EventScript_AreaSign::"
+        },
+        {
+          "line": 18,
+          "text": "\tmsgbox SafariZone_Center_Text_CenterArea, MSGBOX_SIGN"
+        },
+        {
+          "line": 19,
+          "text": "\tend"
+        }
+      ],
+      "required_source_tokens": [
+        "SafariZone_Center_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, SafariZone_Center_OnTransition",
+        ".byte 0",
+        "SafariZone_Center_OnTransition::",
+        "msgbox SafariZone_Center_Text_RestHouse, MSGBOX_SIGN"
+      ],
+      "source_observations": "Safari Zone Center transition delegates to shared SafariZone_OnTransition, with local sign and trainer-tip labels only. Original pinned authored source only; no compiled execution, save or physical Flash witness.",
+      "dependency_edges": [
+        "SafariZone_OnTransition shared source",
+        "SafariZone timer/state save consumer",
+        "map.json object event sign references",
+        "MSGBOX_SIGN text and event interpreter"
+      ],
+      "unresolved": [
+        "Generated map table and original assembler/linker symbol closure not demonstrated",
+        "Native opcode/special execution and event/map object wiring not reproduced",
+        "Original FireRed authored asset and derivative licensing unresolved",
+        "No natural stock gameplay, native .sav persistence or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line and all inactive/error branches at the pinned source blob",
+        "Rehash the original compressed machine dossier and source SHA256",
+        "Trace map.json, event_scripts.s, generated map table, linker and native consumer",
+        "Independently reconcile original asset/derivative licensing",
+        "Sign a genuinely distinct full-file review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 218,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SaffronCity/scripts.inc",
+        "git_blob_sha1": "b2950a4dfa78571573f72d701ad1bd565c7eb1f1",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SaffronCity/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "d6d0365ff6cab81cf019b9e31bdf6b0314ae853c1115098c22cf883a98762ece",
+      "whole_source_sha256_from_packet": "7d0cb333fbac18872344c2e06f15ee6e1ff9a0093cb2211a2fab3178fcff8c29",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SaffronCity_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SaffronCity_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "SaffronCity_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_SAFFRON_CITY"
+        },
+        {
+          "line": 51,
+          "text": "SaffronCity_EventScript_DoorGuardAsleep::"
+        },
+        {
+          "line": 57,
+          "text": "SaffronCity_EventScript_WorkerM::"
+        },
+        {
+          "line": 61,
+          "text": "SaffronCity_EventScript_Youngster::"
+        },
+        {
+          "line": 110,
+          "text": "SaffronCity_EventScript_SilphCoSign::"
+        },
+        {
+          "line": 114,
+          "text": "SaffronCity_EventScript_MrPsychicsHouseSign::"
+        },
+        {
+          "line": 118,
+          "text": "SaffronCity_EventScript_SilphProductSign::"
+        },
+        {
+          "line": 122,
+          "text": "SaffronCity_EventScript_TrainerFanClubSign::"
+        }
+      ],
+      "required_source_tokens": [
+        "SaffronCity_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, SaffronCity_OnTransition",
+        "SaffronCity_OnTransition::",
+        "setworldmapflag FLAG_WORLD_MAP_SAFFRON_CITY",
+        "SaffronCity_EventScript_DoorGuardAsleep::"
+      ],
+      "source_observations": "Saffron City Rocket occupation scripts and guard branch depend on Fuji rescue flag; other city signs and NPCs remain authored labels. Original pinned authored source only; no compiled execution, save or physical Flash witness.",
+      "dependency_edges": [
+        "FLAG_RESCUED_MR_FUJI state",
+        "LOCALID_SAFFRON_DOOR_GUARD_GRUNT position",
+        "Saffron map.json event object visibility",
+        "Team Rocket progression and save flags"
+      ],
+      "unresolved": [
+        "Generated map table and original assembler/linker symbol closure not demonstrated",
+        "Native opcode/special execution and event/map object wiring not reproduced",
+        "Original FireRed authored asset and derivative licensing unresolved",
+        "No natural stock gameplay, native .sav persistence or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line and all inactive/error branches at the pinned source blob",
+        "Rehash the original compressed machine dossier and source SHA256",
+        "Trace map.json, event_scripts.s, generated map table, linker and native consumer",
+        "Independently reconcile original asset/derivative licensing",
+        "Sign a genuinely distinct full-file review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 219,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SaffronCity_PokemonCenter_1F/scripts.inc",
+        "git_blob_sha1": "43d1d94d38e8d6bb159ebbe1954c10c34123690a",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SaffronCity_PokemonCenter_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "eb95783fdfdc14aa60fd87aac5e99952769ec302cc2665ca49acec18a29eb585",
+      "whole_source_sha256_from_packet": "92c999d092ab151ea19f894e56cdb3688192b2ab192f24b0e66ee0ec3f26def6",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SaffronCity_PokemonCenter_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SaffronCity_PokemonCenter_1F_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume"
+        },
+        {
+          "line": 6,
+          "text": "SaffronCity_PokemonCenter_1F_OnTransition::"
+        },
+        {
+          "line": 10,
+          "text": "SaffronCity_PokemonCenter_1F_EventScript_Nurse::"
+        },
+        {
+          "line": 17,
+          "text": "SaffronCity_PokemonCenter_1F_EventScript_Gentleman::"
+        },
+        {
+          "line": 21,
+          "text": "SaffronCity_PokemonCenter_1F_EventScript_Woman::"
+        },
+        {
+          "line": 25,
+          "text": "SaffronCity_PokemonCenter_1F_EventScript_Youngster::"
+        },
+        {
+          "line": 28,
+          "text": "\tgoto_if_eq VAR_MAP_SCENE_SILPH_CO_11F, 1, SaffronCity_PokemonCenter_1F_EventScript_YoungsterRocketsGone"
+        },
+        {
+          "line": 33,
+          "text": "SaffronCity_PokemonCenter_1F_EventScript_YoungsterRocketsGone::"
+        }
+      ],
+      "required_source_tokens": [
+        "SaffronCity_PokemonCenter_1F_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, SaffronCity_PokemonCenter_1F_OnTransition",
+        "map_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume",
+        "SaffronCity_PokemonCenter_1F_OnTransition::",
+        "SaffronCity_PokemonCenter_1F_EventScript_Nurse::"
+      ],
+      "source_observations": "Saffron Center transition sets heal respawn; youngster dialogue switches on Silph Co 11F scene variable, nurse calls shared Center handler. Original pinned authored source only; no compiled execution, save or physical Flash witness.",
+      "dependency_edges": [
+        "VAR_MAP_SCENE_SILPH_CO_11F",
+        "HEAL_LOCATION_SAFFRON_CITY save/respawn",
+        "EventScript_PkmnCenterNurse",
+        "CableClub_OnResume"
+      ],
+      "unresolved": [
+        "Generated map table and original assembler/linker symbol closure not demonstrated",
+        "Native opcode/special execution and event/map object wiring not reproduced",
+        "Original FireRed authored asset and derivative licensing unresolved",
+        "No natural stock gameplay, native .sav persistence or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line and all inactive/error branches at the pinned source blob",
+        "Rehash the original compressed machine dossier and source SHA256",
+        "Trace map.json, event_scripts.s, generated map table, linker and native consumer",
+        "Independently reconcile original asset/derivative licensing",
+        "Sign a genuinely distinct full-file review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}
