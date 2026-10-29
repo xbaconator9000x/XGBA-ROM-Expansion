@@ -16,7 +16,8 @@
     "docs/phase1-review-readiness/remaining-p0-four-firered-lorelei-fuchsia-20261030.json",
     "docs/phase1-review-readiness/remaining-p0-four-firered-safari-indigo-20261030.json",
     "docs/phase1-review-readiness/remaining-p0-four-firered-indigo-lavender-20261030.json",
-    "docs/phase1-review-readiness/remaining-p0-four-firered-mtember-mtmoon-20261030.json"
+    "docs/phase1-review-readiness/remaining-p0-four-firered-mtember-mtmoon-20261030.json",
+    "docs/phase1-review-readiness/remaining-p0-eight-firered-navel-oneisland-20261030.json"
   ],
   "batch_sizes": [
     4,
@@ -29,17 +30,18 @@
     4,
     4,
     4,
-    4
+    4,
+    8
   ],
-  "second_packet_partial_source_inspected": 52,
+  "second_packet_partial_source_inspected": 60,
   "first_packet_partial_source_inspected": 100,
-  "remaining_p0_partial_source_inspected": 152,
-  "remaining_p0_without_partial_source_inspection": 157,
+  "remaining_p0_partial_source_inspected": 160,
+  "remaining_p0_without_partial_source_inspection": 149,
   "curated_p0_partial_source_inspected": 29,
-  "total_p0_partial_source_inspected": 181,
+  "total_p0_partial_source_inspected": 189,
   "independent_p0_approved": 0,
   "independent_total_approved": 0,
   "whole_file_semantic_approved": 0,
   "phase1_gate": "FAIL_INCOMPLETE",
-  "scope_note": "52 disjoint second packet source-only partial analyst records (indices 100-107 and 130-173); 4 original map.json static event/connection evidence blobs; 200 original machine dossiers separately rehashed; no full-file independent review, licensing clearance, compiled/native gameplay or physical Flash."
+  "scope_note": "60 disjoint second packet source-only partial analyst records (indices 100-107 and 130-181); 200 original machine dossiers separately rehashed; no whole-file independent review, licensing clearance, compiled/native gameplay or physical Flash."
 }

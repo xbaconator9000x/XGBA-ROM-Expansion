@@ -1,0 +1,821 @@
+{
+  "schema": "xgba.phase1.second_packet_firered_174_181_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+  "source_packet_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0000-0199-20261030.json",
+  "new_partial_indices": [
+    174,
+    175,
+    176,
+    177,
+    178,
+    179,
+    180,
+    181
+  ],
+  "prior_second_packet_indices": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149,
+    150,
+    151,
+    152,
+    153,
+    154,
+    155,
+    156,
+    157,
+    158,
+    159,
+    160,
+    161,
+    162,
+    163,
+    164,
+    165,
+    166,
+    167,
+    168,
+    169,
+    170,
+    171,
+    172,
+    173
+  ],
+  "other_p0_partial_total": 160,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 189,
+  "other_p0_without_partial": 149,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Eight pinned authored source-only partials; machine dossier original bytes separately verified. Harbor scene state 1->2 and Island state 2->3 are source-only cross-edges, not compiled or gameplay proof.",
+  "records": [
+    {
+      "packet_index": 174,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/MtMoon_B2F/scripts.inc",
+        "git_blob_sha1": "2cd079852d35ac64af3d673cfca8c01f3cbd9ad8",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/MtMoon_B2F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "4a870f29137e069814518fc27f8b66b5939967f399c8019e2b9ef2bd601c45c3",
+      "whole_source_sha256_from_packet": "4d53d179f893c9c6d6af6c5b10e2a005ce83315484636a57df36d56bcc7f7898",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "MtMoon_B2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, MtMoon_B2F_OnTransition"
+        },
+        {
+          "line": 6,
+          "text": "\tcall_if_unset FLAG_GOT_FOSSIL_FROM_MT_MOON, MtMoon_B2F_EventScript_ShowFossils"
+        },
+        {
+          "line": 10,
+          "text": "\tclearflag FLAG_HIDE_DOME_FOSSIL"
+        },
+        {
+          "line": 38,
+          "text": "\ttrainerbattle_no_intro TRAINER_SUPER_NERD_MIGUEL, MtMoon_B2F_Text_MiguelDefeat"
+        },
+        {
+          "line": 59,
+          "text": "\tgiveitem_msg MtMoon_B2F_Text_ObtainedDomeFossil, ITEM_DOME_FOSSIL, 1, MUS_OBTAIN_KEY_ITEM"
+        },
+        {
+          "line": 72,
+          "text": "\tsetflag FLAG_GOT_DOME_FOSSIL"
+        },
+        {
+          "line": 90,
+          "text": "\tgiveitem_msg MtMoon_B2F_Text_ObtainedHelixFossil, ITEM_HELIX_FOSSIL, 1, MUS_OBTAIN_KEY_ITEM"
+        },
+        {
+          "line": 103,
+          "text": "\tsetflag FLAG_GOT_HELIX_FOSSIL"
+        }
+      ],
+      "required_source_tokens": [
+        "FLAG_GOT_FOSSIL_FROM_MT_MOON",
+        "TRAINER_SUPER_NERD_MIGUEL",
+        "ITEM_DOME_FOSSIL",
+        "ITEM_HELIX_FOSSIL"
+      ],
+      "source_observations": "Mt Moon B2F conditional fossil visibility, Miguel battle scene, two fossil choice paths and completion flag.",
+      "dependency_edges": [
+        "transition fossil visibility",
+        "Miguel trainer battle scene variable",
+        "fossil item/obtained flag writers",
+        "map object IDs and generated map consumers"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original source include is not compiled preprocessor/assembler/linker or map table proof",
+        "Generated map header/map.json, native script handlers and flag/save consumers need full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 175,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/NavelRock_Base/scripts.inc",
+        "git_blob_sha1": "9984658a7703ab7f5613ffa414a4e632bd1c34c6",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/NavelRock_Base/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "b747e040c8b93fe9adc960de10455513ed2e7ec3f2432d417089cc97e44abd53",
+      "whole_source_sha256_from_packet": "c51810c7c0f63c8700fb7d49815166287cefa9c43d46b5ec1882a03b795b2b40",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "NavelRock_Base_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, NavelRock_Base_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, NavelRock_Base_OnResume"
+        },
+        {
+          "line": 7,
+          "text": "\tcall_if_set FLAG_FOUGHT_LUGIA, NavelRock_Base_EventScript_HideLugia"
+        },
+        {
+          "line": 16,
+          "text": "\tgoto_if_set FLAG_LUGIA_FLEW_AWAY, EventScript_Return"
+        },
+        {
+          "line": 21,
+          "text": "\tcall_if_set FLAG_SYS_SPECIAL_WILD_BATTLE, NavelRock_Base_EventScript_TryRemoveLugia"
+        },
+        {
+          "line": 25,
+          "text": "\tspecialvar VAR_RESULT, GetBattleOutcome"
+        },
+        {
+          "line": 56,
+          "text": "\tseteventmon SPECIES_LUGIA, 70"
+        },
+        {
+          "line": 57,
+          "text": "\tsetflag FLAG_SYS_SPECIAL_WILD_BATTLE"
+        },
+        {
+          "line": 58,
+          "text": "\tspecial StartLegendaryBattle"
+        },
+        {
+          "line": 65,
+          "text": "\tsetflag FLAG_FOUGHT_LUGIA"
+        },
+        {
+          "line": 70,
+          "text": "\tsetflag FLAG_LUGIA_FLEW_AWAY"
+        }
+      ],
+      "required_source_tokens": [
+        "FLAG_FOUGHT_LUGIA",
+        "FLAG_LUGIA_FLEW_AWAY",
+        "FLAG_SYS_SPECIAL_WILD_BATTLE",
+        "StartLegendaryBattle"
+      ],
+      "source_observations": "Navel Rock Base uses fought/fled flags for Lugia visibility and a resume special-battle outcome for event-object removal.",
+      "dependency_edges": [
+        "transition Lugia fought/fled flags",
+        "resume special-wild-battle marker",
+        "StartLegendaryBattle/GetBattleOutcome",
+        "LOCALID_NAVEL_ROCK_LUGIA map object"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original source include is not compiled preprocessor/assembler/linker or map table proof",
+        "Generated map header/map.json, native script handlers and flag/save consumers need full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 176,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/NavelRock_Exterior/scripts.inc",
+        "git_blob_sha1": "58b2ad2dc6b8437de6b3302a8df6178a9cb7c4be",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/NavelRock_Exterior/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "974e8cf4b125c76061b3281a0647a6adb3b25aac7ec6d8d0e8cb1ede08a1b981",
+      "whole_source_sha256_from_packet": "1f94ede410647b34c416a96114459e31ad2322d075b1bbbb5b0d3fc04b6600ac",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "NavelRock_Exterior_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, NavelRock_Exterior_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 5,
+          "text": "NavelRock_Exterior_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_NAVEL_ROCK_EXTERIOR"
+        },
+        {
+          "line": 7,
+          "text": "\tend"
+        }
+      ],
+      "required_source_tokens": [
+        "NavelRock_Exterior_MapScripts",
+        "MAP_SCRIPT_ON_TRANSITION",
+        "FLAG_WORLD_MAP_NAVEL_ROCK_EXTERIOR",
+        "setworldmapflag"
+      ],
+      "source_observations": "Navel Rock Exterior has a transition-only world-map-flag writer, with no observed battle or persistence behavior.",
+      "dependency_edges": [
+        "transition script dispatch",
+        "world-map flag storage/reader",
+        "map header/map.json routing",
+        "event_scripts.s assembler include"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original source include is not compiled preprocessor/assembler/linker or map table proof",
+        "Generated map header/map.json, native script handlers and flag/save consumers need full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 177,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/NavelRock_Summit/scripts.inc",
+        "git_blob_sha1": "7dd3f0e947d93c8d8b3ce6ef244a72eb416d40f8",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/NavelRock_Summit/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "9fdd1a8c14f5a51f8ada96154b9383a6e51237627ee44fe86bd556e62ec19e03",
+      "whole_source_sha256_from_packet": "3dffe6191b7c9cd9cb60083cc370b326afcc8057ec5d874cc7e372e5cbc528d8",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "NavelRock_Summit_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, NavelRock_Summit_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, NavelRock_Summit_OnResume"
+        },
+        {
+          "line": 7,
+          "text": "\tcall_if_set FLAG_FOUGHT_HO_OH, NavelRock_Summit_EventScript_HideHoOh"
+        },
+        {
+          "line": 18,
+          "text": "\tgoto_if_set FLAG_HO_OH_FLEW_AWAY, EventScript_Return"
+        },
+        {
+          "line": 24,
+          "text": "\tcall_if_set FLAG_SYS_SPECIAL_WILD_BATTLE, NavelRock_Summit_EventScript_TryRemoveHoOh"
+        },
+        {
+          "line": 28,
+          "text": "\tspecialvar VAR_RESULT, GetBattleOutcome"
+        },
+        {
+          "line": 60,
+          "text": "\tseteventmon SPECIES_HO_OH, 70"
+        },
+        {
+          "line": 61,
+          "text": "\tsetflag FLAG_SYS_SPECIAL_WILD_BATTLE"
+        },
+        {
+          "line": 62,
+          "text": "\tspecial StartLegendaryBattle"
+        },
+        {
+          "line": 70,
+          "text": "\tsetflag FLAG_FOUGHT_HO_OH"
+        },
+        {
+          "line": 75,
+          "text": "\tsetflag FLAG_HO_OH_FLEW_AWAY"
+        }
+      ],
+      "required_source_tokens": [
+        "FLAG_FOUGHT_HO_OH",
+        "FLAG_HO_OH_FLEW_AWAY",
+        "StartLegendaryBattle",
+        "SpawnCameraObject"
+      ],
+      "source_observations": "Navel Rock Summit controls Ho-Oh visibility and performs camera/movement and special battle sequencing.",
+      "dependency_edges": [
+        "transition/resume Ho-Oh flags",
+        "camera object lifecycle",
+        "special battle marker and outcome",
+        "map event object consumers"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original source include is not compiled preprocessor/assembler/linker or map table proof",
+        "Generated map header/map.json, native script handlers and flag/save consumers need full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 178,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/OneIsland/scripts.inc",
+        "git_blob_sha1": "6afd7cd76f4f11890c8ac2d7bfb65e183d956da1",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/OneIsland/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "b0e7df488f5bd9f61782e8ae11852da0ab13de9c50d4af5c1b1a3ffd8f876baa",
+      "whole_source_sha256_from_packet": "c9ebd8700a79b59c5a0a817a13a5df1c199748e853286c5ba1a8a77a002575f6",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "OneIsland_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, OneIsland_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, OneIsland_OnFrame"
+        },
+        {
+          "line": 7,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_ONE_ISLAND"
+        },
+        {
+          "line": 11,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_ONE_ISLAND_HARBOR, 2, OneIsland_EventScript_EnterOneIslandFirstTime"
+        },
+        {
+          "line": 17,
+          "text": "\tapplymovement LOCALID_PLAYER, OneIsland_Movement_PlayerExitHarbor"
+        },
+        {
+          "line": 32,
+          "text": "\tsetvar VAR_MAP_SCENE_ONE_ISLAND_HARBOR, 3"
+        },
+        {
+          "line": 33,
+          "text": "\twarp MAP_ONE_ISLAND_POKEMON_CENTER_1F, 9, 9"
+        }
+      ],
+      "required_source_tokens": [
+        "VAR_MAP_SCENE_ONE_ISLAND_HARBOR",
+        "OneIsland_EventScript_EnterOneIslandFirstTime",
+        "MAP_ONE_ISLAND_POKEMON_CENTER_1F",
+        "OneIsland_Movement_BillWalkToPokeCenter"
+      ],
+      "source_observations": "One Island frame scene consumes harbor state 2, moves Bill/player, writes state 3 and warps to the Center.",
+      "dependency_edges": [
+        "harbor state 2 consumer",
+        "OnFrame map_script_2 dispatch",
+        "Bill/player movement",
+        "Center destination warp"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original source include is not compiled preprocessor/assembler/linker or map table proof",
+        "Generated map header/map.json, native script handlers and flag/save consumers need full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 179,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/OneIsland_Harbor/scripts.inc",
+        "git_blob_sha1": "84006d70e9b3fa06acfec3d10bd3557539296142",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/OneIsland_Harbor/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "ed3344ea35b05e39b1f0b207d9ca0c0cd8c760fb3338547c593f2c001b46b00f",
+      "whole_source_sha256_from_packet": "5979c33c1862f36d84577396f50968192bbc5cb89493dfb560f57017cd408faa",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "OneIsland_Harbor_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, OneIsland_Harbor_OnWarp"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, OneIsland_Harbor_OnFrame"
+        },
+        {
+          "line": 7,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_ONE_ISLAND_HARBOR, 1, OneIsland_Harbor_EventScript_TurnPlayerNorth"
+        },
+        {
+          "line": 15,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_ONE_ISLAND_HARBOR, 1, OneIsland_Harbor_EventScript_PlayerEnterHarborFirstTime"
+        },
+        {
+          "line": 23,
+          "text": "\tsetvar VAR_MAP_SCENE_ONE_ISLAND_HARBOR, 2"
+        },
+        {
+          "line": 24,
+          "text": "\twarp MAP_ONE_ISLAND, 12, 18"
+        },
+        {
+          "line": 40,
+          "text": "\tsetvar VAR_0x8004, SEAGALLOP_ONE_ISLAND"
+        },
+        {
+          "line": 41,
+          "text": "\tgoto EventScript_ChooseDestFromOneIsland"
+        }
+      ],
+      "required_source_tokens": [
+        "VAR_MAP_SCENE_ONE_ISLAND_HARBOR",
+        "OneIsland_Harbor_EventScript_PlayerEnterHarborFirstTime",
+        "MAP_ONE_ISLAND",
+        "EventScript_ChooseDestFromOneIsland"
+      ],
+      "source_observations": "One Island Harbor first-entry scene writes state 2 and warps to One Island; sailor delegates to shared ferry choice.",
+      "dependency_edges": [
+        "OnWarp/OnFrame state 1",
+        "harbor state 2 writer",
+        "MAP_ONE_ISLAND warp",
+        "shared ferry destination handler"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original source include is not compiled preprocessor/assembler/linker or map table proof",
+        "Generated map header/map.json, native script handlers and flag/save consumers need full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 180,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/OneIsland_PokemonCenter_1F/scripts.inc",
+        "git_blob_sha1": "0907948f58a8914d52eee538c581d85a01619795",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/OneIsland_PokemonCenter_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "f1597b68a95264a2699001d72a03a4c7f2d01f700696b41e5ccc021bc1ba072b",
+      "whole_source_sha256_from_packet": "845a094b969d8d8fca4411a9626a25babf6d02aa3876fd1aa0bc67988b6efd70",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "OneIsland_PokemonCenter_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, OneIsland_PokemonCenter_1F_OnTransition"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, OneIsland_PokemonCenter_1F_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, OneIsland_PokemonCenter_1F_OnFrame"
+        },
+        {
+          "line": 9,
+          "text": "\tcall_if_ge VAR_MAP_SCENE_ONE_ISLAND_POKEMON_CENTER_1F, 5, OneIsland_PokemonCenter_1F_EventScript_SetRubyMetatile"
+        },
+        {
+          "line": 10,
+          "text": "\tcall_if_set FLAG_SYS_CAN_LINK_WITH_RS, OneIsland_PokemonCenter_1F_EventScript_SetNetworkMachineOn"
+        },
+        {
+          "line": 14,
+          "text": "\tsetmetatile 13, 4, METATILE_PokemonCenter_NetworkMachine_Ruby, 1"
+        },
+        {
+          "line": 18,
+          "text": "\tsetmetatile 16, 4, METATILE_PokemonCenter_NetworkMachine_Sapphire, 1"
+        },
+        {
+          "line": 203,
+          "text": "\tgoto_if_set FLAG_RECOVERED_SAPPHIRE, OneIsland_PokemonCenter_1F_EventScript_GiveCelioSapphire"
+        },
+        {
+          "line": 205,
+          "text": "\tgoto_if_set FLAG_GOT_RUBY, OneIsland_PokemonCenter_1F_EventScript_GiveCelioRuby"
+        },
+        {
+          "line": 275,
+          "text": "\tspecial SetPostgameFlags"
+        },
+        {
+          "line": 276,
+          "text": "\tsetflag FLAG_SYS_CAN_LINK_WITH_RS"
+        },
+        {
+          "line": 279,
+          "text": "\tsetvar VAR_MAP_SCENE_ONE_ISLAND_POKEMON_CENTER_1F, 6"
+        },
+        {
+          "line": 321,
+          "text": "\tsetvar VAR_MAP_SCENE_ONE_ISLAND_POKEMON_CENTER_1F, 5"
+        },
+        {
+          "line": 350,
+          "text": "\tsetvar VAR_MAP_SCENE_MT_EMBER_EXTERIOR, 1"
+        },
+        {
+          "line": 351,
+          "text": "\tsetvar VAR_MAP_SCENE_ONE_ISLAND_POKEMON_CENTER_1F, 4"
+        }
+      ],
+      "required_source_tokens": [
+        "FLAG_SYS_CAN_LINK_WITH_RS",
+        "FLAG_GOT_RUBY",
+        "FLAG_RECOVERED_SAPPHIRE",
+        "OneIsland_PokemonCenter_1F_EventScript_GiveCelioSapphire"
+      ],
+      "source_observations": "One Island Center 1F stages Celio Ruby/Sapphire progress, changes network-machine metatiles, and sets RS-link flag on Sapphire completion.",
+      "dependency_edges": [
+        "Ruby/Sapphire metatile source",
+        "Celio Ruby/Sapphire flag branches",
+        "RS-link flag and postgame consumers",
+        "Center scene variable and map transitions"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original source include is not compiled preprocessor/assembler/linker or map table proof",
+        "Generated map header/map.json, native script handlers and flag/save consumers need full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 181,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/OneIsland_PokemonCenter_2F/scripts.inc",
+        "git_blob_sha1": "1d1df03120a4ec62f8e4ab01213081ff8e36dbed",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/OneIsland_PokemonCenter_2F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "4035cd22052e2cee1193ecf39e76eda7203439a28dccb38293e4beb30e39f4aa",
+      "whole_source_sha256_from_packet": "ef14528622a0d7ca8f1a395eac92703009f397e474ec12334acfde98e98cf79c",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "OneIsland_PokemonCenter_2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CableClub_OnTransition"
+        },
+        {
+          "line": 8,
+          "text": "@ The below 3 are unused and leftover from RS"
+        },
+        {
+          "line": 10,
+          "text": "\tcall CableClub_EventScript_Colosseum"
+        },
+        {
+          "line": 14,
+          "text": "\tcall CableClub_EventScript_TradeCenter"
+        },
+        {
+          "line": 18,
+          "text": "\tcall CableClub_EventScript_RecordCorner"
+        }
+      ],
+      "required_source_tokens": [
+        "CableClub_OnFrame",
+        "CableClub_OnWarp",
+        "CableClub_OnLoad",
+        "CableClub_OnTransition"
+      ],
+      "source_observations": "One Island Center 2F dispatches shared CableClub handlers and contains three explicitly unused Ruby/Sapphire leftover labels.",
+      "dependency_edges": [
+        "CableClub frame/warp",
+        "CableClub load/transition",
+        "unused Colosseum/TradeCenter/RecordCorner",
+        "map header and compiled event table"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Original source include is not compiled preprocessor/assembler/linker or map table proof",
+        "Generated map header/map.json, native script handlers and flag/save consumers need full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}

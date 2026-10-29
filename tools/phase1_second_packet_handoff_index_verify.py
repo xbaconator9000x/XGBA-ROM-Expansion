@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 BASE=ROOT/"docs/phase1-review-readiness"
 INDEX=BASE/"second-packet-partial-handoff-index-20261030.json"
-EXPECTED=list(range(100,108))+list(range(130,174))
+EXPECTED=list(range(100,108))+list(range(130,182))
 def blob(raw):return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
 def validate(r,p):
  s=r["source"];i=p["identity"]
@@ -32,9 +32,9 @@ def main():
  assert receipt["packet_git_blobs"][idx["packet"]]==idx["packet_blob_sha1"]
  first=json.loads((ROOT/idx["first_packet_index"]).read_bytes())
  assert first["remaining_p0_partial_source_inspected"]==100 and first["independent_p0_approved"]==0
- assert idx["batch_sizes"]==[4,4,4,8,8,4,4,4,4,4,4] and len(idx["batches"])==11
- assert idx["second_packet_partial_source_inspected"]==52 and idx["remaining_p0_partial_source_inspected"]==152
- assert idx["remaining_p0_without_partial_source_inspection"]==157 and idx["curated_p0_partial_source_inspected"]==29 and idx["total_p0_partial_source_inspected"]==181
+ assert idx["batch_sizes"]==[4,4,4,8,8,4,4,4,4,4,4,8] and len(idx["batches"])==12
+ assert idx["second_packet_partial_source_inspected"]==60 and idx["remaining_p0_partial_source_inspected"]==160
+ assert idx["remaining_p0_without_partial_source_inspection"]==149 and idx["curated_p0_partial_source_inspected"]==29 and idx["total_p0_partial_source_inspected"]==189
  assert idx["phase1_gate"]=="FAIL_INCOMPLETE" and idx["independent_p0_approved"]==idx["independent_total_approved"]==idx["whole_file_semantic_approved"]==0
  seen=set();negatives=0
  for path,count in zip(idx["batches"],idx["batch_sizes"]):
@@ -51,6 +51,6 @@ def main():
     bad=copy.deepcopy(r);bad["source"][field]=value;reject(bad,p);negatives+=1
    field="machine_dossier_sha256_verified_in_original_bytes" if "machine_dossier_sha256_verified_in_original_bytes" in r else "machine_dossier_sha256_unverified"
    bad=copy.deepcopy(r);bad[field]="0"*64;reject(bad,p);negatives+=1
- assert sorted(seen)==EXPECTED and negatives==520,(sorted(seen),negatives)
- print("P0_SECOND_PACKET_INDEX_PASS second_partial=52 first_partial=100 other_p0_partial=152 curated=29 total_partial=181 negatives=520 approved_p0=0/338 approved_total=0/14834 gate=FAIL_INCOMPLETE")
+ assert sorted(seen)==EXPECTED and negatives==600,(sorted(seen),negatives)
+ print("P0_SECOND_PACKET_INDEX_PASS second_partial=60 first_partial=100 other_p0_partial=160 curated=29 total_partial=189 negatives=600 approved_p0=0/338 approved_total=0/14834 gate=FAIL_INCOMPLETE")
 if __name__=="__main__":main()
