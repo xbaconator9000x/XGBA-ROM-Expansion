@@ -35,11 +35,11 @@ def main():
     idx = json.loads(INDEX.read_text(encoding="utf-8"))
     assert idx["phase1_gate"] == "FAIL_INCOMPLETE"
     assert idx["independent_p0_approved"] == idx["independent_total_approved"] == idx["whole_file_semantic_approved"] == 0
-    assert idx["remaining_p0_partial_source_inspected"] == 94
-    assert idx["remaining_p0_without_partial_source_inspection"] == 215
-    assert idx["total_p0_partial_source_inspected"] == 123
+    assert idx["remaining_p0_partial_source_inspected"] == 100
+    assert idx["remaining_p0_without_partial_source_inspection"] == 209
+    assert idx["total_p0_partial_source_inspected"] == 129
     assert idx["curated_p0_partial_source_inspected"] == 29
-    assert idx["batch_sizes"] == [6, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8]
+    assert idx["batch_sizes"] == [6, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 6]
     raw = (ROOT / idx["packet"]).read_bytes()
     assert git_blob(raw) == idx["packet_blob_sha1"]
     packets = json.loads(raw)["packets"]
@@ -79,10 +79,10 @@ def main():
             bad = copy.deepcopy(record)
             bad["line_anchors"] = []
             reject(bad, packets[i]); negatives += 1
-    assert len(seen) == 94
-    assert sorted(seen) == [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,35,36,37,38,39,40,41,42,43,44,45,46,47,51,52,53,54,55,56,58,59,60,61,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99]
-    assert negatives == 940
-    print("P0_HANDOFF_INDEX_PASS partial=94 curated=29 total_partial=123 negatives=940 approved_p0=0/338 approved_total=0/14834 gate=FAIL_INCOMPLETE")
+    assert len(seen) == 100
+    assert sorted(seen) == [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99]
+    assert negatives == 1000
+    print("P0_HANDOFF_INDEX_PASS partial=100 curated=29 total_partial=129 negatives=1000 approved_p0=0/338 approved_total=0/14834 gate=FAIL_INCOMPLETE")
 
 if __name__ == "__main__":
     main()

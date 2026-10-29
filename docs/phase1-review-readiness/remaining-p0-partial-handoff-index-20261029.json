@@ -16,7 +16,8 @@
     "docs/phase1-review-readiness/remaining-p0-eight-gba-runtime-20261029.json",
     "docs/phase1-review-readiness/remaining-p0-eight-crossboundary-20261029.json",
     "docs/phase1-review-readiness/remaining-p0-eight-gb-debugger-20261029.json",
-    "docs/phase1-review-readiness/remaining-p0-eight-cheats-config-20261029.json"
+    "docs/phase1-review-readiness/remaining-p0-eight-cheats-config-20261029.json",
+    "docs/phase1-review-readiness/remaining-p0-six-qt-go-libretro-20261029.json"
   ],
   "batch_sizes": [
     6,
@@ -30,15 +31,16 @@
     8,
     8,
     8,
-    8
+    8,
+    6
   ],
-  "remaining_p0_partial_source_inspected": 94,
-  "remaining_p0_without_partial_source_inspection": 215,
+  "remaining_p0_partial_source_inspected": 100,
+  "remaining_p0_without_partial_source_inspection": 209,
   "curated_p0_partial_source_inspected": 29,
-  "total_p0_partial_source_inspected": 123,
+  "total_p0_partial_source_inspected": 129,
   "whole_file_semantic_approved": 0,
   "independent_p0_approved": 0,
   "independent_total_approved": 0,
   "phase1_gate": "FAIL_INCOMPLETE",
-  "reviewer_handoff": "94 disjoint other-P0 pinned partial source dossiers including Porymap config and original mGBA GBX test, unlicensed carts, and cheat decoders. mGBA MPL-2.0 and Porymap LGPLv3 repository license evidence is source-grounded; original machine dossier SHA256 bytes, file-level license clearance, full-source dependency closure and distinct external reviewers remain outstanding. No cheat/GBX result implies FireRed stock gameplay or physical Flash. All NEEDS_REVIEW."
+  "reviewer_handoff": "All 100 indices in first pinned packet have disjoint partial source dossiers. Final six cover libretro.h (separate permissive header license), original Porymap Editor/MainWindow/Project and Poryscript Go parser/emitter test fixtures. mGBA MPL-2.0, Porymap LGPLv3 and Poryscript MIT repository identities recorded; original machine dossier bytes/SHA256, licensing closure, full-source coverage and distinct independent reviewers still pending. All NEEDS_REVIEW."
 }
