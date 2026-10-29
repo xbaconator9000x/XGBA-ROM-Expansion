@@ -13,6 +13,8 @@ PKT_SHA = "3ddc0b8f66c8f14351a18208fa11e823f73b1d63"
 SPECS = (
     ("remaining-p0-four-firered-lorelei-fuchsia-20261030.json", list(range(158, 162)), 140, 169, 169),
     ("remaining-p0-four-firered-safari-indigo-20261030.json", list(range(162, 166)), 144, 173, 165),
+    ("remaining-p0-four-firered-indigo-lavender-20261030.json", list(range(166, 170)), 148, 177, 161),
+    ("remaining-p0-four-firered-mtember-mtmoon-20261030.json", list(range(170, 174)), 152, 181, 157),
 )
 MAPPED = {158, 161, 164, 165}
 
@@ -132,9 +134,9 @@ def main():
                 reject(raw, mapraw, bad, p, n); negatives += 1
                 reject(raw, mapraw + b" ", rec, p, n); negatives += 1
             print("P0_FUCHSIA_SOURCE_OK", n, s["path"], s["git_blob_sha1"])
-    assert seen == list(range(158, 166))
-    assert negatives == 8 * 18 + 4 * 4, negatives
-    print(f"P0_FUCHSIA_INDIGO_PASS files=8 map_wiring=4 negatives={negatives} other_p0_partial=144 curated=29 total_partial=173 approved_p0=0/338 approved_total=0/14834 gate=FAIL_INCOMPLETE")
+    assert seen == list(range(158, 174))
+    assert negatives == 16 * 18 + 4 * 4, negatives
+    print(f"P0_FUCHSIA_INDIGO_PASS files=16 map_wiring=4 negatives={negatives} other_p0_partial=152 curated=29 total_partial=181 approved_p0=0/338 approved_total=0/14834 gate=FAIL_INCOMPLETE")
 
 if __name__ == "__main__":
     main()
