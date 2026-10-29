@@ -21,7 +21,7 @@ SCOPES={
 105:"QT_DESIGNER_OVERRIDE_UI_DECLARATION_NOT_RUNTIME_SAVE",
 }
 def git_blob(raw):
- return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\\0"+raw).hexdigest()
+ return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\x00"+raw).hexdigest()
 def read(url):
  with urllib.request.urlopen(urllib.request.Request(url,headers={"User-Agent":"xgba-phase1-source-analyst"}),timeout=45) as r:return r.read()
 def check(raw,r,p):
