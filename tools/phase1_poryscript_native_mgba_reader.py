@@ -37,11 +37,12 @@ def check(log):
             need(result==(table+29 if tag==3 else table+11 if tag==2 else 0),
                  "original reader pointer result")
         else:
-            need(result==0,"malformed unmatched tag pointer changed")
             if bad==1:
+                # CPU r0 is not a return value when the instruction budget expires.
                 need(ret==0 and steps==500,"unterminated table must exhaust test budget")
             else:
-                need(ret==1 and steps<500,"synthetic sentinel beyond table not reached")
+                need(ret==1 and steps<500 and result==0,
+                     "synthetic sentinel beyond table not reached")
         parsed.append({"tag":tag,"malformed_case":bad,"returned":bool(ret),"steps":steps,"result":result,"table":table})
     need(parsed[4]["steps"]<parsed[5]["steps"]<parsed[3]["steps"],
          "synthetic sentinel traversal ordering")
