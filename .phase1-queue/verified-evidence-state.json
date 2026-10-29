@@ -297,9 +297,19 @@
     {
       "attempts": 1,
       "error": null,
-      "receipt": null,
+      "receipt": {
+        "evidence_class": "REVERIFIED_CANDIDATE_DOSSIERS_ONLY",
+        "first_file": 8501,
+        "independent_semantic_approvals": 0,
+        "input_fingerprint": "8e88f2a94bf332d057952ba7de3be4c98f99717e5d325d3d45e89304e7431e60",
+        "last_file": 9000,
+        "packet_sha256": "630567e97214d3862d41f3fefe59bba1bb1341469c7ddbe37ddd072c90a53c62",
+        "phase1_approved": false,
+        "unit": 18,
+        "verified_files": 500
+      },
       "run_id": "40802644088",
-      "status": "RUNNING"
+      "status": "VERIFIED"
     },
     {
       "attempts": 0,
