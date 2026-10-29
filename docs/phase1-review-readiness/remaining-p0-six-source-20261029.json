@@ -1,0 +1,346 @@
+{
+  "schema": "xgba.phase1.remaining_p0_partial_analyst_batch.v1",
+  "date": "2026-10-29",
+  "source_packet": "docs/phase1-review-readiness/packet-0000-0099.json",
+  "source_packet_blob_sha1": "a48c12900acc7e0211a8071119763e2b5de4b1a4",
+  "partial_source_inspected": 6,
+  "curated_29_source_inspected": 29,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "machine_dossier_sha256_note": "Unverified machine-triage digest copied from exact packet. Not an independently validated machine dossier, no whole-file disposition.",
+  "records": [
+    {
+      "packet_index": 1,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/gba/gba.h",
+        "git_blob_sha1": "65e994dc63a304cc9fb207536f09bb2c8a6cf3e5",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/gba/gba.h"
+      },
+      "machine_dossier_sha256_unverified": "d6e61894ce31db089d3fd04e64e0938d1e689fb6c7498a8056fced405bf2bba0",
+      "source_anchors": [
+        "struct ARMCore;",
+        "struct GBA {",
+        "struct GBAMemory memory;",
+        "void GBAReset(struct ARMCore* cpu);",
+        "bool GBALoadROM(struct GBA* gba, struct VFile* vf);"
+      ],
+      "line_anchors": [
+        {
+          "line": 53,
+          "text": "struct ARMCore;"
+        },
+        {
+          "line": 65,
+          "text": "struct GBA {"
+        },
+        {
+          "line": 69,
+          "text": "struct GBAMemory memory;"
+        },
+        {
+          "line": 148,
+          "text": "void GBAReset(struct ARMCore* cpu);"
+        },
+        {
+          "line": 175,
+          "text": "bool GBALoadROM(struct GBA* gba, struct VFile* vf);"
+        }
+      ],
+      "responsibilities": "Defines GBA core state and ROM/reset entrypoints, embedding GBAMemory; direct ARM stepping relies on this state layout and GBA reset.",
+      "dependency_edges": [
+        "src/gba/gba.c",
+        "include/mgba/internal/gba/memory.h",
+        "include/mgba/internal/arm/arm.h"
+      ],
+      "unresolved": [
+        "No whole-header ABI/layout verification",
+        "No native large-ROM behavior derived from declarations"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 2,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "include/project.h",
+        "git_blob_sha1": "50d3307cf618f4cd5e9603bdbe3e0ea8d9b5e354",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/include/project.h"
+      },
+      "machine_dossier_sha256_unverified": "0a5103fa34ee62748f39cbcbd0d50c3bb9ccabc824cf9813ca53bd5118cc69eb",
+      "source_anchors": [
+        "#include <QFileSystemWatcher>",
+        "class Project : public QObject",
+        "Map *createNewMap(const Project::NewMapSettings &mapSettings, const Map* toDuplicate = nullptr);",
+        "bool saveMap(Map *map, bool skipLayout = false);",
+        "bool watchFile(const QString &filename);",
+        "bool saveMapGroups();"
+      ],
+      "line_anchors": [
+        {
+          "line": 18,
+          "text": "#include <QFileSystemWatcher>"
+        },
+        {
+          "line": 20,
+          "text": "class Project : public QObject"
+        },
+        {
+          "line": 140,
+          "text": "Map *createNewMap(const Project::NewMapSettings &mapSettings, const Map* toDuplicate = nullptr);"
+        },
+        {
+          "line": 180,
+          "text": "bool saveMap(Map *map, bool skipLayout = false);"
+        },
+        {
+          "line": 237,
+          "text": "bool watchFile(const QString &filename);"
+        },
+        {
+          "line": 356,
+          "text": "bool saveMapGroups();"
+        }
+      ],
+      "responsibilities": "Original Project QObject declares map creation/save, file watcher registration and map group persistence, linking GUI new-map action to disk and watcher lifecycle.",
+      "dependency_edges": [
+        "src/core/project.cpp",
+        "include/editor.h",
+        "src/ui/mainwindow.cpp",
+        "QFileSystemWatcher"
+      ],
+      "unresolved": [
+        "No whole-header signal/slot semantic verification",
+        "No concurrent modal-warning/reload runtime proof"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "packet_index": 6,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "include/editor.h",
+        "git_blob_sha1": "3842743d5a671633a494ce1a364a1f0677e6bb94",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/include/editor.h"
+      },
+      "machine_dossier_sha256_unverified": "e188d4edbbbf1142096af44f8a4b0bcf60aae08760853d7a2370a25e09087e9e",
+      "source_anchors": [
+        "class Editor : public QObject",
+        "QPointer<Project> project = nullptr;",
+        "bool saveAll();",
+        "bool setMap(QString map_name);"
+      ],
+      "line_anchors": [
+        {
+          "line": 36,
+          "text": "class Editor : public QObject"
+        },
+        {
+          "line": 50,
+          "text": "QPointer<Project> project = nullptr;"
+        },
+        {
+          "line": 60,
+          "text": "bool saveAll();"
+        },
+        {
+          "line": 66,
+          "text": "bool setMap(QString map_name);"
+        }
+      ],
+      "responsibilities": "Original Editor QObject holds guarded Project pointer and declares saveAll and map selection; actual GUI QAction routing and rollback require implementation-level evidence.",
+      "dependency_edges": [
+        "include/project.h",
+        "src/core/editor.cpp",
+        "src/ui/mainwindow.cpp"
+      ],
+      "unresolved": [
+        "No full 290-line editor header disposition",
+        "No populated multi-map or concurrent reload execution"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "packet_index": 10,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/arm/arm.h",
+        "git_blob_sha1": "5ef2da96519ac3f429b65fd6d323be0775f3b3cf",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/arm/arm.h"
+      },
+      "machine_dossier_sha256_unverified": "aca7d604d669aced639ef33deb3a23ca309747d961c83972ec9baf8805ebd1b1",
+      "source_anchors": [
+        "int32_t bankedRegisters[6][7];",
+        "uint32_t prefetch[2];",
+        "enum ExecutionMode executionMode;",
+        "void ARMReset(struct ARMCore* cpu);",
+        "void ARMRun(struct ARMCore* cpu);"
+      ],
+      "line_anchors": [
+        {
+          "line": 178,
+          "text": "int32_t bankedRegisters[6][7];"
+        },
+        {
+          "line": 184,
+          "text": "uint32_t prefetch[2];"
+        },
+        {
+          "line": 185,
+          "text": "enum ExecutionMode executionMode;"
+        },
+        {
+          "line": 205,
+          "text": "void ARMReset(struct ARMCore* cpu);"
+        },
+        {
+          "line": 211,
+          "text": "void ARMRun(struct ARMCore* cpu);"
+        }
+      ],
+      "responsibilities": "Defines original ARM core banked registers, dual prefetch, execution mode and reset/run ABI; needed to reason about remapping and savestate restore.",
+      "dependency_edges": [
+        "src/arm/arm.c",
+        "src/gba/gba.c",
+        "src/gba/serialize.c"
+      ],
+      "unresolved": [
+        "No complete register-bank ABI audit",
+        "No stale-prefetch native counterexample"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 14,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/gba/memory.h",
+        "git_blob_sha1": "0aad912613e726560d06bbdbf6061986e69e5842",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/gba/memory.h"
+      },
+      "machine_dossier_sha256_unverified": "6d4aad1e87edf5e5e07bc6af2af6f36c396f1a5530518ca575a765e3640dea8",
+      "source_anchors": [
+        "struct GBAMemory {",
+        "size_t romSize;",
+        "uint32_t romMask;",
+        "int activeRegion;",
+        "void GBAMemoryReset(struct GBA* gba);",
+        "void GBAMemorySerialize(const struct GBAMemory* memory, struct GBASerializedState* state);"
+      ],
+      "line_anchors": [
+        {
+          "line": 102,
+          "text": "struct GBAMemory {"
+        },
+        {
+          "line": 114,
+          "text": "size_t romSize;"
+        },
+        {
+          "line": 115,
+          "text": "uint32_t romMask;"
+        },
+        {
+          "line": 123,
+          "text": "int activeRegion;"
+        },
+        {
+          "line": 146,
+          "text": "void GBAMemoryReset(struct GBA* gba);"
+        },
+        {
+          "line": 176,
+          "text": "void GBAMemorySerialize(const struct GBAMemory* memory, struct GBASerializedState* state);"
+        }
+      ],
+      "responsibilities": "Declares ROM size/mask and active memory region fields and reset/serialization interfaces; direct ROM aperture and mapper behavior must be traced in implementations.",
+      "dependency_edges": [
+        "src/gba/memory.c",
+        "src/gba/cart/matrix.c",
+        "src/gba/gba.c"
+      ],
+      "unresolved": [
+        "No native oversized-ROM remap test",
+        "No independent whole-file memory interface disposition"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 16,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/gba/dma.h",
+        "git_blob_sha1": "23fdbb60ad4d3f8b590598b3af78bbc9b5a0260b",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/gba/dma.h"
+      },
+      "machine_dossier_sha256_unverified": "e474028261ba316711cbe44f7f8f6ed0d1651607cd605b79ad80c91cd7dbdd2a",
+      "source_anchors": [
+        "DECL_BITFIELD(GBADMARegister, uint16_t);",
+        "struct GBADMA {",
+        "void GBADMAUpdate(struct GBA* gba);"
+      ],
+      "line_anchors": [
+        {
+          "line": 29,
+          "text": "DECL_BITFIELD(GBADMARegister, uint16_t);"
+        },
+        {
+          "line": 41,
+          "text": "struct GBADMA {"
+        },
+        {
+          "line": 70,
+          "text": "void GBADMAUpdate(struct GBA* gba);"
+        }
+      ],
+      "responsibilities": "Defines DMA channel register/control state and update entrypoint; EEPROM special path is implemented in src/gba/dma.c, not proven by header declarations.",
+      "dependency_edges": [
+        "src/gba/dma.c",
+        "src/gba/savedata.c",
+        "include/mgba/internal/gba/memory.h"
+      ],
+      "unresolved": [
+        "No DMA3 EEPROM native timing verification",
+        "No whole-header bitfield ABI audit"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    }
+  ]
+}
