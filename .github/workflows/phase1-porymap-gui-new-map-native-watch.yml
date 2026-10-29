@@ -1,0 +1,80 @@
+name: Phase 1 original Porymap MainWindow new-map QAction and watcher
+on:
+  push:
+    branches: [phase1/porymap-full-qt-project-roundtrip-20261028]
+    paths:
+      - 'tests/porymap_qt_gui_new_map_watch.cpp'
+      - 'tools/phase1_porymap_gui_new_map_watch.py'
+      - 'docs/phase1-review-readiness/porymap-gui-new-map-native-watch-20261029.md'
+      - '.github/workflows/phase1-porymap-gui-new-map-native-watch.yml'
+  pull_request:
+    paths:
+      - 'tests/porymap_qt_gui_new_map_watch.cpp'
+      - 'tools/phase1_porymap_gui_new_map_watch.py'
+      - 'docs/phase1-review-readiness/porymap-gui-new-map-native-watch-20261029.md'
+      - '.github/workflows/phase1-porymap-gui-new-map-native-watch.yml'
+permissions:
+  contents: read
+jobs:
+  original-mainwindow-new-map:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/porymap
+          ref: 26b919d7ff4b54152de010abd5bf344af2ebe116
+          path: upstream-porymap
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - name: Install original Qt build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-base-dev-tools qmake6 libqt6svg6-dev libgl1-mesa-dev pkg-config g++
+      - name: Build unchanged pinned full Porymap with test-only GUI entrypoint
+        run: |
+          set -euo pipefail
+          git -C upstream-porymap hash-object src/mainwindow.cpp | grep -Fx 08ce1a7a599ef825967717b69626984cdc6d772b
+          git -C upstream-porymap hash-object src/project.cpp | grep -Fx d43b0949303433111d4478ad76117c2b3445dd13
+          git -C upstream-porymap hash-object src/ui/newmapdialog.cpp | grep -Fx c8a028025bf1a9aabb8fd96cccf3d0a76214bb0e
+          mkdir -p upstream-porymap/tests
+          cp tests/porymap_qt_gui_new_map_watch.cpp upstream-porymap/tests/
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("upstream-porymap/porymap.pro")
+          s=p.read_text()
+          assert s.count("src/main.cpp")==1
+          s=s.replace("src/main.cpp","tests/porymap_qt_gui_new_map_watch.cpp")
+          s += "\nTARGET = porymap-phase1-gui-new-map\n"
+          Path("upstream-porymap/porymap-phase1-gui-new-map.pro").write_text(s)
+          PY
+          (cd upstream-porymap && qmake6 porymap-phase1-gui-new-map.pro -o Makefile.phase1gui && make -f Makefile.phase1gui -j4) > phase1-gui-new-map-build.log 2>&1 || { tail -100 phase1-gui-new-map-build.log; exit 1; }
+      - name: Execute actual MainWindow QAction, original dialog, save and watcher registration
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import shutil
+          from pathlib import Path
+          dest=Path("phase1-project/pokefirered")
+          dest.parent.mkdir(parents=True,exist_ok=True)
+          shutil.copytree("upstream-firered",dest,ignore=shutil.ignore_patterns(".git"))
+          assert (dest/"data/maps/PalletTown/map.json").is_file()
+          PY
+          mkdir -p phase1-evidence
+          QT_QPA_PLATFORM=offscreen timeout 180s upstream-porymap/porymap-phase1-gui-new-map "$PWD/phase1-project/pokefirered" > phase1-evidence/gui-new-map.log 2>&1 || { tail -100 phase1-evidence/gui-new-map.log; exit 1; }
+          python3 tools/phase1_porymap_gui_new_map_watch.py --porymap upstream-porymap --firered upstream-firered --log phase1-evidence/gui-new-map.log --output phase1-evidence/gui-new-map.json
+      - name: Preserve text evidence and build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-porymap-gui-new-map-watch
+          path: |
+            phase1-evidence/
+            phase1-gui-new-map-build.log
+          if-no-files-found: warn
