@@ -244,7 +244,7 @@
         "git_blob_sha1": "0aad912613e726560d06bbdbf6061986e69e5842",
         "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/gba/memory.h"
       },
-      "machine_dossier_sha256_unverified": "6d4aad1e87edf5e5e07bc6af2af6f36c396f1a5530518ca575a765e3640dea8",
+      "machine_dossier_sha256_unverified": "6d4aad1e87edf5e5e07bc6af2af6f36c396f1a5530518ca575a765e3640dea8e",
       "source_anchors": [
         "struct GBAMemory {",
         "size_t romSize;",
