@@ -14,6 +14,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
+#include <string.h>
 
 enum { DATA_SIZE = 4092, MAX_STEPS = 12000000, INPUT = 0x02010000,
        OUTPUT = 0x02012000, BANK1_30 = 0x1E000, BANK1_31 = 0x1F000 };
@@ -85,8 +87,62 @@ static void check_readback(struct mCore *core, unsigned sector) {
         need(core->busRead8(core, OUTPUT + i) == pattern(sector, i),
              "original_arm_readback_payload");
 }
+
+/* Test-only disk snapshots via ORIGINAL mGBA VFile and savedata APIs. */
+static void save_to_file(struct mCore *core, const char *path) {
+    struct VFile *vf = VFileOpen(path, O_CREAT | O_TRUNC | O_RDWR);
+    need(vf != NULL, "sav_open");
+    need(GBASavedataClone(&((struct GBA *)core->board)->memory.savedata, vf),
+         "original_mgba_savedata_clone");
+    need(vf->size(vf) == 0x20000 && vf->close(vf), "sav_size_close");
+}
+static void reopen_and_read(const uint8_t *rom, size_t size, const char *path,
+                            bool partial, uint32_t initintr, uint32_t checkflash,
+                            uint32_t read, uint32_t present, uint32_t gflash) {
+    struct mCore *fresh = GBACoreCreate();
+    need(fresh && fresh->init(fresh), "fresh_core_init");
+    mCoreInitConfig(fresh, NULL);
+    struct VFile *rvf = VFileFromConstMemory(rom, size);
+    need(rvf && fresh->loadROM(fresh, rvf), "fresh_rom");
+    fresh->reset(fresh);
+    struct VFile *svf = VFileOpen(path, O_RDWR);
+    need(svf && fresh->loadSave(fresh, svf), "original_mgba_load_save");
+    struct GBASavedata *save = &((struct GBA *)fresh->board)->memory.savedata;
+    GBASavedataForceType(save, GBA_SAVEDATA_FLASH1M);
+    need(save->data && sector_matches(save->data, BANK1_30, 30),
+         "fresh_sector30_physical");
+    if (partial) {
+        for (unsigned i = 0; i < 4096; ++i)
+            need(save->data[BANK1_31 + i] == 0xff, "fresh_sector31_erased");
+    } else {
+        need(sector_matches(save->data, BANK1_31, 31), "fresh_sector31_physical");
+    }
+    original_entry(fresh, initintr, 0, 0, "FreshInitIntrHandlers");
+    original_entry(fresh, checkflash, 0, 0, "FreshCheckForFlashMemory");
+    need(fresh->busRead32(fresh, present) == 1 &&
+         fresh->busRead32(fresh, gflash) != 0, "fresh_original_flash_init");
+    for (unsigned sector = 30; sector <= 31; ++sector) {
+        for (unsigned i = 0; i < DATA_SIZE; ++i)
+            fresh->busWrite8(fresh, OUTPUT + i, 0xcc);
+        uint32_t status = original_entry(fresh, read, sector, OUTPUT,
+                        sector == 30 ? "FreshReadSector30" : "FreshReadSector31");
+        need(status == (sector == 31 && partial ? 0xffU : 1U),
+             "fresh_original_arm_status");
+        if (sector == 31 && partial) {
+            for (unsigned i = 0; i < DATA_SIZE; ++i)
+                need(fresh->busRead8(fresh, OUTPUT + i) == 0xcc,
+                     "invalid_sentinel_output_unchanged");
+        } else {
+            check_readback(fresh, sector);
+        }
+    }
+    printf("PERSIST fresh_%s_sector30=1 sector31=%u\n",
+           partial ? "partial" : "complete", partial ? 255 : 1);
+    mCoreConfigDeinit(&fresh->config);
+    fresh->deinit(fresh);
+}
 int main(int argc, char **argv) {
-    need(argc == 8, "usage_rom_initintr_checkflash_write_read_flashpresent_gflash");
+    need(argc == 8 || argc == 9, "usage_optional_sav_path");
     size_t rom_size = 0;
     uint8_t *rom = load_rom(argv[1], &rom_size);
     uint32_t initintr = arg_address(argv[2]);
@@ -132,6 +188,14 @@ int main(int argc, char **argv) {
             need(save->data[BANK1_31] == 0xff, "sector31_not_yet_written");
         puts(sector == 30 ? "PASS original_arm_sector30_write" :
                             "PASS original_arm_sector31_write");
+        if (argc == 9 && sector == 30) {
+            char *path = malloc(strlen(argv[8]) + 9);
+            need(path != NULL, "partial_path_alloc");
+            sprintf(path, "%s.partial", argv[8]);
+            save_to_file(core, path);
+            puts("PERSIST partial_sav_bytes=131072");
+            free(path);
+        }
     }
     for (unsigned sector = 30; sector <= 31; ++sector) {
         for (unsigned i = 0; i < DATA_SIZE; ++i)
@@ -148,6 +212,19 @@ int main(int argc, char **argv) {
     need(rejected == 0xff && save->data[0x1d000] == before,
          "original_arm_invalid_sector_rejected");
     puts("PASS invalid_sector_no_flash_mutation");
+    if (argc == 9) {
+        save_to_file(core, argv[8]);
+        puts("PERSIST complete_sav_bytes=131072");
+        char *path = malloc(strlen(argv[8]) + 9);
+        need(path != NULL, "partial_path_alloc");
+        sprintf(path, "%s.partial", argv[8]);
+        reopen_and_read(rom, rom_size, path, true, initintr, checkflash,
+                        read, present, gflash);
+        reopen_and_read(rom, rom_size, argv[8], false, initintr, checkflash,
+                        read, present, gflash);
+        free(path);
+        puts("PERSIST_SCOPE original_mgba_clone=true fresh_core=true original_arm_reader=true synthetic_snapshot=true automatic_writeback=false power_loss=false physical_hardware=false stock_gameplay=false phase1_gate=FAIL_INCOMPLETE approvals=0");
+    }
     puts("SUMMARY native_mgba=true original_agbcc_arm=true original_flash_init=true host_flash_commands=false synthetic_direct_entry=true stock_gameplay=false physical_hardware=false persistent_sav=false phase1_gate=FAIL_INCOMPLETE approvals=0");
     mCoreConfigDeinit(&core->config);
     core->deinit(core); free(rom);
