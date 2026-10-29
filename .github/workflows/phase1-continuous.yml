@@ -1,0 +1,71 @@
+name: Phase 1 resumable pinned evidence queue
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
+  push:
+    paths:
+      - 'tools/phase1_continuous.py'
+      - 'tests/test_phase1_continuous.py'
+      - '.github/workflows/phase1-continuous.yml'
+
+permissions:
+  actions: write
+  contents: write
+
+concurrency:
+  group: xgba-phase1-continuous-queue
+  cancel-in-progress: false
+
+jobs:
+  regression:
+    name: Verify queue failure and recovery invariants
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run fail-closed unit tests
+        run: |
+          python3 -m py_compile tools/phase1_continuous.py tests/test_phase1_continuous.py
+          python3 -m unittest discover -s tests -p test_phase1_continuous.py -v
+
+  evidence-queue:
+    name: Resume next incomplete source-evidence checkpoint
+    if: github.ref == 'refs/heads/main'
+    needs: regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reuse successful main-branch pinned source census artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_id=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow phase1-census.yml \
+            --branch main --limit 100 --json databaseId,conclusion \
+            --jq '[.[] | select(.conclusion == "success")][0].databaseId')
+          if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
+            echo "No successful source-census artifact on main; refusing to advance" >&2
+            exit 2
+          fi
+          mkdir -p audit-output
+          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" \
+            --name xgba-phase1-evidence-and-review-queue --dir audit-output
+          test -s audit-output/audit_summary.json
+          test -s audit-output/second_pass_summary.json
+          test -s audit-output/candidate_review_dossiers.jsonl.gz
+          test -s audit-output/semantic_review_queue.csv.gz
+          test -s audit-output/tracked_file_manifest.csv.gz
+      - name: Resume verified source evidence queue, never semantic signoff
+        run: python3 tools/phase1_continuous.py --audit audit-output --max-units 5 --output queue-output
+      - name: Preserve evidence checkpoint dashboard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-phase1-evidence-queue-report
+          path: queue-output/
+          retention-days: 30
+          if-no-files-found: warn
