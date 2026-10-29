@@ -10,24 +10,28 @@
     "docs/phase1-review-readiness/remaining-p0-four-python-qt-20261030.json",
     "docs/phase1-review-readiness/remaining-p0-four-firered-map-scripts-20261030.json",
     "docs/phase1-review-readiness/remaining-p0-eight-firered-centers-caves-20261030.json",
-    "docs/phase1-review-readiness/remaining-p0-eight-firered-sevii-20261030.json"
+    "docs/phase1-review-readiness/remaining-p0-eight-firered-sevii-20261030.json",
+    "docs/phase1-review-readiness/remaining-p0-four-firered-fiveisland-20261030.json",
+    "docs/phase1-review-readiness/remaining-p0-four-firered-fourisland-20261030.json"
   ],
   "batch_sizes": [
     4,
     4,
     4,
     8,
-    8
+    8,
+    4,
+    4
   ],
-  "second_packet_partial_source_inspected": 28,
+  "second_packet_partial_source_inspected": 36,
   "first_packet_partial_source_inspected": 100,
-  "remaining_p0_partial_source_inspected": 128,
-  "remaining_p0_without_partial_source_inspection": 181,
+  "remaining_p0_partial_source_inspected": 136,
+  "remaining_p0_without_partial_source_inspection": 173,
   "curated_p0_partial_source_inspected": 29,
-  "total_p0_partial_source_inspected": 157,
+  "total_p0_partial_source_inspected": 165,
   "independent_p0_approved": 0,
   "independent_total_approved": 0,
   "whole_file_semantic_approved": 0,
   "phase1_gate": "FAIL_INCOMPLETE",
-  "scope_note": "28 disjoint second packet source-only partial analyst records (indices 100-107 and 130-149), original 200 machine dossiers rehashed by separate exact-head verifier; no independent full-file semantics or license clearance."
+  "scope_note": "36 disjoint second packet source-only partial analyst records (indices 100-107 and 130-157); original 200 machine dossiers rehashed by separate exact-head verifier; no independent full-file semantics, license clearance, compiled/native gameplay or physical Flash."
 }
