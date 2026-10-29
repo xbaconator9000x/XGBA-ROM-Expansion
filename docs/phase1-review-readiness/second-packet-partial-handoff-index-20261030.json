@@ -19,7 +19,8 @@
     "docs/phase1-review-readiness/remaining-p0-four-firered-mtember-mtmoon-20261030.json",
     "docs/phase1-review-readiness/remaining-p0-eight-firered-navel-oneisland-20261030.json",
     "docs/phase1-review-readiness/remaining-p0-eight-firered-pallet-pewter-agatha-20261030.json",
-    "docs/phase1-review-readiness/remaining-p0-ten-firered-league-mansion-20261030.json"
+    "docs/phase1-review-readiness/remaining-p0-ten-firered-league-mansion-20261030.json",
+    "docs/phase1-review-readiness/remaining-p0-five-qt-wii-20261030.json"
   ],
   "batch_sizes": [
     4,
@@ -35,17 +36,18 @@
     4,
     8,
     8,
-    10
+    10,
+    5
   ],
-  "second_packet_partial_source_inspected": 78,
+  "second_packet_partial_source_inspected": 83,
   "first_packet_partial_source_inspected": 100,
-  "remaining_p0_partial_source_inspected": 178,
-  "remaining_p0_without_partial_source_inspection": 131,
+  "remaining_p0_partial_source_inspected": 183,
+  "remaining_p0_without_partial_source_inspection": 126,
   "curated_p0_partial_source_inspected": 29,
-  "total_p0_partial_source_inspected": 207,
+  "total_p0_partial_source_inspected": 212,
   "independent_p0_approved": 0,
   "independent_total_approved": 0,
   "whole_file_semantic_approved": 0,
   "phase1_gate": "FAIL_INCOMPLETE",
-  "scope_note": "78 disjoint second packet source-only partial analyst records (indices 100-107 and 130-199); 200 original machine dossiers separately rehashed; no whole-file independent review, licensing clearance, compiled/native gameplay or physical Flash."
+  "scope_note": "83 disjoint second-packet source-only partial analyst records (100-111, 128, 130-199); 200 original machine dossiers separately rehashed. Four 7k-line Qt TS XML catalogs and Wii frontend have partial source-only scope; Qt translation build/loader edges are static, not compiled. No whole-file independent review, licensing clearance, native/gameplay or physical Flash."
 }

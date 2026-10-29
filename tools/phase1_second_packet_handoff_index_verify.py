@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 BASE=ROOT/"docs/phase1-review-readiness"
 INDEX=BASE/"second-packet-partial-handoff-index-20261030.json"
-EXPECTED=list(range(100,108))+list(range(130,200))
+EXPECTED=list(range(100,112))+[128]+list(range(130,200))
 def blob(raw):return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
 def validate(r,p):
  s=r["source"];i=p["identity"]
@@ -17,7 +17,7 @@ def validate(r,p):
  assert r["whole_file_semantic_coverage"] is False and r["independent_reviewer"] is None and r["independent_verdict"]=="NEEDS_REVIEW"
  assert r["license_status"].startswith("PENDING_")
  assert len(r["line_anchors"])>=4 and r["dependency_edges"] and r["unresolved"] and r.get("responsibilities",r.get("source_observations"))
- assert r["evidence_class"] in ("PINNED_SOURCE_ONLY","PINNED_AUTHORED_SOURCE_ONLY")
+ assert r["evidence_class"] in ("PINNED_SOURCE_ONLY","PINNED_AUTHORED_SOURCE_ONLY","PINNED_TRANSLATION_ASSET_SOURCE_ONLY","PINNED_WII_FRONTEND_SOURCE_ONLY")
 def reject(r,p):
  try:validate(r,p)
  except (AssertionError,KeyError,TypeError):return
@@ -32,9 +32,9 @@ def main():
  assert receipt["packet_git_blobs"][idx["packet"]]==idx["packet_blob_sha1"]
  first=json.loads((ROOT/idx["first_packet_index"]).read_bytes())
  assert first["remaining_p0_partial_source_inspected"]==100 and first["independent_p0_approved"]==0
- assert idx["batch_sizes"]==[4,4,4,8,8,4,4,4,4,4,4,8,8,10] and len(idx["batches"])==14
- assert idx["second_packet_partial_source_inspected"]==78 and idx["remaining_p0_partial_source_inspected"]==178
- assert idx["remaining_p0_without_partial_source_inspection"]==131 and idx["curated_p0_partial_source_inspected"]==29 and idx["total_p0_partial_source_inspected"]==207
+ assert idx["batch_sizes"]==[4,4,4,8,8,4,4,4,4,4,4,8,8,10,5] and len(idx["batches"])==15
+ assert idx["second_packet_partial_source_inspected"]==83 and idx["remaining_p0_partial_source_inspected"]==183
+ assert idx["remaining_p0_without_partial_source_inspection"]==126 and idx["curated_p0_partial_source_inspected"]==29 and idx["total_p0_partial_source_inspected"]==212
  assert idx["phase1_gate"]=="FAIL_INCOMPLETE" and idx["independent_p0_approved"]==idx["independent_total_approved"]==idx["whole_file_semantic_approved"]==0
  seen=set();negatives=0
  for path,count in zip(idx["batches"],idx["batch_sizes"]):
@@ -51,6 +51,6 @@ def main():
     bad=copy.deepcopy(r);bad["source"][field]=value;reject(bad,p);negatives+=1
    field="machine_dossier_sha256_verified_in_original_bytes" if "machine_dossier_sha256_verified_in_original_bytes" in r else "machine_dossier_sha256_unverified"
    bad=copy.deepcopy(r);bad[field]="0"*64;reject(bad,p);negatives+=1
- assert sorted(seen)==EXPECTED and negatives==780,(sorted(seen),negatives)
- print("P0_SECOND_PACKET_INDEX_PASS second_partial=78 first_partial=100 other_p0_partial=178 curated=29 total_partial=207 negatives=780 approved_p0=0/338 approved_total=0/14834 gate=FAIL_INCOMPLETE")
+ assert sorted(seen)==EXPECTED and negatives==830,(sorted(seen),negatives)
+ print("P0_SECOND_PACKET_INDEX_PASS second_partial=83 first_partial=100 other_p0_partial=183 curated=29 total_partial=212 negatives=830 approved_p0=0/338 approved_total=0/14834 gate=FAIL_INCOMPLETE")
 if __name__=="__main__":main()
