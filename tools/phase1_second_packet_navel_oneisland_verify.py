@@ -27,7 +27,7 @@ def validate(raw,r,p,n):
  assert r["map_json_static_wiring"] is None and r["source_observations"] and len(r["dependency_edges"])>=4
  assert len(r["unresolved"])>=3 and len(r["reviewer_questions"])==5
  lines=raw.decode("utf-8").splitlines()
- assert len(r["line_anchors"])>=4 and b"MapScripts::" in raw and b"\\t.byte 0" in raw
+ assert len(r["line_anchors"])>=4 and b"MapScripts::" in raw and b"\t.byte 0" in raw
  assert len(set(a["line"] for a in r["line_anchors"]))==len(r["line_anchors"])
  for a in r["line_anchors"]:assert 0<a["line"]<=len(lines) and lines[a["line"]-1]==a["text"]
  assert len(r["required_source_tokens"])>=4
