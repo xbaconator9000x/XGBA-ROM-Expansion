@@ -96,7 +96,7 @@ static void run_case(const uint8_t *original,size_t originalSize,
         uint32_t want=tag==3 ? tableAddress+29 : tag==2 ? tableAddress+11 : 0;
         need(result==want,"valid_reader_pointer");
     } else if (malformed==1) {
-        need(!returned && steps==MAX_STEPS-1,
+        need(!returned && steps==MAX_STEPS,
              "missing_sentinel_did_not_exhaust_bounded_budget");
     } else {
         need(returned && result==0,
