@@ -58,7 +58,11 @@ static uint32_t original_entry(struct mCore *core, uint32_t address,
         uint32_t pc = (uint32_t)cpu->gprs[ARM_PC];
         if (pc >= 0x03000000U && pc <= 0x03000008U) break;
     }
-    need(i < MAX_STEPS, "bounded_original_arm_return");
+    if (i >= MAX_STEPS) {
+        fprintf(stderr, "FAIL bounded_original_arm_return label=%s pc=0x%08x r0=0x%08x steps=%u\n",
+                label, (uint32_t)cpu->gprs[ARM_PC], (uint32_t)cpu->gprs[0], i);
+        exit(3);
+    }
     printf("ARM %s steps=%u result=0x%08x\n", label, i + 1, (uint32_t)cpu->gprs[0]);
     return (uint32_t)cpu->gprs[0];
 }

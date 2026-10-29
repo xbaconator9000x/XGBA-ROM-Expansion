@@ -102,7 +102,7 @@ def main():
     proc = subprocess.run(cmd, capture_output=True, text=True, timeout=900)
     a.log.parent.mkdir(parents=True, exist_ok=True)
     a.log.write_text(proc.stdout + proc.stderr)
-    need(proc.returncode == 0, "native execution failed: " + proc.stderr[-1200:])
+    need(proc.returncode == 0, "native execution failed: stdout=" + proc.stdout[-1200:] + " stderr=" + proc.stderr[-1200:])
     calls, checks = verify(proc.stdout)
     rejected = negatives(proc.stdout)
     out = {"evidence_class": "EXPERIMENTAL_ORIGINAL_AGBCC_ARM_MGBA_SPECIAL_SECTORS",
