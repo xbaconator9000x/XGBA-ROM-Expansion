@@ -1,0 +1,795 @@
+{
+  "schema": "xgba.phase1.curated_p0_independent_review_intake.v1",
+  "created_date": "2026-10-29",
+  "source_registry": "semantic-snapshots/curated/p0_semantic_review_candidates_2026-10-26.json",
+  "source_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+  "record_count": 29,
+  "partial_source_inspected_count": 5,
+  "registry_only_count": 24,
+  "independent_approved_count": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "note": "Analyst-prepared intake only. All 29 exact pinned Git blobs were rechecked via GitHub Contents; 5 have scoped source observations and 24 remain without source semantic inspection. No whole-file semantic disposition, machine dossier review, independent reviewer or approval is implied.",
+  "records": [
+    {
+      "ordinal": 1,
+      "identity": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "include/global.fieldmap.h",
+        "git_blob_sha1": "e2828ec0cb1439718e830fbef4366770b3b77b1c"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "native_map_cell_bitfield_abi",
+        "map_event_and_script_pointer_structures"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 2,
+      "identity": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "include/fieldmap.h",
+        "git_blob_sha1": "639e329a9a0f721abd7e40001228859cb9466005"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "native_backup_map_capacity",
+        "map_border_offsets"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 3,
+      "identity": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "src/fieldmap.c",
+        "git_blob_sha1": "41567772299000ba5855419e5c39ad9373a34c20"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "map_grid_materialization",
+        "collision_elevation_runtime_mutations",
+        "layer_metatile_attribute_lookup",
+        "save_map_view_ubfix"
+      ],
+      "analyst_preparation": "PARTIAL_PINNED_SOURCE_INSPECTION",
+      "partial_source_claim": {
+        "summary": "Grid accessors separate elevation, collision and metatile-ID bits; undefined blocks have special border/impassability behavior; bounded mutation preserves elevation for metatile-ID writes, while full-entry write replaces the word.",
+        "source_lines": {
+          "start": 347,
+          "end": 429
+        },
+        "source_url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/fieldmap.c#L347-L429",
+        "dependency_edges": [
+          "GetMapGridBlockAt",
+          "GetBorderBlockAt",
+          "AreCoordsWithinMapGridBounds",
+          "VMap",
+          "gMapHeader.mapLayout"
+        ],
+        "unresolved": [
+          "Full 952-line file disposition, map transition state, border aliasing and save-map-view behavior"
+        ]
+      },
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Inspect entire pinned file and dependency edges independently; verify exact machine dossier and runtime/compiler implications before any signoff"
+    },
+    {
+      "ordinal": 4,
+      "identity": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "include/global.h",
+        "git_blob_sha1": "77155b09014aa854fcf87260e6ad2969e222da53"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "map_view_save_block_layout",
+        "save_block_struct_abi"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 5,
+      "identity": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "include/script.h",
+        "git_blob_sha1": "ce10c87266a8019eeefaaf787f43b291e7a58624"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "bytecode_live_pointer_struct",
+        "bounded_native_script_stack"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 6,
+      "identity": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "src/script.c",
+        "git_blob_sha1": "d0433bdda062b138e53d1a1d3184b4566ad7d9dc"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "native_bytecode_dispatch",
+        "little_endian_word_operands",
+        "unchecked_script_call_push_failure",
+        "async_script_pointer_lifetime"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 7,
+      "identity": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "src/scrcmd.c",
+        "git_blob_sha1": "97b695ee2f6fca80a3b78f52f6a444f696fe5814"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "field_opcode_pointer_role_consumers",
+        "script_native_callback_targets",
+        "setmetatile_collision_force"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 8,
+      "identity": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "src/save.c",
+        "git_blob_sha1": "36b960f375c92711aa49b99bdfe9c6b3a99d6b1c"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "flash_save_slot_rotation",
+        "sector_crc_signature_validation"
+      ],
+      "analyst_preparation": "PARTIAL_PINNED_SOURCE_INSPECTION",
+      "partial_source_claim": {
+        "summary": "TryReadSpecialSaveSector and TryWriteSpecialSaveSector restrict sector IDs to the two Trainer Tower sectors; read checks the leading sentinel and copies payload after the sentinel; write calls original ProgramFlashSectorAndVerify and propagates failure.",
+        "source_lines": {
+          "start": 833,
+          "end": 879
+        },
+        "source_url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/save.c#L833-L879",
+        "dependency_edges": [
+          "ReadFlash",
+          "ProgramFlashSectorAndVerify",
+          "gSaveDataBuffer",
+          "SECTOR_COUNTER_OFFSET"
+        ],
+        "unresolved": [
+          "Full 964-line file disposition, sector counter interpretation, callers, save-slot interactions and hardware behavior"
+        ]
+      },
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Inspect entire pinned file and dependency edges independently; verify exact machine dossier and runtime/compiler implications before any signoff"
+    },
+    {
+      "ordinal": 9,
+      "identity": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "src/load_save.c",
+        "git_blob_sha1": "8b723dd044c6024b3671bb890b25b56a53f99ec5"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "saveblock_pointer_relocation",
+        "saveblock_encryption_key_rotation"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 10,
+      "identity": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "include/config.h",
+        "git_blob_sha1": "db131b2717ab739e62e41c5054a798f045c0631d"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "modern_bugfix_macro_select",
+        "saved_map_view_ubfix_variant"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 11,
+      "identity": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "config.mk",
+        "git_blob_sha1": "c07d31fc083fa341cca29c340e560ed107d5364a"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "compiler_variant_default_configuration"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 12,
+      "identity": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "Makefile",
+        "git_blob_sha1": "8b454dbd18eb0069fa5851d788697190890a5b37"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "compiler_flag_provenance",
+        "native_fixed_16MiB_cartridge_padding"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 13,
+      "identity": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "ld_script.ld",
+        "git_blob_sha1": "9a4b45031e93c1e1da8186d8c697332710526048"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "legacy_32MiB_ROM_linker_memory_region"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 14,
+      "identity": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/script_cmd_table.inc",
+        "git_blob_sha1": "c5d112d9ea66d258d5a372dda89b9ad96ed2b1e1"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "field_script_dispatch_opcode_to_function"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 15,
+      "identity": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps.s",
+        "git_blob_sha1": "fc88d8fc2521e92db22264bf6cf33966fda977ba"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "native_map_groups_headers_and_layout_inclusion"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 16,
+      "identity": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "src/core/block.cpp",
+        "git_blob_sha1": "fc4fe774ccd75673c549734055907eb7c79c0fc2"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "editor_map_block_three_field_semantics",
+        "configurable_16bit_masks"
+      ],
+      "analyst_preparation": "PARTIAL_PINNED_SOURCE_INSPECTION",
+      "partial_source_claim": {
+        "summary": "Block packs metatile, collision and elevation through three BitPacker instances; setLayout updates masks from projectConfig; field setters clamp to current mask maxima.",
+        "source_lines": {
+          "start": 1,
+          "end": 88
+        },
+        "source_url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/src/core/block.cpp#L1-L88",
+        "dependency_edges": [
+          "BitPacker",
+          "projectConfig.blockMetatileIdMask",
+          "projectConfig.blockCollisionMask",
+          "projectConfig.blockElevationMask"
+        ],
+        "unresolved": [
+          "BitPacker implementation, project-wide mask changes, round-trip with Blockdata and binary FireRed layout"
+        ]
+      },
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Inspect entire pinned file and dependency edges independently; verify exact machine dossier and runtime/compiler implications before any signoff"
+    },
+    {
+      "ordinal": 17,
+      "identity": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "src/core/bitpacker.cpp",
+        "git_blob_sha1": "34f86b4e3910021613a1d090746ae53a1c6782a2"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "sparse_bitfield_pack_unpack",
+        "modulo_value_clamping"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 18,
+      "identity": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "src/core/blockdata.cpp",
+        "git_blob_sha1": "5fcd4e32b115790f5a86b5cef5726cace8005017"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "native_map_block_le16_serialization"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 19,
+      "identity": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "src/core/maplayout.cpp",
+        "git_blob_sha1": "44616ab6c9c3ea9b04eff011586b7ec29183588f"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "source_project_map_layout_model",
+        "editor_metatile_id_preserves_collision_and_elevation",
+        "on_disk_map_binary_dimensional_reconciliation"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 20,
+      "identity": {
+        "repository": "huderlem/poryscript",
+        "revision": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+        "path": "emitter/emitter.go",
+        "git_blob_sha1": "d35843ef29929ead47351646d7a33dd5c692b850"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "structured_script_to_assembler_emission",
+        "map_script_terminators"
+      ],
+      "analyst_preparation": "PARTIAL_PINNED_SOURCE_INSPECTION",
+      "partial_source_claim": {
+        "summary": "emitMapScriptStatement emits map_script and map_script_2 assembler directives and explicit .byte 0/.2byte 0 terminators; downstream assembler widths and consumer bounds are separate obligations.",
+        "source_lines": {
+          "start": 112,
+          "end": 154
+        },
+        "source_url": "https://github.com/huderlem/poryscript/blob/c32481161c767b25a3425fa9f1f8729927ff3d55/emitter/emitter.go#L112-L154",
+        "dependency_edges": [
+          "ast.MapScriptsStatement",
+          "emitScriptStatement",
+          "map_script assembler macro",
+          "map_script_2 assembler macro"
+        ],
+        "unresolved": [
+          "Remaining emitter control flow, generated include build integration, compiled table and native reader behavior"
+        ]
+      },
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Inspect entire pinned file and dependency edges independently; verify exact machine dossier and runtime/compiler implications before any signoff"
+    },
+    {
+      "ordinal": 21,
+      "identity": {
+        "repository": "huderlem/poryscript",
+        "revision": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+        "path": "emitter/chunk.go",
+        "git_blob_sha1": "bb3a6514988eb2699022551d3dbfe2bdce260377"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "script_branch_chunk_synthesis",
+        "generated_local_labels_and_goto"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 22,
+      "identity": {
+        "repository": "huderlem/poryscript",
+        "revision": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+        "path": "main.go",
+        "git_blob_sha1": "10db05ef1518460da78b0bd41f22bb091917a385"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "compile_switches_and_flags",
+        "source_to_assembler_entrypoint"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 23,
+      "identity": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/gba.c",
+        "git_blob_sha1": "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "rom_load_32MiB_aperture",
+        "native_matrix_marker_0xAC"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 24,
+      "identity": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/memory.c",
+        "git_blob_sha1": "aa01fdcc7d6ae5ecdf8753efc63b3a60a1e8d3dc"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "active_CPU_region_and_mask",
+        "ROM2_EX_EEPROM_eReader_arbitration"
+      ],
+      "analyst_preparation": "PARTIAL_PINNED_SOURCE_INSPECTION",
+      "partial_source_claim": {
+        "summary": "GBASetActiveRegion updates CPU active memory region and mask; early return for an unchanged region is conditional on ROM address being within romSize, so out-of-ROM fetch is a separate path.",
+        "source_lines": {
+          "start": 280,
+          "end": 333
+        },
+        "source_url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/memory.c#L280-L333",
+        "dependency_edges": [
+          "ARMCore",
+          "GBASetActiveRegion",
+          "GBA_REGION_ROM0",
+          "memory->romSize",
+          "cpu->memory.activeMask"
+        ],
+        "unresolved": [
+          "Full 1970-line file, ROM2_EX EEPROM arbitration, data-read fallback and native runtime error policy"
+        ]
+      },
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Inspect entire pinned file and dependency edges independently; verify exact machine dossier and runtime/compiler implications before any signoff"
+    },
+    {
+      "ordinal": 25,
+      "identity": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/dma.c",
+        "git_blob_sha1": "da2a800ba48cb32d6e10e42c3b3527ef406bad22"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "DMA3_ROM2_EX_EEPROM_width_priority",
+        "timing_scheduler_transfers"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 26,
+      "identity": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/cart/matrix.c",
+        "git_blob_sha1": "9ccbe883235b98bcf56cd609015e7b4003aa832c"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "native_matrix_26bit_physical_address",
+        "unchecked_physical_bank_extent",
+        "matrix_savestate_remap"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 27,
+      "identity": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/serialize.c",
+        "git_blob_sha1": "a307a51e751f412c64a7378323c56758304ebe85"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "savestate_ROM_CRC_warn_only",
+        "CPU_and_bank_map_restoration"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 28,
+      "identity": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/arm/arm.c",
+        "git_blob_sha1": "0b92d7f55f1fb853d4b1b9c9163ee086126066e2"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "ARM_Thumb_direct_CPU_prefetch",
+        "bank_remap_prefetch_lifetime"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    },
+    {
+      "ordinal": 29,
+      "identity": {
+        "repository": "pret/agbcc",
+        "revision": "da598c1d918402c42c0c0d7128ba14567f3175e9",
+        "path": "gcc_arm/config/arm/t-arm-elf",
+        "git_blob_sha1": "b57eeca9805d5aeb0ba20e08948758cb27da82fd"
+      },
+      "candidate_registry_blob_sha1": "b6269c9a4ddf164643e3202ffb0497e27160bcca",
+      "interpreted_roles_from_registry": [
+        "ARM_Thumb_interworking_multilib_build_flags"
+      ],
+      "analyst_preparation": "REGISTRY_ONLY_NOT_SOURCE_INSPECTED",
+      "partial_source_claim": null,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_review_verdict": "NEEDS_REVIEW",
+      "independent_review_receipt": null,
+      "whole_file_semantic_coverage": false,
+      "license_review_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION",
+      "source_hash_validation": "GITHUB_CONTENTS_BLOB_MATCHED",
+      "reviewer_next_action": "Fetch and inspect entire pinned file and machine dossier independently; do not infer approval from registry"
+    }
+  ],
+  "source_blob_verified_count": 29,
+  "source_blob_verification_method": "Pinned GitHub Contents API full-file blob SHA comparison, 2026-10-29; metadata verification only, not whole-file semantic interpretation"
+}

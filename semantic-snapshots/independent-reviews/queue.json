@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "status": "READY_FOR_INDEPENDENT_REVIEW",
+  "source": "semantic-snapshots/current/phase1_mapping_gate.json",
+  "priority": [
+    {
+      "group": "curated_p0",
+      "target": 29,
+      "approved": 0
+    },
+    {
+      "group": "remaining_p0",
+      "target": 309,
+      "approved": 0
+    },
+    {
+      "group": "other_inventory",
+      "target": 14496,
+      "approved": 0
+    }
+  ],
+  "total_target": 14834,
+  "total_approved": 0,
+  "review_policy": "distinct independent source-grounded reviewer required; no automatic approval",
+  "next_action": "claim curated P0 candidate; prepare interpretation; request independent verification",
+  "phase1_gate": "FAIL_INCOMPLETE"
+}
