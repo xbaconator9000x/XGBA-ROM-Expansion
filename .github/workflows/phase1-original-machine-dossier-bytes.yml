@@ -1,0 +1,19 @@
+name: Phase 1 original compressed machine dossier byte reconciliation
+on:
+  push:
+    branches:
+      - phase1/review-readiness-handoff-20261027
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  original-machine-dossiers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Rehash 14,834 original machine dossiers and reconcile 200 P0 packets with 1,406 negatives
+        run: python3 tools/phase1_original_machine_dossier_sha_verify.py
