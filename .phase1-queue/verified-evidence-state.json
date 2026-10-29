@@ -1,0 +1,189 @@
+{
+  "approval_claim": false,
+  "chunk_size": 500,
+  "input_fingerprint": "8e88f2a94bf332d057952ba7de3be4c98f99717e5d325d3d45e89304e7431e60",
+  "schema": 1,
+  "total_files": 14834,
+  "units": [
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    },
+    {
+      "attempts": 0,
+      "error": null,
+      "receipt": null,
+      "status": "PENDING"
+    }
+  ]
+}
