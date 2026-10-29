@@ -125,8 +125,9 @@
 | `pret/pokefirered:include/scanline_effect.h` | [0106](0106-firered-scanline-effect.md) | pending independent review |
 | `pret/pokefirered:include/palette.h` | [0107](0107-firered-palette.md) | pending independent review |
 | `pret/pokefirered:include/palette_util.h` | [0108](0108-firered-palette-util.md) | pending independent review |
+| `pret/pokefirered:src/cereader_tool.c` | [0114](0114-firered-cereader-tool-impl.md) | pending independent review |
 
-**Count: 113 distinct pinned upstream whole-file identities prepared / 14,834 = 0.4247%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
+**Count: 114 distinct pinned upstream whole-file identities prepared / 14,834 = 0.7685%**, compared with 0.0000% independently approved. Automated file inventory: **14,834/14,834 = 100%**. This count covers only the candidate documents explicitly registered above, **not** the 14,834 machine-generated dossiers, 338 P0 review candidates, or other standalone technical investigation notes. The separate standalone `docs/PHASE1_WHOLE_FILE_CANDIDATE_FIRERED_CRT0_2026-10-27.md` analyzes the *same* `src/crt0.s` and must **not** be counted as an additional file.
 
 ## 27 October — corrected duplicate and script interpreter ABI closure
 
@@ -207,3 +208,8 @@ Candidates [0059–0083](0059-firered-field-camera.md) prepare **25 distinct com
 ## 27 October — source-verified save, map-script and graphics interface batch (25 files)
 
 Candidates [0084–0108](0084-firered-quest-log-battle.md) add **25 distinct complete pinned FireRed headers** covering quest-log replay, flash save-sector structures, save-block relocation/encryption, new-game and map-warp state, script menus/movement/gifts, encounter tables, tileset assets, scanline DMA and palette bitfields. Each records exact Git blob SHA, line-anchored exhaustive non-comment source inventory, semantic interpretation and unresolved reviewer obligations. `batch-20261027-save-map-graphics-interfaces.json` is verified by the same fail-closed pinned source checker and CI workflow as the field-interface batch. These are **source-header preparations, not implementation, compiled or independent-review approvals**. **113/14,834 = 0.7618% prepared; 0/14,834 = 0.0000% independently approved; inventory 100%; FAIL_INCOMPLETE.** Exact-head CI must be checked before claiming a verified result.
+
+
+## 27 October — Trainer Tower CE-reader whole-file preparation
+
+Candidate [0114](0114-firered-cereader-tool-impl.md) covers the complete pinned 97-line implementation with a region-by-region source inventory and explicit unresolved native runtime and flash-recovery obligations. This raises the distinct analyst-prepared total from 113 to **114**, with **zero independent approvals**. The new source-anchored prefix-integrity checker is not itself an approval; Phase 1 remains **FAIL_INCOMPLETE**.
