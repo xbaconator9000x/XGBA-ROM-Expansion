@@ -37,7 +37,7 @@ static void write32(uint8_t *p,uint32_t v) {
 }
 static void run_case(const uint8_t *original,size_t originalSize,
                      const uint8_t *table,uint32_t reader,uint32_t header,
-                     uint8_t tag,bool malformed) {
+                     uint8_t tag,unsigned malformed) {
     size_t offset=(originalSize+4095U)&~(size_t)4095U;
     size_t romSize=offset+TABLE_PAD;
     need(romSize<0x02000000U,"ROM_aperture");
@@ -54,7 +54,17 @@ static void run_case(const uint8_t *original,size_t originalSize,
         need(old>=0x08000000U && old<0x08000000U+TABLE_SIZE,"table_pointer");
         write32(out+reloc[i],tableAddress+(old-0x08000000U));
     }
-    if(malformed)memset(out+10,0x7F,TABLE_PAD-10);
+    /* Preserve the actual CLI-generated first two records, then deliberately
+     * remove its offset-10 outer sentinel. The only replacement sentinel is
+     * beyond the original 32-byte table, or absent within the step budget.
+     * This tests native out-of-extent traversal, not memory safety.
+     */
+    if (malformed) {
+        need(tag==99 && malformed<=3,"malformed_case_contract");
+        memset(out+10,0x7F,TABLE_PAD-10);
+        if (malformed==2) out[35]=0;
+        if (malformed==3) out[105]=0;
+    }
     struct mCore *core=GBACoreCreate();
     need(core!=NULL && core->init(core),"native_core_init");
     mCoreInitConfig(core,NULL);
@@ -85,10 +95,16 @@ static void run_case(const uint8_t *original,size_t originalSize,
         need(returned,"valid_reader_did_not_return");
         uint32_t want=tag==3 ? tableAddress+29 : tag==2 ? tableAddress+11 : 0;
         need(result==want,"valid_reader_pointer");
+    } else if (malformed==1) {
+        need(!returned && steps==MAX_STEPS-1,
+             "missing_sentinel_did_not_exhaust_bounded_budget");
+    } else {
+        need(returned && result==0,
+             "out_of_table_synthetic_sentinel_not_followed");
     }
     need(steps>0 && steps<=MAX_STEPS,"bounded_instruction_count");
     printf("CASE tag=%u malformed=%u returned=%u steps=%d result=0x%08x table=0x%08x\n",
-           tag,malformed?1:0,returned?1:0,steps,result,tableAddress);
+           tag,malformed,returned?1:0,steps,result,tableAddress);
     mCoreConfigDeinit(&core->config);
     core->deinit(core);
     free(rom);
@@ -106,7 +122,9 @@ int main(int argc,char **argv) {
     run_case(rom,romSize,table,reader,header,3,false);
     run_case(rom,romSize,table,reader,header,2,false);
     run_case(rom,romSize,table,reader,header,99,false);
-    run_case(rom,romSize,table,reader,header,99,true);
+    run_case(rom,romSize,table,reader,header,99,1);
+    run_case(rom,romSize,table,reader,header,99,2);
+    run_case(rom,romSize,table,reader,header,99,3);
     puts("SUMMARY native_mgba=true original_agbcc_arm=true actual_poryscript_cli_table=true synthetic_direct_entry=true stock_reachability=false physical_flash=false phase1_gate=FAIL_INCOMPLETE approvals=0");
     free(rom);free(table);return 0;
 }
