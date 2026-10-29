@@ -1,0 +1,411 @@
+{
+  "schema": "xgba.phase1.second_packet_firered_158_165_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+  "source_packet_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0000-0199-20261030.json",
+  "new_partial_indices": [
+    158,
+    159,
+    160,
+    161
+  ],
+  "prior_second_packet_indices": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149,
+    150,
+    151,
+    152,
+    153,
+    154,
+    155,
+    156,
+    157
+  ],
+  "other_p0_partial_total": 140,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 169,
+  "other_p0_without_partial": 169,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Disjoint original pinned FireRed authored source-only partials with static map.json edges where available; original machine dossier rehashed by prior exact-head verifier; no compiled/runtime/stock gameplay/physical Flash or independent approval.",
+  "records": [
+    {
+      "packet_index": 158,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FourIsland_LoreleisHouse/scripts.inc",
+        "git_blob_sha1": "df5d79bfbab666218b36834a6ded8929922b15ba",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FourIsland_LoreleisHouse/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "e5b078f9aec316691ed82e4e3401c415590fc3795c4ed2a2571188052bd1e9df",
+      "whole_source_sha256_from_packet": "f951d5b4ef9e7388480b36798fffcdf640cd965719640fa1426469138f99ab02",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FourIsland_LoreleisHouse_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, FourIsland_LoreleisHouse_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 6,
+          "text": "\tspecial UpdateLoreleiDollCollection"
+        },
+        {
+          "line": 12,
+          "text": "\tgoto_if_set FLAG_TALKED_TO_LORELEI_AFTER_WAREHOUSE, FourIsland_LoreleisHouse_EventScript_Lorelei3"
+        },
+        {
+          "line": 13,
+          "text": "\tgoto_if_set FLAG_DEFEATED_ROCKETS_IN_WAREHOUSE, FourIsland_LoreleisHouse_EventScript_Lorelei2"
+        },
+        {
+          "line": 29,
+          "text": "FourIsland_LoreleisHouse_EventScript_Doll::"
+        }
+      ],
+      "required_source_tokens": [
+        "UpdateLoreleiDollCollection",
+        "FLAG_DEFEATED_ROCKETS_IN_WAREHOUSE",
+        "FLAG_TALKED_TO_LORELEI_AFTER_WAREHOUSE",
+        "EventScript_Doll"
+      ],
+      "source_observations": "Lorelei's doll collection updates on map transition; warehouse victory and conversation flags select three authored Lorelei dialogue paths, not observed runtime.",
+      "dependency_edges": [
+        "UpdateLoreleiDollCollection native special and doll flag data",
+        "warehouse battle/flag writer and save persistence",
+        "map.json Lorelei NPC script binding",
+        "map script transition dispatch"
+      ],
+      "map_json_static_wiring": {
+        "path": "data/maps/FourIsland_LoreleisHouse/map.json",
+        "git_blob_sha1": "ba745bf940c5b9fa165e2a002ec81724dd144721",
+        "source_only_event_refs": [
+          "FourIsland_LoreleisHouse_EventScript_Lorelei",
+          "FourIsland_LoreleisHouse_EventScript_Doll",
+          "FourIsland_LoreleisHouse_EventScript_Doll",
+          "FourIsland_LoreleisHouse_EventScript_Doll",
+          "FourIsland_LoreleisHouse_EventScript_Doll",
+          "FourIsland_LoreleisHouse_EventScript_Doll",
+          "FourIsland_LoreleisHouse_EventScript_Doll",
+          "FourIsland_LoreleisHouse_EventScript_Doll",
+          "FourIsland_LoreleisHouse_EventScript_Doll",
+          "FourIsland_LoreleisHouse_EventScript_Doll",
+          "FourIsland_LoreleisHouse_EventScript_Doll",
+          "FourIsland_LoreleisHouse_EventScript_Doll"
+        ],
+        "unresolved_in_this_script": [],
+        "coord_trigger_count": 0,
+        "connection_count": 0
+      },
+      "unresolved": [
+        "Authored script-to-generated map header/script table and compiled linker consumer not established",
+        "Special handlers, scene/flag writers and save/asset dependencies need independent whole-source closure",
+        "Original FireRed script and derivative licensing not independently cleared; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the exact pinned source including inactive paths",
+        "Rehash original compressed machine dossier bytes and verify its SHA256",
+        "Trace map.json, generated tables, native script handlers and actual consumer paths",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable full-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 159,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FourIsland_PokemonCenter_1F/scripts.inc",
+        "git_blob_sha1": "3b90884547cf45c18950a85b1cf6c8348e350a2c",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FourIsland_PokemonCenter_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "c74cc74d3488a71e8470ee3350866dbffc955c53322e2a812a097507eb71606c",
+      "whole_source_sha256_from_packet": "6782364292bc1ee241845232e113aabcd7028ff04fb6ca6102e68327bf69bf72",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FourIsland_PokemonCenter_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, FourIsland_PokemonCenter_1F_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume"
+        },
+        {
+          "line": 7,
+          "text": "\tsetrespawn HEAL_LOCATION_FOUR_ISLAND"
+        },
+        {
+          "line": 13,
+          "text": "\tcall EventScript_PkmnCenterNurse"
+        },
+        {
+          "line": 18,
+          "text": "\tmsgbox FourIsland_PokemonCenter_1F_Text_RareIceMonsInCave, MSGBOX_NPC"
+        }
+      ],
+      "required_source_tokens": [
+        "HEAL_LOCATION_FOUR_ISLAND",
+        "CableClub_OnResume",
+        "EventScript_PkmnCenterNurse",
+        "RareIceMonsInCave"
+      ],
+      "source_observations": "Four Island first-floor Center sets a respawn location on transition and delegates nurse and cable-club resume behaviour to shared handlers.",
+      "dependency_edges": [
+        "HEAL_LOCATION_FOUR_ISLAND respawn consumer",
+        "CableClub_OnResume shared handler",
+        "EventScript_PkmnCenterNurse and heal state",
+        "map header and script table emission"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Authored script-to-generated map header/script table and compiled linker consumer not established",
+        "Special handlers, scene/flag writers and save/asset dependencies need independent whole-source closure",
+        "Original FireRed script and derivative licensing not independently cleared; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the exact pinned source including inactive paths",
+        "Rehash original compressed machine dossier bytes and verify its SHA256",
+        "Trace map.json, generated tables, native script handlers and actual consumer paths",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable full-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 160,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FourIsland_PokemonCenter_2F/scripts.inc",
+        "git_blob_sha1": "c02811b7fe1077dd38ccc0c088f05779e40b58c2",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FourIsland_PokemonCenter_2F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "d6afbcac2c111f446be48bba712bed416fa94edb60872e9101347aa747ae1d45",
+      "whole_source_sha256_from_packet": "e104a0f8d543fade5b4f82b6d48dd736cd59bb85797b07488bead7f2554e9f52",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FourIsland_PokemonCenter_2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad"
+        },
+        {
+          "line": 14,
+          "text": "\tcall CableClub_EventScript_TradeCenter"
+        }
+      ],
+      "required_source_tokens": [
+        "CableClub_OnFrame",
+        "CableClub_OnWarp",
+        "CableClub_OnLoad",
+        "CableClub_EventScript_TradeCenter"
+      ],
+      "source_observations": "Four Island second-floor Center references shared CableClub frame, warp, load and transition callbacks; three labelled RS leftovers are commented unused.",
+      "dependency_edges": [
+        "CableClub_OnFrame shared frame handler",
+        "CableClub_OnWarp and map warp interpreter",
+        "CableClub_OnLoad/OnTransition handlers",
+        "map event bindings for leftover RS labels"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Authored script-to-generated map header/script table and compiled linker consumer not established",
+        "Special handlers, scene/flag writers and save/asset dependencies need independent whole-source closure",
+        "Original FireRed script and derivative licensing not independently cleared; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the exact pinned source including inactive paths",
+        "Rehash original compressed machine dossier bytes and verify its SHA256",
+        "Trace map.json, generated tables, native script handlers and actual consumer paths",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable full-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 161,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FuchsiaCity/scripts.inc",
+        "git_blob_sha1": "f50aa66bc974c9d5795560153fc630c5913457d8",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FuchsiaCity/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "efbcc32f843519029069f724255f4d5bafaf8e8886c1122fbf1f3925e51cf280",
+      "whole_source_sha256_from_packet": "e3703838a2fdcccf4b0c4800f5531169915e2733c9de132bb48ad0cf7895a226",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FuchsiaCity_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, FuchsiaCity_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 7,
+          "text": "\tcall_if_set FLAG_GOT_DOME_FOSSIL, FuchsiaCity_EventScript_SetOmanyteGfx"
+        },
+        {
+          "line": 38,
+          "text": "\tfamechecker FAMECHECKER_KOGA, 3"
+        },
+        {
+          "line": 74,
+          "text": "\tspecial SetSeenMon"
+        },
+        {
+          "line": 133,
+          "text": "\tsetvar VAR_0x8004, SPECIES_OMANYTE"
+        }
+      ],
+      "required_source_tokens": [
+        "FLAG_GOT_DOME_FOSSIL",
+        "FAMECHECKER_KOGA",
+        "SetSeenMon",
+        "SPECIES_OMANYTE"
+      ],
+      "source_observations": "Fuchsia transition selects fossil exhibit graphics by Dome Fossil flag; signs invoke SetSeenMon and FameChecker; map.json includes references requiring separate symbol closure.",
+      "dependency_edges": [
+        "FLAG_GOT_DOME_FOSSIL writer and flag persistence",
+        "SetSeenMon and Pokédex state",
+        "map.json sign/object event label resolution",
+        "FAMECHECKER_KOGA dispatch and map scripts"
+      ],
+      "map_json_static_wiring": {
+        "path": "data/maps/FuchsiaCity/map.json",
+        "git_blob_sha1": "834806202ccdfe0d39f95634554aeca718ff3bb3",
+        "source_only_event_refs": [
+          "FuchsiaCity_EventScript_Erik",
+          "FuchsiaCity_EventScript_Youngster",
+          "FuchsiaCity_EventScript_LittleBoy",
+          "FuchsiaCity_EventScript_OldMan",
+          "FuchsiaCity_EventScript_Lass",
+          "FuchsiaCity_EventScript_CitySign",
+          "FuchsiaCity_EventScript_SafariZoneSign",
+          "FuchsiaCity_EventScript_GymSign",
+          "FuchsiaCity_EventScript_WardensHomeSign",
+          "FuchsiaCity_EventScript_VoltorbSign",
+          "FuchsiaCity_EventScript_SlowpokeSign",
+          "FuchsiaCity_EventScript_ChanseySign"
+        ],
+        "unresolved_in_this_script": [
+          "FuchsiaCity_EventScript_SubstituteTutor"
+        ],
+        "coord_trigger_count": 0,
+        "connection_count": 3
+      },
+      "unresolved": [
+        "Authored script-to-generated map header/script table and compiled linker consumer not established",
+        "Special handlers, scene/flag writers and save/asset dependencies need independent whole-source closure",
+        "Original FireRed script and derivative licensing not independently cleared; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the exact pinned source including inactive paths",
+        "Rehash original compressed machine dossier bytes and verify its SHA256",
+        "Trace map.json, generated tables, native script handlers and actual consumer paths",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable full-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}
