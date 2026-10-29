@@ -1,0 +1,19 @@
+name: Phase 1 third P0 machine packet source-reconciled integrity
+on:
+  push:
+    branches:
+      - phase1/review-readiness-handoff-20261027
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  third-p0-packet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Rebuild third 100 P0 machine records and reject 1304 negative mutations
+        run: python3 tools/phase1_third_p0_packet_verify.py
