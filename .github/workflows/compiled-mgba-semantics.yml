@@ -1,11 +1,7 @@
 name: Phase 1 compiled mGBA source semantics
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'tools/compiler_bindings_semantics.py'
-      - 'tools/compiled_dependency_graph.py'
-      - '.github/workflows/compiled-mgba-semantics.yml'
+
 permissions:
   contents: read
 jobs:

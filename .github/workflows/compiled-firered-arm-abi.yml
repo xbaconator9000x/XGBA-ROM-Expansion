@@ -1,10 +1,7 @@
 name: Phase 1 compiled FireRed ARM ABI evidence
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'tools/firered_compiled_abi.py'
-      - '.github/workflows/compiled-firered-arm-abi.yml'
+
 permissions:
   contents: read
 jobs:

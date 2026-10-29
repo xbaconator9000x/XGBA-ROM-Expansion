@@ -1,19 +1,7 @@
 name: Phase 1 compiled FireRed classic versus modern ABI
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'tools/firered_variant_semantics.py'
-      - 'tools/firered_map_view_variant_semantics.py'
-      - 'tools/field_script_stack_lifetime_semantics.py'
-      - 'tools/compiled_binding_fingerprints.py'
-      - 'tools/firered_full_symbol_census.py'
-      - 'tools/firered_compiled_object_bindings.py'
-      - 'tools/firered_external_symbol_reconciliation.py'
-      - 'tools/firered_runtime_rom_hashes.py'
-      - 'tools/runtime_rom_symbol_preflight.py'
-      - 'tools/firered_build_timestamp_semantics.py'
-      - '.github/workflows/compiled-firered-variants.yml'
+
 permissions:
   contents: read
 jobs:

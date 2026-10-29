@@ -1,12 +1,7 @@
 name: Phase 1 compiled FireRed map semantics
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'tools/mapjson_semantic_proof.py'
-      - 'tools/clone_crossmap_semantics.py'
-      - 'tools/map_alias_compiler_semantics.py'
-      - '.github/workflows/compiled-firered-maps.yml'
+
 permissions:
   contents: read
 jobs:

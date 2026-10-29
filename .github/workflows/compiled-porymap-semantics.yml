@@ -1,13 +1,7 @@
 name: Phase 1 compiled Porymap Qt semantic evidence
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'tools/porymap_compiled_semantics.py'
-      - 'tools/porymap_block_semantic_reference.py'
-      - 'tools/porymap_shared_semantics.py'
-      - 'tools/qt_metaobject_contracts.py'
-      - '.github/workflows/compiled-porymap-semantics.yml'
+
 permissions:
   contents: read
 jobs:
