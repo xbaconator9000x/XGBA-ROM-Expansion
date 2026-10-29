@@ -6,10 +6,11 @@
   "total_files": 14834,
   "units": [
     {
-      "attempts": 0,
+      "attempts": 1,
       "error": null,
       "receipt": null,
-      "status": "PENDING"
+      "run_id": "40802505192",
+      "status": "RUNNING"
     },
     {
       "attempts": 0,
