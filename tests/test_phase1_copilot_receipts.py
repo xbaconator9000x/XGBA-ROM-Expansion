@@ -1,4 +1,5 @@
 import copy
+import datetime
 import hashlib
 import json
 import subprocess
@@ -34,8 +35,10 @@ class CopilotReceiptTests(unittest.TestCase):
         subprocess.run(["git", "-C", str(self.checkout), "init", "-q"], check=True)
         (self.checkout / "src").mkdir()
         self.source = b"static int add(int a, int b)\n{\n    return a + b;\n}\n"
+        self.second_source = b"static int negate(int value)\n{\n    return -value;\n}\n"
         self.license = b"Copyright and license terms for the pinned fixture.\n"
         (self.checkout / "src" / "sample.c").write_bytes(self.source)
+        (self.checkout / "src" / "second.c").write_bytes(self.second_source)
         (self.checkout / "LICENSE").write_bytes(self.license)
         subprocess.run(["git", "-C", str(self.checkout), "add", "."], check=True)
         subprocess.run([
@@ -51,6 +54,7 @@ class CopilotReceiptTests(unittest.TestCase):
         self.head = "c" * 40
         self.repository = "xbaconator9000x/XGBA-ROM-Expansion"
         self.key = ("pret/pokefirered", "src/sample.c")
+        self.second_key = ("pret/pokefirered", "src/second.c")
         self.dossier = {
             "provenance": {
                 "repository": self.key[0],
@@ -62,24 +66,45 @@ class CopilotReceiptTests(unittest.TestCase):
             "review": {"semantic_signoff": False, "reviewer": None},
         }
         self.dossier_hash = digest(canonical(self.dossier))
+        self.second_dossier = {
+            "provenance": {
+                "repository": self.second_key[0],
+                "pinned_revision": self.pin,
+                "path": self.second_key[1],
+                "git_blob_sha": git_blob(self.second_source),
+                "source_content_sha256": hashlib.sha256(self.second_source).hexdigest(),
+            },
+            "review": {"semantic_signoff": False, "reviewer": None},
+        }
+        self.second_dossier_hash = digest(canonical(self.second_dossier))
         self.queue = {
             self.key: {
                 "repo": self.key[0], "path": self.key[1],
                 "blob_sha": git_blob(self.source), "evidence_sha256": self.dossier_hash,
+            },
+            self.second_key: {
+                "repo": self.second_key[0], "path": self.second_key[1],
+                "blob_sha": git_blob(self.second_source),
+                "evidence_sha256": self.second_dossier_hash,
             }
         }
-        self.dossiers = {self.key: self.dossier}
+        self.dossiers = {self.key: self.dossier, self.second_key: self.second_dossier}
         (self.repository_root / "review").mkdir()
         dossier_bytes = b'{"reviewed_item":"pret/pokefirered/src/sample.c"}\n'
         evidence_bytes = b"Independent source observations for the fixture.\n"
+        second_dossier_bytes = b'{"reviewed_item":"pret/pokefirered/src/second.c"}\n'
+        second_evidence_bytes = b"Independent observations for the second fixture.\n"
         (self.repository_root / "review" / "dossier.json").write_bytes(dossier_bytes)
         (self.repository_root / "review" / "evidence.txt").write_bytes(evidence_bytes)
+        (self.repository_root / "review" / "second-dossier.json").write_bytes(second_dossier_bytes)
+        (self.repository_root / "review" / "second-evidence.txt").write_bytes(second_evidence_bytes)
         subprocess.run(["git", "-C", str(self.repository_root), "add", "."], check=True)
         subprocess.run(["git", "-C", str(self.repository_root), "commit", "-qm", "Evidence checkpoint"], check=True)
         self.evidence_commit = subprocess.check_output(
             ["git", "-C", str(self.repository_root), "rev-parse", "HEAD"], text=True
         ).strip()
-        self.authorship = [
+        self.authorship = {
+            self.key: [
             {
                 "path": "review/dossier.json",
                 "sha256": hashlib.sha256(dossier_bytes).hexdigest(),
@@ -90,9 +115,23 @@ class CopilotReceiptTests(unittest.TestCase):
                 "sha256": hashlib.sha256(evidence_bytes).hexdigest(),
                 "commit_sha": self.evidence_commit,
             },
-        ]
+            ],
+            self.second_key: [
+                {
+                    "path": "review/second-dossier.json",
+                    "sha256": hashlib.sha256(second_dossier_bytes).hexdigest(),
+                    "commit_sha": self.evidence_commit,
+                },
+                {
+                    "path": "review/second-evidence.txt",
+                    "sha256": hashlib.sha256(second_evidence_bytes).hexdigest(),
+                    "commit_sha": self.evidence_commit,
+                },
+            ],
+        }
         self.receipt = self._make_receipt()
         self.github_responses = {}
+        self.committed_receipts = []
 
     def _restore_pin(self):
         receipts.PINS["pret/pokefirered"] = self.old_pin
@@ -106,22 +145,30 @@ class CopilotReceiptTests(unittest.TestCase):
             "source_sha256": hashlib.sha256(data).hexdigest(),
         }
 
-    def _make_receipt(self):
-        lines = len(self.source.splitlines())
+    def _make_receipt(self, key=None):
+        key = self.key if key is None else key
+        source = self.source if key == self.key else self.second_source
+        dossier_hash = self.dossier_hash if key == self.key else self.second_dossier_hash
+        authorship = self.authorship[key]
+        lines = len(source.splitlines())
         return {
             "schema": receipts.SCHEMA,
-            "source": self._source_ref("src/sample.c", self.source),
-            "machine_dossier_sha256": self.dossier_hash,
+            "source": self._source_ref(key[1], source),
+            "machine_dossier_sha256": dossier_hash,
             "review": {
                 "decision": "APPROVED",
                 "semantic_rationale": "The complete pinned implementation and its call contract were reviewed.",
                 "findings": [{
-                    "claim": "The helper returns the sum of its two integer arguments.",
+                    "claim": (
+                        "The helper returns the sum of its two integer arguments."
+                        if key == self.key else
+                        "The helper returns the negation of its integer argument."
+                    ),
                     "source_lines": [1, 3],
                 }],
                 "whole_file_coverage": {
                     "scope": "WHOLE_FILE",
-                    "source_sha256": hashlib.sha256(self.source).hexdigest(),
+                    "source_sha256": hashlib.sha256(source).hexdigest(),
                     "source_lines": lines,
                     "reviewed_line_ranges": [[1, lines]],
                 },
@@ -138,7 +185,7 @@ class CopilotReceiptTests(unittest.TestCase):
                 "evidence_distinctions": {
                     "source": {
                         "status": "VERIFIED",
-                        "source_sha256": hashlib.sha256(self.source).hexdigest(),
+                        "source_sha256": hashlib.sha256(source).hexdigest(),
                     },
                     "synthetic": {"status": "NOT_CLAIMED", "reason": "No synthetic result is claimed."},
                     "compiled_native": {"status": "NOT_RUN", "reason": "No native build result is claimed."},
@@ -148,9 +195,9 @@ class CopilotReceiptTests(unittest.TestCase):
                 },
                 "objections": [],
                 "authorship": {
-                    "dossier": {k: v for k, v in self.authorship[0].items() if k != "commit_sha"},
+                    "dossier": {k: v for k, v in authorship[0].items() if k != "commit_sha"},
                     "substantive_evidence": [
-                        {k: v for k, v in self.authorship[1].items() if k != "commit_sha"}
+                        {k: v for k, v in authorship[1].items() if k != "commit_sha"}
                     ],
                 },
             },
@@ -160,42 +207,78 @@ class CopilotReceiptTests(unittest.TestCase):
                 "evidence_commit": self.evidence_commit,
                 "receipt_path": "docs/phase1-review-readiness/copilot-semantic-review-receipts.jsonl",
             },
+            "attestation": {
+                "mode": "conversation_comment",
+                "receipt_sha256": "",
+            },
         }
 
-    def _seal(self, receipt=None):
-        receipt = self.receipt if receipt is None else receipt
+    def _commit_receipt(self, receipt):
         body_hash = receipts.receipt_digest(receipt)
-        receipt["attestation"] = {
-            "receipt_sha256": body_hash,
-        }
-        subprocess.run([
-            "git", "-C", str(self.repository_root), "reset", "--hard", self.evidence_commit
-        ], check=True, stdout=subprocess.DEVNULL)
+        receipt["attestation"]["receipt_sha256"] = body_hash
         register = self.repository_root / receipt["target"]["receipt_path"]
         register.parent.mkdir(parents=True, exist_ok=True)
         receipt_line = json.dumps(receipt, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
-        register.write_text(receipt_line + "\n", encoding="utf-8")
+        previous = register.read_text(encoding="utf-8") if register.exists() else ""
+        if receipt_line in previous.splitlines():
+            return self.head
+        register.write_text(previous + receipt_line + "\n", encoding="utf-8")
         subprocess.run(["git", "-C", str(self.repository_root), "add", receipt["target"]["receipt_path"]], check=True)
         subprocess.run(["git", "-C", str(self.repository_root), "commit", "-qm", "Add semantic receipt"], check=True)
         self.head = subprocess.check_output(
             ["git", "-C", str(self.repository_root), "rev-parse", "HEAD"], text=True
         ).strip()
-        parent = subprocess.check_output(
-            ["git", "-C", str(self.repository_root), "rev-parse", "HEAD^"], text=True
+        intro_date = subprocess.check_output(
+            ["git", "-C", str(self.repository_root), "show", "-s", "--format=%cI", self.head],
+            text=True,
         ).strip()
-        changed_path = receipt["target"]["receipt_path"]
+        intro_time = datetime.datetime.fromisoformat(intro_date)
+        comment_id = 810000 + len(self.committed_receipts)
+        evidence_sha = receipt["target"]["evidence_commit"]
+        body = "\n".join((
+            receipts.RECEIPT_MARKER + body_hash,
+            receipts.INTRO_COMMIT_MARKER + self.head,
+            receipts.EVIDENCE_COMMIT_MARKER + evidence_sha,
+            receipts.DECISION_MARKER,
+        ))
+        self.committed_receipts.append({
+            "receipt": receipt,
+            "digest": body_hash,
+            "intro": self.head,
+            "created_at": (intro_time + datetime.timedelta(seconds=1)).isoformat(),
+            "comment_id": comment_id,
+            "body": body,
+        })
+        self._refresh_github_responses()
+        return self.head
+
+    def _seal(self, receipt=None):
+        receipt = self.receipt if receipt is None else receipt
+        subprocess.run([
+            "git", "-C", str(self.repository_root), "reset", "--hard", self.evidence_commit
+        ], check=True, stdout=subprocess.DEVNULL)
+        self.head = self.evidence_commit
+        self.committed_receipts = []
+        return self._commit_receipt(receipt)
+
+    def _refresh_github_responses(self):
         self.github_responses = {
             f"https://api.github.com/repos/{self.repository}/pulls/8": {
                 "user": {"login": "xbaconator9000x"},
                 "head": {"sha": self.head},
             },
-            f"https://api.github.com/repos/{self.repository}/pulls/8/reviews?per_page=100": [{
-                "user": {"login": "Copilot"},
-                "commit_id": self.head,
-                "state": "COMMENTED",
-                "submitted_at": "2026-10-30T00:00:00Z",
-                "body": receipts.RECEIPT_MARKER + body_hash + "\n" + receipts.DECISION_MARKER,
-            }],
+            f"https://api.github.com/repos/{self.repository}/pulls/8/reviews?per_page=100": [],
+            f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100": [
+                {
+                    "id": item["comment_id"],
+                    "user": {"login": "Copilot"},
+                    "issue_url": f"https://api.github.com/repos/{self.repository}/issues/8",
+                    "html_url": f"https://github.com/{self.repository}/pull/8#issuecomment-{item['comment_id']}",
+                    "created_at": item["created_at"],
+                    "body": item["body"],
+                }
+                for item in self.committed_receipts
+            ],
             f"https://api.github.com/repos/{self.repository}/actions/runs?head_sha={self.head}&per_page=100": {
                 "workflow_runs": [{
                     "name": "Phase 1 consolidated PR checks",
@@ -212,28 +295,27 @@ class CopilotReceiptTests(unittest.TestCase):
                     }],
                 }],
             },
-            f"https://api.github.com/repos/{self.repository}/commits/{self.head}": {
-                "sha": self.head,
-                "parents": [{"sha": parent}],
-                "files": [{"filename": changed_path}],
-            },
         }
         api_root = f"https://api.github.com/repos/{self.repository}"
-        for item in self.authorship:
-            query = urlencode({
-                "path": item["path"], "sha": self.evidence_commit, "per_page": 1,
-            })
-            self.github_responses[f"{api_root}/commits?{query}"] = [
-                {"sha": self.evidence_commit}
-            ]
-            self.github_responses[f"{api_root}/commits/{self.evidence_commit}"] = {
-                "sha": self.evidence_commit,
-                "parents": [],
-                "author": {"login": "xbaconator9000x"},
-                "committer": {"login": "xbaconator9000x"},
-                "files": [{"filename": authored["path"]} for authored in self.authorship],
-            }
-        return receipt
+        for entries in self.authorship.values():
+            for item in entries:
+                query = urlencode({
+                    "path": item["path"], "sha": self.evidence_commit, "per_page": 1,
+                })
+                self.github_responses[f"{api_root}/commits?{query}"] = [
+                    {"sha": self.evidence_commit}
+                ]
+                self.github_responses[f"{api_root}/commits/{self.evidence_commit}"] = {
+                    "sha": self.evidence_commit,
+                    "parents": [],
+                    "author": {"login": "xbaconator9000x"},
+                    "committer": {"login": "xbaconator9000x"},
+                    "files": [
+                        {"filename": authored["path"]}
+                        for authored_entries in self.authorship.values()
+                        for authored in authored_entries
+                    ],
+                }
 
     def _validate(self, receipt=None):
         return receipts.validate_receipt(
@@ -328,7 +410,7 @@ class CopilotReceiptTests(unittest.TestCase):
         self._seal()
         commit_url = (
             f"https://api.github.com/repos/{self.repository}/commits/"
-            f"{self.authorship[0]['commit_sha']}"
+            f"{self.evidence_commit}"
         )
         self.github_responses[commit_url]["author"]["login"] = "copilot-swe-agent[bot]"
         self.assertEqual(

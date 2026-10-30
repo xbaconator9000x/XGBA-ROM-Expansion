@@ -6,18 +6,22 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import urllib.error
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlencode, urlparse
 
 from phase1_bulk_triage import PINS, canonical, digest, git_blob, source_bytes
 
-SCHEMA = "xgba.phase1.copilot_semantic_review_receipt.v3"
+SCHEMA = "xgba.phase1.copilot_semantic_review_receipt.v4"
 SHA1 = re.compile(r"^[0-9a-f]{40}$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 RECEIPT_MARKER = "XGBA-Phase1-Receipt-SHA256: "
 DECISION_MARKER = "XGBA-Phase1-Decision: APPROVED"
+INTRO_COMMIT_MARKER = "XGBA-Phase1-Receipt-Commit: "
+EVIDENCE_COMMIT_MARKER = "XGBA-Phase1-Evidence-Commit: "
 CENSUS_WORKFLOW_PATH = ".github/workflows/phase1-census.yml"
 PR_WORKFLOW_NAME = "Phase 1 consolidated PR checks"
 EVIDENCE_STATES = {"VERIFIED", "NOT_APPLICABLE", "NOT_CLAIMED", "NOT_RUN"}
@@ -33,6 +37,71 @@ EVIDENCE_KINDS = {
 def receipt_digest(receipt):
     """Hash the durable receipt body, excluding its GitHub review attestation."""
     return digest(canonical({k: v for k, v in receipt.items() if k != "attestation"}))
+
+
+def _git(repository_root, *args):
+    try:
+        return subprocess.check_output(
+            ["git", "-C", str(repository_root), *args],
+            stderr=subprocess.PIPE,
+            text=True,
+        ).strip()
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise ValueError("Unable to verify receipt Git history") from exc
+
+
+def _find_receipt_introduction(repository_root, receipt_path, receipt_line,
+                               evidence_commit, expected_head):
+    root = Path(repository_root).resolve()
+    head = _git(root, "rev-parse", "HEAD")
+    if head != expected_head:
+        raise ValueError("Receipt validation checkout is not the expected exact head")
+    _git(root, "merge-base", "--is-ancestor", evidence_commit, expected_head)
+    commits = _git(
+        root, "rev-list", "--first-parent", "--reverse",
+        f"{evidence_commit}..{expected_head}",
+    ).splitlines()
+    introduction = None
+    intro_date = None
+    for commit_sha in commits:
+        try:
+            contents = subprocess.check_output(
+                ["git", "-C", str(root), "show", f"{commit_sha}:{receipt_path}"],
+                stderr=subprocess.DEVNULL,
+            ).decode("utf-8")
+        except subprocess.CalledProcessError:
+            continue
+        occurrences = contents.splitlines().count(receipt_line)
+        if occurrences > 1:
+            raise ValueError("Duplicate receipt bytes in the append-only register")
+        if occurrences == 1:
+            introduction = commit_sha
+            break
+    if introduction is None:
+        raise ValueError("Receipt has no introduction commit after its evidence commit")
+    parent_line = _git(root, "rev-list", "--parents", "-n", "1", introduction).split()
+    if len(parent_line) != 2:
+        raise ValueError("Receipt introduction commit has invalid ancestry")
+    changed = _git(root, "diff-tree", "--no-commit-id", "--name-only", "-r", introduction).splitlines()
+    if changed != [receipt_path]:
+        raise ValueError("Receipt introduction commit must change only the receipt register")
+    introduced = False
+    for commit_sha in commits:
+        if commit_sha == introduction:
+            introduced = True
+        if not introduced:
+            continue
+        try:
+            contents = subprocess.check_output(
+                ["git", "-C", str(root), "show", f"{commit_sha}:{receipt_path}"],
+                stderr=subprocess.DEVNULL,
+            ).decode("utf-8")
+        except subprocess.CalledProcessError as exc:
+            raise ValueError("Receipt was removed from the append-only register") from exc
+        if contents.splitlines().count(receipt_line) != 1:
+            raise ValueError("Receipt was removed or modified after introduction")
+    intro_date = _git(root, "show", "-s", "--format=%cI", introduction)
+    return introduction, datetime.fromisoformat(intro_date)
 
 
 def github_get_json(url, token=None):
@@ -128,6 +197,7 @@ def _verify_attestation(receipt, expected_head, repository, repository_root, git
     pull_number = target.get("pull_number")
     evidence_commit = target.get("evidence_commit")
     receipt_path = target.get("receipt_path")
+    mode = attestation.get("mode")
     if (not isinstance(pull_number, int) or pull_number < 1
             or not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", str(repository))
             or target.get("repository") != repository
@@ -135,40 +205,72 @@ def _verify_attestation(receipt, expected_head, repository, repository_root, git
             or evidence_commit == expected_head
             or receipt_path != "docs/phase1-review-readiness/copilot-semantic-review-receipts.jsonl"):
         raise ValueError("Receipt evidence target is stale or belongs to another repository")
+    if mode not in {"github_review", "conversation_comment"}:
+        raise ValueError("Receipt has no supported authenticated Copilot attestation mode")
+    receipt_line = json.dumps(receipt, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    introduction, introduction_time = _find_receipt_introduction(
+        repository_root, receipt_path, receipt_line, evidence_commit, expected_head,
+    )
 
     api_root = f"https://api.github.com/repos/{repository}"
     pull = github_api(f"{api_root}/pulls/{pull_number}")
     review_list = github_api(f"{api_root}/pulls/{pull_number}/reviews?per_page=100")
+    comment_list = github_api(f"{api_root}/issues/{pull_number}/comments?per_page=100")
     run_list = github_api(f"{api_root}/actions/runs?head_sha={expected_head}&per_page=100")
-    final_commit = github_api(f"{api_root}/commits/{expected_head}")
     if not isinstance(review_list, list) or len(review_list) >= 100:
         raise ValueError("GitHub review list is missing or exceeds the fail-closed lookup limit")
+    if not isinstance(comment_list, list) or len(comment_list) >= 100:
+        raise ValueError("GitHub conversation comment list is missing or exceeds the fail-closed lookup limit")
     runs = run_list.get("workflow_runs") if isinstance(run_list, dict) else None
     if not isinstance(runs, list) or len(runs) >= 100:
         raise ValueError("Exact-head workflow run list is missing or exceeds the fail-closed lookup limit")
+    receipt_markers = (
+        RECEIPT_MARKER + body_hash,
+        INTRO_COMMIT_MARKER + introduction,
+        EVIDENCE_COMMIT_MARKER + evidence_commit,
+        DECISION_MARKER,
+    )
+
+    def submitted_after(timestamp):
+        if not isinstance(timestamp, str):
+            return False
+        try:
+            parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+            return parsed.tzinfo is not None and parsed.astimezone(timezone.utc) > introduction_time.astimezone(timezone.utc)
+        except ValueError:
+            return False
+
     matching_reviews = [
         review for review in review_list
         if review.get("user", {}).get("login") == "Copilot"
-        and review.get("commit_id") == expected_head
+        and review.get("commit_id") == introduction
         and review.get("state") == "COMMENTED"
-        and review.get("submitted_at")
-        and RECEIPT_MARKER + body_hash in (review.get("body") or "")
-        and DECISION_MARKER in (review.get("body") or "")
+        and submitted_after(review.get("submitted_at"))
+        and all(marker in (review.get("body") or "") for marker in receipt_markers)
+    ]
+    matching_comments = [
+        comment for comment in comment_list
+        if comment.get("user", {}).get("login") == "Copilot"
+        and comment.get("issue_url") == f"{api_root}/issues/{pull_number}"
+        and isinstance(comment.get("id"), int) and comment["id"] > 0
+        and comment.get("html_url")
+        == f"https://github.com/{repository}/pull/{pull_number}#issuecomment-{comment.get('id')}"
+        and submitted_after(comment.get("created_at"))
+        and all(marker in (comment.get("body") or "") for marker in receipt_markers)
     ]
     author = pull.get("user", {}).get("login")
     if pull.get("head", {}).get("sha") != expected_head:
         raise ValueError("Pull request head differs from exact validation head")
-    parents = final_commit.get("parents", []) if isinstance(final_commit, dict) else []
-    changed_files = final_commit.get("files", []) if isinstance(final_commit, dict) else []
-    if (final_commit.get("sha") != expected_head
-            or [parent.get("sha") for parent in parents] != [evidence_commit]
-            or len(changed_files) != 1
-            or changed_files[0].get("filename") != receipt_path):
-        raise ValueError(
-            "Receipt commit must be the exact-head child of the evidence commit and change only the receipt file"
-        )
-    if not author or author.casefold() == "copilot" or len(matching_reviews) != 1:
-        raise ValueError("Missing Copilot identity or reviewer conflicts with pull request author")
+    matching = matching_reviews if mode == "github_review" else matching_comments
+    unique_ids = [record.get("id") for record in matching]
+    unique_urls = [
+        record.get("html_url") for record in matching
+        if mode == "conversation_comment"
+    ]
+    if (not author or author.casefold() == "copilot" or len(matching) != 1
+            or len(set(unique_ids)) != 1
+            or (mode == "conversation_comment" and len(set(unique_urls)) != 1)):
+        raise ValueError("Missing unique authenticated Copilot attestation or reviewer conflicts with PR author")
     _verify_file_authorship(
         receipt.get("review", {}), repository, pull_number, evidence_commit,
         repository_root, github_api,
