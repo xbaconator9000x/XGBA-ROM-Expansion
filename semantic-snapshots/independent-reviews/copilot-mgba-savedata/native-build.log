@@ -1,0 +1,5 @@
+[  0%] Built target mgba-version-info
+[ 97%] Built target mgba
+[ 98%] Building C object CMakeFiles/xgba_mgba_bank_boundary.dir/mgba_bank_boundary.c.o
+[100%] Linking C executable xgba_mgba_bank_boundary
+[100%] Built target xgba_mgba_bank_boundary

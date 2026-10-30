@@ -1,1 +1,0 @@
-/usr/bin/cc -g -Wl,--dependency-file=CMakeFiles/xgba_mgba_bank_boundary.dir/link.d CMakeFiles/xgba_mgba_bank_boundary.dir/mgba_bank_boundary.c.o -o xgba_mgba_bank_boundary  pinned-mgba/libmgba.a /usr/lib/x86_64-linux-gnu/libsqlite3.so -lm

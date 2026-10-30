@@ -1,2 +1,0 @@
-# Hashes of file build rules.
-c5bd26fd1ecc8b67cffe7fafd30c964c pinned-mgba/CMakeFiles/mgba-version-info
