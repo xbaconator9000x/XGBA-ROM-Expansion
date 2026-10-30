@@ -1,0 +1,89 @@
+-- Checking for one of the modules 'libedit'
+CMake Warning at /home/runner/work/XGBA-ROM-Expansion/XGBA-ROM-Expansion/upstream/mgba/src/platform/cmake/FindFeature.cmake:83 (message):
+  Requested module libedit missing for feature USE_EDITLINE.  Feature
+  disabled.
+Call Stack (most recent call first):
+  /home/runner/work/XGBA-ROM-Expansion/XGBA-ROM-Expansion/upstream/mgba/CMakeLists.txt:417 (find_feature)
+
+
+-- Checking for one of the modules 'libavcodec'
+CMake Warning at /home/runner/work/XGBA-ROM-Expansion/XGBA-ROM-Expansion/upstream/mgba/src/platform/cmake/FindFeature.cmake:83 (message):
+  Requested module libavcodec missing for feature USE_FFMPEG.  Feature
+  disabled.
+Call Stack (most recent call first):
+  /home/runner/work/XGBA-ROM-Expansion/XGBA-ROM-Expansion/upstream/mgba/CMakeLists.txt:511 (find_feature)
+
+
+-- Checking for one of the modules 'minizip'
+CMake Warning at /home/runner/work/XGBA-ROM-Expansion/XGBA-ROM-Expansion/upstream/mgba/src/platform/cmake/FindFeature.cmake:83 (message):
+  Requested module minizip missing for feature USE_MINIZIP.  Feature
+  disabled.
+Call Stack (most recent call first):
+  /home/runner/work/XGBA-ROM-Expansion/XGBA-ROM-Expansion/upstream/mgba/CMakeLists.txt:514 (find_feature)
+
+
+-- Checking for one of the modules 'libzip'
+CMake Warning at /home/runner/work/XGBA-ROM-Expansion/XGBA-ROM-Expansion/upstream/mgba/src/platform/cmake/FindFeature.cmake:83 (message):
+  Requested module libzip missing for feature USE_LIBZIP.  Feature disabled.
+Call Stack (most recent call first):
+  /home/runner/work/XGBA-ROM-Expansion/XGBA-ROM-Expansion/upstream/mgba/CMakeLists.txt:516 (find_feature)
+
+
+-- Checking for one of the modules 'epoxy'
+CMake Warning at /home/runner/work/XGBA-ROM-Expansion/XGBA-ROM-Expansion/upstream/mgba/src/platform/cmake/FindFeature.cmake:83 (message):
+  Requested module epoxy missing for feature USE_EPOXY.  Feature disabled.
+Call Stack (most recent call first):
+  /home/runner/work/XGBA-ROM-Expansion/XGBA-ROM-Expansion/upstream/mgba/CMakeLists.txt:517 (find_feature)
+
+
+-- Checking for one of the modules 'libelf'
+CMake Warning at /home/runner/work/XGBA-ROM-Expansion/XGBA-ROM-Expansion/upstream/mgba/src/platform/cmake/FindFeature.cmake:83 (message):
+  Requested module libelf missing for feature USE_ELF.  Feature disabled.
+Call Stack (most recent call first):
+  /home/runner/work/XGBA-ROM-Expansion/XGBA-ROM-Expansion/upstream/mgba/CMakeLists.txt:520 (find_feature)
+
+
+-- Checking for one of the modules 'Freetype'
+CMake Warning at /home/runner/work/XGBA-ROM-Expansion/XGBA-ROM-Expansion/upstream/mgba/src/platform/cmake/FindFeature.cmake:83 (message):
+  Requested module Freetype missing for feature USE_FREETYPE.  Feature
+  disabled.
+Call Stack (most recent call first):
+  /home/runner/work/XGBA-ROM-Expansion/XGBA-ROM-Expansion/upstream/mgba/CMakeLists.txt:521 (find_feature)
+
+
+-- Build type: Debug
+-- Platforms:
+-- 	Game Boy Advance: ON
+-- 	Game Boy: ON
+-- Features:
+-- 	Debuggers: ON
+-- 	CLI debugger: OFF
+-- 	GDB stub: OFF
+-- 	GIF/Video recording: OFF
+-- 	Screenshot/advanced savestate support: OFF
+-- 	ZIP support: OFF
+-- 	7-Zip support: ON
+-- 	SQLite3 game database: ON
+-- 	ELF loading support: OFF
+-- 	Discord Rich Presence support: ON
+-- 	OpenGL support: OFF
+-- Scripting support: OFF
+-- Frontends:
+-- 	Qt: OFF
+-- 	SDL (): OFF
+-- 	Headless: OFF
+-- 	Python bindings: OFF
+-- 	Examples: OFF
+-- Test tools:
+-- 	Profiling: OFF
+-- 	Test harness: OFF
+-- 	Test suite: OFF
+-- 	Video test suite: OFF
+-- Cores:
+-- 	Libretro core: OFF
+-- Libraries:
+-- 	Static: ON
+-- 	Shared: OFF
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/runner/work/XGBA-ROM-Expansion/XGBA-ROM-Expansion/build-mgba-boundary
