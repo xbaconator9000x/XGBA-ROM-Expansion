@@ -11,7 +11,7 @@ import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import urlencode, urlparse
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from phase1_bulk_triage import PINS, canonical, digest, git_blob, source_bytes
 
@@ -58,14 +58,16 @@ def _find_receipt_introduction(repository_root, receipt_path, receipt_line,
         raise ValueError("Receipt validation checkout is not the expected exact head")
     _git(root, "merge-base", "--is-ancestor", evidence_commit, expected_head)
     try:
-        subprocess.check_output(
+        evidence_register = subprocess.check_output(
             ["git", "-C", str(root), "show", f"{evidence_commit}:{receipt_path}"],
             stderr=subprocess.DEVNULL,
-        )
+        ).decode("utf-8").splitlines()
     except subprocess.CalledProcessError:
-        pass
-    else:
-        raise ValueError("Receipt evidence commit already contains the receipt register")
+        evidence_register = []
+    if len(evidence_register) != len(set(evidence_register)):
+        raise ValueError("Receipt evidence commit contains duplicate register entries")
+    if receipt_line in evidence_register:
+        raise ValueError("Receipt already exists at its evidence commit")
     commits = _git(
         root, "rev-list", "--first-parent", "--reverse",
         f"{evidence_commit}..{expected_head}",
@@ -96,14 +98,14 @@ def _find_receipt_introduction(repository_root, receipt_path, receipt_line,
                 raise ValueError("Receipt register changes must be single-parent, receipt-only commits")
             if contents[:len(previous)] != previous or len(contents) != len(set(contents)):
                 raise ValueError("Receipt register history is not append-only")
-            if not previous and parent != evidence_commit:
-                raise ValueError("First receipt must directly descend from its evidence commit")
         elif contents != previous:
             raise ValueError("Receipt register changed outside an append-only commit")
         occurrences = contents.count(receipt_line)
         if occurrences > 1:
             raise ValueError("Duplicate receipt bytes in the append-only register")
         if introduction is None and occurrences == 1 and receipt_line not in previous:
+            if parent != evidence_commit:
+                raise ValueError("Receipt introduction must directly descend from its evidence commit")
             introduction = commit_sha
     if introduction is None:
         raise ValueError("Receipt has no introduction commit after its evidence commit")
@@ -143,6 +145,50 @@ def github_get_json(url, token=None):
             return json.loads(response.read())
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
         raise ValueError("Unable to verify GitHub receipt attestation") from exc
+
+
+class GitHubAPICache:
+    """Cache GitHub API reads and fetch complete paginated collections."""
+
+    def __init__(self, getter=github_get_json):
+        self.getter = getter
+        self.responses = {}
+
+    def __call__(self, url):
+        if url not in self.responses:
+            try:
+                result = self.getter(url)
+            except Exception as exc:
+                raise ValueError("Unable to retrieve complete GitHub API response") from exc
+            if result is None:
+                raise ValueError("GitHub API returned a missing response")
+            self.responses[url] = result
+        return self.responses[url]
+
+    def paginate(self, url, *, result_key=None):
+        parsed = urlparse(url)
+        query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+        query["per_page"] = "100"
+        items = []
+        seen_ids = set()
+        page = 1
+        while True:
+            query["page"] = str(page)
+            page_url = urlunparse(parsed._replace(query=urlencode(query)))
+            response = self(page_url)
+            page_items = response.get(result_key) if result_key else response
+            if (not isinstance(page_items, list) or len(page_items) > 100
+                    or any(not isinstance(item, dict) for item in page_items)):
+                raise ValueError("GitHub API returned an invalid paginated response")
+            for item in page_items:
+                item_id = item.get("id")
+                if not isinstance(item_id, int) or item_id < 1 or item_id in seen_ids:
+                    raise ValueError("GitHub pagination contains a missing or duplicate record ID")
+                seen_ids.add(item_id)
+            items.extend(page_items)
+            if not page_items:
+                return items
+            page += 1
 
 
 def _verify_source_reference(ref, source_root):
@@ -193,6 +239,15 @@ def _verify_file_authorship(review, repository, pull_number, evidence_commit,
             raise ValueError("Authorship evidence file is missing or outside the checkout")
         if hashlib.sha256(file_path.read_bytes()).hexdigest() != expected_sha:
             raise ValueError("Authorship evidence file hash differs from the exact checkout")
+        try:
+            evidence_bytes = subprocess.check_output(
+                ["git", "-C", str(root), "show", f"{evidence_commit}:{path}"],
+                stderr=subprocess.DEVNULL,
+            )
+        except subprocess.CalledProcessError as exc:
+            raise ValueError("Authorship evidence file is missing at its evidence commit") from exc
+        if hashlib.sha256(evidence_bytes).hexdigest() != expected_sha:
+            raise ValueError("Authorship evidence hash differs at its evidence commit")
         query = urlencode({"path": path, "sha": evidence_commit, "per_page": 1})
         commits = github_api(f"{api_root}/commits?{query}")
         if not isinstance(commits, list) or not commits:
@@ -238,17 +293,14 @@ def _verify_attestation(receipt, expected_head, repository, repository_root, git
     )
 
     api_root = f"https://api.github.com/repos/{repository}"
-    pull = github_api(f"{api_root}/pulls/{pull_number}")
-    review_list = github_api(f"{api_root}/pulls/{pull_number}/reviews?per_page=100")
-    comment_list = github_api(f"{api_root}/issues/{pull_number}/comments?per_page=100")
-    run_list = github_api(f"{api_root}/actions/runs?head_sha={expected_head}&per_page=100")
-    if not isinstance(review_list, list) or len(review_list) >= 100:
-        raise ValueError("GitHub review list is missing or exceeds the fail-closed lookup limit")
-    if not isinstance(comment_list, list) or len(comment_list) >= 100:
-        raise ValueError("GitHub conversation comment list is missing or exceeds the fail-closed lookup limit")
-    runs = run_list.get("workflow_runs") if isinstance(run_list, dict) else None
-    if not isinstance(runs, list) or len(runs) >= 100:
-        raise ValueError("Exact-head workflow run list is missing or exceeds the fail-closed lookup limit")
+    api = github_api if isinstance(github_api, GitHubAPICache) else GitHubAPICache(github_api)
+    pull = api(f"{api_root}/pulls/{pull_number}")
+    review_list = api.paginate(f"{api_root}/pulls/{pull_number}/reviews")
+    comment_list = api.paginate(f"{api_root}/issues/{pull_number}/comments")
+    runs = api.paginate(
+        f"{api_root}/actions/runs?head_sha={expected_head}",
+        result_key="workflow_runs",
+    )
     receipt_markers = (
         RECEIPT_MARKER + body_hash,
         INTRO_COMMIT_MARKER + introduction,
@@ -328,6 +380,7 @@ def validate_receipt(receipt, *, queue, dossiers, source_root, expected_head,
     """Return (source key, problems) after independently checking receipt evidence."""
     key = None
     problems = []
+    api = github_api if isinstance(github_api, GitHubAPICache) else GitHubAPICache(github_api)
     try:
         if not isinstance(receipt, dict) or receipt.get("schema") != SCHEMA:
             raise ValueError("Unknown Copilot receipt schema")
@@ -471,7 +524,7 @@ def validate_receipt(receipt, *, queue, dossiers, source_root, expected_head,
                 raise ValueError("Unresolved substantive objection")
         _verify_attestation(
             receipt, expected_head, repository,
-            root, github_api,
+            root, api,
         )
     except (AttributeError, KeyError, TypeError, ValueError, OSError) as exc:
         problems.append(str(exc))

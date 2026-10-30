@@ -40,7 +40,7 @@ class LegacyDispositionTests(unittest.TestCase):
             f"https://api.github.com/repos/{self.repository}/pulls/8": {
                 "user": {"login": "pr-author"},
             },
-            f"https://api.github.com/repos/{self.repository}/pulls/8/reviews?per_page=100": [{
+            f"https://api.github.com/repos/{self.repository}/pulls/8/reviews?per_page=100&page=1": [{
                 "id": 321,
                 "user": {"login": "reviewer"},
                 "commit_id": self.sha,
@@ -53,6 +53,7 @@ class LegacyDispositionTests(unittest.TestCase):
                     + gate.DECISION_MARKER
                 ),
             }],
+            f"https://api.github.com/repos/{self.repository}/pulls/8/reviews?per_page=100&page=2": [],
         }
 
     def test_attributed_legacy_receipt_remains_valid(self):
@@ -74,7 +75,7 @@ class LegacyDispositionTests(unittest.TestCase):
 
     def test_forged_or_stale_github_review_is_rejected(self):
         self.api[
-            f"https://api.github.com/repos/{self.repository}/pulls/8/reviews?per_page=100"
+            f"https://api.github.com/repos/{self.repository}/pulls/8/reviews?per_page=100&page=1"
         ][0]["body"] = "No matching disposition receipt."
         self.assertTrue(
             gate.verify_legacy_provenance(

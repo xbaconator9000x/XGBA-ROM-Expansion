@@ -98,7 +98,7 @@ class CopilotReceiptTests(unittest.TestCase):
         (self.repository_root / "review" / "evidence.txt").write_bytes(evidence_bytes)
         (self.repository_root / "review" / "second-dossier.json").write_bytes(second_dossier_bytes)
         (self.repository_root / "review" / "second-evidence.txt").write_bytes(second_evidence_bytes)
-        subprocess.run(["git", "-C", str(self.repository_root), "add", "."], check=True)
+        subprocess.run(["git", "-C", str(self.repository_root), "add", "review/dossier.json", "review/evidence.txt"], check=True)
         subprocess.run(["git", "-C", str(self.repository_root), "commit", "-qm", "Evidence checkpoint"], check=True)
         self.evidence_commit = subprocess.check_output(
             ["git", "-C", str(self.repository_root), "rev-parse", "HEAD"], text=True
@@ -129,6 +129,7 @@ class CopilotReceiptTests(unittest.TestCase):
                 },
             ],
         }
+        self.second_evidence_commit = None
         self.receipt = self._make_receipt()
         self.github_responses = {}
         self.committed_receipts = []
@@ -204,7 +205,9 @@ class CopilotReceiptTests(unittest.TestCase):
             "target": {
                 "repository": self.repository,
                 "pull_number": 8,
-                "evidence_commit": self.evidence_commit,
+                "evidence_commit": (
+                    self.evidence_commit if key == self.key else self.second_evidence_commit
+                ),
                 "receipt_path": "docs/phase1-review-readiness/copilot-semantic-review-receipts.jsonl",
             },
             "attestation": {
@@ -257,6 +260,39 @@ class CopilotReceiptTests(unittest.TestCase):
         extra.write_text("A later unrelated change.\n", encoding="utf-8")
         subprocess.run(["git", "-C", str(self.repository_root), "add", "review/later-note.txt"], check=True)
         subprocess.run(["git", "-C", str(self.repository_root), "commit", "-qm", "Later unrelated change"], check=True)
+        self.head = subprocess.check_output(
+            ["git", "-C", str(self.repository_root), "rev-parse", "HEAD"], text=True
+        ).strip()
+        self._refresh_github_responses()
+
+    def _commit_second_evidence(self):
+        subprocess.run([
+            "git", "-C", str(self.repository_root), "add",
+            "review/second-dossier.json", "review/second-evidence.txt",
+        ], check=True)
+        subprocess.run([
+            "git", "-C", str(self.repository_root), "commit", "-qm", "Second independent evidence",
+        ], check=True)
+        self.second_evidence_commit = subprocess.check_output(
+            ["git", "-C", str(self.repository_root), "rev-parse", "HEAD"], text=True
+        ).strip()
+        for item in self.authorship[self.second_key]:
+            item["commit_sha"] = self.second_evidence_commit
+        self._refresh_github_responses()
+
+    def _commit_second_evidence_with_rewritten_register(self):
+        register = self.repository_root / self.receipt["target"]["receipt_path"]
+        original_lines = register.read_text(encoding="utf-8").splitlines()
+        register.write_text(original_lines[0] + " " + "\n", encoding="utf-8")
+        subprocess.run([
+            "git", "-C", str(self.repository_root), "add",
+            "review/second-dossier.json", "review/second-evidence.txt",
+            self.receipt["target"]["receipt_path"],
+        ], check=True)
+        subprocess.run([
+            "git", "-C", str(self.repository_root), "commit", "-qm",
+            "Second evidence rewrites earlier receipt",
+        ], check=True)
         self.head = subprocess.check_output(
             ["git", "-C", str(self.repository_root), "rev-parse", "HEAD"], text=True
         ).strip()
@@ -356,8 +392,9 @@ class CopilotReceiptTests(unittest.TestCase):
                 "user": {"login": "xbaconator9000x"},
                 "head": {"sha": self.head},
             },
-            f"https://api.github.com/repos/{self.repository}/pulls/8/reviews?per_page=100": [],
-            f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100": [
+            f"https://api.github.com/repos/{self.repository}/pulls/8/reviews?per_page=100&page=1": [],
+            f"https://api.github.com/repos/{self.repository}/pulls/8/reviews?per_page=100&page=2": [],
+            f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100&page=1": [
                 {
                     "id": item["comment_id"],
                     "user": {"login": "Copilot"},
@@ -368,8 +405,10 @@ class CopilotReceiptTests(unittest.TestCase):
                 }
                 for item in self.committed_receipts
             ],
-            f"https://api.github.com/repos/{self.repository}/actions/runs?head_sha={self.head}&per_page=100": {
+            f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100&page=2": [],
+            f"https://api.github.com/repos/{self.repository}/actions/runs?head_sha={self.head}&per_page=100&page=1": {
                 "workflow_runs": [{
+                    "id": 900001,
                     "name": "Phase 1 consolidated PR checks",
                     "event": "pull_request",
                     "head_sha": self.head,
@@ -384,29 +423,33 @@ class CopilotReceiptTests(unittest.TestCase):
                     }],
                 }],
             },
+            f"https://api.github.com/repos/{self.repository}/actions/runs?head_sha={self.head}&per_page=100&page=2": {
+                "workflow_runs": [],
+            },
         }
         api_root = f"https://api.github.com/repos/{self.repository}"
+        files_by_commit = {}
         for entries in self.authorship.values():
             for item in entries:
                 query = urlencode({
-                    "path": item["path"], "sha": self.evidence_commit, "per_page": 1,
+                    "path": item["path"], "sha": item["commit_sha"], "per_page": 1,
                 })
                 self.github_responses[f"{api_root}/commits?{query}"] = [
-                    {"sha": self.evidence_commit}
+                    {"sha": item["commit_sha"]}
                 ]
-                self.github_responses[f"{api_root}/commits/{self.evidence_commit}"] = {
-                    "sha": self.evidence_commit,
-                    "parents": [],
-                    "author": {"login": "xbaconator9000x"},
-                    "committer": {"login": "xbaconator9000x"},
-                    "files": [
-                        {"filename": authored["path"]}
-                        for authored_entries in self.authorship.values()
-                        for authored in authored_entries
-                    ],
-                }
+                files_by_commit.setdefault(item["commit_sha"], []).append(
+                    {"filename": item["path"]}
+                )
+        for commit_sha, files in files_by_commit.items():
+            self.github_responses[f"{api_root}/commits/{commit_sha}"] = {
+                "sha": commit_sha,
+                "parents": [],
+                "author": {"login": "xbaconator9000x"},
+                "committer": {"login": "xbaconator9000x"},
+                "files": files,
+            }
 
-    def _validate(self, receipt=None):
+    def _validate(self, receipt=None, github_api=None):
         return receipts.validate_receipt(
             self.receipt if receipt is None else receipt,
             queue=self.queue,
@@ -415,8 +458,12 @@ class CopilotReceiptTests(unittest.TestCase):
             expected_head=self.head,
             repository_root=self.repository_root,
             repository=self.repository,
-            github_api=self.github_responses.__getitem__,
+            github_api=github_api or self.github_responses.__getitem__,
         )
+
+    @staticmethod
+    def _noise_records(first_id, count):
+        return [{"id": first_id + index, "user": {"login": "other"}} for index in range(count)]
 
     def test_real_post_receipt_git_sha_validates_without_self_reference(self):
         self._seal()
@@ -436,11 +483,106 @@ class CopilotReceiptTests(unittest.TestCase):
     def test_two_receipts_remain_valid_after_later_receipt_and_unrelated_commit(self):
         self._seal()
         first = copy.deepcopy(self.receipt)
+        self._commit_second_evidence()
         second = self._make_receipt(self.second_key)
         self._commit_receipt(second)
         self._add_unrelated_commit()
         self.assertEqual(self._validate(first), (self.key, []))
         self.assertEqual(self._validate(second), (self.second_key, []))
+
+    def test_paginated_attestations_find_page_two_and_share_cached_snapshots(self):
+        self._seal()
+        first = copy.deepcopy(self.receipt)
+        self._commit_second_evidence()
+        second = self._make_receipt(self.second_key)
+        self._commit_receipt(second)
+        self._add_unrelated_commit()
+        api_root = f"https://api.github.com/repos/{self.repository}"
+        comments_one = f"{api_root}/issues/8/comments?per_page=100&page=1"
+        comments_two = f"{api_root}/issues/8/comments?per_page=100&page=2"
+        comments_three = f"{api_root}/issues/8/comments?per_page=100&page=3"
+        reviews_one = f"{api_root}/pulls/8/reviews?per_page=100&page=1"
+        reviews_two = f"{api_root}/pulls/8/reviews?per_page=100&page=2"
+        self.github_responses[comments_one] = self._noise_records(100000, 100)
+        self.github_responses[comments_two] = [
+            {
+                "id": item["comment_id"],
+                "user": {"login": "Copilot"},
+                "issue_url": f"{api_root}/issues/8",
+                "html_url": f"https://github.com/{self.repository}/pull/8#issuecomment-{item['comment_id']}",
+                "created_at": item["created_at"],
+                "body": item["body"],
+            }
+            for item in self.committed_receipts
+        ]
+        self.github_responses[comments_three] = []
+        self.github_responses[reviews_one] = self._noise_records(200000, 100)
+        self.github_responses[reviews_two] = []
+        calls = {}
+
+        def counted_api(url):
+            calls[url] = calls.get(url, 0) + 1
+            return self.github_responses[url]
+
+        api = receipts.GitHubAPICache(counted_api)
+        self.assertEqual(self._validate(first, api), (self.key, []))
+        snapshot_calls = {
+            url: count for url, count in calls.items()
+            if "/reviews?" in url or "/comments?" in url or "/actions/runs?" in url
+        }
+        self.assertEqual(self._validate(second, api), (self.second_key, []))
+        self.assertEqual(
+            snapshot_calls,
+            {
+                url: count for url, count in calls.items()
+                if "/reviews?" in url or "/comments?" in url or "/actions/runs?" in url
+            },
+        )
+        self.assertIn(comments_two, api.responses)
+        self.assertIn(reviews_two, api.responses)
+
+    def test_duplicate_attestations_across_pages_are_rejected(self):
+        self._seal()
+        api_root = f"https://api.github.com/repos/{self.repository}"
+        comments_one = f"{api_root}/issues/8/comments?per_page=100&page=1"
+        comments_two = f"{api_root}/issues/8/comments?per_page=100&page=2"
+        original = self.github_responses[comments_one][0]
+        self.github_responses[comments_one] = self._noise_records(100000, 99) + [original]
+        duplicate = copy.deepcopy(original)
+        duplicate["id"] += 1
+        duplicate["html_url"] = f"https://github.com/{self.repository}/pull/8#issuecomment-{duplicate['id']}"
+        self.github_responses[comments_two] = [duplicate]
+        self.assertTrue(self._validate()[1])
+
+    def test_short_attestation_page_does_not_hide_later_records(self):
+        self._seal()
+        api_root = f"https://api.github.com/repos/{self.repository}"
+        comments_one = f"{api_root}/issues/8/comments?per_page=100&page=1"
+        comments_two = f"{api_root}/issues/8/comments?per_page=100&page=2"
+        comments_three = f"{api_root}/issues/8/comments?per_page=100&page=3"
+        attestation = self.github_responses[comments_one][0]
+        self.github_responses[comments_one] = self._noise_records(100000, 30)
+        self.github_responses[comments_two] = [attestation]
+        self.github_responses[comments_three] = []
+        key, problems = self._validate()
+        self.assertEqual(key, self.key)
+        self.assertEqual(problems, [])
+
+    def test_missing_or_rate_limited_attestation_page_fails_closed(self):
+        self._seal()
+        api_root = f"https://api.github.com/repos/{self.repository}"
+        comments_one = f"{api_root}/issues/8/comments?per_page=100&page=1"
+        comments_two = f"{api_root}/issues/8/comments?per_page=100&page=2"
+        self.github_responses[comments_one] = self._noise_records(100000, 100)
+        self.github_responses.pop(comments_two, None)
+        self.assertTrue(self._validate()[1])
+
+        def rate_limited(url):
+            if url == comments_two:
+                raise RuntimeError("rate limit")
+            return self.github_responses[url]
+
+        self.assertTrue(self._validate(github_api=rate_limited)[1])
 
     def test_receipt_introduction_commit_with_extra_file_is_rejected(self):
         self._seal()
@@ -467,6 +609,7 @@ class CopilotReceiptTests(unittest.TestCase):
 
     def test_removing_another_appended_receipt_is_rejected(self):
         self._seal()
+        self._commit_second_evidence()
         self._commit_receipt(self._make_receipt(self.second_key))
         self._remove_later_appended_receipt()
         self.assertTrue(self._validate()[1])
@@ -476,6 +619,11 @@ class CopilotReceiptTests(unittest.TestCase):
         duplicate = copy.deepcopy(self.receipt)
         duplicate["review"]["semantic_rationale"] += " Duplicate identity."
         self._commit_receipt(duplicate)
+        self.assertTrue(self._validate()[1])
+
+    def test_second_evidence_commit_cannot_rewrite_prior_receipt(self):
+        self._seal()
+        self._commit_second_evidence_with_rewritten_register()
         self.assertTrue(self._validate()[1])
 
     def test_receipt_register_missing_or_foreign_target_is_rejected(self):
@@ -559,12 +707,12 @@ class CopilotReceiptTests(unittest.TestCase):
 
     def test_missing_reviewer_identity_is_rejected(self):
         self._seal()
-        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100"
+        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100&page=1"
         self.github_responses[comment_url][0]["user"] = {}
         self.assertTrue(self._validate()[1])
 
     def test_conversation_comment_attestation_rejects_wrong_author_duplicate_or_early_comment(self):
-        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100"
+        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100&page=1"
         self._seal()
         self.github_responses[comment_url][0]["user"]["login"] = "someone-else"
         self.assertTrue(self._validate()[1])
@@ -581,12 +729,12 @@ class CopilotReceiptTests(unittest.TestCase):
 
     def test_missing_conversation_comment_is_rejected(self):
         self._seal()
-        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100"
+        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100&page=1"
         self.github_responses[comment_url] = []
         self.assertTrue(self._validate()[1])
 
     def test_conversation_comment_requires_exact_receipt_and_commit_markers(self):
-        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100"
+        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100&page=1"
         for marker in (
             receipts.RECEIPT_MARKER + "0" * 64,
             receipts.INTRO_COMMIT_MARKER + "d" * 40,
@@ -685,13 +833,13 @@ class CopilotReceiptTests(unittest.TestCase):
 
     def test_exact_head_run_must_include_census_workflow(self):
         self._seal()
-        run_url = f"https://api.github.com/repos/{self.repository}/actions/runs?head_sha={self.head}&per_page=100"
+        run_url = f"https://api.github.com/repos/{self.repository}/actions/runs?head_sha={self.head}&per_page=100&page=1"
         self.github_responses[run_url]["workflow_runs"][0]["referenced_workflows"] = []
         self.assertTrue(self._validate()[1])
 
     def test_unsuccessful_exact_head_validation_is_rejected(self):
         self._seal()
-        run_url = f"https://api.github.com/repos/{self.repository}/actions/runs?head_sha={self.head}&per_page=100"
+        run_url = f"https://api.github.com/repos/{self.repository}/actions/runs?head_sha={self.head}&per_page=100&page=1"
         self.github_responses[run_url]["workflow_runs"][0]["conclusion"] = "failure"
         self.assertTrue(self._validate()[1])
         self._seal()
@@ -700,7 +848,7 @@ class CopilotReceiptTests(unittest.TestCase):
 
     def test_hash_without_explicit_review_decision_is_rejected(self):
         self._seal()
-        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100"
+        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100&page=1"
         self.github_responses[comment_url][0]["body"] = receipts.RECEIPT_MARKER + receipts.receipt_digest(self.receipt)
         self.assertTrue(self._validate()[1])
 

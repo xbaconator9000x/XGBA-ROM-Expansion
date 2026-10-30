@@ -2,7 +2,7 @@
 """Fail-closed Phase 1 mapping gate; never conflates source census with semantic signoff."""
 import argparse,csv,gzip,hashlib,json,os,re,sys
 from pathlib import Path
-from phase1_copilot_receipts import github_get_json, load_receipts, validate_receipt
+from phase1_copilot_receipts import GitHubAPICache, github_get_json, load_receipts, validate_receipt
 GOOD={"mapped_dependencies","reviewed_not_relevant","excluded_with_evidence"}
 SHA1=re.compile(r"^[0-9a-f]{40}$")
 SHA256=re.compile(r"^[0-9a-f]{64}$")
@@ -60,9 +60,8 @@ def verify_legacy_provenance(d,repository,github_api=github_get_json):
  api_root=f"https://api.github.com/repos/{repository}"
  try:
   pull=github_api(f"{api_root}/pulls/{provenance['pull_number']}")
-  reviews=github_api(f"{api_root}/pulls/{provenance['pull_number']}/reviews?per_page=100")
-  if not isinstance(reviews,list) or len(reviews)>=100:
-   return ["Legacy GitHub review list is missing or exceeds the fail-closed lookup limit"]
+  api=github_api if isinstance(github_api,GitHubAPICache) else GitHubAPICache(github_api)
+  reviews=api.paginate(f"{api_root}/pulls/{provenance['pull_number']}/reviews")
   reviewer=provenance["reviewer_login"]
   body_hash=provenance["disposition_sha256"]
   matching=[
@@ -84,6 +83,7 @@ def verify_legacy_provenance(d,repository,github_api=github_get_json):
  return []
 def gate(root,dispositions,copilot_receipts=None,source_root=None,expected_head=None,
         repository=None,github_api=github_get_json):
+ github_api=github_api if isinstance(github_api,GitHubAPICache) else GitHubAPICache(github_api)
  issues=[];audit=json.loads((root/"audit_summary.json").read_text())
  second=json.loads((root/"second_pass_summary.json").read_text())
  if not audit["census_complete"]:issues.append("Pinned source census is incomplete")
@@ -146,7 +146,8 @@ def gate(root,dispositions,copilot_receipts=None,source_root=None,expected_head=
   receipt_seen=set()
   for receipt in receipts:
    key,problems=validate_receipt(receipt,queue=qindex,dossiers=dossiers,
-     source_root=source_root,expected_head=expected_head,repository=repository)
+     source_root=source_root,expected_head=expected_head,repository=repository,
+     github_api=github_api)
    if key in receipt_seen:
     issues.append("Duplicate Copilot review receipt "+str(key))
     continue
