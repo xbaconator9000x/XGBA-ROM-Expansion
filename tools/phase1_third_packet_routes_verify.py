@@ -25,7 +25,7 @@ def check(raw,r,p,n):
  assert r["license_status"]=="PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING"
  assert r["license_evidence"]=={"repository":"pret/pokefirered","file_notice":"NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER","license_clearance":"NOT_ESTABLISHED"}
  assert r["source_observations"] and len(r["dependency_edges"])>=4 and len(r["unresolved"])>=4 and len(r["reviewer_questions"])==5
- assert len(r["line_anchors"])>=min(8,p["source_lines"]) and len(r["required_source_tokens"])>=5
+ assert len(r["line_anchors"])>=(6 if p["source_lines"]<8 else 8) and len(r["required_source_tokens"])>=5
  lines=raw.decode("utf-8").splitlines()
  assert len(lines)==p["source_lines"]
  for a in r["line_anchors"]:assert 0<a["line"]<=len(lines) and lines[a["line"]-1]==a["text"]

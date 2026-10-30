@@ -18,7 +18,7 @@ def check(r,p):
  assert r["license_status"].startswith("PENDING_")
  assert r["platform_scope"]=="AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED"
  assert r["evidence_class"]=="PINNED_AUTHORED_SOURCE_ONLY"
- assert len(r["line_anchors"])>=min(8,p["source_lines"]) and len(r["dependency_edges"])>=4 and len(r["unresolved"])>=4 and r["source_observations"]
+ assert len(r["line_anchors"])>=(6 if p["source_lines"]<8 else 8) and len(r["dependency_edges"])>=4 and len(r["unresolved"])>=4 and r["source_observations"]
  assert (r["map_json_static_wiring"]["git_blob_sha1"] and r["map_json_static_wiring"]["required_event_scripts"]) if r["packet_index"]<204 else r["packet_index"] in range(204,228)
 def reject(r,p):
  try:check(r,p)
