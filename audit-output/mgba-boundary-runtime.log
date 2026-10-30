@@ -1,0 +1,116 @@
+STEP begin vanilla
+STEP fixture allocated vanilla
+STEP core created/initialized
+STEP ROM loaded, resetting
+STEP core reset successful
+CARTRIDGE vanilla backing_bytes=33554432 visible_rom_bytes=33554432
+STEP vanilla pre-check
+PASS vanilla_non_M_does_not_select_matrix
+TRACE vanilla_ARM_fetch_data_consistency data=e1a00000 fetch=e1a00000 expected=e1a00000
+PASS vanilla_ARM_fetch_data_consistency
+TRACE vanilla_Thumb_fetch_data_consistency data=46c0 fetch=46c0 expected=46c0
+PASS vanilla_Thumb_fetch_data_consistency
+PASS native_ROM2_EX_without_EEPROM_reads_ROM
+PASS native_ROM2_EX_16bit_EEPROM_overrides_ROM
+PASS native_ROM2_EX_32bit_EEPROM_not_16bit_override
+PASS native_ROM2_EX_eReader_register_overrides_ROM
+PASS native_EEPROM_priority_over_eReader_on_16bit_ROM2_EX
+GBA DMA: Starting DMA 3 0x0D001200 -> 0x02000100 (8000:0001)
+DMA DEBUG pre: now=0 event.when=3 scheduled=1 active=3 count=1 src=0d001200 dst=02000100 cycles=0 nextEvent=0
+DMA DEBUG tick=1 now=80 scheduled=1 count=1 enabled=32768
+DMA DEBUG tick=2 now=160 scheduled=1 count=-2147483648 enabled=32768
+DMA DEBUG tick=3 now=240 scheduled=0 count=0 enabled=0
+DMA DEBUG post: now=240 event.when=170 scheduled=0 active=-1 count=0 dstword=0001 cycles=0 nextEvent=-80
+PASS native_DMA3_16bit_ROM2_EX_reads_EEPROM
+PASS native_DMA3_immediate_one_unit_completes
+STEP deinit
+STEP complete
+STEP begin matrix
+STEP fixture allocated matrix
+STEP core created/initialized
+STEP ROM loaded, resetting
+STEP core reset successful
+CARTRIDGE matrix backing_bytes=67108864 visible_rom_bytes=16777216
+STEP matrix pre-check
+PASS matrix_M_signature_and_16MiB_aperture
+TRACE matrix_bank_A_ARM_fetch_data data=e1a00000 fetch=e1a00000 expected=e1a00000
+PASS matrix_bank_A_ARM_fetch_data
+OBSERVATION native_remap_leaves_prefetch_stale_until_refetch=true
+TRACE matrix_bank_B_ARM_fetch_data_after_refetch data=e1a01001 fetch=e1a01001 expected=e1a01001
+PASS matrix_bank_B_ARM_fetch_data_after_refetch
+TRACE matrix_bank_A_Thumb_fetch_data data=46c0 fetch=46c0 expected=46c0
+PASS matrix_bank_A_Thumb_fetch_data
+TRACE matrix_bank_B_Thumb_fetch_data data=46c9 fetch=46c9 expected=46c9
+PASS matrix_bank_B_Thumb_fetch_data
+PASS matrix_reset_does_not_preserve_alternate_bank
+PASS matrix_savestate_16slot_metadata_roundtrip
+TRACE matrix_savestate_reloads_ARM_physical_bank data=e1a01001 fetch=e1a01001 expected=e1a01001
+PASS matrix_savestate_reloads_ARM_physical_bank
+TRACE matrix_savestate_reloads_Thumb_physical_bank data=46c9 fetch=46c9 expected=46c9
+PASS matrix_savestate_reloads_Thumb_physical_bank
+TRACE matrix_pre_full_state_mutation_bank_A data=e1a00000 fetch=e1a00000 expected=e1a00000
+PASS matrix_pre_full_state_mutation_bank_A
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA Savedata: Switching save types
+PASS matrix_full_emulator_state_deserialize_success
+TRACE matrix_full_state_restores_ARM_bank_B data=e1a01001 fetch=e1a01001 expected=e1a01001
+PASS matrix_full_state_restores_ARM_bank_B
+TRACE matrix_full_state_restores_Thumb_bank_B data=46c9 fetch=46c9 expected=46c9
+PASS matrix_full_state_restores_Thumb_bank_B
+GBA Savestate: Savestate is for a different version of the game
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA Savedata: Switching save types
+OBSERVATION native_savestate_CRC_mismatch_only_warns=true
+GBA Savestate: Savestate is for a different game
+PASS native_savestate_rejects_changed_game_code
+GBA Savestate: Savestate is for a different game
+PASS native_savestate_rejects_changed_game_title
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA Savedata: Switching save types
+OBSERVATION native_savestate_external_bank_payload_change_unverified=true
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA DMA: Invalid DMA source address: 0x00000000
+GBA Savedata: Switching save types
+PASS native_savestate_restores_original_backing_after_fixture_mutation
+GBA Memory: Invalid Matrix mapping: 00002000
+PASS native_matrix_rejects_outside_8KiB_window
+GBA Memory: Rejecting Matrix write for size 0
+PASS native_matrix_rejects_zero_size
+OBSERVATION native_matrix_accepts_physical_range_past_end=true
+STEP deinit
+STEP complete
+PASS native_oversize_nonM_keeps_32MiB_visible_aperture
+PASS native_oversize_nonM_keeps_full_VFile_backing_length
+PASS native_oversize_nonM_does_not_activate_Matrix
+TRACE native_oversize_nonM_ARM_visible_bytes data=e1a00000 fetch=e1a00000 expected=e1a00000
+PASS native_oversize_nonM_ARM_visible_bytes
+PASS native_oversize_nonM_ROM_end_access
+PASS native_oversize_nonM_has_no_extra_CPU_address_window
+SUMMARY hard_failures=0 native_gap_observations=4 xgba_runtime_implemented=false phase1_mapping_complete=false
