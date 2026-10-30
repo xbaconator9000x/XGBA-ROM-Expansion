@@ -1,0 +1,55 @@
+name: Copilot integration readiness checker tests
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/copilot-integration-readiness-tests.yml"
+      - "development/copilot-integration/manifest.json"
+      - "docs/PHASE1_STATUS.md"
+      - "tests/fixtures/copilot-integration-readiness/valid_merge_sha.json"
+      - "tests/test_copilot_check_integration_readiness.py"
+      - "tools/copilot_check_integration_readiness.py"
+
+permissions:
+  contents: read
+
+jobs:
+  checker-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify pinned offline fixture
+        run: |
+          echo "eb445e9b6763638c0e52423fd48368c641533274106828e86857253d94a81c17  tests/fixtures/copilot-integration-readiness/valid_merge_sha.json" | sha256sum --check
+      - name: Run integration readiness regression tests
+        run: python3 -m unittest discover -s tests -p 'test_copilot_check_integration_readiness.py' -v
+      - name: Verify offline behavior remains blocked
+        run: |
+          set +e
+          python3 tools/copilot_check_integration_readiness.py --offline > "$RUNNER_TEMP/copilot-readiness.txt" 2>&1
+          status=$?
+          set -e
+          if [ "$status" -ne 1 ]; then
+            cat "$RUNNER_TEMP/copilot-readiness.txt"
+            echo "Expected the incomplete recorded snapshot to exit 1; got $status"
+            exit 1
+          fi
+          grep -Fq "BLOCKED (8 readiness issues):" "$RUNNER_TEMP/copilot-readiness.txt"
+          grep -Fq "manifest base SHA is malformed" "$RUNNER_TEMP/copilot-readiness.txt"
+      - name: Preserve Phase 1 gate and approval totals
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(Path("development/copilot-integration/manifest.json").read_text())
+          policy = manifest["policy"]
+          assert policy["phase1_gate"] == "FAIL_INCOMPLETE"
+          assert policy["independent_approvals"] == 0
+          assert policy["preserve_source_pins"] is True
+          assert policy["ci_is_semantic_approval"] is False
+          status = Path("docs/PHASE1_STATUS.md").read_text()
+          assert "**Decision: FAIL_INCOMPLETE." in status
+          assert "Independent whole-file semantic dispositions approved: 0/14,834." in status
+          PY
