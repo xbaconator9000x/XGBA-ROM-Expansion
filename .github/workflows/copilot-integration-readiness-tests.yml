@@ -1,0 +1,88 @@
+name: Copilot integration readiness checker tests
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/copilot-integration-readiness-tests.yml"
+      - "development/copilot-integration/manifest.json"
+      - "docs/integration/copilot-stack-readiness-20261030.md"
+      - "docs/PHASE1_STATUS.md"
+      - "semantic-snapshots/current/phase1_mapping_gate.json"
+      - "semantic-snapshots/curated/p0_semantic_review_candidates_2026-10-26.json"
+      - "semantic-snapshots/independent-reviews/curated-p0-intake-20261029.json"
+      - "semantic-snapshots/independent-reviews/queue.json"
+      - "tests/fixtures/copilot-integration-readiness/valid_merge_sha.json"
+      - "tests/test_copilot_check_integration_readiness.py"
+      - "tests/test_phase1_ci_context.py"
+      - "tests/test_phase1_continuous.py"
+      - "tests/test_phase1_independent_queue.py"
+      - "tests/test_xgba_rom_compatibility_preflight.py"
+      - "tools/copilot_check_integration_readiness.py"
+      - "tools/phase1_continuous.py"
+      - "tools/phase1_independent_queue_validate.py"
+      - "tools/verify_phase1_ci_context.py"
+      - "tools/xgba_rom_compatibility_preflight.py"
+
+permissions:
+  contents: read
+
+jobs:
+  checker-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Require exact PR-head checkout and valid event scope
+        run: python3 tools/verify_phase1_ci_context.py
+      - name: Compile supported Python validators and regression tests
+        run: |
+          python3 -m py_compile \
+            tools/copilot_check_integration_readiness.py \
+            tools/phase1_continuous.py \
+            tools/phase1_independent_queue_validate.py \
+            tools/verify_phase1_ci_context.py \
+            tools/xgba_rom_compatibility_preflight.py \
+            tests/test_copilot_check_integration_readiness.py \
+            tests/test_phase1_ci_context.py \
+            tests/test_phase1_continuous.py \
+            tests/test_phase1_independent_queue.py \
+            tests/test_xgba_rom_compatibility_preflight.py
+      - name: Verify pinned offline fixture
+        run: |
+          echo "eb445e9b6763638c0e52423fd48368c641533274106828e86857253d94a81c17  tests/fixtures/copilot-integration-readiness/valid_merge_sha.json" | sha256sum --check
+      - name: Validate Phase 1 independent-review queue without changing it
+        run: python3 tools/phase1_independent_queue_validate.py
+      - name: Run existing isolated Phase 1 Python regression suites
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Verify offline behavior remains blocked
+        run: |
+          set +e
+          python3 tools/copilot_check_integration_readiness.py --offline > "$RUNNER_TEMP/copilot-readiness.txt" 2>&1
+          status=$?
+          set -e
+          if [ "$status" -ne 1 ]; then
+            cat "$RUNNER_TEMP/copilot-readiness.txt"
+            echo "Expected the incomplete recorded snapshot to exit 1; got $status"
+            exit 1
+          fi
+          grep -Fq "BLOCKED (8 readiness issues):" "$RUNNER_TEMP/copilot-readiness.txt"
+          grep -Fq "manifest base SHA is malformed" "$RUNNER_TEMP/copilot-readiness.txt"
+      - name: Preserve Phase 1 gate and approval totals
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(Path("development/copilot-integration/manifest.json").read_text())
+          policy = manifest["policy"]
+          assert policy["phase1_gate"] == "FAIL_INCOMPLETE"
+          assert policy["independent_approvals"] == 0
+          assert policy["preserve_source_pins"] is True
+          assert policy["ci_is_semantic_approval"] is False
+          status = Path("docs/PHASE1_STATUS.md").read_text()
+          assert "**Decision: FAIL_INCOMPLETE." in status
+          assert "Independent whole-file semantic dispositions approved: 0/14,834." in status
+          PY

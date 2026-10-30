@@ -1,0 +1,60 @@
+{
+  "manifest": {
+    "repository": "example/project",
+    "main": {"ref": "main", "sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+    "pull_requests": [
+      {
+        "number": 77,
+        "head": {"ref": "topic", "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+        "base": {"ref": "main", "sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+        "depends_on": [],
+        "required_evidence": [
+          "successful required workflow with exact head/base provenance"
+        ]
+      }
+    ],
+    "required_workflow_ids": {"77": [42]},
+    "pull_request_order": [77],
+    "integration_order": [{"order": 1, "action": "Integrate the single PR after verification."}]
+  },
+  "snapshot": {
+    "main": {"ref": "main", "sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+    "pull_requests": {
+      "77": {
+        "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "base_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "base_ref": "main",
+        "state": "open",
+        "draft": true,
+        "merged": false
+      }
+    },
+    "workflow_runs": [
+      {
+        "id": 123456,
+        "workflow_id": 42,
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "pull_requests": [
+          {
+            "number": 77,
+            "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "base_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "merge_sha": "cccccccccccccccccccccccccccccccccccccccc"
+          }
+        ]
+      }
+    ],
+    "commit_details": {
+      "cccccccccccccccccccccccccccccccccccccccc": {
+        "sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "parents": [
+          "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ]
+      }
+    }
+  }
+}
