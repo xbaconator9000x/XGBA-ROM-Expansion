@@ -5,10 +5,23 @@ on:
     paths:
       - ".github/workflows/copilot-integration-readiness-tests.yml"
       - "development/copilot-integration/manifest.json"
+      - "docs/integration/copilot-stack-readiness-20261030.md"
       - "docs/PHASE1_STATUS.md"
+      - "semantic-snapshots/current/phase1_mapping_gate.json"
+      - "semantic-snapshots/curated/p0_semantic_review_candidates_2026-10-26.json"
+      - "semantic-snapshots/independent-reviews/curated-p0-intake-20261029.json"
+      - "semantic-snapshots/independent-reviews/queue.json"
       - "tests/fixtures/copilot-integration-readiness/valid_merge_sha.json"
       - "tests/test_copilot_check_integration_readiness.py"
+      - "tests/test_phase1_ci_context.py"
+      - "tests/test_phase1_continuous.py"
+      - "tests/test_phase1_independent_queue.py"
+      - "tests/test_xgba_rom_compatibility_preflight.py"
       - "tools/copilot_check_integration_readiness.py"
+      - "tools/phase1_continuous.py"
+      - "tools/phase1_independent_queue_validate.py"
+      - "tools/verify_phase1_ci_context.py"
+      - "tools/xgba_rom_compatibility_preflight.py"
 
 permissions:
   contents: read
@@ -19,11 +32,31 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Require exact PR-head checkout and valid event scope
+        run: python3 tools/verify_phase1_ci_context.py
+      - name: Compile supported Python validators and regression tests
+        run: |
+          python3 -m py_compile \
+            tools/copilot_check_integration_readiness.py \
+            tools/phase1_continuous.py \
+            tools/phase1_independent_queue_validate.py \
+            tools/verify_phase1_ci_context.py \
+            tools/xgba_rom_compatibility_preflight.py \
+            tests/test_copilot_check_integration_readiness.py \
+            tests/test_phase1_ci_context.py \
+            tests/test_phase1_continuous.py \
+            tests/test_phase1_independent_queue.py \
+            tests/test_xgba_rom_compatibility_preflight.py
       - name: Verify pinned offline fixture
         run: |
           echo "eb445e9b6763638c0e52423fd48368c641533274106828e86857253d94a81c17  tests/fixtures/copilot-integration-readiness/valid_merge_sha.json" | sha256sum --check
-      - name: Run integration readiness regression tests
-        run: python3 -m unittest discover -s tests -p 'test_copilot_check_integration_readiness.py' -v
+      - name: Validate Phase 1 independent-review queue without changing it
+        run: python3 tools/phase1_independent_queue_validate.py
+      - name: Run existing isolated Phase 1 Python regression suites
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
       - name: Verify offline behavior remains blocked
         run: |
           set +e

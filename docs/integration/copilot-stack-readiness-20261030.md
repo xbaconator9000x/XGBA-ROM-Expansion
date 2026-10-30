@@ -170,3 +170,55 @@ Its only result is integration metadata readiness; it never edits approvals,
 queues, gates, pins, branches, or PR state.
 
 Focused fixtures: `python3 -m unittest discover -s tests -p test_copilot_check_integration_readiness.py`.
+
+## Reusable read-only Phase 1 PR validation
+
+The existing
+[`copilot-integration-readiness-tests.yml`](../../.github/workflows/copilot-integration-readiness-tests.yml)
+workflow is the single PR entry point for the supported, local-only validation
+suites. The workflow must first be reviewed and merged into the target branch
+through the repository's normal process; a PR cannot make its own modified
+workflow trusted by declaring it so. Once present on the base branch, it runs
+on relevant PR updates, grants only `contents: read`, uses no secrets, and
+checks out `github.event.pull_request.head.sha` rather than the synthetic PR
+merge ref. Before running any tests,
+[`verify_phase1_ci_context.py`](../../tools/verify_phase1_ci_context.py) checks
+that the event is `pull_request`, the repository and PR number scopes are
+present, and `git rev-parse HEAD` exactly equals that event's head SHA. Its
+negative tests reject a wrong executed SHA, missing PR scope, wrong event type,
+and mismatched repository scope.
+
+The workflow reuses these bounded suites without changing review state:
+
+| Validation | What it establishes | Safe CI boundary |
+|---|---|---|
+| `phase1_independent_queue_validate.py` and `test_phase1_independent_queue.py` | Queue schema, source pins, and zero-approval invariants | Reads checked-out files and writes only unit-test temporary fixtures; it is not an independent reviewer. |
+| `test_phase1_continuous.py` | Failure/retry state-machine behavior | Uses in-memory fakes; the workflow does not invoke the queue-writing worker or its Actions write permissions. |
+| `test_xgba_rom_compatibility_preflight.py` | Synthetic-ROM inspect-only and malformed-input cases | Uses temporary synthetic files; it does not inspect or transform user ROMs. |
+| `test_copilot_check_integration_readiness.py` and `--offline` check | Readiness-provenance fail-closed cases and the expected currently blocked audit | Uses pinned offline data; a passing test does not make the manifest ready. |
+| `test_phase1_ci_context.py` | Exact-head and PR-scope enforcement | Exercises valid and negative event/checkout combinations without credentials or network access. |
+
+This entry point deliberately does not run compiled FireRed, mGBA, or Porymap
+validation. Those existing manual workflows require pinned upstream checkouts,
+ARM/Thumb compilers, native libraries, or other toolchain setup and network
+access; they remain separate evidence jobs and their output is not semantic
+approval. The `phase1-continuous.yml` evidence-queue job is also excluded: it
+has `actions: write`/`contents: write` permissions and mutates durable review
+queue state. Only its isolated in-memory regression tests are reused here.
+
+The workflow cannot override GitHub's fork-workflow approval policy. For
+public-fork PRs, whether approval is required is controlled by repository,
+organization, or enterprise Actions settings. A maintainer with write access
+may need to approve a run under the configured policy; a workflow YAML change
+cannot bypass that approval. The repository setting is under **Settings →
+Actions → General**, in the fork pull-request workflow approval controls.
+GitHub documents this in
+[Approving workflow runs from forks](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/approve-runs-from-forks)
+and
+[Managing GitHub Actions settings for a repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository).
+No `pull_request_target`, elevated token permissions, workflow inputs, or
+secret-backed credentials are used to work around that platform setting.
+
+CI is limited to code/test integrity. The authoritative Phase 1 gate remains
+`FAIL_INCOMPLETE` with 0/14,834 independent semantic approvals, and neither a
+green check nor a queue validation result can change that status.
