@@ -1,0 +1,24 @@
+name: Phase 1 pinned mGBA savedata whole-file handoff (no approvals)
+on:
+  pull_request:
+    paths:
+      - 'tools/phase1_mgba_savedata_handoff_verify.py'
+      - 'docs/phase1-review-readiness/mgba-savedata-whole-file-handoff-20261027.md'
+      - '.github/workflows/phase1-mgba-savedata-handoff.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-savedata-source-review-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax check
+        run: python3 -m py_compile tools/phase1_mgba_savedata_handoff_verify.py
+      - name: Fetch exact pinned mGBA source
+        run: |
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git /tmp/xgba-mgba-savedata
+          git -C /tmp/xgba-mgba-savedata checkout --quiet fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Verify whole-file identity, functions, consumers and negative controls
+        run: python3 tools/phase1_mgba_savedata_handoff_verify.py --checkout /tmp/xgba-mgba-savedata
