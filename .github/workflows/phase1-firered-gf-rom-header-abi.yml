@@ -1,0 +1,36 @@
+name: Phase 1 pinned FireRed GF ROM header ABI review
+on:
+  push:
+    branches:
+      - phase1/firered-gf-rom-header-abi-20261028
+  pull_request:
+    paths:
+      - 'tools/phase1_firered_gf_rom_header_abi.py'
+      - 'docs/phase1-review-readiness/firered-gf-rom-header-abi-20261028.md'
+      - '.github/workflows/phase1-firered-gf-rom-header-abi.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-pinned-gf-rom-header:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Syntax check
+        run: python3 -m py_compile tools/phase1_firered_gf_rom_header_abi.py
+      - name: Exact Git blobs, whole-file structural ABI and 10 negative controls
+        run: |
+          set -euo pipefail
+          python3 tools/phase1_firered_gf_rom_header_abi.py --output phase1-evidence/gf-rom-header-abi.json
+          python3 -m json.tool phase1-evidence/gf-rom-header-abi.json >/dev/null
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase1-gf-rom-header-abi
+          path: phase1-evidence/gf-rom-header-abi.json
+          if-no-files-found: warn
+          retention-days: 90
