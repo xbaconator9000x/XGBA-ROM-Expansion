@@ -1,9 +1,6 @@
 name: Phase 1 remaining P0 original GBA runtime source dossiers
 on:
-  push:
-    branches:
-      - phase1/review-readiness-handoff-20261027
-  pull_request:
+  workflow_call:
 permissions:
   contents: read
 jobs:

@@ -14,6 +14,12 @@ python3 tools/phase1_review_packets.py --max-packets 100 --output docs/phase1-re
 
 The ten positive/negative controls cover duplicate identities, wrong source hashes, fabricated approvals, unverified sources, invalid offsets, ambiguous include resolution and missing/tampered integrity evidence. The generator fails closed when the required upstream reconciliation has not completed. The output must not be committed or reported as source-verified without checking the complete manifest and exact-head CI.
 
+## Consolidated Phase 1 PR checks
+
+The `phase1-pr-checks.yml` entry point invokes the 40 Phase 1 checks that previously ran as separate PR workflows for this stacked branch. Their validation jobs, exact-head checkout behavior and read-only permissions are unchanged; they are now reusable workflows, with duplicate direct PR and branch-push triggers removed. Five unrelated path-filtered workflows are not part of this consolidation. The entry point runs for pull requests targeting `phase1/firered-layout-writers-20261026`.
+
+This only consolidates CI orchestration. It does not approve the run, waive GitHub's workflow-approval requirement, count as semantic review, or bypass repository rules. Before merging this change, maintainers must verify the protected branch's required status checks: if it requires former individual check names, update that requirement through the normal protected-branch process to require the consolidated entry point. Do not merge if the new check is not enforced equivalently. Review and merge this workflow change through the existing protected PR process; do not treat it as trusted before merge.
+
 **Counting:** review packets are not substantively prepared whole-file dispositions, independent approvals or a Phase 1 pass. At this checkpoint, the last confirmed baseline is **113/14,834 prepared (0.7618%)**, **0/14,834 approved (0.0000%)**, **14,834/14,834 inventoried (100%)**, gate **FAIL_INCOMPLETE**. Machine triage is separate. A qualifying reviewer must examine each complete pinned file and resolve or explicitly bound its dependencies.
 
 ## Evidence-qualified Copilot receipts
