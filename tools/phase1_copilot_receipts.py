@@ -96,6 +96,8 @@ def _find_receipt_introduction(repository_root, receipt_path, receipt_line,
                 raise ValueError("Receipt register changes must be single-parent, receipt-only commits")
             if contents[:len(previous)] != previous or len(contents) != len(set(contents)):
                 raise ValueError("Receipt register history is not append-only")
+            if not previous and parent != evidence_commit:
+                raise ValueError("First receipt must directly descend from its evidence commit")
         elif contents != previous:
             raise ValueError("Receipt register changed outside an append-only commit")
         occurrences = contents.count(receipt_line)
