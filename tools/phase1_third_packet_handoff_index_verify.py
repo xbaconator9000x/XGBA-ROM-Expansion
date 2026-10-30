@@ -19,7 +19,7 @@ def check(r,p):
  assert r["platform_scope"]=="AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED"
  assert r["evidence_class"]=="PINNED_AUTHORED_SOURCE_ONLY"
  assert len(r["line_anchors"])>=(6 if p["source_lines"]<8 else 8) and len(r["dependency_edges"])>=4 and len(r["unresolved"])>=4 and r["source_observations"]
- assert (r["map_json_static_wiring"]["git_blob_sha1"] and r["map_json_static_wiring"]["required_event_scripts"]) if r["packet_index"]<204 else r["packet_index"] in range(204,252)
+ assert (r["map_json_static_wiring"]["git_blob_sha1"] and r["map_json_static_wiring"]["required_event_scripts"]) if r["packet_index"]<204 else r["packet_index"] in range(204,260)
 def reject(r,p):
  try:check(r,p)
  except (AssertionError,KeyError,TypeError):return
@@ -37,11 +37,11 @@ def main():
  assert first["remaining_p0_partial_source_inspected"]==100 and first["independent_p0_approved"]==0
  assert second["second_packet_partial_source_inspected"]==83 and second["remaining_p0_partial_source_inspected"]==183
  assert second["independent_p0_approved"]==second["independent_total_approved"]==0
- assert idx["batches"]==["docs/phase1-review-readiness/remaining-p0-four-firered-powerplant-rocket-20261030.json","docs/phase1-review-readiness/remaining-p0-eight-firered-routes-204-211-20261030.json","docs/phase1-review-readiness/remaining-p0-eight-firered-routes-212-219-20261030.json","docs/phase1-review-readiness/remaining-p0-eight-firered-saffron-seafoam-seven-220-227-20261030.json","docs/phase1-review-readiness/remaining-p0-eight-firered-sevenisland-tanoby-228-235-20261030.json","docs/phase1-review-readiness/remaining-p0-eight-firered-tanoby-trainertower-silph-236-243-20261030.json","docs/phase1-review-readiness/remaining-p0-eight-firered-silph-sixisland-244-251-20261031.json"]
- assert idx["batch_sizes"]==[4,8,8,8,8,8,8]
- assert idx["third_packet_partial_source_inspected"]==52 and idx["second_packet_partial_source_inspected"]==83 and idx["first_packet_partial_source_inspected"]==100
- assert idx["remaining_p0_partial_source_inspected"]==235 and idx["remaining_p0_without_partial_source_inspection"]==74
- assert idx["curated_p0_partial_source_inspected"]==29 and idx["total_p0_partial_source_inspected"]==264
+ assert idx["batches"]==["docs/phase1-review-readiness/remaining-p0-four-firered-powerplant-rocket-20261030.json","docs/phase1-review-readiness/remaining-p0-eight-firered-routes-204-211-20261030.json","docs/phase1-review-readiness/remaining-p0-eight-firered-routes-212-219-20261030.json","docs/phase1-review-readiness/remaining-p0-eight-firered-saffron-seafoam-seven-220-227-20261030.json","docs/phase1-review-readiness/remaining-p0-eight-firered-sevenisland-tanoby-228-235-20261030.json","docs/phase1-review-readiness/remaining-p0-eight-firered-tanoby-trainertower-silph-236-243-20261030.json","docs/phase1-review-readiness/remaining-p0-eight-firered-silph-sixisland-244-251-20261031.json","docs/phase1-review-readiness/remaining-p0-eight-firered-sixisland-threeisland-252-259-20261031.json"]
+ assert idx["batch_sizes"]==[4,8,8,8,8,8,8,8]
+ assert idx["third_packet_partial_source_inspected"]==60 and idx["second_packet_partial_source_inspected"]==83 and idx["first_packet_partial_source_inspected"]==100
+ assert idx["remaining_p0_partial_source_inspected"]==243 and idx["remaining_p0_without_partial_source_inspection"]==66
+ assert idx["curated_p0_partial_source_inspected"]==29 and idx["total_p0_partial_source_inspected"]==272
  assert idx["independent_p0_approved"]==idx["independent_total_approved"]==idx["whole_file_semantic_approved"]==0
  assert idx["phase1_gate"]=="FAIL_INCOMPLETE"
  seen=set();negatives=0
@@ -52,13 +52,13 @@ def main():
   assert len(d["records"])==count and d["new_partial_indices"]==[r["packet_index"] for r in d["records"]]
   for r in d["records"]:
    n=r["packet_index"]
-   assert n in range(200,252) and n not in seen;seen.add(n)
+   assert n in range(200,260) and n not in seen;seen.add(n)
    p=packet[n-200];check(r,p)
    for field,value in (("independent_verdict","APPROVED"),("independent_reviewer","fabricated"),("whole_file_semantic_coverage",True),("license_status","CLEARED"),("analyst_status","APPROVED"),("evidence_class","STOCK_GAMEPLAY"),("line_anchors",[])):
     bad=copy.deepcopy(r);bad[field]=value;reject(bad,p);negatives+=1
    for field,value in (("path","wrong.inc"),("git_blob_sha1","0"*40)):
     bad=copy.deepcopy(r);bad["source"][field]=value;reject(bad,p);negatives+=1
    bad=copy.deepcopy(r);bad["machine_dossier_sha256_reconciled_via_original_byte_receipt"]="0"*64;reject(bad,p);negatives+=1
- assert sorted(seen)==list(range(200,252)) and negatives==520,(seen,negatives)
- print("P0_THIRD_HANDOFF_INDEX_PASS third_partial=52 second_partial=83 first_partial=100 other_p0_partial=235 curated=29 total_partial=264 negatives=520 approved_p0=0/338 approved_total=0/14834 gate=FAIL_INCOMPLETE")
+ assert sorted(seen)==list(range(200,260)) and negatives==600,(seen,negatives)
+ print("P0_THIRD_HANDOFF_INDEX_PASS third_partial=60 second_partial=83 first_partial=100 other_p0_partial=243 curated=29 total_partial=272 negatives=600 approved_p0=0/338 approved_total=0/14834 gate=FAIL_INCOMPLETE")
 if __name__=="__main__":main()

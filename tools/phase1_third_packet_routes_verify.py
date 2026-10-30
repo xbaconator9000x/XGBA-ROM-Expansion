@@ -6,7 +6,7 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE=ROOT/"docs/phase1-review-readiness"
 PIN="ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
 PACKET_BLOB="c998c2ea8c887968e586b1792c5207ecb5286839"
-BATCHES=["remaining-p0-eight-firered-routes-204-211-20261030.json","remaining-p0-eight-firered-routes-212-219-20261030.json","remaining-p0-eight-firered-saffron-seafoam-seven-220-227-20261030.json","remaining-p0-eight-firered-sevenisland-tanoby-228-235-20261030.json","remaining-p0-eight-firered-tanoby-trainertower-silph-236-243-20261030.json","remaining-p0-eight-firered-silph-sixisland-244-251-20261031.json"]
+BATCHES=["remaining-p0-eight-firered-routes-204-211-20261030.json","remaining-p0-eight-firered-routes-212-219-20261030.json","remaining-p0-eight-firered-saffron-seafoam-seven-220-227-20261030.json","remaining-p0-eight-firered-sevenisland-tanoby-228-235-20261030.json","remaining-p0-eight-firered-tanoby-trainertower-silph-236-243-20261030.json","remaining-p0-eight-firered-silph-sixisland-244-251-20261031.json","remaining-p0-eight-firered-sixisland-threeisland-252-259-20261031.json"]
 def blob(raw):return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
 def get(path):
  url=f"https://raw.githubusercontent.com/pret/pokefirered/{PIN}/{path}"
@@ -47,7 +47,7 @@ def main():
   assert d["independent_p0_approved"]==d["independent_total_approved"]==0
   assert d["new_partial_indices"]==[r["packet_index"] for r in d["records"]]
   for r in d["records"]:
-   n=r["packet_index"];assert n in range(204,252) and n not in seen;seen.add(n)
+   n=r["packet_index"];assert n in range(204,260) and n not in seen;seen.add(n)
    p=packet[n-200];raw=get(r["source"]["path"]);check(raw,r,p,n)
    changed=raw.replace(r["line_anchors"][0]["text"].encode(),b"XGBA_FORGED",1)
    assert changed!=raw;reject(changed,r,p,n);negatives+=1
@@ -57,6 +57,6 @@ def main():
     bad=copy.deepcopy(r);bad["source"][field]=value;reject(raw,bad,p,n);negatives+=1
    bad=copy.deepcopy(r);bad["line_anchors"][0]["line"]+=1;reject(raw,bad,p,n);negatives+=1
    print("P0_THIRD_ROUTE_SOURCE_OK",n,r["source"]["path"],r["source"]["git_blob_sha1"])
- assert sorted(seen)==list(range(204,252)) and negatives==960,(seen,negatives)
+ assert sorted(seen)==list(range(204,260)) and negatives==1120,(seen,negatives)
  print(f"P0_THIRD_ROUTE_PASS files={len(seen)} negatives={negatives} approved_p0=0/338 approved_total=0/14834 gate=FAIL_INCOMPLETE")
 if __name__=="__main__":main()
