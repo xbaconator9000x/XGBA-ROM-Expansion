@@ -530,6 +530,7 @@ class CopilotReceiptTests(unittest.TestCase):
             url: count for url, count in calls.items()
             if "/reviews?" in url or "/comments?" in url or "/actions/runs?" in url
         }
+        snapshot_collection_count = len(api.collections)
         self.assertEqual(self._validate(second, api), (self.second_key, []))
         self.assertEqual(
             snapshot_calls,
@@ -538,6 +539,7 @@ class CopilotReceiptTests(unittest.TestCase):
                 if "/reviews?" in url or "/comments?" in url or "/actions/runs?" in url
             },
         )
+        self.assertEqual(len(api.collections), snapshot_collection_count)
         self.assertIn(comments_two, api.responses)
         self.assertIn(reviews_two, api.responses)
 

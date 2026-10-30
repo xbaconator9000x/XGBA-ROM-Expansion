@@ -153,6 +153,7 @@ class GitHubAPICache:
     def __init__(self, getter=github_get_json):
         self.getter = getter
         self.responses = {}
+        self.collections = {}
 
     def __call__(self, url):
         if url not in self.responses:
@@ -166,6 +167,9 @@ class GitHubAPICache:
         return self.responses[url]
 
     def paginate(self, url, *, result_key=None):
+        collection_key = (url, result_key)
+        if collection_key in self.collections:
+            return self.collections[collection_key]
         parsed = urlparse(url)
         query = dict(parse_qsl(parsed.query, keep_blank_values=True))
         query["per_page"] = "100"
@@ -187,6 +191,7 @@ class GitHubAPICache:
                 seen_ids.add(item_id)
             items.extend(page_items)
             if not page_items:
+                self.collections[collection_key] = items
                 return items
             page += 1
 
