@@ -914,6 +914,8 @@ class CopilotReceiptTests(unittest.TestCase):
         self.github_responses[run_url]["workflow_runs"][0]["conclusion"] = "failure"
         self.assertTrue(self._validate()[1])
         self._seal()
+        # _seal creates a fresh real Git commit and therefore a new exact-head API URL.
+        run_url = f"https://api.github.com/repos/{self.repository}/actions/runs?head_sha={self.head}&per_page=100&page=1"
         self.github_responses[run_url]["workflow_runs"][0]["pull_requests"][0]["number"] = 9
         self.assertTrue(self._validate()[1])
 
