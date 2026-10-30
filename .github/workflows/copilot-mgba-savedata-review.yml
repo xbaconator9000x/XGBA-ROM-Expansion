@@ -1,0 +1,135 @@
+name: Phase 1 pinned mGBA savedata review evidence
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/copilot-mgba-savedata-review.yml'
+      - 'tests/mgba_bank_boundary.c'
+      - 'tests/run_pinned_mgba_boundary.sh'
+      - 'tests/CMakeLists.txt'
+      - 'tools/copilot_mgba_savedata_review.py'
+      - 'tools/verify_native_mgba_regressions.py'
+      - 'semantic-snapshots/independent-reviews/copilot-mgba-savedata/**'
+      - 'docs/PHASE1_STATUS.md'
+      - 'docs/PHASE1_INDEPENDENT_SEMANTIC_REVIEW_QUEUE.md'
+      - 'semantic-snapshots/independent-reviews/queue.json'
+      - 'semantic-snapshots/current/phase1_mapping_gate.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pinned-savedata-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Confirm shared review state is not changed by this PR
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git diff --exit-code "$BASE_SHA" HEAD -- \
+            docs/PHASE1_STATUS.md \
+            docs/PHASE1_INDEPENDENT_SEMANTIC_REVIEW_QUEUE.md \
+            semantic-snapshots/independent-reviews/queue.json \
+            semantic-snapshots/current/phase1_mapping_gate.json
+      - name: Check Python syntax and existing gate negative controls
+        run: |
+          python3 -m py_compile \
+            tools/copilot_mgba_savedata_review.py \
+            tools/verify_native_mgba_regressions.py
+          python3 tools/verify_native_mgba_regressions.py --self-test
+      - name: Fetch immutable mGBA source pin
+        run: |
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba fetch --quiet origin fd9dc5c2cbf234365068855851107e762fc6211b
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Verify source packet and mutation controls
+        run: python3 tools/copilot_mgba_savedata_review.py --checkout upstream/mgba --self-test
+      - name: Build and execute existing pinned native boundary harness
+        run: bash tests/run_pinned_mgba_boundary.sh
+      - name: Create summary from this successful native run
+        run: |
+          python3 - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+          from tools.verify_native_mgba_regressions import PIN, extract
+
+          log = Path("audit-output/mgba-boundary-runtime.log").read_text()
+          source = Path("tests/mgba_bank_boundary.c").read_bytes()
+          passed = extract(log, "PASS")
+          observations = extract(log, "OBSERVATION")
+          summary = {
+              "source_revision": PIN,
+              "test_source_sha256": __import__("hashlib").sha256(source).hexdigest(),
+              "run_kind": "NATIVE_MGBA_SYNTHETIC_CARTRIDGE_ONLY",
+              "native_probe_exit_code": 0,
+              "external_XGBA_banking_implemented": False,
+              "phase1_mapping_complete": False,
+              "independent_semantic_reviews_approved": 0,
+              "positive_checks_passed": len(passed),
+              "positive_checks_failed": len(extract(log, "FAIL")),
+              "native_gap_observations": observations,
+          }
+          if len(passed) != 43 or len(observations) != 4 or re.search(r"^FAIL ", log, re.M):
+              raise SystemExit("Native run did not produce 43 passing assertions and four hazard observations")
+          Path("compiler-evidence").mkdir(exist_ok=True)
+          Path("compiler-evidence/mgba-native-boundary-result.json").write_text(
+              json.dumps(summary, indent=2, sort_keys=True) + "\n"
+          )
+          PY
+      - name: Run existing fail-closed native regression evidence gate
+        run: |
+          python3 tools/verify_native_mgba_regressions.py \
+            --log audit-output/mgba-boundary-runtime.log \
+            --summary compiler-evidence/mgba-native-boundary-result.json \
+            --source tests/mgba_bank_boundary.c \
+            --out compiler-evidence/mgba-native-regression-gate.json
+      - name: Verify savedata review against this PR native run
+        run: |
+          python3 tools/copilot_mgba_savedata_review.py \
+            --checkout upstream/mgba \
+            --record semantic-snapshots/independent-reviews/copilot-mgba-savedata/review.json \
+            --native-log audit-output/mgba-boundary-runtime.log \
+            --configure-log audit-output/mgba-boundary-configure.log \
+            --build-log audit-output/mgba-boundary-build.log \
+            --revision-evidence audit-output/mgba_native_test_revision.txt \
+            --test-source tests/mgba_bank_boundary.c \
+            --ci-native
+      - name: Write workflow-only run identity and exact hashes
+        if: always()
+        run: |
+          mkdir -p audit-output compiler-evidence
+          {
+            echo "event=${GITHUB_EVENT_NAME}"
+            echo "run_id=${GITHUB_RUN_ID}"
+            echo "run_attempt=${GITHUB_RUN_ATTEMPT}"
+            echo "workflow_sha=${GITHUB_SHA}"
+            echo "pinned_mgba_revision=$(cat audit-output/mgba_native_test_revision.txt 2>/dev/null || echo unavailable)"
+            sha256sum \
+              tests/mgba_bank_boundary.c \
+              tools/copilot_mgba_savedata_review.py \
+              tools/verify_native_mgba_regressions.py \
+              audit-output/mgba-boundary-runtime.log \
+              audit-output/mgba-boundary-configure.log \
+              audit-output/mgba-boundary-build.log \
+              audit-output/mgba_native_test_revision.txt \
+              compiler-evidence/mgba-native-boundary-result.json \
+              compiler-evidence/mgba-native-regression-gate.json 2>/dev/null || true
+          } > audit-output/workflow-run-manifest.txt
+      - name: Archive workflow-generated logs and verification
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: copilot-mgba-savedata-review-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            audit-output/
+            compiler-evidence/mgba-native-boundary-result.json
+            compiler-evidence/mgba-native-regression-gate.json
+          retention-days: 90
+          if-no-files-found: warn

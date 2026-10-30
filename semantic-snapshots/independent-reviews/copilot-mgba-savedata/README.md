@@ -2,7 +2,7 @@
 
 **Review identity:** GitHub Copilot Coding Agent (`@copilot`), this task's source-review pass. Prior analyst interpretation is identified as `xbaconator9000x` in open PRs [#12](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/12) and [#13](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/13). This review does not claim maintainer validation or independent approval.
 
-**Scope and gate:** Complete pinned `src/gba/savedata.c` (800 lines, 28 function definitions) plus the VFile API/backends and direct savedata callers needed to adjudicate the existing assumptions. Upstream is unchanged at `fd9dc5c2cbf234365068855851107e762fc6211b`. This packet is task-specific and unregistered; every listed file remains `NEEDS_EVIDENCE`. The shared queue/gate hashes below are checked by the verifier. Phase 1 remains **`FAIL_INCOMPLETE`**, with **0/14,834** approvals before and after.
+**Scope and gate:** Complete pinned `src/gba/savedata.c` (800 lines, 28 function definitions) plus the VFile API/backends and direct savedata callers needed to adjudicate the existing assumptions. Upstream is unchanged at `fd9dc5c2cbf234365068855851107e762fc6211b`. This packet is task-specific and unregistered; every listed file remains `NEEDS_EVIDENCE`. Protected baseline hashes are verified against review snapshot commit `d9a46bbdf50cf67a6b52322a68f56caace2aef7e`; current gate/queue invariants are checked independently, and the PR workflow confirms this PR does not edit the shared files. Thus unrelated future queue updates do not invalidate this historical snapshot. Phase 1 remains **`FAIL_INCOMPLETE`**, with **0/14,834** approvals before and after this review.
 
 ## Independent findings
 
@@ -16,7 +16,7 @@ Relevant reachability was independently traced through `GBALoadSave` and lifecyc
 
 ## Native evidence (not a mock, not semantic approval)
 
-The existing `tests/run_pinned_mgba_boundary.sh` was reused and its existing synthetic-ROM harness was extended; no alternate emulator was created. It compiled the unmodified pinned mGBA static library and exercised real POSIX `VFileFD` saves, mGBA anonymous allocation, and the pinned read-only memory VFile. The nine savedata assertions are included in the 43 passing assertions; all four pre-existing Matrix hazard observations remain visible. A passing run characterizes only these paths and does not establish cross-platform save compatibility, durable persistence, XGBA behavior, or Phase 1 completion.
+The existing `tests/run_pinned_mgba_boundary.sh` was reused and its existing synthetic-ROM harness was extended; no alternate emulator was created. It compiled the unmodified pinned mGBA static library and exercised real POSIX `VFileFD` saves, mGBA anonymous allocation, and the pinned read-only memory VFile. The nine savedata assertions are included in the 43 passing assertions; all four pre-existing Matrix hazard observations remain visible. The committed `native-*.log` files and hashes below are local agent run evidence. The new pull-request workflow runs the same harness and both evidence verifiers against the PR checkout, then uploads a separate artifact named `copilot-mgba-savedata-review-<run-id>-<attempt>` with the workflow run identity and exact hashes. A local run is not an independently observed workflow run. A passing run characterizes only these paths and does not establish cross-platform save compatibility, durable persistence, XGBA behavior, or Phase 1 completion.
 
 | Evidence | SHA-256 |
 |---|---|
@@ -27,8 +27,9 @@ The existing `tests/run_pinned_mgba_boundary.sh` was reused and its existing syn
 | Build log | `4f40f5d3e6bd02dfd9ab189490915f1ba0685e19c06da84c00b86e90159725ea` |
 | Existing runner `tests/run_pinned_mgba_boundary.sh` | `85746b2690a89c19a78ee754e8d1a224e3907790ddfc94cdec53b141ec64b0e8` |
 | Existing `tests/CMakeLists.txt` | `7035354e527c93b37300b7dc4960d38457b78872cd940a52e8668938203346a5` |
-| Bounded verifier `tools/copilot_mgba_savedata_review.py` | `7a817cfb24cd3ae6761ee027f7a1fcb0c3fd27a70b91a605c50803d16071e640` |
+| Bounded verifier `tools/copilot_mgba_savedata_review.py` | `4b2a85024d1cf9cd327eeeaab4e381b7498cc193ad3a60ace9c589706bcd300c` |
 | Pinned test runner revision receipt | `6283a270bf7e86ff1a6a4b01a69041c350a2f35f451239400bfaaddf3296c78a` |
+| Existing native regression evidence gate `tools/verify_native_mgba_regressions.py` | updated in this PR; workflow records its exact checkout SHA |
 
 Original packets are kept in their proper evidence class: PR #13's mock-VFile CI run #40480788248 at `9bf2b6f31c7e0ebf00e1ebaf6aee6f0930c90444` is not counted as native execution; the prior 34-check native Matrix run #40205086061 at `d2c31ac826209752a249f9694e50d5ed5cc3ef97` is not a savedata semantic review.
 
@@ -44,9 +45,12 @@ python3 tools/copilot_mgba_savedata_review.py \
   --record semantic-snapshots/independent-reviews/copilot-mgba-savedata/review.json \
   --native-log semantic-snapshots/independent-reviews/copilot-mgba-savedata/native-run.log \
   --test-source tests/mgba_bank_boundary.c
+python3 tools/verify_native_mgba_regressions.py --self-test
 ```
 
-The bounded verifier checks the exact upstream commit and 16 Git blobs, all 800 savedata lines/function definitions and pinned risk anchors, the four protected shared Phase 1 files, all nine native savedata checks, and three mutated-source negative controls. Its `PASS` is evidence-integrity only; it cannot approve files or advance the gate.
+The bounded verifier checks the exact upstream commit and 16 Git blobs, all 800 savedata lines/function definitions and pinned risk anchors, the historical protected-file hashes at the review snapshot, current fail-closed gate invariants, all nine native savedata checks, and three mutated-source negative controls. The existing native regression gate preserves all 34 original named assertions and four hazard observations, requires exactly these nine additions, and runs its synthetic and negative controls. Both `PASS` results are evidence-integrity only; neither can approve files or advance the gate.
+
+For PR validation, `.github/workflows/copilot-mgba-savedata-review.yml` is triggered by only the review packet, harness, verifier, and protected-gate paths. It builds/runs the pinned native harness, runs both verifiers on the generated PR-run logs, checks that the PR does not modify shared state, and archives CI-specific evidence and checksums. The locally recorded run above remains distinct from those workflow artifacts.
 
 ## Remaining evidence obligations
 

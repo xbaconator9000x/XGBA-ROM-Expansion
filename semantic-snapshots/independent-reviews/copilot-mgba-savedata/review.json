@@ -3,7 +3,7 @@
   "review_date": "2026-10-30",
   "scope": "Phase 1 mGBA savedata source semantics only",
   "source_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
-  "review_verifier_sha256": "7a817cfb24cd3ae6761ee027f7a1fcb0c3fd27a70b91a605c50803d16071e640",
+  "review_verifier_sha256": "4b2a85024d1cf9cd327eeeaab4e381b7498cc193ad3a60ace9c589706bcd300c",
   "review_identity": {
     "reviewer": "GitHub Copilot Coding Agent (@copilot), task-specific source review",
     "prior_interpretation": "xbaconator9000x analyst packets in PR #12 (head 9ed9d2630a098525e7703853de0b804c56658da9) and PR #13 (head 9bf2b6f31c7e0ebf00e1ebaf6aee6f0930c90444); neither packet is treated as approval",
@@ -17,11 +17,14 @@
     "inventory_total": 14834,
     "phase1_completion_claimed": false
   },
-  "protected_state_sha256": {
-    "docs/PHASE1_STATUS.md": "248b931af27d7fa38c18d636b8e7a0f09e6b6bb698117ab55e7fbd0d0e491e49",
-    "docs/PHASE1_INDEPENDENT_SEMANTIC_REVIEW_QUEUE.md": "91e29885742be869d5eb382d2bff3190afc0e62ddf2777a9a6e1038d05bb8efb",
-    "semantic-snapshots/independent-reviews/queue.json": "37bd0e2b0de315d6f8f1bc34d3f6c3951d4246e81892882afc7f4ab179ae5c7a",
-    "semantic-snapshots/current/phase1_mapping_gate.json": "7df6ceb6641ccb24cdc114f0ed6af10bc0ecbf3b42db484b26be41907e96d953"
+  "protected_state_snapshot": {
+    "commit": "d9a46bbdf50cf67a6b52322a68f56caace2aef7e",
+    "sha256": {
+      "docs/PHASE1_STATUS.md": "248b931af27d7fa38c18d636b8e7a0f09e6b6bb698117ab55e7fbd0d0e491e49",
+      "docs/PHASE1_INDEPENDENT_SEMANTIC_REVIEW_QUEUE.md": "91e29885742be869d5eb382d2bff3190afc0e62ddf2777a9a6e1038d05bb8efb",
+      "semantic-snapshots/independent-reviews/queue.json": "37bd0e2b0de315d6f8f1bc34d3f6c3951d4246e81892882afc7f4ab179ae5c7a",
+      "semantic-snapshots/current/phase1_mapping_gate.json": "7df6ceb6641ccb24cdc114f0ed6af10bc0ecbf3b42db484b26be41907e96d953"
+    }
   },
   "source_blobs": {
     "include/mgba-util/vfs.h": {

@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 PIN = "fd9dc5c2cbf234365068855851107e762fc6211b"
+REVIEW_SNAPSHOT_COMMIT = "d9a46bbdf50cf67a6b52322a68f56caace2aef7e"
 SOURCE_BLOBS = {
     "src/gba/savedata.c": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
     "include/mgba/internal/gba/savedata.h": "6227be25e8c9d2c1cc14c06ded34389b96138577",
@@ -29,12 +30,12 @@ SOURCE_BLOBS = {
     "src/util/vfs/vfs-file.c": "4a63e53f842b31b24d6188e6525ddcf121a0c7da",
     "src/util/memory.c": "89646d3bcb5a23e6c75ee5ea8ee8dfd7b940027b",
 }
-PROTECTED_STATE_SHA256 = {
-    "docs/PHASE1_STATUS.md": "248b931af27d7fa38c18d636b8e7a0f09e6b6bb698117ab55e7fbd0d0e491e49",
-    "docs/PHASE1_INDEPENDENT_SEMANTIC_REVIEW_QUEUE.md": "91e29885742be869d5eb382d2bff3190afc0e62ddf2777a9a6e1038d05bb8efb",
-    "semantic-snapshots/independent-reviews/queue.json": "37bd0e2b0de315d6f8f1bc34d3f6c3951d4246e81892882afc7f4ab179ae5c7a",
-    "semantic-snapshots/current/phase1_mapping_gate.json": "7df6ceb6641ccb24cdc114f0ed6af10bc0ecbf3b42db484b26be41907e96d953",
-}
+PROTECTED_STATE_PATHS = (
+    "docs/PHASE1_STATUS.md",
+    "docs/PHASE1_INDEPENDENT_SEMANTIC_REVIEW_QUEUE.md",
+    "semantic-snapshots/independent-reviews/queue.json",
+    "semantic-snapshots/current/phase1_mapping_gate.json",
+)
 DEFINITIONS = (
     "_ashesToAshes", "GBASavedataInit", "GBASavedataReset", "GBASavedataDeinit",
     "GBASavedataMask", "GBASavedataUnmask", "GBASavedataClone", "GBASavedataSize",
@@ -170,8 +171,11 @@ def verify_record(
         raise ReviewEvidenceRejected("review record source identities mismatch")
     if record.get("review_verifier_sha256") != verifier_sha256:
         raise ReviewEvidenceRejected("review verifier SHA-256 mismatch")
-    if record.get("protected_state_sha256") != PROTECTED_STATE_SHA256:
-        raise ReviewEvidenceRejected("protected Phase 1 state hashes mismatch")
+    snapshot = record.get("protected_state_snapshot", {})
+    if snapshot.get("commit") != REVIEW_SNAPSHOT_COMMIT:
+        raise ReviewEvidenceRejected("protected Phase 1 review snapshot commit mismatch")
+    if set(snapshot.get("sha256", {})) != set(PROTECTED_STATE_PATHS):
+        raise ReviewEvidenceRejected("protected Phase 1 snapshot file list mismatch")
     if record.get("phase1_gate") != "FAIL_INCOMPLETE":
         raise ReviewEvidenceRejected("review packet cannot change the Phase 1 gate")
     accounting = record.get("approval_accounting", {})
@@ -195,16 +199,27 @@ def verify_record(
             raise ReviewEvidenceRejected(f"unsupported approval claim: {path}")
 
 
-def verify_protected_state(root: Path) -> None:
-    for path, expected in PROTECTED_STATE_SHA256.items():
-        if sha256((root / path).read_bytes()) != expected:
-            raise ReviewEvidenceRejected(f"protected Phase 1 state changed: {path}")
+def verify_protected_state(root: Path, record: dict) -> None:
+    snapshot = record["protected_state_snapshot"]
+    commit = snapshot["commit"]
+    for path in PROTECTED_STATE_PATHS:
+        historical = subprocess.check_output(
+            ["git", "-C", str(root), "show", f"{commit}:{path}"]
+        )
+        if sha256(historical) != snapshot["sha256"][path]:
+            raise ReviewEvidenceRejected(f"review snapshot hash mismatch: {path}")
     queue = json.loads((root / "semantic-snapshots/independent-reviews/queue.json").read_text())
     gate = json.loads((root / "semantic-snapshots/current/phase1_mapping_gate.json").read_text())
-    if queue.get("phase1_gate") != "FAIL_INCOMPLETE" or queue.get("total_approved") != 0:
-        raise ReviewEvidenceRejected("shared independent-review queue no longer has zero approvals")
-    if gate.get("decision") != "FAIL_INCOMPLETE" or gate.get("approved_semantic_dispositions") != 0:
+    if queue.get("phase1_gate") != "FAIL_INCOMPLETE":
+        raise ReviewEvidenceRejected("shared independent-review queue gate changed")
+    if not isinstance(queue.get("total_approved"), int) or queue["total_approved"] < 0:
+        raise ReviewEvidenceRejected("shared independent-review queue approval count invalid")
+    if gate.get("decision") != "FAIL_INCOMPLETE":
         raise ReviewEvidenceRejected("authoritative Phase 1 gate changed")
+    if not isinstance(gate.get("approved_semantic_dispositions"), int) or gate["approved_semantic_dispositions"] < 0:
+        raise ReviewEvidenceRejected("authoritative gate approval count invalid")
+    if queue["total_approved"] != gate["approved_semantic_dispositions"]:
+        raise ReviewEvidenceRejected("queue and authoritative gate approval counts disagree")
 
 
 def verify_native_evidence(
@@ -214,6 +229,7 @@ def verify_native_evidence(
     configure_log: Path,
     build_log: Path,
     revision_evidence: Path,
+    require_snapshot_hashes: bool = True,
 ) -> dict:
     log = native_log.read_bytes()
     source = test_source.read_bytes()
@@ -233,13 +249,13 @@ def verify_native_evidence(
         raise ReviewEvidenceRejected("native run used a different mGBA revision")
     if native.get("test_source_sha256") != sha256(source):
         raise ReviewEvidenceRejected("native test source SHA-256 mismatch")
-    if native.get("runtime_log_sha256") != sha256(log):
+    if require_snapshot_hashes and native.get("runtime_log_sha256") != sha256(log):
         raise ReviewEvidenceRejected("native runtime log SHA-256 mismatch")
-    if native.get("configure_log_sha256") != sha256(configure):
+    if require_snapshot_hashes and native.get("configure_log_sha256") != sha256(configure):
         raise ReviewEvidenceRejected("native configure log SHA-256 mismatch")
-    if native.get("build_log_sha256") != sha256(build):
+    if require_snapshot_hashes and native.get("build_log_sha256") != sha256(build):
         raise ReviewEvidenceRejected("native build log SHA-256 mismatch")
-    if native.get("revision_evidence_sha256") != sha256(revision) or revision != (PIN + "\n").encode():
+    if (require_snapshot_hashes and native.get("revision_evidence_sha256") != sha256(revision)) or revision != (PIN + "\n").encode():
         raise ReviewEvidenceRejected("native runner revision evidence mismatch")
     text = log.decode("utf-8")
     if "SUMMARY hard_failures=0 native_gap_observations=4 " not in text:
@@ -276,10 +292,10 @@ def main() -> int:
     parser.add_argument("--configure-log", type=Path, default=evidence_dir / "native-configure.log")
     parser.add_argument("--build-log", type=Path, default=evidence_dir / "native-build.log")
     parser.add_argument("--revision-evidence", type=Path, default=evidence_dir / "native-source-revision.txt")
+    parser.add_argument("--ci-native", action="store_true", help="validate this run's logs, not the archived local run")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     try:
-        verify_protected_state(Path.cwd())
         sources = verify_checkout(args.checkout)
         savedata = git(args.checkout, "cat-file", "blob", SOURCE_BLOBS["src/gba/savedata.c"])
         controls = source_negative_controls(savedata)
@@ -288,9 +304,11 @@ def main() -> int:
             return 0
         record = json.loads(args.record.read_text(encoding="utf-8"))
         verify_record(record, sources, sha256(Path(__file__).read_bytes()))
+        verify_protected_state(Path.cwd(), record)
         native = verify_native_evidence(
             record, args.native_log, args.test_source,
             args.configure_log, args.build_log, args.revision_evidence,
+            require_snapshot_hashes=not args.ci_native,
         )
     except (OSError, ValueError, subprocess.CalledProcessError) as error:
         print(f"FAIL_CLOSED: {error}", file=sys.stderr)
