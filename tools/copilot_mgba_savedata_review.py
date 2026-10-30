@@ -8,6 +8,7 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 PIN = "fd9dc5c2cbf234365068855851107e762fc6211b"
@@ -89,6 +90,71 @@ def sha256(data: bytes) -> str:
 
 def git(checkout: Path, *args: str) -> bytes:
     return subprocess.check_output(["git", "-C", str(checkout), *args])
+
+
+def protected_state_changes(root: Path, base: str, head: str) -> list[str]:
+    changed = git(
+        root, "diff", "--name-only", f"{base}...{head}", "--", *PROTECTED_STATE_PATHS
+    )
+    return changed.decode("utf-8").splitlines()
+
+
+def verify_no_protected_state_changes(root: Path, base: str, head: str) -> None:
+    changed = protected_state_changes(root, base, head)
+    if changed:
+        raise ReviewEvidenceRejected(
+            "PR-authored changes modify protected Phase 1 state: " + ", ".join(changed)
+        )
+
+
+def protected_state_negative_controls() -> int:
+    with tempfile.TemporaryDirectory(prefix="mgba-protected-state-") as directory:
+        root = Path(directory)
+        git(root, "init", "--quiet")
+        git(root, "config", "user.name", "Protected-state regression")
+        git(root, "config", "user.email", "protected-state@example.invalid")
+        for path in PROTECTED_STATE_PATHS:
+            target = root / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("pinned baseline\n", encoding="utf-8")
+        git(root, "add", ".")
+        git(root, "commit", "--quiet", "-m", "baseline")
+        baseline = git(root, "rev-parse", "HEAD").decode().strip()
+
+        git(root, "checkout", "--quiet", "-b", "pr")
+        (root / "review-output.txt").write_text("PR-owned output\n", encoding="utf-8")
+        git(root, "add", "review-output.txt")
+        git(root, "commit", "--quiet", "-m", "allowed review output")
+        pr_head = git(root, "rev-parse", "HEAD").decode().strip()
+
+        git(root, "checkout", "--quiet", "-b", "base", baseline)
+        (root / PROTECTED_STATE_PATHS[1]).write_text(
+            "unrelated upstream queue update\n", encoding="utf-8"
+        )
+        git(root, "add", PROTECTED_STATE_PATHS[1])
+        git(root, "commit", "--quiet", "-m", "unrelated base queue update")
+        base_head = git(root, "rev-parse", "HEAD").decode().strip()
+        verify_no_protected_state_changes(root, base_head, pr_head)
+
+        rejected = 0
+        for path in (
+            "semantic-snapshots/current/phase1_mapping_gate.json",
+            "semantic-snapshots/independent-reviews/queue.json",
+        ):
+            git(root, "checkout", "--quiet", "--detach", pr_head)
+            (root / path).write_text("unauthorized PR mutation\n", encoding="utf-8")
+            git(root, "add", path)
+            git(root, "commit", "--quiet", "-m", f"unauthorized change to {path}")
+            unauthorized_head = git(root, "rev-parse", "HEAD").decode().strip()
+            try:
+                verify_no_protected_state_changes(root, base_head, unauthorized_head)
+            except ReviewEvidenceRejected:
+                rejected += 1
+            else:
+                raise ReviewEvidenceRejected(
+                    f"protected-state negative control escaped: {path}"
+                )
+        return rejected
 
 
 def git_blob_sha(data: bytes) -> str:
@@ -294,13 +360,30 @@ def main() -> int:
     parser.add_argument("--revision-evidence", type=Path, default=evidence_dir / "native-source-revision.txt")
     parser.add_argument("--ci-native", action="store_true", help="validate this run's logs, not the archived local run")
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--protected-base")
+    parser.add_argument("--protected-head")
     args = parser.parse_args()
     try:
+        if args.protected_base or args.protected_head:
+            if not args.protected_base or not args.protected_head:
+                raise ReviewEvidenceRejected(
+                    "both protected-state base and PR head revisions are required"
+                )
+            verify_no_protected_state_changes(
+                Path.cwd(), args.protected_base, args.protected_head
+            )
+            print("PASS no PR-authored changes to protected Phase 1 state")
+            return 0
         sources = verify_checkout(args.checkout)
         savedata = git(args.checkout, "cat-file", "blob", SOURCE_BLOBS["src/gba/savedata.c"])
         controls = source_negative_controls(savedata)
         if args.self_test:
-            print(f"PASS pinned whole-file source evidence; {len(sources)} blob identities; {controls} mutation controls rejected")
+            protected_controls = protected_state_negative_controls()
+            print(
+                f"PASS pinned whole-file source evidence; {len(sources)} blob identities; "
+                f"{controls} source mutations and {protected_controls} unauthorized "
+                "protected-state mutations rejected; unrelated base update ignored"
+            )
             return 0
         record = json.loads(args.record.read_text(encoding="utf-8"))
         verify_record(record, sources, sha256(Path(__file__).read_bytes()))

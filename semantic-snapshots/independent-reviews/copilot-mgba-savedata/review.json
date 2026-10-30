@@ -3,7 +3,7 @@
   "review_date": "2026-10-30",
   "scope": "Phase 1 mGBA savedata source semantics only",
   "source_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
-  "review_verifier_sha256": "4b2a85024d1cf9cd327eeeaab4e381b7498cc193ad3a60ace9c589706bcd300c",
+  "review_verifier_sha256": "bd6d29af0e144cd77b990e7ff2fb3434b4b0060f1eca03112b103e9b0b467564",
   "review_identity": {
     "reviewer": "GitHub Copilot Coding Agent (@copilot), task-specific source review",
     "prior_interpretation": "xbaconator9000x analyst packets in PR #12 (head 9ed9d2630a098525e7703853de0b804c56658da9) and PR #13 (head 9bf2b6f31c7e0ebf00e1ebaf6aee6f0930c90444); neither packet is treated as approval",

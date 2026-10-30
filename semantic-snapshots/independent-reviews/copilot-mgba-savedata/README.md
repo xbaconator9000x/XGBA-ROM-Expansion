@@ -27,7 +27,7 @@ The existing `tests/run_pinned_mgba_boundary.sh` was reused and its existing syn
 | Build log | `4f40f5d3e6bd02dfd9ab189490915f1ba0685e19c06da84c00b86e90159725ea` |
 | Existing runner `tests/run_pinned_mgba_boundary.sh` | `85746b2690a89c19a78ee754e8d1a224e3907790ddfc94cdec53b141ec64b0e8` |
 | Existing `tests/CMakeLists.txt` | `7035354e527c93b37300b7dc4960d38457b78872cd940a52e8668938203346a5` |
-| Bounded verifier `tools/copilot_mgba_savedata_review.py` | `4b2a85024d1cf9cd327eeeaab4e381b7498cc193ad3a60ace9c589706bcd300c` |
+| Bounded verifier `tools/copilot_mgba_savedata_review.py` | `bd6d29af0e144cd77b990e7ff2fb3434b4b0060f1eca03112b103e9b0b467564` |
 | Pinned test runner revision receipt | `6283a270bf7e86ff1a6a4b01a69041c350a2f35f451239400bfaaddf3296c78a` |
 | Existing native regression evidence gate `tools/verify_native_mgba_regressions.py` | updated in this PR; workflow records its exact checkout SHA |
 
@@ -48,9 +48,9 @@ python3 tools/copilot_mgba_savedata_review.py \
 python3 tools/verify_native_mgba_regressions.py --self-test
 ```
 
-The bounded verifier checks the exact upstream commit and 16 Git blobs, all 800 savedata lines/function definitions and pinned risk anchors, the historical protected-file hashes at the review snapshot, current fail-closed gate invariants, all nine native savedata checks, and three mutated-source negative controls. The existing native regression gate preserves all 34 original named assertions and four hazard observations, requires exactly these nine additions, and runs its synthetic and negative controls. Both `PASS` results are evidence-integrity only; neither can approve files or advance the gate.
+The bounded verifier checks the exact upstream commit and 16 Git blobs, all 800 savedata lines/function definitions and pinned risk anchors, the historical protected-file hashes at the review snapshot, current fail-closed gate invariants, all nine native savedata checks, and three mutated-source negative controls. Its protected-state self-test also rejects unauthorized gate/register changes and confirms that an unrelated base-branch queue update does not appear PR-authored. The existing native regression gate preserves all 34 original named assertions and four hazard observations, requires exactly these nine additions, and runs its synthetic and negative controls. Both `PASS` results are evidence-integrity only; neither can approve files or advance the gate.
 
-For PR validation, `.github/workflows/copilot-mgba-savedata-review.yml` is triggered by only the review packet, harness, verifier, and protected-gate paths. It builds/runs the pinned native harness, runs both verifiers on the generated PR-run logs, checks that the PR does not modify shared state, and archives CI-specific evidence and checksums. The locally recorded run above remains distinct from those workflow artifacts.
+For PR validation, `.github/workflows/copilot-mgba-savedata-review.yml` is triggered by only the review packet, harness, verifier, and protected-gate paths. It builds/runs the pinned native harness, runs both verifiers on the generated PR-run logs, checks PR-authored changes from the merge base for shared-state edits, and archives CI-specific evidence and checksums. The locally recorded run above remains distinct from those workflow artifacts.
 
 ## Remaining evidence obligations
 

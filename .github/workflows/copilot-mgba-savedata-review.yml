@@ -30,12 +30,11 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          git diff --exit-code "$BASE_SHA" HEAD -- \
-            docs/PHASE1_STATUS.md \
-            docs/PHASE1_INDEPENDENT_SEMANTIC_REVIEW_QUEUE.md \
-            semantic-snapshots/independent-reviews/queue.json \
-            semantic-snapshots/current/phase1_mapping_gate.json
+          python3 tools/copilot_mgba_savedata_review.py \
+            --protected-base "$BASE_SHA" \
+            --protected-head "$PR_HEAD_SHA"
       - name: Check Python syntax and existing gate negative controls
         run: |
           python3 -m py_compile \
