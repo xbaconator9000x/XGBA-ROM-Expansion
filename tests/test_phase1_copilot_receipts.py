@@ -252,6 +252,95 @@ class CopilotReceiptTests(unittest.TestCase):
         self._refresh_github_responses()
         return self.head
 
+    def _add_unrelated_commit(self):
+        extra = self.repository_root / "review" / "later-note.txt"
+        extra.write_text("A later unrelated change.\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(self.repository_root), "add", "review/later-note.txt"], check=True)
+        subprocess.run(["git", "-C", str(self.repository_root), "commit", "-qm", "Later unrelated change"], check=True)
+        self.head = subprocess.check_output(
+            ["git", "-C", str(self.repository_root), "rev-parse", "HEAD"], text=True
+        ).strip()
+        self._refresh_github_responses()
+
+    def _amend_introduction_with_extra_file(self):
+        subprocess.run(
+            ["git", "-C", str(self.repository_root), "reset", "--soft", "HEAD^"],
+            check=True,
+            stdout=subprocess.DEVNULL,
+        )
+        (self.repository_root / "review" / "unexpected.txt").write_text(
+            "An unreviewed extra edit.\n", encoding="utf-8",
+        )
+        subprocess.run(["git", "-C", str(self.repository_root), "add", "review/unexpected.txt"], check=True)
+        subprocess.run(
+            ["git", "-C", str(self.repository_root), "commit", "-qm", "Receipt with extra edit"],
+            check=True,
+        )
+        self.head = subprocess.check_output(
+            ["git", "-C", str(self.repository_root), "rev-parse", "HEAD"], text=True
+        ).strip()
+        self._refresh_github_responses()
+
+    def _foreign_commit(self):
+        tree = subprocess.check_output(
+            ["git", "-C", str(self.repository_root), "rev-parse", f"{self.evidence_commit}^{{tree}}"],
+            text=True,
+        ).strip()
+        return subprocess.check_output(
+            ["git", "-C", str(self.repository_root), "commit-tree", tree, "-m", "Foreign evidence"],
+            text=True,
+        ).strip()
+
+    def _rebase_receipt_introduction(self):
+        old_introduction = self.head
+        receipt_path = self.receipt["target"]["receipt_path"]
+        register_bytes = subprocess.check_output(
+            ["git", "-C", str(self.repository_root), "show", f"{old_introduction}:{receipt_path}"],
+        )
+        subprocess.run(
+            ["git", "-C", str(self.repository_root), "reset", "--hard", self.evidence_commit],
+            check=True,
+            stdout=subprocess.DEVNULL,
+        )
+        (self.repository_root / "review" / "before-rebased-receipt.txt").write_text(
+            "An intervening commit changes the receipt ancestry.\n", encoding="utf-8",
+        )
+        subprocess.run(["git", "-C", str(self.repository_root), "add", "review/before-rebased-receipt.txt"], check=True)
+        subprocess.run(["git", "-C", str(self.repository_root), "commit", "-qm", "Intervening commit"], check=True)
+        register = self.repository_root / receipt_path
+        register.parent.mkdir(parents=True, exist_ok=True)
+        register.write_bytes(register_bytes)
+        subprocess.run(["git", "-C", str(self.repository_root), "add", receipt_path], check=True)
+        subprocess.run(["git", "-C", str(self.repository_root), "commit", "-qm", "Rebased receipt introduction"], check=True)
+        self.head = subprocess.check_output(
+            ["git", "-C", str(self.repository_root), "rev-parse", "HEAD"], text=True
+        ).strip()
+        self._refresh_github_responses()
+
+    def _remove_receipt_after_introduction(self):
+        register = self.repository_root / self.receipt["target"]["receipt_path"]
+        register.unlink()
+        subprocess.run(
+            ["git", "-C", str(self.repository_root), "add", "-u", self.receipt["target"]["receipt_path"]],
+            check=True,
+        )
+        subprocess.run(["git", "-C", str(self.repository_root), "commit", "-qm", "Remove receipt"], check=True)
+        self.head = subprocess.check_output(
+            ["git", "-C", str(self.repository_root), "rev-parse", "HEAD"], text=True
+        ).strip()
+        self._refresh_github_responses()
+
+    def _remove_later_appended_receipt(self):
+        register = self.repository_root / self.receipt["target"]["receipt_path"]
+        lines = register.read_text(encoding="utf-8").splitlines()
+        register.write_text(lines[0] + "\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(self.repository_root), "add", self.receipt["target"]["receipt_path"]], check=True)
+        subprocess.run(["git", "-C", str(self.repository_root), "commit", "-qm", "Remove appended receipt"], check=True)
+        self.head = subprocess.check_output(
+            ["git", "-C", str(self.repository_root), "rev-parse", "HEAD"], text=True
+        ).strip()
+        self._refresh_github_responses()
+
     def _seal(self, receipt=None):
         receipt = self.receipt if receipt is None else receipt
         subprocess.run([
@@ -344,13 +433,49 @@ class CopilotReceiptTests(unittest.TestCase):
         self.assertEqual(key, self.key)
         self.assertEqual(problems, [])
 
-    def test_receipt_commit_with_wrong_parent_or_extra_file_is_rejected(self):
+    def test_two_receipts_remain_valid_after_later_receipt_and_unrelated_commit(self):
         self._seal()
-        final_url = f"https://api.github.com/repos/{self.repository}/commits/{self.head}"
-        self.github_responses[final_url]["parents"] = [{"sha": "d" * 40}]
+        first = copy.deepcopy(self.receipt)
+        second = self._make_receipt(self.second_key)
+        self._commit_receipt(second)
+        self._add_unrelated_commit()
+        self.assertEqual(self._validate(first), (self.key, []))
+        self.assertEqual(self._validate(second), (self.second_key, []))
+
+    def test_receipt_introduction_commit_with_extra_file_is_rejected(self):
+        self._seal()
+        self._amend_introduction_with_extra_file()
+        key, problems = self._validate()
+        self.assertEqual(key, self.key)
+        self.assertTrue(problems)
+
+    def test_receipt_with_foreign_evidence_ancestry_is_rejected(self):
+        bad = copy.deepcopy(self.receipt)
+        bad["target"]["evidence_commit"] = self._foreign_commit()
+        self._seal(bad)
+        self.assertTrue(self._validate(bad)[1])
+
+    def test_receipt_rebased_onto_new_introduction_commit_requires_new_attestation(self):
+        self._seal()
+        self._rebase_receipt_introduction()
         self.assertTrue(self._validate()[1])
+
+    def test_removing_a_receipt_after_introduction_is_rejected(self):
         self._seal()
-        self.github_responses[final_url]["files"].append({"filename": "review/evidence.txt"})
+        self._remove_receipt_after_introduction()
+        self.assertTrue(self._validate()[1])
+
+    def test_removing_another_appended_receipt_is_rejected(self):
+        self._seal()
+        self._commit_receipt(self._make_receipt(self.second_key))
+        self._remove_later_appended_receipt()
+        self.assertTrue(self._validate()[1])
+
+    def test_duplicate_source_receipts_are_rejected(self):
+        self._seal()
+        duplicate = copy.deepcopy(self.receipt)
+        duplicate["review"]["semantic_rationale"] += " Duplicate identity."
+        self._commit_receipt(duplicate)
         self.assertTrue(self._validate()[1])
 
     def test_receipt_register_missing_or_foreign_target_is_rejected(self):
@@ -434,9 +559,57 @@ class CopilotReceiptTests(unittest.TestCase):
 
     def test_missing_reviewer_identity_is_rejected(self):
         self._seal()
-        review_url = f"https://api.github.com/repos/{self.repository}/pulls/8/reviews?per_page=100"
-        self.github_responses[review_url][0]["user"] = {}
+        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100"
+        self.github_responses[comment_url][0]["user"] = {}
         self.assertTrue(self._validate()[1])
+
+    def test_conversation_comment_attestation_rejects_wrong_author_duplicate_or_early_comment(self):
+        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100"
+        self._seal()
+        self.github_responses[comment_url][0]["user"]["login"] = "someone-else"
+        self.assertTrue(self._validate()[1])
+        self._seal()
+        self.github_responses[comment_url].append(copy.deepcopy(self.github_responses[comment_url][0]))
+        self.assertTrue(self._validate()[1])
+        self._seal()
+        intro_date = subprocess.check_output(
+            ["git", "-C", str(self.repository_root), "show", "-s", "--format=%cI", self.head],
+            text=True,
+        ).strip()
+        self.github_responses[comment_url][0]["created_at"] = intro_date
+        self.assertTrue(self._validate()[1])
+
+    def test_missing_conversation_comment_is_rejected(self):
+        self._seal()
+        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100"
+        self.github_responses[comment_url] = []
+        self.assertTrue(self._validate()[1])
+
+    def test_conversation_comment_requires_exact_receipt_and_commit_markers(self):
+        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100"
+        for marker in (
+            receipts.RECEIPT_MARKER + "0" * 64,
+            receipts.INTRO_COMMIT_MARKER + "d" * 40,
+            receipts.EVIDENCE_COMMIT_MARKER + "e" * 40,
+            receipts.DECISION_MARKER,
+        ):
+            with self.subTest(marker=marker):
+                self._seal()
+                body = self.github_responses[comment_url][0]["body"]
+                if marker == receipts.DECISION_MARKER:
+                    body = body.replace(marker, "XGBA-Phase1-Decision: NEEDS_REVIEW")
+                elif marker.startswith(receipts.RECEIPT_MARKER):
+                    body = body.replace(receipts.RECEIPT_MARKER + receipts.receipt_digest(self.receipt), marker)
+                elif marker.startswith(receipts.INTRO_COMMIT_MARKER):
+                    body = body.replace(
+                        receipts.INTRO_COMMIT_MARKER + self.head, marker,
+                    )
+                else:
+                    body = body.replace(
+                        receipts.EVIDENCE_COMMIT_MARKER + self.evidence_commit, marker,
+                    )
+                self.github_responses[comment_url][0]["body"] = body
+                self.assertTrue(self._validate()[1])
 
     def test_malformed_source_identity_is_rejected(self):
         self._seal()
@@ -527,10 +700,8 @@ class CopilotReceiptTests(unittest.TestCase):
 
     def test_hash_without_explicit_review_decision_is_rejected(self):
         self._seal()
-        review_url = f"https://api.github.com/repos/{self.repository}/pulls/8/reviews?per_page=100"
-        self.github_responses[review_url][0]["body"] = (
-            receipts.RECEIPT_MARKER + receipts.receipt_digest(self.receipt)
-        )
+        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100"
+        self.github_responses[comment_url][0]["body"] = receipts.RECEIPT_MARKER + receipts.receipt_digest(self.receipt)
         self.assertTrue(self._validate()[1])
 
 

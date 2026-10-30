@@ -57,34 +57,57 @@ def _find_receipt_introduction(repository_root, receipt_path, receipt_line,
     if head != expected_head:
         raise ValueError("Receipt validation checkout is not the expected exact head")
     _git(root, "merge-base", "--is-ancestor", evidence_commit, expected_head)
+    try:
+        subprocess.check_output(
+            ["git", "-C", str(root), "show", f"{evidence_commit}:{receipt_path}"],
+            stderr=subprocess.DEVNULL,
+        )
+    except subprocess.CalledProcessError:
+        pass
+    else:
+        raise ValueError("Receipt evidence commit already contains the receipt register")
     commits = _git(
         root, "rev-list", "--first-parent", "--reverse",
         f"{evidence_commit}..{expected_head}",
     ).splitlines()
     introduction = None
-    intro_date = None
     for commit_sha in commits:
+        parents = _git(root, "rev-list", "--parents", "-n", "1", commit_sha).split()
+        if len(parents) < 2:
+            raise ValueError("Receipt history has invalid first-parent ancestry")
+        parent = parents[1]
+        changed = _git(root, "diff", "--name-only", parent, commit_sha).splitlines()
+        try:
+            previous = subprocess.check_output(
+                ["git", "-C", str(root), "show", f"{parent}:{receipt_path}"],
+                stderr=subprocess.DEVNULL,
+            ).decode("utf-8").splitlines()
+        except subprocess.CalledProcessError:
+            previous = []
         try:
             contents = subprocess.check_output(
                 ["git", "-C", str(root), "show", f"{commit_sha}:{receipt_path}"],
                 stderr=subprocess.DEVNULL,
-            ).decode("utf-8")
+            ).decode("utf-8").splitlines()
         except subprocess.CalledProcessError:
-            continue
-        occurrences = contents.splitlines().count(receipt_line)
+            contents = []
+        if receipt_path in changed:
+            if changed != [receipt_path] or len(parents) != 2:
+                raise ValueError("Receipt register changes must be single-parent, receipt-only commits")
+            if contents[:len(previous)] != previous or len(contents) != len(set(contents)):
+                raise ValueError("Receipt register history is not append-only")
+        elif contents != previous:
+            raise ValueError("Receipt register changed outside an append-only commit")
+        occurrences = contents.count(receipt_line)
         if occurrences > 1:
             raise ValueError("Duplicate receipt bytes in the append-only register")
-        if occurrences == 1:
+        if introduction is None and occurrences == 1 and receipt_line not in previous:
             introduction = commit_sha
-            break
     if introduction is None:
         raise ValueError("Receipt has no introduction commit after its evidence commit")
     parent_line = _git(root, "rev-list", "--parents", "-n", "1", introduction).split()
-    if len(parent_line) != 2:
+    if len(parent_line) != 2 or parent_line[1] != _git(root, "rev-parse", f"{introduction}^1"):
         raise ValueError("Receipt introduction commit has invalid ancestry")
-    changed = _git(root, "diff-tree", "--no-commit-id", "--name-only", "-r", introduction).splitlines()
-    if changed != [receipt_path]:
-        raise ValueError("Receipt introduction commit must change only the receipt register")
     introduced = False
     for commit_sha in commits:
         if commit_sha == introduction:
@@ -243,6 +266,7 @@ def _verify_attestation(receipt, expected_head, repository, repository_root, git
     matching_reviews = [
         review for review in review_list
         if review.get("user", {}).get("login") == "Copilot"
+        and isinstance(review.get("id"), int) and review["id"] > 0
         and review.get("commit_id") == introduction
         and review.get("state") == "COMMENTED"
         and submitted_after(review.get("submitted_at"))
@@ -320,8 +344,20 @@ def validate_receipt(receipt, *, queue, dossiers, source_root, expected_head,
         if not register.is_file():
             raise ValueError("Receipt is missing from the checked-out receipt register")
         receipt_line = json.dumps(receipt, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
-        if receipt_line not in register.read_text(encoding="utf-8").splitlines():
+        register_lines = register.read_text(encoding="utf-8").splitlines()
+        if receipt_line not in register_lines:
             raise ValueError("Receipt bytes are missing or differ from the checked-out register")
+        source_identities = set()
+        for line in register_lines:
+            try:
+                registered = json.loads(line)
+                registered_source = registered["source"]
+                identity = (registered_source["repository"], registered_source["path"])
+            except (TypeError, KeyError, json.JSONDecodeError) as exc:
+                raise ValueError("Receipt register contains a malformed record") from exc
+            if identity in source_identities:
+                raise ValueError("Receipt register contains duplicate source identities")
+            source_identities.add(identity)
         source = receipt.get("source")
         if not isinstance(source, dict):
             raise ValueError("Missing pinned source identity")
