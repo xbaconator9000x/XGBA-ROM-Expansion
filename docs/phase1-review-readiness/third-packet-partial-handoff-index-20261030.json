@@ -9,23 +9,25 @@
   "batches": [
     "docs/phase1-review-readiness/remaining-p0-four-firered-powerplant-rocket-20261030.json",
     "docs/phase1-review-readiness/remaining-p0-eight-firered-routes-204-211-20261030.json",
-    "docs/phase1-review-readiness/remaining-p0-eight-firered-routes-212-219-20261030.json"
+    "docs/phase1-review-readiness/remaining-p0-eight-firered-routes-212-219-20261030.json",
+    "docs/phase1-review-readiness/remaining-p0-eight-firered-saffron-seafoam-seven-220-227-20261030.json"
   ],
   "batch_sizes": [
     4,
     8,
+    8,
     8
   ],
-  "third_packet_partial_source_inspected": 20,
+  "third_packet_partial_source_inspected": 28,
   "second_packet_partial_source_inspected": 83,
   "first_packet_partial_source_inspected": 100,
-  "remaining_p0_partial_source_inspected": 203,
-  "remaining_p0_without_partial_source_inspection": 106,
+  "remaining_p0_partial_source_inspected": 211,
+  "remaining_p0_without_partial_source_inspection": 98,
   "curated_p0_partial_source_inspected": 29,
-  "total_p0_partial_source_inspected": 232,
+  "total_p0_partial_source_inspected": 240,
   "independent_p0_approved": 0,
   "independent_total_approved": 0,
   "whole_file_semantic_approved": 0,
   "phase1_gate": "FAIL_INCOMPLETE",
-  "scope_note": "20 disjoint third-packet partial source inspections (4 prior + 16 route/city); no independent approval or compiled/runtime/license clearance."
+  "scope_note": "28 disjoint third-packet partial source inspections; no independent approval or compiled/runtime/license clearance."
 }
