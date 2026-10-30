@@ -159,6 +159,13 @@ observations already captured in the manifest, or provide an API-like snapshot
 with `--snapshot FILE`. It fails closed for absent PR/dependency data,
 changed head/base/main SHAs, malformed SHAs, absent successful evidence, stale
 green runs, and PR merge-SHA runs lacking matching actual head/base provenance.
+An exact PR-head run is accepted only when its executed SHA equals the current
+PR head. A merge-SHA run requires a direct commit lookup whose immutable commit
+object has exactly the current base SHA as first parent and PR head SHA as
+second parent; the mutable `merge_sha` field alone is not trusted.
+`pull_request_target` runs executing only base code are rejected. The checker
+also rejects empty/duplicate PR scopes, dependency cycles, and incomplete or
+non-topological PR order.
 Its only result is integration metadata readiness; it never edits approvals,
 queues, gates, pins, branches, or PR state.
 

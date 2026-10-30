@@ -13,7 +13,9 @@
         ]
       }
     ],
-    "required_workflow_ids": {"77": [42]}
+    "required_workflow_ids": {"77": [42]},
+    "pull_request_order": [77],
+    "integration_order": [{"order": 1, "action": "Integrate the single PR after verification."}]
   },
   "snapshot": {
     "main": {"ref": "main", "sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
@@ -44,6 +46,15 @@
           }
         ]
       }
-    ]
+    ],
+    "commit_details": {
+      "cccccccccccccccccccccccccccccccccccccccc": {
+        "sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "parents": [
+          "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ]
+      }
+    }
   }
 }

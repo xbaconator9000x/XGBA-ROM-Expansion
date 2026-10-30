@@ -313,6 +313,10 @@
     "21": [398273014],
     "24": [398361788]
   },
+  "pull_request_order": [
+    2, 3, 4, 6, 7, 23, 25, 35, 36, 5, 8, 10, 11, 12, 14, 15, 16, 17,
+    18, 21, 13, 19, 20, 22, 24, 26, 27, 28
+  ],
   "integration_order": [
     {"order": 1, "action": "Refresh main-based roots #2, #3, #6, #7, #23, and #25 to current main; revalidate exact-head workflows. Do not treat PR-body claims as evidence."},
     {"order": 2, "action": "Review active PR #35 and #36 packets alongside their targets (#12/#13 and #16/#20 respectively); avoid duplicating review work, and do not treat the packets or reused CI as approval."},
