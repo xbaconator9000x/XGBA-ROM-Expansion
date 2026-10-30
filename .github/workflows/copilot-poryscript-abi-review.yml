@@ -1,0 +1,105 @@
+name: Copilot Poryscript ABI review validation
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/copilot-poryscript-abi-review.yml'
+      - 'semantic-snapshots/independent-reviews/copilot-poryscript-abi/**'
+      - 'tests/test_copilot_poryscript_abi_review.py'
+      - 'tools/copilot_poryscript_abi_review.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  review-record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/poryscript
+          ref: c32481161c767b25a3425fa9f1f8729927ff3d55
+          path: upstream-poryscript
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - name: Test fail-closed review evidence and verify pinned source blobs
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/copilot_poryscript_abi_review.py tests/test_copilot_poryscript_abi_review.py
+          python3 -m unittest discover -s tests -p 'test_copilot_poryscript_abi_review.py' -v
+          python3 tools/copilot_poryscript_abi_review.py \
+            --poryscript-root upstream-poryscript \
+            --firered-root upstream-firered
+
+  actual-cli-gnu-arm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Reuse the exact historical PR #20 witness implementation
+        uses: actions/checkout@v4
+        with:
+          repository: xbaconator9000x/XGBA-ROM-Expansion
+          ref: 587132181ef728b635968dd091b1cf171e78f753
+          path: pinned-witness
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/poryscript
+          ref: c32481161c767b25a3425fa9f1f8729927ff3d55
+          path: upstream-poryscript
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - name: Install GNU ARM assembler and linker
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi build-essential
+          go version
+          arm-none-eabi-as --version | head -1
+          arm-none-eabi-ld --version | head -1
+      - name: Verify harness provenance and run the actual pinned CLI witness
+        run: |
+          set -euo pipefail
+          harness_commit=587132181ef728b635968dd091b1cf171e78f753
+          harness_blob=4a137032662f0c711fcf1aee7a0fdd6ddfa001cb
+          test "$(git -C pinned-witness rev-parse HEAD)" = "$harness_commit"
+          test "$(git -C pinned-witness hash-object tools/verify_poryscript_actual_cli_arm_table.py)" = "$harness_blob"
+          mkdir -p phase1-evidence
+          {
+            printf 'harness_commit=%s\n' "$harness_commit"
+            printf 'harness_git_blob=%s\n' "$harness_blob"
+            printf 'poryscript_commit=c32481161c767b25a3425fa9f1f8729927ff3d55\n'
+            printf 'firered_commit=ce6406d8c2eaf46d543c8a2606de0c3cb1951982\n'
+          } > phase1-evidence/witness-provenance.txt
+          python3 -m py_compile pinned-witness/tools/verify_poryscript_actual_cli_arm_table.py
+          python3 pinned-witness/tools/verify_poryscript_actual_cli_arm_table.py \
+            --poryscript upstream-poryscript \
+            --firered upstream-firered \
+            --output phase1-evidence/poryscript-real-cli-gnu-arm-table.json
+          python3 -c 'import json; d=json.load(open("phase1-evidence/poryscript-real-cli-gnu-arm-table.json")); assert d["poryscript_commit"] == "c32481161c767b25a3425fa9f1f8729927ff3d55"; assert d["firered_commit"] == "ce6406d8c2eaf46d543c8a2606de0c3cb1951982"; assert d["actual_poryscript_cli_executed"] and d["actual_pinned_fire_red_preprocessor_used"]; assert d["negative_controls_passed"] == 7; assert d["independent_approvals"] == 0 and d["phase1_gate"] == "FAIL_INCOMPLETE"'
+      - name: Archive actual CLI and GNU ARM witness output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: copilot-poryscript-abi-actual-cli-gnu-arm
+          path: phase1-evidence/
+          if-no-files-found: warn
+          retention-days: 60
