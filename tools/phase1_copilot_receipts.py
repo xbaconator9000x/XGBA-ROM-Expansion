@@ -9,15 +9,17 @@ import re
 import urllib.error
 import urllib.request
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 
 from phase1_bulk_triage import PINS, canonical, digest, git_blob, source_bytes
 
-SCHEMA = "xgba.phase1.copilot_semantic_review_receipt.v1"
+SCHEMA = "xgba.phase1.copilot_semantic_review_receipt.v2"
 SHA1 = re.compile(r"^[0-9a-f]{40}$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 RECEIPT_MARKER = "XGBA-Phase1-Receipt-SHA256: "
 DECISION_MARKER = "XGBA-Phase1-Decision: APPROVED"
+CENSUS_WORKFLOW_PATH = ".github/workflows/phase1-census.yml"
+PR_WORKFLOW_NAME = "Phase 1 consolidated PR checks"
 EVIDENCE_STATES = {"VERIFIED", "NOT_APPLICABLE", "NOT_CLAIMED", "NOT_RUN"}
 EVIDENCE_KINDS = {
     "synthetic": {"synthetic_test"},
@@ -67,7 +69,55 @@ def _verify_source_reference(ref, source_root):
     return data
 
 
-def _verify_attestation(receipt, expected_head, repository, github_api):
+def _verify_file_authorship(review, repository, pull_number, expected_head,
+                            repository_root, github_api):
+    authorship = review.get("authorship")
+    if not isinstance(authorship, dict):
+        raise ValueError("Missing dossier and substantive-evidence authorship provenance")
+    dossier = authorship.get("dossier")
+    evidence = authorship.get("substantive_evidence")
+    if not isinstance(evidence, list) or not evidence:
+        raise ValueError("Substantive-evidence authorship provenance is incomplete")
+    entries = [dossier, *evidence]
+    root = Path(repository_root).resolve()
+    api_root = f"https://api.github.com/repos/{repository}"
+    for item in entries:
+        if not isinstance(item, dict):
+            raise ValueError("Authorship provenance is not an object")
+        path, expected_sha = item.get("path"), item.get("sha256")
+        if (not isinstance(path, str) or not path or Path(path).is_absolute()
+                or ".." in Path(path).parts or not isinstance(expected_sha, str)
+                or not SHA256.fullmatch(expected_sha)):
+            raise ValueError("Authorship provenance has an invalid path or content hash")
+        candidate = root
+        for part in Path(path).parts:
+            candidate = candidate / part
+            if candidate.is_symlink():
+                raise ValueError("Authorship evidence file cannot traverse symbolic links")
+        file_path = candidate.resolve()
+        if root not in file_path.parents or not file_path.is_file():
+            raise ValueError("Authorship evidence file is missing or outside the checkout")
+        if hashlib.sha256(file_path.read_bytes()).hexdigest() != expected_sha:
+            raise ValueError("Authorship evidence file hash differs from the exact checkout")
+        query = urlencode({"path": path, "sha": expected_head, "per_page": 1})
+        commits = github_api(f"{api_root}/commits?{query}")
+        if not isinstance(commits, list) or not commits:
+            raise ValueError("No exact-head Git commit provenance for " + path)
+        commit_sha = commits[0].get("sha")
+        if not isinstance(commit_sha, str) or not SHA1.fullmatch(commit_sha):
+            raise ValueError("GitHub returned invalid file authorship commit for " + path)
+        commit = github_api(f"{api_root}/commits/{commit_sha}")
+        if (not isinstance(commit, dict) or commit.get("sha") != commit_sha
+                or not any(file.get("filename") == path for file in commit.get("files", []))):
+            raise ValueError("GitHub commit does not attest the cited file path")
+        author = commit.get("author", {}).get("login")
+        committer = commit.get("committer", {}).get("login")
+        if (not isinstance(author, str) or not author or "copilot" in author.casefold()
+                or (isinstance(committer, str) and "copilot" in committer.casefold())):
+            raise ValueError("Copilot cannot review its own dossier or substantive evidence")
+
+
+def _verify_attestation(receipt, expected_head, repository, repository_root, github_api):
     attestation = receipt.get("attestation")
     if not isinstance(attestation, dict):
         raise ValueError("Missing attributable GitHub review signature")
@@ -104,11 +154,22 @@ def _verify_attestation(receipt, expected_head, repository, github_api):
         raise ValueError("Pull request head differs from exact validation head")
     if not author or author.casefold() == "copilot" or len(matching_reviews) != 1:
         raise ValueError("Missing Copilot identity or reviewer conflicts with pull request author")
+    _verify_file_authorship(
+        receipt.get("review", {}), repository, pull_number, expected_head,
+        repository_root, github_api,
+    )
     if any(run.get("head_sha") == expected_head
-           and run.get("name") == "Phase 1 pinned source census and review dossiers"
+           and run.get("name") == PR_WORKFLOW_NAME
            and run.get("event") == "pull_request"
            and run.get("status") == "completed"
            and run.get("conclusion") == "success"
+           and any(
+               isinstance(workflow.get("path"), str)
+               and workflow["path"].split("@", 1)[0].endswith(
+                   f"{repository}/{CENSUS_WORKFLOW_PATH}"
+               )
+               for workflow in run.get("referenced_workflows", [])
+           )
            and any(pr.get("number") == pull_number
                    and pr.get("head", {}).get("sha") == expected_head
                    for pr in run.get("pull_requests", []))
@@ -119,6 +180,7 @@ def _verify_attestation(receipt, expected_head, repository, github_api):
 
 
 def validate_receipt(receipt, *, queue, dossiers, source_root, expected_head,
+                     repository_root=None,
                      repository, github_api=github_get_json):
     """Return (source key, problems) after independently checking receipt evidence."""
     key = None
@@ -222,6 +284,9 @@ def validate_receipt(receipt, *, queue, dossiers, source_root, expected_head,
                             or not isinstance(artifact.get("uri"), str) or not artifact["uri"].strip()
                             or artifact.get("kind") not in EVIDENCE_KINDS[category]):
                         raise ValueError("Unsupported or unhashed evidence artifact: " + category)
+                raise ValueError(
+                    "Non-source VERIFIED artifacts require independent byte verification: " + category
+                )
             elif len((item.get("reason") or "").strip()) < 12:
                 raise ValueError("Unrun or unclaimed evidence lacks an explicit reason: " + category)
 
@@ -232,7 +297,10 @@ def validate_receipt(receipt, *, queue, dossiers, source_root, expected_head,
             if (not isinstance(objection, dict) or objection.get("status") != "RESOLVED"
                     or len((objection.get("resolution") or "").strip()) < 12):
                 raise ValueError("Unresolved substantive objection")
-        _verify_attestation(receipt, expected_head, repository, github_api)
+        _verify_attestation(
+            receipt, expected_head, repository,
+            repository_root or Path.cwd(), github_api,
+        )
     except (AttributeError, KeyError, TypeError, ValueError, OSError) as exc:
         problems.append(str(exc))
     return key, problems

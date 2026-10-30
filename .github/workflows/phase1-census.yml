@@ -1,5 +1,6 @@
 name: Phase 1 pinned source census and review dossiers
 on:
+  workflow_call:
   workflow_dispatch:
   push:
     paths:
@@ -9,6 +10,7 @@ on:
       - 'tools/phase1_mapping_gate.py'
       - 'tools/phase1_copilot_receipts.py'
       - 'tests/test_phase1_copilot_receipts.py'
+      - 'tests/test_phase1_mapping_gate.py'
       - 'docs/phase1-review-readiness/copilot-semantic-review-receipts.jsonl'
       - 'tools/verify_source_contracts.py'
       - 'tools/verify_p0_additive_source_contracts.py'
@@ -56,12 +58,15 @@ jobs:
     timeout-minutes: 110
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Verify Python syntax
         run: |
           python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py tools/phase1_copilot_receipts.py tools/phase1_mapping_gate.py
           python3 tools/semantic_review_dossiers.py --self-test
           python3 tools/phase1_mapping_gate.py --self-test
           python3 -m unittest discover -s tests -p test_phase1_copilot_receipts.py -v
+          python3 -m unittest discover -s tests -p test_phase1_mapping_gate.py -v
       - name: Clone pinned sources and scan
         run: python3 tools/pinned_source_census.py --checkout --root upstream --out audit-output
       - name: Verify pinned Poryscript compiler parsing and emission tests

@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from urllib.parse import urlencode
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 import phase1_copilot_receipts as receipts
@@ -19,7 +20,9 @@ class CopilotReceiptTests(unittest.TestCase):
         self.root = Path(self.tmp.name)
         self.source_root = self.root / "upstream"
         self.checkout = self.source_root / "pokefirered"
+        self.repository_root = self.root / "repository"
         self.checkout.mkdir(parents=True)
+        self.repository_root.mkdir()
         subprocess.run(["git", "-C", str(self.checkout), "init", "-q"], check=True)
         (self.checkout / "src").mkdir()
         self.source = b"static int add(int a, int b)\n{\n    return a + b;\n}\n"
@@ -58,6 +61,23 @@ class CopilotReceiptTests(unittest.TestCase):
             }
         }
         self.dossiers = {self.key: self.dossier}
+        (self.repository_root / "review").mkdir()
+        dossier_bytes = b'{"reviewed_item":"pret/pokefirered/src/sample.c"}\n'
+        evidence_bytes = b"Independent source observations for the fixture.\n"
+        (self.repository_root / "review" / "dossier.json").write_bytes(dossier_bytes)
+        (self.repository_root / "review" / "evidence.txt").write_bytes(evidence_bytes)
+        self.authorship = [
+            {
+                "path": "review/dossier.json",
+                "sha256": hashlib.sha256(dossier_bytes).hexdigest(),
+                "commit_sha": "a" * 40,
+            },
+            {
+                "path": "review/evidence.txt",
+                "sha256": hashlib.sha256(evidence_bytes).hexdigest(),
+                "commit_sha": "b" * 40,
+            },
+        ]
         self.receipt = self._make_receipt()
         self.github_responses = {}
 
@@ -114,6 +134,12 @@ class CopilotReceiptTests(unittest.TestCase):
                     "physical_flash": {"status": "NOT_CLAIMED", "reason": "No hardware result is claimed."},
                 },
                 "objections": [],
+                "authorship": {
+                    "dossier": {k: v for k, v in self.authorship[0].items() if k != "commit_sha"},
+                    "substantive_evidence": [
+                        {k: v for k, v in self.authorship[1].items() if k != "commit_sha"}
+                    ],
+                },
             },
             "target": {
                 "repository": self.repository,
@@ -142,11 +168,14 @@ class CopilotReceiptTests(unittest.TestCase):
             }],
             f"https://api.github.com/repos/{self.repository}/actions/runs?head_sha={self.head}&per_page=100": {
                 "workflow_runs": [{
-                    "name": "Phase 1 pinned source census and review dossiers",
+                    "name": "Phase 1 consolidated PR checks",
                     "event": "pull_request",
                     "head_sha": self.head,
                     "status": "completed",
                     "conclusion": "success",
+                    "referenced_workflows": [{
+                        "path": f"{self.repository}/.github/workflows/phase1-census.yml@{self.head}",
+                    }],
                     "pull_requests": [{
                         "number": 8,
                         "head": {"sha": self.head},
@@ -154,6 +183,20 @@ class CopilotReceiptTests(unittest.TestCase):
                 }],
             },
         }
+        api_root = f"https://api.github.com/repos/{self.repository}"
+        for item in self.authorship:
+            query = urlencode({
+                "path": item["path"], "sha": self.head, "per_page": 1,
+            })
+            self.github_responses[f"{api_root}/commits?{query}"] = [
+                {"sha": item["commit_sha"]}
+            ]
+            self.github_responses[f"{api_root}/commits/{item['commit_sha']}"] = {
+                "sha": item["commit_sha"],
+                "author": {"login": "xbaconator9000x"},
+                "committer": {"login": "xbaconator9000x"},
+                "files": [{"filename": item["path"]}],
+            }
         return receipt
 
     def _validate(self, receipt=None):
@@ -163,6 +206,7 @@ class CopilotReceiptTests(unittest.TestCase):
             dossiers=self.dossiers,
             source_root=self.source_root,
             expected_head=self.head,
+            repository_root=self.repository_root,
             repository=self.repository,
             github_api=self.github_responses.__getitem__,
         )
@@ -215,6 +259,28 @@ class CopilotReceiptTests(unittest.TestCase):
         self.github_responses[pull_url]["user"]["login"] = "copilot"
         self.assertTrue(self._validate()[1])
 
+    def test_copilot_authored_dossier_is_rejected_even_when_pr_author_is_other(self):
+        self._seal()
+        commit_url = (
+            f"https://api.github.com/repos/{self.repository}/commits/"
+            f"{self.authorship[0]['commit_sha']}"
+        )
+        self.github_responses[commit_url]["author"]["login"] = "copilot-swe-agent[bot]"
+        self.assertEqual(
+            self.github_responses[
+                f"https://api.github.com/repos/{self.repository}/pulls/8"
+            ]["user"]["login"],
+            "xbaconator9000x",
+        )
+        self.assertTrue(self._validate()[1])
+
+    def test_stale_dossier_or_substantive_evidence_file_hash_is_rejected(self):
+        self._seal()
+        bad = copy.deepcopy(self.receipt)
+        bad["review"]["authorship"]["dossier"]["sha256"] = "0" * 64
+        self._seal(bad)
+        self.assertTrue(self._validate(bad)[1])
+
     def test_missing_reviewer_identity_is_rejected(self):
         self._seal()
         review_url = f"https://api.github.com/repos/{self.repository}/pulls/8/reviews?per_page=100"
@@ -262,13 +328,42 @@ class CopilotReceiptTests(unittest.TestCase):
         bad["review"]["evidence_distinctions"]["runtime_gameplay"] = {
             "status": "VERIFIED",
             "artifacts": [{
-                "kind": "synthetic_test",
+                "kind": "runtime_trace",
                 "uri": "https://example.test/test.log",
                 "sha256": "a" * 64,
             }],
         }
         self._seal(bad)
         self.assertTrue(self._validate(bad)[1])
+
+    def test_claimed_non_source_artifacts_are_rejected_without_byte_verifier(self):
+        kinds = {
+            "synthetic": "synthetic_test",
+            "compiled_native": "build_artifact",
+            "runtime_gameplay": "runtime_trace",
+            "save_restart": "save_image",
+            "physical_flash": "physical_flash_capture",
+        }
+        for uri, digest in (
+            ("https://missing.example/artifact.bin", "a" * 64),
+            ("https://example.test/wrong-bytes.bin", "b" * 64),
+            ("https://example.test/stale-artifact.bin", "c" * 64),
+        ):
+            for category, kind in kinds.items():
+                with self.subTest(uri=uri, category=category):
+                    bad = copy.deepcopy(self.receipt)
+                    bad["review"]["evidence_distinctions"][category] = {
+                        "status": "VERIFIED",
+                        "artifacts": [{"kind": kind, "uri": uri, "sha256": digest}],
+                    }
+                    self._seal(bad)
+                    self.assertTrue(self._validate(bad)[1])
+
+    def test_exact_head_run_must_include_census_workflow(self):
+        self._seal()
+        run_url = f"https://api.github.com/repos/{self.repository}/actions/runs?head_sha={self.head}&per_page=100"
+        self.github_responses[run_url]["workflow_runs"][0]["referenced_workflows"] = []
+        self.assertTrue(self._validate()[1])
 
     def test_unsuccessful_exact_head_validation_is_rejected(self):
         self._seal()

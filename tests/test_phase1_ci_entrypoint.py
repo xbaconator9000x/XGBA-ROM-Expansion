@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / ".github" / "workflows"
 ENTRYPOINT = WORKFLOWS / "phase1-pr-checks.yml"
 CHILDREN = {
+    "phase1-census.yml",
     "phase1-curated-core-four.yml",
     "phase1-curated-final-six.yml",
     "phase1-curated-four-source.yml",
@@ -62,8 +63,19 @@ class Phase1CiEntrypointTests(unittest.TestCase):
             with self.subTest(workflow=name):
                 source = (WORKFLOWS / name).read_text()
                 trigger_block = source.split("permissions:", 1)[0]
-                self.assertEqual(trigger_block, "name: " + source.splitlines()[0][6:] + "\non:\n  workflow_call:\n")
-                self.assertIn("permissions:\n  contents: read\n", source)
+                if name == "phase1-census.yml":
+                    self.assertIn("  workflow_call:\n", trigger_block)
+                    self.assertIn("  workflow_dispatch:\n", trigger_block)
+                    self.assertIn("  push:\n", trigger_block)
+                    self.assertIn("ref: ${{ github.event.pull_request.head.sha || github.sha }}", source)
+                    self.assertIn("test_phase1_mapping_gate.py", source)
+                else:
+                    self.assertEqual(
+                        trigger_block,
+                        "name: " + source.splitlines()[0][6:] + "\non:\n  workflow_call:\n",
+                    )
+                self.assertIn("permissions:\n  contents: read", source)
+                self.assertNotIn("contents: write", source)
 
     def test_entrypoint_is_read_only_and_targets_stacked_base(self):
         source = ENTRYPOINT.read_text()

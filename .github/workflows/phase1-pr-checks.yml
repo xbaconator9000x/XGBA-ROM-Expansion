@@ -5,7 +5,11 @@ on:
       - phase1/firered-layout-writers-20261026
 permissions:
   contents: read
+  pull-requests: read
+  actions: read
 jobs:
+  census:
+    uses: ./.github/workflows/phase1-census.yml
   curated-core-four:
     uses: ./.github/workflows/phase1-curated-core-four.yml
   curated-final-six:
