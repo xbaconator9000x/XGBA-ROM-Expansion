@@ -239,10 +239,12 @@ class CopilotReceiptTests(unittest.TestCase):
         comment_id = 810000 + len(self.committed_receipts)
         evidence_sha = receipt["target"]["evidence_commit"]
         body = "\n".join((
+            receipts.ATTESTATION_BEGIN,
             receipts.RECEIPT_MARKER + body_hash,
             receipts.INTRO_COMMIT_MARKER + self.head,
             receipts.EVIDENCE_COMMIT_MARKER + evidence_sha,
             receipts.DECISION_MARKER,
+            receipts.ATTESTATION_END,
         ))
         self.committed_receipts.append({
             "receipt": receipt,
@@ -729,6 +731,28 @@ class CopilotReceiptTests(unittest.TestCase):
         self.github_responses[comment_url][0]["created_at"] = intro_date
         self.assertTrue(self._validate()[1])
 
+    def test_github_review_uses_the_same_unquoted_attestation_grammar(self):
+        self.receipt["attestation"]["mode"] = "github_review"
+        self._seal()
+        review_url = (
+            f"https://api.github.com/repos/{self.repository}/pulls/8/reviews"
+            "?per_page=100&page=1"
+        )
+        attestation = self.committed_receipts[0]
+        self.github_responses[review_url] = [{
+            "id": 810100,
+            "user": {"login": "Copilot"},
+            "commit_id": self.head,
+            "state": "COMMENTED",
+            "submitted_at": attestation["created_at"],
+            "body": attestation["body"],
+        }]
+        self.assertFalse(self._validate()[1])
+        self.github_responses[review_url][0]["body"] = "\n".join(
+            "> " + line for line in attestation["body"].splitlines()
+        )
+        self.assertTrue(self._validate()[1])
+
     def test_missing_conversation_comment_is_rejected(self):
         self._seal()
         comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100&page=1"
@@ -760,6 +784,51 @@ class CopilotReceiptTests(unittest.TestCase):
                     )
                 self.github_responses[comment_url][0]["body"] = body
                 self.assertTrue(self._validate()[1])
+
+    def test_quote_echo_with_needs_review_is_not_an_attestation(self):
+        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100&page=1"
+        self._seal()
+        body = self.github_responses[comment_url][0]["body"]
+        self.github_responses[comment_url][0]["body"] = "\n".join(
+            ["> " + line for line in body.splitlines()]
+            + ["XGBA-Phase1-Decision: NEEDS_REVIEW"]
+        )
+        self.assertTrue(self._validate()[1])
+
+    def test_fenced_attestation_markers_are_not_an_attestation(self):
+        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100&page=1"
+        self._seal()
+        body = self.github_responses[comment_url][0]["body"]
+        self.github_responses[comment_url][0]["body"] = "```\n" + body + "\n```"
+        self.assertTrue(self._validate()[1])
+
+    def test_html_quoted_attestation_markers_are_not_an_attestation(self):
+        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100&page=1"
+        self._seal()
+        body = self.github_responses[comment_url][0]["body"]
+        self.github_responses[comment_url][0]["body"] = (
+            "<blockquote>\n" + body + "\n</blockquote>"
+        )
+        self.assertTrue(self._validate()[1])
+
+    def test_attestation_requires_one_unambiguous_affirmative_section(self):
+        comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100&page=1"
+        self._seal()
+        body = self.github_responses[comment_url][0]["body"]
+        self.github_responses[comment_url][0]["body"] = body.replace(
+            receipts.DECISION_MARKER, "XGBA-Phase1-Reviewer: Copilot",
+        )
+        self.assertTrue(self._validate()[1])
+        self._seal()
+        body = self.github_responses[comment_url][0]["body"]
+        self.github_responses[comment_url][0]["body"] = (
+            body + "\nXGBA-Phase1-Decision: REJECTED"
+        )
+        self.assertTrue(self._validate()[1])
+        self._seal()
+        body = self.github_responses[comment_url][0]["body"]
+        self.github_responses[comment_url][0]["body"] = body + "\n" + body
+        self.assertTrue(self._validate()[1])
 
     def test_malformed_source_identity_is_rejected(self):
         self._seal()

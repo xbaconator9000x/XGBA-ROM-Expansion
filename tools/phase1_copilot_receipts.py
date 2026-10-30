@@ -22,6 +22,8 @@ RECEIPT_MARKER = "XGBA-Phase1-Receipt-SHA256: "
 DECISION_MARKER = "XGBA-Phase1-Decision: APPROVED"
 INTRO_COMMIT_MARKER = "XGBA-Phase1-Receipt-Commit: "
 EVIDENCE_COMMIT_MARKER = "XGBA-Phase1-Evidence-Commit: "
+ATTESTATION_BEGIN = "XGBA-Phase1-Attestation: BEGIN"
+ATTESTATION_END = "XGBA-Phase1-Attestation: END"
 CENSUS_WORKFLOW_PATH = ".github/workflows/phase1-census.yml"
 PR_WORKFLOW_NAME = "Phase 1 consolidated PR checks"
 EVIDENCE_STATES = {"VERIFIED", "NOT_APPLICABLE", "NOT_CLAIMED", "NOT_RUN"}
@@ -37,6 +39,54 @@ EVIDENCE_KINDS = {
 def receipt_digest(receipt):
     """Hash the durable receipt body, excluding its GitHub review attestation."""
     return digest(canonical({k: v for k, v in receipt.items() if k != "attestation"}))
+
+
+def _attestation_section_is_valid(body, markers):
+    if not isinstance(body, str):
+        return False
+    active_lines = []
+    fence = None
+    html_quote_depth = 0
+    for line in body.splitlines():
+        quote_opens = len(re.findall(r"<blockquote(?:\s[^>]*)?>", line, re.IGNORECASE))
+        quote_closes = len(re.findall(r"</blockquote\s*>", line, re.IGNORECASE))
+        if html_quote_depth or quote_opens:
+            html_quote_depth = max(0, html_quote_depth + quote_opens - quote_closes)
+            continue
+        quote_content = re.sub(r"^ {0,3}> ?", "", line)
+        candidate = quote_content if quote_content != line else line
+        if fence:
+            closing = re.fullmatch(
+                rf" {{0,3}}{re.escape(fence[0])}{{{fence[1]},}}[ \t]*",
+                candidate,
+            )
+            if closing:
+                fence = None
+            continue
+        opening = re.match(r"^ {0,3}(`{3,}|~{3,})", candidate)
+        if opening:
+            fence = (opening.group(1)[0], len(opening.group(1)))
+            continue
+        if candidate != line:
+            continue
+        if re.match(r"^ {4,}", line):
+            continue
+        active_lines.append(line)
+
+    begin_positions = [i for i, line in enumerate(active_lines) if line == ATTESTATION_BEGIN]
+    end_positions = [i for i, line in enumerate(active_lines) if line == ATTESTATION_END]
+    if len(begin_positions) != 1 or len(end_positions) != 1:
+        return False
+    begin, end = begin_positions[0], end_positions[0]
+    if end <= begin or active_lines[begin:end + 1] != [
+        ATTESTATION_BEGIN, *markers, ATTESTATION_END,
+    ]:
+        return False
+    if any(active_lines.count(marker) != 1 for marker in markers):
+        return False
+    if re.search(r"\b(?:NEEDS[_ -]REVIEW|REJECTED)\b", "\n".join(active_lines), re.IGNORECASE):
+        return False
+    return True
 
 
 def _git(repository_root, *args):
@@ -329,7 +379,7 @@ def _verify_attestation(receipt, expected_head, repository, repository_root, git
         and review.get("commit_id") == introduction
         and review.get("state") == "COMMENTED"
         and submitted_after(review.get("submitted_at"))
-        and all(marker in (review.get("body") or "") for marker in receipt_markers)
+        and _attestation_section_is_valid(review.get("body"), receipt_markers)
     ]
     matching_comments = [
         comment for comment in comment_list
@@ -339,7 +389,7 @@ def _verify_attestation(receipt, expected_head, repository, repository_root, git
         and comment.get("html_url")
         == f"https://github.com/{repository}/pull/{pull_number}#issuecomment-{comment.get('id')}"
         and submitted_after(comment.get("created_at"))
-        and all(marker in (comment.get("body") or "") for marker in receipt_markers)
+        and _attestation_section_is_valid(comment.get("body"), receipt_markers)
     ]
     author = pull.get("user", {}).get("login")
     if pull.get("head", {}).get("sha") != expected_head:
