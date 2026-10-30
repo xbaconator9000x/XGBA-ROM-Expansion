@@ -1,0 +1,334 @@
+{
+  "schema_version": 1,
+  "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+  "observed_at": "2026-10-30",
+  "main": {
+    "ref": "main",
+    "sha": "de2a775184d69411016ff683a8075af72ef4a58d"
+  },
+  "policy": {
+    "phase": 1,
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "independent_approvals": 0,
+    "preserve_source_pins": true,
+    "merge_or_branch_mutation_performed": false,
+    "ci_is_semantic_approval": false
+  },
+  "main_tree_path_audit": {
+    "compared_tree_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+    "pr_8": {
+      "changed_file_entries": 130,
+      "status": "all_added",
+      "added_paths_found_in_main": 0
+    },
+    "pr_11": {
+      "changed_file_entries": 8,
+      "added_or_modified_paths_found_in_main": 0
+    },
+    "pr_35": {
+      "changed_file_entries": 8,
+      "paths_found_in_main": ["tests/mgba_bank_boundary.c"],
+      "finding": "extends an existing native test and adds a separate pinned mGBA savedata review packet"
+    },
+    "pr_36": {
+      "changed_file_entries": 4,
+      "added_paths_found_in_main": 0,
+      "finding": "separate Poryscript ABI review packet; does not modify PR #16/#20 implementation files"
+    },
+    "pr_19": {
+      "parent": 11,
+      "finding": "follow-on diff modifies binary-triage files introduced/modified by PR 11; expected stacked overlap, not an independent duplicate"
+    },
+    "other_stack_filesystem_comparison": "not fully verified"
+  },
+  "pull_requests": [
+    {
+      "number": 2,
+      "title": "fail closed on unauthenticated independent-review claims",
+      "head": {"ref": "phase1/verified-review-attestation-gate-20261026", "sha": "69726db2857624c0e49955b79961a4e7e9730636"},
+      "base": {"ref": "main", "sha": "b0b13c1a277663b255b366878345540c2dcc90b1"},
+      "depends_on": [],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": [{"id": 40216488315, "workflow_id": 396211566, "conclusion": "success", "event": "pull_request", "head_sha": "b14bfc164aa623648342405c04ed7fcf475005eb", "matches_current_head": false, "base_provenance": "not returned"}]
+    },
+    {
+      "number": 3,
+      "title": "pinned mGBA scheduler/DMA semantic dependency candidates",
+      "head": {"ref": "phase1/mgba-timing-dma-semantic-review-20261026", "sha": "ece1972aff3b333d8b5d33f6d1d043f10f779961"},
+      "base": {"ref": "main", "sha": "b0b13c1a277663b255b366878345540c2dcc90b1"},
+      "depends_on": [],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": [{"id": 40221153698, "workflow_id": null, "conclusion": "claimed success in PR body", "event": "not queried", "head_sha": "ece1972aff3b333d8b5d33f6d1d043f10f779961", "base_provenance": "unverified"}]
+    },
+    {
+      "number": 4,
+      "title": "mGBA EEPROM state-machine and savestate timing dependencies",
+      "head": {"ref": "phase1/mgba-eeprom-savestate-dependency-20261026", "sha": "2f915111f9d9b3982647baab773dac59f800fa30"},
+      "base": {"ref": "main", "sha": "a18c7e01a9a6e0625a68426829057899df3a6da6"},
+      "depends_on": [],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": [{"id": 40221526970, "workflow_id": null, "conclusion": "claimed success in PR body", "event": "not queried", "head_sha": "2f915111f9d9b3982647baab773dac59f800fa30", "base_provenance": "unverified"}]
+    },
+    {
+      "number": 5,
+      "title": "reconcile pinned mGBA timing, EEPROM, CPU prefetch and Matrix ABI review",
+      "head": {"ref": "phase1/mgba-crosspacket-review-reconciliation-20261026", "sha": "b30d76cb0ff57562dd939008e6d9da10df3fa0a4"},
+      "base": {"ref": "phase1/mgba-timing-dma-semantic-review-20261026", "sha": "ece1972aff3b333d8b5d33f6d1d043f10f779961"},
+      "depends_on": [3],
+      "supersedes_or_carries": [4],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": [{"id": 40244363130, "workflow_id": null, "conclusion": "claimed success in PR body", "event": "not queried", "head_sha": "b30d76cb0ff57562dd939008e6d9da10df3fa0a4", "base_provenance": "unverified"}]
+    },
+    {
+      "number": 6,
+      "title": "join every pinned FireRed map header to its authored layout",
+      "head": {"ref": "phase1/pinned-firered-map-layout-join-20261026", "sha": "14536d8592ecb873ab1331086b9eea49916e6429"},
+      "base": {"ref": "main", "sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5"},
+      "depends_on": [],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": [{"id": 40255555421, "workflow_id": null, "conclusion": "claimed success in PR body", "event": "not queried", "head_sha": "dacbcf31ffa8eb10ac74729f1bfd32bd4f9e8c43", "base_provenance": "unverified"}]
+    },
+    {
+      "number": 7,
+      "title": "pin FireRed layout-ID writers and explicit alternate selectors",
+      "head": {"ref": "phase1/firered-layout-writers-20261026", "sha": "03608155216b4f283fd92b7c5d795dd066698244"},
+      "base": {"ref": "main", "sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5"},
+      "depends_on": [],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": [{"id": 40265524942, "workflow_id": null, "conclusion": "claimed success in PR body", "event": "not queried", "head_sha": "5bb4cad4e435531695294160583a5024148e5a94", "base_provenance": "unverified"}]
+    },
+    {
+      "number": 8,
+      "title": "source-verified P0 review-readiness handoff",
+      "head": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "a03acca40614db990756aa88730688dcf084ee31"},
+      "base": {"ref": "phase1/firered-layout-writers-20261026", "sha": "8eb234e3508d55621ecc03531823036d336fa4d1"},
+      "depends_on": [7],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": [{"id": 40449595853, "workflow_id": 397824487, "conclusion": "success", "event": "push", "head_sha": "3f8fab19de2248aeee846cc344769ff069031398", "matches_current_head": false, "base_provenance": "not applicable to push event", "artifact_id": 12709673369, "artifact_sha256": "34417e0f2f2be8ce480a9789c480081c8e1ee179b0fe8319483726ead1422f79"}]
+    },
+    {
+      "number": 10,
+      "title": "pin Trainer Tower active-prefix checksum boundary",
+      "head": {"ref": "phase1/tower-prefix-integrity-20261027", "sha": "4c138b6922eb2368d264ff85d3fbb0df3d70b4c9"},
+      "base": {"ref": "phase1/firered-layout-writers-20261026", "sha": "03608155216b4f283fd92b7c5d795dd066698244"},
+      "depends_on": [7],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": []
+    },
+    {
+      "number": 11,
+      "title": "binary-aware machine-triage v2 with fail-closed legacy integrity",
+      "head": {"ref": "phase1/binary-aware-triage-issue9-20261027", "sha": "a59756ee192659ac60988195bf7e5f1a4fea29f6"},
+      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
+      "depends_on": [8],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": [{"id": 40468447957, "workflow_id": 397970898, "conclusion": "success", "event": "push", "head_sha": "26402b704480cbeb3fe9fe467a1d4b2c75ac54c3", "matches_current_head": false, "base_provenance": "not applicable to push event"}]
+    },
+    {
+      "number": 12,
+      "title": "pinned mGBA savedata whole-file review handoff",
+      "head": {"ref": "phase1/mgba-savedata-review-handoff-20261027", "sha": "9ed9d2630a098525e7703853de0b804c56658da9"},
+      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
+      "depends_on": [8],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": []
+    },
+    {
+      "number": 13,
+      "title": "pinned mGBA flash/EEPROM initialization boundary witness",
+      "head": {"ref": "phase1/mgba-savedata-boundary-witness-20261027", "sha": "9bf2b6f31c7e0ebf00e1ebaf6aee6f0930c90444"},
+      "base": {"ref": "phase1/mgba-savedata-review-handoff-20261027", "sha": "9ed9d2630a098525e7703853de0b804c56658da9"},
+      "depends_on": [12],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": [{"id": 40480788248, "workflow_id": 398059096, "conclusion": "success", "event": "pull_request", "head_sha": "9bf2b6f31c7e0ebf00e1ebaf6aee6f0930c90444", "matches_current_head": true, "base_provenance": "PR number returned; exact base SHA not exposed"}]
+    },
+    {
+      "number": 14,
+      "title": "pinned Porymap Qt JSON writer failure boundary",
+      "head": {"ref": "phase1/porymap-qt-writer-failure-boundary-20261027", "sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03"},
+      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
+      "depends_on": [8],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": []
+    },
+    {
+      "number": 15,
+      "title": "FireRed save-block relocation and encryption whole-file review",
+      "head": {"ref": "phase1/firered-load-save-relocation-review-20261027", "sha": "7c283d21b48ef3b2276a225465b59ff492364a12"},
+      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
+      "depends_on": [8],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": [{"id": 40492941829, "workflow_id": 398142984, "conclusion": "success", "event": "pull_request", "head_sha": "7c283d21b48ef3b2276a225465b59ff492364a12", "matches_current_head": true, "base_provenance": "PR number returned; exact base SHA not exposed"}]
+    },
+    {
+      "number": 16,
+      "title": "compiled Poryscript/FireRed map-table relocation witness",
+      "head": {"ref": "phase1/poryscript-compiled-map-table-20261027", "sha": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d"},
+      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
+      "depends_on": [8],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": []
+    },
+    {
+      "number": 17,
+      "title": "pinned FireRed Flash bank/timer/write whole-file review",
+      "head": {"ref": "phase1/firered-flash-bank-timer-review-20261027", "sha": "302465862501f542250d719444b3a9831406f6ac"},
+      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
+      "depends_on": [8],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": []
+    },
+    {
+      "number": 18,
+      "title": "FireRed/mGBA Flash1M override and chip-ID contract",
+      "head": {"ref": "phase1/firered-mgba-flash-identification-contract-20261027", "sha": "61a49f48e372272ff2ffcc720e21366bd91507bd"},
+      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
+      "depends_on": [8],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": []
+    },
+    {
+      "number": 19,
+      "title": "fail-closed PNG container integrity before binary v2 migration",
+      "head": {"ref": "phase1/binary-container-validation-20261027", "sha": "8ba12ff806248875856cd965f1265fbfec37334f"},
+      "base": {"ref": "phase1/binary-aware-triage-issue9-20261027", "sha": "a59756ee192659ac60988195bf7e5f1a4fea29f6"},
+      "depends_on": [11],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": [{"id": 40505350595, "workflow_id": 398232973, "conclusion": "success", "event": "push", "head_sha": "8ba12ff806248875856cd965f1265fbfec37334f", "matches_current_head": true, "base_provenance": "not applicable to push event"}]
+    },
+    {
+      "number": 20,
+      "title": "actual pinned Poryscript CLI to GNU ARM map-table witness",
+      "head": {"ref": "phase1/poryscript-real-cli-arm-map-table-20261027", "sha": "afb5fc1714235f1349f51b256ba20ac4c78e2019"},
+      "base": {"ref": "phase1/poryscript-compiled-map-table-20261027", "sha": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d"},
+      "depends_on": [16],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": [{"id": 40506170513, "workflow_id": 398234226, "conclusion": "success", "event": "pull_request", "head_sha": "587132181ef728b635968dd091b1cf171e78f753", "matches_current_head": false, "base_provenance": "PR number returned; exact base SHA not exposed", "artifact_id": 12735216391, "artifact_sha256": "37cc5d0e03fd481c61721816533b8869709b1a23b7b9bc6f76df701252f988e5"}]
+    },
+    {
+      "number": 21,
+      "title": "pinned FireRed root Makefile build and ROM geometry contract",
+      "head": {"ref": "phase1/firered-root-build-rom-geometry-20261027", "sha": "a324b99b486d56d57eab94049a2a25ad091a862b"},
+      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
+      "depends_on": [8],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": [{"id": 40510922233, "workflow_id": 398273014, "conclusion": "success", "event": "pull_request", "head_sha": "a324b99b486d56d57eab94049a2a25ad091a862b", "matches_current_head": true, "base_provenance": "PR number returned; exact base SHA not exposed"}],
+      "historical_failed_runs": [{"id": 40510851149, "job_id": 122212051019, "head_sha": "7558b8f17f776b00c3ab43c06d45da6817cf9119", "finding": "pad-to ROM span assertion selected EWRAM origin; corrected by later exact-head success"}]
+    },
+    {
+      "number": 22,
+      "title": "compiled FireRed/mGBA Flash bank and sector boundary",
+      "head": {"ref": "phase1/firered-mgba-flash-bank-sector-20261027", "sha": "7149f0f07339706ce5c29c3ca5a40e5cfcd85256"},
+      "base": {"ref": "phase1/firered-mgba-flash-identification-contract-20261027", "sha": "61a49f48e372272ff2ffcc720e21366bd91507bd"},
+      "depends_on": [18],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": []
+    },
+    {
+      "number": 23,
+      "title": "pinned FireRed GF ROM header save/resource ABI review",
+      "head": {"ref": "phase1/firered-gf-rom-header-abi-20261028", "sha": "23a004216e64c5ffd2ca62e3ad94e98c623c467a"},
+      "base": {"ref": "main", "sha": "52796a8619b08d86f2f9fed024f8cbf95a0f5822"},
+      "depends_on": [],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": []
+    },
+    {
+      "number": 24,
+      "title": "source-built FireRed ROM in pinned mGBA with save fixtures",
+      "head": {"ref": "phase1/firered-mgba-real-rom-boot-save-20261028", "sha": "b6f0cee6a4b5ec25c2eb39eaf4340b65e8da10d8"},
+      "base": {"ref": "phase1/firered-mgba-flash-bank-sector-20261027", "sha": "7149f0f07339706ce5c29c3ca5a40e5cfcd85256"},
+      "depends_on": [22],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": [{"id": 40525408728, "workflow_id": 398361788, "conclusion": "success", "event": "push", "head_sha": "b6f0cee6a4b5ec25c2eb39eaf4340b65e8da10d8", "matches_current_head": true, "base_provenance": "not applicable to push event", "artifact_id": 12746115949, "artifact_sha256": "eb61d5d4565912a599429fc2cf3499384dca2bcf4a14faa562a99341971dc378"}]
+    },
+    {
+      "number": 25,
+      "title": "independent pinned save-loader reachability evidence gap",
+      "head": {"ref": "phase1/independent-save-loader-evidence-guard-20261028", "sha": "5105d3517de94967b755850eaf183913b76758cc"},
+      "base": {"ref": "main", "sha": "52796a8619b08d86f2f9fed024f8cbf95a0f5822"},
+      "depends_on": [],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": []
+    },
+    {
+      "number": 26,
+      "title": "FireRed save-loader instruction entry under pinned mGBA",
+      "head": {"ref": "phase1/firered-mgba-save-loader-steptrace-20261028", "sha": "1dfe0906687fbca6d0e356e7332f8940eef76981"},
+      "base": {"ref": "phase1/firered-mgba-real-rom-boot-save-20261028", "sha": "b6f0cee6a4b5ec25c2eb39eaf4340b65e8da10d8"},
+      "depends_on": [24],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": []
+    },
+    {
+      "number": 27,
+      "title": "full pinned Porymap Qt project save/reopen and injected failure",
+      "head": {"ref": "phase1/porymap-full-qt-project-roundtrip-20261028", "sha": "dde48dd6c94d2c666c090d2c6a26ba0800ffa03f"},
+      "base": {"ref": "phase1/porymap-qt-writer-failure-boundary-20261027", "sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03"},
+      "depends_on": [14],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": []
+    },
+    {
+      "number": 28,
+      "title": "input-driven FireRed Flash persistence without host bus writes",
+      "head": {"ref": "phase1/firered-game-controller-save-observation-20261028", "sha": "42c7e2c9590ed2659f1b88415e65d067694b2253"},
+      "base": {"ref": "phase1/firered-mgba-save-loader-steptrace-20261028", "sha": "1dfe0906687fbca6d0e356e7332f8940eef76981"},
+      "depends_on": [26],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": []
+    },
+    {
+      "number": 35,
+      "title": "review pinned mGBA savedata semantics and resolve evidence gaps",
+      "head": {"ref": "copilot/review-pinned-mgba-savedata", "sha": "d9a46bbdf50cf67a6b52322a68f56caace2aef7e"},
+      "base": {"ref": "main", "sha": "de2a775184d69411016ff683a8075af72ef4a58d"},
+      "depends_on": [],
+      "reviews_or_reuses": [12, 13],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": [],
+      "observed_scope": "review follow-up; added independent-review packet/tool/logs and modifies tests/mgba_bank_boundary.c"
+    },
+    {
+      "number": 36,
+      "title": "review pinned Poryscript to FireRed script ABI contracts",
+      "head": {"ref": "copilot/independently-review-pinned-poryscript", "sha": "ce87e9d76d03599970596f3ebe159492f921f56c"},
+      "base": {"ref": "main", "sha": "de2a775184d69411016ff683a8075af72ef4a58d"},
+      "depends_on": [],
+      "reviews_or_reuses": [16, 20],
+      "reused_evidence": [{"run_id": 40506170513, "tested_sha": "587132181ef728b635968dd091b1cf171e78f753", "current_pr_20_head": "afb5fc1714235f1349f51b256ba20ac4c78e2019", "status": "stale for current PR #20; not PR #36 head evidence"}],
+      "required_evidence": ["successful workflow with exact head/base provenance"],
+      "observed_runs": [],
+      "observed_scope": "separate review packet; no changes to PR #16/#20 implementation files"
+    }
+  ],
+  "required_workflow_ids": {
+    "2": [396211566],
+    "8": [397824487],
+    "11": [397970898],
+    "13": [398059096],
+    "15": [398142984],
+    "19": [398232973],
+    "20": [398234226],
+    "21": [398273014],
+    "24": [398361788]
+  },
+  "integration_order": [
+    {"order": 1, "action": "Refresh main-based roots #2, #3, #6, #7, #23, and #25 to current main; revalidate exact-head workflows. Do not treat PR-body claims as evidence."},
+    {"order": 2, "action": "Review active PR #35 and #36 packets alongside their targets (#12/#13 and #16/#20 respectively); avoid duplicating review work, and do not treat the packets or reused CI as approval."},
+    {"order": 3, "action": "Integrate the #3 → #5 stack only after refresh; #5 says it carries PR #4's EEPROM work, so compare actual trees and avoid double-applying #4."},
+    {"order": 4, "action": "Refresh PR #7, then resolve its sibling branches #10 and #8. PR #8's recorded base SHA does not equal PR #7's current head."},
+    {"order": 5, "action": "After #8 is refreshed and validated, assess #11, #12, #14–18, and #21; their recorded bases point to an older #8 checkpoint."},
+    {"order": 6, "action": "Continue dependency chains only after each parent is current: #12 → #13; #11 → #19; #16 → #20; #18 → #22 → #24 → #26 → #28; #14 → #27."},
+    {"order": 7, "action": "Before any integration, obtain exact-base workflow provenance for PR-event runs and re-run missing/stale evidence. Preserve Phase 1 FAIL_INCOMPLETE and 0 independent approvals."}
+  ],
+  "first_concrete_blocker": "PR #8 base SHA 8eb234e3508d55621ecc03531823036d336fa4d1 does not match dependency PR #7 current head 03608155216b4f283fd92b7c5d795dd066698244; #8's observed green run #40449595853 tests older head 3f8fab19de2248aeee846cc344769ff069031398. Confirm/rebase the intended parent and obtain current exact-head evidence.",
+  "observation_limits": [
+    "All listed PRs were observed open and draft through GitHub PR read access; no merge or branch mutation was performed.",
+    "GitHub Actions run status/head SHA was queried for the listed run IDs only. Other PR workflow status is unverified.",
+    "The Actions read response exposed PR numbers, not actual PR head/base SHA on pull_request-event run objects; those runs cannot certify base provenance from the available response.",
+    "The unauthenticated public REST endpoint returned HTTP 403 in this environment. No PAT was used or added; checker live mode reports API unavailability rather than fabricating a result.",
+    "No commit-ancestry/tree comparison is claimed for which open-PR changes are already present in main. PR state and main checkpoint alone do not prove source-level containment.",
+    "PR #5 body reports carrying PR #4 content, and #8–28 bodies describe their work; full tree-level overlap and semantic validity remain unverified where the file list/diff API was unavailable or oversized."
+  ]
+}
