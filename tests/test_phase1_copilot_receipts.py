@@ -23,6 +23,14 @@ class CopilotReceiptTests(unittest.TestCase):
         self.repository_root = self.root / "repository"
         self.checkout.mkdir(parents=True)
         self.repository_root.mkdir()
+        subprocess.run(["git", "-C", str(self.repository_root), "init", "-q"], check=True)
+        subprocess.run([
+            "git", "-C", str(self.repository_root), "config", "user.name", "Fixture Author"
+        ], check=True)
+        subprocess.run([
+            "git", "-C", str(self.repository_root), "config", "user.email",
+            "fixture-author@example.test",
+        ], check=True)
         subprocess.run(["git", "-C", str(self.checkout), "init", "-q"], check=True)
         (self.checkout / "src").mkdir()
         self.source = b"static int add(int a, int b)\n{\n    return a + b;\n}\n"
@@ -66,16 +74,21 @@ class CopilotReceiptTests(unittest.TestCase):
         evidence_bytes = b"Independent source observations for the fixture.\n"
         (self.repository_root / "review" / "dossier.json").write_bytes(dossier_bytes)
         (self.repository_root / "review" / "evidence.txt").write_bytes(evidence_bytes)
+        subprocess.run(["git", "-C", str(self.repository_root), "add", "."], check=True)
+        subprocess.run(["git", "-C", str(self.repository_root), "commit", "-qm", "Evidence checkpoint"], check=True)
+        self.evidence_commit = subprocess.check_output(
+            ["git", "-C", str(self.repository_root), "rev-parse", "HEAD"], text=True
+        ).strip()
         self.authorship = [
             {
                 "path": "review/dossier.json",
                 "sha256": hashlib.sha256(dossier_bytes).hexdigest(),
-                "commit_sha": "a" * 40,
+                "commit_sha": self.evidence_commit,
             },
             {
                 "path": "review/evidence.txt",
                 "sha256": hashlib.sha256(evidence_bytes).hexdigest(),
-                "commit_sha": "b" * 40,
+                "commit_sha": self.evidence_commit,
             },
         ]
         self.receipt = self._make_receipt()
@@ -144,7 +157,8 @@ class CopilotReceiptTests(unittest.TestCase):
             "target": {
                 "repository": self.repository,
                 "pull_number": 8,
-                "head_sha": self.head,
+                "evidence_commit": self.evidence_commit,
+                "receipt_path": "docs/phase1-review-readiness/copilot-semantic-review-receipts.jsonl",
             },
         }
 
@@ -154,6 +168,22 @@ class CopilotReceiptTests(unittest.TestCase):
         receipt["attestation"] = {
             "receipt_sha256": body_hash,
         }
+        subprocess.run([
+            "git", "-C", str(self.repository_root), "reset", "--hard", self.evidence_commit
+        ], check=True, stdout=subprocess.DEVNULL)
+        register = self.repository_root / receipt["target"]["receipt_path"]
+        register.parent.mkdir(parents=True, exist_ok=True)
+        receipt_line = json.dumps(receipt, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+        register.write_text(receipt_line + "\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(self.repository_root), "add", receipt["target"]["receipt_path"]], check=True)
+        subprocess.run(["git", "-C", str(self.repository_root), "commit", "-qm", "Add semantic receipt"], check=True)
+        self.head = subprocess.check_output(
+            ["git", "-C", str(self.repository_root), "rev-parse", "HEAD"], text=True
+        ).strip()
+        parent = subprocess.check_output(
+            ["git", "-C", str(self.repository_root), "rev-parse", "HEAD^"], text=True
+        ).strip()
+        changed_path = receipt["target"]["receipt_path"]
         self.github_responses = {
             f"https://api.github.com/repos/{self.repository}/pulls/8": {
                 "user": {"login": "xbaconator9000x"},
@@ -182,20 +212,26 @@ class CopilotReceiptTests(unittest.TestCase):
                     }],
                 }],
             },
+            f"https://api.github.com/repos/{self.repository}/commits/{self.head}": {
+                "sha": self.head,
+                "parents": [{"sha": parent}],
+                "files": [{"filename": changed_path}],
+            },
         }
         api_root = f"https://api.github.com/repos/{self.repository}"
         for item in self.authorship:
             query = urlencode({
-                "path": item["path"], "sha": self.head, "per_page": 1,
+                "path": item["path"], "sha": self.evidence_commit, "per_page": 1,
             })
             self.github_responses[f"{api_root}/commits?{query}"] = [
-                {"sha": item["commit_sha"]}
+                {"sha": self.evidence_commit}
             ]
-            self.github_responses[f"{api_root}/commits/{item['commit_sha']}"] = {
-                "sha": item["commit_sha"],
+            self.github_responses[f"{api_root}/commits/{self.evidence_commit}"] = {
+                "sha": self.evidence_commit,
+                "parents": [],
                 "author": {"login": "xbaconator9000x"},
                 "committer": {"login": "xbaconator9000x"},
-                "files": [{"filename": item["path"]}],
+                "files": [{"filename": authored["path"]} for authored in self.authorship],
             }
         return receipt
 
@@ -211,11 +247,40 @@ class CopilotReceiptTests(unittest.TestCase):
             github_api=self.github_responses.__getitem__,
         )
 
-    def test_valid_attributed_receipt_passes(self):
+    def test_real_post_receipt_git_sha_validates_without_self_reference(self):
         self._seal()
+        committed_head = subprocess.check_output(
+            ["git", "-C", str(self.repository_root), "rev-parse", "HEAD"], text=True
+        ).strip()
+        parent = subprocess.check_output(
+            ["git", "-C", str(self.repository_root), "rev-parse", "HEAD^"], text=True
+        ).strip()
+        self.assertEqual(self.head, committed_head)
+        self.assertEqual(parent, self.evidence_commit)
+        self.assertNotEqual(self.head, self.evidence_commit)
         key, problems = self._validate()
         self.assertEqual(key, self.key)
         self.assertEqual(problems, [])
+
+    def test_receipt_commit_with_wrong_parent_or_extra_file_is_rejected(self):
+        self._seal()
+        final_url = f"https://api.github.com/repos/{self.repository}/commits/{self.head}"
+        self.github_responses[final_url]["parents"] = [{"sha": "d" * 40}]
+        self.assertTrue(self._validate()[1])
+        self._seal()
+        self.github_responses[final_url]["files"].append({"filename": "review/evidence.txt"})
+        self.assertTrue(self._validate()[1])
+
+    def test_receipt_register_missing_or_foreign_target_is_rejected(self):
+        self._seal()
+        register = self.repository_root / self.receipt["target"]["receipt_path"]
+        register.unlink()
+        self.assertTrue(self._validate()[1])
+        self._seal()
+        bad = copy.deepcopy(self.receipt)
+        bad["target"]["repository"] = "elsewhere/another-repo"
+        self._seal(bad)
+        self.assertTrue(self._validate(bad)[1])
 
     def test_missing_or_forged_signature_is_rejected(self):
         self._seal()
@@ -238,7 +303,7 @@ class CopilotReceiptTests(unittest.TestCase):
         self._seal(bad)
         self.assertTrue(self._validate(bad)[1])
         bad = copy.deepcopy(self.receipt)
-        bad["target"]["head_sha"] = "d" * 40
+        bad["target"]["evidence_commit"] = "d" * 40
         self._seal(bad)
         self.assertTrue(self._validate(bad)[1])
 
@@ -280,6 +345,10 @@ class CopilotReceiptTests(unittest.TestCase):
         bad["review"]["authorship"]["dossier"]["sha256"] = "0" * 64
         self._seal(bad)
         self.assertTrue(self._validate(bad)[1])
+        self._seal()
+        evidence_file = self.repository_root / "review" / "evidence.txt"
+        evidence_file.write_text("Changed substantive evidence.\n", encoding="utf-8")
+        self.assertTrue(self._validate()[1])
 
     def test_missing_reviewer_identity_is_rejected(self):
         self._seal()

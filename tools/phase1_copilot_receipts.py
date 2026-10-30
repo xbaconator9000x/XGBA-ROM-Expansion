@@ -13,7 +13,7 @@ from urllib.parse import urlencode, urlparse
 
 from phase1_bulk_triage import PINS, canonical, digest, git_blob, source_bytes
 
-SCHEMA = "xgba.phase1.copilot_semantic_review_receipt.v2"
+SCHEMA = "xgba.phase1.copilot_semantic_review_receipt.v3"
 SHA1 = re.compile(r"^[0-9a-f]{40}$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 RECEIPT_MARKER = "XGBA-Phase1-Receipt-SHA256: "
@@ -69,7 +69,7 @@ def _verify_source_reference(ref, source_root):
     return data
 
 
-def _verify_file_authorship(review, repository, pull_number, expected_head,
+def _verify_file_authorship(review, repository, pull_number, evidence_commit,
                             repository_root, github_api):
     authorship = review.get("authorship")
     if not isinstance(authorship, dict):
@@ -99,7 +99,7 @@ def _verify_file_authorship(review, repository, pull_number, expected_head,
             raise ValueError("Authorship evidence file is missing or outside the checkout")
         if hashlib.sha256(file_path.read_bytes()).hexdigest() != expected_sha:
             raise ValueError("Authorship evidence file hash differs from the exact checkout")
-        query = urlencode({"path": path, "sha": expected_head, "per_page": 1})
+        query = urlencode({"path": path, "sha": evidence_commit, "per_page": 1})
         commits = github_api(f"{api_root}/commits?{query}")
         if not isinstance(commits, list) or not commits:
             raise ValueError("No exact-head Git commit provenance for " + path)
@@ -126,15 +126,21 @@ def _verify_attestation(receipt, expected_head, repository, repository_root, git
         raise ValueError("Receipt signature digest mismatch")
     target = receipt.get("target", {})
     pull_number = target.get("pull_number")
+    evidence_commit = target.get("evidence_commit")
+    receipt_path = target.get("receipt_path")
     if (not isinstance(pull_number, int) or pull_number < 1
             or not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", str(repository))
-            or target.get("repository") != repository or target.get("head_sha") != expected_head):
-        raise ValueError("Receipt target is stale or belongs to another repository")
+            or target.get("repository") != repository
+            or not isinstance(evidence_commit, str) or not SHA1.fullmatch(evidence_commit)
+            or evidence_commit == expected_head
+            or receipt_path != "docs/phase1-review-readiness/copilot-semantic-review-receipts.jsonl"):
+        raise ValueError("Receipt evidence target is stale or belongs to another repository")
 
     api_root = f"https://api.github.com/repos/{repository}"
     pull = github_api(f"{api_root}/pulls/{pull_number}")
     review_list = github_api(f"{api_root}/pulls/{pull_number}/reviews?per_page=100")
     run_list = github_api(f"{api_root}/actions/runs?head_sha={expected_head}&per_page=100")
+    final_commit = github_api(f"{api_root}/commits/{expected_head}")
     if not isinstance(review_list, list) or len(review_list) >= 100:
         raise ValueError("GitHub review list is missing or exceeds the fail-closed lookup limit")
     runs = run_list.get("workflow_runs") if isinstance(run_list, dict) else None
@@ -152,10 +158,19 @@ def _verify_attestation(receipt, expected_head, repository, repository_root, git
     author = pull.get("user", {}).get("login")
     if pull.get("head", {}).get("sha") != expected_head:
         raise ValueError("Pull request head differs from exact validation head")
+    parents = final_commit.get("parents", []) if isinstance(final_commit, dict) else []
+    changed_files = final_commit.get("files", []) if isinstance(final_commit, dict) else []
+    if (final_commit.get("sha") != expected_head
+            or [parent.get("sha") for parent in parents] != [evidence_commit]
+            or len(changed_files) != 1
+            or changed_files[0].get("filename") != receipt_path):
+        raise ValueError(
+            "Receipt commit must be the exact-head child of the evidence commit and change only the receipt file"
+        )
     if not author or author.casefold() == "copilot" or len(matching_reviews) != 1:
         raise ValueError("Missing Copilot identity or reviewer conflicts with pull request author")
     _verify_file_authorship(
-        receipt.get("review", {}), repository, pull_number, expected_head,
+        receipt.get("review", {}), repository, pull_number, evidence_commit,
         repository_root, github_api,
     )
     if any(run.get("head_sha") == expected_head
@@ -188,6 +203,23 @@ def validate_receipt(receipt, *, queue, dossiers, source_root, expected_head,
     try:
         if not isinstance(receipt, dict) or receipt.get("schema") != SCHEMA:
             raise ValueError("Unknown Copilot receipt schema")
+        target = receipt.get("target")
+        if not isinstance(target, dict):
+            raise ValueError("Missing receipt lifecycle target")
+        receipt_path = target.get("receipt_path")
+        root = Path(repository_root or Path.cwd()).resolve()
+        if receipt_path != "docs/phase1-review-readiness/copilot-semantic-review-receipts.jsonl":
+            raise ValueError("Receipt lifecycle path is not the canonical receipt register")
+        register = root
+        for part in Path(receipt_path).parts:
+            register = register / part
+            if register.is_symlink():
+                raise ValueError("Receipt register cannot traverse symbolic links")
+        if not register.is_file():
+            raise ValueError("Receipt is missing from the checked-out receipt register")
+        receipt_line = json.dumps(receipt, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+        if receipt_line not in register.read_text(encoding="utf-8").splitlines():
+            raise ValueError("Receipt bytes are missing or differ from the checked-out register")
         source = receipt.get("source")
         if not isinstance(source, dict):
             raise ValueError("Missing pinned source identity")
@@ -299,7 +331,7 @@ def validate_receipt(receipt, *, queue, dossiers, source_root, expected_head,
                 raise ValueError("Unresolved substantive objection")
         _verify_attestation(
             receipt, expected_head, repository,
-            repository_root or Path.cwd(), github_api,
+            root, github_api,
         )
     except (AttributeError, KeyError, TypeError, ValueError, OSError) as exc:
         problems.append(str(exc))
