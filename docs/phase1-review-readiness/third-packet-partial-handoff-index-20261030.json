@@ -11,25 +11,27 @@
     "docs/phase1-review-readiness/remaining-p0-eight-firered-routes-204-211-20261030.json",
     "docs/phase1-review-readiness/remaining-p0-eight-firered-routes-212-219-20261030.json",
     "docs/phase1-review-readiness/remaining-p0-eight-firered-saffron-seafoam-seven-220-227-20261030.json",
-    "docs/phase1-review-readiness/remaining-p0-eight-firered-sevenisland-tanoby-228-235-20261030.json"
+    "docs/phase1-review-readiness/remaining-p0-eight-firered-sevenisland-tanoby-228-235-20261030.json",
+    "docs/phase1-review-readiness/remaining-p0-eight-firered-tanoby-trainertower-silph-236-243-20261030.json"
   ],
   "batch_sizes": [
     4,
     8,
     8,
     8,
+    8,
     8
   ],
-  "third_packet_partial_source_inspected": 36,
+  "third_packet_partial_source_inspected": 44,
   "second_packet_partial_source_inspected": 83,
   "first_packet_partial_source_inspected": 100,
-  "remaining_p0_partial_source_inspected": 219,
-  "remaining_p0_without_partial_source_inspection": 90,
+  "remaining_p0_partial_source_inspected": 227,
+  "remaining_p0_without_partial_source_inspection": 82,
   "curated_p0_partial_source_inspected": 29,
-  "total_p0_partial_source_inspected": 248,
+  "total_p0_partial_source_inspected": 256,
   "independent_p0_approved": 0,
   "independent_total_approved": 0,
   "whole_file_semantic_approved": 0,
   "phase1_gate": "FAIL_INCOMPLETE",
-  "scope_note": "36 disjoint third-packet partial source inspections; no independent approval or compiled/runtime/license clearance."
+  "scope_note": "44 disjoint third-packet partial source inspections; no independent approval or compiled/runtime/license clearance."
 }
