@@ -1,0 +1,237 @@
+#!/usr/bin/env python3
+"""Pinned Porymap Qt JSON writer durability boundary (source-only half).
+
+Fail closed on source drift. This does not run the full editor, approve any file,
+or establish a GUI save/reopen failure. The separate C++ witness executes the
+real pinned OrderedJsonDoc serializer against Qt file devices.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import subprocess
+from pathlib import Path
+
+PIN = "26b919d7ff4b54152de010abd5bf344af2ebe116"
+BLOBS = {
+    "src/project.cpp": "d43b0949303433111d4478ad76117c2b3445dd13",
+    "src/editor.cpp": "34112f6355b13d9381de7188624c36e5efeba151",
+    "src/mainwindow.cpp": "08ce1a7a599ef825967717b69626984cdc6d772b",
+    "src/core/map.cpp": "47b279919bd4afcc76b88f9eeecd459b3452989f",
+    "include/lib/orderedjson.h": "cb5139d37d955f2469ebd2eaaf089668b82884fe",
+    "src/lib/orderedjson.cpp": "4d3a460c652541371a01132116e508db8c4c872c",
+}
+FUNCTIONS = {
+    "map_writer": ("src/project.cpp", "bool Project::saveMap(Map *map, bool skipLayout)"),
+    "groups_writer": ("src/project.cpp", "bool Project::saveMapGroups()"),
+    "layouts_writer": ("src/project.cpp", "bool Project::saveMapLayouts()"),
+    "sections_writer": ("src/project.cpp", "bool Project::saveRegionMapSections()"),
+    "wild_writer": ("src/project.cpp", "bool Project::saveWildMonData()"),
+    "heal_writer": ("src/project.cpp", "bool Project::saveHealLocations()"),
+    "text_writer": ("src/project.cpp", "bool Project::saveTextFile(const QString &path, const QString &text)"),
+    "text_append": ("src/project.cpp", "bool Project::appendTextFile(const QString &path, const QString &text)"),
+    "global_writer": ("src/project.cpp", "bool Project::saveGlobalData()"),
+    "editor_save": ("src/editor.cpp", "bool Editor::save(bool currentOnly)"),
+    "gui_save": ("src/mainwindow.cpp", "bool MainWindow::save(bool currentOnly)"),
+    "clean": ("src/core/map.cpp", "void Map::setClean()"),
+    "serializer": ("include/lib/orderedjson.h", "void dump(QFile *file)"),
+}
+
+
+def require(condition: bool, message: str) -> None:
+    if not condition:
+        raise ValueError(message)
+
+
+def extract(source: str, signature: str) -> str:
+    start = source.find(signature)
+    require(start >= 0, "missing function signature: " + signature)
+    brace = source.find("{", start + len(signature))
+    require(brace >= 0, "missing function opening brace: " + signature)
+    depth = 1
+    for pos in range(brace + 1, len(source)):
+        if source[pos] == "{":
+            depth += 1
+        elif source[pos] == "}":
+            depth -= 1
+            if depth == 0:
+                return source[brace + 1:pos]
+    raise ValueError("unterminated function: " + signature)
+
+
+def ordered(body: str, tokens: list[str], name: str) -> None:
+    previous = -1
+    for token in tokens:
+        found = body.find(token, previous + 1)
+        require(found > previous, name + " missing/reordered " + token)
+        previous = found
+
+
+def contract(files: dict[str, str]) -> dict:
+    parts = {key: extract(files[path], signature)
+             for key, (path, signature) in FUNCTIONS.items()}
+    m = parts["map_writer"]
+    g = parts["groups_writer"]
+    s = parts["serializer"]
+    ordered(m, [
+        'if (!mapFile.open(QIODevice::WriteOnly))',
+        "jsonDoc.dump(&mapFile);",
+        "mapFile.close();",
+        "map->setClean();",
+        "return true;",
+    ], "map writer")
+    ordered(g, [
+        'if (!mapGroupsFile.open(QIODevice::WriteOnly))',
+        "jsonDoc.dump(&mapGroupsFile);",
+        "mapGroupsFile.close();",
+        "return true;",
+    ], "map-group writer")
+    # Census every OrderedJsonDoc writer in this pinned Project implementation.
+    # Each opens, dumps, closes and reports true without validating stream I/O.
+    json_writers = {
+        "map_writer": "mapFile",
+        "groups_writer": "mapGroupsFile",
+        "layouts_writer": "layoutsFile",
+        "sections_writer": "file",
+        "wild_writer": "wildEncountersFile",
+        "heal_writer": "file",
+    }
+    for name, device in json_writers.items():
+        writer = parts[name]
+        ordered(writer, [
+            "jsonDoc.dump(&" + device + ");",
+            device + ".close();",
+            "return true;",
+        ], name)
+        require(device + ".flush()" not in writer and device + ".error()" not in writer,
+                name + " gained write validation: reassess")
+    for name in ("text_writer", "text_append"):
+        writer = parts[name]
+        ordered(writer, ["file.write(text.toUtf8());", "return true;"], name)
+        require("file.flush()" not in writer and "file.error()" not in writer,
+                name + " gained write validation: reassess")
+    require("saveTextFile(fullPath +" in m and "appendTextFile(root +" in m,
+            "new-map collateral writer calls changed")
+    require("if (!saveTextFile(" not in m and "if (!appendTextFile(" not in m,
+            "new-map collateral error propagation changed")
+    ordered(s, [
+        "QTextStream fileStream(file);",
+        "fileStream << m_obj->dump(&m_indent);",
+        'fileStream << "\\n";',
+    ], "serializer")
+    require("return " not in s and "fileStream.status()" not in s,
+            "serializer gained an error/result path: reassess")
+    require("mapFile.error()" not in m and "mapFile.flush()" not in m,
+            "map writer gained error/flush validation: reassess")
+    require("mapGroupsFile.error()" not in g and "mapGroupsFile.flush()" not in g,
+            "groups writer gained error/flush validation: reassess")
+    require("m_hasUnsavedDataChanges = false;" in parts["clean"],
+            "Map::setClean changed")
+    require("if (!saveMapGroups()) success = false;" in parts["global_writer"],
+            "global save propagation changed")
+    require("success = this->project->saveMap(this->map);" in parts["editor_save"]
+            and "if (!this->project->saveGlobalData())" in parts["editor_save"],
+            "editor Save Current call chain changed")
+    ordered(parts["gui_save"], [
+        "bool success = currentOnly ? this->editor->saveCurrent() : this->editor->saveAll();",
+        "if (!success) {",
+        'RecentErrorMessage::show(QStringLiteral("Failed to save some project changes."), this);',
+        "return success;",
+    ], "MainWindow save UI")
+    require("void dump(QFile *file)" in files["include/lib/orderedjson.h"],
+            "writer return type changed")
+    # The independent Qt harness tests the serializer's success/failure device
+    # behaviour. These checks establish only the project-level result gap.
+    return {
+        "porymap_pin": PIN,
+        "git_blobs": BLOBS,
+        "source_functions_checked": sorted(parts),
+        "map_writer_checks_open": True,
+        "map_writer_checks_stream_or_close": False,
+        "map_writer_clears_dirty_after_unchecked_dump": True,
+        "mapgroups_writer_checks_stream_or_close": False,
+        "serializer_return_type": "void",
+        "editor_save_current_can_propagate_unchecked_success": True,
+        "gui_failure_message_conditioned_on_editor_false": True,
+        "project_json_writer_sites_checked": len(json_writers),
+        "project_text_writer_sites_checked": 2,
+        "new_map_collateral_file_errors_propagated": False,
+        "actual_gui_save_failure_observed": False,
+        "independent_whole_file_approvals": 0,
+        "phase1_gate": "FAIL_INCOMPLETE",
+    }
+
+
+def negative_controls(files: dict[str, str]) -> list[str]:
+    cases = [
+        ("src/project.cpp", "jsonDoc.dump(&mapFile);",
+         "if (!jsonDoc.dump(&mapFile)) return false;", "map checked dump"),
+        ("src/project.cpp", "map->setClean();",
+         "map->modify();", "dirty flag changed"),
+        ("src/project.cpp", "jsonDoc.dump(&mapGroupsFile);",
+         "if (!jsonDoc.dump(&mapGroupsFile)) return false;", "groups checked dump"),
+        ("include/lib/orderedjson.h", "void dump(QFile *file)",
+         "bool dump(QFile *file)", "serializer return type"),
+        ("include/lib/orderedjson.h", "fileStream << m_obj->dump(&m_indent);",
+         'fileStream << "{}";', "serializer payload"),
+        ("src/project.cpp", "if (!saveMapGroups()) success = false;",
+         "saveMapGroups();", "global save propagation"),
+        ("src/editor.cpp", "if (!this->project->saveGlobalData())",
+         "if (false)", "editor save propagation"),
+        ("src/project.cpp", "jsonDoc.dump(&layoutsFile);",
+         "if (!jsonDoc.dump(&layoutsFile)) return false;", "layouts checked dump"),
+        ("src/project.cpp", "jsonDoc.dump(&wildEncountersFile);",
+         "if (!jsonDoc.dump(&wildEncountersFile)) return false;", "wild checked dump"),
+        ("src/project.cpp", "jsonDoc.dump(&file);",
+         "if (!jsonDoc.dump(&file)) return false;", "generic JSON checked dump"),
+        ("src/project.cpp", "file.write(text.toUtf8());",
+         "if (file.write(text.toUtf8()) < 0) return false;", "text checked write"),
+        ("src/project.cpp", "saveTextFile(fullPath +",
+         "if (!saveTextFile(fullPath +", "new-map script checked write"),
+        ("src/mainwindow.cpp", 'RecentErrorMessage::show(QStringLiteral("Failed to save some project changes."), this);',
+         'RecentErrorMessage::show(QStringLiteral("Saved."), this);', "GUI failure message"),
+        ("src/core/map.cpp", "m_hasUnsavedDataChanges = false;",
+         "m_hasUnsavedDataChanges = true;", "map clean flag"),
+    ]
+    passed = []
+    for path, before, after, label in cases:
+        require(before in files[path], "negative control source missing: " + label)
+        modified = dict(files)
+        modified[path] = files[path].replace(before, after, 1)
+        try:
+            contract(modified)
+        except ValueError:
+            passed.append(label)
+        else:
+            raise ValueError("negative control escaped detection: " + label)
+    return passed
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--porymap", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    root = args.porymap.resolve()
+
+    def git(*command: str) -> str:
+        return subprocess.check_output(["git", "-C", str(root), *command],
+                                       text=True).strip()
+
+    require(git("rev-parse", "HEAD") == PIN, "wrong Porymap revision")
+    files = {}
+    for path, expected in BLOBS.items():
+        require(git("hash-object", path) == expected, "blob mismatch: " + path)
+        files[path] = (root / path).read_text(encoding="utf-8")
+    result = contract(files)
+    result["negative_controls"] = negative_controls(files)
+    result["negative_control_count"] = len(result["negative_controls"])
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+    print("Pinned Porymap writer source contract PASS;",
+          result["negative_control_count"], "negative controls")
+
+
+if __name__ == "__main__":
+    main()
