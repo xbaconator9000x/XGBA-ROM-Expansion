@@ -8,6 +8,19 @@ on:
       - "tests/test_phase1_bulk_triage.py"
       - "docs/PHASE1_BINARY_AWARE_TRIAGE_V2_HANDOFF_2026-10-27.md"
       - ".github/workflows/phase1-binary-aware-triage-v2.yml"
+      - "docs/phase1-machine-triage/batch-001000-001499.json"
+      - "docs/phase1-machine-triage/batch-001500-001999.json"
+      - "docs/phase1-machine-triage/integrity-000000-001999.json"
+  pull_request:
+    paths:
+      - "tools/phase1_bulk_triage.py"
+      - "tools/phase1_bulk_triage_integrity.py"
+      - "tests/test_phase1_bulk_triage.py"
+      - "docs/PHASE1_BINARY_AWARE_TRIAGE_V2_HANDOFF_2026-10-27.md"
+      - ".github/workflows/phase1-binary-aware-triage-v2.yml"
+      - "docs/phase1-machine-triage/batch-001000-001499.json"
+      - "docs/phase1-machine-triage/batch-001500-001999.json"
+      - "docs/phase1-machine-triage/integrity-000000-001999.json"
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,6 +30,15 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Confirm exact event head checkout
+        env:
+          EXPECTED_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          test -n "$EXPECTED_SHA"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
       - name: Syntax and typed binary negative controls
         run: |
           python3 -m py_compile tools/phase1_bulk_triage.py tools/phase1_bulk_triage_integrity.py
