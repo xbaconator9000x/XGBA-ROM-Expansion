@@ -399,7 +399,7 @@ class CopilotReceiptTests(unittest.TestCase):
             f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100&page=1": [
                 {
                     "id": item["comment_id"],
-                    "user": {"login": "Copilot"},
+                    "user": {"login": "copilot-swe-agent[bot]", "id": 198982749, "type": "Bot"},
                     "issue_url": f"https://api.github.com/repos/{self.repository}/issues/8",
                     "html_url": f"https://github.com/{self.repository}/pull/8#issuecomment-{item['comment_id']}",
                     "created_at": item["created_at"],
@@ -509,7 +509,7 @@ class CopilotReceiptTests(unittest.TestCase):
         self.github_responses[comments_two] = [
             {
                 "id": item["comment_id"],
-                "user": {"login": "Copilot"},
+                "user": {"login": "copilot-swe-agent[bot]", "id": 198982749, "type": "Bot"},
                 "issue_url": f"{api_root}/issues/8",
                 "html_url": f"https://github.com/{self.repository}/pull/8#issuecomment-{item['comment_id']}",
                 "created_at": item["created_at"],
@@ -715,6 +715,24 @@ class CopilotReceiptTests(unittest.TestCase):
         self.github_responses[comment_url][0]["user"] = {}
         self.assertTrue(self._validate()[1])
 
+    def test_attestation_requires_verified_copilot_bot_account(self):
+        comment_url = (
+            f"https://api.github.com/repos/{self.repository}/issues/8/comments"
+            "?per_page=100&page=1"
+        )
+        bad_accounts = (
+            {"login": "Copilot", "id": 198982749, "type": "Bot"},
+            {"login": "copilot-swe-agent[bot]", "id": 198982750, "type": "Bot"},
+            {"login": "copilot-swe-agent[bot]", "id": 198982749, "type": "User"},
+            {"login": "copilot-swe-agent[bot]", "type": "Bot"},
+            {"login": "copilot-swe-agent[bot]", "id": 198982749},
+        )
+        for bad_account in bad_accounts:
+            with self.subTest(bad_account=bad_account):
+                self._seal()
+                self.github_responses[comment_url][0]["user"] = bad_account
+                self.assertTrue(self._validate()[1])
+
     def test_conversation_comment_attestation_rejects_wrong_author_duplicate_or_early_comment(self):
         comment_url = f"https://api.github.com/repos/{self.repository}/issues/8/comments?per_page=100&page=1"
         self._seal()
@@ -741,7 +759,7 @@ class CopilotReceiptTests(unittest.TestCase):
         attestation = self.committed_receipts[0]
         self.github_responses[review_url] = [{
             "id": 810100,
-            "user": {"login": "Copilot"},
+            "user": {"login": "copilot-swe-agent[bot]", "id": 198982749, "type": "Bot"},
             "commit_id": self.head,
             "state": "COMMENTED",
             "submitted_at": attestation["created_at"],

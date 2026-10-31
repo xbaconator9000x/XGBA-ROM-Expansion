@@ -36,6 +36,21 @@ EVIDENCE_KINDS = {
 }
 
 
+# Immutable GitHub identity observed on the attributable Copilot SWE attestation.
+# A display name or an unverified account claiming to be Copilot is insufficient.
+COPILOT_BOT_LOGIN = "copilot-swe-agent[bot]"
+COPILOT_BOT_USER_ID = 198982749
+
+
+def _authenticated_copilot_bot(user):
+    return (
+        isinstance(user, dict)
+        and user.get("login") == COPILOT_BOT_LOGIN
+        and user.get("id") == COPILOT_BOT_USER_ID
+        and user.get("type") == "Bot"
+    )
+
+
 def receipt_digest(receipt):
     """Hash the durable receipt body, excluding its GitHub review attestation."""
     return digest(canonical({k: v for k, v in receipt.items() if k != "attestation"}))
@@ -374,7 +389,7 @@ def _verify_attestation(receipt, expected_head, repository, repository_root, git
 
     matching_reviews = [
         review for review in review_list
-        if review.get("user", {}).get("login") == "Copilot"
+        if _authenticated_copilot_bot(review.get("user"))
         and isinstance(review.get("id"), int) and review["id"] > 0
         and review.get("commit_id") == introduction
         and review.get("state") == "COMMENTED"
@@ -383,7 +398,7 @@ def _verify_attestation(receipt, expected_head, repository, repository_root, git
     ]
     matching_comments = [
         comment for comment in comment_list
-        if comment.get("user", {}).get("login") == "Copilot"
+        if _authenticated_copilot_bot(comment.get("user"))
         and comment.get("issue_url") == f"{api_root}/issues/{pull_number}"
         and isinstance(comment.get("id"), int) and comment["id"] > 0
         and comment.get("html_url")
@@ -400,7 +415,7 @@ def _verify_attestation(receipt, expected_head, repository, repository_root, git
         record.get("html_url") for record in matching
         if mode == "conversation_comment"
     ]
-    if (not author or author.casefold() == "copilot" or len(matching) != 1
+    if (not author or author.casefold() in {"copilot", COPILOT_BOT_LOGIN.casefold()} or len(matching) != 1
             or len(set(unique_ids)) != 1
             or (mode == "conversation_comment" and len(set(unique_urls)) != 1)):
         raise ValueError("Missing unique authenticated Copilot attestation or reviewer conflicts with PR author")
