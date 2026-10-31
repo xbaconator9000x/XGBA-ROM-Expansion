@@ -385,18 +385,6 @@ def run_live(pr8_root, source_root, token=None):
             }
             for receipt in receipts
         ]
-    source_blockers = {}
-    for receipt in receipts:
-        key = (receipt["source"]["repository"], receipt["source"]["path"])
-        try:
-            review = receipt["review"]
-            verifier._verify_source_reference(receipt["source"], source_path)
-            for dependency in review["dependency_closure"]["dependencies"]:
-                verifier._verify_source_reference(dependency, source_path)
-            for license_evidence in review["licensing"]["evidence"]:
-                verifier._verify_source_reference(license_evidence, source_path)
-        except Exception as exc:
-            source_blockers[key] = str(exc)
     token = token or os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
     api = github_api_client(verifier, token=token)
     results = []
