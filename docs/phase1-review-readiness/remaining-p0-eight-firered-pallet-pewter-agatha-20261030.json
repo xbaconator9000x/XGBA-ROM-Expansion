@@ -1,0 +1,793 @@
+{
+  "schema": "xgba.phase1.second_packet_firered_182_189_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+  "source_packet_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0000-0199-20261030.json",
+  "new_partial_indices": [
+    182,
+    183,
+    184,
+    185,
+    186,
+    187,
+    188,
+    189
+  ],
+  "prior_second_packet_indices": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149,
+    150,
+    151,
+    152,
+    153,
+    154,
+    155,
+    156,
+    157,
+    158,
+    159,
+    160,
+    161,
+    162,
+    163,
+    164,
+    165,
+    166,
+    167,
+    168,
+    169,
+    170,
+    171,
+    172,
+    173,
+    174,
+    175,
+    176,
+    177,
+    178,
+    179,
+    180,
+    181
+  ],
+  "other_p0_partial_total": 168,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 197,
+  "other_p0_without_partial": 141,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Eight new pinned authored FireRed source-only partials, original machine dossier SHA receipt 0..199. Oak Pallet scene7 to lab scene7 and Celio RS-link flag to Agatha rematch are static source cross-edges only.",
+  "records": [
+    {
+      "packet_index": 182,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PalletTown/scripts.inc",
+        "git_blob_sha1": "1384b7d6c6bb5d2b93538ebaf5e92defde2d41e5",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PalletTown/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "140a602dd28d9875a3f38f3e656a9ee996b6e696e395aced7a0a7a0060c3eeb8",
+      "whole_source_sha256_from_packet": "ca9ae01d210ebfeda42895a152145940b7c444a03b6416b26353ceb0adac9190",
+      "line_anchors": [
+        {
+          "line": 3,
+          "text": "PalletTown_MapScripts::"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, PalletTown_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, PalletTown_OnFrame"
+        },
+        {
+          "line": 10,
+          "text": "\tcall_if_set FLAG_PALLET_LADY_NOT_BLOCKING_SIGN, PalletTown_EventScript_TryReadySignLady"
+        },
+        {
+          "line": 16,
+          "text": "\tgoto_if_unset FLAG_OPENED_START_MENU, EventScript_Return"
+        },
+        {
+          "line": 18,
+          "text": "\tsetvar VAR_MAP_SCENE_PALLET_TOWN_SIGN_LADY, 1"
+        },
+        {
+          "line": 38,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_PALLET_TOWN_OAK, 2, PalletTown_EventScript_OakRatingScene"
+        },
+        {
+          "line": 72,
+          "text": "\tsetvar VAR_MAP_SCENE_PALLET_TOWN_PROFESSOR_OAKS_LAB, 7"
+        },
+        {
+          "line": 73,
+          "text": "\tsetvar VAR_MAP_SCENE_PALLET_TOWN_OAK, 3"
+        },
+        {
+          "line": 75,
+          "text": "\twarp MAP_PALLET_TOWN_PROFESSOR_OAKS_LAB, 6, 12"
+        }
+      ],
+      "required_source_tokens": [
+        "FLAG_OPENED_START_MENU",
+        "VAR_MAP_SCENE_PALLET_TOWN_OAK",
+        "MAP_PALLET_TOWN_PROFESSOR_OAKS_LAB",
+        "FLAG_HIDE_OAK_IN_PALLET_TOWN"
+      ],
+      "source_observations": "Pallet Town conditions sign-lady placement on menu/scene flags; Oak post-League rating scene advances lab scene to 7 and warps to Oak's Lab.",
+      "dependency_edges": [
+        "start-menu/sign-lady flags and scene variable",
+        "Oak rating scene and Pokédex count",
+        "Oak's Lab scene 7 writer and warp",
+        "Pallet map event triggers and object placement"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Authored script include is not compiled preprocessor/assembler/linker or map table proof",
+        "Generated map header/map.json, native handlers, state writers and save consumers require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 183,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PalletTown_PlayersHouse_2F/scripts.inc",
+        "git_blob_sha1": "edc6ac371d8f04ac9bdff0547d9b4983b9629c77",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PalletTown_PlayersHouse_2F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "325d5591ca9d1539c8111a8b8503fc1fbbc2fa11ca5f4f5a98de6425edfe944b",
+      "whole_source_sha256_from_packet": "cf8cd1b168c2bc098676305dd77eba1ebbc35e8e7f48bb69fa9ce4c43b435481",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "PalletTown_PlayersHouse_2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, PalletTown_PlayersHouse_2F_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, PalletTown_PlayersHouse_2F_OnWarp"
+        },
+        {
+          "line": 7,
+          "text": "\tcall_if_eq VAR_MAP_SCENE_PALLET_TOWN_PLAYERS_HOUSE_2F, 0, PalletTown_PlayersHouse_2F_EventScript_SetRespawn"
+        },
+        {
+          "line": 11,
+          "text": "\tsetrespawn HEAL_LOCATION_PALLET_TOWN"
+        },
+        {
+          "line": 15,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_PALLET_TOWN_PLAYERS_HOUSE_2F, 0, PalletTown_PlayersHouse_2F_FirstWarpIn"
+        },
+        {
+          "line": 20,
+          "text": "\tsetvar VAR_MAP_SCENE_PALLET_TOWN_PLAYERS_HOUSE_2F, 1"
+        },
+        {
+          "line": 35,
+          "text": "\tspecial Script_SetHelpContext"
+        },
+        {
+          "line": 40,
+          "text": "\tspecial BedroomPC"
+        }
+      ],
+      "required_source_tokens": [
+        "HEAL_LOCATION_PALLET_TOWN",
+        "BedroomPC",
+        "VAR_MAP_SCENE_PALLET_TOWN_PLAYERS_HOUSE_2F",
+        "Script_SetHelpContext"
+      ],
+      "source_observations": "Player bedroom sets Pallet respawn on initial scene and uses shared PC/help-context specials; first warp advances scene state.",
+      "dependency_edges": [
+        "first-warp scene state transition",
+        "HEAL_LOCATION_PALLET_TOWN respawn writer",
+        "BedroomPC special and waitstate",
+        "quest-log guard and help-context reset"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Authored script include is not compiled preprocessor/assembler/linker or map table proof",
+        "Generated map header/map.json, native handlers, state writers and save consumers require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 184,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PalletTown_ProfessorOaksLab/scripts.inc",
+        "git_blob_sha1": "90adf867df540efc42b5ef98307a882b8aa97987",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PalletTown_ProfessorOaksLab/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "b6ca04e0e80bc44d4fd2ac1b3646c7a038dce6eef539787b5f71a76acfdd29d6",
+      "whole_source_sha256_from_packet": "ed6e02fdd179af05159f27288ef9b5226ce7917c03ae54e8fb8d83c853fc311d",
+      "line_anchors": [
+        {
+          "line": 8,
+          "text": "PalletTown_ProfessorOaksLab_MapScripts::"
+        },
+        {
+          "line": 9,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, PalletTown_ProfessorOaksLab_OnTransition"
+        },
+        {
+          "line": 10,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, PalletTown_ProfessorOaksLab_OnWarp"
+        },
+        {
+          "line": 11,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, PalletTown_ProfessorOaksLab_OnFrame"
+        },
+        {
+          "line": 15,
+          "text": "\tsetflag FLAG_VISITED_OAKS_LAB"
+        },
+        {
+          "line": 42,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_PALLET_TOWN_PROFESSOR_OAKS_LAB, 1, PalletTown_ProfessorOaksLab_EventScript_ReadyPlayerForStarterScene"
+        },
+        {
+          "line": 50,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_PALLET_TOWN_PROFESSOR_OAKS_LAB, 1, PalletTown_ProfessorOaksLab_ChooseStarterScene"
+        },
+        {
+          "line": 51,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_PALLET_TOWN_PROFESSOR_OAKS_LAB, 7, PalletTown_ProfessorOaksLab_EventScript_EnterForNationalDexScene"
+        },
+        {
+          "line": 107,
+          "text": "\tspecial EnableNationalPokedex"
+        },
+        {
+          "line": 118,
+          "text": "\tsetvar VAR_MAP_SCENE_PALLET_TOWN_PROFESSOR_OAKS_LAB, 8"
+        }
+      ],
+      "required_source_tokens": [
+        "PalletTown_ProfessorOaksLab_ChooseStarterScene",
+        "EnableNationalPokedex",
+        "VAR_MAP_SCENE_PALLET_TOWN_PROFESSOR_OAKS_LAB",
+        "FLAG_VISITED_OAKS_LAB"
+      ],
+      "source_observations": "Oak's Lab authored script handles starter scene, National Dex scene 7, flag/scene transitions and shared special EnableNationalPokedex.",
+      "dependency_edges": [
+        "Pallet Town scene 7 consumer",
+        "starter scene and rival/Oak movement",
+        "National Pokédex special and state writers",
+        "lab map header, object events and compiled script table"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Authored script include is not compiled preprocessor/assembler/linker or map table proof",
+        "Generated map header/map.json, native handlers, state writers and save consumers require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 185,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PalletTown_RivalsHouse/scripts.inc",
+        "git_blob_sha1": "a9e5e29b85d913ecd1d6547a7bf50fac65e5c173",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PalletTown_RivalsHouse/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "8c8ea9b7a70102ff5c824f4417c955e658343147183cdd6f4c693e35537e23a2",
+      "whole_source_sha256_from_packet": "8ceaa5011452e4e06f15ffe43700cac92318755d02cc9e32d8b5f06095d03c9b",
+      "line_anchors": [
+        {
+          "line": 3,
+          "text": "PalletTown_RivalsHouse_MapScripts::"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, PalletTown_RivalsHouse_OnTransition"
+        },
+        {
+          "line": 18,
+          "text": "\tsetvar RECEIVED_TOWN_MAP, TRUE"
+        },
+        {
+          "line": 29,
+          "text": "\tgoto_if_ge VAR_MAP_SCENE_PALLET_TOWN_PROFESSOR_OAKS_LAB, 1, PalletTown_RivalsHouse_EventScript_HeardBattledRival"
+        },
+        {
+          "line": 45,
+          "text": "\tgoto_if_lt VAR_MASSAGE_COOLDOWN_STEP_COUNTER, 500, PalletTown_RivalsHouse_EventScript_RateMonFriendship"
+        },
+        {
+          "line": 49,
+          "text": "\tspecial ChoosePartyMon"
+        },
+        {
+          "line": 61,
+          "text": "\tspecial DaisyMassageServices"
+        },
+        {
+          "line": 78,
+          "text": "PalletTown_RivalsHouse_EventScript_RateMonFriendship::"
+        }
+      ],
+      "required_source_tokens": [
+        "VAR_MASSAGE_COOLDOWN_STEP_COUNTER",
+        "DaisyMassageServices",
+        "RECEIVED_TOWN_MAP",
+        "PalletTown_RivalsHouse_EventScript_RateMonFriendship"
+      ],
+      "source_observations": "Rival's house gates Town Map receipt and Daisy's grooming/friendship service on lab state and massage cooldown.",
+      "dependency_edges": [
+        "lab scene state and Town Map variable",
+        "Daisy friendship and cooldown checks",
+        "ChoosePartyMon and egg guard",
+        "DaisyMassageServices native special"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Authored script include is not compiled preprocessor/assembler/linker or map table proof",
+        "Generated map header/map.json, native handlers, state writers and save consumers require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 186,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PewterCity/scripts.inc",
+        "git_blob_sha1": "5b0f1b65fcb24282071c8f387235451e2e957b5c",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PewterCity/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "0c2ec1760c3c70c75676bcde44929a452feed1bf70cab739662be4ac34cfa3b4",
+      "whole_source_sha256_from_packet": "8cdad0daad04002a4dff3e9878884da4e478626ac48181ea7aa48616fe295e6d",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "PewterCity_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, PewterCity_OnTransition"
+        },
+        {
+          "line": 7,
+          "text": "\tsetvar VAR_MAP_SCENE_PEWTER_CITY_MUSEUM_1F, 0"
+        },
+        {
+          "line": 15,
+          "text": "\tmsgbox PewterCity_Text_BrocksLookingForChallengersFollowMe"
+        },
+        {
+          "line": 21,
+          "text": "\tapplymovement LOCALID_PEWTER_GYM_GUIDE, PewterCity_Movement_GymGuideExit"
+        },
+        {
+          "line": 25,
+          "text": "\tclearflag FLAG_HIDE_PEWTER_CITY_GYM_GUIDE"
+        },
+        {
+          "line": 33,
+          "text": "\tapplymovement LOCALID_PLAYER, PewterCity_Movement_PlayerWalkToGymEast"
+        }
+      ],
+      "required_source_tokens": [
+        "VAR_MAP_SCENE_PEWTER_CITY_MUSEUM_1F",
+        "LOCALID_PEWTER_GYM_GUIDE",
+        "PewterCity_Movement_GuideWalkToGymEast",
+        "FLAG_HIDE_PEWTER_CITY_GYM_GUIDE"
+      ],
+      "source_observations": "Pewter City transition resets museum scene; guide sequences player/object movement to the Gym with visibility flags.",
+      "dependency_edges": [
+        "museum scene reset",
+        "gym guide visibility flag",
+        "guide/player movement macros",
+        "Pewter map.json event trigger wiring"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Authored script include is not compiled preprocessor/assembler/linker or map table proof",
+        "Generated map header/map.json, native handlers, state writers and save consumers require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 187,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PewterCity_PokemonCenter_1F/scripts.inc",
+        "git_blob_sha1": "a68ea93ba311a0c96494d1556612694d6b7e28e6",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PewterCity_PokemonCenter_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "9f9175fd5a8447939ebe30263b4a53062b935ce07754329da9f142350335f96f",
+      "whole_source_sha256_from_packet": "fb566c03a9f656f534502e913b073c71c45d860f3ee5a13729b570863753b9da",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "PewterCity_PokemonCenter_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, PewterCity_PokemonCenter_1F_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume"
+        },
+        {
+          "line": 7,
+          "text": "\tsetrespawn HEAL_LOCATION_PEWTER_CITY"
+        },
+        {
+          "line": 13,
+          "text": "\tcall EventScript_PkmnCenterNurse"
+        },
+        {
+          "line": 18,
+          "text": "\tmsgbox PewterCity_PokemonCenter_1F_Text_TeamRocketMtMoonImOnPhone, MSGBOX_NPC"
+        },
+        {
+          "line": 34,
+          "text": "\tmsgbox PewterCity_PokemonCenter_1F_Text_WhenJiggylypuffSingsMonsGetDrowsy, MSGBOX_NPC"
+        }
+      ],
+      "required_source_tokens": [
+        "HEAL_LOCATION_PEWTER_CITY",
+        "CableClub_OnResume",
+        "EventScript_PkmnCenterNurse",
+        "PewterCity_PokemonCenter_1F_MapScripts"
+      ],
+      "source_observations": "Pewter Center 1F sets heal respawn, invokes shared nurse and CableClub resume, and contains NPC/trade dialogue.",
+      "dependency_edges": [
+        "Center transition respawn writer",
+        "CableClub_OnResume handler",
+        "shared nurse event script",
+        "Pewter Center map header/warp"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Authored script include is not compiled preprocessor/assembler/linker or map table proof",
+        "Generated map header/map.json, native handlers, state writers and save consumers require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 188,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PewterCity_PokemonCenter_2F/scripts.inc",
+        "git_blob_sha1": "1d4e7e7d748e84782f06349db3b0793f865c4169",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PewterCity_PokemonCenter_2F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "57b46dc3f19ce4e69fc00ff0ffc6489c82897dfd9c9be25fc329d586951c90e7",
+      "whole_source_sha256_from_packet": "ae88cd91f231e1064c993b3b26229634f64c1448c0b3afe6ce0a580f274514dc",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "PewterCity_PokemonCenter_2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CableClub_OnTransition"
+        },
+        {
+          "line": 10,
+          "text": "\tcall CableClub_EventScript_Colosseum"
+        },
+        {
+          "line": 14,
+          "text": "\tcall CableClub_EventScript_TradeCenter"
+        },
+        {
+          "line": 18,
+          "text": "\tcall CableClub_EventScript_RecordCorner"
+        }
+      ],
+      "required_source_tokens": [
+        "CableClub_OnFrame",
+        "CableClub_OnWarp",
+        "CableClub_OnLoad",
+        "CableClub_OnTransition"
+      ],
+      "source_observations": "Pewter Center 2F uses shared CableClub dispatch and three Ruby/Sapphire leftover script labels.",
+      "dependency_edges": [
+        "CableClub frame/warp handlers",
+        "CableClub load/transition handlers",
+        "Colosseum/TradeCenter/RecordCorner labels",
+        "map header and compiled event table"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Authored script include is not compiled preprocessor/assembler/linker or map table proof",
+        "Generated map header/map.json, native handlers, state writers and save consumers require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 189,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PokemonLeague_AgathasRoom/scripts.inc",
+        "git_blob_sha1": "fd67829d20410c8f1e1f364b8db6f5ecf8e77f64",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PokemonLeague_AgathasRoom/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "c8fb2c378e23762d1071e22e69063daa59b8a47619d0c58eda23230229d5e90c",
+      "whole_source_sha256_from_packet": "3d3af744133659ca0644bbdb1aefcb04d2c0e1255f65a18904fd6e59b7452e4f",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "PokemonLeague_AgathasRoom_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, PokemonLeague_AgathasRoom_OnResume"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, PokemonLeague_AgathasRoom_OnLoad"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, PokemonLeague_AgathasRoom_OnWarp"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, PokemonLeague_AgathasRoom_OnFrame"
+        },
+        {
+          "line": 35,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_POKEMON_LEAGUE, 2, PokemonLeague_AgathasRoom_EventScript_EnterRoom"
+        },
+        {
+          "line": 41,
+          "text": "\tsetvar VAR_MAP_SCENE_POKEMON_LEAGUE, 3"
+        },
+        {
+          "line": 49,
+          "text": "\tgoto_if_set FLAG_DEFEATED_AGATHA, PokemonLeague_AgathasRoom_EventScript_PostBattle"
+        },
+        {
+          "line": 57,
+          "text": "\tcall_if_unset FLAG_SYS_CAN_LINK_WITH_RS, PokemonLeague_AgathasRoom_EventScript_Battle"
+        },
+        {
+          "line": 58,
+          "text": "\tcall_if_set FLAG_SYS_CAN_LINK_WITH_RS, PokemonLeague_AgathasRoom_EventScript_Rematch"
+        },
+        {
+          "line": 72,
+          "text": "\ttrainerbattle_no_intro TRAINER_ELITE_FOUR_AGATHA, PokemonLeague_AgathasRoom_Text_Defeat"
+        },
+        {
+          "line": 76,
+          "text": "\ttrainerbattle_no_intro TRAINER_ELITE_FOUR_AGATHA_2, PokemonLeague_AgathasRoom_Text_Defeat"
+        },
+        {
+          "line": 85,
+          "text": "\tsetflag FLAG_DEFEATED_AGATHA"
+        }
+      ],
+      "required_source_tokens": [
+        "FLAG_SYS_CAN_LINK_WITH_RS",
+        "PokemonLeague_AgathasRoom_EventScript_Rematch",
+        "TRAINER_ELITE_FOUR_AGATHA_2",
+        "FLAG_DEFEATED_AGATHA"
+      ],
+      "source_observations": "Agatha's League script selects standard versus rematch trainer battle using FLAG_SYS_CAN_LINK_WITH_RS and gates postbattle door by defeated flag.",
+      "dependency_edges": [
+        "RS-link flag source in One Island Center 1F",
+        "Agatha standard/rematch trainer selection",
+        "FLAG_DEFEATED_AGATHA and door opening",
+        "League room load/warp/frame map scripts"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Authored script include is not compiled preprocessor/assembler/linker or map table proof",
+        "Generated map header/map.json, native handlers, state writers and save consumers require full-source review",
+        "Original FireRed asset/derivative licensing unresolved; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of exact pinned source including unused paths",
+        "Rehash original compressed machine dossier bytes and verify SHA256",
+        "Trace map.json, generated map tables, native handlers and compiled consumers",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable whole-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}

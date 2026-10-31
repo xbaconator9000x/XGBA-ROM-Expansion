@@ -1,5 +1,6 @@
 name: Phase 1 pinned source census and review dossiers
 on:
+  workflow_call:
   workflow_dispatch:
   push:
     paths:
@@ -7,6 +8,10 @@ on:
       - 'tools/semantic_review_dossiers.py'
       - 'tools/include_dependency_classifier.py'
       - 'tools/phase1_mapping_gate.py'
+      - 'tools/phase1_copilot_receipts.py'
+      - 'tests/test_phase1_copilot_receipts.py'
+      - 'tests/test_phase1_mapping_gate.py'
+      - 'docs/phase1-review-readiness/copilot-semantic-review-receipts.jsonl'
       - 'tools/verify_source_contracts.py'
       - 'tools/verify_p0_additive_source_contracts.py'
       - 'tools/verify_curated_p0_semantic_registry.py'
@@ -45,17 +50,26 @@ on:
       - '.github/workflows/phase1-census.yml'
 permissions:
   contents: read
+  pull-requests: read
+  actions: read
 jobs:
   census:
     runs-on: ubuntu-latest
     timeout-minutes: 110
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Require complete Git history for append-only receipt ancestry
+        run: test "$(git rev-parse --is-shallow-repository)" = "false"
       - name: Verify Python syntax
         run: |
-          python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py
+          python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py tools/phase1_copilot_receipts.py tools/phase1_mapping_gate.py
           python3 tools/semantic_review_dossiers.py --self-test
           python3 tools/phase1_mapping_gate.py --self-test
+          python3 -m unittest discover -s tests -p test_phase1_copilot_receipts.py -v
+          python3 -m unittest discover -s tests -p test_phase1_mapping_gate.py -v
       - name: Clone pinned sources and scan
         run: python3 tools/pinned_source_census.py --checkout --root upstream --out audit-output
       - name: Verify pinned Poryscript compiler parsing and emission tests
@@ -126,9 +140,13 @@ jobs:
       - name: Index every source-anchored function's calls, writes and control flow
         run: python3 tools/function_semantic_dossiers.py
       - name: Evaluate Phase 1 semantic gate (incomplete is expected until signed review)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           rc=0
-          python3 tools/phase1_mapping_gate.py --root audit-output || rc=$?
+          expected_head="${{ github.event.pull_request.head.sha || github.sha }}"
+          python3 tools/phase1_mapping_gate.py --root audit-output --source-root upstream \
+            --expected-head "$expected_head" --repository "$GITHUB_REPOSITORY" || rc=$?
           if [ "$rc" -ne 0 ] && [ "$rc" -ne 2 ]; then exit "$rc"; fi
       - name: Preserve census, review queue and 500-file checkpoints
         if: always()

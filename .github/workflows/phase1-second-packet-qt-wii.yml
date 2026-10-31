@@ -1,0 +1,22 @@
+name: Phase 1 original mGBA Qt translation and Wii source partials
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  qt-wii-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify exact head checkout (not synthetic PR merge)
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify five pinned Qt/Wii sources and fail-closed static build-loader closure
+        run: python3 tools/phase1_second_packet_qt_wii_verify.py

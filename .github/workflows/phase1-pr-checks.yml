@@ -1,0 +1,92 @@
+name: Phase 1 consolidated PR checks
+on:
+  pull_request:
+    branches:
+      - phase1/firered-layout-writers-20261026
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+jobs:
+  census:
+    uses: ./.github/workflows/phase1-census.yml
+  curated-core-four:
+    uses: ./.github/workflows/phase1-curated-core-four.yml
+  curated-final-six:
+    uses: ./.github/workflows/phase1-curated-final-six.yml
+  curated-four-source:
+    uses: ./.github/workflows/phase1-curated-four-source.yml
+  curated-handoff-index:
+    uses: ./.github/workflows/phase1-curated-handoff-index.yml
+  curated-interop-four:
+    uses: ./.github/workflows/phase1-curated-interop-four.yml
+  curated-six-source:
+    uses: ./.github/workflows/phase1-curated-six-source.yml
+  fuchsia-tutor-static:
+    uses: ./.github/workflows/phase1-fuchsia-tutor-static.yml
+  next-p0-packet:
+    uses: ./.github/workflows/phase1-next-p0-packet.yml
+  original-machine-dossier-bytes:
+    uses: ./.github/workflows/phase1-original-machine-dossier-bytes.yml
+  remaining-p0-eight-abi-decoder:
+    uses: ./.github/workflows/phase1-remaining-p0-eight-abi-decoder.yml
+  remaining-p0-eight-arm:
+    uses: ./.github/workflows/phase1-remaining-p0-eight-arm.yml
+  remaining-p0-eight-cart-editor:
+    uses: ./.github/workflows/phase1-remaining-p0-eight-cart-editor.yml
+  remaining-p0-eight-cheats-config:
+    uses: ./.github/workflows/phase1-remaining-p0-eight-cheats-config.yml
+  remaining-p0-eight-crossboundary:
+    uses: ./.github/workflows/phase1-remaining-p0-eight-crossboundary.yml
+  remaining-p0-eight-gb-cpu:
+    uses: ./.github/workflows/phase1-remaining-p0-eight-gb-cpu.yml
+  remaining-p0-eight-gb-debugger:
+    uses: ./.github/workflows/phase1-remaining-p0-eight-gb-debugger.yml
+  remaining-p0-eight-gba-runtime:
+    uses: ./.github/workflows/phase1-remaining-p0-eight-gba-runtime.yml
+  remaining-p0-eight-interop:
+    uses: ./.github/workflows/phase1-remaining-p0-eight-interop.yml
+  remaining-p0-eight-porymap:
+    uses: ./.github/workflows/phase1-remaining-p0-eight-porymap.yml
+  remaining-p0-eight:
+    uses: ./.github/workflows/phase1-remaining-p0-eight.yml
+  remaining-p0-four-firered-map:
+    uses: ./.github/workflows/phase1-remaining-p0-four-firered-map.yml
+  remaining-p0-four-libretro-qt:
+    uses: ./.github/workflows/phase1-remaining-p0-four-libretro-qt.yml
+  remaining-p0-four-python-qt:
+    uses: ./.github/workflows/phase1-remaining-p0-four-python-qt.yml
+  remaining-p0-handoff-index:
+    uses: ./.github/workflows/phase1-remaining-p0-handoff-index.yml
+  remaining-p0-six-qt-go-libretro:
+    uses: ./.github/workflows/phase1-remaining-p0-six-qt-go-libretro.yml
+  remaining-p0-six:
+    uses: ./.github/workflows/phase1-remaining-p0-six.yml
+  second-packet-firered-next:
+    uses: ./.github/workflows/phase1-second-packet-firered-next.yml
+  second-packet-firered-sevii:
+    uses: ./.github/workflows/phase1-second-packet-firered-sevii.yml
+  second-packet-firered:
+    uses: ./.github/workflows/phase1-second-packet-firered.yml
+  second-packet-fuchsia-indigo:
+    uses: ./.github/workflows/phase1-second-packet-fuchsia-indigo.yml
+  second-packet-handoff-index:
+    uses: ./.github/workflows/phase1-second-packet-handoff-index.yml
+  second-packet-league-mansion:
+    uses: ./.github/workflows/phase1-second-packet-league-mansion.yml
+  second-packet-navel-oneisland:
+    uses: ./.github/workflows/phase1-second-packet-navel-oneisland.yml
+  second-packet-pallet-pewter:
+    uses: ./.github/workflows/phase1-second-packet-pallet-pewter.yml
+  second-packet-qt-wii:
+    uses: ./.github/workflows/phase1-second-packet-qt-wii.yml
+  third-machine-dossier-sha:
+    uses: ./.github/workflows/phase1-third-machine-dossier-sha.yml
+  third-p0-packet:
+    uses: ./.github/workflows/phase1-third-p0-packet.yml
+  third-packet-firered:
+    uses: ./.github/workflows/phase1-third-packet-firered.yml
+  third-packet-handoff-index:
+    uses: ./.github/workflows/phase1-third-packet-handoff-index.yml
+  third-packet-routes:
+    uses: ./.github/workflows/phase1-third-packet-routes.yml

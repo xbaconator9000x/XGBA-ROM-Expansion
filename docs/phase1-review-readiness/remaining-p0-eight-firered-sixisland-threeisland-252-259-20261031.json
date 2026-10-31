@@ -1,0 +1,1235 @@
+{
+  "schema": "xgba.phase1.third_packet_firered_sixisland_threeisland_252_259_partial.v1",
+  "date": "2026-10-31",
+  "source_packet": "docs/phase1-review-readiness/packet-0200-0299.json",
+  "source_packet_blob_sha1": "c998c2ea8c887968e586b1792c5207ecb5286839",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0200-0299-20261030.json",
+  "new_partial_indices": [
+    252,
+    253,
+    254,
+    255,
+    256,
+    257,
+    258,
+    259
+  ],
+  "other_p0_partial_total": 243,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 272,
+  "other_p0_without_partial": 66,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Eight original pinned Six Island/Three Island authored source-only scripts; no whole-file semantic, compiled/runtime, stock gameplay, .sav, physical Flash, licensing or independent approval.",
+  "records": [
+    {
+      "packet_index": 252,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SixIsland_DottedHole_1F/scripts.inc",
+        "git_blob_sha1": "ec0c34e6ed07d32a2470bb67ef43ea2359eefe18",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SixIsland_DottedHole_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "ed95a3cc08f4e9bd6b74f150698bae0ec14f05cc20e33c3b7fb456dd64be3ea5",
+      "whole_source_sha256_from_packet": "373b94ca425aab08f196e3da11a57cb9ad81cd6129bec34b98aed84ae1e92bac",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SixIsland_DottedHole_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SixIsland_DottedHole_1F_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "SixIsland_DottedHole_1F_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_SIX_ISLAND_DOTTED_HOLE_1F"
+        },
+        {
+          "line": 9,
+          "text": "SixIsland_DottedHole_B1F_EventScript_BrailleUp::"
+        },
+        {
+          "line": 11,
+          "text": "\tbraillemessage Braille_Text_Up"
+        },
+        {
+          "line": 16,
+          "text": "SixIsland_DottedHole_B4F_EventScript_BrailleDown::"
+        },
+        {
+          "line": 18,
+          "text": "\tbraillemessage Braille_Text_Down"
+        },
+        {
+          "line": 23,
+          "text": "SixIsland_DottedHole_B3F_EventScript_BrailleRight::"
+        },
+        {
+          "line": 25,
+          "text": "\tbraillemessage Braille_Text_Right"
+        },
+        {
+          "line": 30,
+          "text": "SixIsland_DottedHole_B2F_EventScript_BrailleLeft::"
+        },
+        {
+          "line": 32,
+          "text": "\tbraillemessage Braille_Text_Left"
+        }
+      ],
+      "required_source_tokens": [
+        "SixIsland_DottedHole_1F_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, SixIsland_DottedHole_1F_OnTransition",
+        "SixIsland_DottedHole_1F_OnTransition::",
+        "\tsetworldmapflag FLAG_WORLD_MAP_SIX_ISLAND_DOTTED_HOLE_1F",
+        "SixIsland_DottedHole_B1F_EventScript_BrailleUp::",
+        "\tbraillemessage Braille_Text_Up",
+        "SixIsland_DottedHole_B4F_EventScript_BrailleDown::",
+        "\tbraillemessage Braille_Text_Down",
+        "SixIsland_DottedHole_B3F_EventScript_BrailleRight::"
+      ],
+      "source_observations": "Dotted Hole 1F transition sets its world-map flag, while the same source defines B1F/B4F/B3F/B2F Braille messages for up/down/right/left respectively; map floor warp or puzzle execution is not established by these declarations.",
+      "dependency_edges": [
+        "Cross-floor map.json objects and Braille script pointer references",
+        "FLAG_WORLD_MAP_SIX_ISLAND_DOTTED_HOLE_1F world-map UI/save consumer",
+        "Braille_Text_Up/Down/Right/Left assets and message handlers",
+        "Original compiled script table, map layout and floor warp/linker closure"
+      ],
+      "unresolved": [
+        "Full original map.json trigger/warp/object table and map assembler/linker closure not independently demonstrated",
+        "Shared scripts, battle/party/save handlers and native execution not independently reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map table, actual preprocessor/assembler/linker and native consumer",
+        "Reconcile original assets, derivatives, toolchain and dependency licensing independently",
+        "Sign a distinct evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 253,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SixIsland_PatternBush/scripts.inc",
+        "git_blob_sha1": "d5f06a1833668be804b096ecf5a0043e93760dd9",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SixIsland_PatternBush/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "79bb40535eb7cd0627b7a3ec5157879e3085e2d65f9099fef9fe2a1ed8b14aec",
+      "whole_source_sha256_from_packet": "8b804e41edb4b46d75e2a87d4cc5ceb8df7c51adf9c3fffb33cae5b2337b3245",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SixIsland_PatternBush_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SixIsland_PatternBush_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "SixIsland_PatternBush_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_SIX_ISLAND_PATTERN_BUSH"
+        },
+        {
+          "line": 7,
+          "text": "\tgetplayerxy VAR_TEMP_1, VAR_TEMP_2"
+        },
+        {
+          "line": 8,
+          "text": "\tcall_if_ge VAR_TEMP_1, 50, SixIsland_PatternBush_EventScript_SetEscapeRightExit"
+        },
+        {
+          "line": 9,
+          "text": "\tcall_if_le VAR_TEMP_1, 49, SixIsland_PatternBush_EventScript_SetEscapeLeftExit"
+        },
+        {
+          "line": 12,
+          "text": "SixIsland_PatternBush_EventScript_SetEscapeRightExit::"
+        },
+        {
+          "line": 13,
+          "text": "\tsetescapewarp MAP_SIX_ISLAND_GREEN_PATH, 255, 64, 10"
+        },
+        {
+          "line": 16,
+          "text": "SixIsland_PatternBush_EventScript_SetEscapeLeftExit::"
+        },
+        {
+          "line": 17,
+          "text": "\tsetescapewarp MAP_SIX_ISLAND_GREEN_PATH, 255, 45, 10"
+        },
+        {
+          "line": 20,
+          "text": "SixIsland_PatternBush_EventScript_Bethany::"
+        },
+        {
+          "line": 21,
+          "text": "\ttrainerbattle_single TRAINER_PKMN_BREEDER_BETHANY, SixIsland_PatternBush_Text_BethanyIntro, SixIsland_PatternBush_Text_BethanyDefeat"
+        },
+        {
+          "line": 25,
+          "text": "SixIsland_PatternBush_EventScript_Allison::"
+        },
+        {
+          "line": 26,
+          "text": "\ttrainerbattle_single TRAINER_PKMN_BREEDER_ALLISON, SixIsland_PatternBush_Text_AllisonIntro, SixIsland_PatternBush_Text_AllisonDefeat"
+        },
+        {
+          "line": 30,
+          "text": "SixIsland_PatternBush_EventScript_Garret::"
+        },
+        {
+          "line": 31,
+          "text": "\ttrainerbattle_single TRAINER_BUG_CATCHER_GARRET, SixIsland_PatternBush_Text_GarretIntro, SixIsland_PatternBush_Text_GarretDefeat"
+        },
+        {
+          "line": 35,
+          "text": "SixIsland_PatternBush_EventScript_Jonah::"
+        },
+        {
+          "line": 36,
+          "text": "\ttrainerbattle_single TRAINER_BUG_CATCHER_JONAH, SixIsland_PatternBush_Text_JonahIntro, SixIsland_PatternBush_Text_JonahDefeat"
+        },
+        {
+          "line": 40,
+          "text": "SixIsland_PatternBush_EventScript_Vance::"
+        },
+        {
+          "line": 41,
+          "text": "\ttrainerbattle_single TRAINER_BUG_CATCHER_VANCE, SixIsland_PatternBush_Text_VanceIntro, SixIsland_PatternBush_Text_VanceDefeat"
+        },
+        {
+          "line": 45,
+          "text": "SixIsland_PatternBush_EventScript_Nash::"
+        },
+        {
+          "line": 46,
+          "text": "\ttrainerbattle_single TRAINER_YOUNGSTER_NASH, SixIsland_PatternBush_Text_NashIntro, SixIsland_PatternBush_Text_NashDefeat"
+        },
+        {
+          "line": 50,
+          "text": "SixIsland_PatternBush_EventScript_Cordell::"
+        },
+        {
+          "line": 51,
+          "text": "\ttrainerbattle_single TRAINER_YOUNGSTER_CORDELL, SixIsland_PatternBush_Text_CordellIntro, SixIsland_PatternBush_Text_CordellDefeat"
+        },
+        {
+          "line": 55,
+          "text": "SixIsland_PatternBush_EventScript_Dalia::"
+        },
+        {
+          "line": 56,
+          "text": "\ttrainerbattle_single TRAINER_LASS_DALIA, SixIsland_PatternBush_Text_DaliaIntro, SixIsland_PatternBush_Text_DaliaDefeat"
+        },
+        {
+          "line": 60,
+          "text": "SixIsland_PatternBush_EventScript_Joana::"
+        },
+        {
+          "line": 61,
+          "text": "\ttrainerbattle_single TRAINER_LASS_JOANA, SixIsland_PatternBush_Text_JoanaIntro, SixIsland_PatternBush_Text_JoanaDefeat"
+        },
+        {
+          "line": 65,
+          "text": "SixIsland_PatternBush_EventScript_Riley::"
+        },
+        {
+          "line": 66,
+          "text": "\ttrainerbattle_single TRAINER_CAMPER_RILEY, SixIsland_PatternBush_Text_RileyIntro, SixIsland_PatternBush_Text_RileyDefeat"
+        },
+        {
+          "line": 70,
+          "text": "SixIsland_PatternBush_EventScript_Marcy::"
+        },
+        {
+          "line": 71,
+          "text": "\ttrainerbattle_single TRAINER_PICNICKER_MARCY, SixIsland_PatternBush_Text_MarcyIntro, SixIsland_PatternBush_Text_MarcyDefeat"
+        },
+        {
+          "line": 75,
+          "text": "SixIsland_PatternBush_EventScript_Layton::"
+        },
+        {
+          "line": 76,
+          "text": "\ttrainerbattle_single TRAINER_RUIN_MANIAC_LAYTON, SixIsland_PatternBush_Text_LaytonIntro, SixIsland_PatternBush_Text_LaytonDefeat"
+        }
+      ],
+      "required_source_tokens": [
+        "SixIsland_PatternBush_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, SixIsland_PatternBush_OnTransition",
+        "SixIsland_PatternBush_OnTransition::",
+        "\tsetworldmapflag FLAG_WORLD_MAP_SIX_ISLAND_PATTERN_BUSH",
+        "\tgetplayerxy VAR_TEMP_1, VAR_TEMP_2",
+        "\tcall_if_ge VAR_TEMP_1, 50, SixIsland_PatternBush_EventScript_SetEscapeRightExit",
+        "\tcall_if_le VAR_TEMP_1, 49, SixIsland_PatternBush_EventScript_SetEscapeLeftExit",
+        "SixIsland_PatternBush_EventScript_SetEscapeRightExit::",
+        "\tsetescapewarp MAP_SIX_ISLAND_GREEN_PATH, 255, 64, 10"
+      ],
+      "source_observations": "Pattern Bush transition records its world-map flag and selects escape-warp destinations on Green Path based on player X>=50 versus X<=49; twelve named trainer battle scripts follow, but map event bindings and native battle execution remain untested.",
+      "dependency_edges": [
+        "getplayerxy and setescapewarp engine semantics, X threshold and warp destination",
+        "Green Path map coordinates and escape-rope native consumer",
+        "Twelve trainer constants, battle state and text assets",
+        "Pattern Bush map.json objects, transition table and compiled map/linker closure"
+      ],
+      "unresolved": [
+        "Full original map.json trigger/warp/object table and map assembler/linker closure not independently demonstrated",
+        "Shared scripts, battle/party/save handlers and native execution not independently reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map table, actual preprocessor/assembler/linker and native consumer",
+        "Reconcile original assets, derivatives, toolchain and dependency licensing independently",
+        "Sign a distinct evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 254,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SixIsland_PokemonCenter_1F/scripts.inc",
+        "git_blob_sha1": "366a3d9c2f7e5f9af67dea678b8d3e36803cc79d",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SixIsland_PokemonCenter_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "7e71027a37a17f8df08bfbe999e1c10f1ccc434a258636b312b7f2bf48d11979",
+      "whole_source_sha256_from_packet": "ffd9e0746c05366a663df2c5a439a8dbcb0669b421577dd7730a43600e942023",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SixIsland_PokemonCenter_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SixIsland_PokemonCenter_1F_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, SixIsland_PokemonCenter_1F_OnFrame"
+        },
+        {
+          "line": 7,
+          "text": "SixIsland_PokemonCenter_1F_OnTransition::"
+        },
+        {
+          "line": 8,
+          "text": "\tsetrespawn HEAL_LOCATION_SIX_ISLAND"
+        },
+        {
+          "line": 9,
+          "text": "\tcall_if_eq VAR_MAP_SCENE_SIX_ISLAND_POKEMON_CENTER_1F, 0, SixIsland_PokemonCenter_1F_EventScript_ShowRival"
+        },
+        {
+          "line": 12,
+          "text": "SixIsland_PokemonCenter_1F_EventScript_ShowRival::"
+        },
+        {
+          "line": 13,
+          "text": "\tclearflag FLAG_HIDE_SIX_ISLAND_POKECENTER_RIVAL"
+        },
+        {
+          "line": 16,
+          "text": "SixIsland_PokemonCenter_1F_OnFrame::"
+        },
+        {
+          "line": 17,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_SIX_ISLAND_POKEMON_CENTER_1F, 0, SixIsland_PokemonCenter_1F_EventScript_RivalScene"
+        },
+        {
+          "line": 20,
+          "text": "SixIsland_PokemonCenter_1F_EventScript_RivalScene::"
+        },
+        {
+          "line": 33,
+          "text": "\tmsgbox SixIsland_PokemonCenter_1F_Text_RivalImpossibleToGetAllMonsAroundHere"
+        },
+        {
+          "line": 41,
+          "text": "\tremoveobject LOCALID_SIX_ISLAND_RIVAL"
+        },
+        {
+          "line": 42,
+          "text": "\tsetvar VAR_MAP_SCENE_SIX_ISLAND_POKEMON_CENTER_1F, 1"
+        },
+        {
+          "line": 43,
+          "text": "\tsetvar VAR_MAP_SCENE_FOUR_ISLAND, 1"
+        },
+        {
+          "line": 65,
+          "text": "SixIsland_PokemonCenter_1F_EventScript_Nurse::"
+        },
+        {
+          "line": 68,
+          "text": "\tcall EventScript_PkmnCenterNurse"
+        },
+        {
+          "line": 72,
+          "text": "SixIsland_PokemonCenter_1F_EventScript_Hiker::"
+        },
+        {
+          "line": 76,
+          "text": "SixIsland_PokemonCenter_1F_EventScript_OldMan::"
+        }
+      ],
+      "required_source_tokens": [
+        "SixIsland_PokemonCenter_1F_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, SixIsland_PokemonCenter_1F_OnTransition",
+        "\tmap_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume",
+        "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, SixIsland_PokemonCenter_1F_OnFrame",
+        "SixIsland_PokemonCenter_1F_OnTransition::",
+        "\tsetrespawn HEAL_LOCATION_SIX_ISLAND",
+        "\tcall_if_eq VAR_MAP_SCENE_SIX_ISLAND_POKEMON_CENTER_1F, 0, SixIsland_PokemonCenter_1F_EventScript_ShowRival",
+        "SixIsland_PokemonCenter_1F_EventScript_ShowRival::",
+        "\tclearflag FLAG_HIDE_SIX_ISLAND_POKECENTER_RIVAL"
+      ],
+      "source_observations": "Six Island Center 1F transition sets heal respawn and reveals rival when its scene is zero; ON_FRAME scene triggers a movement/dialogue exit that sets both Six Island Center and Four Island scene vars to one. ON_RESUME calls CableClub_OnResume; nurse delegates to shared Center heal script.",
+      "dependency_edges": [
+        "VAR_MAP_SCENE_SIX_ISLAND_POKEMON_CENTER_1F and VAR_MAP_SCENE_FOUR_ISLAND cross-map writers/readers",
+        "CableClub_OnResume, Center nurse healing and respawn save semantics",
+        "Rival local object flag, movement scripts and on-frame trigger map.json",
+        "Generated map script table and native party/save consumer"
+      ],
+      "unresolved": [
+        "Full original map.json trigger/warp/object table and map assembler/linker closure not independently demonstrated",
+        "Shared scripts, battle/party/save handlers and native execution not independently reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map table, actual preprocessor/assembler/linker and native consumer",
+        "Reconcile original assets, derivatives, toolchain and dependency licensing independently",
+        "Sign a distinct evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 255,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SixIsland_PokemonCenter_2F/scripts.inc",
+        "git_blob_sha1": "cb7a00ad217dea8ae068693b68aad302c7f201c1",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SixIsland_PokemonCenter_2F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "e9e08342384add8cd639ab92e5f7a5ff0c017d31fc362c42c9c355cfc066ce99",
+      "whole_source_sha256_from_packet": "d343a0a35f932fe471387f4df89f27908fc3a4334d21f9838c400d99f4e5ea55",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SixIsland_PokemonCenter_2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CableClub_OnTransition"
+        },
+        {
+          "line": 8,
+          "text": "@ The below 3 are unused and leftover from RS"
+        },
+        {
+          "line": 9,
+          "text": "SixIsland_PokemonCenter_2F_EventScript_Colosseum::"
+        },
+        {
+          "line": 10,
+          "text": "\tcall CableClub_EventScript_Colosseum"
+        },
+        {
+          "line": 13,
+          "text": "SixIsland_PokemonCenter_2F_EventScript_TradeCenter::"
+        },
+        {
+          "line": 14,
+          "text": "\tcall CableClub_EventScript_TradeCenter"
+        },
+        {
+          "line": 17,
+          "text": "SixIsland_PokemonCenter_2F_EventScript_RecordCorner::"
+        },
+        {
+          "line": 18,
+          "text": "\tcall CableClub_EventScript_RecordCorner"
+        }
+      ],
+      "required_source_tokens": [
+        "SixIsland_PokemonCenter_2F_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame",
+        "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp",
+        "\tmap_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, CableClub_OnTransition",
+        "@ The below 3 are unused and leftover from RS",
+        "SixIsland_PokemonCenter_2F_EventScript_Colosseum::",
+        "\tcall CableClub_EventScript_Colosseum",
+        "SixIsland_PokemonCenter_2F_EventScript_TradeCenter::"
+      ],
+      "source_observations": "Six Island Center 2F map hooks all delegate to shared CableClub frame, warp, load and transition scripts; three Colosseum/Trade Center/Record Corner script labels are explicitly annotated unused RS leftovers, so their runtime reachability is not inferred.",
+      "dependency_edges": [
+        "CableClub_OnFrame/OnWarp/OnLoad/OnTransition implementations",
+        "2F map.json object/warp events and unused label reachability",
+        "CableClub trade and battle data/save protocol consumers",
+        "Native assembler/linker and multiplayer environment requirements"
+      ],
+      "unresolved": [
+        "Full original map.json trigger/warp/object table and map assembler/linker closure not independently demonstrated",
+        "Shared scripts, battle/party/save handlers and native execution not independently reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map table, actual preprocessor/assembler/linker and native consumer",
+        "Reconcile original assets, derivatives, toolchain and dependency licensing independently",
+        "Sign a distinct evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 256,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SixIsland_RuinValley/scripts.inc",
+        "git_blob_sha1": "d48dda2394359338978dc1f931253bbc6c2b04cd",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SixIsland_RuinValley/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "cb2926c3abbeee9417d9570b69e12b73796066bc21f7c5d4e40bfbb16f52bdb1",
+      "whole_source_sha256_from_packet": "b9b8908abec9c93265d2025c61f8ffc678bd3d1834381ca8634874efbfac6541",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SixIsland_RuinValley_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, SixIsland_RuinValley_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "SixIsland_RuinValley_OnLoad::"
+        },
+        {
+          "line": 6,
+          "text": "\tcall_if_set FLAG_USED_CUT_ON_RUIN_VALLEY_BRAILLE, SixIsland_RuinValley_EventScript_OpenDottedHoleDoor"
+        },
+        {
+          "line": 9,
+          "text": "SixIsland_RuinValley_EventScript_OpenDottedHoleDoor::"
+        },
+        {
+          "line": 10,
+          "text": "\tsetmetatile 24, 24, METATILE_SeviiIslands67_DottedHoleDoor_Open, 0"
+        },
+        {
+          "line": 13,
+          "text": "SixIsland_RuinValley_EventScript_Scientist::"
+        },
+        {
+          "line": 15,
+          "text": "\tmsgbox SixIsland_RuinValley_Text_CantFigureOutHowToGetInside"
+        },
+        {
+          "line": 24,
+          "text": "SixIsland_RuinValley_EventScript_DottedHoleDoor::"
+        },
+        {
+          "line": 26,
+          "text": "\tgoto_if_set FLAG_USED_CUT_ON_RUIN_VALLEY_BRAILLE, SixIsland_RuinValley_EventScript_DottedHoleDoorOpen"
+        },
+        {
+          "line": 27,
+          "text": "\tmsgbox SixIsland_RuinValley_Text_CheckDoorMoreThoroughly, MSGBOX_YESNO"
+        },
+        {
+          "line": 28,
+          "text": "\tgoto_if_eq VAR_RESULT, NO, SixIsland_RuinValley_EventScript_IgnoreDottedHoleDoor"
+        },
+        {
+          "line": 29,
+          "text": "\tmsgbox SixIsland_RuinValley_Text_SeveralDotsOnTheDoor"
+        },
+        {
+          "line": 30,
+          "text": "\tbraillemessage Braille_Text_Cut"
+        },
+        {
+          "line": 35,
+          "text": "SixIsland_RuinValley_EventScript_DottedHoleDoorOpen::"
+        },
+        {
+          "line": 36,
+          "text": "\tmsgbox SixIsland_RuinValley_Text_DoorIsOpen"
+        },
+        {
+          "line": 40,
+          "text": "SixIsland_RuinValley_EventScript_IgnoreDottedHoleDoor::"
+        },
+        {
+          "line": 41,
+          "text": "\tmsgbox SixIsland_RuinValley_Text_LeftDoorAlone"
+        }
+      ],
+      "required_source_tokens": [
+        "SixIsland_RuinValley_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_LOAD, SixIsland_RuinValley_OnLoad",
+        "SixIsland_RuinValley_OnLoad::",
+        "\tcall_if_set FLAG_USED_CUT_ON_RUIN_VALLEY_BRAILLE, SixIsland_RuinValley_EventScript_OpenDottedHoleDoor",
+        "SixIsland_RuinValley_EventScript_OpenDottedHoleDoor::",
+        "\tsetmetatile 24, 24, METATILE_SeviiIslands67_DottedHoleDoor_Open, 0",
+        "SixIsland_RuinValley_EventScript_Scientist::",
+        "\tmsgbox SixIsland_RuinValley_Text_CantFigureOutHowToGetInside",
+        "SixIsland_RuinValley_EventScript_DottedHoleDoor::"
+      ],
+      "source_observations": "Ruin Valley ON_LOAD changes Dotted Hole door metatile when the Cut-used flag is set. Door interaction offers a YES/NO check and displays Cut Braille until the flag is set, then reports an open door; the actual Cut flag setter and collision/graphics refresh are external.",
+      "dependency_edges": [
+        "FLAG_USED_CUT_ON_RUIN_VALLEY_BRAILLE setter and save persistence",
+        "setmetatile graphics/collision refresh and Cut field move engine",
+        "Ruin Valley map.json door trigger, object position and warp to Dotted Hole",
+        "Braille_Text_Cut, door text assets and compiled script consumer"
+      ],
+      "unresolved": [
+        "Full original map.json trigger/warp/object table and map assembler/linker closure not independently demonstrated",
+        "Shared scripts, battle/party/save handlers and native execution not independently reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map table, actual preprocessor/assembler/linker and native consumer",
+        "Reconcile original assets, derivatives, toolchain and dependency licensing independently",
+        "Sign a distinct evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 257,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/ThreeIsland/scripts.inc",
+        "git_blob_sha1": "8f3e0dfd279eb46281b88b0fb9f90fa3c0a3c647",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/ThreeIsland/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "7b3a1176f25baf64b86e5153e5334c588f3105332597a0e40c8895445d37b347",
+      "whole_source_sha256_from_packet": "c3638f71aa947c752cc31d07dc789c4d487bca290c144de519cd988ed6355071",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "ThreeIsland_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, ThreeIsland_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "ThreeIsland_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_THREE_ISLAND"
+        },
+        {
+          "line": 7,
+          "text": "\tcall_if_set FLAG_RESCUED_LOSTELLE, ThreeIsland_EventScript_HideAntiBikers"
+        },
+        {
+          "line": 8,
+          "text": "\tcall_if_eq VAR_MAP_SCENE_THREE_ISLAND, 4, ThreeIsland_EventScript_SetAntiBikersMovementAfterBikers"
+        },
+        {
+          "line": 11,
+          "text": "ThreeIsland_EventScript_HideAntiBikers::"
+        },
+        {
+          "line": 12,
+          "text": "\tsetflag FLAG_HIDE_THREE_ISLAND_ANTIBIKERS"
+        },
+        {
+          "line": 20,
+          "text": "ThreeIsland_EventScript_Biker::"
+        },
+        {
+          "line": 27,
+          "text": "ThreeIsland_EventScript_AntiBiker1::"
+        },
+        {
+          "line": 29,
+          "text": "\tgoto_if_set FLAG_GOT_FULL_RESTORE_FROM_THREE_ISLAND_DEFENDER, ThreeIsland_EventScript_AntiBiker1GotFullRestore"
+        },
+        {
+          "line": 30,
+          "text": "\tgoto_if_eq VAR_MAP_SCENE_THREE_ISLAND, 4, ThreeIsland_EventScript_GiveFullRestore"
+        },
+        {
+          "line": 43,
+          "text": "ThreeIsland_EventScript_GiveFullRestore::"
+        },
+        {
+          "line": 47,
+          "text": "\tcheckitemspace ITEM_FULL_RESTORE"
+        },
+        {
+          "line": 48,
+          "text": "\tgoto_if_eq VAR_RESULT, FALSE, ThreeIsland_EventScript_NoRoomForFullRestore"
+        },
+        {
+          "line": 49,
+          "text": "\tmsgreceiveditem ThreeIsland_Text_GivenFullRestore, ITEM_FULL_RESTORE"
+        },
+        {
+          "line": 50,
+          "text": "\tadditem ITEM_FULL_RESTORE"
+        },
+        {
+          "line": 51,
+          "text": "\tsetflag FLAG_GOT_FULL_RESTORE_FROM_THREE_ISLAND_DEFENDER"
+        },
+        {
+          "line": 56,
+          "text": "ThreeIsland_EventScript_NoRoomForFullRestore::"
+        },
+        {
+          "line": 61,
+          "text": "ThreeIsland_EventScript_BikerArgumentScene::"
+        },
+        {
+          "line": 120,
+          "text": "ThreeIsland_EventScript_AntiBiker2::"
+        },
+        {
+          "line": 122,
+          "text": "\tgoto_if_eq VAR_MAP_SCENE_THREE_ISLAND, 4, ThreeIsland_EventScript_AntiBiker2BikersGone"
+        },
+        {
+          "line": 135,
+          "text": "ThreeIsland_EventScript_BikerBossIntroTrigger::"
+        },
+        {
+          "line": 153,
+          "text": "\tsetvar VAR_MAP_SCENE_THREE_ISLAND, 3"
+        },
+        {
+          "line": 165,
+          "text": "ThreeIsland_EventScript_BattleBikersTriggerLeft::"
+        },
+        {
+          "line": 171,
+          "text": "ThreeIsland_EventScript_BattleBikersTriggerMidLeft::"
+        },
+        {
+          "line": 177,
+          "text": "ThreeIsland_EventScript_BattleBikersTriggerMid::"
+        },
+        {
+          "line": 183,
+          "text": "ThreeIsland_EventScript_BattleBikersTriggerMidRight::"
+        },
+        {
+          "line": 189,
+          "text": "ThreeIsland_EventScript_BattleBikersTriggerRight::"
+        },
+        {
+          "line": 195,
+          "text": "ThreeIsland_EventScript_BattleBikersScene::"
+        },
+        {
+          "line": 207,
+          "text": "\tmsgbox ThreeIsland_Text_WannaMakeSomethingOfYourStaring, MSGBOX_YESNO"
+        },
+        {
+          "line": 208,
+          "text": "\tgoto_if_eq VAR_RESULT, NO, ThreeIsland_EventScript_LeaveBikersAlone"
+        },
+        {
+          "line": 211,
+          "text": "\ttrainerbattle_no_intro TRAINER_BIKER_GOON, ThreeIsland_Text_Biker1Defeat"
+        },
+        {
+          "line": 221,
+          "text": "\ttrainerbattle_no_intro TRAINER_BIKER_GOON_2, ThreeIsland_Text_Biker2Defeat"
+        },
+        {
+          "line": 231,
+          "text": "\ttrainerbattle_no_intro TRAINER_BIKER_GOON_3, ThreeIsland_Text_Biker3Defeat"
+        },
+        {
+          "line": 240,
+          "text": "\tcall_if_eq VAR_TEMP_1, 0, ThreeIsland_EventScript_PaxtonApproachLeft"
+        },
+        {
+          "line": 248,
+          "text": "\ttrainerbattle_no_intro TRAINER_CUE_BALL_PAXTON, ThreeIsland_Text_PaxtonDefeat"
+        },
+        {
+          "line": 251,
+          "text": "\tfadescreen FADE_TO_BLACK"
+        },
+        {
+          "line": 252,
+          "text": "\tremoveobject LOCALID_PAXTON"
+        },
+        {
+          "line": 260,
+          "text": "\tsetvar VAR_MAP_SCENE_THREE_ISLAND, 4"
+        },
+        {
+          "line": 297,
+          "text": "ThreeIsland_EventScript_LeaveBikersAlone::"
+        },
+        {
+          "line": 370,
+          "text": "ThreeIsland_EventScript_Doduo::"
+        },
+        {
+          "line": 374,
+          "text": "\tplaymoncry SPECIES_DODUO, CRY_MODE_NORMAL"
+        },
+        {
+          "line": 380,
+          "text": "ThreeIsland_EventScript_IslandSign::"
+        },
+        {
+          "line": 384,
+          "text": "ThreeIsland_EventScript_Biker6::"
+        }
+      ],
+      "required_source_tokens": [
+        "ThreeIsland_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, ThreeIsland_OnTransition",
+        "ThreeIsland_OnTransition::",
+        "\tsetworldmapflag FLAG_WORLD_MAP_THREE_ISLAND",
+        "\tcall_if_set FLAG_RESCUED_LOSTELLE, ThreeIsland_EventScript_HideAntiBikers",
+        "\tcall_if_eq VAR_MAP_SCENE_THREE_ISLAND, 4, ThreeIsland_EventScript_SetAntiBikersMovementAfterBikers",
+        "ThreeIsland_EventScript_HideAntiBikers::",
+        "\tsetflag FLAG_HIDE_THREE_ISLAND_ANTIBIKERS",
+        "ThreeIsland_EventScript_Biker::"
+      ],
+      "source_observations": "Three Island transition sets its world-map flag and branches on Lostelle rescue and scene=4 for anti-biker objects. Anti-biker reward checks Full Restore bag capacity before setting the one-time flag. Five entry triggers feed a biker chain with optional NO exit, three goon battles and Paxton, then set scene=4; authored source alone does not prove native encounter order.",
+      "dependency_edges": [
+        "VAR_MAP_SCENE_THREE_ISLAND, Lostelle rescue and one-time Full Restore flags",
+        "Five map.json trigger coordinates and biker/local-object movement IDs",
+        "Trainer Biker Goon 1-3 and Cue Ball Paxton battle macros, returns and quest state",
+        "Bag capacity/item save semantics, map event table, original native compiled gameplay"
+      ],
+      "unresolved": [
+        "Full original map.json trigger/warp/object table and map assembler/linker closure not independently demonstrated",
+        "Shared scripts, battle/party/save handlers and native execution not independently reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map table, actual preprocessor/assembler/linker and native consumer",
+        "Reconcile original assets, derivatives, toolchain and dependency licensing independently",
+        "Sign a distinct evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 258,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/ThreeIsland_BerryForest/scripts.inc",
+        "git_blob_sha1": "9aefd0fc1f6e8e3d902177df495a66f48c6c5a0d",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/ThreeIsland_BerryForest/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "a7b5f3cbebc002428f70d78ec2d87e1e699a6d37b76c6be053433e9a90271812",
+      "whole_source_sha256_from_packet": "e716d5252078b670652939fe883fc8b6db45af0273e4183c82ee3939985a9342",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "ThreeIsland_BerryForest_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, ThreeIsland_BerryForest_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "ThreeIsland_BerryForest_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_THREE_ISLAND_BERRY_FOREST"
+        },
+        {
+          "line": 7,
+          "text": "\tsetescapewarp MAP_THREE_ISLAND_BOND_BRIDGE, 12, 6"
+        },
+        {
+          "line": 10,
+          "text": "ThreeIsland_BerryForest_EventScript_Lostelle::"
+        },
+        {
+          "line": 13,
+          "text": "\tmsgbox ThreeIsland_BerryForest_Text_HelpScaryPokemon"
+        },
+        {
+          "line": 20,
+          "text": "\tgoto_if_questlog EventScript_ReleaseEnd"
+        },
+        {
+          "line": 22,
+          "text": "\tplaymoncry SPECIES_HYPNO, CRY_MODE_ENCOUNTER"
+        },
+        {
+          "line": 24,
+          "text": "\tsetwildbattle SPECIES_HYPNO, 30"
+        },
+        {
+          "line": 25,
+          "text": "\tdowildbattle"
+        },
+        {
+          "line": 26,
+          "text": "\tspecial QuestLog_CutRecording"
+        },
+        {
+          "line": 29,
+          "text": "\tmsgbox ThreeIsland_BerryForest_Text_ThankYouHaveThis"
+        },
+        {
+          "line": 30,
+          "text": "\tgiveitem ITEM_IAPAPA_BERRY"
+        },
+        {
+          "line": 31,
+          "text": "\tcall_if_eq VAR_RESULT, FALSE, ThreeIsland_BerryForest_EventScript_NoRoomForBerry"
+        },
+        {
+          "line": 35,
+          "text": "\tsetflag FLAG_RESCUED_LOSTELLE"
+        },
+        {
+          "line": 36,
+          "text": "\tsetflag FLAG_HIDE_LOSTELLE_IN_BERRY_FOREST"
+        },
+        {
+          "line": 37,
+          "text": "\tsetvar VAR_MAP_SCENE_TWO_ISLAND_JOYFUL_GAME_CORNER, 2"
+        },
+        {
+          "line": 38,
+          "text": "\tclearflag FLAG_HIDE_TWO_ISLAND_GAME_CORNER_LOSTELLE"
+        },
+        {
+          "line": 39,
+          "text": "\twarp MAP_TWO_ISLAND_JOYFUL_GAME_CORNER, 6, 6"
+        },
+        {
+          "line": 44,
+          "text": "ThreeIsland_BerryForest_EventScript_NoRoomForBerry::"
+        },
+        {
+          "line": 45,
+          "text": "\tmsgbox ThreeIsland_BerryForest_Text_BerryPouchIsFull"
+        },
+        {
+          "line": 48,
+          "text": "ThreeIsland_BerryForest_Movement_LostelleLookAround::"
+        }
+      ],
+      "required_source_tokens": [
+        "ThreeIsland_BerryForest_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, ThreeIsland_BerryForest_OnTransition",
+        "ThreeIsland_BerryForest_OnTransition::",
+        "\tsetworldmapflag FLAG_WORLD_MAP_THREE_ISLAND_BERRY_FOREST",
+        "\tsetescapewarp MAP_THREE_ISLAND_BOND_BRIDGE, 12, 6",
+        "ThreeIsland_BerryForest_EventScript_Lostelle::",
+        "\tmsgbox ThreeIsland_BerryForest_Text_HelpScaryPokemon",
+        "\tgoto_if_questlog EventScript_ReleaseEnd",
+        "\tplaymoncry SPECIES_HYPNO, CRY_MODE_ENCOUNTER"
+      ],
+      "source_observations": "Berry Forest Lostelle script performs a quest-log guard before the authored level-30 Hypno wild battle, attempts to give an Iapapa Berry, then sets rescue/hide flags and Two Island Joyful Game Corner scene before warping there. The no-room berry helper returns, so the following rescue sequence remains reachable in authored script.",
+      "dependency_edges": [
+        "QuestLog_CutRecording and goto_if_questlog replay/recording semantics",
+        "setwildbattle/dowildbattle Hypno encounter, battle outcomes and save state",
+        "giveitem ITEM_IAPAPA_BERRY failure branch, rescue flags and cross-map scene",
+        "Berry Forest map.json Lostelle object, Two Island warp, original native compiled gameplay"
+      ],
+      "unresolved": [
+        "Full original map.json trigger/warp/object table and map assembler/linker closure not independently demonstrated",
+        "Shared scripts, battle/party/save handlers and native execution not independently reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map table, actual preprocessor/assembler/linker and native consumer",
+        "Reconcile original assets, derivatives, toolchain and dependency licensing independently",
+        "Sign a distinct evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 259,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/ThreeIsland_DunsparceTunnel/scripts.inc",
+        "git_blob_sha1": "889af04201aef92c34fc9ceac64a5370fba27fe2",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/ThreeIsland_DunsparceTunnel/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "d41299ccf7f75c5474306b73ba33d78ce18352c1f0278107166d2ccbb670b250",
+      "whole_source_sha256_from_packet": "a3c22afc0e8451c0a56f6c6b026996792d0a3f6bab9851e17dcfb506cbe6a728",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "ThreeIsland_DunsparceTunnel_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, ThreeIsland_DunsparceTunnel_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "ThreeIsland_DunsparceTunnel_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_THREE_ISLAND_DUNSPARCE_TUNNEL"
+        },
+        {
+          "line": 7,
+          "text": "\tspecialvar VAR_RESULT, IsNationalPokedexEnabled"
+        },
+        {
+          "line": 8,
+          "text": "\tcopyvar VAR_0x8008, VAR_RESULT"
+        },
+        {
+          "line": 9,
+          "text": "\tcall_if_eq VAR_0x8008, TRUE, ThreeIsland_DunsparceTunnel_EventScript_SetLayoutDugOut"
+        },
+        {
+          "line": 10,
+          "text": "\tcall_if_eq VAR_0x8008, FALSE, ThreeIsland_DunsparceTunnel_EventScript_MoveProspectorToWall"
+        },
+        {
+          "line": 13,
+          "text": "ThreeIsland_DunsparceTunnel_EventScript_SetLayoutDugOut::"
+        },
+        {
+          "line": 14,
+          "text": "\tsetmaplayoutindex LAYOUT_THREE_ISLAND_DUNSPARCE_TUNNEL_DUG_OUT"
+        },
+        {
+          "line": 17,
+          "text": "ThreeIsland_DunsparceTunnel_EventScript_MoveProspectorToWall::"
+        },
+        {
+          "line": 18,
+          "text": "\tsetobjectxyperm LOCALID_PROSPECTOR, 6, 3"
+        },
+        {
+          "line": 22,
+          "text": "ThreeIsland_DunsparceTunnel_EventScript_Prospector::"
+        },
+        {
+          "line": 25,
+          "text": "\tgoto_if_set FLAG_GOT_NUGGET_FROM_DUNSPARCE_TUNNEL, ThreeIsland_DunsparceTunnel_EventScript_ProspectorAlreadyGaveNugget"
+        },
+        {
+          "line": 26,
+          "text": "\tspecialvar VAR_RESULT, IsNationalPokedexEnabled"
+        },
+        {
+          "line": 27,
+          "text": "\tgoto_if_eq VAR_RESULT, TRUE, ThreeIsland_DunsparceTunnel_EventScript_ProspectorStruckGold"
+        },
+        {
+          "line": 35,
+          "text": "ThreeIsland_DunsparceTunnel_EventScript_ProspectorStruckGold::"
+        },
+        {
+          "line": 37,
+          "text": "\tgiveitem ITEM_NUGGET"
+        },
+        {
+          "line": 38,
+          "text": "\tgoto_if_eq VAR_RESULT, FALSE, ThreeIsland_DunsparceTunnel_EventScript_NoRoomForNugget"
+        },
+        {
+          "line": 39,
+          "text": "\tsetflag FLAG_GOT_NUGGET_FROM_DUNSPARCE_TUNNEL"
+        },
+        {
+          "line": 43,
+          "text": "ThreeIsland_DunsparceTunnel_EventScript_NoRoomForNugget::"
+        },
+        {
+          "line": 48,
+          "text": "ThreeIsland_DunsparceTunnel_EventScript_ProspectorAlreadyGaveNugget::"
+        },
+        {
+          "line": 49,
+          "text": "\tmsgbox ThreeIsland_DunsparceTunnel_Text_ThatsANugget"
+        }
+      ],
+      "required_source_tokens": [
+        "ThreeIsland_DunsparceTunnel_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, ThreeIsland_DunsparceTunnel_OnTransition",
+        "ThreeIsland_DunsparceTunnel_OnTransition::",
+        "\tsetworldmapflag FLAG_WORLD_MAP_THREE_ISLAND_DUNSPARCE_TUNNEL",
+        "\tspecialvar VAR_RESULT, IsNationalPokedexEnabled",
+        "\tcopyvar VAR_0x8008, VAR_RESULT",
+        "\tcall_if_eq VAR_0x8008, TRUE, ThreeIsland_DunsparceTunnel_EventScript_SetLayoutDugOut",
+        "\tcall_if_eq VAR_0x8008, FALSE, ThreeIsland_DunsparceTunnel_EventScript_MoveProspectorToWall",
+        "ThreeIsland_DunsparceTunnel_EventScript_SetLayoutDugOut::"
+      ],
+      "source_observations": "Dunsparce Tunnel transition queries National Pokédex enablement to choose dug-out layout or move the prospector; the Nugget reward checks both dex status and bag-space result, setting the one-time reward flag only after successful giveitem.",
+      "dependency_edges": [
+        "IsNationalPokedexEnabled and its persisted state",
+        "LAYOUT_THREE_ISLAND_DUNSPARCE_TUNNEL_DUG_OUT and setmaplayoutindex native consumer",
+        "FLAG_GOT_NUGGET_FROM_DUNSPARCE_TUNNEL and giveitem bag-capacity semantics",
+        "Prospector object coordinates, map.json and compiled map layout/linker closure"
+      ],
+      "unresolved": [
+        "Full original map.json trigger/warp/object table and map assembler/linker closure not independently demonstrated",
+        "Shared scripts, battle/party/save handlers and native execution not independently reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map table, actual preprocessor/assembler/linker and native consumer",
+        "Reconcile original assets, derivatives, toolchain and dependency licensing independently",
+        "Sign a distinct evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}

@@ -1,0 +1,389 @@
+{
+  "schema": "xgba.phase1.remaining_p0_firered_map_scripts_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+  "source_packet_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0000-0199-20261030.json",
+  "new_partial_indices": [
+    130,
+    132,
+    137,
+    141
+  ],
+  "previous_second_packet_indices": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107
+  ],
+  "other_p0_partial_total": 112,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 141,
+  "other_p0_without_partial": 197,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Four authored FireRed map-script partial source inspections. No compiled byte, native runtime, stock gameplay, physical Flash, license clearance or independent approval inferred.",
+  "records": [
+    {
+      "packet_index": 130,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/BirthIsland_Exterior/scripts.inc",
+        "git_blob_sha1": "5bef2d0e9a9ca88bf5aac889ce21059cfb23e935",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/BirthIsland_Exterior/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "8fd1488c6ac3da27b849349479d301083582a91ba6578da60d551dd291310420",
+      "whole_source_sha256_from_packet": "04f37aed5bbf5fa74a85151f9887397dbdc46b19d3e8679ac10bb8c774258b08",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "BirthIsland_Exterior_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, BirthIsland_Exterior_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, BirthIsland_Exterior_OnResume"
+        },
+        {
+          "line": 7,
+          "text": "BirthIsland_Exterior_OnReturnToField::"
+        },
+        {
+          "line": 8,
+          "text": "\tspecial SetDeoxysTrianglePalette"
+        },
+        {
+          "line": 11,
+          "text": "BirthIsland_Exterior_OnTransition::"
+        },
+        {
+          "line": 20,
+          "text": "BirthIsland_Exterior_EventScript_HideDeoxysAndPuzzle::"
+        },
+        {
+          "line": 36,
+          "text": "\tspecialvar VAR_RESULT, GetBattleOutcome"
+        },
+        {
+          "line": 42,
+          "text": "\tlock"
+        },
+        {
+          "line": 46,
+          "text": "\tspecial DoDeoxysTriangleInteraction"
+        },
+        {
+          "line": 84,
+          "text": "\tsetflag FLAG_SYS_SPECIAL_WILD_BATTLE"
+        },
+        {
+          "line": 85,
+          "text": "\tspecial StartLegendaryBattle"
+        },
+        {
+          "line": 92,
+          "text": "\tsetflag FLAG_FOUGHT_DEOXYS"
+        }
+      ],
+      "responsibilities": "Birth Island map transition/resume/field callbacks, Deoxys triangle palette, state flags, movement and legendary battle script sequence.",
+      "dependency_edges": [
+        "data/maps/BirthIsland_Exterior/map.json -> authored map script binding",
+        "asm/macros/event.inc -> map_script and command encoding",
+        "src/field_specials.c -> special functions and VAR_RESULT",
+        "src/scrcmd.c -> field script opcode interpreter"
+      ],
+      "unresolved": [
+        "Map table inclusion and compiled ROM byte addresses not checked",
+        "Deoxys battle runtime branch/flags not executed",
+        "Quest log and special callbacks outside selected source"
+      ],
+      "reviewer_questions": [
+        "Trace map script table through generator, assembler and linker",
+        "Validate battle outcome flag paths under real gameplay",
+        "Verify special call ABI and state mutation",
+        "Resolve licensing of original script assets and generated derivatives",
+        "Independently review full pinned file and machine dossier"
+      ],
+      "platform_scope": "AUTHORED_EVENT_SCRIPT_SOURCE_NOT_EXECUTED_GAMEPLAY",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 132,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/CeladonCity_GameCorner/scripts.inc",
+        "git_blob_sha1": "dddd0aefab1d3d8c2972a66aed7490810d201ee2",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/CeladonCity_GameCorner/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "9c8f6402fe425991a8ddb3e227bd47df719fc0b5b3bfb1b3b7c381794955ec1b",
+      "whole_source_sha256_from_packet": "1e05d3520f34fa7a6bad3542e0f99b205d0308cdb9d9e812c33a8f0b71498da5",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "CeladonCity_GameCorner_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, CeladonCity_GameCorner_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "CeladonCity_GameCorner_OnLoad::"
+        },
+        {
+          "line": 6,
+          "text": "\tcall_if_unset FLAG_OPENED_ROCKET_HIDEOUT, CeladonCity_GameCorner_EventScript_HideRocketHideout"
+        },
+        {
+          "line": 9,
+          "text": "CeladonCity_GameCorner_EventScript_HideRocketHideout::"
+        },
+        {
+          "line": 15,
+          "text": "\treturn"
+        },
+        {
+          "line": 23,
+          "text": "\tlock"
+        },
+        {
+          "line": 68,
+          "text": "\tmsgbox CeladonCity_GameCorner_Text_HereAreYourCoins"
+        },
+        {
+          "line": 132,
+          "text": "\tsetflag FLAG_GOT_10_COINS_FROM_GAMBLER"
+        },
+        {
+          "line": 200,
+          "text": ""
+        }
+      ],
+      "responsibilities": "Celadon Game Corner on-load hideout metatile state, coin exchange and NPC dialogue/coin-case branches, Rocket progression flags.",
+      "dependency_edges": [
+        "data/maps/CeladonCity_GameCorner/map.json -> map event script binding",
+        "asm/macros/event.inc -> script command encoding",
+        "src/scrcmd.c -> setmetatile and field script handlers",
+        "include/constants/flags.h -> hideout and coin flags"
+      ],
+      "unresolved": [
+        "Full 466-line branch coverage and all local labels pending",
+        "Coin-case capacity/price values not compiled or runtime tested",
+        "Map tile collision/render persistence after load not observed"
+      ],
+      "reviewer_questions": [
+        "Trace source to compiled map-script table and event objects",
+        "Verify coin case arithmetic and branch conditions against engine",
+        "Trace Rocket hideout metatile and flag persistence",
+        "Check licensing of original event scripts",
+        "Independently inspect full file and machine dossier"
+      ],
+      "platform_scope": "AUTHORED_GAME_CORNER_SCRIPT_SOURCE_NOT_EXECUTED_GAMEPLAY",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 137,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/CeruleanCity/scripts.inc",
+        "git_blob_sha1": "0621f6e96ba3ea9c88abd0af4b4d2f2874d2b180",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/CeruleanCity/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "7c7cdd2ab8aa0ebca4e1a9a223b8f454b3c2440f25d28bfb6789a32b0675d8e0",
+      "whole_source_sha256_from_packet": "d4e99c027ed400707ad2ce259ac0f8efc77ecbb8f5adff118be84b05ed29e49b",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "CeruleanCity_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CeruleanCity_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "CeruleanCity_OnTransition::"
+        },
+        {
+          "line": 7,
+          "text": "\tcall_if_unset FLAG_GOT_SS_TICKET, CeruleanCity_EventScript_BlockExits"
+        },
+        {
+          "line": 10,
+          "text": "CeruleanCity_EventScript_BlockExits::"
+        },
+        {
+          "line": 17,
+          "text": "\tlockall"
+        },
+        {
+          "line": 41,
+          "text": "\tapplymovement LOCALID_CERULEAN_RIVAL, CeruleanCity_Movement_RivalEnter"
+        },
+        {
+          "line": 69,
+          "text": "\ttrainerbattle_no_intro TRAINER_RIVAL_CERULEAN_SQUIRTLE, CeruleanCity_Text_RivalDefeat"
+        },
+        {
+          "line": 172,
+          "text": "\ttrainerbattle_no_intro TRAINER_TEAM_ROCKET_GRUNT_5, CeruleanCity_Text_GruntDefeat"
+        },
+        {
+          "line": 250,
+          "text": "\tmsgbox CeruleanCity_Text_PokemonEncyclopediaAmusing, MSGBOX_NPC"
+        }
+      ],
+      "responsibilities": "Cerulean City transition and object placement, rival encounter, trainer battle variants, Rocket grunt and event progression.",
+      "dependency_edges": [
+        "data/maps/CeruleanCity/map.json -> map event identity",
+        "asm/macros/event.inc -> trainerbattle and movement macros",
+        "src/scrcmd.c -> map field script runtime",
+        "include/constants/flags.h -> story flags"
+      ],
+      "unresolved": [
+        "Rival starter-dependent branch and flags not runtime traced",
+        "Object placement collision and pathing not tested",
+        "Trainer battle macros expansion/link addresses not verified"
+      ],
+      "reviewer_questions": [
+        "Verify authored map event triggers and script pointers",
+        "Trace rival trainer variants through compiled command data",
+        "Inspect NPC movement and collision dependencies",
+        "Resolve script asset licensing and source ownership",
+        "Independent full-source and machine dossier review"
+      ],
+      "platform_scope": "AUTHORED_CITY_EVENT_SCRIPT_SOURCE_NOT_EXECUTED_GAMEPLAY",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 141,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/CinnabarIsland_Gym/scripts.inc",
+        "git_blob_sha1": "19bdcfeca350e31393111f0dbed95a9ecd7acbda",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/CinnabarIsland_Gym/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "bc2cb14184e899e0aa7a897e05c0b0205c71b4dcfeeab7d7c6a740c200d01494",
+      "whole_source_sha256_from_packet": "e7576dbee7d5b44f6e03c363c062bfdfae2a40adf4273a13461e35a70ff5ad5e",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "CinnabarIsland_Gym_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, CinnabarIsland_Gym_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "CinnabarIsland_Gym_OnLoad::"
+        },
+        {
+          "line": 6,
+          "text": "\tgoto_if_set FLAG_DEFEATED_BLAINE, CinnabarIsland_Gym_OnLoadOpenAllDoors"
+        },
+        {
+          "line": 13,
+          "text": "\tend"
+        },
+        {
+          "line": 50,
+          "text": "\ttrainerbattle_single TRAINER_LEADER_BLAINE, CinnabarIsland_Gym_Text_BlaineIntro, CinnabarIsland_Gym_Text_BlaineDefeat, CinnabarIsland_Gym_EventScript_DefeatedBlaine, NO_MUSIC"
+        },
+        {
+          "line": 58,
+          "text": "\tsetflag FLAG_DEFEATED_BLAINE"
+        },
+        {
+          "line": 59,
+          "text": "\tsetflag FLAG_BADGE07_GET"
+        },
+        {
+          "line": 72,
+          "text": "\tsetflag FLAG_GOT_TM38_FROM_BLAINE"
+        },
+        {
+          "line": 200,
+          "text": "\tgoto CinnabarIsland_Gym_EventScript_Quiz1"
+        },
+        {
+          "line": 500,
+          "text": "\twaitmovement 0"
+        }
+      ],
+      "responsibilities": "Cinnabar Gym on-load door state from quiz flags, trainer encounters, Blaine battle, Volcano Badge and TM reward progression.",
+      "dependency_edges": [
+        "data/maps/CinnabarIsland_Gym/map.json -> gym events and scripts",
+        "asm/macros/event.inc -> trainerbattle and flag commands",
+        "src/scrcmd.c -> setmetatile/flag script handlers",
+        "include/constants/flags.h -> quiz and badge flags"
+      ],
+      "unresolved": [
+        "Full 710-line quiz branch graph not independently reviewed",
+        "Map metatile persistence and door collision not observed",
+        "Trainer battle result and reward flags not executed"
+      ],
+      "reviewer_questions": [
+        "Trace gym quiz flags and door metatile commands through compiler",
+        "Check reward and badge flags after battle outcomes",
+        "Verify map tile/collision updates and save persistence",
+        "Reconcile licensing and original script assets",
+        "Independent full-file review with original machine dossier"
+      ],
+      "platform_scope": "AUTHORED_GYM_QUIZ_SCRIPT_SOURCE_NOT_EXECUTED_GAMEPLAY",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}

@@ -1,0 +1,402 @@
+{
+  "schema": "xgba.phase1.second_packet_firered_158_165_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+  "source_packet_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0000-0199-20261030.json",
+  "new_partial_indices": [
+    162,
+    163,
+    164,
+    165
+  ],
+  "prior_second_packet_indices": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149,
+    150,
+    151,
+    152,
+    153,
+    154,
+    155,
+    156,
+    157,
+    158,
+    159,
+    160,
+    161
+  ],
+  "other_p0_partial_total": 144,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 173,
+  "other_p0_without_partial": 165,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Disjoint original pinned FireRed authored source-only partials with static map.json edges where available; original machine dossier rehashed by prior exact-head verifier; no compiled/runtime/stock gameplay/physical Flash or independent approval.",
+  "records": [
+    {
+      "packet_index": 162,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FuchsiaCity_PokemonCenter_1F/scripts.inc",
+        "git_blob_sha1": "7dcd895876a6257ca167be61ff07a919e2053227",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FuchsiaCity_PokemonCenter_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "6e99001f7ddef719c54571bcee2894a2529e09ea4d4fe5f7b7f54048485632ba",
+      "whole_source_sha256_from_packet": "c11f920449f40063f98a1cf44bf7ccad2aacc465b22412bc767f74541d1ad211",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FuchsiaCity_PokemonCenter_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, FuchsiaCity_PokemonCenter_1F_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume"
+        },
+        {
+          "line": 7,
+          "text": "\tsetrespawn HEAL_LOCATION_FUCHSIA_CITY"
+        },
+        {
+          "line": 13,
+          "text": "\tcall EventScript_PkmnCenterNurse"
+        },
+        {
+          "line": 26,
+          "text": "\tmsgbox FuchsiaCity_PokemonCenter_1F_Text_VisitSafariZoneForPokedex, MSGBOX_NPC"
+        }
+      ],
+      "required_source_tokens": [
+        "HEAL_LOCATION_FUCHSIA_CITY",
+        "CableClub_OnResume",
+        "EventScript_PkmnCenterNurse",
+        "VisitSafariZoneForPokedex"
+      ],
+      "source_observations": "Fuchsia first-floor Center sets Fuchsia respawn on transition and delegates nurse and link resume to shared handlers.",
+      "dependency_edges": [
+        "HEAL_LOCATION_FUCHSIA_CITY respawn consumer",
+        "CableClub_OnResume shared handler",
+        "EventScript_PkmnCenterNurse and heal state",
+        "map header and script table emission"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Authored script-to-generated map header/script table and compiled linker consumer not established",
+        "Special handlers, scene/flag writers and save/asset dependencies need independent whole-source closure",
+        "Original FireRed script and derivative licensing not independently cleared; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the exact pinned source including inactive paths",
+        "Rehash original compressed machine dossier bytes and verify its SHA256",
+        "Trace map.json, generated tables, native script handlers and actual consumer paths",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable full-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 163,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FuchsiaCity_PokemonCenter_2F/scripts.inc",
+        "git_blob_sha1": "01cc55b84c15187a1e9e404cd1a8f4b54f202a7e",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FuchsiaCity_PokemonCenter_2F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "c68c96d43d4fbb83d6b65f9310b547e928332b469e78e3138134e48d8611c40f",
+      "whole_source_sha256_from_packet": "f54cb0a0ad01b4093007a5771ddb2ccf320b22195377f50646dca3d2d8e1a7e9",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FuchsiaCity_PokemonCenter_2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad"
+        },
+        {
+          "line": 14,
+          "text": "\tcall CableClub_EventScript_TradeCenter"
+        }
+      ],
+      "required_source_tokens": [
+        "CableClub_OnFrame",
+        "CableClub_OnWarp",
+        "CableClub_OnLoad",
+        "CableClub_EventScript_TradeCenter"
+      ],
+      "source_observations": "Fuchsia second-floor Center references shared CableClub callbacks and three RS leftover event labels; source presence does not prove event reachability.",
+      "dependency_edges": [
+        "CableClub_OnFrame shared frame handler",
+        "CableClub_OnWarp and warp interpreter",
+        "CableClub_OnLoad/OnTransition handlers",
+        "map event bindings for leftover RS labels"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Authored script-to-generated map header/script table and compiled linker consumer not established",
+        "Special handlers, scene/flag writers and save/asset dependencies need independent whole-source closure",
+        "Original FireRed script and derivative licensing not independently cleared; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the exact pinned source including inactive paths",
+        "Rehash original compressed machine dossier bytes and verify its SHA256",
+        "Trace map.json, generated tables, native script handlers and actual consumer paths",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable full-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 164,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FuchsiaCity_SafariZone_Entrance/scripts.inc",
+        "git_blob_sha1": "959957400a700bbe0a3f7eb4a2e421e9759b6772",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FuchsiaCity_SafariZone_Entrance/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "6f5357718b1f67eff06aec8a75ee473d65dd50db0c784c53956a859ceb140db8",
+      "whole_source_sha256_from_packet": "81d9958f74f5472787991815a4b3ef1b2d407d8ac3d50edbe77df78d8807ea81",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FuchsiaCity_SafariZone_Entrance_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, FuchsiaCity_SafariZone_Entrance_OnFrame"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 6,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_FUCHSIA_CITY_SAFARI_ZONE_ENTRANCE, 1, FuchsiaCity_SafariZone_Entrance_EventScript_ExitWarpIn"
+        },
+        {
+          "line": 21,
+          "text": "\tspecial ExitSafariMode"
+        },
+        {
+          "line": 114,
+          "text": "\tcheckmoney 500"
+        },
+        {
+          "line": 130,
+          "text": "\tspecial EnterSafariMode"
+        },
+        {
+          "line": 154,
+          "text": "\tspecialvar VAR_RESULT, IsThereRoomInAnyBoxForMorePokemon"
+        }
+      ],
+      "required_source_tokens": [
+        "ExitSafariMode",
+        "EnterSafariMode",
+        "VAR_MAP_SCENE_FUCHSIA_CITY_SAFARI_ZONE_ENTRANCE",
+        "IsThereRoomInAnyBoxForMorePokemon",
+        "checkmoney 500"
+      ],
+      "source_observations": "Safari entrance script has separate depleted-ball/step, early exit and entry routes; fee check, box-space gate, Safari mode state and scene var require runtime consumer tracing.",
+      "dependency_edges": [
+        "Safari fee and money engine semantics",
+        "IsThereRoomInAnyBoxForMorePokemon and party size",
+        "EnterSafariMode/ExitSafariMode native specials",
+        "map.json three coordinate entry triggers and scene var writer"
+      ],
+      "map_json_static_wiring": {
+        "path": "data/maps/FuchsiaCity_SafariZone_Entrance/map.json",
+        "git_blob_sha1": "c740629298ed833383cece15f016fb65f3bbc4ca",
+        "source_only_event_refs": [
+          "FuchsiaCity_SafariZone_Entrance_EventScript_InfoAttendant",
+          "FuchsiaCity_SafariZone_Entrance_EventScript_EntryTriggerMid",
+          "FuchsiaCity_SafariZone_Entrance_EventScript_EntryTriggerRight",
+          "FuchsiaCity_SafariZone_Entrance_EventScript_EntryTriggerLeft"
+        ],
+        "unresolved_in_this_script": [],
+        "coord_trigger_count": 3,
+        "connection_count": 0
+      },
+      "unresolved": [
+        "Authored script-to-generated map header/script table and compiled linker consumer not established",
+        "Special handlers, scene/flag writers and save/asset dependencies need independent whole-source closure",
+        "Original FireRed script and derivative licensing not independently cleared; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the exact pinned source including inactive paths",
+        "Rehash original compressed machine dossier bytes and verify its SHA256",
+        "Trace map.json, generated tables, native script handlers and actual consumer paths",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable full-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 165,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/IndigoPlateau_Exterior/scripts.inc",
+        "git_blob_sha1": "b2291ca776ed1209c961f21ed2ad4af73b38031e",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/IndigoPlateau_Exterior/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "961c61494f4b24a6a7fa9d3dae99dd82176b6bda65d86803edffe82c7d51594a",
+      "whole_source_sha256_from_packet": "f7bd3facc7d833e7483571ba2328694410d65aab9671e3d9dbc3cf5ed3850a05",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "IndigoPlateau_Exterior_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, IndigoPlateau_Exterior_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, IndigoPlateau_Exterior_OnFrame"
+        },
+        {
+          "line": 8,
+          "text": "\tcall_if_eq VAR_MAP_SCENE_INDIGO_PLATEAU_EXTERIOR, 1, IndigoPlateau_Exterior_EventScript_PlayCreditsMusic"
+        },
+        {
+          "line": 12,
+          "text": "\tplaybgm MUS_CREDITS, 0"
+        },
+        {
+          "line": 31,
+          "text": "\tspecial SpawnCameraObject"
+        },
+        {
+          "line": 76,
+          "text": "\tspecial RemoveCameraObject"
+        },
+        {
+          "line": 80,
+          "text": "\tspecial DoCredits"
+        }
+      ],
+      "required_source_tokens": [
+        "VAR_MAP_SCENE_INDIGO_PLATEAU_EXTERIOR",
+        "SpawnCameraObject",
+        "DoCredits",
+        "MUS_CREDITS",
+        "RemoveCameraObject"
+      ],
+      "source_observations": "Indigo exterior frame scene 1 authors timed credits sequence with camera dummy, rival/Oak movements and DoCredits, not a gameplay execution witness.",
+      "dependency_edges": [
+        "VAR_MAP_SCENE_INDIGO_PLATEAU_EXTERIOR writer and transition",
+        "SpawnCameraObject/RemoveCameraObject native specials",
+        "DoCredits and credit-state reset",
+        "map.json route connection and scene dispatch"
+      ],
+      "map_json_static_wiring": {
+        "path": "data/maps/IndigoPlateau_Exterior/map.json",
+        "git_blob_sha1": "1d3903bf15aa25adcfbdb483c7cc076ccae892d4",
+        "source_only_event_refs": [],
+        "unresolved_in_this_script": [],
+        "coord_trigger_count": 0,
+        "connection_count": 1
+      },
+      "unresolved": [
+        "Authored script-to-generated map header/script table and compiled linker consumer not established",
+        "Special handlers, scene/flag writers and save/asset dependencies need independent whole-source closure",
+        "Original FireRed script and derivative licensing not independently cleared; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the exact pinned source including inactive paths",
+        "Rehash original compressed machine dossier bytes and verify its SHA256",
+        "Trace map.json, generated tables, native script handlers and actual consumer paths",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable full-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}

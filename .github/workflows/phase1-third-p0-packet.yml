@@ -1,0 +1,22 @@
+name: Phase 1 third P0 machine packet source-reconciled integrity
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  third-p0-packet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify exact head checkout (not synthetic PR merge)
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Rebuild third 100 P0 machine records and reject 1304 negative mutations
+        run: python3 tools/phase1_third_p0_packet_verify.py

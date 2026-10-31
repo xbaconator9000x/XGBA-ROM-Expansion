@@ -1,0 +1,31 @@
+{
+  "schema": "xgba.phase1.curated_p0_partial_handoff_index.v1",
+  "date": "2026-10-29",
+  "intake": {
+    "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+    "commit": "f0f06a90005cdd63da25c53100ae531cf5de2305",
+    "path": "semantic-snapshots/independent-reviews/curated-p0-intake-20261029.json",
+    "git_blob_sha1": "ed13467c6eb1090114b123ff3752f834213838ac"
+  },
+  "original_partial_ordinals": [
+    3,
+    8,
+    16,
+    20,
+    24
+  ],
+  "batches": [
+    "docs/phase1-review-readiness/curated-six-source-dossiers-20261029.json",
+    "docs/phase1-review-readiness/curated-four-source-dossiers-20261029.json",
+    "docs/phase1-review-readiness/curated-firered-core-four-20261029.json",
+    "docs/phase1-review-readiness/curated-toolchain-interop-four-20261029.json",
+    "docs/phase1-review-readiness/curated-final-six-source-20261029.json"
+  ],
+  "curated_source_inspected_partial": 29,
+  "curated_registry_only_remaining": 0,
+  "whole_file_semantic_approved": 0,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "phase1_gate": "FAIL_INCOMPLETE",
+  "reviewer_handoff": "A distinct reviewer must inspect full exact pinned source, original machine dossier SHA, evidence, dependencies and license before any APPROVED receipt. These are partial analyst dossiers only; intake NEEDS_REVIEW remains authoritative."
+}

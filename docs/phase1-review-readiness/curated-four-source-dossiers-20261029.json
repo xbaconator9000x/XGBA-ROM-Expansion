@@ -1,0 +1,143 @@
+{
+  "schema": "xgba.phase1.curated_p0_analyst_batch.v1",
+  "date": "2026-10-29",
+  "source_blobs_inspected": 4,
+  "prior_registry_only": 4,
+  "gate": "FAIL_INCOMPLETE",
+  "p0_independent_approved": 0,
+  "total_independent_approved": 0,
+  "records": [
+    {
+      "ordinal": 11,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "config.mk",
+        "git_blob_sha1": "c07d31fc083fa341cca29c340e560ed107d5364a",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/config.mk"
+      },
+      "source_anchors": [
+        "GAME_VERSION  ?= FIRERED",
+        "GAME_REVISION ?= 0",
+        "MODERN        ?= 0",
+        "COMPARE       ?= 0",
+        "BUILD_DIR := build"
+      ],
+      "responsibilities": "Build-selection defaults for FireRed/LeafGreen, revision, modern compiler mode, compare target, language-specific game code and build naming.",
+      "dependency_edges": [
+        "Makefile",
+        "ld_script.ld",
+        "original agbcc versus modern GNU ARM"
+      ],
+      "unresolved": [
+        "Conditional definitions do not prove compiled build or selected compiler",
+        "Version-specific object and ABI compatibility remain unreviewed"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "ordinal": 18,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "src/core/blockdata.cpp",
+        "git_blob_sha1": "5fcd4e32b115790f5a86b5cef5726cace8005017",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/src/core/blockdata.cpp"
+      },
+      "source_anchors": [
+        "QByteArray Blockdata::serialize() const",
+        "uint16_t word = block.rawValue();",
+        "word & 0xff",
+        "(word >> 8) & 0xff"
+      ],
+      "responsibilities": "Serializes each original Block raw 16-bit word in little-endian low-byte/high-byte order into QByteArray.",
+      "dependency_edges": [
+        "src/core/block.h",
+        "src/core/blockdata.h",
+        "Project binary layout persistence"
+      ],
+      "unresolved": [
+        "No file-write status or atomic persistence in this serializer",
+        "No full Qt Project binary round-trip from this source alone"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "ordinal": 19,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "src/core/maplayout.cpp",
+        "git_blob_sha1": "44616ab6c9c3ea9b04eff011586b7ec29183588f",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/src/core/maplayout.cpp"
+      },
+      "source_anchors": [
+        "bool Layout::getBlock(int x, int y, Block *out) const",
+        "*out = this->blockdata.value(i);",
+        "if (i < this->blockdata.size()) {",
+        "uint16_t Layout::getBorderMetatileId(int x, int y)",
+        "this->border[i].metatileId()",
+        "void Layout::setNewDimensionsBlockdata"
+      ],
+      "responsibilities": "Layout bounds, get/set block data, border access, dimension resizing and collision/elevation fill; getBlock bounds checks coordinates but value(i) can default when data shorter; border accessor directly indexes without local bounds check.",
+      "dependency_edges": [
+        "src/core/maplayout.h",
+        "src/core/blockdata.cpp",
+        "Scripting::cb_MetatileChanged",
+        "Project::getMetatileViewDistance"
+      ],
+      "unresolved": [
+        "Only selected original functions reviewed, not all 22,816 bytes",
+        "Negative indices and mismatched border size need native Qt reproducer before runtime claims",
+        "Rendering and populated multi-map persistence not reviewed"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "ordinal": 26,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/cart/matrix.c",
+        "git_blob_sha1": "9ccbe883235b98bcf56cd609015e7b4003aa832c",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/cart/matrix.c"
+      },
+      "source_anchors": [
+        "#define MAPPING_MASK (GBA_MATRIX_MAPPINGS_MAX - 1)",
+        "static void _remapMatrix(struct GBA* gba)",
+        "gba->romVf->seek(",
+        "gba->romVf->read(",
+        "void GBAMatrixDeserialize("
+      ],
+      "responsibilities": "mGBA Matrix cartridge bank mapping, 512-byte-aligned mapping constraints, ROM VFile seek/read remapping, register writes and mapping state serialization/deserialization.",
+      "dependency_edges": [
+        "src/gba/memory.c",
+        "src/gba/serialize.c",
+        "mgba-util/vfs.h",
+        "GBA_MATRIX_MAPPINGS_MAX"
+      ],
+      "unresolved": [
+        "VFile seek/read return values not locally checked; failure behavior requires original mGBA runtime test",
+        "Special Matrix cartridge hardware not equivalent to ordinary FireRed ROM expansion",
+        "MPL-2.0 license notice present; reuse obligations need separate review"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "MPL_2_0_SOURCE_NOTICE_PRESENT_REUSE_REVIEW_PENDING"
+    }
+  ]
+}

@@ -1,0 +1,517 @@
+{
+  "schema": "xgba.phase1.remaining_p0_partial_analyst_batch.v3",
+  "date": "2026-10-29",
+  "source_packet": "docs/phase1-review-readiness/packet-0000-0099.json",
+  "source_packet_blob_sha1": "a48c12900acc7e0211a8071119763e2b5de4b1a4",
+  "previous_partial_indices": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    16,
+    25,
+    33,
+    38,
+    43,
+    55,
+    58,
+    60
+  ],
+  "new_partial_indices": [
+    23,
+    24,
+    27,
+    29,
+    39,
+    40,
+    54,
+    63
+  ],
+  "partial_source_inspected": 8,
+  "curated_29_source_inspected": 29,
+  "remaining_p0_partial_total": 30,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "machine_dossier_sha256_note": "Unverified digest copied from pinned machine packet, NOT a checked machine dossier or whole-file independent approval.",
+  "records": [
+    {
+      "packet_index": 23,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/gba/cart/gpio.h",
+        "git_blob_sha1": "1f870cfd5e9d40a921680c0d0406eb60e4283345",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/gba/cart/gpio.h"
+      },
+      "machine_dossier_sha256_unverified": "2040ca6ceb90110bf8bb3560cd94471371dbbf2748c71dcec376de742be603f3",
+      "line_anchors": [
+        {
+          "line": 19,
+          "text": "#define IS_GPIO_REGISTER(reg) ((reg) == GPIO_REG_DATA || (reg) == GPIO_REG_DIRECTION || (reg) == GPIO_REG_CONTROL)"
+        },
+        {
+          "line": 32,
+          "text": "DECL_BITFIELD(RTCControl, uint8_t);"
+        },
+        {
+          "line": 50,
+          "text": "struct GBARTC {"
+        },
+        {
+          "line": 66,
+          "text": "struct GBACartridgeHardware {"
+        },
+        {
+          "line": 90,
+          "text": "void GBAHardwareInit(struct GBACartridgeHardware* gpio, uint16_t* gpioBase);"
+        },
+        {
+          "line": 105,
+          "text": "void GBAHardwareSerialize(const struct GBACartridgeHardware* gpio, struct GBASerializedState* state);"
+        }
+      ],
+      "responsibilities": "GPIO cartridge register addresses C4/C6/C8, RTC command bitfields and per-device state; original GBA hardware init/write and serialization APIs",
+      "dependency_edges": [
+        "src/gba/cart/gpio.c",
+        "src/gba/memory.c",
+        "include/mgba/internal/gba/serialize.h"
+      ],
+      "unresolved": [
+        "Header alone does not establish RTC timing, GPIO read mask or savestate compatibility",
+        "Exact machine dossier bytes and SHA256 not independently retrieved",
+        "Whole-file semantics, source-to-consumer closure, licensing and distinct independent reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Independently read complete pinned file and every preprocessor branch",
+        "Check declared callers, consumers and native/Qt/compiled edge conditions",
+        "Validate machine dossier bytes and SHA256 separately",
+        "Resolve upstream license and notices before any reuse approval"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 24,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/gba/cart/unlicensed.h",
+        "git_blob_sha1": "f9adbee7ed20af2185bad0d336cb901406bbd86e",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/gba/cart/unlicensed.h"
+      },
+      "machine_dossier_sha256_unverified": "95cd865719dac82698a876935067788b7f4aa5069b376f462b3d24c2cee14551",
+      "line_anchors": [
+        {
+          "line": 16,
+          "text": "enum GBAVFameCartType {"
+        },
+        {
+          "line": 22,
+          "text": "enum GBAUnlCartType {"
+        },
+        {
+          "line": 36,
+          "text": "struct GBAMulticart {"
+        },
+        {
+          "line": 49,
+          "text": "struct GBAUnlCart {"
+        },
+        {
+          "line": 59,
+          "text": "void GBAUnlCartInit(struct GBA*);"
+        },
+        {
+          "line": 70,
+          "text": "bool GBAVFameDetect(struct GBAVFameCart* cart, uint32_t* rom, size_t romSize, uint32_t crc32);"
+        }
+      ],
+      "responsibilities": "Unlicensed VFame and multicart bank state, SRAM/ROM writes, mapper detection and serialization boundaries",
+      "dependency_edges": [
+        "src/gba/cart/unlicensed.c",
+        "src/gba/memory.c",
+        "src/gba/gba.c"
+      ],
+      "unresolved": [
+        "No runtime verification of unsupported multicart bank sizes or address overflow",
+        "Exact machine dossier bytes and SHA256 not independently retrieved",
+        "Whole-file semantics, source-to-consumer closure, licensing and distinct independent reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Independently read complete pinned file and every preprocessor branch",
+        "Check declared callers, consumers and native/Qt/compiled edge conditions",
+        "Validate machine dossier bytes and SHA256 separately",
+        "Resolve upstream license and notices before any reuse approval"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 27,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/arm/emitter-arm.h",
+        "git_blob_sha1": "04c3715d2c2ba42fbd9644c0171111756723bbb8",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/arm/emitter-arm.h"
+      },
+      "machine_dossier_sha256_unverified": "53c0c115e727903bbab355b19ca6d7e4813f4b6c949c85bb38000df764277a57",
+      "line_anchors": [
+        {
+          "line": 11,
+          "text": "#define DECLARE_INSTRUCTION_ARM(EMITTER, NAME) \\"
+        },
+        {
+          "line": 36,
+          "text": "#define DECLARE_ARM_LOAD_STORE_IMMEDIATE_BLOCK(EMITTER, NAME, P, U, W) \\"
+        },
+        {
+          "line": 62,
+          "text": "#define DECLARE_ARM_BRANCH_BLOCK(EMITTER, NAME) \\"
+        },
+        {
+          "line": 78,
+          "text": "#define DECLARE_ARM_EMITTER_BLOCK(EMITTER) \\"
+        },
+        {
+          "line": 203,
+          "text": "/* -40---X- */ DECLARE_ARM_LOAD_STORE_IMMEDIATE_BLOCK(EMITTER, STR, , , ), \\"
+        }
+      ],
+      "responsibilities": "Macro-expanded ARM opcode dispatch table including ALU, branch, load/store, illegal and coprocessor slots",
+      "dependency_edges": [
+        "src/arm/decoder-arm.c",
+        "include/mgba/internal/arm/emitter-inlines.h",
+        "src/arm/isa-arm.c"
+      ],
+      "unresolved": [
+        "Macro declarations are not proof of all expanded decoder entries or native JIT behavior",
+        "Exact machine dossier bytes and SHA256 not independently retrieved",
+        "Whole-file semantics, source-to-consumer closure, licensing and distinct independent reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Independently read complete pinned file and every preprocessor branch",
+        "Check declared callers, consumers and native/Qt/compiled edge conditions",
+        "Validate machine dossier bytes and SHA256 separately",
+        "Resolve upstream license and notices before any reuse approval"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 29,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/arm/emitter-thumb.h",
+        "git_blob_sha1": "7d27524b2e723696df642a72135bac024bbd8071",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/arm/emitter-thumb.h"
+      },
+      "machine_dossier_sha256_unverified": "482d2a7131cef6f320f3e4786f2d3482e7a4217ca931428dd409e92d3e7da729",
+      "line_anchors": [
+        {
+          "line": 11,
+          "text": "#define DECLARE_INSTRUCTION_THUMB(EMITTER, NAME) \\"
+        },
+        {
+          "line": 20,
+          "text": "#define DECLARE_THUMB_EMITTER_BLOCK(EMITTER) \\"
+        },
+        {
+          "line": 48,
+          "text": "DECLARE_INSTRUCTION_WITH_HIGH_THUMB(EMITTER, ADD4), \\"
+        },
+        {
+          "line": 51,
+          "text": "DECLARE_INSTRUCTION_THUMB(EMITTER, BX), \\"
+        },
+        {
+          "line": 86,
+          "text": "DO_4(DECLARE_INSTRUCTION_THUMB(EMITTER, POP)), \\"
+        },
+        {
+          "line": 110,
+          "text": "DO_8(DO_4(DECLARE_INSTRUCTION_THUMB(EMITTER, BL1))), \\"
+        }
+      ],
+      "responsibilities": "Thumb opcode dispatch table with high-register BX, push/pop, conditional branches, SWI and BL halves",
+      "dependency_edges": [
+        "src/arm/decoder-thumb.c",
+        "include/mgba/internal/arm/emitter-inlines.h",
+        "src/arm/isa-thumb.c"
+      ],
+      "unresolved": [
+        "No exhaustive expanded 65536-entry table or Thumb-state runtime equivalence proof",
+        "Exact machine dossier bytes and SHA256 not independently retrieved",
+        "Whole-file semantics, source-to-consumer closure, licensing and distinct independent reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Independently read complete pinned file and every preprocessor branch",
+        "Check declared callers, consumers and native/Qt/compiled edge conditions",
+        "Validate machine dossier bytes and SHA256 separately",
+        "Resolve upstream license and notices before any reuse approval"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 39,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "include/ui/connectionpixmapitem.h",
+        "git_blob_sha1": "5106ba8fa0fdf91f8f1f1a45e06cf549da45bd31",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/include/ui/connectionpixmapitem.h"
+      },
+      "machine_dossier_sha256_unverified": "edacd8d0d4fb125e6e577d1ef39552e2a4a49707ca8c9d215836b6b0df57414a",
+      "line_anchors": [
+        {
+          "line": 11,
+          "text": "class ConnectionPixmapItem : public QObject, public QGraphicsPixmapItem {"
+        },
+        {
+          "line": 16,
+          "text": "const QPointer<MapConnection> connection;"
+        },
+        {
+          "line": 26,
+          "text": "void positionChanged(qreal x, qreal y);"
+        },
+        {
+          "line": 43,
+          "text": "virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;"
+        },
+        {
+          "line": 49,
+          "text": "void connectionItemDoubleClicked(MapConnection*);"
+        }
+      ],
+      "responsibilities": "QGraphicsPixmapItem map-connection position and selection events sharing a QPointer<MapConnection>",
+      "dependency_edges": [
+        "src/ui/connectionpixmapitem.cpp",
+        "include/mapconnection.h",
+        "src/editor.cpp"
+      ],
+      "unresolved": [
+        "No runtime proof that drag and undo remain synchronized after target map deletion",
+        "Exact machine dossier bytes and SHA256 not independently retrieved",
+        "Whole-file semantics, source-to-consumer closure, licensing and distinct independent reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Independently read complete pinned file and every preprocessor branch",
+        "Check declared callers, consumers and native/Qt/compiled edge conditions",
+        "Validate machine dossier bytes and SHA256 separately",
+        "Resolve upstream license and notices before any reuse approval"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "packet_index": 40,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "include/ui/connectionslistitem.h",
+        "git_blob_sha1": "1b9713cf45ef6643928e228327ee95af83937147",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/include/ui/connectionslistitem.h"
+      },
+      "machine_dossier_sha256_unverified": "f00d91db6ffadb7dcbb780d5d31dbb3638c6f5ed6bb6df6d443e0b691de36c60",
+      "line_anchors": [
+        {
+          "line": 18,
+          "text": "class ConnectionsListItem : public QFrame"
+        },
+        {
+          "line": 23,
+          "text": "explicit ConnectionsListItem(QWidget *parent, MapConnection *connection, const QStringList &mapNames);"
+        },
+        {
+          "line": 30,
+          "text": "QPointer<MapConnection> connection;"
+        },
+        {
+          "line": 42,
+          "text": "void selected();"
+        },
+        {
+          "line": 47,
+          "text": "void commitMap(const QString &mapName);"
+        }
+      ],
+      "responsibilities": "Connections sidebar QFrame edits direction, target map, offset and removal using shared MapConnection pointer",
+      "dependency_edges": [
+        "src/ui/connectionslistitem.cpp",
+        "src/editor.cpp",
+        "include/mapconnection.h"
+      ],
+      "unresolved": [
+        "No populated multi-map save/reload or edit-command undo proof",
+        "Exact machine dossier bytes and SHA256 not independently retrieved",
+        "Whole-file semantics, source-to-consumer closure, licensing and distinct independent reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Independently read complete pinned file and every preprocessor branch",
+        "Check declared callers, consumers and native/Qt/compiled edge conditions",
+        "Validate machine dossier bytes and SHA256 separately",
+        "Resolve upstream license and notices before any reuse approval"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "packet_index": 54,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "src/ui/newmapconnectiondialog.cpp",
+        "git_blob_sha1": "b9938f3e8af71b10935e27ab7be1687f17283b91",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/src/ui/newmapconnectiondialog.cpp"
+      },
+      "machine_dossier_sha256_unverified": "a25fbf523c3bf611a4b1e6c087114d85a2a9eff43a810d3bf7c141b0a9475632",
+      "line_anchors": [
+        {
+          "line": 13,
+          "text": "ui->comboBox_Direction->addItems(MapConnection::cardinalDirections);"
+        },
+        {
+          "line": 20,
+          "text": "for (auto connection : m_map->getConnections()) {"
+        },
+        {
+          "line": 57,
+          "text": "bool NewMapConnectionDialog::mapNameIsValid() {"
+        },
+        {
+          "line": 75,
+          "text": "void NewMapConnectionDialog::accept() {"
+        },
+        {
+          "line": 88,
+          "text": "if (MapConnection::isDiving(direction)) {"
+        },
+        {
+          "line": 103,
+          "text": "emit newConnectionedAdded(targetMapName, direction);"
+        }
+      ],
+      "responsibilities": "NewMapConnectionDialog selects least-used cardinal direction, rejects unknown target map, and handles Dive/Emerge replacement confirmation",
+      "dependency_edges": [
+        "src/ui/newmapconnectiondialog.cpp",
+        "src/editor.cpp",
+        "include/mapconnection.h"
+      ],
+      "unresolved": [
+        "No runtime validation of custom directions or reciprocal connection persistence",
+        "Exact machine dossier bytes and SHA256 not independently retrieved",
+        "Whole-file semantics, source-to-consumer closure, licensing and distinct independent reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Independently read complete pinned file and every preprocessor branch",
+        "Check declared callers, consumers and native/Qt/compiled edge conditions",
+        "Validate machine dossier bytes and SHA256 separately",
+        "Resolve upstream license and notices before any reuse approval"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "packet_index": 63,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/arm/CMakeLists.txt",
+        "git_blob_sha1": "a86f0bea1f38aeb88222fb5b532b4ea9e256767f",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/arm/CMakeLists.txt"
+      },
+      "machine_dossier_sha256_unverified": "821659a5c9436e3472b409a43e08f66e703a8daff07e0b6cf70d46eaed1d491a",
+      "line_anchors": [
+        {
+          "line": 2,
+          "text": "set(SOURCE_FILES"
+        },
+        {
+          "line": 10,
+          "text": "set(DEBUGGER_FILES"
+        },
+        {
+          "line": 15,
+          "text": "source_group(\"ARM core\" FILES ${SOURCE_FILES})"
+        },
+        {
+          "line": 18,
+          "text": "export_directory(ARM SOURCE_FILES)"
+        }
+      ],
+      "responsibilities": "CMake ARM source and debugger translation-unit export lists for original mGBA build",
+      "dependency_edges": [
+        "src/CMakeLists.txt",
+        "src/arm/decoder-arm.c",
+        "src/arm/decoder-thumb.c"
+      ],
+      "unresolved": [
+        "No host-specific generated build graph, conditional debugger linkage or binary proof",
+        "Exact machine dossier bytes and SHA256 not independently retrieved",
+        "Whole-file semantics, source-to-consumer closure, licensing and distinct independent reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Independently read complete pinned file and every preprocessor branch",
+        "Check declared callers, consumers and native/Qt/compiled edge conditions",
+        "Validate machine dossier bytes and SHA256 separately",
+        "Resolve upstream license and notices before any reuse approval"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    }
+  ]
+}

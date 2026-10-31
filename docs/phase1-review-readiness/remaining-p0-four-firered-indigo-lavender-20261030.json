@@ -1,0 +1,382 @@
+{
+  "schema": "xgba.phase1.second_packet_firered_166_173_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+  "source_packet_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0000-0199-20261030.json",
+  "new_partial_indices": [
+    166,
+    167,
+    168,
+    169
+  ],
+  "prior_second_packet_indices": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149,
+    150,
+    151,
+    152,
+    153,
+    154,
+    155,
+    156,
+    157,
+    158,
+    159,
+    160,
+    161,
+    162,
+    163,
+    164,
+    165
+  ],
+  "other_p0_partial_total": 148,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 177,
+  "other_p0_without_partial": 161,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Disjoint pinned FireRed authored source-only partials; machine dossier rehashed by separate prior exact-head verifier; no compiled/runtime/stock gameplay, .sav/physical Flash or independent approval.",
+  "records": [
+    {
+      "packet_index": 166,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/IndigoPlateau_PokemonCenter_1F/scripts.inc",
+        "git_blob_sha1": "6b0120cf9d979d169138ef65f415d4de20ded2c3",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/IndigoPlateau_PokemonCenter_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "31a526581ce13ac23795c3987fdf40c9b16d716cc4784ff3092ecb2f21d6de13",
+      "whole_source_sha256_from_packet": "4f83364d4a0b4dfeefc93d993f83ed4bab769ccc3e939df06e331bc9ffbc9f81",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "IndigoPlateau_PokemonCenter_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, IndigoPlateau_PokemonCenter_1F_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume"
+        },
+        {
+          "line": 7,
+          "text": "\tsetrespawn HEAL_LOCATION_INDIGO_PLATEAU"
+        },
+        {
+          "line": 8,
+          "text": "\tspecialvar VAR_RESULT, IsNationalPokedexEnabled"
+        },
+        {
+          "line": 13,
+          "text": "\tgoto_if_set FLAG_SYS_CAN_LINK_WITH_RS, EventScript_Return"
+        },
+        {
+          "line": 14,
+          "text": "\tsetobjectxyperm LOCALID_LEAGUE_DOOR_GUARD, 4, 2"
+        },
+        {
+          "line": 54,
+          "text": "\t.2byte ITEM_ULTRA_BALL"
+        }
+      ],
+      "required_source_tokens": [
+        "HEAL_LOCATION_INDIGO_PLATEAU",
+        "IsNationalPokedexEnabled",
+        "FLAG_SYS_CAN_LINK_WITH_RS",
+        "LOCALID_LEAGUE_DOOR_GUARD",
+        "ITEM_ULTRA_BALL"
+      ],
+      "source_observations": "Indigo Plateau Center 1F source gates League door guard placement on National Pokédex and RS link flag; shop inventory and respawn are authored, not executed.",
+      "dependency_edges": [
+        "IsNationalPokedexEnabled native special",
+        "FLAG_SYS_CAN_LINK_WITH_RS writer and save persistence",
+        "setobjectxyperm door guard and map object binding",
+        "pokemart item table and script engine"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Authored script-to-generated map header/script table and compiled linker consumer not established",
+        "Special handlers, scene/flag writers and save/asset dependencies need independent whole-source closure",
+        "Original FireRed script and derivative licensing not independently cleared; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the exact pinned source including inactive paths",
+        "Rehash original compressed machine dossier bytes and verify its SHA256",
+        "Trace map.json, generated tables, native script handlers and actual consumer paths",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable full-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 167,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/IndigoPlateau_PokemonCenter_2F/scripts.inc",
+        "git_blob_sha1": "841712a89660d01ac4194ba6f1d9ce87b73006b3",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/IndigoPlateau_PokemonCenter_2F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "5a00d0949164d3c3ff5c1c13bb5ba1c0312702c90af86673747fd636b85b5555",
+      "whole_source_sha256_from_packet": "b9b1b947dbeb8a907cd2f1d1c590e8bd1576c5a1fb7d6debb20654c3d0ac2d37",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "IndigoPlateau_PokemonCenter_2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad"
+        },
+        {
+          "line": 14,
+          "text": "\tcall CableClub_EventScript_TradeCenter"
+        }
+      ],
+      "required_source_tokens": [
+        "CableClub_OnFrame",
+        "CableClub_OnWarp",
+        "CableClub_OnLoad",
+        "CableClub_EventScript_TradeCenter"
+      ],
+      "source_observations": "Indigo Plateau Center 2F shares CableClub lifecycle and leftover RS labels, with event binding and native link semantics unresolved.",
+      "dependency_edges": [
+        "CableClub_OnFrame/OnWarp dispatch",
+        "CableClub_OnLoad/OnTransition dispatch",
+        "map header/warp metadata",
+        "RS leftover label event reachability"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Authored script-to-generated map header/script table and compiled linker consumer not established",
+        "Special handlers, scene/flag writers and save/asset dependencies need independent whole-source closure",
+        "Original FireRed script and derivative licensing not independently cleared; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the exact pinned source including inactive paths",
+        "Rehash original compressed machine dossier bytes and verify its SHA256",
+        "Trace map.json, generated tables, native script handlers and actual consumer paths",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable full-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 168,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/LavenderTown/scripts.inc",
+        "git_blob_sha1": "4832d2d9d2274c05159c8f41abd7d90752a6672f",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/LavenderTown/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "dde4bb8a3bfcd8fec25ae1bb96c235f3955a4fb366fafb6271af74790e294312",
+      "whole_source_sha256_from_packet": "c2c373f451734358501c3b44a8a9ff3ca8436104be18f69a0e9d186a528d2276",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "LavenderTown_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, LavenderTown_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_LAVENDER_TOWN"
+        },
+        {
+          "line": 7,
+          "text": "\tsetvar VAR_MAP_SCENE_S_S_ANNE_2F_CORRIDOR, 1"
+        },
+        {
+          "line": 8,
+          "text": "\tsetflag FLAG_HIDE_SS_ANNE_RIVAL"
+        },
+        {
+          "line": 14,
+          "text": "\tmsgbox LavenderTown_Text_DoYouBelieveInGhosts, MSGBOX_YESNO"
+        }
+      ],
+      "required_source_tokens": [
+        "FLAG_WORLD_MAP_LAVENDER_TOWN",
+        "FLAG_HIDE_SS_ANNE_RIVAL",
+        "VAR_MAP_SCENE_S_S_ANNE_2F_CORRIDOR",
+        "Text_DoYouBelieveInGhosts"
+      ],
+      "source_observations": "Lavender transition sets town map flag and S.S. Anne scene/rival-hide state; ghost-question dialogue branches on yes/no response.",
+      "dependency_edges": [
+        "S.S. Anne scene and rival flag writers",
+        "map transition script interpreter",
+        "yes/no message result semantics",
+        "Lavender map.json event bindings"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Authored script-to-generated map header/script table and compiled linker consumer not established",
+        "Special handlers, scene/flag writers and save/asset dependencies need independent whole-source closure",
+        "Original FireRed script and derivative licensing not independently cleared; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the exact pinned source including inactive paths",
+        "Rehash original compressed machine dossier bytes and verify its SHA256",
+        "Trace map.json, generated tables, native script handlers and actual consumer paths",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable full-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 169,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/LavenderTown_PokemonCenter_1F/scripts.inc",
+        "git_blob_sha1": "2f4cb3cb579c786fd9c2df4b5fa4956590cc59c3",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/LavenderTown_PokemonCenter_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "a0d0a1671bc657be159080a1394b78036c6b844f14c524e6b8b206dd25fa019b",
+      "whole_source_sha256_from_packet": "2de883216a4b7fd91a72c2d3032d232376be80e83e784cd0803834919a361d4b",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "LavenderTown_PokemonCenter_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, LavenderTown_PokemonCenter_1F_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume"
+        },
+        {
+          "line": 7,
+          "text": "\tsetrespawn HEAL_LOCATION_LAVENDER_TOWN"
+        },
+        {
+          "line": 13,
+          "text": "\tcall EventScript_PkmnCenterNurse"
+        },
+        {
+          "line": 22,
+          "text": "\tmsgbox LavenderTown_PokemonCenter_1F_Text_CubonesMotherKilledByRockets, MSGBOX_NPC"
+        }
+      ],
+      "required_source_tokens": [
+        "HEAL_LOCATION_LAVENDER_TOWN",
+        "CableClub_OnResume",
+        "EventScript_PkmnCenterNurse",
+        "CubonesMotherKilledByRockets"
+      ],
+      "source_observations": "Lavender Center 1F sets respawn and delegates healing/link resume; dialogue mentions Rocket/Cubone story, not runtime persistence.",
+      "dependency_edges": [
+        "HEAL_LOCATION_LAVENDER_TOWN respawn consumer",
+        "CableClub_OnResume shared handler",
+        "EventScript_PkmnCenterNurse and heal state",
+        "map header and script table emission"
+      ],
+      "map_json_static_wiring": null,
+      "unresolved": [
+        "Authored script-to-generated map header/script table and compiled linker consumer not established",
+        "Special handlers, scene/flag writers and save/asset dependencies need independent whole-source closure",
+        "Original FireRed script and derivative licensing not independently cleared; no stock gameplay, native .sav or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the exact pinned source including inactive paths",
+        "Rehash original compressed machine dossier bytes and verify its SHA256",
+        "Trace map.json, generated tables, native script handlers and actual consumer paths",
+        "Independently reconcile original asset and derivative licensing",
+        "Only a distinct external reviewer may sign an immutable full-file verdict"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}

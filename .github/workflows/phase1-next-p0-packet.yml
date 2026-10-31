@@ -1,0 +1,16 @@
+name: Phase 1 next 100 source-reconciled P0 machine packets
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  next-p0-packet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Rebuild original 2000-record integrity and reject 814 forged packet cases
+        run: python3 tools/phase1_next_p0_packet_verify.py

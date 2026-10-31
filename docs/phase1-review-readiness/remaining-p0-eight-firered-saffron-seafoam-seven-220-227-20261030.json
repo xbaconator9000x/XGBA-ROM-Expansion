@@ -1,0 +1,999 @@
+{
+  "schema": "xgba.phase1.third_packet_firered_saffron_seafoam_seven_220_227_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0200-0299.json",
+  "source_packet_blob_sha1": "c998c2ea8c887968e586b1792c5207ecb5286839",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0200-0299-20261030.json",
+  "new_partial_indices": [
+    220,
+    221,
+    222,
+    223,
+    224,
+    225,
+    226,
+    227
+  ],
+  "other_p0_partial_total": 211,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 240,
+  "other_p0_without_partial": 98,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Eight original pinned FireRed source-only scripts; no whole-file semantic, compiled/runtime, gameplay, .sav, physical Flash, independent licensing or approval.",
+  "records": [
+    {
+      "packet_index": 220,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SaffronCity_PokemonCenter_2F/scripts.inc",
+        "git_blob_sha1": "94cc9b51b92197314946de2d5454198a9332ebcc",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SaffronCity_PokemonCenter_2F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "6a2d668c6ea1410dd7686c4b6dcf74fe5c0fa6207411203b422241abeb33a074",
+      "whole_source_sha256_from_packet": "ac5a4429f00147b93ee2b025db76e3d2cbe52d80b26b77465bad7051461b5f21",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SaffronCity_PokemonCenter_2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CableClub_OnTransition"
+        },
+        {
+          "line": 9,
+          "text": "SaffronCity_PokemonCenter_2F_EventScript_Colosseum::"
+        },
+        {
+          "line": 10,
+          "text": "\tcall CableClub_EventScript_Colosseum"
+        },
+        {
+          "line": 13,
+          "text": "SaffronCity_PokemonCenter_2F_EventScript_TradeCenter::"
+        },
+        {
+          "line": 14,
+          "text": "\tcall CableClub_EventScript_TradeCenter"
+        },
+        {
+          "line": 17,
+          "text": "SaffronCity_PokemonCenter_2F_EventScript_RecordCorner::"
+        },
+        {
+          "line": 18,
+          "text": "\tcall CableClub_EventScript_RecordCorner"
+        }
+      ],
+      "required_source_tokens": [
+        "SaffronCity_PokemonCenter_2F_MapScripts::",
+        "map_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame",
+        "map_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp",
+        "map_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad",
+        "map_script MAP_SCRIPT_ON_TRANSITION, CableClub_OnTransition",
+        "SaffronCity_PokemonCenter_2F_EventScript_Colosseum::"
+      ],
+      "source_observations": "Saffron Center 2F delegates map lifecycle to shared CableClub handlers; three event stubs call RS legacy Colosseum/Trade Center/Record Corner handlers and are marked unused. Original pinned authored source only; no compiled execution, gameplay, native save or physical Flash witness.",
+      "dependency_edges": [
+        "CableClub lifecycle handlers",
+        "Legacy CableClub event handlers",
+        "Map warp and object metadata",
+        "RS leftovers are not evidence of reachable gameplay"
+      ],
+      "unresolved": [
+        "Generated map table, assembler/linker and native opcode closure not demonstrated",
+        "Original map.json triggers and native special execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No natural stock gameplay, native .sav restart or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect whole pinned file, inactive branches and called handlers",
+        "Rehash original compressed machine dossier and pinned source SHA256",
+        "Trace map.json, event_scripts.s, map table, linker and native consumer",
+        "Independently reconcile original asset and derivative licensing",
+        "Sign distinct full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 221,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SaffronCity_PokemonTrainerFanClub/scripts.inc",
+        "git_blob_sha1": "f714cf2c5b2f78c1ebf8a4237154c4d75c6debd3",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SaffronCity_PokemonTrainerFanClub/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "486368be02c95f630cea9522815f31a490671cb10d696ff120b40246122ef8c3",
+      "whole_source_sha256_from_packet": "fea2976333d6d2f0a348c5511ec34afe1c29cf7c1d5fb087da0b1a2401022d68",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SaffronCity_PokemonTrainerFanClub_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, SaffronCity_PokemonTrainerFanClub_OnFrame"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SaffronCity_PokemonTrainerFanClub_OnTransition"
+        },
+        {
+          "line": 6,
+          "text": "SaffronCity_PokemonTrainerFanClub_OnFrame::"
+        },
+        {
+          "line": 7,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_SAFFRON_CITY_POKEMON_TRAINER_FAN_CLUB, 1, SaffronCity_PokemonTrainerFanClub_EventScript_MeetFirstFans"
+        },
+        {
+          "line": 10,
+          "text": "SaffronCity_PokemonTrainerFanClub_EventScript_MeetFirstFans::"
+        },
+        {
+          "line": 27,
+          "text": "\tsetvar VAR_MAP_SCENE_SAFFRON_CITY_POKEMON_TRAINER_FAN_CLUB, 2"
+        },
+        {
+          "line": 77,
+          "text": "SaffronCity_PokemonTrainerFanClub_OnTransition::"
+        },
+        {
+          "line": 78,
+          "text": "\tgoto_if_eq VAR_MAP_SCENE_SAFFRON_CITY_POKEMON_TRAINER_FAN_CLUB, 1, SaffronCity_PokemonTrainerFanClub_EventScript_SetMemberPosForFirstMeeting"
+        },
+        {
+          "line": 79,
+          "text": "\tgoto_if_eq VAR_MAP_SCENE_SAFFRON_CITY_POKEMON_TRAINER_FAN_CLUB, 2, SaffronCity_PokemonTrainerFanClub_EventScript_UpdateFanMemberPositions"
+        },
+        {
+          "line": 83,
+          "text": "\tspecial Script_TryLoseFansFromPlayTime"
+        },
+        {
+          "line": 84,
+          "text": "\tsetvar VAR_0x8004, FANCLUB_MEMBER1"
+        },
+        {
+          "line": 90,
+          "text": "\tsetvar VAR_0x8004, FANCLUB_MEMBER3"
+        },
+        {
+          "line": 105,
+          "text": "\tsetvar VAR_0x8004, FANCLUB_MEMBER8"
+        },
+        {
+          "line": 150,
+          "text": "SaffronCity_PokemonTrainerFanClub_EventScript_SetMemberPosForFirstMeeting::"
+        },
+        {
+          "line": 158,
+          "text": "SaffronCity_PokemonTrainerFanClub_EventScript_CrushGirl::"
+        },
+        {
+          "line": 162,
+          "text": "\tspecial Script_BufferFanClubTrainerName"
+        }
+      ],
+      "required_source_tokens": [
+        "SaffronCity_PokemonTrainerFanClub_MapScripts::",
+        "map_script MAP_SCRIPT_ON_FRAME_TABLE, SaffronCity_PokemonTrainerFanClub_OnFrame",
+        "map_script MAP_SCRIPT_ON_TRANSITION, SaffronCity_PokemonTrainerFanClub_OnTransition",
+        "SaffronCity_PokemonTrainerFanClub_OnFrame::",
+        "map_script_2 VAR_MAP_SCENE_SAFFRON_CITY_POKEMON_TRAINER_FAN_CLUB, 1, SaffronCity_PokemonTrainerFanClub_EventScript_MeetFirstFans",
+        "SaffronCity_PokemonTrainerFanClub_EventScript_MeetFirstFans::"
+      ],
+      "source_observations": "Trainer Fan Club frame/transition scenes track initial fans and member positions; play-time fan loss and per-member selectors influence dialogue. Original pinned authored source only; no compiled execution, gameplay, native save or physical Flash witness.",
+      "dependency_edges": [
+        "VAR_MAP_SCENE_SAFFRON_CITY_POKEMON_TRAINER_FAN_CLUB",
+        "Script_TryLoseFansFromPlayTime special",
+        "FANCLUB_MEMBER1..8 and VAR_0x8004",
+        "Movement, object and text dependencies"
+      ],
+      "unresolved": [
+        "Generated map table, assembler/linker and native opcode closure not demonstrated",
+        "Original map.json triggers and native special execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No natural stock gameplay, native .sav restart or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect whole pinned file, inactive branches and called handlers",
+        "Rehash original compressed machine dossier and pinned source SHA256",
+        "Trace map.json, event_scripts.s, map table, linker and native consumer",
+        "Independently reconcile original asset and derivative licensing",
+        "Sign distinct full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 222,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SeafoamIslands_1F/scripts.inc",
+        "git_blob_sha1": "039742b60d944ae43dda8d489830b687ec17ed14",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SeafoamIslands_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "036e2bfa3cff374a8c756e28432705504f7c8342340ba2b42c09692887db53dd",
+      "whole_source_sha256_from_packet": "6776346a0291e02427e439926d5f733e805a1f3f83b43a0fef09515531eaab70",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SeafoamIslands_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SeafoamIslands_1F_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 5,
+          "text": "SeafoamIslands_1F_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_SEAFOAM_ISLANDS_1F"
+        },
+        {
+          "line": 7,
+          "text": "\tend"
+        }
+      ],
+      "required_source_tokens": [
+        "SeafoamIslands_1F_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, SeafoamIslands_1F_OnTransition",
+        ".byte 0",
+        "SeafoamIslands_1F_OnTransition::",
+        "setworldmapflag FLAG_WORLD_MAP_SEAFOAM_ISLANDS_1F",
+        "end"
+      ],
+      "source_observations": "Seafoam 1F transition sets its world-map flag, without proving native world-map persistence. Original pinned authored source only; no compiled execution, gameplay, native save or physical Flash witness.",
+      "dependency_edges": [
+        "FLAG_WORLD_MAP_SEAFOAM_ISLANDS_1F",
+        "MAP_SCRIPT_ON_TRANSITION interpreter",
+        "World map flag save-block owner",
+        "Generated map table and header"
+      ],
+      "unresolved": [
+        "Generated map table, assembler/linker and native opcode closure not demonstrated",
+        "Original map.json triggers and native special execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No natural stock gameplay, native .sav restart or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect whole pinned file, inactive branches and called handlers",
+        "Rehash original compressed machine dossier and pinned source SHA256",
+        "Trace map.json, event_scripts.s, map table, linker and native consumer",
+        "Independently reconcile original asset and derivative licensing",
+        "Sign distinct full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 223,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SeafoamIslands_B3F/scripts.inc",
+        "git_blob_sha1": "0f0494f1aaeca0fddaf94bacaf002d717d0e2cc6",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SeafoamIslands_B3F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "772119cdfed9adb9041beef04e42fe51ecf315dbde03604b9eb0580042615872",
+      "whole_source_sha256_from_packet": "8fb9009baa9ba345952c2f0e362e6d7a62bd628fa8813c442f3b2e8de71146c6",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": ".equ NUM_BOULDERS_PRESENT, VAR_TEMP_2"
+        },
+        {
+          "line": 3,
+          "text": "SeafoamIslands_B3F_MapScripts::"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SeafoamIslands_B3F_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, SeafoamIslands_B3F_OnFrame"
+        },
+        {
+          "line": 8,
+          "text": "SeafoamIslands_B3F_OnTransition::"
+        },
+        {
+          "line": 9,
+          "text": "\tcall_if_unset FLAG_STOPPED_SEAFOAM_B3F_CURRENT, SeafoamIslands_B3F_EventScript_CheckStoppedCurrent"
+        },
+        {
+          "line": 10,
+          "text": "\tcall_if_set FLAG_STOPPED_SEAFOAM_B3F_CURRENT, SeafoamIslands_B3F_EventScript_SetNoCurrentLayout"
+        },
+        {
+          "line": 13,
+          "text": "SeafoamIslands_B3F_EventScript_CheckStoppedCurrent::"
+        },
+        {
+          "line": 14,
+          "text": "\tsetvar NUM_BOULDERS_PRESENT, 0"
+        },
+        {
+          "line": 20,
+          "text": "SeafoamIslands_B3F_EventScript_StoppedCurrent::"
+        },
+        {
+          "line": 21,
+          "text": "\tsetflag FLAG_STOPPED_SEAFOAM_B3F_CURRENT"
+        },
+        {
+          "line": 24,
+          "text": "SeafoamIslands_B3F_EventScript_SetNoCurrentLayout::"
+        },
+        {
+          "line": 25,
+          "text": "\tsetmaplayoutindex LAYOUT_SEAFOAM_ISLANDS_B3F_CURRENT_STOPPED"
+        },
+        {
+          "line": 28,
+          "text": "SeafoamIslands_B3F_OnFrame::"
+        },
+        {
+          "line": 32,
+          "text": "SeafoamIslands_B3F_EventScript_EnterByFalling::"
+        },
+        {
+          "line": 37,
+          "text": "\tgoto_if_eq NUM_BOULDERS_PRESENT, 2, SeafoamIslands_B3F_EventScript_CurrentBlocked"
+        },
+        {
+          "line": 42,
+          "text": "\twarp MAP_SEAFOAM_ISLANDS_B4F, 27, 21"
+        }
+      ],
+      "required_source_tokens": [
+        ".equ NUM_BOULDERS_PRESENT, VAR_TEMP_2",
+        "SeafoamIslands_B3F_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, SeafoamIslands_B3F_OnTransition",
+        "map_script MAP_SCRIPT_ON_FRAME_TABLE, SeafoamIslands_B3F_OnFrame",
+        "SeafoamIslands_B3F_OnTransition::",
+        "call_if_unset FLAG_STOPPED_SEAFOAM_B3F_CURRENT, SeafoamIslands_B3F_EventScript_CheckStoppedCurrent"
+      ],
+      "source_observations": "Seafoam B3F checks boulders to stop currents and switch layout; falling entry can warp to B4F with a scene variable. Original pinned authored source only; no compiled execution, gameplay, native save or physical Flash witness.",
+      "dependency_edges": [
+        "FLAG_STOPPED_SEAFOAM_B3F_CURRENT",
+        "B3F_CURRENT_STOPPED layout",
+        "B3F/B4F warp and scene variable",
+        "Coordinate triggers and map.json objects"
+      ],
+      "unresolved": [
+        "Generated map table, assembler/linker and native opcode closure not demonstrated",
+        "Original map.json triggers and native special execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No natural stock gameplay, native .sav restart or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect whole pinned file, inactive branches and called handlers",
+        "Rehash original compressed machine dossier and pinned source SHA256",
+        "Trace map.json, event_scripts.s, map table, linker and native consumer",
+        "Independently reconcile original asset and derivative licensing",
+        "Sign distinct full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 224,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SeafoamIslands_B4F/scripts.inc",
+        "git_blob_sha1": "d6a90577860179caa8613c8efa90dfb671d09b7c",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SeafoamIslands_B4F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "1d1b08b39f859d8e56ab581ddf52390ef8d28d714b68f4ff3d7fb35443f2874e",
+      "whole_source_sha256_from_packet": "f269137e533de5e32c2b90fe281a9b16017cdfbc5a1aa8cdf2754feff2b2bacd",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": ".equ NUM_BOULDERS_PRESENT, VAR_TEMP_2"
+        },
+        {
+          "line": 3,
+          "text": "SeafoamIslands_B4F_MapScripts::"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SeafoamIslands_B4F_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, SeafoamIslands_B4F_OnResume"
+        },
+        {
+          "line": 6,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, SeafoamIslands_B4F_OnLoad"
+        },
+        {
+          "line": 7,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, SeafoamIslands_B4F_OnWarp"
+        },
+        {
+          "line": 8,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, SeafoamIslands_B4F_OnFrame"
+        },
+        {
+          "line": 11,
+          "text": "SeafoamIslands_B4F_OnResume::"
+        },
+        {
+          "line": 12,
+          "text": "\tcall_if_set FLAG_SYS_SPECIAL_WILD_BATTLE, SeafoamIslands_B4F_EventScript_TryRemoveArticuno"
+        },
+        {
+          "line": 15,
+          "text": "SeafoamIslands_B4F_EventScript_TryRemoveArticuno::"
+        },
+        {
+          "line": 17,
+          "text": "\tgoto_if_ne VAR_RESULT, B_OUTCOME_CAUGHT, EventScript_Return"
+        },
+        {
+          "line": 21,
+          "text": "SeafoamIslands_B4F_OnTransition::"
+        },
+        {
+          "line": 27,
+          "text": "SeafoamIslands_B4F_EventScript_CheckStoppedCurrent::"
+        },
+        {
+          "line": 34,
+          "text": "SeafoamIslands_B4F_EventScript_StoppedCurrent::"
+        },
+        {
+          "line": 35,
+          "text": "\tsetflag FLAG_STOPPED_SEAFOAM_B4F_CURRENT"
+        },
+        {
+          "line": 38,
+          "text": "SeafoamIslands_B4F_EventScript_SetNoCurrentLayout::"
+        },
+        {
+          "line": 39,
+          "text": "\tsetmaplayoutindex LAYOUT_SEAFOAM_ISLANDS_B4F_CURRENT_STOPPED"
+        },
+        {
+          "line": 42,
+          "text": "SeafoamIslands_B4F_EventScript_ShowArticuno::"
+        },
+        {
+          "line": 43,
+          "text": "\tclearflag FLAG_HIDE_ARTICUNO"
+        },
+        {
+          "line": 46,
+          "text": "SeafoamIslands_B4F_OnLoad::"
+        },
+        {
+          "line": 58,
+          "text": "SeafoamIslands_B4F_OnWarp::"
+        },
+        {
+          "line": 67,
+          "text": "SeafoamIslands_B4F_OnFrame::"
+        },
+        {
+          "line": 73,
+          "text": "SeafoamIslands_B4F_EventScript_EnterOnCurrent::"
+        },
+        {
+          "line": 88,
+          "text": "SeafoamIslands_B4F_EventScript_EnterByFalling::"
+        },
+        {
+          "line": 93,
+          "text": "\tgoto_if_eq NUM_BOULDERS_PRESENT, 2, SeafoamIslands_B4F_EventScript_CurrentBlocked"
+        },
+        {
+          "line": 97,
+          "text": "\tspecial SeafoamIslandsB4F_CurrentDumpsPlayerOnLand"
+        },
+        {
+          "line": 154,
+          "text": "SeafoamIslands_B4F_EventScript_Articuno::"
+        },
+        {
+          "line": 155,
+          "text": "\tgoto_if_questlog EventScript_ReleaseEnd"
+        }
+      ],
+      "required_source_tokens": [
+        ".equ NUM_BOULDERS_PRESENT, VAR_TEMP_2",
+        "SeafoamIslands_B4F_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, SeafoamIslands_B4F_OnTransition",
+        "map_script MAP_SCRIPT_ON_RESUME, SeafoamIslands_B4F_OnResume",
+        "map_script MAP_SCRIPT_ON_LOAD, SeafoamIslands_B4F_OnLoad",
+        "map_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, SeafoamIslands_B4F_OnWarp"
+      ],
+      "source_observations": "Seafoam B4F transition/load/warp/frame/resume scripts alter currents/layout, force Surf in some entries and check Articuno encounter state after special wild battles. Original pinned authored source only; no compiled execution, gameplay, native save or physical Flash witness.",
+      "dependency_edges": [
+        "B4F current stop flag and layout",
+        "Articuno hide and special battle flags",
+        "ForcePlayerToStartSurfing native special",
+        "B3F/B4F warps and Articuno battle"
+      ],
+      "unresolved": [
+        "Generated map table, assembler/linker and native opcode closure not demonstrated",
+        "Original map.json triggers and native special execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No natural stock gameplay, native .sav restart or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect whole pinned file, inactive branches and called handlers",
+        "Rehash original compressed machine dossier and pinned source SHA256",
+        "Trace map.json, event_scripts.s, map table, linker and native consumer",
+        "Independently reconcile original asset and derivative licensing",
+        "Sign distinct full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 225,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SevenIsland/scripts.inc",
+        "git_blob_sha1": "8ed3bd403f26e6bb65ab3d285f0f16f1ad699c82",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SevenIsland/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "fe2683c8bfc5e1ea27fcd91b65de1b09c1377441696a7037c80a8e4a1aca6346",
+      "whole_source_sha256_from_packet": "93577c3de7ef6fa248dc3be8b3c048679cee33cbae98094c70b685a63f9c4305",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SevenIsland_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 5,
+          "text": "SevenIsland_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_SEVEN_ISLAND"
+        },
+        {
+          "line": 7,
+          "text": "\tend"
+        },
+        {
+          "line": 9,
+          "text": "SevenIsland_EventScript_IslandSign::"
+        },
+        {
+          "line": 10,
+          "text": "\tmsgbox SevenIsland_Text_IslandSign, MSGBOX_SIGN"
+        },
+        {
+          "line": 13,
+          "text": "SevenIsland_EventScript_OldWoman::"
+        },
+        {
+          "line": 17,
+          "text": "SevenIsland_EventScript_Scientist::"
+        }
+      ],
+      "required_source_tokens": [
+        "SevenIsland_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_OnTransition",
+        ".byte 0",
+        "SevenIsland_OnTransition::",
+        "setworldmapflag FLAG_WORLD_MAP_SEVEN_ISLAND",
+        "end"
+      ],
+      "source_observations": "Seven Island transition sets world-map flag; sign and NPC events reference dialogue assets. Original pinned authored source only; no compiled execution, gameplay, native save or physical Flash witness.",
+      "dependency_edges": [
+        "FLAG_WORLD_MAP_SEVEN_ISLAND",
+        "Map transition header",
+        "NPC objects and text assets",
+        "World map save persistence"
+      ],
+      "unresolved": [
+        "Generated map table, assembler/linker and native opcode closure not demonstrated",
+        "Original map.json triggers and native special execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No natural stock gameplay, native .sav restart or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect whole pinned file, inactive branches and called handlers",
+        "Rehash original compressed machine dossier and pinned source SHA256",
+        "Trace map.json, event_scripts.s, map table, linker and native consumer",
+        "Independently reconcile original asset and derivative licensing",
+        "Sign distinct full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 226,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SevenIsland_House_Room1/scripts.inc",
+        "git_blob_sha1": "5e7ce493bdb26c3ddbbbfee6e2c9c338faff3dcf",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SevenIsland_House_Room1/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "af2d1a41364b0b256104108feaad5b985be11706d963903ee0685959fa0c7b39",
+      "whole_source_sha256_from_packet": "6a41336f1ccfb6784a3be281c5c8fc9b40226bba9e39c22b6a27a6a050d4bbcd",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": ".equ TRAINER_VISITING, VAR_TEMP_1"
+        },
+        {
+          "line": 3,
+          "text": "SevenIsland_House_Room1_MapScripts::"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_House_Room1_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, SevenIsland_House_Room1_OnFrame"
+        },
+        {
+          "line": 8,
+          "text": "SevenIsland_House_Room1_OnTransition::"
+        },
+        {
+          "line": 9,
+          "text": "\tspecial ValidateEReaderTrainer"
+        },
+        {
+          "line": 10,
+          "text": "\tcall_if_eq VAR_RESULT, 0, SevenIsland_House_Room1_EventScript_SetTrainerVisitingLayout"
+        },
+        {
+          "line": 14,
+          "text": "SevenIsland_House_Room1_EventScript_SetTrainerVisitingLayout::"
+        },
+        {
+          "line": 15,
+          "text": "\tsetvar TRAINER_VISITING, TRUE"
+        },
+        {
+          "line": 18,
+          "text": "\tsetmaplayoutindex LAYOUT_SEVEN_ISLAND_HOUSE_ROOM1_DOOR_OPEN"
+        },
+        {
+          "line": 26,
+          "text": "SevenIsland_House_Room1_OnFrame::"
+        },
+        {
+          "line": 32,
+          "text": "SevenIsland_House_Room1_EventScript_OldWomanCommentOnBattle::"
+        },
+        {
+          "line": 45,
+          "text": "\tspecial LoadPlayerParty"
+        },
+        {
+          "line": 46,
+          "text": "\tsetvar VAR_MAP_SCENE_SEVEN_ISLAND_HOUSE_ROOM1, 0"
+        },
+        {
+          "line": 71,
+          "text": "SevenIsland_House_Room1_EventScript_OldWoman::"
+        },
+        {
+          "line": 74,
+          "text": "\tspecial ValidateEReaderTrainer"
+        },
+        {
+          "line": 86,
+          "text": "SevenIsland_House_Room1_EventScript_TrainerVisiting::"
+        },
+        {
+          "line": 87,
+          "text": "\tspecial SavePlayerParty"
+        },
+        {
+          "line": 96,
+          "text": "\tcall EventScript_AskSaveGame"
+        },
+        {
+          "line": 98,
+          "text": "\tspecial SavePlayerParty"
+        },
+        {
+          "line": 99,
+          "text": "\tspecial ReducePlayerPartyToThree"
+        },
+        {
+          "line": 105,
+          "text": "\twarp MAP_SEVEN_ISLAND_HOUSE_ROOM2, 3, 1"
+        },
+        {
+          "line": 110,
+          "text": "SevenIsland_House_Room1_EventScript_DeclineBattle::"
+        }
+      ],
+      "required_source_tokens": [
+        ".equ TRAINER_VISITING, VAR_TEMP_1",
+        "SevenIsland_House_Room1_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_House_Room1_OnTransition",
+        "map_script MAP_SCRIPT_ON_FRAME_TABLE, SevenIsland_House_Room1_OnFrame",
+        "SevenIsland_House_Room1_OnTransition::",
+        "special ValidateEReaderTrainer"
+      ],
+      "source_observations": "Room1 validates e-Reader trainer, controls layout and scene, saves/restores party, asks to save, reduces party to three and enters Room2. Original pinned authored source only; no compiled execution, gameplay, native save or physical Flash witness.",
+      "dependency_edges": [
+        "ValidateEReaderTrainer and trainer data",
+        "SavePlayerParty/LoadPlayerParty/ReducePlayerPartyToThree",
+        "EventScript_AskSaveGame and persistence",
+        "Room1 door layout and Room2 warp"
+      ],
+      "unresolved": [
+        "Generated map table, assembler/linker and native opcode closure not demonstrated",
+        "Original map.json triggers and native special execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No natural stock gameplay, native .sav restart or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect whole pinned file, inactive branches and called handlers",
+        "Rehash original compressed machine dossier and pinned source SHA256",
+        "Trace map.json, event_scripts.s, map table, linker and native consumer",
+        "Independently reconcile original asset and derivative licensing",
+        "Sign distinct full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 227,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SevenIsland_House_Room2/scripts.inc",
+        "git_blob_sha1": "1ea4739403f070e2f45872e73834c405a0a90053",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SevenIsland_House_Room2/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "2a834e193e7d2319404760390ef6c1f02076638b261993d15d62eb77a3d08b58",
+      "whole_source_sha256_from_packet": "f921373f723cb03a6c3bf32211678fef1a8f88e2b0ca74c00a5cc70de0734704",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SevenIsland_House_Room2_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_House_Room2_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, SevenIsland_House_Room2_OnFrame"
+        },
+        {
+          "line": 6,
+          "text": "SevenIsland_House_Room2_OnTransition::"
+        },
+        {
+          "line": 7,
+          "text": "\tspecial SetEReaderTrainerGfxId"
+        },
+        {
+          "line": 10,
+          "text": "SevenIsland_House_Room2_OnFrame::"
+        },
+        {
+          "line": 11,
+          "text": "\tmap_script_2 VAR_TEMP_1, 0, SevenIsland_House_Room2_EventScript_BattleVisitingTrainer"
+        },
+        {
+          "line": 14,
+          "text": "SevenIsland_House_Room2_EventScript_BattleVisitingTrainer::"
+        },
+        {
+          "line": 15,
+          "text": "\tlockall"
+        },
+        {
+          "line": 21,
+          "text": "\tsetvar VAR_0x8004, 2"
+        },
+        {
+          "line": 22,
+          "text": "\tsetvar VAR_0x8005, 0"
+        },
+        {
+          "line": 23,
+          "text": "\tspecial StartSpecialBattle"
+        },
+        {
+          "line": 24,
+          "text": "\twaitstate"
+        },
+        {
+          "line": 29,
+          "text": "\tspecial HealPlayerParty"
+        },
+        {
+          "line": 32,
+          "text": "\tspecial LoadPlayerParty"
+        },
+        {
+          "line": 33,
+          "text": "\tsetvar VAR_TEMP_1, 1"
+        },
+        {
+          "line": 34,
+          "text": "\twarp MAP_SEVEN_ISLAND_HOUSE_ROOM1, 4, 1"
+        },
+        {
+          "line": 39,
+          "text": "SevenIsland_House_Room2_EventScript_BattleTie::"
+        },
+        {
+          "line": 40,
+          "text": "\tsetvar VAR_MAP_SCENE_SEVEN_ISLAND_HOUSE_ROOM1, 3"
+        },
+        {
+          "line": 44,
+          "text": "SevenIsland_House_Room2_EventScript_BattleWon::"
+        },
+        {
+          "line": 45,
+          "text": "\tsetvar VAR_MAP_SCENE_SEVEN_ISLAND_HOUSE_ROOM1, 1"
+        },
+        {
+          "line": 51,
+          "text": "SevenIsland_House_Room2_EventScript_BattleLost::"
+        },
+        {
+          "line": 52,
+          "text": "\tsetvar VAR_MAP_SCENE_SEVEN_ISLAND_HOUSE_ROOM1, 2"
+        }
+      ],
+      "required_source_tokens": [
+        "SevenIsland_House_Room2_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_House_Room2_OnTransition",
+        "map_script MAP_SCRIPT_ON_FRAME_TABLE, SevenIsland_House_Room2_OnFrame",
+        "SevenIsland_House_Room2_OnTransition::",
+        "special SetEReaderTrainerGfxId",
+        "SevenIsland_House_Room2_OnFrame::"
+      ],
+      "source_observations": "Room2 starts visiting-trainer special battle, branches on win/loss/tie, heals/restores party and returns to Room1. Original pinned authored source only; no compiled execution, gameplay, native save or physical Flash witness.",
+      "dependency_edges": [
+        "SetEReaderTrainerGfxId and StartSpecialBattle",
+        "Room1 scene win/loss/tie values",
+        "HealPlayerParty and LoadPlayerParty",
+        "Room1 return warp and Room2 map triggers"
+      ],
+      "unresolved": [
+        "Generated map table, assembler/linker and native opcode closure not demonstrated",
+        "Original map.json triggers and native special execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No natural stock gameplay, native .sav restart or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect whole pinned file, inactive branches and called handlers",
+        "Rehash original compressed machine dossier and pinned source SHA256",
+        "Trace map.json, event_scripts.s, map table, linker and native consumer",
+        "Independently reconcile original asset and derivative licensing",
+        "Sign distinct full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}

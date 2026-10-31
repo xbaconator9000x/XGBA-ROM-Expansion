@@ -1,0 +1,16 @@
+name: Phase 1 remaining P0 partial handoff cross-batch reconciliation
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  remaining-p0-index:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Reconcile 100 disjoint other-P0 source dossiers and 1000 negatives
+        run: python3 tools/phase1_remaining_p0_handoff_index_verify.py

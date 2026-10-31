@@ -1,0 +1,16 @@
+name: Phase 1 second packet FireRed centers and caves partial source
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  firered-second-packet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify original source and 120 fail-closed negatives
+        run: python3 tools/phase1_second_packet_firered_verify.py

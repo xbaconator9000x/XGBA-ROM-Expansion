@@ -1,0 +1,886 @@
+{
+  "schema": "xgba.phase1.third_packet_firered_tanoby_trainertower_silph_236_243_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0200-0299.json",
+  "source_packet_blob_sha1": "c998c2ea8c887968e586b1792c5207ecb5286839",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0200-0299-20261030.json",
+  "new_partial_indices": [
+    236,
+    237,
+    238,
+    239,
+    240,
+    241,
+    242,
+    243
+  ],
+  "other_p0_partial_total": 227,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 256,
+  "other_p0_without_partial": 82,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Eight original pinned Tanoby, Trainer Tower and Silph Co source-only scripts; no whole-file semantic, compiled/runtime, natural gameplay, .sav, physical Flash, independent licensing or approval.",
+  "records": [
+    {
+      "packet_index": 236,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SevenIsland_TanobyRuins_ViapoisChamber/scripts.inc",
+        "git_blob_sha1": "2557804fd58e8a65cc9932804fd5c8251e5cbb95",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SevenIsland_TanobyRuins_ViapoisChamber/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "0ddffe1414114a296abe5239a854e7f196a1dc145470722b9bb338839adc0dc6",
+      "whole_source_sha256_from_packet": "308c2a2d383d0ef68156d9bc6814773c854c849357f73f264f7293e3eea19b3c",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SevenIsland_TanobyRuins_ViapoisChamber_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_TanobyRuins_ViapoisChamber_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 5,
+          "text": "SevenIsland_TanobyRuins_ViapoisChamber_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tcall EventScript_TryDarkenRuins"
+        },
+        {
+          "line": 7,
+          "text": "\tend"
+        }
+      ],
+      "required_source_tokens": [
+        "SevenIsland_TanobyRuins_ViapoisChamber_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_TanobyRuins_ViapoisChamber_OnTransition",
+        "\t.byte 0",
+        "SevenIsland_TanobyRuins_ViapoisChamber_OnTransition::",
+        "\tcall EventScript_TryDarkenRuins",
+        "\tend"
+      ],
+      "source_observations": "Viapois Chamber's seven-line authored script delegates map transition darkening to EventScript_TryDarkenRuins; no chamber-specific spawn or native gameplay evidence is contained in this file.",
+      "dependency_edges": [
+        "Shared EventScript_TryDarkenRuins and its conditions",
+        "Map transition pointer and generated map table",
+        "Tanoby Key unlock flag and Unown encounter table",
+        "Map cave/object metadata and darkening consumer"
+      ],
+      "unresolved": [
+        "Complete original map.json object/warp triggers and map table/linker closure not established",
+        "Shared called script/special handlers and native execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash the original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map-table, preprocessor/assembler/linker and native consumer",
+        "Reconcile original asset, derivative, toolchain and dependency licensing independently",
+        "Sign a distinct, evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 237,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SevenIsland_TanobyRuins_WeepthChamber/scripts.inc",
+        "git_blob_sha1": "60a04561c85eafe6f116540a59a39d84fd5006d1",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SevenIsland_TanobyRuins_WeepthChamber/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "62210fffa53b1824fe5048dda473a62695efba92727c02f73ff641cee4e068f7",
+      "whole_source_sha256_from_packet": "a7e65f5f3db3818aed65c6dbc557e8d063955eca4648e910592a56a17a0c7842",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SevenIsland_TanobyRuins_WeepthChamber_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_TanobyRuins_WeepthChamber_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 5,
+          "text": "SevenIsland_TanobyRuins_WeepthChamber_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tcall EventScript_TryDarkenRuins"
+        },
+        {
+          "line": 7,
+          "text": "\tend"
+        }
+      ],
+      "required_source_tokens": [
+        "SevenIsland_TanobyRuins_WeepthChamber_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_TanobyRuins_WeepthChamber_OnTransition",
+        "\t.byte 0",
+        "SevenIsland_TanobyRuins_WeepthChamber_OnTransition::",
+        "\tcall EventScript_TryDarkenRuins",
+        "\tend"
+      ],
+      "source_observations": "Weepth Chamber's seven-line authored script delegates map transition darkening to EventScript_TryDarkenRuins; no chamber-specific spawn or native gameplay evidence is contained in this file.",
+      "dependency_edges": [
+        "Shared EventScript_TryDarkenRuins and its conditions",
+        "Map transition pointer and generated map table",
+        "Tanoby Key unlock flag and Unown encounter table",
+        "Map cave/object metadata and darkening consumer"
+      ],
+      "unresolved": [
+        "Complete original map.json object/warp triggers and map table/linker closure not established",
+        "Shared called script/special handlers and native execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash the original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map-table, preprocessor/assembler/linker and native consumer",
+        "Reconcile original asset, derivative, toolchain and dependency licensing independently",
+        "Sign a distinct, evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 238,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SevenIsland_TrainerTower/scripts.inc",
+        "git_blob_sha1": "b357537593138b61bb43e399d70fca17fd991f0f",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SevenIsland_TrainerTower/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "072f54d9a3a467f41234542e4f9866b4cd3041b1f5b94aa3894b83bea0e2260a",
+      "whole_source_sha256_from_packet": "9fddf00c108dcba448c5ec29803b54e6533f49485c11d494827186f38a9ce822",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SevenIsland_TrainerTower_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_TrainerTower_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 5,
+          "text": "SevenIsland_TrainerTower_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tsetvar VAR_MAP_SCENE_TRAINER_TOWER, 0"
+        },
+        {
+          "line": 7,
+          "text": "\tend"
+        },
+        {
+          "line": 9,
+          "text": "SevenIsland_TrainerTower_EventScript_TrainerTowerSign::"
+        },
+        {
+          "line": 10,
+          "text": "\tmsgbox SevenIsland_TrainerTower_Text_TrainerTowerSign, MSGBOX_SIGN"
+        },
+        {
+          "line": 11,
+          "text": "\tend"
+        },
+        {
+          "line": 13,
+          "text": "SevenIsland_TrainerTower_EventScript_TrainerTowerAheadSign::"
+        },
+        {
+          "line": 14,
+          "text": "\tmsgbox SevenIsland_TrainerTower_Text_TrainerTowerAhead, MSGBOX_SIGN"
+        },
+        {
+          "line": 15,
+          "text": "\tend"
+        }
+      ],
+      "required_source_tokens": [
+        "SevenIsland_TrainerTower_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_TrainerTower_OnTransition",
+        "\t.byte 0",
+        "SevenIsland_TrainerTower_OnTransition::",
+        "\tsetvar VAR_MAP_SCENE_TRAINER_TOWER, 0",
+        "\tend",
+        "SevenIsland_TrainerTower_EventScript_TrainerTowerSign::"
+      ],
+      "source_observations": "Trainer Tower overworld transition resets VAR_MAP_SCENE_TRAINER_TOWER to zero; two signs display text. This is not the Trainer Tower challenge implementation, trainer encounters, time trial, native gameplay or save/restart witness.",
+      "dependency_edges": [
+        "VAR_MAP_SCENE_TRAINER_TOWER and transition lifecycle",
+        "Trainer Tower entrance and room map connection",
+        "Separate Trainer Tower challenge engine and trainer tables",
+        "Sign text symbols and map object bindings"
+      ],
+      "unresolved": [
+        "Complete original map.json object/warp triggers and map table/linker closure not established",
+        "Shared called script/special handlers and native execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash the original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map-table, preprocessor/assembler/linker and native consumer",
+        "Reconcile original asset, derivative, toolchain and dependency licensing independently",
+        "Sign a distinct, evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 239,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SilphCo_10F/scripts.inc",
+        "git_blob_sha1": "789caf5b2129a8d537b4e103eb04fffc5601c706",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SilphCo_10F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "f268c64c1d2db6fc2aed6dd6a978eff25a0382cd41830a7060e106fe90f9e562",
+      "whole_source_sha256_from_packet": "5782ab4256b7ae6121bc3c3503e0d78941e67831985ebd55ec5e492eeccb7d60",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SilphCo_10F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, SilphCo_10F_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "SilphCo_10F_OnLoad::"
+        },
+        {
+          "line": 6,
+          "text": "\tcall_if_unset FLAG_SILPH_10F_DOOR, EventScript_Close10FDoor"
+        },
+        {
+          "line": 9,
+          "text": "SilphCo_10F_EventScript_WorkerF::"
+        },
+        {
+          "line": 12,
+          "text": "\tgoto_if_ge VAR_MAP_SCENE_SILPH_CO_11F, 1, SilphCo_10F_EventScript_WorkerFRocketsGone"
+        },
+        {
+          "line": 17,
+          "text": "SilphCo_10F_EventScript_WorkerFRocketsGone::"
+        },
+        {
+          "line": 22,
+          "text": "SilphCo_10F_EventScript_FloorSign::"
+        },
+        {
+          "line": 26,
+          "text": "SilphCo_10F_EventScript_Travis::"
+        },
+        {
+          "line": 27,
+          "text": "\ttrainerbattle_single TRAINER_SCIENTIST_TRAVIS, SilphCo_10F_Text_TravisIntro, SilphCo_10F_Text_TravisDefeat"
+        },
+        {
+          "line": 31,
+          "text": "SilphCo_10F_EventScript_Grunt::"
+        },
+        {
+          "line": 32,
+          "text": "\ttrainerbattle_single TRAINER_TEAM_ROCKET_GRUNT_39, SilphCo_10F_Text_GruntIntro, SilphCo_10F_Text_GruntDefeat"
+        }
+      ],
+      "required_source_tokens": [
+        "SilphCo_10F_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_LOAD, SilphCo_10F_OnLoad",
+        "SilphCo_10F_OnLoad::",
+        "\tcall_if_unset FLAG_SILPH_10F_DOOR, EventScript_Close10FDoor",
+        "SilphCo_10F_EventScript_WorkerF::",
+        "\tgoto_if_ge VAR_MAP_SCENE_SILPH_CO_11F, 1, SilphCo_10F_EventScript_WorkerFRocketsGone",
+        "SilphCo_10F_EventScript_WorkerFRocketsGone::"
+      ],
+      "source_observations": "Silph Co 10F on-load closes its door unless FLAG_SILPH_10F_DOOR is set. Worker dialogue branches on 11F scene progress; two authored trainer battle stubs use distinct Scientist Travis and Rocket Grunt 39 identifiers. Static script source only.",
+      "dependency_edges": [
+        "FLAG_SILPH_10F_DOOR and shared close-door script",
+        "VAR_MAP_SCENE_SILPH_CO_11F post-Giovanni progression",
+        "Trainer identifiers and battle dispatch",
+        "Floor map object and dialogue text bindings"
+      ],
+      "unresolved": [
+        "Complete original map.json object/warp triggers and map table/linker closure not established",
+        "Shared called script/special handlers and native execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash the original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map-table, preprocessor/assembler/linker and native consumer",
+        "Reconcile original asset, derivative, toolchain and dependency licensing independently",
+        "Sign a distinct, evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 240,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SilphCo_11F/scripts.inc",
+        "git_blob_sha1": "94aebcc2b04aafaf6a0ad57621afb7db7ad2cdd3",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SilphCo_11F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "df5aa3c857b1bf1c6d35835907829f6bb0ab41ba5bfe60d4bd2611c02dfb5fe6",
+      "whole_source_sha256_from_packet": "34d6a1075bc50768cd182488907e77e4f46110ba55fae4dec83ff7d96c729339",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SilphCo_11F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, SilphCo_11F_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "SilphCo_11F_OnLoad::"
+        },
+        {
+          "line": 6,
+          "text": "\tcall_if_unset FLAG_SILPH_11F_DOOR, EventScript_Close11FDoor"
+        },
+        {
+          "line": 9,
+          "text": "SilphCo_11F_EventScript_President::"
+        },
+        {
+          "line": 12,
+          "text": "\tgoto_if_set FLAG_GOT_MASTER_BALL_FROM_SILPH, SilphCo_11F_EventScript_AlreadyGotMasterBall"
+        },
+        {
+          "line": 13,
+          "text": "\tcheckplayergender"
+        },
+        {
+          "line": 16,
+          "text": "\tcheckitemspace ITEM_MASTER_BALL"
+        },
+        {
+          "line": 17,
+          "text": "\tgoto_if_eq VAR_RESULT, FALSE, SilphCo_11F_EventScript_NoRoomForMasterBall"
+        },
+        {
+          "line": 18,
+          "text": "\tgiveitem_msg SilphCo_11F_Text_ObtainedMasterBallFromPresident, ITEM_MASTER_BALL, 1, MUS_OBTAIN_KEY_ITEM"
+        },
+        {
+          "line": 20,
+          "text": "\tsetflag FLAG_GOT_MASTER_BALL_FROM_SILPH"
+        },
+        {
+          "line": 32,
+          "text": "SilphCo_11F_EventScript_NoRoomForMasterBall::"
+        },
+        {
+          "line": 37,
+          "text": "SilphCo_11F_EventScript_AlreadyGotMasterBall::"
+        },
+        {
+          "line": 46,
+          "text": "SilphCo_11F_EventScript_GiovanniTriggerLeft::"
+        },
+        {
+          "line": 52,
+          "text": "SilphCo_11F_EventScript_GiovanniTriggerRight::"
+        },
+        {
+          "line": 58,
+          "text": "SilphCo_11F_EventScript_BattleGiovanni::"
+        },
+        {
+          "line": 65,
+          "text": "\tcall_if_eq VAR_TEMP_1, 0, SilphCo_11F_EventScript_GiovanniApproachLeft"
+        },
+        {
+          "line": 66,
+          "text": "\tcall_if_eq VAR_TEMP_1, 1, SilphCo_11F_EventScript_GiovanniApproachRight"
+        },
+        {
+          "line": 68,
+          "text": "\ttrainerbattle_no_intro TRAINER_BOSS_GIOVANNI_2, SilphCo_11F_Text_GiovanniDefeat"
+        },
+        {
+          "line": 72,
+          "text": "\tremoveobject LOCALID_SILPH_CO_GIOVANNI"
+        },
+        {
+          "line": 76,
+          "text": "\tsetvar VAR_MAP_SCENE_SILPH_CO_11F, 1"
+        },
+        {
+          "line": 77,
+          "text": "\tsetflag FLAG_HIDE_SAFFRON_ROCKETS"
+        },
+        {
+          "line": 78,
+          "text": "\tclearflag FLAG_HIDE_SAFFRON_CIVILIANS"
+        },
+        {
+          "line": 79,
+          "text": "\treleaseall"
+        },
+        {
+          "line": 82,
+          "text": "SilphCo_11F_EventScript_GiovanniApproachLeft::"
+        },
+        {
+          "line": 88,
+          "text": "SilphCo_11F_EventScript_GiovanniApproachRight::"
+        },
+        {
+          "line": 125,
+          "text": "SilphCo_11F_EventScript_Grunt1::"
+        },
+        {
+          "line": 130,
+          "text": "SilphCo_11F_EventScript_Grunt2::"
+        }
+      ],
+      "required_source_tokens": [
+        "SilphCo_11F_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_LOAD, SilphCo_11F_OnLoad",
+        "SilphCo_11F_OnLoad::",
+        "\tcall_if_unset FLAG_SILPH_11F_DOOR, EventScript_Close11FDoor",
+        "SilphCo_11F_EventScript_President::",
+        "\tgoto_if_set FLAG_GOT_MASTER_BALL_FROM_SILPH, SilphCo_11F_EventScript_AlreadyGotMasterBall",
+        "\tcheckplayergender"
+      ],
+      "source_observations": "Silph Co 11F president's Master Ball reward checks prior-reward flag and bag space before giving the item and setting the flag. Giovanni's two approach triggers converge on a no-intro boss battle; post-battle removes objects, changes 11F scene and city Rocket/civilian visibility flags. No native battle/save or item persistence verified.",
+      "dependency_edges": [
+        "FLAG_GOT_MASTER_BALL_FROM_SILPH and inventory/save consumers",
+        "VAR_MAP_SCENE_SILPH_CO_11F cross-floor scene",
+        "FLAG_HIDE_SAFFRON_ROCKETS and FLAG_HIDE_SAFFRON_CIVILIANS",
+        "Giovanni trainer battle and movement handlers",
+        "11F doors, local object IDs and item receipt text"
+      ],
+      "unresolved": [
+        "Complete original map.json object/warp triggers and map table/linker closure not established",
+        "Shared called script/special handlers and native execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash the original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map-table, preprocessor/assembler/linker and native consumer",
+        "Reconcile original asset, derivative, toolchain and dependency licensing independently",
+        "Sign a distinct, evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 241,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SilphCo_1F/scripts.inc",
+        "git_blob_sha1": "16d249cd03487e09e4fbbca5526b0fd7e1c90515",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SilphCo_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "a190bea7071cebd242fecdf7e9d58a628ea758862e8dbe59a3a98b7f27d00738",
+      "whole_source_sha256_from_packet": "f95bd6f58d732abad159850cfd91043241ec6a87b328e4f3a3be0f2dcd157ead",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SilphCo_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SilphCo_1F_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 5,
+          "text": "SilphCo_1F_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_SILPH_CO_1F"
+        },
+        {
+          "line": 7,
+          "text": "\tend"
+        },
+        {
+          "line": 9,
+          "text": "SilphCo_1F_EventScript_Receptionist::"
+        },
+        {
+          "line": 10,
+          "text": "\tmsgbox SilphCo_1F_Text_WelcomePresidentInBoardroom, MSGBOX_NPC"
+        },
+        {
+          "line": 11,
+          "text": "\tend"
+        },
+        {
+          "line": 13,
+          "text": "SilphCo_1F_EventScript_FloorSign::"
+        },
+        {
+          "line": 14,
+          "text": "\tmsgbox SilphCo_1F_Text_FloorSign, MSGBOX_SIGN"
+        },
+        {
+          "line": 15,
+          "text": "\tend"
+        }
+      ],
+      "required_source_tokens": [
+        "SilphCo_1F_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, SilphCo_1F_OnTransition",
+        "\t.byte 0",
+        "SilphCo_1F_OnTransition::",
+        "\tsetworldmapflag FLAG_WORLD_MAP_SILPH_CO_1F",
+        "\tend",
+        "SilphCo_1F_EventScript_Receptionist::"
+      ],
+      "source_observations": "Silph Co 1F transition sets its world-map discovery flag, and receptionist and floor-sign scripts display text; original source only, not native world-map persistence evidence.",
+      "dependency_edges": [
+        "FLAG_WORLD_MAP_SILPH_CO_1F and save consumer",
+        "Map transition script pointer and map table",
+        "Receptionist dialogue text and map object binding",
+        "Floor-sign text and map object binding"
+      ],
+      "unresolved": [
+        "Complete original map.json object/warp triggers and map table/linker closure not established",
+        "Shared called script/special handlers and native execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash the original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map-table, preprocessor/assembler/linker and native consumer",
+        "Reconcile original asset, derivative, toolchain and dependency licensing independently",
+        "Sign a distinct, evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 242,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SilphCo_2F/scripts.inc",
+        "git_blob_sha1": "9fb2624fdd338b1fc28a907aaf4cbf313dfe6fca",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SilphCo_2F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "5e834d9355eb4798d77f21fd27a0ae86ac767d393951885d3fdc0828ffa9e508",
+      "whole_source_sha256_from_packet": "8bca764b3e2e8f6338659b307deb363542daf54e81bb3edf6339c41e63fc75ae",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SilphCo_2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, SilphCo_2F_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "SilphCo_2F_OnLoad::"
+        },
+        {
+          "line": 6,
+          "text": "\tcall_if_unset FLAG_SILPH_2F_DOOR_1, EventScript_Close2FDoor1"
+        },
+        {
+          "line": 7,
+          "text": "\tcall_if_unset FLAG_SILPH_2F_DOOR_2, EventScript_Close2FDoor2"
+        },
+        {
+          "line": 10,
+          "text": "SilphCo_2F_EventScript_ThunderWaveTutor::"
+        },
+        {
+          "line": 11,
+          "text": "\tgoto EventScript_ThunderWaveTutor"
+        },
+        {
+          "line": 14,
+          "text": "SilphCo_2F_EventScript_FloorSign::"
+        },
+        {
+          "line": 18,
+          "text": "SilphCo_2F_EventScript_Connor::"
+        },
+        {
+          "line": 19,
+          "text": "\ttrainerbattle_single TRAINER_SCIENTIST_CONNOR, SilphCo_2F_Text_ConnorIntro, SilphCo_2F_Text_ConnorDefeat"
+        },
+        {
+          "line": 23,
+          "text": "SilphCo_2F_EventScript_Jerry::"
+        },
+        {
+          "line": 24,
+          "text": "\ttrainerbattle_single TRAINER_SCIENTIST_JERRY, SilphCo_2F_Text_JerryIntro, SilphCo_2F_Text_JerryDefeat"
+        },
+        {
+          "line": 28,
+          "text": "SilphCo_2F_EventScript_Grunt1::"
+        },
+        {
+          "line": 29,
+          "text": "\ttrainerbattle_single TRAINER_TEAM_ROCKET_GRUNT_23, SilphCo_2F_Text_Grunt1Intro, SilphCo_2F_Text_Grunt1Defeat"
+        },
+        {
+          "line": 33,
+          "text": "SilphCo_2F_EventScript_Grunt2::"
+        },
+        {
+          "line": 34,
+          "text": "\ttrainerbattle_single TRAINER_TEAM_ROCKET_GRUNT_24, SilphCo_2F_Text_Grunt2Intro, SilphCo_2F_Text_Grunt2Defeat"
+        }
+      ],
+      "required_source_tokens": [
+        "SilphCo_2F_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_LOAD, SilphCo_2F_OnLoad",
+        "SilphCo_2F_OnLoad::",
+        "\tcall_if_unset FLAG_SILPH_2F_DOOR_1, EventScript_Close2FDoor1",
+        "\tcall_if_unset FLAG_SILPH_2F_DOOR_2, EventScript_Close2FDoor2",
+        "SilphCo_2F_EventScript_ThunderWaveTutor::",
+        "\tgoto EventScript_ThunderWaveTutor"
+      ],
+      "source_observations": "Silph Co 2F on-load closes two independently flagged doors; Thunder Wave tutor delegates to a shared script. Scientist Connor/Jerry and two Rocket grunts have authored trainer-battle stubs. No tutor or trainer execution verified.",
+      "dependency_edges": [
+        "FLAG_SILPH_2F_DOOR_1 and FLAG_SILPH_2F_DOOR_2",
+        "Shared EventScript_ThunderWaveTutor and move tutor state",
+        "Scientist and Rocket trainer identifiers and battle dispatcher",
+        "Map object bindings and door metatile updates"
+      ],
+      "unresolved": [
+        "Complete original map.json object/warp triggers and map table/linker closure not established",
+        "Shared called script/special handlers and native execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash the original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map-table, preprocessor/assembler/linker and native consumer",
+        "Reconcile original asset, derivative, toolchain and dependency licensing independently",
+        "Sign a distinct, evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 243,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SilphCo_3F/scripts.inc",
+        "git_blob_sha1": "1b5510791434acaa9713ab407bb95b086386b017",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SilphCo_3F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "3a3eb6d73fe98c654dacedab971980b9e3c0d086990092bb8477a825dbce2482",
+      "whole_source_sha256_from_packet": "de8cf2428970d57ee9f6190f5c294f7d8fc1211de3df50f82227c34e5818ff89",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SilphCo_3F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, SilphCo_3F_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "SilphCo_3F_OnLoad::"
+        },
+        {
+          "line": 6,
+          "text": "\tcall_if_unset FLAG_SILPH_3F_DOOR_1, EventScript_Close3FDoor1"
+        },
+        {
+          "line": 7,
+          "text": "\tcall_if_unset FLAG_SILPH_3F_DOOR_2, EventScript_Close3FDoor2"
+        },
+        {
+          "line": 10,
+          "text": "SilphCo_3F_EventScript_WorkerM::"
+        },
+        {
+          "line": 13,
+          "text": "\tgoto_if_ge VAR_MAP_SCENE_SILPH_CO_11F, 1, SilphCo_3F_EventScript_WorkerMRocketsGone"
+        },
+        {
+          "line": 18,
+          "text": "SilphCo_3F_EventScript_WorkerMRocketsGone::"
+        },
+        {
+          "line": 23,
+          "text": "SilphCo_3F_EventScript_FloorSign::"
+        },
+        {
+          "line": 27,
+          "text": "SilphCo_3F_EventScript_Jose::"
+        },
+        {
+          "line": 28,
+          "text": "\ttrainerbattle_single TRAINER_SCIENTIST_JOSE, SilphCo_3F_Text_JoseIntro, SilphCo_3F_Text_JoseDefeat"
+        },
+        {
+          "line": 32,
+          "text": "SilphCo_3F_EventScript_Grunt::"
+        },
+        {
+          "line": 33,
+          "text": "\ttrainerbattle_single TRAINER_TEAM_ROCKET_GRUNT_25, SilphCo_3F_Text_GruntIntro, SilphCo_3F_Text_GruntDefeat"
+        }
+      ],
+      "required_source_tokens": [
+        "SilphCo_3F_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_LOAD, SilphCo_3F_OnLoad",
+        "SilphCo_3F_OnLoad::",
+        "\tcall_if_unset FLAG_SILPH_3F_DOOR_1, EventScript_Close3FDoor1",
+        "\tcall_if_unset FLAG_SILPH_3F_DOOR_2, EventScript_Close3FDoor2",
+        "SilphCo_3F_EventScript_WorkerM::",
+        "\tgoto_if_ge VAR_MAP_SCENE_SILPH_CO_11F, 1, SilphCo_3F_EventScript_WorkerMRocketsGone"
+      ],
+      "source_observations": "Silph Co 3F on-load closes two flagged doors; worker dialogue changes when 11F scene reaches one. Scientist Jose and Rocket Grunt 25 have authored battle stubs. Source-level cross-floor dependency, not native execution.",
+      "dependency_edges": [
+        "FLAG_SILPH_3F_DOOR_1 and FLAG_SILPH_3F_DOOR_2",
+        "VAR_MAP_SCENE_SILPH_CO_11F cross-floor progression",
+        "Scientist Jose and Rocket Grunt 25 battle dispatch",
+        "Map object bindings and shared door-close metatiles"
+      ],
+      "unresolved": [
+        "Complete original map.json object/warp triggers and map table/linker closure not established",
+        "Shared called script/special handlers and native execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash the original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map-table, preprocessor/assembler/linker and native consumer",
+        "Reconcile original asset, derivative, toolchain and dependency licensing independently",
+        "Sign a distinct, evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}

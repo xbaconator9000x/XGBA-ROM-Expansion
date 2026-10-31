@@ -1,0 +1,314 @@
+{
+  "schema": "xgba.phase1.remaining_p0_second_packet_partial_analyst.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+  "source_packet_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+  "new_partial_indices": [
+    100,
+    103,
+    106,
+    107
+  ],
+  "previous_other_p0_partial": 100,
+  "other_p0_partial_total": 104,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 133,
+  "other_p0_without_partial": 205,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "machine_dossier_note": "Exact machine dossier SHA256 copied from source-reconciled packet; original compressed machine dossier bytes not independently accessible/verified.",
+  "license_note": "Original pinned mGBA MPL-2.0 file notices and repository LICENSE blob verified; full file/dependency licensing clearance pending.",
+  "records": [
+    {
+      "packet_index": 100,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/platform/libretro/libretro.c",
+        "git_blob_sha1": "12e79131c38e06a8ba46cef97e0872ec51544e38",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/platform/libretro/libretro.c"
+      },
+      "machine_dossier_sha256_unverified": "70da3c3b8a3280ad6d077f9998fc73d69b443505d2d13dfee3dae791105f5f18",
+      "whole_source_sha256_from_machine_packet_unverified": "da8800c76929e25729573760b6180452cdefa824aa6df21b51c3566553ad67ac",
+      "line_anchors": [
+        {
+          "line": 356,
+          "text": "unsigned retro_api_version(void) {"
+        },
+        {
+          "line": 652,
+          "text": "static void _setupMaps(struct mCore* core) {"
+        },
+        {
+          "line": 845,
+          "text": "bool retro_load_game(const struct retro_game_info* game) {"
+        },
+        {
+          "line": 1009,
+          "text": "size_t retro_serialize_size(void) {"
+        },
+        {
+          "line": 1020,
+          "text": "bool retro_serialize(void* data, size_t size) {"
+        },
+        {
+          "line": 1038,
+          "text": "bool retro_unserialize(const void* data, size_t size) {"
+        }
+      ],
+      "responsibilities": "Original mGBA libretro frontend bridges core lifecycle, platform memory maps, game loading, savestate serialization and frontend memory interfaces; GBA and GB code paths are conditional.",
+      "dependency_edges": [
+        "src/platform/libretro/libretro.h",
+        "include/mgba/core/core.h",
+        "src/gba/memory.c",
+        "src/gba/serialize.c"
+      ],
+      "unresolved": [
+        "Source _setupMaps documents a TODO distinguishing Flash from SRAM mapping; verify actual frontend memory-map contract before any compatibility claim.",
+        "retro_serialize uses SAVESTATE_SAVEDATA | SAVESTATE_RTC while retro_unserialize uses SAVESTATE_RTC; trace exact savedata ownership and flags with executable tests.",
+        "Frontend savestates are not persistent .sav flush, stock FireRed gameplay, power-loss, or physical Flash evidence."
+      ],
+      "partial_source_scope": "Selected original functions, platform guards, call sites and error paths only; no whole-file semantic coverage",
+      "reviewer_questions": [
+        "Read full exact pinned source including inactive platform branches and error paths",
+        "Recompute original machine dossier bytes and SHA256, not just packet strings",
+        "Resolve all compiled/native callers, consumers and serialization dependencies",
+        "Reconcile MPL-2.0 source notices, repository LICENSE and transitive licensing",
+        "A genuinely distinct reviewer must issue source-bound approval or NEEDS_EVIDENCE"
+      ],
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "observed_repository_license": "Mozilla Public License Version 2.0",
+        "file_notice": "Mozilla Public License, v. 2.0.",
+        "scope_note": "File-level and dependency licensing not independently cleared"
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "LIBRETRO_HOST_BRIDGE_SOURCE_NOT_STOCK_GAMEPLAY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    },
+    {
+      "packet_index": 103,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/platform/qt/GBOverride.cpp",
+        "git_blob_sha1": "2248304373739615ce92d97518097144309c2614",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/platform/qt/GBOverride.cpp"
+      },
+      "machine_dossier_sha256_unverified": "19bf9b19877a1d09f9aad0890594ca56cd588fccbf9f98e09e260bdcc321d0a9",
+      "whole_source_sha256_from_machine_packet_unverified": "b92b1154a55927003f3b1b403dec3310a69a8ecfb6b02b701797786412030656",
+      "line_anchors": [
+        {
+          "line": 14,
+          "text": "void GBOverride::identify(const struct mCore* core) {"
+        },
+        {
+          "line": 15,
+          "text": "\tif (core->platform(core) != mPLATFORM_GB) {"
+        },
+        {
+          "line": 19,
+          "text": "\tif (!gb->memory.rom || gb->memory.romSize < sizeof(struct GBCartridge) + 0x100) {"
+        },
+        {
+          "line": 25,
+          "text": "void GBOverride::save(struct Configuration* config) const {"
+        },
+        {
+          "line": 29,
+          "text": "const void* GBOverride::raw() const {"
+        }
+      ],
+      "responsibilities": "Original Qt Game Boy cartridge override helper checks platform and ROM/header bounds, computes header CRC32, and delegates configuration save.",
+      "dependency_edges": [
+        "src/platform/qt/GBOverride.h",
+        "include/mgba/internal/gb/gb.h",
+        "src/gb/overrides.c"
+      ],
+      "unresolved": [
+        "Trace Qt callers and GBOverrideSave persistence path, including null core preconditions.",
+        "The ROM size guard protects the CRC range in source; no native malformed-ROM witness was executed.",
+        "This file handles Game Boy metadata, not FireRed GBA Flash or physical cartridge persistence."
+      ],
+      "partial_source_scope": "Selected original functions, platform guards, call sites and error paths only; no whole-file semantic coverage",
+      "reviewer_questions": [
+        "Read full exact pinned source including inactive platform branches and error paths",
+        "Recompute original machine dossier bytes and SHA256, not just packet strings",
+        "Resolve all compiled/native callers, consumers and serialization dependencies",
+        "Reconcile MPL-2.0 source notices, repository LICENSE and transitive licensing",
+        "A genuinely distinct reviewer must issue source-bound approval or NEEDS_EVIDENCE"
+      ],
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "observed_repository_license": "Mozilla Public License Version 2.0",
+        "file_notice": "Mozilla Public License, v. 2.0.",
+        "scope_note": "File-level and dependency licensing not independently cleared"
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "GAME_BOY_QT_OVERRIDE_NOT_GBA_FLASH",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    },
+    {
+      "packet_index": 106,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/platform/qt/ROMInfo.cpp",
+        "git_blob_sha1": "3f0f6ea2ae825f3be840f3826485d3b363edf253",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/platform/qt/ROMInfo.cpp"
+      },
+      "machine_dossier_sha256_unverified": "167145cd4c2d41e821840dbf46e13a1318af9b40e823c41cd73f84885bfa5687",
+      "whole_source_sha256_from_machine_packet_unverified": "0578ecac1c1596a746f768cf4d8892f058f9b1e522a7d0ffd825c813e054f90d",
+      "line_anchors": [
+        {
+          "line": 28,
+          "text": "ROMInfo::ROMInfo(std::shared_ptr<CoreController> controller, QWidget* parent)"
+        },
+        {
+          "line": 40,
+          "text": "\tCoreController::Interrupter interrupter(controller);"
+        },
+        {
+          "line": 44,
+          "text": "\tm_ui.title->setText(QLatin1String(info.title));"
+        },
+        {
+          "line": 50,
+          "text": "\tm_ui.maker->setText(QLatin1String(info.maker));"
+        },
+        {
+          "line": 60,
+          "text": "\t\tm_ui.crc->setText(QString::number(crc32, 16));"
+        }
+      ],
+      "responsibilities": "Original Qt ROM information dialog interrupts core controller while collecting game metadata, CRC32/MD5/SHA1, ROM size, optional database metadata and configured save-file path.",
+      "dependency_edges": [
+        "src/platform/qt/CoreController.h",
+        "src/platform/qt/ROMInfo.h",
+        "include/mgba/core/core.h"
+      ],
+      "unresolved": [
+        "Trace CoreController::Interrupter thread synchronization and game metadata buffer contract.",
+        "Optional USE_SQLITE3 database lookup is conditional and requires separate compiled configuration evidence.",
+        "Displayed save-file path is UI metadata, not evidence of successful save writes or Flash durability."
+      ],
+      "partial_source_scope": "Selected original functions, platform guards, call sites and error paths only; no whole-file semantic coverage",
+      "reviewer_questions": [
+        "Read full exact pinned source including inactive platform branches and error paths",
+        "Recompute original machine dossier bytes and SHA256, not just packet strings",
+        "Resolve all compiled/native callers, consumers and serialization dependencies",
+        "Reconcile MPL-2.0 source notices, repository LICENSE and transitive licensing",
+        "A genuinely distinct reviewer must issue source-bound approval or NEEDS_EVIDENCE"
+      ],
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "observed_repository_license": "Mozilla Public License Version 2.0",
+        "file_notice": "Mozilla Public License, v. 2.0.",
+        "scope_note": "File-level and dependency licensing not independently cleared"
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "QT_ROM_INFORMATION_DISPLAY_SOURCE_NOT_SAVE_DURABILITY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    },
+    {
+      "packet_index": 107,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/platform/qt/SaveConverter.cpp",
+        "git_blob_sha1": "4c32280c9c5288e806ffd237119186e2a633c4a7",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/platform/qt/SaveConverter.cpp"
+      },
+      "machine_dossier_sha256_unverified": "dc4112a41e57a7496c02986e900cb3d089cc081ae36ee02f4df479d0fc890357",
+      "whole_source_sha256_from_machine_packet_unverified": "3a6498a4fa69064d9b3723b49398cfe9d8e827ada3d8be26215db3a5ead2184f",
+      "line_anchors": [
+        {
+          "line": 66,
+          "text": "void SaveConverter::convert() {"
+        },
+        {
+          "line": 72,
+          "text": "\tQByteArray converted = input.convertTo(output);"
+        },
+        {
+          "line": 80,
+          "text": "\tQFile out(m_ui.outputFile->text());"
+        },
+        {
+          "line": 82,
+          "text": "\t\tout.write(converted);"
+        },
+        {
+          "line": 164,
+          "text": "void SaveConverter::detectFromSavestate(VFile* vf) {"
+        },
+        {
+          "line": 657,
+          "text": "QByteArray SaveConverter::AnnotatedSave::convertTo(const SaveConverter::AnnotatedSave& target) const {"
+        }
+      ],
+      "responsibilities": "Original Qt SaveConverter identifies savestate/raw formats and platform-specific save types, converts compatible representations, and writes converted bytes to an output QFile.",
+      "dependency_edges": [
+        "src/platform/qt/SaveConverter.h",
+        "src/platform/qt/VFileDevice.h",
+        "src/gba/serialize.c",
+        "src/gb/serialize.c"
+      ],
+      "unresolved": [
+        "Source line 82 ignores QFile::write return value; reproduce short write/ENOSPC under native Qt before claiming lost or corrupt output.",
+        "Confirm output type index validation and input VFile ownership across failed conversions.",
+        "GBA EEPROM endian conversion and GB MBC2 nibble conversions are separate; neither proves stock FireRed Flash persistence."
+      ],
+      "partial_source_scope": "Selected original functions, platform guards, call sites and error paths only; no whole-file semantic coverage",
+      "reviewer_questions": [
+        "Read full exact pinned source including inactive platform branches and error paths",
+        "Recompute original machine dossier bytes and SHA256, not just packet strings",
+        "Resolve all compiled/native callers, consumers and serialization dependencies",
+        "Reconcile MPL-2.0 source notices, repository LICENSE and transitive licensing",
+        "A genuinely distinct reviewer must issue source-bound approval or NEEDS_EVIDENCE"
+      ],
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "observed_repository_license": "Mozilla Public License Version 2.0",
+        "file_notice": "Mozilla Public License, v. 2.0.",
+        "scope_note": "File-level and dependency licensing not independently cleared"
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "QT_SAVE_CONVERTER_SOURCE_UNCHECKED_WRITE_NOT_NATIVE_FAILURE",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    }
+  ]
+}

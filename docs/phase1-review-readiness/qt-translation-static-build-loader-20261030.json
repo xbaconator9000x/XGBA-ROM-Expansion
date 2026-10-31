@@ -1,0 +1,107 @@
+{
+  "schema": "xgba.phase1.mgba_qt_translation_static_build_loader.v1",
+  "date": "2026-10-30",
+  "pin": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "build_source": {
+    "path": "src/platform/qt/CMakeLists.txt",
+    "git_blob_sha1": "fc0c46c19dfb91ed1bfc5c681c7fe0885540db79",
+    "line_anchors": [
+      {
+        "line": 398,
+        "text": "find_package(${QT}LinguistTools)"
+      },
+      {
+        "line": 399,
+        "text": "if(${QT}LinguistTools_FOUND)"
+      },
+      {
+        "line": 402,
+        "text": "\tfile(GLOB TS_FILES \"${CMAKE_CURRENT_SOURCE_DIR}/ts/${BINARY_NAME}-*.ts\")"
+      },
+      {
+        "line": 409,
+        "text": "\t\tlist(REMOVE_ITEM TS_FILES \"${CMAKE_CURRENT_SOURCE_DIR}/ts/${BINARY_NAME}-template.ts\")"
+      },
+      {
+        "line": 413,
+        "text": "\t\t\tqt_add_translation(TRANSLATION_FILES ${TS_FILES})"
+      },
+      {
+        "line": 415,
+        "text": "\t\t\tqt5_add_translation(TRANSLATION_FILES ${TS_FILES})"
+      },
+      {
+        "line": 434,
+        "text": "\tfile(WRITE ${TRANSLATION_QRC} \"<RCC>\\n\\t<qresource prefix=\\\"/translations/\\\">\\n\")"
+      },
+      {
+        "line": 442,
+        "text": "\t\tqt_add_resources(TRANSLATION_RESOURCES ${TRANSLATION_QRC})"
+      },
+      {
+        "line": 444,
+        "text": "\t\tqt5_add_resources(TRANSLATION_RESOURCES ${TRANSLATION_QRC})"
+      }
+    ]
+  },
+  "consumer_source": {
+    "path": "src/platform/qt/main.cpp",
+    "git_blob_sha1": "d0ea3cb178dd2eb70d8ebbd7308a469d3eded1a2",
+    "line_anchors": [
+      {
+        "line": 121,
+        "text": "\tQTranslator qtTranslator;"
+      },
+      {
+        "line": 131,
+        "text": "\tQTranslator qtStaticTranslator;"
+      },
+      {
+        "line": 136,
+        "text": "\tQTranslator langTranslator;"
+      },
+      {
+        "line": 137,
+        "text": "\tif (langTranslator.load(locale, binaryName, \"-\", \":/translations/\")) {"
+      },
+      {
+        "line": 138,
+        "text": "\t\tapplication.installTranslator(&langTranslator);"
+      }
+    ]
+  },
+  "edges": [
+    {
+      "from": "Qt TS asset",
+      "to": "CMake TS_FILES glob",
+      "status": "STATIC_SOURCE_RULE_ONLY"
+    },
+    {
+      "from": "CMake Qt LinguistTools",
+      "to": "conditional Qt5/Qt6 translation QM",
+      "status": "STATIC_BUILD_RULE_ONLY"
+    },
+    {
+      "from": "QM list",
+      "to": "generated ts.qrc and Qt resources",
+      "status": "STATIC_BUILD_RULE_ONLY"
+    },
+    {
+      "from": "resource prefix /translations/",
+      "to": "main.cpp QTranslator.load",
+      "status": "STATIC_LOADER_SOURCE_ONLY"
+    }
+  ],
+  "evidence_class": "PINNED_BUILD_RULE_AND_LOADER_SOURCE_ONLY",
+  "compiled_qm_verified": false,
+  "resource_bundle_verified": false,
+  "native_qt_locale_runtime_verified": false,
+  "independent_approved": false,
+  "licensing_clearance": "PENDING_INDEPENDENT",
+  "limitations": [
+    "Qt LinguistTools conditional presence not verified",
+    "No lrelease, Qt build, generated QM or QRC output observed",
+    "No Qt UI runtime or locale fallback exercised",
+    "Static source rules do not prove compiled or native behavior"
+  ]
+}

@@ -1,0 +1,421 @@
+{
+  "schema": "xgba.phase1.remaining_p0_partial_analyst_batch.v2",
+  "date": "2026-10-29",
+  "source_packet": "docs/phase1-review-readiness/packet-0000-0099.json",
+  "source_packet_blob_sha1": "a48c12900acc7e0211a8071119763e2b5de4b1a4",
+  "previous_partial_indices": [
+    1,
+    2,
+    6,
+    10,
+    14,
+    16
+  ],
+  "new_partial_indices": [
+    3,
+    25,
+    33,
+    38,
+    43,
+    55,
+    58,
+    60
+  ],
+  "partial_source_inspected": 8,
+  "curated_29_source_inspected": 29,
+  "remaining_p0_partial_total": 14,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "machine_dossier_sha256_note": "Packet digest copied for exact identity only; original machine dossier bytes and SHA256 not independently verified.",
+  "records": [
+    {
+      "packet_index": 3,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/gba/io.h",
+        "git_blob_sha1": "2891c650c4fb033e7132ad55dbbf9181c1f65317",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/gba/io.h"
+      },
+      "machine_dossier_sha256_unverified": "d409b0a50ede1ca383cf929c436c978e2d327ef466cb215dcf341f01cc2f43a5",
+      "line_anchors": [
+        {
+          "line": 15,
+          "text": "#define GBA_REG(X) (GBA_REG_ ## X >> 1)"
+        },
+        {
+          "line": 17,
+          "text": "enum GBAIORegisters {"
+        },
+        {
+          "line": 176,
+          "text": "void GBAIOInit(struct GBA* gba);"
+        },
+        {
+          "line": 177,
+          "text": "void GBAIOWrite(struct GBA* gba, uint32_t address, uint16_t value);"
+        },
+        {
+          "line": 185,
+          "text": "void GBAIOSerialize(struct GBA* gba, struct GBASerializedState* state);"
+        }
+      ],
+      "responsibilities": "GBA I/O register offsets are byte addresses; GBA_REG macro maps them to halfword slots. Read/write/serialize interfaces are declared, not executed.",
+      "dependency_edges": [
+        "src/gba/io.c",
+        "include/mgba/internal/gba/gba.h",
+        "src/gba/serialize.c"
+      ],
+      "unresolved": [
+        "I/O register alias and width-specific dispatch not exhaustively checked",
+        "No native I/O readback test in this batch"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 25,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/gba/savedata.h",
+        "git_blob_sha1": "6227be25e8c9d2c1cc14c06ded34389b96138577",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/gba/savedata.h"
+      },
+      "machine_dossier_sha256_unverified": "eaee2c8bdb65c51e4f40daeb80af916f57ed430c48c88286562363f687ca6de9",
+      "line_anchors": [
+        {
+          "line": 42,
+          "text": "enum FlashStateMachine {"
+        },
+        {
+          "line": 64,
+          "text": "struct GBASavedata {"
+        },
+        {
+          "line": 84,
+          "text": "int dirty;"
+        },
+        {
+          "line": 103,
+          "text": "bool GBASavedataClone(struct GBASavedata* savedata, struct VFile* out);"
+        },
+        {
+          "line": 104,
+          "text": "bool GBASavedataLoad(struct GBASavedata* savedata, struct VFile* in);"
+        }
+      ],
+      "responsibilities": "Savedata state includes backing VFile, Flash state machine, current bank, dirty status, and APIs for clone/load, Flash and EEPROM access. Header declarations do not prove disk durability.",
+      "dependency_edges": [
+        "src/gba/savedata.c",
+        "src/gba/memory.c",
+        "src/gba/dma.c"
+      ],
+      "unresolved": [
+        "Flash writeback and masked-file failure semantics require implementation inspection",
+        "No physical Flash or power-loss result"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 33,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "include/core/events.h",
+        "git_blob_sha1": "816cf95396df4fad571ae056c5ff428823e9b5df",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/include/core/events.h"
+      },
+      "machine_dossier_sha256_unverified": "62d954945c6e7d1ca7d49b5742a7696dce806642692789eb2329ba94528b9012",
+      "line_anchors": [
+        {
+          "line": 40,
+          "text": "class Event {"
+        },
+        {
+          "line": 207,
+          "text": "class ObjectEvent : public Event {"
+        },
+        {
+          "line": 313,
+          "text": "class WarpEvent : public Event {"
+        },
+        {
+          "line": 353,
+          "text": "class CoordEvent : public Event {"
+        },
+        {
+          "line": 512,
+          "text": "class HiddenItemEvent : public BGEvent {"
+        }
+      ],
+      "responsibilities": "Porymap Event type hierarchy declares object, warp, coordinate, background, sign and hidden-item event classes, each requiring implementation-level JSON/ASM semantics.",
+      "dependency_edges": [
+        "src/core/events.cpp",
+        "src/core/project.cpp",
+        "include/core/map.h"
+      ],
+      "unresolved": [
+        "Full event subclass fields, validation and serialization are not reviewed",
+        "No GUI event editing or ROM roundtrip execution"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "packet_index": 38,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "include/core/map.h",
+        "git_blob_sha1": "47d52b08e4a403e88c80c0d436f563460721e65d",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/include/core/map.h"
+      },
+      "machine_dossier_sha256_unverified": "2a3f73a2bf4dc173b57023c9434a6c42065fb93394d48b035195ff278d4210a4",
+      "line_anchors": [
+        {
+          "line": 30,
+          "text": "class Map : public QObject"
+        },
+        {
+          "line": 48,
+          "text": "void setLayout(Layout *layout);"
+        },
+        {
+          "line": 74,
+          "text": "void setHasUnsavedDataChanges(bool unsavedDataChanges) { m_hasUnsavedDataChanges = unsavedDataChanges; }"
+        },
+        {
+          "line": 112,
+          "text": "void setClean();"
+        },
+        {
+          "line": 142,
+          "text": "QMap<Event::Group, QList<Event *>> m_events;"
+        }
+      ],
+      "responsibilities": "Map QObject holds layout pointer, unsaved-data state, event groups and connections; setClean/hasUnsavedChanges declarations bound persistence lifecycle.",
+      "dependency_edges": [
+        "src/core/map.cpp",
+        "src/core/project.cpp",
+        "src/core/editor.cpp"
+      ],
+      "unresolved": [
+        "Dirty-state and save-failure semantics need full method-body audit",
+        "No fresh-process populated multi-map verification"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "packet_index": 43,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "include/ui/newmapconnectiondialog.h",
+        "git_blob_sha1": "db9eee49ff3fb976be7dc4454cdaac5b3cd7bd8f",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/include/ui/newmapconnectiondialog.h"
+      },
+      "machine_dossier_sha256_unverified": "db025e1b1cca24a3545b9cd69948d442136b2a37801c2f5a99585a8838e06e6f",
+      "line_anchors": [
+        {
+          "line": 12,
+          "text": "class NewMapConnectionDialog : public QDialog"
+        },
+        {
+          "line": 22,
+          "text": "signals:"
+        },
+        {
+          "line": 23,
+          "text": "void newConnectionedAdded(const QString &mapName, const QString &direction);"
+        },
+        {
+          "line": 24,
+          "text": "void connectionReplaced(const QString &mapName, const QString &direction);"
+        },
+        {
+          "line": 32,
+          "text": "bool askReplaceConnection(MapConnection *connection, const QString &newMapName);"
+        }
+      ],
+      "responsibilities": "NewMapConnectionDialog exposes add/replace Qt signals and a replacement-confirmation helper, but this header alone cannot establish reciprocal map-connection persistence.",
+      "dependency_edges": [
+        "src/ui/newmapconnectiondialog.cpp",
+        "src/core/project.cpp",
+        "src/core/map.cpp"
+      ],
+      "unresolved": [
+        "Connection replacement warning and reverse-link behavior untested",
+        "No native dialog save/reload witness"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "packet_index": 55,
+      "source": {
+        "repository": "huderlem/poryscript",
+        "revision": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+        "path": "emitter/branch.go",
+        "git_blob_sha1": "9413b4699597e453c4ca8df4e1d6be9c68d250a2",
+        "url": "https://github.com/huderlem/poryscript/blob/c32481161c767b25a3425fa9f1f8729927ff3d55/emitter/branch.go"
+      },
+      "machine_dossier_sha256_unverified": "c6fb2dbcfa67b9fed0a0e0dd7014e5f6427ab10e12c2a3b5a9f17acff1f1b55e",
+      "line_anchors": [
+        {
+          "line": 29,
+          "text": "func (j *jump) renderBranchConditions(sb *strings.Builder, scriptName string, nextChunkID int, registerJumpChunk func(int), enableLineMarkers bool, inputFilepath string) bool {"
+        },
+        {
+          "line": 31,
+          "text": "registerJumpChunk(j.destChunkID)"
+        },
+        {
+          "line": 110,
+          "text": "func (s *switchBranch) renderBranchConditions(sb *strings.Builder, scriptName string, nextChunkID int, registerJumpChunk func(int), enableLineMarkers bool, inputFilepath string) bool {"
+        },
+        {
+          "line": 146,
+          "text": "func renderBranchComparison(sb *strings.Builder, dest *conditionDestination, scriptName string, enableLineMarkers bool, inputFilepath string) {"
+        },
+        {
+          "line": 167,
+          "text": "func renderVarComparison(sb *strings.Builder, dest *conditionDestination, scriptName string) {"
+        }
+      ],
+      "responsibilities": "Poryscript branch emission registers destination chunks for jumps, leaf conditions and switches; flag, variable and defeated comparisons dispatch to separate renderers.",
+      "dependency_edges": [
+        "emitter/chunk.go",
+        "emitter/emitter.go",
+        "parser/parser.go"
+      ],
+      "unresolved": [
+        "No exhaustive control-flow proof for nested break/switch",
+        "No compiled ARM execution for these branch combinations"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "packet_index": 58,
+      "source": {
+        "repository": "huderlem/poryscript",
+        "revision": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+        "path": "parser/formattext.go",
+        "git_blob_sha1": "4dc423d6d36defd87d048062e5648b3fe3a883de",
+        "url": "https://github.com/huderlem/poryscript/blob/c32481161c767b25a3425fa9f1f8729927ff3d55/parser/formattext.go"
+      },
+      "machine_dossier_sha256_unverified": "7d278ec94d66c04bfe4439714dc7a02895001a52ce984760da2c171568ec3858",
+      "line_anchors": [
+        {
+          "line": 43,
+          "text": "func LoadFontConfig(filepath string) (FontConfig, error) {"
+        },
+        {
+          "line": 63,
+          "text": "func (fc *FontConfig) compileReplacements() error {"
+        },
+        {
+          "line": 180,
+          "text": "func (fc *FontConfig) ValidateLineWidths(text, fontID string, maxWidth, cursorOverlapWidth int) []LineTooLongError {"
+        },
+        {
+          "line": 297,
+          "text": "func (fc *FontConfig) computeLinePixelWidth(line, fontID string, maxWidth int) (width, overflowByteOffset, overflowRuneOffset int) {"
+        },
+        {
+          "line": 379,
+          "text": "func (fc *FontConfig) FormatText(text string, maxWidth int, cursorOverlapWidth int, fontID string, numLines int) (string, error) {"
+        }
+      ],
+      "responsibilities": "Poryscript font configuration compiles replacement rules, checks pixel line widths with byte/rune overflow positions, and formats text with control-code processing.",
+      "dependency_edges": [
+        "parser/formattext_test.go",
+        "parser/parser.go",
+        "emitter/emitter.go"
+      ],
+      "unresolved": [
+        "UTF-8 offset and control-code edge cases require test expansion",
+        "No runtime rendered-font pixel parity proof"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "packet_index": 60,
+      "source": {
+        "repository": "huderlem/poryscript",
+        "revision": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+        "path": "parser/parse_error.go",
+        "git_blob_sha1": "3a50eb2890e2f6a7c1a189a503dc7d306a6a5ea7",
+        "url": "https://github.com/huderlem/poryscript/blob/c32481161c767b25a3425fa9f1f8729927ff3d55/parser/parse_error.go"
+      },
+      "machine_dossier_sha256_unverified": "ee52f30e91828a4047b289fbfd5cc4ca2ad71ec60741b6a0fd6dee38363eab8f",
+      "line_anchors": [
+        {
+          "line": 9,
+          "text": "type ParseError struct {"
+        },
+        {
+          "line": 19,
+          "text": "func NewParseError(tok token.Token, message string) error {"
+        },
+        {
+          "line": 31,
+          "text": "func NewRangeParseError(tok1, tok2 token.Token, message string) error {"
+        },
+        {
+          "line": 43,
+          "text": "func (e ParseError) Error() string {"
+        }
+      ],
+      "responsibilities": "Poryscript ParseError records token-based single-point and ranged error locations and exposes Error() formatting; caller propagation remains unresolved.",
+      "dependency_edges": [
+        "parser/parser.go",
+        "parser/parser_test.go",
+        "parser/formattext.go"
+      ],
+      "unresolved": [
+        "No full parser error propagation audit",
+        "No malformed-input corpus execution"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    }
+  ]
+}

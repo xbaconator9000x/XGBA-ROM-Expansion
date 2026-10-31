@@ -1,0 +1,16 @@
+name: Phase 1 second packet FireRed Fuchsia and Indigo pinned source partials
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  firered-fuchsia-indigo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify eight pinned source files, four map wiring blobs and fail-closed negatives
+        run: python3 tools/phase1_second_packet_fuchsia_indigo_verify.py

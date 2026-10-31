@@ -1,0 +1,16 @@
+name: Phase 1 pinned Mt Moon Navel Rock One Island source partials
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  navel-oneisland:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify eight original pinned FireRed scripts and 144 fail-closed negatives
+        run: python3 tools/phase1_second_packet_navel_oneisland_verify.py

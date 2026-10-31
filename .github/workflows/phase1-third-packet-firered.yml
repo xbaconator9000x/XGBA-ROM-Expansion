@@ -1,0 +1,22 @@
+name: Phase 1 third packet original FireRed PowerPlant Rocket source partials
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  third-firered-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify exact head checkout
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify four pinned scripts and map wiring with 76 fail-closed negatives
+        run: python3 tools/phase1_third_packet_firered_verify.py

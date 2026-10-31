@@ -1,0 +1,16 @@
+name: Phase 1 curated final six pinned partial source dossiers
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  curated-final-six:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify six original pinned sources and 42 negative controls
+        run: python3 tools/phase1_curated_eight_source_verify.py remaining

@@ -1,0 +1,22 @@
+name: Phase 1 second packet disjoint P0 partial handoff reconciliation
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  second-packet-index:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify exact head checkout (not synthetic PR merge)
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify 83 disjoint second-packet P0 partials and 830 negatives
+        run: python3 tools/phase1_second_packet_handoff_index_verify.py
