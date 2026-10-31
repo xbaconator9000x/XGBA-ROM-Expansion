@@ -29,6 +29,15 @@ class FixtureAPI:
         raise AssertionError(f"Unexpected API request: {url}")
 
 
+class FakeVerifier:
+    class GitHubAPICache:
+        def __init__(self, getter):
+            self.getter = getter
+
+        def __call__(self, url):
+            return self.getter(url)
+
+
 def fixture_run(event, run_id, *, head=adapter.PR8_HEAD, conclusion="success",
                 status="completed", path=None, name=None):
     run = {
@@ -103,6 +112,84 @@ class CopilotReceiptV4AdapterTests(unittest.TestCase):
             spoof = {**user, field: value}
             with self.subTest(field=field, value=value):
                 self.assertFalse(adapter._bot_identity(spoof))
+
+    def test_public_api_client_uses_anonymous_read_only_getter_without_user_probe(self):
+        requests = []
+
+        def getter(url, *, token):
+            requests.append((url, token))
+            return {"public": True}
+
+        verifier = FakeVerifier()
+        verifier.github_get_json = getter
+        api = adapter.github_api_client(verifier)
+        url = f"{adapter.API_ROOT}/issues/8/comments?per_page=100&page=1"
+        self.assertEqual(api(url), {"public": True})
+        self.assertEqual(requests, [(url, None)])
+
+    def test_public_api_client_fails_closed_on_anonymous_api_error(self):
+        def getter(url, *, token):
+            self.assertIsNone(token)
+            raise ValueError("GitHub API returned HTTP 403")
+
+        verifier = FakeVerifier()
+        verifier.github_get_json = getter
+        api = adapter.github_api_client(verifier)
+        with self.assertRaisesRegex(ValueError, "HTTP 403"):
+            api(f"{adapter.API_ROOT}/actions/runs?head_sha={adapter.PR8_HEAD}")
+
+    def test_expected_comment_rejects_spoofed_identity_and_tampered_marker(self):
+        key, expected = next(iter(adapter.EXPECTED_RECEIPTS.items()))
+        markers = (
+            "receipt-digest:" + expected["receipt_sha256"],
+            "receipt-commit:" + expected["receipt_commit"],
+            "evidence-commit:" + expected["evidence_commit"],
+            "decision:APPROVED",
+        )
+
+        class MarkerVerifier:
+            RECEIPT_MARKER = "receipt-digest:"
+            INTRO_COMMIT_MARKER = "receipt-commit:"
+            EVIDENCE_COMMIT_MARKER = "evidence-commit:"
+            DECISION_MARKER = "decision:APPROVED"
+
+            @staticmethod
+            def _attestation_section_is_valid(body, required):
+                return isinstance(body, str) and all(marker in body for marker in required)
+
+        class CommentAPI:
+            def __init__(self, comment):
+                self.comment = comment
+
+            def paginate(self, _url):
+                return [self.comment]
+
+        comment = {
+            "id": expected["comment_id"],
+            "user": {
+                "login": "Copilot",
+                "id": adapter.BOT_ID,
+                "node_id": adapter.BOT_NODE_ID,
+                "type": "Bot",
+            },
+            "issue_url": f"{adapter.API_ROOT}/issues/8",
+            "html_url": f"https://github.com/{adapter.OWNER_REPOSITORY}/pull/8"
+            f"#issuecomment-{expected['comment_id']}",
+            "body": "\n".join(markers),
+            "created_at": "2026-10-31T20:00:00Z",
+        }
+        receipt = {"source": {"repository": key[0], "path": key[1]}}
+        for field, value in (
+            ("user", {"login": "Copilot", "id": adapter.BOT_ID + 1,
+                      "node_id": adapter.BOT_NODE_ID, "type": "Bot"}),
+            ("body", comment["body"].replace(expected["receipt_sha256"], "0" * 64)),
+        ):
+            tampered = {**comment, field: value}
+            with self.subTest(field=field):
+                with self.assertRaisesRegex(ValueError, "identity/markers did not match"):
+                    adapter.verify_expected_comment(
+                        receipt, MarkerVerifier(), CommentAPI(tampered), Path("/unused")
+                    )
 
     def test_v4_register_rejects_unknown_duplicate_and_wrong_schema(self):
         for records in (

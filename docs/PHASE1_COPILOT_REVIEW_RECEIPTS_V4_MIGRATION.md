@@ -47,14 +47,14 @@ The prior PR #2 v1 workflow run `#41232472820` ended `action_required` with zero
 
 ## Standalone read-only adapter
 
-`tools/phase1_copilot_receipts_v4_adapter.py` is a separately versioned, read-only adapter for this exact PR #8 snapshot. It requires a full-history PR #8 worktree at the pinned head, original compressed archives, an upstream source checkout at its pin, and an authenticated read-only GitHub token:
+`tools/phase1_copilot_receipts_v4_adapter.py` is a separately versioned, read-only adapter for this exact PR #8 snapshot. It requires a full-history PR #8 worktree at the pinned head, original compressed archives, and an upstream source checkout at its pin. For public repository evidence it uses anonymous HTTPS GETs to the pinned validator's `api.github.com` allowlist when no token is provided; `GITHUB_TOKEN` or `GH_TOKEN` is optional and only raises API rate limits:
 
 ```sh
-GITHUB_TOKEN=... python3 tools/phase1_copilot_receipts_v4_adapter.py \
+python3 tools/phase1_copilot_receipts_v4_adapter.py \
   --pr8-root /path/to/pr8-worktree \
   --source-root /path/to/pinned-upstream-checkouts
 ```
 
-The adapter verifies the cross-branch protocol/register/tool blobs and both original compressed archive SHA-256 values before loading the original PR #8 validator by its pinned blob identity. It reuses that validator without modifying or weakening it, then adds exact expected comment-ID checks and requires successful exact-head pull-request and push Actions runs with nonempty, fully executed successful jobs. Its only per-file success label is `COPILOT_RECEIPT_VALIDATED`; blockers are reported individually. Missing token, worktree history, source checkout, evidence bytes, identity fields, or successful executed jobs fail closed. It never writes receipts or approval counts, and it does not include the ARM endian macros `NEEDS_REVIEW` target.
+The adapter verifies the cross-branch protocol/register/tool blobs and both original compressed archive SHA-256 values before loading the original PR #8 validator by its pinned blob identity. It reuses that validator without modifying or weakening it, then adds exact expected comment-ID checks and requires successful exact-head pull-request and push Actions runs with nonempty, fully executed successful jobs. Its only per-file success label is `COPILOT_RECEIPT_VALIDATED`; blockers are reported individually. Missing/denied/rate-limited public API data, worktree history, source checkout, evidence bytes, identity fields, or successful executed jobs fail closed. It never probes `/user`, writes receipts or approval counts, and it does not include the ARM endian macros `NEEDS_REVIEW` target.
 
 The adapter's synthetic tests exercise canonical receipt hashing, strict Copilot account identity, PR/push run matching, and zero-job, failed-job, stale-head, missing-run, and permission-required cases. These fixtures are controls, not evidence that any source was reviewed.

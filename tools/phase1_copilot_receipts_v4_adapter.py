@@ -194,6 +194,13 @@ def _bot_identity(user):
     )
 
 
+def github_api_client(verifier, token=None):
+    """Create a read-only public GitHub API client; a token only raises rate limits."""
+    return verifier.GitHubAPICache(
+        lambda url: verifier.github_get_json(url, token=token)
+    )
+
+
 def validate_exact_ci(api, pull_number=PR_NUMBER, expected_head=PR8_HEAD, not_before=None):
     runs = api.paginate(
         f"{API_ROOT}/actions/runs?head_sha={expected_head}", result_key="workflow_runs"
@@ -374,11 +381,7 @@ def run_live(pr8_root, source_root, token=None):
                 "source": f"{receipt['source']['repository']}:{receipt['source']['path']}",
                 "status": "BLOCKED",
                 "blocker": "Pinned upstream source checkout is unavailable; "
-                "whole-source, dependency, and licensing bytes cannot be verified."
-                + (
-                    " Authenticated GitHub API token missing; reviewer identity and Actions also cannot be verified."
-                    if not (token or os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")) else ""
-                ),
+                "whole-source, dependency, and licensing bytes cannot be verified.",
             }
             for receipt in receipts
         ]
@@ -395,50 +398,7 @@ def run_live(pr8_root, source_root, token=None):
         except Exception as exc:
             source_blockers[key] = str(exc)
     token = token or os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
-    if not token:
-        blocked = []
-        for receipt in receipts:
-            key = (receipt["source"]["repository"], receipt["source"]["path"])
-            local_problems = []
-            if key not in source_blockers:
-                _, local_problems = verifier.validate_receipt(
-                    receipt,
-                    queue=queue_by_key,
-                    dossiers=dossiers,
-                    source_root=source_path,
-                    expected_head=PR8_HEAD,
-                    repository_root=root,
-                    repository=OWNER_REPOSITORY,
-                    github_api=lambda _url: (_ for _ in ()).throw(
-                        ValueError("Authenticated GitHub API token missing")
-                    ),
-                )
-                local_problems = [
-                    problem for problem in local_problems
-                    if "GitHub API response" not in problem
-                    and "GitHub review signature" not in problem
-                ]
-            blocker = source_blockers.get(key)
-            if not blocker and local_problems:
-                blocker = "; ".join(local_problems)
-            if not blocker:
-                blocker = (
-                    "Pinned sources, original compressed archives, canonical per-file dossiers, "
-                    "dependency/license closure, whole-file scope, objections, and ancestry verified."
-                )
-            blocked.append({
-                "source": f"{receipt['source']['repository']}:{receipt['source']['path']}",
-                "status": "BLOCKED",
-                "blocker": blocker
-                + " Authenticated GitHub API token missing; reviewer identity, evidence authorship, and exact-head Actions cannot be verified.",
-            })
-        return blocked
-    api = verifier.GitHubAPICache(
-        lambda url: verifier.github_get_json(url, token=token)
-    )
-    user = api("https://api.github.com/user")
-    if not isinstance(user, dict) or not isinstance(user.get("id"), int):
-        raise ValueError("GitHub token did not authenticate an API user")
+    api = github_api_client(verifier, token=token)
     results = []
     for receipt in receipts:
         key = (receipt["source"]["repository"], receipt["source"]["path"])
