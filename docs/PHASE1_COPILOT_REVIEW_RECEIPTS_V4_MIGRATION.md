@@ -44,3 +44,17 @@ The v4 unit suite from the pinned PR #8 head passed locally: 39 tests, including
 For exact PR #8 head `3aec481a15bd821122314bc441e7bb7954d65b40`, PR run `#41194426346` attempt 2 completed 41/41 jobs successfully, and push census run `#41194422805` attempt 2 completed 1/1 successfully. The census and machine-dossier byte-verification logs explicitly retain `FAIL_INCOMPLETE`, 0/338 approved P0, and 0/14,834 approved total. These runs are evidence for their exact head only; they do not integrate this PR #2 proposal or change counts.
 
 The prior PR #2 v1 workflow run `#41232472820` ended `action_required` with zero jobs and no failed-job logs. This is a permissions/dispatch blocker, not a successful v1 CI run and not a code failure. No workflow changes are proposed here.
+
+## Standalone read-only adapter
+
+`tools/phase1_copilot_receipts_v4_adapter.py` is a separately versioned, read-only adapter for this exact PR #8 snapshot. It requires a full-history PR #8 worktree at the pinned head, original compressed archives, an upstream source checkout at its pin, and an authenticated read-only GitHub token:
+
+```sh
+GITHUB_TOKEN=... python3 tools/phase1_copilot_receipts_v4_adapter.py \
+  --pr8-root /path/to/pr8-worktree \
+  --source-root /path/to/pinned-upstream-checkouts
+```
+
+The adapter verifies the cross-branch protocol/register/tool blobs and both original compressed archive SHA-256 values before loading the original PR #8 validator by its pinned blob identity. It reuses that validator without modifying or weakening it, then adds exact expected comment-ID checks and requires successful exact-head pull-request and push Actions runs with nonempty, fully executed successful jobs. Its only per-file success label is `COPILOT_RECEIPT_VALIDATED`; blockers are reported individually. Missing token, worktree history, source checkout, evidence bytes, identity fields, or successful executed jobs fail closed. It never writes receipts or approval counts, and it does not include the ARM endian macros `NEEDS_REVIEW` target.
+
+The adapter's synthetic tests exercise canonical receipt hashing, strict Copilot account identity, PR/push run matching, and zero-job, failed-job, stale-head, missing-run, and permission-required cases. These fixtures are controls, not evidence that any source was reviewed.
