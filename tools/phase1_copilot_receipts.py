@@ -40,13 +40,15 @@ EVIDENCE_KINDS = {
 # A display name or an unverified account claiming to be Copilot is insufficient.
 COPILOT_BOT_LOGIN = "copilot-swe-agent[bot]"
 COPILOT_BOT_USER_ID = 198982749
+COPILOT_BOT_NODE_ID = "BOT_kgDOC9w8XQ"
 
 
 def _authenticated_copilot_bot(user):
     return (
         isinstance(user, dict)
-        and user.get("login") == COPILOT_BOT_LOGIN
+        and user.get("login") in {"Copilot", COPILOT_BOT_LOGIN}
         and user.get("id") == COPILOT_BOT_USER_ID
+        and user.get("node_id") == COPILOT_BOT_NODE_ID
         and user.get("type") == "Bot"
     )
 
