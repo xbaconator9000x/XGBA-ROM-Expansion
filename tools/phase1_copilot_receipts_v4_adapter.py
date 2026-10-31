@@ -5,12 +5,12 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import hashlib
-import importlib
 import json
 import os
 import subprocess
 import sys
 from pathlib import Path
+from types import ModuleType
 
 PR8_HEAD = "3aec481a15bd821122314bc441e7bb7954d65b40"
 PR8_PROTOCOL_BLOB = "16382c1146a191f3027347644696b9444251303b"
@@ -156,22 +156,28 @@ def validate_receipt_inventory(receipts):
 
 
 def _load_pinned_validator(root):
-    tools = root / "tools"
-    previous_path = list(sys.path)
+    pinned_modules = (
+        ("phase1_bulk_triage", TRIAGE_PATH, TRIAGE_BLOB),
+        ("phase1_copilot_receipts", VALIDATOR_PATH, VALIDATOR_BLOB),
+    )
     previous_modules = {
         name: sys.modules.get(name) for name in ("phase1_bulk_triage", "phase1_copilot_receipts")
     }
     try:
-        sys.path.insert(0, str(tools))
-        for name in previous_modules:
-            sys.modules.pop(name, None)
-        triage = importlib.import_module("phase1_bulk_triage")
-        verifier = importlib.import_module("phase1_copilot_receipts")
-        return triage, verifier
+        loaded = {}
+        for name, path, expected_blob in pinned_modules:
+            source = (root / path).read_bytes()
+            if git_blob_sha(source) != expected_blob:
+                raise ValueError(f"Pinned validator source changed: {path}")
+            module = ModuleType(name)
+            module.__file__ = str(root / path)
+            sys.modules[name] = module
+            exec(compile(source, module.__file__, "exec"), module.__dict__)
+            loaded[name] = module
+        return loaded["phase1_bulk_triage"], loaded["phase1_copilot_receipts"]
     except Exception as exc:
         raise ValueError("Unable to load the exact pinned PR #8 v4 validator") from exc
     finally:
-        sys.path[:] = previous_path
         for name, module in previous_modules.items():
             sys.modules.pop(name, None)
             if module is not None:
