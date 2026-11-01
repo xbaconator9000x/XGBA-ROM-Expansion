@@ -4,12 +4,16 @@ on:
     paths:
       - 'tools/phase1_copilot_receipts_v1.py'
       - 'tests/test_phase1_copilot_receipts_v1.py'
+      - 'tools/phase1_copilot_receipts_v4_adapter.py'
+      - 'tests/test_phase1_copilot_receipts_v4_adapter.py'
       - 'docs/PHASE1_COPILOT_REVIEW_RECEIPTS_V1_PROPOSAL.md'
       - '.github/workflows/phase1-copilot-receipts-v1.yml'
   push:
     paths:
       - 'tools/phase1_copilot_receipts_v1.py'
       - 'tests/test_phase1_copilot_receipts_v1.py'
+      - 'tools/phase1_copilot_receipts_v4_adapter.py'
+      - 'tests/test_phase1_copilot_receipts_v4_adapter.py'
       - 'docs/PHASE1_COPILOT_REVIEW_RECEIPTS_V1_PROPOSAL.md'
       - '.github/workflows/phase1-copilot-receipts-v1.yml'
 permissions:
@@ -24,3 +28,12 @@ jobs:
         run: python3 -m py_compile tools/phase1_copilot_receipts_v1.py tests/test_phase1_copilot_receipts_v1.py
       - name: Run synthetic positive and fail-closed controls
         run: python3 -m unittest discover -s tests -p 'test_phase1_copilot_receipts_v1.py' -v
+  v4-adapter-fail-closed-controls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check v4 adapter and test syntax
+        run: python3 -m py_compile tools/phase1_copilot_receipts_v4_adapter.py tests/test_phase1_copilot_receipts_v4_adapter.py
+      - name: Run v4 adapter synthetic positive and adversarial controls
+        run: python3 -m unittest discover -s tests -p 'test_phase1_copilot_receipts_v4_adapter.py' -v
