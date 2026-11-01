@@ -41,6 +41,8 @@ native_matrix_rejects_zero_size
 native_matrix_valid_physical_range_maps
 native_matrix_short_read_fault_injection_reproduced
 native_matrix_seek_failure_fault_injection_reproduced
+native_matrix_deserialize_seek_failure_fault_injection_reproduced
+matrix_DMA3_reads_active_mapped_bank
 native_oversize_nonM_keeps_32MiB_visible_aperture
 native_oversize_nonM_keeps_full_VFile_backing_length
 native_oversize_nonM_does_not_activate_Matrix
@@ -55,6 +57,7 @@ native_savestate_external_bank_payload_change_unverified=true
 native_matrix_accepts_physical_range_past_end=true
 native_matrix_short_read_commits_mapping=true
 native_matrix_seek_failure_commits_mapping=true
+native_matrix_deserialize_seek_failure_commits_mapping=true
 """.split())
 
 class EvidenceRejected(RuntimeError):
@@ -160,6 +163,11 @@ def self_test()->None:
         (data.replace("SUMMARY hard_failures=0","NOT_SUMMARY hard_failures=0"),rec,source),
         (data+"SUMMARY hard_failures=0 native_gap_observations="+str(len(REQUIRED_NATIVE_GAPS))+" xgba_runtime_implemented=false phase1_mapping_complete=false\n",rec,source),
     ]
+    for name in (
+        "matrix_DMA3_reads_active_mapped_bank",
+        "native_matrix_deserialize_seek_failure_fault_injection_reproduced",
+    ):
+        negatives.append((data.replace("PASS "+name+"\n",""),rec,source))
     for i,(logs,record,blob) in enumerate(negatives,1):
         try:check(logs,record,blob)
         except EvidenceRejected:continue

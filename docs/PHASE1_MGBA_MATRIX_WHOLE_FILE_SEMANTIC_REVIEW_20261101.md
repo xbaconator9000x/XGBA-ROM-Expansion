@@ -57,6 +57,23 @@ The following covers every function in the 134-line source file. Function locati
 
 This is a source interpretation, not a proof of behavioral equivalence. There is no XGBA-side implementation or contract in this evidence set against which to compare all functions and register paths.
 
+## VFile provider and direct/indirect consumer trace
+
+The fixture does not select a production file backend by path. `tests/mgba_bank_boundary.c` creates its synthetic cartridge with `VFileFromConstMemory` (line 401). At the pinned revision:
+
+| Source | Git blob / SHA-256 | Relevant behavior |
+| --- | --- | --- |
+| `src/gba/core.c` | `6bfc518bb8899205c07d1d0fc091a287cb42f874` / `47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596` | `_GBACoreLoadROM` (623–643) dispatches a normal ROM to `GBALoadROM(core->board, vf)` after the optional ELF and multiboot checks. |
+| `src/gba/gba.c` | `c30bd943909dc00df0b5b9932e6d9ddb6e1c404e` / `e84eaba17f6c96ac7b78431afaee79d7633dd50118f92e31e4432793f80c4c7b` | `GBALoadROM` (425–440) retains the caller-supplied VFile pointer as `gba->romVf`; the Matrix reset probe uses its `size`, `seek`, and `read` callbacks (297–304). The selected provider is therefore determined by the caller, not by `matrix.c`. |
+| `src/util/vfs/vfs-mem.c` | `048194e2dd2d0b3b395a852d2092c694663c88a2` / `6b5951a0cd634d398a69ce57766298bd32d5e6410ee0aa4e8b8894c6aaa5829b` | `VFileFromConstMemory` (62–87) installs `_vfmSeek` and `_vfmRead`; `_vfmSeek` (154–187) bounds the offset and `_vfmRead` (224–234) clips to available bytes. These are the concrete callbacks wrapped by the native fixture. |
+| `src/util/vfs/vfs-fd.c` | `2535bd0fb76740745ae038d5523ead28658f1035` / `0073a68b6688f1baa26acaf609af52e9f29308605e449e7c3182c9f4d768da44` | The separate FD provider (`VFileFromFD`, 66–100) installs `_vfdSeek`/`_vfdRead`; on POSIX they delegate to `lseek`/`read` (119–127). It is not the provider used by this in-memory fixture. |
+
+At runtime the Matrix call is indirect through the `VFile` function pointers in `matrix.c:36–37`. The fault wrapper swaps those callbacks only on the exact retained test VFile and delegates normal operations to its original memory-provider methods. This proves callback behavior for this provider and test condition; it does not identify which provider every frontend passes in production.
+
+The direct consumers remain reset (`gba.c:297–304`), selected cartridge writes (`memory.c:811–817, 930–943`), and conditional state handling (`serialize.c:91–93, 236–238`). A newly added focused test exercises the indirect DMA path: with DMA3 channel enabled for one immediate 32-bit unit, source `GBA_BASE_ROM0 + 0x1200` (the active mapped bank) and destination EWRAM, `dma.c:259–294` dispatches the source through `cpu->memory.load32`; `memory.c:44–46` binds that callback to `GBALoad32`. This is a Matrix-backed DMA read witness, not a test of every timing mode, DMA channel, peripheral arbitration, or source/destination interaction.
+
+The additional deserialize-fault witness saves the active Matrix metadata, starts the memory VFile at offset zero, then injects failure for each of the 16 seeks made by `GBAMatrixDeserialize`'s remap loop. It records that the reads continue and the mapping metadata is restored despite failed seeks. This is a reproduced error-path behavior, not a safe restore result. Both v8 cases require exact named PASS records; the deserialize observation is separately required by the fail-closed native gate. The v8 suite is awaiting its exact-head Actions execution; no result is inferred from the prior v7 run.
+
 ## Build, dependency and consumer boundary
 
 At the pinned revision `src/gba/CMakeLists.txt:8` includes `cart/matrix.c`. The headless configured build compiled 173/173 source units and selected 364 pinned headers, with 3,126 transitive preprocessor header edges. This proves membership and configured-build compilation only; it is not every mGBA configuration, consumer, frontend final link, or runtime path.
@@ -66,7 +83,7 @@ Source inspection identifies these direct consumer candidates:
 - `src/gba/gba.c:297–304` probes the ROM identifier through VFile and calls `GBAMatrixReset` when it sees `M`.
 - `src/gba/memory.c:811–817, 930–943` routes selected 32-/16-bit cartridge-port writes to `GBAMatrixWrite` / `GBAMatrixWrite16`.
 - `src/gba/serialize.c:91–93, 236–238` calls Matrix state serialize/deserialize when Matrix size is nonzero.
-- `src/gba/dma.c:290–323` performs transfers via generic CPU memory load/store interfaces and maintains ROM-range address behavior; this is a possible indirect interaction, not a direct Matrix symbol edge. Existing ordinary DMA checks do not prove Matrix-specific DMA semantics.
+- `src/gba/dma.c:259–323` performs transfers via generic CPU memory load/store interfaces and maintains ROM-range address behavior. The new one-unit DMA3 case exercises a Matrix-mapped 32-bit source through that indirect path, but does not close other DMA modes or peripheral interactions.
 - `_remapMatrix` calls `romVf->seek` and `romVf->read` through VFile function pointers. The callback implementations and all runtime providers are not closed by object-symbol matching.
 
 The artifact inspected one static library and recorded 2,305 undefined symbol references: 394 code-symbol candidate edges and 11 data/other candidate edges, with 1,900 unresolved or unattributed rows (902 without an in-archive provider, 846 without unique consumer-source attribution, 152 without provider-source attribution, and zero exceeding provider-enumeration limits). Matrix-related records include a `gba.c -> GBAMatrixReset` candidate and a Matrix-to-`mLog` candidate; `GBAMatrixWrite`/`GBAMatrixWrite16` have ambiguous `memory.c.o` attribution, `GBAMatrixSerialize`/`GBAMatrixDeserialize` have ambiguous `serialize.c.o` attribution, and `memset` plus a logging-category provider lack source attribution. These are compiler/linker evidence candidates, not proven executed calls. Frontend/platform final-link resolution, indirect callback closure, and the complete dependency/consumer closure remain `NOT_ESTABLISHED`.
@@ -75,7 +92,7 @@ The artifact inspected one static library and recorded 2,305 undefined symbol re
 
 Pinned `LICENSE` is MPL-2.0 (Git blob `14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e`, SHA-256 `fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85`); `matrix.c` carries an MPL-2.0 notice. The repository README describes a source-pinned research/test environment and says no XGBA unlimited-ROM runtime has been implemented or released. It does not establish whether a future product distributes covered source, an executable containing covered software, both, or neither. No legal conclusion is made; project-specific distribution clearance remains `NOT_ASSESSED`.
 
-Unresolved semantic objections include the six observed hazards above, Matrix-specific DMA/peripheral interaction, complete source and runtime consumer closure, full register/state compatibility, and the absence of an XGBA semantic counterpart. The current native tests establish some behaviors but do not discharge these objections.
+Unresolved semantic objections include the six prior observed hazards, the new deserialize failed-seek behavior, Matrix-specific DMA/peripheral arbitration outside the narrow one-unit read case, complete source and runtime consumer closure, full register/state compatibility, and the absence of an XGBA semantic counterpart. The current native tests establish some behaviors but do not discharge these objections.
 
 ## Fail-closed disposition
 

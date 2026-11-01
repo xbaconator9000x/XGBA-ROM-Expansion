@@ -278,6 +278,52 @@ static void test_native_matrix_state(struct mCore *core, uint8_t *backing) {
     free(state);
 }
 
+static void test_matrix_dma(struct mCore *core) {
+    struct GBA *gba = core->board;
+    uint32_t *wram = (uint32_t *) gba->memory.wram;
+    const uint32_t destination = GBA_BASE_EWRAM + 0x200u;
+    wram[0x200u >> 2] = 0;
+    GBADMAWriteSAD(gba, 3, ADDRESS);
+    GBADMAWriteDAD(gba, 3, destination);
+    gba->memory.io[GBA_REG_DMA3CNT_LO >> 1] = 1u;
+    GBADMAWriteCNT_HI(gba, 3, 0x8400u); /* enable, immediate, 32-bit, one unit */
+    for (int turn = 0; turn < 8 &&
+         GBADMARegisterIsEnable(gba->memory.dma[3].reg); ++turn) {
+        mTimingTick(&gba->timing, 80);
+    }
+    check("matrix_DMA3_reads_active_mapped_bank",
+          !GBADMARegisterIsEnable(gba->memory.dma[3].reg) &&
+          wram[0x200u >> 2] == OPCODE_B);
+}
+
+static void test_matrix_deserialize_seek_failure(struct GBA *gba) {
+    struct GBASerializedState *state = calloc(1, sizeof(*state));
+    if (!state) {
+        check("matrix_deserialize_seek_failure_state_allocation", false);
+        return;
+    }
+    GBAMatrixSerialize(gba, state);
+    const uint32_t expected_mapping =
+        gba->memory.matrix.mappings[0x1200u >> 9];
+    struct VFile *vf = gba->romVf;
+    bool positioned_at_start = vf && vf->seek(vf, 0, SEEK_SET) == 0;
+    if (positioned_at_start) {
+        install_vfile_fault(vf, VFILE_FAULT_SEEK_FAILURE);
+        GBAMatrixDeserialize(gba, state);
+        remove_vfile_fault();
+    }
+    bool deserialize_seek_failure_committed =
+        positioned_at_start && fault_seek_calls == 16 &&
+        fault_read_calls == 16 && fault_read_requested == 512 &&
+        fault_read_returned == 512 &&
+        gba->memory.matrix.mappings[0x1200u >> 9] == expected_mapping;
+    observation("native_matrix_deserialize_seek_failure_commits_mapping",
+                deserialize_seek_failure_committed);
+    check("native_matrix_deserialize_seek_failure_fault_injection_reproduced",
+          deserialize_seek_failure_committed);
+    free(state);
+}
+
 static void test_matrix_vfile_faults(struct GBA *gba, uint8_t *backing, size_t backing_size) {
     const uint32_t valid_physical = BANK_A + 0x800u;
     const uint32_t valid_virtual = 0x1600u;
@@ -440,6 +486,8 @@ static void run_one(bool matrix) {
         map512(gba, BANK_B+0x200u, 0x1400u);
         check_thumb(core, THUMB_ADDRESS, THUMB_B, "matrix_bank_B_Thumb_fetch_data");
         test_native_matrix_state(core, bytes);
+        test_matrix_dma(core);
+        test_matrix_deserialize_seek_failure(gba);
         test_matrix_vfile_faults(gba, bytes, size);
         /* Invalid virtual windows and zero size are rejected by native Matrix. */
         uint32_t previous = GBALoad32(cpu, ADDRESS, NULL);
