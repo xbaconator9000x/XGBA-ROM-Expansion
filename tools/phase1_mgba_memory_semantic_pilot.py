@@ -159,8 +159,17 @@ def validate_references(references: list[dict], claimed_document_ids: set[str]) 
         raise ValueError("Unknown, missing, or duplicate external documentation reference")
     if claimed_document_ids - set(by_id):
         raise ValueError("Claim cites ungrounded external documentation")
+    used_ids = set()
     for reference in references:
-        if reference.get("used_to_support_pilot_claim"):
+        flag = reference.get("used_to_support_pilot_claim")
+        if not isinstance(flag, bool):
+            raise ValueError("External documentation claim flag must be explicit boolean")
+        if flag:
+            used_ids.add(reference["id"])
+    if used_ids != claimed_document_ids:
+        raise ValueError("External documentation claim flags and claimed IDs disagree")
+    for reference in references:
+        if reference["id"] in claimed_document_ids:
             checksum = reference.get("content_sha256")
             if not isinstance(checksum, str) or not re.fullmatch(r"[0-9a-f]{64}", checksum):
                 raise ValueError("External documentation claim lacks retrieved content hash")

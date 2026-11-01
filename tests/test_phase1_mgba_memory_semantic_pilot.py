@@ -32,6 +32,30 @@ class MGBAMemorySemanticPilotTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "lacks retrieved content hash"):
             pilot.validate_references(unverified_claim, {"GBATEK"})
 
+    def test_document_claim_ids_and_flags_must_agree_in_both_directions(self):
+        # A caller may not cite GBATEK while the reference marks it unused.
+        with self.assertRaisesRegex(ValueError, "flags and claimed IDs disagree"):
+            pilot.validate_references(list(pilot.REFERENCES), {"GBATEK"})
+
+        references = [dict(reference) for reference in pilot.REFERENCES]
+        references[0]["used_to_support_pilot_claim"] = True
+        # Nor may the reference claim support without a corresponding citation.
+        with self.assertRaisesRegex(ValueError, "flags and claimed IDs disagree"):
+            pilot.validate_references(references, set())
+        # Matching claim flags still require retrieved-and-hashed provenance.
+        with self.assertRaisesRegex(ValueError, "lacks retrieved content hash"):
+            pilot.validate_references(references, {"GBATEK"})
+
+        references[0]["content_sha256"] = hashlib.sha256(b"test-only retrieved document").hexdigest()
+        references[0]["retrieval"] = "RETRIEVED_AND_HASHED"
+        pilot.validate_references(references, {"GBATEK"})
+        references[0]["retrieval"] = "UNVERIFIED_EXTERNAL_REFERENCE_ONLY"
+        with self.assertRaisesRegex(ValueError, "not verified"):
+            pilot.validate_references(references, {"GBATEK"})
+        references[0]["used_to_support_pilot_claim"] = "yes"
+        with self.assertRaisesRegex(ValueError, "explicit boolean"):
+            pilot.validate_references(references, {"GBATEK"})
+
     def test_missing_upstream_test_fails_closed(self):
         with self.assertRaisesRegex(ValueError, "Missing upstream test"):
             pilot.validate_coverage({})
