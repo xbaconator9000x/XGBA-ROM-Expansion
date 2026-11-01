@@ -1,0 +1,89 @@
+{
+  "schema": "xgba.phase1.additive_timing_dma_semantic_candidates.v1",
+  "date": "2026-10-26",
+  "source_repository": "mgba-emu/mgba",
+  "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "parent_curated_registry": "semantic-snapshots/curated/p0_semantic_review_candidates_2026-10-26.json",
+  "parent_curated_count_unchanged": 29,
+  "additional_source_files": 2,
+  "independent_whole_file_approvals": 0,
+  "phase1_mapping_complete": false,
+  "status": "SOURCE_INTERPRETED_ADDITIVE_CANDIDATES_NOT_INDEPENDENTLY_REVIEWED",
+  "candidates": [
+    {
+      "path": "src/core/timing.c",
+      "git_blob_sha1": "cebd619957b0845deedfc03b1e9c89d168861ea1",
+      "source_lines": [
+        28,
+        140
+      ],
+      "semantic_roles": [
+        "root_reroot_scheduler_queue_lifetime",
+        "timing_priority_ordering",
+        "event_callback_dispatch_and_promotion",
+        "relative_and_master_cycle_accounting"
+      ],
+      "cross_source_consumers": [
+        "src/gba/dma.c:137-140",
+        "src/gba/dma.c:233-254"
+      ],
+      "unresolved": [
+        "dynamic_queue_invariants_all_interrupt_interleavings",
+        "callback_reentrancy_and_DMA_pause_order",
+        "emulator_instruction_boundary_consistency"
+      ],
+      "independent_signoff": false
+    },
+    {
+      "path": "include/mgba/core/timing.h",
+      "git_blob_sha1": "6e938970e9ffdaa2c8c6f20d71319c0df9eccb5e",
+      "source_lines": [
+        14,
+        51
+      ],
+      "semantic_roles": [
+        "timing_event_callback_function_pointer_abi",
+        "root_reroot_state_struct_layout",
+        "signed_relative_cycle_pointer_contract"
+      ],
+      "cross_source_consumers": [
+        "src/core/timing.c:8-14",
+        "src/gba/dma.c:35-39"
+      ],
+      "unresolved": [
+        "whole_project_callback_targets",
+        "cross_module_struct_alias_and_lifetime",
+        "compiler_configuration_and_struct_layout"
+      ],
+      "independent_signoff": false
+    }
+  ],
+  "cross_source_contracts": [
+    {
+      "id": "MGBA_TIMING_REROOT_PROMOTION_AFTER_ROOT_DRAIN",
+      "producer": "src/core/timing.c:104-124",
+      "consumer": "src/gba/dma.c:233-254",
+      "meaning": "Newly promoted reroot events are not dispatched by the same mTimingTick iteration that promotes them; the DMA fixture must allow a subsequent scheduler turn.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_WITH_EXISTING_NATIVE_FIXTURE"
+    },
+    {
+      "id": "MGBA_DMA_IMMEDIATE_START_THREE_CYCLES",
+      "producer": "src/gba/dma.c:137-140",
+      "consumer": "src/core/timing.c:36-63",
+      "meaning": "Immediate DMA schedules at current emulator time plus three cycles; event scheduling and callback execution are separate.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_WITH_EXISTING_NATIVE_FIXTURE"
+    },
+    {
+      "id": "MGBA_DMA3_ROM2_EX_EEPROM_SERVICE",
+      "producer": "src/gba/dma.c:259-315",
+      "consumer": "src/gba/memory.c:586-625",
+      "meaning": "The 16-bit DMA ROM2_EX path has explicit EEPROM read/write handling; it cannot be treated as an unconditional external ROM bank read.",
+      "proof_level": "PINNED_SOURCE_INTERPRETATION_WITH_EXISTING_NATIVE_FIXTURE"
+    }
+  ],
+  "limitations": [
+    "This is additive to the immutable 29-file curated registry and does not automatically reorder the 14,834-file review queue.",
+    "Git blob identities were checked via connected GitHub pinned-source reads; independent review, compiler path coverage and exhaustive event interleavings remain outstanding.",
+    "No XGBA emulator source, ROM, save-state format, editor or Phase 2 implementation was modified."
+  ]
+}
