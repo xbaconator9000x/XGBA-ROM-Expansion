@@ -56,6 +56,27 @@ class MGBAMemorySemanticPilotTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "explicit boolean"):
             pilot.validate_references(references, {"GBATEK"})
 
+    def test_all_six_rom_window_bases_are_individually_anchored(self):
+        bases = [
+            ("ROM0", "0x08000000"),
+            ("ROM0_EX", "0x09000000"),
+            ("ROM1", "0x0A000000"),
+            ("ROM1_EX", "0x0B000000"),
+            ("ROM2", "0x0C000000"),
+            ("ROM2_EX", "0x0D000000"),
+        ]
+        lines = [f"GBA_BASE_{name} = {value}," for name, value in bases]
+        lines.append("GBA_SIZE_ROM0 = 0x02000000,")
+        source = ("\n".join(lines) + "\n").encode()
+        anchors = pilot.SOURCES[0]["anchors"]
+        result = pilot._anchors(source, anchors, "include/mgba/internal/gba/memory.h")
+        self.assertEqual(len(result), 7)
+        for name, value in bases:
+            mutated = source.replace(f"GBA_BASE_{name} = {value}".encode(),
+                                     f"GBA_BASE_{name} = 0x00000000".encode())
+            with self.subTest(selector=name), self.assertRaisesRegex(ValueError, "Missing source anchor"):
+                pilot._anchors(mutated, anchors, "include/mgba/internal/gba/memory.h")
+
     def test_missing_upstream_test_fails_closed(self):
         with self.assertRaisesRegex(ValueError, "Missing upstream test"):
             pilot.validate_coverage({})

@@ -25,7 +25,12 @@ SOURCES = (
         "blob": "0aad912613e726560d06bbdbf6061986e69e5842",
         "role": "GBA ROM window constants",
         "anchors": {
-            "rom_window_bases": r"GBA_BASE_ROM[012]\s*=\s*0x0[8AC]000000",
+            "rom_window_base_0": r"\bGBA_BASE_ROM0\s*=\s*0x08000000\b",
+            "rom_window_base_0_ex": r"\bGBA_BASE_ROM0_EX\s*=\s*0x09000000\b",
+            "rom_window_base_1": r"\bGBA_BASE_ROM1\s*=\s*0x0A000000\b",
+            "rom_window_base_1_ex": r"\bGBA_BASE_ROM1_EX\s*=\s*0x0B000000\b",
+            "rom_window_base_2": r"\bGBA_BASE_ROM2\s*=\s*0x0C000000\b",
+            "rom_window_base_2_ex": r"\bGBA_BASE_ROM2_EX\s*=\s*0x0D000000\b",
             "rom_window_size": r"GBA_SIZE_ROM0\s*=\s*0x02000000",
         },
     },
