@@ -31,6 +31,60 @@
 
 static int failures;
 static int observations;
+enum VFileFaultMode {
+    VFILE_FAULT_NONE,
+    VFILE_FAULT_SHORT_READ,
+    VFILE_FAULT_SEEK_FAILURE
+};
+static struct VFile *fault_vfile;
+static off_t (*original_vfile_seek)(struct VFile *, off_t, int);
+static ssize_t (*original_vfile_read)(struct VFile *, void *, size_t);
+static enum VFileFaultMode vfile_fault_mode;
+static int fault_seek_calls;
+static int fault_read_calls;
+static size_t fault_read_requested;
+static ssize_t fault_read_returned;
+
+static off_t fault_injected_seek(struct VFile *vf, off_t offset, int whence) {
+    if (vf == fault_vfile) {
+        ++fault_seek_calls;
+        if (vfile_fault_mode == VFILE_FAULT_SEEK_FAILURE) return -1;
+    }
+    return original_vfile_seek(vf, offset, whence);
+}
+
+static ssize_t fault_injected_read(struct VFile *vf, void *buffer, size_t size) {
+    if (vf == fault_vfile) {
+        ++fault_read_calls;
+        fault_read_requested = size;
+        size_t read_size = size;
+        if (vfile_fault_mode == VFILE_FAULT_SHORT_READ && read_size) --read_size;
+        fault_read_returned = original_vfile_read(vf, buffer, read_size);
+        return fault_read_returned;
+    }
+    return original_vfile_read(vf, buffer, size);
+}
+
+static void install_vfile_fault(struct VFile *vf, enum VFileFaultMode mode) {
+    fault_vfile = vf;
+    original_vfile_seek = vf->seek;
+    original_vfile_read = vf->read;
+    fault_seek_calls = 0;
+    fault_read_calls = 0;
+    fault_read_requested = 0;
+    fault_read_returned = -1;
+    vfile_fault_mode = mode;
+    vf->seek = fault_injected_seek;
+    vf->read = fault_injected_read;
+}
+
+static void remove_vfile_fault(void) {
+    vfile_fault_mode = VFILE_FAULT_NONE;
+    fault_vfile->seek = original_vfile_seek;
+    fault_vfile->read = original_vfile_read;
+    fault_vfile = NULL;
+}
+
 static void check(const char *label, bool condition) {
     printf("%s %s\n", condition ? "PASS" : "FAIL", label);
     printf("CASE %s exit_code=%d\n", label, condition ? 0 : 1);
@@ -224,6 +278,48 @@ static void test_native_matrix_state(struct mCore *core, uint8_t *backing) {
     free(state);
 }
 
+static void test_matrix_vfile_faults(struct GBA *gba, uint8_t *backing, size_t backing_size) {
+    const uint32_t valid_physical = BANK_A + 0x800u;
+    const uint32_t valid_virtual = 0x1600u;
+    memset(backing + valid_physical, 0x5A, 512);
+    map512(gba, valid_physical, valid_virtual);
+    check("native_matrix_valid_physical_range_maps",
+          gba->memory.matrix.mappings[valid_virtual >> 9] == valid_physical);
+
+    const uint32_t short_physical = BANK_A + 0x1000u;
+    const uint32_t short_virtual = 0x1800u;
+    const size_t short_destination = short_virtual >> 2;
+    memset(backing + short_physical, 0x6B, 512);
+    memset(gba->memory.rom + short_destination, 0xCC, 512);
+    install_vfile_fault(gba->romVf, VFILE_FAULT_SHORT_READ);
+    map512(gba, short_physical, short_virtual);
+    remove_vfile_fault();
+    bool short_read_committed =
+        fault_read_calls == 1 && fault_read_requested == 512 &&
+        fault_read_returned == 511 &&
+        gba->memory.matrix.mappings[short_virtual >> 9] == short_physical &&
+        gba->memory.rom[short_destination] == 0x6B &&
+        gba->memory.rom[short_destination + 511] == 0xCC;
+    observation("native_matrix_short_read_commits_mapping", short_read_committed);
+    check("native_matrix_short_read_fault_injection_reproduced", short_read_committed);
+
+    const uint32_t seek_physical = BANK_A + 0x1200u;
+    const uint32_t seek_virtual = 0x1A00u;
+    off_t eof = (off_t) backing_size - 4;
+    struct VFile *vf = gba->romVf;
+    bool positioned_at_eof = vf->seek(vf, eof, SEEK_SET) == eof;
+    memset(gba->memory.rom + (seek_virtual >> 2), 0xCC, 512);
+    install_vfile_fault(vf, VFILE_FAULT_SEEK_FAILURE);
+    map512(gba, seek_physical, seek_virtual);
+    remove_vfile_fault();
+    bool seek_failure_committed =
+        positioned_at_eof && fault_seek_calls == 1 && fault_read_calls == 1 &&
+        fault_read_requested == 512 && fault_read_returned == 4 &&
+        gba->memory.matrix.mappings[seek_virtual >> 9] == seek_physical;
+    observation("native_matrix_seek_failure_commits_mapping", seek_failure_committed);
+    check("native_matrix_seek_failure_fault_injection_reproduced", seek_failure_committed);
+}
+
 /* Native >32MiB loading is not an XGBA opt-in handshake.
  * mGBA's loader inspects byte 0xAC and takes different code paths:
  * verify that a non-M oversized native file retains the ordinary 32MiB
@@ -343,6 +439,7 @@ static void run_one(bool matrix) {
         map512(gba, BANK_B+0x200u, 0x1400u);
         check_thumb(core, THUMB_ADDRESS, THUMB_B, "matrix_bank_B_Thumb_fetch_data");
         test_native_matrix_state(core, bytes);
+        test_matrix_vfile_faults(gba, bytes, size);
         /* Invalid virtual windows and zero size are rejected by native Matrix. */
         uint32_t previous = GBALoad32(cpu, ADDRESS, NULL);
         uint32_t slot = gba->memory.matrix.mappings[0x1200u >> 9];

@@ -17,6 +17,8 @@ HEADERS=("object_source","source_blob_sha","dependency_path","dependency_blob_sh
 RELOCS=("archive","consumer_object","consumer_source_candidate","referenced_symbol",
         "symbol_provider_object","provider_source_candidate","provider_kind",
         "provider_count","resolution")
+UNRESOLVED=("archive","consumer_object","consumer_source_candidate",
+            "referenced_symbol","provider_count","reason_code")
 def gitsha(data):return hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
 def tracked_tree():
  raw=subprocess.check_output(["git","-C",str(ROOT),"ls-tree","-r","-z","HEAD"])
@@ -56,6 +58,48 @@ def parse_nm_line(line):
  m=re.match(r"^(.+?\.a):([^:]+):\s*(?:[0-9A-Fa-f]+\s+)?([A-Za-z?])\s+(\S+)\s*$",line)
  if not m:return None
  return m.group(1),m.group(2),m.group(3),m.group(4)
+def classify_symbol_references(undefined,definitions,object_to_src,max_providers=32):
+ candidates=[];unresolved=[]
+ for archive,obj,_,name in undefined:
+  providers=[p for p in definitions.get(name,[]) if (p[0],p[1])!=(archive,obj)]
+  consumer_source_set=object_to_src.get(obj,set())
+  consumer_sources=";".join(sorted(consumer_source_set)) or "UNATTRIBUTED_OBJECT_SOURCE"
+  if not providers:
+   unresolved.append({"archive":archive,"consumer_object":obj,
+    "consumer_source_candidate":consumer_sources,"referenced_symbol":name,
+    "provider_count":0,"reason_code":"NO_PROVIDER_IN_INSPECTED_STATIC_ARCHIVES"})
+   continue
+  if len(providers)>max_providers:
+   unresolved.append({"archive":archive,"consumer_object":obj,
+    "consumer_source_candidate":consumer_sources,"referenced_symbol":name,
+    "provider_count":len(providers),"reason_code":"PROVIDER_SET_EXCEEDS_ENUMERATION_LIMIT"})
+   continue
+  if len(consumer_source_set)!=1:
+   unresolved.append({"archive":archive,"consumer_object":obj,
+    "consumer_source_candidate":consumer_sources,"referenced_symbol":name,
+    "provider_count":len(providers),"reason_code":"CONSUMER_SOURCE_ATTRIBUTION_MISSING"})
+   continue
+  provider_source_rows=[]
+  for l,other,kind in providers:
+   provider_source_set=object_to_src.get(other,set())
+   if len(provider_source_set)!=1:
+    provider_source_rows=[]
+    break
+   provider_source_rows.append((l,other,kind,next(iter(provider_source_set))))
+  if not provider_source_rows:
+   unresolved.append({"archive":archive,"consumer_object":obj,
+    "consumer_source_candidate":consumer_sources,"referenced_symbol":name,
+    "provider_count":len(providers),"reason_code":"PROVIDER_SOURCE_ATTRIBUTION_MISSING"})
+   continue
+  for l,other,kind,provider_sources in provider_source_rows:
+   candidates.append({"archive":archive,"consumer_object":obj,
+    "consumer_source_candidate":consumer_sources,"referenced_symbol":name,
+    "symbol_provider_object":other,"provider_source_candidate":provider_sources,
+    "provider_kind":kind,"provider_count":len(providers),
+    "resolution":("LINK_OBJECT_CODE_SYMBOL_CANDIDATE" if kind.upper() in ("T","W")
+                  else "LINK_OBJECT_DATA_OR_OTHER")})
+ return (sorted(candidates,key=lambda row:tuple(row[k] for k in RELOCS)),
+         sorted(unresolved,key=lambda row:tuple(row[k] for k in UNRESOLVED)))
 def main():
  OUT.mkdir(exist_ok=True)
  assert subprocess.check_output(["git","-C",str(ROOT),"rev-parse","HEAD"],text=True).strip()==SHA
@@ -111,7 +155,7 @@ def main():
   # CMake sometimes builds the same source twice under differing targets.
   if len(compiler_units)<int(len(comp)*0.7):
    raise RuntimeError("Compilation units were not adequately resolved")
- archives=list(BUILD.rglob("*.a"))
+ archives=sorted(BUILD.rglob("*.a"))
  defs=collections.defaultdict(list);undef=[]
  for lib in archives:
   for flags,mode in [(["-A","-g","--defined-only"],"definition"),
@@ -123,34 +167,30 @@ def main():
     archive,obj,kind,name=z
     if mode=="definition":defs[name].append((archive,obj,kind))
     else:undef.append((archive,obj,kind,name))
- summary=collections.Counter()
+ candidate_edges,unresolved_edges=classify_symbol_references(undef,defs,object_to_src)
+ summary=collections.Counter(row["resolution"] for row in candidate_edges)
+ summary["undefined_references_without_in_archive_provider"]=sum(
+  row["reason_code"]=="NO_PROVIDER_IN_INSPECTED_STATIC_ARCHIVES" for row in unresolved_edges)
+ summary["symbol_multi_provider_overflow"]=sum(
+  row["reason_code"]=="PROVIDER_SET_EXCEEDS_ENUMERATION_LIMIT" for row in unresolved_edges)
+ summary["consumer_source_attribution_missing"]=sum(
+  row["reason_code"]=="CONSUMER_SOURCE_ATTRIBUTION_MISSING" for row in unresolved_edges)
+ summary["provider_source_attribution_missing"]=sum(
+  row["reason_code"]=="PROVIDER_SOURCE_ATTRIBUTION_MISSING" for row in unresolved_edges)
  with (OUT/"compiled_symbol_reference_edges.csv").open("w",encoding="utf-8",newline="") as f:
   w=csv.DictWriter(f,fieldnames=RELOCS);w.writeheader()
-  for archive,obj,_,name in undef:
-   providers=defs.get(name,[])
-   if len(providers)>32:
-    summary["symbol_multi_provider_overflow"]+=1
-    continue
-   for l,other,kind in providers:
-    if (l,obj)==(archive,other):continue
-    consumer_src=";".join(sorted(object_to_src[obj]))
-    provider_src=";".join(sorted(object_to_src[other]))
-    # Linking a symbol may refer to a function or global data; T/W represent
-    # code and named functions and B/D/R/etc represent data.
-    classification=("LINK_OBJECT_CODE_SYMBOL_CANDIDATE" if kind.upper() in ("T","W")
-                    else "LINK_OBJECT_DATA_OR_OTHER")
-    w.writerow({"archive":archive,"consumer_object":obj,
-      "consumer_source_candidate":consumer_src,"referenced_symbol":name,
-      "symbol_provider_object":other,"provider_source_candidate":provider_src,
-      "provider_kind":kind,"provider_count":len(providers),
-      "resolution":classification})
-    summary[classification]+=1
+  w.writerows(candidate_edges)
+ with (OUT/"compiled_unresolved_symbol_references.csv").open("w",encoding="utf-8",newline="") as f:
+  w=csv.DictWriter(f,fieldnames=UNRESOLVED);w.writeheader()
+  w.writerows(unresolved_edges)
  result={
   "pinned_commit":SHA,"compiler_inputs":len(comp),
   "compiler_source_units_succeeded":len(compiler_units),
   "pinned_headers_selected_by_preprocessor":len(unique_headers),
   "compiled_transitive_header_edges":deps_seen,
   "build_generated_header_edges":generated,
+  "undefined_symbol_reference_rows":len(undef),
+  "unresolved_or_unattributed_symbol_reference_rows":len(unresolved_edges),
   "linked_symbol_edge_categories":dict(summary),
   "static_libraries_inspected":len(archives),
   "configuration":"headless-mGBA; Qt/SDL/scripting-disabled; standard GNU C/C++ flags",
@@ -159,7 +199,7 @@ def main():
   "important_limits":["-MM proves active transitive preprocessor inclusion, not direct source include.",
     "Object symbol references are compiler/linker-visible name connections but not definite runtime calls.",
     "CMake build covers only 173 configured units, not the whole mGBA repository.",
-    "Static libraries might contain unresolved externs that are satisfied by the final frontend or platform.",
+    "Every undefined reference from inspected archives is written to compiled_unresolved_symbol_references.csv when no in-archive provider is enumerated, provider sets overflow, or consumer source attribution is missing; final frontend/platform resolution remains unverified.",
     "mGBA host compilation is not a runtime XGBA expansion test."]}
  (OUT/"compiled_dependency_summary.json").write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
  print(json.dumps(result,indent=2))

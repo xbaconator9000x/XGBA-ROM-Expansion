@@ -38,6 +38,9 @@ native_savestate_rejects_changed_game_title
 native_savestate_restores_original_backing_after_fixture_mutation
 native_matrix_rejects_outside_8KiB_window
 native_matrix_rejects_zero_size
+native_matrix_valid_physical_range_maps
+native_matrix_short_read_fault_injection_reproduced
+native_matrix_seek_failure_fault_injection_reproduced
 native_oversize_nonM_keeps_32MiB_visible_aperture
 native_oversize_nonM_keeps_full_VFile_backing_length
 native_oversize_nonM_does_not_activate_Matrix
@@ -50,6 +53,8 @@ native_remap_leaves_prefetch_stale_until_refetch=true
 native_savestate_CRC_mismatch_only_warns=true
 native_savestate_external_bank_payload_change_unverified=true
 native_matrix_accepts_physical_range_past_end=true
+native_matrix_short_read_commits_mapping=true
+native_matrix_seek_failure_commits_mapping=true
 """.split())
 
 class EvidenceRejected(RuntimeError):
@@ -93,7 +98,7 @@ def check(log:str,record:dict,source_bytes:bytes)->dict:
         raise EvidenceRejected("Runtime counts differ from saved result metadata")
     if record.get("native_gap_observations")!=gaps:
         raise EvidenceRejected("Runtime observations differ from saved result metadata")
-    if "SUMMARY hard_failures=0 native_gap_observations=4 " not in log:
+    if f"SUMMARY hard_failures=0 native_gap_observations={len(REQUIRED_NATIVE_GAPS)} " not in log:
         raise EvidenceRejected("Missing native executable termination summary")
     return {
         "decision":"PASS_PINNED_NATIVE_MGBA_REGRESSION_ONLY",
@@ -106,7 +111,7 @@ def check(log:str,record:dict,source_bytes:bytes)->dict:
         "native_XGBA_runtime_verified":False,
         "independent_semantic_dispositions_approved":0,
         "phase1_mapping_complete":False,
-        "notice":"Native source-pinned behavior only; 4 hazardous native behaviors remain XGBA design obligations."
+        "notice":f"Native source-pinned behavior only; {len(REQUIRED_NATIVE_GAPS)} hazardous native behaviors remain XGBA design obligations."
     }
 
 def self_test()->None:
@@ -114,14 +119,16 @@ def self_test()->None:
     passed="\n".join("PASS "+name for name in sorted(REQUIRED_TESTS))
     obs="\n".join("OBSERVATION "+name for name in sorted(REQUIRED_NATIVE_GAPS))
     # Sort order is persisted in metadata; actual runner uses chronological order.
-    data=passed+"\n"+obs+"\nSUMMARY hard_failures=0 native_gap_observations=4 xgba_runtime_implemented=false phase1_mapping_complete=false\n"
+    data=(passed+"\n"+obs+"\nSUMMARY hard_failures=0 native_gap_observations="
+          +str(len(REQUIRED_NATIVE_GAPS))
+          +" xgba_runtime_implemented=false phase1_mapping_complete=false\n")
     rec={"source_revision":PIN,"test_source_sha256":sha(source),
          "run_kind":"NATIVE_MGBA_SYNTHETIC_CARTRIDGE_ONLY",
          "native_probe_exit_code":0,"external_XGBA_banking_implemented":False,
          "phase1_mapping_complete":False,"independent_semantic_reviews_approved":0,
          "positive_checks_passed":len(REQUIRED_TESTS),"positive_checks_failed":0,
          "native_gap_observations":sorted(REQUIRED_NATIVE_GAPS)}
-    assert check(data,rec,source)["assertions_verified"]==34
+    assert check(data,rec,source)["assertions_verified"]==len(REQUIRED_TESTS)
     negatives=[
         (data.replace("PASS "+sorted(REQUIRED_TESTS)[0]+"\n",""),rec,source),
         ("PASS "+sorted(REQUIRED_TESTS)[0]+"\n"+data,{**rec,"positive_checks_passed":35},source),

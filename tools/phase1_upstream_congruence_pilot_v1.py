@@ -46,6 +46,7 @@ PR8_DOSSIER_BLOB = "3b982876c7d810a827af8c80c7e5d9231fdaa327"
 PR8_QUEUE_BLOB = "52fe1a9b8498dd4fa3ea0e6e0236ae1cdeda7268"
 PILOT_REPOSITORY = "mgba-emu/mgba"
 PILOT_REVISION = "fd9dc5c2cbf234365068855851107e762fc6211b"
+PILOT_LICENSE_BLOB = "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e"
 PILOT_FILES = {
     "src/arm/arm.c": (
         "0b92d7f55f1fb853d4b1b9c9163ee086126066e2",
@@ -132,12 +133,12 @@ LOCAL_EVIDENCE = {
         "442b6189fd22beec3426b770e8ceea08718013ed",
     ),
     "tests/mgba_bank_boundary.c": (
-        "eaccce9a4b8622d19c6db62ec4f2cd469e00f0ccf3ed056264f64aa66cdd54fa",
-        "985206e60fdd28a729d02a61a1b21694fcb872d7",
+        "f4ae6023b1d1416be1ec611e2c2df61610f3f28be6240354746a95467d350839",
+        "e09ca92ee8614100efde34f443b84a7dc86e0676",
     ),
     "tests/run_pinned_mgba_boundary.sh": (
-        "730fdbd17e2be80db38ac92f3665e9bfc2abefae4923f314e0a9faa6465633ba",
-        "6dd7d67bc0df2d96fc9923c7a727f3336d50ec09",
+        "908139eb527ae84dac0c92c430571fdbda66216642ede81acfdd090cfc5788ae",
+        "7a8462d60a4ff789e8e4972b871facbed9e06e92",
     ),
     "tests/CMakeLists.txt": (
         "7035354e527c93b37300b7dc4960d38457b78872cd940a52e8668938203346a5",
@@ -789,7 +790,7 @@ def reconcile(root: Path, index_bytes: bytes, pr8_dossier_bytes: bytes) -> dict:
                 },
                 "license_evidence": {
                     "source_notice": "MPL-2.0",
-                    "license_file_git_blob_sha1": "14e2e1241fc846b57b8d9858349d6df4a79c23a8",
+                    "license_file_git_blob_sha1": PILOT_LICENSE_BLOB,
                     "distribution_clearance": "NOT_ASSESSED",
                 },
                 "risk_obligations": [

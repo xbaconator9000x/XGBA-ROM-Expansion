@@ -81,6 +81,8 @@ The original mGBA source at pin `fd9dc5c2cbf234365068855851107e762fc6211b` compi
 
 The native fixture passed 34 assertions with zero assertion failures and observed four upstream hazards: stale instruction prefetch after remap, warning-only ROM CRC mismatch during state restore, an unverified changed external bank payload, and a Matrix physical range past the backing-file end. These are observations of pinned mGBA behavior, not safe XGBA behavior or semantic controls. The fixture did not test Matrix short reads or combined Matrix/DMA/peripheral arbitration. Do not rerun or relabel the 34 assertions as safety proofs.
 
+The test-source hash above belongs to that historical 34-assertion run. The later Matrix I/O fault-witness change has its own fixture pin, two injected VFile failure cases, and pending exact-head execution in [the follow-up report](PHASE1_MGBA_MATRIX_IO_FAULT_WITNESS_20261101.md); the prior artifact does not validate those new cases.
+
 | Pinned source | Original dossier SHA-256 | Compiler-selected header rows / unique headers | Symbol candidate rows | Source contract rows | Relevant native evidence | Remaining blocker |
 | --- | --- | ---: | ---: | --- | --- | --- |
 | `src/arm/arm.c` | `37c2acf57fc04d0327426d88d01b3353f46868be77fa73f3fa633fcc0a267934` | 9 / 8 | 20 | none | stale prefetch observed | prove invalidation and active-region coherence |

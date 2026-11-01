@@ -231,6 +231,10 @@ class UpstreamCongruencePilotTests(unittest.TestCase):
         self.assertEqual(matrix["compiler_evidence"]["consumer_closure"], "NOT_ESTABLISHED")
         self.assertEqual(matrix["compiler_evidence"]["unresolved_symbol_references"], "NOT_RECORDED")
         self.assertEqual(matrix["license_assessment"]["project_distribution_clearance"], "NOT_ASSESSED")
+        self.assertEqual(
+            matrix["license_assessment"]["pinned_license_git_blob_sha1"],
+            pilot.PILOT_LICENSE_BLOB,
+        )
         self.assertEqual(matrix["dispositions"]["phase1_gate"], "FAIL_INCOMPLETE")
         self.assertEqual(matrix["dispositions"]["needs_review_count"], 6)
         self.assertEqual(matrix["dispositions"]["upstream_verified_passed_count"], 0)
@@ -243,6 +247,44 @@ class UpstreamCongruencePilotTests(unittest.TestCase):
         }
         self.assertEqual(observed, set(matrix["native_run"]["native_hazard_observations"]))
         self.assertEqual(len(observed), 4)
+
+    def test_matrix_fault_fixture_hash_is_bound_in_all_local_verifiers(self):
+        repository_root = Path(__file__).resolve().parents[1]
+        fixture_path = repository_root / "tests/mgba_bank_boundary.c"
+        fixture_bytes = fixture_path.read_bytes()
+        expected_sha = sha256(fixture_bytes)
+        expected_blob = pilot.git_blob_sha(fixture_bytes)
+        self.assertEqual(native_evidence.TEST_SHA256, expected_sha)
+        self.assertEqual(native_evidence.TEST_BLOB, expected_blob)
+        self.assertEqual(
+            pilot.LOCAL_EVIDENCE["tests/mgba_bank_boundary.c"],
+            (expected_sha, expected_blob),
+        )
+        runner = (repository_root / "tests/run_pinned_mgba_boundary.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(expected_blob, runner)
+        self.assertIn(expected_sha, runner)
+        self.assertIn("native_matrix_vfile_fault_controls_v6", native_evidence.PROBE_SUITE_REVISION)
+        pilot._verify_local_evidence(repository_root)
+
+    def test_matrix_fault_observations_are_mandatory_native_evidence(self):
+        self.assertIn(
+            "native_matrix_short_read_commits_mapping=true",
+            native_gate.REQUIRED_NATIVE_GAPS,
+        )
+        self.assertIn(
+            "native_matrix_seek_failure_commits_mapping=true",
+            native_gate.REQUIRED_NATIVE_GAPS,
+        )
+        self.assertIn(
+            "native_matrix_short_read_fault_injection_reproduced",
+            native_gate.REQUIRED_TESTS,
+        )
+        self.assertIn(
+            "native_matrix_seek_failure_fault_injection_reproduced",
+            native_gate.REQUIRED_TESTS,
+        )
 
     def test_pinned_candidate_scope_and_zero_approval_boundary(self):
         self.assertEqual(len(pilot.PILOT_FILES), 6)
@@ -570,7 +612,7 @@ class UpstreamCongruencePilotTests(unittest.TestCase):
                 )
             )
         lines.append(
-            "SUMMARY hard_failures=0 native_gap_observations=4 "
+            f"SUMMARY hard_failures=0 native_gap_observations={len(gaps)} "
             "xgba_runtime_implemented=false phase1_mapping_complete=false"
         )
         log = "\n".join(lines) + "\n"
@@ -610,7 +652,7 @@ class UpstreamCongruencePilotTests(unittest.TestCase):
                 )
             )
         lines.append(
-            "SUMMARY hard_failures=0 native_gap_observations=4 "
+            f"SUMMARY hard_failures=0 native_gap_observations={len(gaps)} "
             "xgba_runtime_implemented=false phase1_mapping_complete=false"
         )
         log = "\n".join(lines) + "\n"

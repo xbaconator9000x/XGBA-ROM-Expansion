@@ -17,8 +17,8 @@ test "$(git -C "$MGBA" hash-object src/gba/dma.c)" = "da2a800ba48cb32d6e10e42c3b
 test "$(git -C "$MGBA" hash-object src/gba/gba.c)" = "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e"
 test "$(git -C "$MGBA" hash-object src/gba/memory.c)" = "aa01fdcc7d6ae5ecdf8753efc63b3a60a1e8d3dc"
 test "$(git -C "$MGBA" hash-object src/gba/serialize.c)" = "a307a51e751f412c64a7378323c56758304ebe85"
-test "$(git -C "$ROOT" hash-object tests/mgba_bank_boundary.c)" = "985206e60fdd28a729d02a61a1b21694fcb872d7"
-test "$(sha256sum "$ROOT/tests/mgba_bank_boundary.c" | cut -d ' ' -f 1)" = "eaccce9a4b8622d19c6db62ec4f2cd469e00f0ccf3ed056264f64aa66cdd54fa"
+test "$(git -C "$ROOT" hash-object tests/mgba_bank_boundary.c)" = "e09ca92ee8614100efde34f443b84a7dc86e0676"
+test "$(sha256sum "$ROOT/tests/mgba_bank_boundary.c" | cut -d ' ' -f 1)" = "f4ae6023b1d1416be1ec611e2c2df61610f3f28be6240354746a95467d350839"
 echo "$PIN" > "$ROOT/audit-output/mgba_native_test_revision.txt"
 set -o pipefail
 cmake -S "$ROOT/tests" -B "$ROOT/build-mgba-boundary" -DCMAKE_BUILD_TYPE=Debug \
