@@ -1,7 +1,6 @@
 # Pinned mGBA SaveConverter whole-file review — v1 (non-approving)
 
-**Disposition:** `NEEDS_REVIEW`  
-**Evidence status:** `NEEDS_EVIDENCE`  
+**Disposition:** `NEEDS_REVIEW` | **Evidence status:** `NEEDS_EVIDENCE`
 **Semantic approval:** none; no approval receipt is created by this workpaper.
 
 This is a source-grounded counter-review of the complete pinned file, not an
