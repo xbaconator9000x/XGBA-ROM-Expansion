@@ -288,9 +288,9 @@ static void test_matrix_vfile_faults(struct GBA *gba, uint8_t *backing, size_t b
 
     const uint32_t short_physical = BANK_A + 0x1000u;
     const uint32_t short_virtual = 0x1800u;
-    const size_t short_destination = short_virtual >> 2;
+    uint8_t *rom_bytes = (uint8_t *) gba->memory.rom;
     memset(backing + short_physical, 0x6B, 512);
-    memset(gba->memory.rom + short_destination, 0xCC, 512);
+    memset(rom_bytes + short_virtual, 0xCC, 512);
     install_vfile_fault(gba->romVf, VFILE_FAULT_SHORT_READ);
     map512(gba, short_physical, short_virtual);
     remove_vfile_fault();
@@ -298,8 +298,9 @@ static void test_matrix_vfile_faults(struct GBA *gba, uint8_t *backing, size_t b
         fault_read_calls == 1 && fault_read_requested == 512 &&
         fault_read_returned == 511 &&
         gba->memory.matrix.mappings[short_virtual >> 9] == short_physical &&
-        gba->memory.rom[short_destination] == 0x6B &&
-        gba->memory.rom[short_destination + 511] == 0xCC;
+        rom_bytes[short_virtual] == 0x6B &&
+        rom_bytes[short_virtual + 510] == 0x6B &&
+        rom_bytes[short_virtual + 511] == 0xCC;
     observation("native_matrix_short_read_commits_mapping", short_read_committed);
     check("native_matrix_short_read_fault_injection_reproduced", short_read_committed);
 

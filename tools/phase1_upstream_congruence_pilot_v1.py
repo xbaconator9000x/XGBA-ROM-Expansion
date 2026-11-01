@@ -133,12 +133,12 @@ LOCAL_EVIDENCE = {
         "442b6189fd22beec3426b770e8ceea08718013ed",
     ),
     "tests/mgba_bank_boundary.c": (
-        "f4ae6023b1d1416be1ec611e2c2df61610f3f28be6240354746a95467d350839",
-        "e09ca92ee8614100efde34f443b84a7dc86e0676",
+        "5c0486fb61699782849bc32776ce375e946b8cd1d7b6cf8efc02c7b4645ab743",
+        "b0900bb2ef5932d2d4d299143c2a5249297cd929",
     ),
     "tests/run_pinned_mgba_boundary.sh": (
-        "908139eb527ae84dac0c92c430571fdbda66216642ede81acfdd090cfc5788ae",
-        "7a8462d60a4ff789e8e4972b871facbed9e06e92",
+        "8c4d7dc717636a244dc9c83986bfb4795d5e08e2b9d526cb7b0409734923dfef",
+        "ab023891cf7a9b223fe831485264050dbd3cca27",
     ),
     "tests/CMakeLists.txt": (
         "7035354e527c93b37300b7dc4960d38457b78872cd940a52e8668938203346a5",

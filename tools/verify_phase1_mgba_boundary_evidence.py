@@ -21,10 +21,10 @@ REPOSITORY = "xbaconator9000x/XGBA-ROM-Expansion"
 WORKFLOW_NAME = "Phase 1 compiled mGBA source semantics"
 WORKFLOW_PATH = ".github/workflows/compiled-mgba-semantics.yml"
 JOB_NAME = "compile-pinned-mgba"
-PROBE_SUITE_REVISION = "native_matrix_vfile_fault_controls_v6"
+PROBE_SUITE_REVISION = "native_matrix_vfile_fault_controls_v7"
 TEST_PATH = "tests/mgba_bank_boundary.c"
-TEST_BLOB = "e09ca92ee8614100efde34f443b84a7dc86e0676"
-TEST_SHA256 = "f4ae6023b1d1416be1ec611e2c2df61610f3f28be6240354746a95467d350839"
+TEST_BLOB = "b0900bb2ef5932d2d4d299143c2a5249297cd929"
+TEST_SHA256 = "5c0486fb61699782849bc32776ce375e946b8cd1d7b6cf8efc02c7b4645ab743"
 SOURCE_PINS = {
     "src/arm/arm.c": (
         "0b92d7f55f1fb853d4b1b9c9163ee086126066e2",

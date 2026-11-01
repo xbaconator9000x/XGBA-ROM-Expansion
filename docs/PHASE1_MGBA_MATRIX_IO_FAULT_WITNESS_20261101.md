@@ -1,6 +1,6 @@
 # Phase 1 mGBA Matrix I/O fault witness — 2026-11-01
 
-**Status: implementation added; native execution is pending exact-head Actions. No semantic disposition was created.** This is a bounded follow-up to the six-file ROM-memory pilot, centered on `src/gba/cart/matrix.c`; it does not change pinned upstream source, the Phase 1 gate, audit snapshots, or any approval count.
+**Status: short-read witness byte indexing corrected; exact-head native rerun pending. No semantic disposition was created.** Run #41285768620 executed the pinned fixture but failed its short-read assertion: the harness compared `uint32_t` ROM elements using byte offsets. The source-pinned implementation writes mapping metadata before the read and ignores its return value; the failed assertion did not falsify that behavior. The corrected fixture now checks destination bytes explicitly. This is a bounded follow-up to the six-file ROM-memory pilot, centered on `src/gba/cart/matrix.c`; it does not change pinned upstream source, the Phase 1 gate, audit snapshots, or any approval count.
 
 ## Immutable candidate identity
 
@@ -10,8 +10,8 @@
 | `src/gba/cart/matrix.c` Git blob / SHA-256 | `9ccbe883235b98bcf56cd609015e7b4003aa832c` / `6e47afc6992d3631d67f89cb201d7fe9784ef8a9e8dcb305c1ab5de48550ef8f` |
 | Original PR2 dossier archive SHA-256 / Git blob | `c47d1fea819e7df59f67bfe8d1bc4dc2650483d03563957145f7331ed099005b` / `143c373f9aae5b9cb24af39abb7d8244362d23b5` |
 | Canonical original dossier SHA-256 for `matrix.c` | `8998fbe6e0afc9b9a566c1891055f7526949b728356c125504d163eab97529aa` |
-| Updated native fixture Git blob / SHA-256 | `e09ca92ee8614100efde34f443b84a7dc86e0676` / `f4ae6023b1d1416be1ec611e2c2df61610f3f28be6240354746a95467d350839` |
-| Probe suite identifier | `native_matrix_vfile_fault_controls_v6` |
+| Updated native fixture Git blob / SHA-256 | `b0900bb2ef5932d2d4d299143c2a5249297cd929` / `5c0486fb61699782849bc32776ce375e946b8cd1d7b6cf8efc02c7b4645ab743` |
+| Probe suite identifier | `native_matrix_vfile_fault_controls_v7` |
 
 The fixture injects failures only through the test's `VFile` callback wrappers after the synthetic cartridge has loaded. It leaves all original mGBA source files untouched. The test runner and live verifier compare the six upstream source pins and the updated fixture's exact Git blob and SHA-256 before accepting native results.
 
@@ -35,7 +35,7 @@ The directly included headers and object-symbol records are not a complete seman
 The existing fixture was extended with controlled `VFile.seek` and `VFile.read` wrappers:
 
 1. `native_matrix_valid_physical_range_maps` is an in-bounds positive control.
-2. `native_matrix_short_read_fault_injection_reproduced` asks for 512 bytes while the wrapper delegates a 511-byte read, then records whether `_remapMatrix` still commits the requested mapping and leaves the final destination byte untouched. The paired observation is `native_matrix_short_read_commits_mapping=true`.
+2. `native_matrix_short_read_fault_injection_reproduced` asks for 512 bytes while the wrapper delegates a 511-byte read, then records whether `_remapMatrix` still commits the requested mapping and leaves the final destination byte untouched. It reads the destination through a byte pointer, matching the VFile byte count. The paired observation is `native_matrix_short_read_commits_mapping=true`.
 3. `native_matrix_seek_failure_fault_injection_reproduced` positions the original memory VFile four bytes before EOF, injects a failed seek, and records whether the subsequent read still occurs and the requested mapping metadata is committed. The paired observation is `native_matrix_seek_failure_commits_mapping=true`.
 4. The existing past-end physical-range case requests a 512-byte mapping with only 256 backing bytes remaining and records `native_matrix_accepts_physical_range_past_end=true`.
 

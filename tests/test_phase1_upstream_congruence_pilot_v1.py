@@ -265,7 +265,7 @@ class UpstreamCongruencePilotTests(unittest.TestCase):
         )
         self.assertIn(expected_blob, runner)
         self.assertIn(expected_sha, runner)
-        self.assertIn("native_matrix_vfile_fault_controls_v6", native_evidence.PROBE_SUITE_REVISION)
+        self.assertIn("native_matrix_vfile_fault_controls_v7", native_evidence.PROBE_SUITE_REVISION)
         pilot._verify_local_evidence(repository_root)
 
     def test_matrix_fault_observations_are_mandatory_native_evidence(self):
