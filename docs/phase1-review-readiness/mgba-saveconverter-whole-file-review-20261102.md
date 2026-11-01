@@ -175,8 +175,10 @@ distribution rights or the licensing of the full dependency closure.
 ## Executed evidence and open objections
 
 GitHub Actions run [#41260407534](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41260407534),
-attempt 2, completed successfully at exact PR #13 head
-`eefaa0a0942ab371c89a5e1fb391bec14d493ee1`. Job
+attempt 2, completed successfully against PR #13 code head
+`eefaa0a0942ab371c89a5e1fb391bec14d493ee1` (the PR head at run time). This
+workpaper was added in subsequent documentation-only commits; the witness
+workflow was not rerun at the current documentation head. Job
 `124718485562` (`pinned-savedata-boundary-witness`) and steps 3–7 completed
 successfully. The job log reports six mock-VFile witnesses and three mutation
 controls; for the native Qt6 witness it reports the four arrays above,
