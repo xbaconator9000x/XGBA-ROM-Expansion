@@ -89,8 +89,11 @@ def check(log:str,record:dict,source_bytes:bytes)->dict:
     if failed:raise EvidenceRejected("Native test has failed assertions")
     if len(set(passed))!=len(passed):raise EvidenceRejected("Duplicate PASS assertion name")
     if len(set(gaps))!=len(gaps):raise EvidenceRejected("Duplicate observation name")
-    missing=REQUIRED_TESTS-set(passed)
+    observed=set(passed)
+    missing=REQUIRED_TESTS-observed
+    unexpected=observed-REQUIRED_TESTS
     if missing:raise EvidenceRejected("Required assertions missing: "+",".join(sorted(missing)))
+    if unexpected:raise EvidenceRejected("Unexpected assertions: "+",".join(sorted(unexpected)))
     if set(gaps)!=REQUIRED_NATIVE_GAPS:
         raise EvidenceRejected("Native hazard observations changed: "+str(sorted(set(gaps)^REQUIRED_NATIVE_GAPS)))
     if (record.get("positive_checks_passed")!=len(passed)
@@ -98,8 +101,11 @@ def check(log:str,record:dict,source_bytes:bytes)->dict:
         raise EvidenceRejected("Runtime counts differ from saved result metadata")
     if record.get("native_gap_observations")!=gaps:
         raise EvidenceRejected("Runtime observations differ from saved result metadata")
-    if f"SUMMARY hard_failures=0 native_gap_observations={len(REQUIRED_NATIVE_GAPS)} " not in log:
-        raise EvidenceRejected("Missing native executable termination summary")
+    summaries=re.findall(
+        r"^SUMMARY hard_failures=0 native_gap_observations=(\d+) xgba_runtime_implemented=false phase1_mapping_complete=false$",
+        log,re.M)
+    if summaries!=[str(len(REQUIRED_NATIVE_GAPS))]:
+        raise EvidenceRejected("Missing, duplicate or malformed native executable termination summary")
     return {
         "decision":"PASS_PINNED_NATIVE_MGBA_REGRESSION_ONLY",
         "source_revision":PIN,
@@ -141,6 +147,9 @@ def self_test()->None:
         (data,{**rec,"positive_checks_passed":33},source),
         (data,{**rec,"phase1_mapping_complete":True},source),
         (data,{**rec,"native_gap_observations":[]},source),
+        (data+"PASS invented_extra_case\n",{**rec,"positive_checks_passed":len(REQUIRED_TESTS)+1},source),
+        (data.replace("SUMMARY hard_failures=0","NOT_SUMMARY hard_failures=0"),rec,source),
+        (data+"SUMMARY hard_failures=0 native_gap_observations="+str(len(REQUIRED_NATIVE_GAPS))+" xgba_runtime_implemented=false phase1_mapping_complete=false\n",rec,source),
     ]
     for i,(logs,record,blob) in enumerate(negatives,1):
         try:check(logs,record,blob)
