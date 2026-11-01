@@ -50,3 +50,47 @@ jobs:
         run: python3 -m py_compile tools/phase1_copilot_receipts_v5_adapter.py tests/test_phase1_copilot_receipts_v5_adapter.py
       - name: Run v5 adapter synthetic positive and adversarial controls
         run: python3 -m unittest discover -s tests -p 'test_phase1_copilot_receipts_v5_adapter.py' -v
+  v5-live-pinned-source-and-github-evidence:
+    # Separate from synthetic controls: execute the actual v5 adapter against
+    # original pinned source bytes, all 14,834 dossiers and live GitHub evidence.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+      issues: read
+      pull-requests: read
+    steps:
+      - name: Check out existing PR2 adapter at this exact workflow head
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check out exact historical PR8 receipt and complete ancestry
+        uses: actions/checkout@v4
+        with:
+          repository: xbaconator9000x/XGBA-ROM-Expansion
+          ref: 3ee4b1117f2976b6ea41098f5456634da18a50f8
+          fetch-depth: 0
+          persist-credentials: false
+          path: .phase1-live/pr8
+      - name: Check out immutable original mGBA source
+        uses: actions/checkout@v4
+        with:
+          repository: mgba-emu/mgba
+          ref: fd9dc5c2cbf234365068855851107e762fc6211b
+          persist-credentials: false
+          path: .phase1-live/upstreams/mgba
+      - name: Verify exact checkout identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C .phase1-live/pr8 rev-parse HEAD)" = "3ee4b1117f2976b6ea41098f5456634da18a50f8"
+          test "$(git -C .phase1-live/upstreams/mgba rev-parse HEAD)" = "fd9dc5c2cbf234365068855851107e762fc6211b"
+          python3 -m py_compile tools/phase1_copilot_receipts_v5_adapter.py
+      - name: Execute real four-receipt v5 validator (fail closed)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 tools/phase1_copilot_receipts_v5_adapter.py \
+            --pr8-root "$GITHUB_WORKSPACE/.phase1-live/pr8" \
+            --source-root "$GITHUB_WORKSPACE/.phase1-live/upstreams"
