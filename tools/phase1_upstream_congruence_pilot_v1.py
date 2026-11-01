@@ -1,0 +1,608 @@
+#!/usr/bin/env python3
+"""Reconcile the pinned PR8 inventory and measure the mGBA ROM pilot."""
+from __future__ import annotations
+
+import argparse
+import csv
+import gzip
+import io
+import json
+import sys
+from collections import Counter
+from pathlib import Path
+
+from phase1_upstream_verified_v1 import (
+    DOSSIER_BLOB,
+    DOSSIER_PATH,
+    DOSSIER_SHA256,
+    GATE_BLOB,
+    GATE_PATH,
+    P0_CANDIDATES,
+    QUEUE_BLOB,
+    QUEUE_PATH,
+    QUEUE_SHA256,
+    REGISTER_BLOB,
+    REGISTER_PATH,
+    REGISTER_SHA256,
+    EvidenceError,
+    PINS,
+    canonical_bytes,
+    git_blob_sha,
+    sha256,
+)
+
+SCHEMA = "xgba.phase1.upstream_congruence_pilot.v1"
+BEHAVIOR_SCHEMA = "xgba.phase1.behavioral_congruence_evidence.v1"
+INVENTORY_SIZE = 14834
+PR8_HEAD = "12bebda10473877e8f82faf3806d4fbbf0f882df"
+PR8_INDEX_PATH = "docs/phase1-review-readiness/inventory-source-index-20261101.json.gz"
+PR8_INDEX_SHA256 = "aaeb605aa9906e979b66c532bc34336f88d8255e534701f2ea6629da3de8a0db"
+PR8_INDEX_BLOB = "d82c9edd68b3facb4cdc1623111f62c397c0b486"
+PR8_DOSSIER_PATH = "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz"
+PR8_DOSSIER_SHA256 = "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+PR8_DOSSIER_BLOB = "3b982876c7d810a827af8c80c7e5d9231fdaa327"
+PR8_QUEUE_BLOB = "52fe1a9b8498dd4fa3ea0e6e0236ae1cdeda7268"
+PILOT_REPOSITORY = "mgba-emu/mgba"
+PILOT_REVISION = "fd9dc5c2cbf234365068855851107e762fc6211b"
+PILOT_FILES = {
+    "src/arm/arm.c": (
+        "0b92d7f55f1fb853d4b1b9c9163ee086126066e2",
+        "c241587e974ac29aa09ed4992c9244c7ac65fad938e61d45836dc457f57129d2",
+    ),
+    "src/gba/cart/matrix.c": (
+        "9ccbe883235b98bcf56cd609015e7b4003aa832c",
+        "6e47afc6992d3631d67f89cb201d7fe9784ef8a9e8dcb305c1ab5de48550ef8f",
+    ),
+    "src/gba/dma.c": (
+        "da2a800ba48cb32d6e10e42c3b3527ef406bad22",
+        "cd4c795f69ec16373e475b4c902e863e4a6db61cd2b9f1c4d851496d3202b9d1",
+    ),
+    "src/gba/gba.c": (
+        "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e",
+        "e84eaba17f6c96ac7b78431afaee79d7633dd50118f92e31e4432793f80c4c7b",
+    ),
+    "src/gba/memory.c": (
+        "aa01fdcc7d6ae5ecdf8753efc63b3a60a1e8d3dc",
+        "501dbbca7d5d7cbaa86240de2d6a4e2e1186b50f74dde11bcf2f323c4af8c437",
+    ),
+    "src/gba/serialize.c": (
+        "a307a51e751f412c64a7378323c56758304ebe85",
+        "23947295749e6eeb27ab13d2a6d4c18bf88b587bcf3109e6d3e6bab5a5658dc3",
+    ),
+}
+LOCAL_EVIDENCE = {
+    "semantic-snapshots/current/resource_lifecycle_contracts.csv": (
+        "4e55e0f333dad5a593eccbff236bff8c92ece1b968f51f08af5713dd9e4806b9",
+        "806198b489f4e91c5817b3ff4de0f139ea5e5cb1",
+    ),
+    "semantic-snapshots/current/resource_lifecycle_contracts_summary.json": (
+        "cd1be207a1042b486252bd6ece15a3a01a50e807c4eecb1cedee6535f3b627bb",
+        "442b6189fd22beec3426b770e8ceea08718013ed",
+    ),
+    "tests/mgba_bank_boundary.c": (
+        "88760d928e51104d58bdf30b8f42a37217908e4b66cca6cb629dba55c4c3be29",
+        "ebdae8082a91996ff34be4a2c4b2088fe00363aa",
+    ),
+    "tests/run_pinned_mgba_boundary.sh": (
+        "85746b2690a89c19a78ee754e8d1a224e3907790ddfc94cdec53b141ec64b0e8",
+        "6ac0a80b9d4a3b49cc57281996b0584fd0c13288",
+    ),
+    "tests/CMakeLists.txt": (
+        "7035354e527c93b37300b7dc4960d38457b78872cd940a52e8668938203346a5",
+        "21287a7ce4504c0c8ae261d2d3fcecc24e888a23",
+    ),
+    "docs/PHASE1_P0_MATRIX_NATIVE_BOUNDARY_PROBE_2026-10-26.md": (
+        "4faf43ed286f5bef42ce86ead00c990dd6917ecc4150236d7be85dfceae13ec3",
+        "072bb651f8788bd1b8f39c0f6c41d70a67aa566e",
+    ),
+}
+EXPECTED_PR8_LIMITS = {
+    "Dependency edges are literal C-preprocessor or assembler include candidates, not compiler closure.",
+    "Direct test include links are candidate links only and do not establish coverage.",
+    "License files and notices do not establish distribution clearance.",
+    "No record is semantically reviewed or approved by this indexer.",
+    "No source-defined semantic invariants are automatically extracted by this index.",
+}
+
+
+def _read_exact(path: Path, expected_sha256: str, expected_blob: str) -> bytes:
+    if path.is_symlink() or not path.is_file():
+        raise EvidenceError(f"Required pinned evidence is missing or unsafe: {path}", "BLOCKED")
+    data = path.read_bytes()
+    if sha256(data) != expected_sha256 or git_blob_sha(data) != expected_blob:
+        raise EvidenceError(f"Pinned evidence digest mismatch: {path}", "BLOCKED")
+    return data
+
+
+def _load_json_gzip(data: bytes, label: str):
+    try:
+        with gzip.GzipFile(fileobj=io.BytesIO(data), mode="rb") as stream:
+            expanded = stream.read(512 * 1024 * 1024 + 1)
+        if len(expanded) > 512 * 1024 * 1024:
+            raise EvidenceError(f"Expanded {label} exceeds the 512 MiB limit", "BLOCKED")
+        return json.loads(expanded)
+    except (OSError, EOFError, json.JSONDecodeError) as exc:
+        raise EvidenceError(f"Invalid compressed JSON in {label}", "BLOCKED") from exc
+
+
+def _load_dossiers(
+    data: bytes, label: str, expected_count: int = INVENTORY_SIZE
+) -> dict[tuple[str, str], dict]:
+    try:
+        with io.TextIOWrapper(gzip.GzipFile(fileobj=io.BytesIO(data)), encoding="utf-8") as stream:
+            records = [json.loads(line) for line in stream]
+    except (OSError, EOFError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise EvidenceError(f"Invalid dossier archive: {label}", "BLOCKED") from exc
+    result = {}
+    for row in records:
+        provenance = row.get("provenance", {})
+        key = (provenance.get("repository"), provenance.get("path"))
+        if not all(isinstance(part, str) and part for part in key) or key in result:
+            raise EvidenceError(f"Duplicate or invalid dossier identity in {label}", "BLOCKED")
+        result[key] = row
+    if len(result) != expected_count:
+        raise EvidenceError(f"Incomplete dossier archive: {label}", "BLOCKED")
+    return result
+
+
+def _load_queue(data: bytes, expected_count: int = INVENTORY_SIZE) -> dict[tuple[str, str], dict]:
+    try:
+        with io.TextIOWrapper(
+            gzip.GzipFile(fileobj=io.BytesIO(data)), encoding="utf-8", newline=""
+        ) as stream:
+            rows = list(csv.DictReader(stream))
+    except (OSError, EOFError, UnicodeDecodeError, csv.Error) as exc:
+        raise EvidenceError("Invalid pinned review queue", "BLOCKED") from exc
+    result = {}
+    for row in rows:
+        key = (row.get("repo"), row.get("path"))
+        if not all(isinstance(part, str) and part for part in key) or key in result:
+            raise EvidenceError("Duplicate or invalid review-queue identity", "BLOCKED")
+        result[key] = row
+    if len(result) != expected_count:
+        raise EvidenceError("Incomplete pinned review queue", "BLOCKED")
+    return result
+
+
+def _verify_pinned_bytes(data: bytes, expected_sha256: str, expected_blob: str, label: str) -> None:
+    if sha256(data) != expected_sha256 or git_blob_sha(data) != expected_blob:
+        raise EvidenceError(f"Pinned evidence digest mismatch: {label}", "BLOCKED")
+
+
+def _validate_pr8_index(index_bytes: bytes) -> dict:
+    if sha256(index_bytes) != PR8_INDEX_SHA256 or git_blob_sha(index_bytes) != PR8_INDEX_BLOB:
+        raise EvidenceError("PR8 source-index archive digest mismatch", "BLOCKED")
+    index = _load_json_gzip(index_bytes, "PR8 source index")
+    identity = index.get("snapshot_identity", {})
+    if (
+        index.get("schema") != "xgba.phase1.inventory_source_index.v1"
+        or index.get("status") != "SOURCE_INDEX_ONLY_NO_SEMANTIC_DISPOSITIONS"
+        or identity.get("mapping_gate_git_blob_sha1") != GATE_BLOB
+        or identity.get("review_queue_git_blob_sha1") != PR8_QUEUE_BLOB
+        or identity.get("source_dossier_archive_git_blob_sha1") != PR8_DOSSIER_BLOB
+        or index.get("gate") != {
+            "decision": "FAIL_INCOMPLETE",
+            "inventory_total": INVENTORY_SIZE,
+            "legacy_approvals": 0,
+            "p0_total": P0_CANDIDATES,
+            "semantic_dispositions_added": 0,
+        }
+        or index.get("run", {}).get("indexed_count") != INVENTORY_SIZE
+        or index.get("run", {}).get("indexed_p0_count") != P0_CANDIDATES
+        or index.get("run", {}).get("blocked_count") != 0
+        or index.get("run", {}).get("unindexed_count") != 0
+    ):
+        raise EvidenceError("PR8 index snapshot or census metadata mismatch", "BLOCKED")
+    if not EXPECTED_PR8_LIMITS.issubset(set(index.get("evidence_boundaries", []))):
+        raise EvidenceError("PR8 index evidence boundaries are missing", "BLOCKED")
+    rows = index.get("source_records")
+    if not isinstance(rows, list) or len(rows) != INVENTORY_SIZE:
+        raise EvidenceError("PR8 source index is incomplete", "BLOCKED")
+    return index
+
+
+def _verify_dossier_row(key, queue, pr2_dossier, pr8_dossier, index_row):
+    pr2_hash = sha256(canonical_bytes(pr2_dossier))
+    pr8_hash = sha256(canonical_bytes(pr8_dossier))
+    provenance = pr2_dossier.get("provenance", {})
+    identity = index_row.get("identity", {})
+    source_sha256 = provenance.get("source_content_sha256")
+    source_bytes = provenance.get("tracked_bytes")
+    if (
+        pr2_hash != queue.get("evidence_sha256")
+        or pr8_hash != pr2_hash
+        or provenance.get("repository") != key[0]
+        or provenance.get("path") != key[1]
+        or provenance.get("pinned_revision") != dict((repo, pin) for repo, pin, _ in PINS).get(key[0])
+        or provenance.get("git_blob_sha") != queue.get("blob_sha")
+        or pr2_dossier.get("review", {}).get("semantic_signoff") is not False
+        or index_row.get("machine_dossier", {}).get("original_archive_git_blob_sha1") != PR8_DOSSIER_BLOB
+        or index_row.get("machine_dossier", {}).get("sha256") != pr2_hash
+        or index_row.get("machine_dossier", {}).get("semantic_signoff") is not False
+        or (
+            index_row.get("machine_dossier", {}).get("source_content_sha256_present") is True
+            and not source_sha256
+        )
+        or (source_sha256 is not None and identity.get("source_sha256") != source_sha256)
+        or (source_bytes is not None and identity.get("source_bytes") != int(source_bytes))
+    ):
+        raise EvidenceError(f"Queue/dossier/index identity mismatch: {key[0]}:{key[1]}", "BLOCKED")
+    if (
+        identity.get("repository") != key[0]
+        or identity.get("path") != key[1]
+        or identity.get("git_blob_sha1") != queue.get("blob_sha")
+        or identity.get("pinned_commit") != provenance.get("pinned_revision")
+        or index_row.get("approval_state") != "NOT_APPROVED"
+        or index_row.get("semantic_review_state") != "NOT_SEMANTICALLY_REVIEWED"
+        or index_row.get("source_index_state") != "SOURCE_INDEXED"
+        or index_row.get("source_index_reason_code") != "SOURCE_BLOB_AND_DOSSIER_VERIFIED"
+    ):
+        raise EvidenceError(f"Source-index identity or non-approval state mismatch: {key[0]}:{key[1]}", "BLOCKED")
+    return pr2_hash
+
+
+def _reconcile_rows(queue, pr2_dossiers, pr8_dossiers, index_rows, expected_count=INVENTORY_SIZE):
+    if not (
+        len(queue) == len(pr2_dossiers) == len(pr8_dossiers) == len(index_rows) == expected_count
+        and queue.keys() == pr2_dossiers.keys() == pr8_dossiers.keys() == index_rows.keys()
+    ):
+        raise EvidenceError("Queue, dossiers, and source index have incomplete or divergent identities", "BLOCKED")
+    for key, queued in queue.items():
+        if queued.get("repo") not in dict((repo, pin) for repo, pin, _ in PINS):
+            raise EvidenceError(f"Unexpected repository in pinned queue: {key[0]}", "BLOCKED")
+        _verify_dossier_row(key, queued, pr2_dossiers[key], pr8_dossiers[key], index_rows[key])
+
+
+def _index_rows(rows) -> dict[tuple[str, str], dict]:
+    result = {}
+    for row in rows:
+        identity = row.get("identity", {})
+        key = (identity.get("repository"), identity.get("path"))
+        if key in result or not all(isinstance(part, str) and part for part in key):
+            raise EvidenceError("Duplicate or malformed PR8 source-index identity", "BLOCKED")
+        result[key] = row
+    return result
+
+
+def _dependency_candidate_component(index_rows, seeds):
+    graph = {}
+    for (repository, path), row in index_rows.items():
+        source = (repository, path)
+        graph.setdefault(source, set())
+        for dependency in row.get("direct_dependencies", []):
+            for candidate in dependency.get("candidate_target_paths", []):
+                target = (repository, candidate)
+                graph.setdefault(target, set())
+                graph[source].add(target)
+                graph[target].add(source)
+    component = set()
+    pending = list(seeds)
+    while pending:
+        node = pending.pop()
+        if node in component:
+            continue
+        component.add(node)
+        pending.extend(graph.get(node, set()) - component)
+    return component
+
+
+def _validate_candidate_evidence(
+    record: dict, expected: dict, verify_reference=None, verify_actions=None
+) -> list[str]:
+    """Validate a versioned behavioral claim; fixtures exercise this helper only."""
+    if not isinstance(record, dict) or not isinstance(expected, dict):
+        return ["BEHAVIORAL_RECORD_INVALID"]
+    reasons = []
+    supplied_digest = record.get("record_sha256")
+    payload = {key: value for key, value in record.items() if key != "record_sha256"}
+    if record.get("schema") != BEHAVIOR_SCHEMA:
+        reasons.append("BEHAVIORAL_SCHEMA_MISMATCH")
+    if supplied_digest != sha256(canonical_bytes(payload)):
+        reasons.append("BEHAVIORAL_RECORD_DIGEST_MISMATCH")
+    if record.get("identity") != expected:
+        reasons.append("SOURCE_OR_DOSSIER_IDENTITY_MISMATCH")
+    scope = record.get("scope") if isinstance(record.get("scope"), dict) else {}
+    claim_ids = scope.get("claim_ids", [])
+    if (
+        scope.get("claim_level") != "whole_file"
+        or scope.get("line_coverage") != [[1, expected.get("source_line_count")]]
+        or not isinstance(claim_ids, list)
+        or not claim_ids
+        or any(not isinstance(claim_id, str) or not claim_id for claim_id in claim_ids)
+        or len(set(claim_ids)) != len(claim_ids)
+    ):
+        reasons.append("WHOLE_FILE_SCOPE_INCOMPLETE")
+        claim_ids = []
+    semantic = record.get("semantic_map") if isinstance(record.get("semantic_map"), dict) else {}
+    if (
+        not semantic.get("statements")
+        or semantic.get("claim_ids") != claim_ids
+        or not semantic.get("source_refs")
+        or not semantic.get("specification_refs")
+    ):
+        reasons.append("UPSTREAM_SEMANTIC_MAP_OR_SPECIFICATION_MISSING")
+    closure = record.get("dependency_closure") if isinstance(record.get("dependency_closure"), dict) else {}
+    dependencies = closure.get("dependencies", [])
+    consumers = closure.get("consumers", [])
+    if not isinstance(dependencies, list):
+        dependencies = []
+        reasons.append("DEPENDENCY_OR_CONSUMER_CLOSURE_INCOMPLETE")
+    if (
+        closure.get("complete") is not True
+        or not dependencies
+        or not isinstance(consumers, list)
+        or not consumers
+        or closure.get("unresolved")
+        or closure.get("dependency_digest_sha256")
+        != sha256(canonical_bytes({"dependencies": dependencies, "consumers": consumers}))
+    ):
+        reasons.append("DEPENDENCY_OR_CONSUMER_CLOSURE_INCOMPLETE")
+    tests = record.get("tests") if isinstance(record.get("tests"), dict) else {}
+    actions = tests.get("actions") if isinstance(tests.get("actions"), dict) else {}
+    counterexample_claim_ids = tests.get("counterexample_claim_ids", [])
+    if not isinstance(counterexample_claim_ids, list):
+        counterexample_claim_ids = []
+    if (
+        tests.get("executed") is not True
+        or tests.get("exit_code") != 0
+        or not tests.get("test_source_refs")
+        or tests.get("positive_cases", 0) < 1
+        or tests.get("negative_counterexamples", 0) < 1
+        or tests.get("covered_claim_ids") != claim_ids
+        or any(not isinstance(claim_id, str) or not claim_id for claim_id in counterexample_claim_ids)
+        or not set(counterexample_claim_ids).issubset(set(claim_ids))
+        or not counterexample_claim_ids
+        or not tests.get("result_sha256")
+        or actions.get("head_sha") != expected.get("revision")
+        or actions.get("conclusion") != "success"
+        or actions.get("event") not in {"push", "pull_request"}
+        or actions.get("total_jobs", 0) < 1
+        or actions.get("successful_jobs") != actions.get("total_jobs")
+        or actions.get("executed_jobs") != actions.get("total_jobs")
+    ):
+        reasons.append("PINNED_POSITIVE_AND_NEGATIVE_TEST_EXECUTION_MISSING")
+    licensing = record.get("licensing") if isinstance(record.get("licensing"), dict) else {}
+    if licensing.get("distribution_clearance") != "CLEARED" or not licensing.get("evidence_refs"):
+        reasons.append("LICENSING_SCOPE_NOT_CLEARED")
+    if record.get("unresolved_objections") != []:
+        reasons.append("UNRESOLVED_SUBSTANTIVE_OBJECTIONS")
+    if record.get("contradictory_evidence") != []:
+        reasons.append("CONTRADICTORY_EVIDENCE_PRESENT")
+    reference_groups = (
+        semantic.get("source_refs", []),
+        semantic.get("specification_refs", []),
+        dependencies,
+        consumers,
+        tests.get("test_source_refs", []),
+        licensing.get("evidence_refs", []),
+    )
+    if any(not isinstance(group, list) for group in reference_groups):
+        reasons.append("REFERENCED_ARTIFACTS_NOT_REVERIFIED")
+        references = []
+    else:
+        references = [reference for group in reference_groups for reference in group]
+    if verify_reference is None or any(not verify_reference(reference) for reference in references):
+        reasons.append("REFERENCED_ARTIFACTS_NOT_REVERIFIED")
+    try:
+        actions_verified = verify_actions is not None and verify_actions(actions)
+    except Exception:
+        actions_verified = False
+    if not actions_verified:
+        reasons.append("EXACT_HEAD_ACTIONS_PROVENANCE_NOT_REVERIFIED")
+    return list(dict.fromkeys(reasons))
+
+
+def _verify_local_evidence(root: Path) -> tuple[list[dict], dict]:
+    for relative, (expected_sha, expected_blob) in LOCAL_EVIDENCE.items():
+        _read_exact(root / relative, expected_sha, expected_blob)
+    with (root / "semantic-snapshots/current/resource_lifecycle_contracts.csv").open(
+        encoding="utf-8", newline=""
+    ) as stream:
+        contracts = list(csv.DictReader(stream))
+    mgba_contracts = [row for row in contracts if row.get("repo") == PILOT_REPOSITORY]
+    if len(mgba_contracts) != 6 or any(row.get("runtime_test_status") != "NOT_RUN" for row in mgba_contracts):
+        raise EvidenceError("Pinned mGBA source-contract evidence changed or implies runtime execution", "BLOCKED")
+    summary = json.loads(
+        (root / "semantic-snapshots/current/resource_lifecycle_contracts_summary.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if (
+        summary.get("critical_areas", {}).get("mGBA_ROM_lifecycle") != 6
+        or summary.get("runtime_paths_exercised") != 0
+        or summary.get("whole_file_semantic_dispositions_approved") != 0
+    ):
+        raise EvidenceError("Pinned mGBA source-contract summary changed", "BLOCKED")
+    return mgba_contracts, summary
+
+
+def reconcile(root: Path, index_bytes: bytes, pr8_dossier_bytes: bytes) -> dict:
+    index = _validate_pr8_index(index_bytes)
+    _verify_pinned_bytes(
+        pr8_dossier_bytes, PR8_DOSSIER_SHA256, PR8_DOSSIER_BLOB, "PR8 original dossier archive"
+    )
+
+    gate = _read_exact(
+        root / GATE_PATH,
+        "7df6ceb6641ccb24cdc114f0ed6af10bc0ecbf3b42db484b26be41907e96d953",
+        GATE_BLOB,
+    )
+    gate_data = json.loads(gate)
+    if (
+        gate_data.get("decision") != "FAIL_INCOMPLETE"
+        or gate_data.get("verified_source_manifest_entries") != INVENTORY_SIZE
+        or gate_data.get("machine_generated_dossiers") != INVENTORY_SIZE
+        or gate_data.get("p0_review_candidates") != P0_CANDIDATES
+        or gate_data.get("approved_semantic_dispositions") != 0
+    ):
+        raise EvidenceError("Historical Phase 1 gate baseline changed", "BLOCKED")
+    register = json.loads(
+        _read_exact(root / REGISTER_PATH, REGISTER_SHA256, REGISTER_BLOB)
+    )
+    if (
+        register.get("schema") != "xgba.phase1.upstream_congruence_register.v1"
+        or register.get("records") != []
+    ):
+        raise EvidenceError("Pinned exact-byte v1 proposal register is not empty or changed", "BLOCKED")
+
+    queue_bytes = _read_exact(root / QUEUE_PATH, QUEUE_SHA256, QUEUE_BLOB)
+    dossier_bytes = _read_exact(root / DOSSIER_PATH, DOSSIER_SHA256, DOSSIER_BLOB)
+    queue = _load_queue(queue_bytes)
+    pr2_dossiers = _load_dossiers(dossier_bytes, "PR2 original dossier archive")
+    pr8_dossiers = _load_dossiers(pr8_dossier_bytes, "PR8 original dossier archive")
+    index_rows = _index_rows(index["source_records"])
+    _reconcile_rows(queue, pr2_dossiers, pr8_dossiers, index_rows)
+
+    contracts, contract_summary = _verify_local_evidence(root)
+    catalog = index.get("repository_evidence_catalog", {}).get(PILOT_REPOSITORY, {})
+    license_state = catalog.get("license_assessment", {})
+    if (
+        catalog.get("pinned_commit") != PILOT_REVISION
+        or license_state.get("distribution_clearance") != "NOT_ASSESSED"
+        or catalog.get("test_source_evidence_state") != "HASH_VERIFIED_TEST_SOURCE_FILES_PRESENT_NOT_EXECUTED"
+    ):
+        raise EvidenceError("mGBA license or test evidence state changed", "BLOCKED")
+    if len(index["run"].get("dependency_edges_by_resolution", {})) < 3:
+        raise EvidenceError("PR8 dependency-candidate summary is incomplete", "BLOCKED")
+
+    pilot_keys = {(PILOT_REPOSITORY, path) for path in PILOT_FILES}
+    lexical_component = _dependency_candidate_component(index_rows, {min(pilot_keys)})
+    if not pilot_keys.issubset(lexical_component):
+        raise EvidenceError("The selected mGBA ROM files are not dependency-connected in the index", "BLOCKED")
+
+    candidates = []
+    resolution_totals = Counter()
+    direct_test_links = 0
+    unresolved_edges = 0
+    for path, (expected_blob, expected_sha) in sorted(PILOT_FILES.items()):
+        key = (PILOT_REPOSITORY, path)
+        row = index_rows.get(key)
+        if row is None:
+            raise EvidenceError(f"mGBA ROM pilot source absent from index: {path}", "BLOCKED")
+        identity = row["identity"]
+        if (
+            identity.get("pinned_commit") != PILOT_REVISION
+            or identity.get("git_blob_sha1") != expected_blob
+            or identity.get("source_sha256") != expected_sha
+            or identity.get("source_materialization") != "ARCHIVE_BYTES_MATCH_PINNED_GIT_BLOB"
+            or row.get("inventory", {}).get("priority") != "P0"
+        ):
+            raise EvidenceError(f"mGBA pilot source pin mismatch: {path}", "BLOCKED")
+        resolution_counts = Counter(
+            dependency.get("resolution") for dependency in row.get("direct_dependencies", [])
+        )
+        resolution_totals.update(resolution_counts)
+        unresolved_edges += row.get("direct_dependency_unresolved_count", 0)
+        direct_test_links += row.get("upstream_test_source_candidate_count", 0)
+        reasons = [
+            "NO_WHOLE_FILE_SEMANTIC_MAP",
+            "LEXICAL_INCLUDE_CANDIDATES_ARE_NOT_DEPENDENCY_CLOSURE",
+            "PINNED_POSITIVE_AND_NEGATIVE_TESTS_NOT_EXECUTED",
+            "LICENSE_DISTRIBUTION_CLEARANCE_NOT_ASSESSED",
+            "WHOLE_FILE_DEPENDENCY_AND_CONSUMER_SCOPE_NOT_ESTABLISHED",
+            "SUBSTANTIVE_ROM_BOUNDARY_OBJECTIONS_REMAIN_OPEN",
+        ]
+        if row.get("upstream_test_source_candidate_count", 0) == 0:
+            reasons.append("NO_DIRECT_TEST_LINK_CANDIDATE")
+        if row.get("direct_dependency_unresolved_count", 0):
+            reasons.append("UNRESOLVED_LITERAL_INCLUDE_CANDIDATE")
+        candidates.append(
+            {
+                "repository": PILOT_REPOSITORY,
+                "path": path,
+                "pinned_revision": PILOT_REVISION,
+                "git_blob_sha1": expected_blob,
+                "source_sha256": expected_sha,
+                "priority": "P0",
+                "v1_exact_bytes_eligible": False,
+                "v1_reason_codes": ["NO_DISTINCT_BYTE_IDENTICAL_IMPLEMENTATION_REFERENCE"],
+                "behavioral_congruence_disposition": "NEEDS_REVIEW",
+                "behavioral_reason_codes": reasons,
+                "source_index_state": row["source_index_state"],
+                "semantic_review_state": row["semantic_review_state"],
+                "direct_dependency_candidates": len(row.get("direct_dependencies", [])),
+                "direct_dependency_resolution_counts": dict(sorted(resolution_counts.items())),
+                "direct_test_link_candidates": row.get("upstream_test_source_candidate_count", 0),
+            }
+        )
+
+    if len(candidates) != len(PILOT_FILES):
+        raise EvidenceError("mGBA ROM pilot target set is incomplete", "BLOCKED")
+    return {
+        "schema": SCHEMA,
+        "proposal_state": "PROSPECTIVE_NOT_ACTIVATED",
+        "pr8_evidence": {
+            "head": PR8_HEAD,
+            "index_path": PR8_INDEX_PATH,
+            "index_sha256": PR8_INDEX_SHA256,
+            "index_git_blob_sha1": PR8_INDEX_BLOB,
+            "dossier_path": PR8_DOSSIER_PATH,
+            "dossier_archive_sha256": PR8_DOSSIER_SHA256,
+            "dossier_git_blob_sha1": PR8_DOSSIER_BLOB,
+            "compressed_dossier_archives_byte_identical": False,
+            "canonical_dossier_records_equal": True,
+            "reconciled_inventory_identities": len(queue),
+            "identity_mismatches": 0,
+        },
+        "historical_gate": {
+            "decision": gate_data["decision"],
+            "inventory_total": INVENTORY_SIZE,
+            "p0_candidates": P0_CANDIDATES,
+            "legacy_external_independent_approved": gate_data["approved_semantic_dispositions"],
+        },
+        "pr8_index_dispositions_added": index["gate"]["semantic_dispositions_added"],
+        "v1_register_record_count": len(register["records"]),
+        "pilot": {
+            "subsystem": "mGBA ROM lifecycle / native Matrix / fetch / DMA / state interactions",
+            "candidate_file_count": len(candidates),
+            "lexical_dependency_component_candidate_nodes": len(lexical_component),
+            "pilot_files_in_lexical_component": len(pilot_keys),
+            "lexical_component_is_complete_semantic_closure": False,
+            "v1_exact_bytes_eligible_count": 0,
+            "v1_exact_bytes_ineligible_count": len(candidates),
+            "behavioral_congruence_passed_count": 0,
+            "behavioral_needs_review_count": len(candidates),
+            "source_contract_rows": len(contracts),
+            "source_contract_files": sorted({row["path"] for row in contracts}),
+            "runtime_paths_exercised": contract_summary["runtime_paths_exercised"],
+            "direct_test_link_candidates": direct_test_links,
+            "unresolved_literal_include_candidates": unresolved_edges,
+            "license_distribution_clearance": license_state["distribution_clearance"],
+            "dependency_candidate_resolution_counts": dict(sorted(resolution_totals.items())),
+            "candidates": candidates,
+        },
+        "counters": {
+            "legacy_external_independent_approved": gate_data["approved_semantic_dispositions"],
+            "legacy_p0_external_independent_approved": 0,
+            "v1_exact_bytes_eligible_count": 0,
+            "v1_exact_bytes_ineligible_count": len(candidates),
+            "behavioral_congruence_passed_count": 0,
+            "behavioral_congruence_needs_review_count": len(candidates),
+        },
+        "completion_gate": "FAIL_INCOMPLETE",
+        "source_bytes_reopened_in_this_run": False,
+        "synthetic_fixtures_counted": 0,
+    }
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--pr8-index", type=Path, required=True)
+    parser.add_argument("--pr8-dossier", type=Path, required=True)
+    parser.add_argument("--repository-root", type=Path, default=Path(__file__).resolve().parents[1])
+    args = parser.parse_args(argv)
+    try:
+        result = reconcile(
+            args.repository_root.resolve(),
+            args.pr8_index.read_bytes(),
+            args.pr8_dossier.read_bytes(),
+        )
+    except (OSError, EvidenceError, ValueError, KeyError) as exc:
+        print(json.dumps({"schema": SCHEMA, "disposition": "BLOCKED", "error": str(exc)}, sort_keys=True))
+        return 2
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
