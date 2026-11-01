@@ -4,6 +4,8 @@ on:
     paths:
       - 'tools/phase1_mgba_savedata_boundary_witness.py'
       - 'tools/phase1_mgba_savedata_handoff_verify.py'
+      - 'tools/phase1_mgba_saveconverter_native.py'
+      - 'tests/phase1_mgba_saveconverter_native.cpp'
       - 'docs/phase1-review-readiness/mgba-savedata-boundary-witness-20261027.md'
       - '.github/workflows/phase1-mgba-savedata-boundary-witness.yml'
   workflow_dispatch:
@@ -23,3 +25,13 @@ jobs:
           git -C /tmp/xgba-mgba-boundary checkout --quiet fd9dc5c2cbf234365068855851107e762fc6211b
       - name: Execute pinned C function bodies against bounded mock VFile
         run: python3 tools/phase1_mgba_savedata_boundary_witness.py --checkout /tmp/xgba-mgba-boundary
+      - name: Install native Qt6 Core for SaveConverter witness
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends qt6-base-dev pkg-config g++
+      - name: Execute pinned SaveConverter body with native Qt6 QIODevice
+        run: |
+          python3 -m py_compile tools/phase1_mgba_saveconverter_native.py
+          python3 tools/phase1_mgba_saveconverter_native.py \
+            --checkout /tmp/xgba-mgba-boundary \
+            --harness tests/phase1_mgba_saveconverter_native.cpp

@@ -27,3 +27,9 @@ The **new empty/anonymous 8-KiB EEPROM observation** strengthens the prior R2 fi
 4. Obtain genuine independent review before accepting any disposition. No source files in mGBA were changed.
 
 **Accounting unchanged:** inventory 14,834/14,834 (100%); registered substantively prepared 113/14,834 (0.7618%); independently approved 0/14,834 (0.0000%); historical v1 machine triage 14,721/14,834 (99.2382%). This is additional evidence for an **unregistered** packet, not another prepared or approved file. Authoritative gate **FAIL_INCOMPLETE**.
+
+## Separate pinned SaveConverter short-write witness
+
+At the same pinned mGBA commit, `src/platform/qt/SaveConverter.cpp` has Git blob `4c32280c9c5288e806ffd237119186e2a633c4a7` and an MPL-2.0 header. The new verifier extracts and compiles the original complete `SaveConverter::convert()` body, replacing only its local `QFile` type with a controlled test `QIODevice` subclass. Native Qt6 `QIODevice::write()` is exercised with full, 1-of-N short, and negative writes; a failed-open case is the positive warning control. Three source mutations are rejected.
+
+This is native Qt6 API execution with controlled `writeData()` results—not `QFile`, a real kernel/filesystem short write, observed end-user corruption, or an mGBA GUI run. It verifies the source-path behavior only: the original body ignores the write result and closes after an open succeeds, while the failed-open branch shows a warning. Stock gameplay, actual `.sav` interoperability, physical Flash, and independent semantic approval remain untested. Keep these evidence classes separate from the existing mock-VFile initialization witness. Accounting and gate remain unchanged: **0 independent approvals; FAIL_INCOMPLETE**.
