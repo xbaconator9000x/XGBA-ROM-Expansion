@@ -29,12 +29,26 @@ Versioned namespace: `xgba.phase1.semantic_review_policy.v2`.
 * `v2_qualified_semantic_review_count`: number of unique pinned files passing the new validator; never sum duplicate receipts or synthetic fixtures.
 * `v2_completion_gate`: remains `FAIL_INCOMPLETE` until inventory parity and all mandatory Phase 1 review and compatibility requirements are satisfied under the reviewed policy. The presence of three existing receipts alone cannot make it pass.
 
-## Required implementation sequence (not completed by this proposal)
+## Required implementation sequence
 
 1. Reconcile current PR #8 protocol/receipt register and PR #2 adapter; avoid merging incompatible v1 and v4 schemas by assumption. Preserve the old gate for historical reporting.
 2. Implement a **separate** v2 fail-closed evaluator over verified v4 receipts. It must not write to `semantic-snapshots/current` or treat user/owner assertions as reviewer evidence. Keep it read-only until an authorised integration.
 3. Add deterministic positive and adversarial tests for every negative above; test against original pinned source and dossier bytes and authenticated GitHub provenance. If network is blocked, report `BLOCKED`, not `PASSED`. Avoid adding workflow YAML solely to bypass GitHub's approval security.
 4. Only after exact-head validation and normal protected-branch integration, change the authoritative completion policy through a separately versioned, auditable migration. Record both old and new counters; never fabricate a historical external signature.
 5. Prioritise reuse of existing pinned mGBA, Porymap, Poryscript, FireRed and original compiler/toolchain components. Licence and technical compatibility remain mandatory.
+
+## PR2 implementation checkpoint
+
+The standalone evaluator is `tools/phase1_semantic_dispositions_v2.py`. It accepts only the pinned PR #8 worktree and pinned-source checkout, delegates receipt/provenance/CI validation to `tools/phase1_copilot_receipts_v4_adapter.py` and the validator pinned by that adapter, and prints a read-only JSON report. It does not accept a receipt JSON file, write snapshots, or update either gate.
+
+```sh
+python3 tools/phase1_semantic_dispositions_v2.py \
+  --pr8-root /path/to/full-history-pr8-worktree \
+  --source-root /path/to/pinned-upstream-checkouts
+```
+
+Each pinned receipt is reported as `COPILOT_REVIEWED/PASSED` only after the live adapter validates it; substantive gaps become `NEEDS_REVIEW`, while provenance, source/dossier, API, CI, or infrastructure failures remain `BLOCKED`. The report keeps `legacy_external_independent_approved` separate from `v2_qualified_semantic_review_count` and hard-fails if the historical 0/338 and 0/14,834 snapshot baseline changes. `v2_completion_gate` remains `FAIL_INCOMPLETE`; the policy remains `PROPOSAL_NOT_ACTIVATED` until reviewed and integrated through the normal protected-branch process.
+
+`tests/test_phase1_semantic_dispositions_v2.py` uses synthetic fixtures only to test report projection and fail-closed classification. No synthetic fixture is an input to the CLI or evidence of a source review. The earlier three PR #8 receipts remain candidate inputs and do not count unless independently revalidated end to end under this evaluator.
 
 **Non-claims:** This proposal does not validate PR #2's live v4 adapter, qualify any new review, approve any file, alter current main/audit, certify ROM expansion, or waive technical/licensing/test requirements. No additional scheduler or human reviewer is requested.
