@@ -1,5 +1,6 @@
 import gzip
 import json
+import json
 import sys
 import tempfile
 import unittest
@@ -8,10 +9,60 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import phase1_inventory_source_index as indexer
-from phase1_bulk_triage import PINS, canonical, digest, git_blob
+from phase1_bulk_triage import (
+    PINS, TOTAL, canonical, checked_dossiers, digest, git_blob, read_queue,
+)
 
 
 class InventorySourceIndexTests(unittest.TestCase):
+    def test_persisted_inventory_artifact_is_complete_and_never_approves(self):
+        artifact = ROOT / (
+            "docs/phase1-review-readiness/"
+            "inventory-source-index-20261101.json.gz"
+        )
+        data = json.loads(gzip.decompress(artifact.read_bytes()))
+        queue = read_queue(ROOT / "semantic-snapshots/current")
+        dossiers = checked_dossiers(ROOT / "semantic-snapshots/current", queue)
+        expected = {
+            (row["repo"], row["path"]): row for row in queue
+        }
+        records = data["source_records"]
+        self.assertEqual(len(records), TOTAL)
+        self.assertEqual(len({
+            (record["identity"]["repository"], record["identity"]["path"])
+            for record in records
+        }), TOTAL)
+        self.assertEqual(data["gate"]["decision"], "FAIL_INCOMPLETE")
+        self.assertEqual(data["gate"]["legacy_approvals"], 0)
+        self.assertEqual(data["gate"]["semantic_dispositions_added"], 0)
+        self.assertEqual(data["run"]["indexed_count"], TOTAL)
+        self.assertEqual(data["run"]["indexed_p0_count"], 338)
+        self.assertEqual(data["run"]["blocked_count"], 0)
+        self.assertEqual(data["run"]["unindexed_count"], 0)
+        self.assertEqual(data["blocked_or_unindexed_records"], [])
+        for record in records:
+            identity = record["identity"]
+            queue_row = expected[(identity["repository"], identity["path"])]
+            self.assertEqual(identity["git_blob_sha1"], queue_row["blob_sha"])
+            self.assertEqual(
+                record["machine_dossier"]["sha256"],
+                queue_row["evidence_sha256"],
+            )
+            self.assertFalse(record["machine_dossier"]["semantic_signoff"])
+            self.assertEqual(record["semantic_review_state"], "NOT_SEMANTICALLY_REVIEWED")
+            self.assertEqual(record["approval_state"], "NOT_APPROVED")
+            assessment = dossiers[
+                (identity["repository"], identity["path"])
+            ]["machine_assessment"]
+            self.assertEqual(
+                record["original_machine_triage"]["rule_counts"],
+                assessment["rule_counts"],
+            )
+            self.assertEqual(
+                record["original_machine_triage"]["lexical_sites_total"],
+                assessment["lexical_sites_total"],
+            )
+
     def test_cached_index_record_is_bound_to_source_and_original_dossier(self):
         source = b"#include \"memory.h\"\n"
         row = {
@@ -165,6 +216,48 @@ class InventorySourceIndexTests(unittest.TestCase):
             indexer._license_assessment({"license_file_paths": []})["reason_code"],
             "LICENSE_EVIDENCE_MISSING",
         )
+        indexer._validate_license_boundary({
+            "repo": {"license_assessment": assessment},
+        })
+        with self.assertRaisesRegex(ValueError, "LICENSE_CLEARANCE_ASSUMPTION"):
+            indexer._validate_license_boundary({
+                "repo": {"license_assessment": {
+                    "distribution_clearance": "CLEARED",
+                }},
+            })
+
+    def test_test_links_are_candidates_not_coverage(self):
+        self.assertEqual(
+            indexer._test_link_state(["tests/test_memory.c"], ["tests/test_memory.c"]),
+            "DIRECT_TEST_INCLUDE_CANDIDATE_FOUND_NOT_COVERAGE",
+        )
+        self.assertEqual(
+            indexer._test_link_state([], ["tests/test_memory.c"]),
+            "NO_DIRECT_TEST_INCLUDE_CANDIDATE_FOUND",
+        )
+        self.assertEqual(
+            indexer._test_link_state([], []),
+            "NO_HASH_VERIFIED_TEST_SOURCE_IN_CURRENT_INDEX",
+        )
+
+    def test_include_limit_marks_partial_scan_without_blocking_source_identity(self):
+        source = b'#include "candidate.h"\n' * (indexer.MAX_INCLUDES_PER_FILE + 1)
+        facts = indexer._extract_file_facts(source, "src/main.c", "source")
+        self.assertEqual(
+            len(facts["direct_include_literals"]),
+            indexer.MAX_INCLUDES_PER_FILE,
+        )
+        self.assertFalse(facts["direct_include_scan_complete"])
+        macro_source = b"#include HEADER\n" * (indexer.MAX_INCLUDES_PER_FILE + 1)
+        macro_facts = indexer._extract_file_facts(
+            macro_source, "src/main.c", "source",
+        )
+        self.assertEqual(
+            len(macro_facts["unsupported_include_lines"]),
+            indexer.MAX_INCLUDES_PER_FILE,
+        )
+        self.assertTrue(macro_facts["unsupported_include_scan_truncated"])
+        self.assertFalse(macro_facts["direct_include_scan_complete"])
 
     def test_missing_test_evidence_cannot_be_claimed(self):
         with self.assertRaisesRegex(ValueError, "UPSTREAM_TEST_EVIDENCE_MISSING"):

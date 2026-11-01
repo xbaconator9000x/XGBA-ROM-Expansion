@@ -24,7 +24,7 @@ SNAPSHOT_BLOBS = {
     "semantic_review_queue.csv.gz": "52fe1a9b8498dd4fa3ea0e6e0236ae1cdeda7268",
     "phase1_mapping_gate.json": "dab5789433dc55cf325a917a220d060088bf1d29",
 }
-CACHE_SCHEMA = "xgba.phase1.inventory_source_cache.v1"
+CACHE_SCHEMA = "xgba.phase1.inventory_source_cache.v2"
 OUTPUT_SCHEMA = "xgba.phase1.inventory_source_index.v1"
 MAX_CACHE_BYTES = 64 * 1024 * 1024
 MAX_CACHE_ENTRIES = TOTAL
@@ -195,6 +195,7 @@ def _extract_file_facts(content: bytes, repo_path: str, category: str) -> dict:
     includes = []
     unsupported_include_lines = []
     include_scan_complete = True
+    unsupported_include_scan_truncated = False
     line_count = 0
     if text is not None:
         for line_count, line in enumerate(text.splitlines(), 1):
@@ -206,7 +207,12 @@ def _extract_file_facts(content: bytes, repo_path: str, category: str) -> dict:
                 else:
                     include_scan_complete = False
             elif UNEXPANDED_INCLUDE.match(line):
-                unsupported_include_lines.append(line_count)
+                if len(unsupported_include_lines) < MAX_INCLUDES_PER_FILE:
+                    unsupported_include_lines.append(line_count)
+                else:
+                    unsupported_include_scan_truncated = True
+        if unsupported_include_scan_truncated:
+            include_scan_complete = False
         if not text or not text.endswith(("\n", "\r")):
             line_count = len(text.splitlines())
     suffix = PurePosixPath(repo_path).suffix.lower()
@@ -225,6 +231,7 @@ def _extract_file_facts(content: bytes, repo_path: str, category: str) -> dict:
         "direct_include_literals": includes,
         "direct_include_scan_complete": include_scan_complete,
         "unsupported_include_lines": unsupported_include_lines,
+        "unsupported_include_scan_truncated": unsupported_include_scan_truncated,
         "text_scanned": text is not None,
         "upstream_evidence_roles": roles,
     }
@@ -344,6 +351,13 @@ def _license_assessment(catalog: dict) -> dict:
     }
 
 
+def _validate_license_boundary(catalogs: dict) -> None:
+    for catalog in catalogs.values():
+        assessment = catalog.get("license_assessment", {})
+        if assessment.get("distribution_clearance") != "NOT_ASSESSED":
+            raise ValueError("UNSUPPORTED_LICENSE_CLEARANCE_ASSUMPTION")
+
+
 def _looks_like_license_path(path: str) -> bool:
     name = PurePosixPath(path).name.lower()
     return name in LICENSE_NAMES or name.startswith("license.")
@@ -352,6 +366,14 @@ def _looks_like_license_path(path: str) -> bool:
 def _require_test_evidence(test_paths: list[str]) -> None:
     if not test_paths:
         raise ValueError("UPSTREAM_TEST_EVIDENCE_MISSING")
+
+
+def _test_link_state(test_candidates: list[str], verified_test_paths: list[str]) -> str:
+    if test_candidates:
+        return "DIRECT_TEST_INCLUDE_CANDIDATE_FOUND_NOT_COVERAGE"
+    if verified_test_paths:
+        return "NO_DIRECT_TEST_INCLUDE_CANDIDATE_FOUND"
+    return "NO_HASH_VERIFIED_TEST_SOURCE_IN_CURRENT_INDEX"
 
 
 def _validate_no_unsupported_inference(
@@ -446,7 +468,6 @@ def build_index(
             blocked[key] = str(exc).split(":", 1)[0]
 
     batch = _select_batch(_pending_records(queue, set(indexed)), offset, limit)
-    batch_keys = {_row_key(row["repo"], row["path"]) for row in batch}
     for row in batch:
         repo, path = row["repo"], row["path"]
         key = _row_key(repo, path)
@@ -515,6 +536,7 @@ def build_index(
     all_edge_rows = []
     for key, entry in indexed.items():
         row = rows_by_key[key]
+        original_assessment = dossiers[(row["repo"], row["path"])]["machine_assessment"]
         repo, path = row["repo"], row["path"]
         references = []
         unresolved = 0
@@ -580,6 +602,23 @@ def build_index(
                 "priority": row["priority"],
                 "machine_review_status": row["machine_review_status"],
             },
+            "original_machine_triage": {
+                "lexical_sites_total": original_assessment["lexical_sites_total"],
+                "rule_counts": original_assessment["rule_counts"],
+                "symbol_candidates_total":
+                    original_assessment["symbol_candidates_total"],
+                "incoming_include_candidates":
+                    original_assessment["incoming_include_candidates"],
+                "outgoing_include_candidates":
+                    original_assessment["outgoing_include_candidates"],
+                "resolved_include_candidates":
+                    original_assessment["resolved_include_candidates"],
+                "ambiguous_include_candidates":
+                    original_assessment["ambiguous_include_candidates"],
+                "unresolved_include_candidates":
+                    original_assessment["unresolved_include_candidates"],
+                "source": "ORIGINAL_HASH_VERIFIED_MACHINE_DOSSIER_NOT_SEMANTIC_REVIEW",
+            },
             "source_index_state": "SOURCE_INDEXED",
             "source_index_reason_code": "SOURCE_BLOB_AND_DOSSIER_VERIFIED",
             "semantic_review_state": "NOT_SEMANTICALLY_REVIEWED",
@@ -597,6 +636,8 @@ def build_index(
             "direct_dependency_unresolved_count": unresolved,
             "unsupported_include_declaration_lines":
                 entry["facts"]["unsupported_include_lines"],
+            "unsupported_include_scan_truncated":
+                entry["facts"]["unsupported_include_scan_truncated"],
             "direct_include_scan_complete":
                 entry["facts"]["direct_include_scan_complete"],
             "direct_dependencies": references,
@@ -639,12 +680,10 @@ def build_index(
             source_key.split(":", 1)[1] for source_key in test_users[:32]
         ]
         record["upstream_test_source_candidate_count"] = len(test_users)
-        if test_users:
-            record["test_link_state"] = "DIRECT_TEST_INCLUDE_CANDIDATE_FOUND_NOT_COVERAGE"
-        elif repo_catalog[identity["repository"]]["verified_test_source_paths"]:
-            record["test_link_state"] = "NO_DIRECT_TEST_INCLUDE_CANDIDATE_FOUND"
-        else:
-            record["test_link_state"] = "NO_HASH_VERIFIED_TEST_SOURCE_IN_CURRENT_INDEX"
+        record["test_link_state"] = _test_link_state(
+            test_users,
+            repo_catalog[identity["repository"]]["verified_test_source_paths"],
+        )
 
     indexed_keys = set(indexed)
     for row in queue:
@@ -686,6 +725,7 @@ def build_index(
                 "inventory_candidate_paths": catalog["inventory_license_candidate_paths"],
                 "distribution_clearance": "NOT_ASSESSED",
             }
+    _validate_license_boundary(repo_catalog)
     claims = [{
         "claim_id": "source-index-inventory",
         "reference_ids": [],
@@ -790,7 +830,7 @@ def build_index(
         "indexed_p0": indexed_p0,
         "p0_total": p0_total,
         "dependency_edges": len(all_edge_rows),
-        "cache_hits": cache_hits,
+        "cache_entries_revalidated": cache_revalidated,
         "elapsed_seconds": round(elapsed, 3),
         "records_per_second": round(len(batch) / elapsed, 1) if elapsed else None,
         "gate": gate["decision"],
@@ -805,10 +845,10 @@ def _main() -> None:
     parser.add_argument("--snapshot", type=Path, default=ROOT / "semantic-snapshots/current")
     parser.add_argument("--source-roots", type=Path, required=True,
                         help="Directory containing extracted, pinned upstream repository trees")
-    parser.add_argument("--cache", type=Path, default=ROOT /
-                        "semantic-snapshots/independent-reviews/inventory-source-index-cache.json.gz")
+    parser.add_argument("--cache", type=Path, default=Path.home() /
+                        ".cache/xgba/phase1-inventory-source-cache.json.gz")
     parser.add_argument("--output", type=Path, default=ROOT /
-                        "semantic-snapshots/independent-reviews/inventory-source-index.json.gz")
+                        "docs/phase1-review-readiness/inventory-source-index-20261101.json.gz")
     parser.add_argument("--offset", type=int, default=0,
                         help="Skip this many currently unindexed records in priority order")
     parser.add_argument("--limit", type=int, default=2000,
