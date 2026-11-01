@@ -9,6 +9,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 
 import phase1_upstream_congruence_pilot_v1 as pilot
+import verify_native_mgba_regressions as native_gate
+import verify_phase1_mgba_boundary_evidence as native_evidence
 from phase1_upstream_verified_v1 import canonical_bytes, sha256
 
 
@@ -356,6 +358,39 @@ class UpstreamCongruencePilotTests(unittest.TestCase):
         reasons = pilot._validate_candidate_evidence(record, identity, lambda _: True, lambda _: True)
         self.assertIn("PINNED_POSITIVE_AND_NEGATIVE_TEST_EXECUTION_MISSING", reasons)
 
+    def test_behavioral_fixture_rejects_malformed_numeric_and_digest_fields(self):
+        malformed = (
+            ("tests", "positive_cases", "1"),
+            ("tests", "positive_cases", True),
+            ("tests", "positive_cases", None),
+            ("tests", "negative_counterexamples", 1.0),
+            ("tests", "negative_counterexamples", False),
+            ("tests", "negative_counterexamples", None),
+            ("tests", "result_sha256", "e" * 63),
+            ("tests", "result_sha256", "g" * 64),
+            ("tests", "result_sha256", True),
+            ("tests", "result_sha256", None),
+            ("tests", "exit_code", False),
+            ("tests.actions", "total_jobs", "1"),
+            ("tests.actions", "total_jobs", True),
+            ("tests.actions", "total_jobs", None),
+            ("tests.actions", "successful_jobs", False),
+            ("tests.actions", "executed_jobs", "1"),
+        )
+        for section, field, value in malformed:
+            record, identity = evidence_fixture()
+            target = record["tests"] if section == "tests" else record["tests"]["actions"]
+            target[field] = value
+            refresh_record_digest(record)
+            reasons = pilot._validate_candidate_evidence(
+                record, identity, lambda _: True, lambda _: True
+            )
+            self.assertIn(
+                "PINNED_POSITIVE_AND_NEGATIVE_TEST_EXECUTION_MISSING",
+                reasons,
+                (section, field, value),
+            )
+
     def test_behavioral_fixture_rejects_stale_actions_head(self):
         record, identity = evidence_fixture()
         record["tests"]["actions"]["head_sha"] = "f" * 40
@@ -457,6 +492,129 @@ class UpstreamCongruencePilotTests(unittest.TestCase):
         self.assertNotIn(
             "PASSED", {obligation["evidence_state"] for obligation in obligations}
         )
+
+    def test_native_ingestion_accepts_exact_synthetic_regression_log_only(self):
+        source = b"fixture-only native source bytes"
+        checks = sorted(native_gate.REQUIRED_TESTS)
+        gaps = sorted(native_gate.REQUIRED_NATIVE_GAPS)
+        lines = []
+        for name in checks:
+            lines.extend((f"PASS {name}", f"CASE {name} exit_code=0"))
+        for observation in gaps:
+            name, value = observation.split("=", 1)
+            lines.extend(
+                (
+                    f"OBSERVATION {observation}",
+                    f"CASE_OBSERVATION {name} observed={value} exit_code=0",
+                )
+            )
+        lines.append(
+            "SUMMARY hard_failures=0 native_gap_observations=4 "
+            "xgba_runtime_implemented=false phase1_mapping_complete=false"
+        )
+        log = "\n".join(lines) + "\n"
+        result = {
+            "source_revision": native_evidence.PIN,
+            "test_source_sha256": sha256(source),
+            "run_kind": "NATIVE_MGBA_SYNTHETIC_CARTRIDGE_ONLY",
+            "probe_suite_revision": native_evidence.PROBE_SUITE_REVISION,
+            "native_probe_exit_code": 0,
+            "external_XGBA_banking_implemented": False,
+            "phase1_mapping_complete": False,
+            "independent_semantic_reviews_approved": 0,
+            "positive_checks_passed": len(checks),
+            "positive_checks_failed": 0,
+            "native_gap_observations": gaps,
+        }
+        verified = native_evidence.verify_case_log(log, result, source)
+        self.assertEqual(verified["assertions_verified"], len(checks))
+        self.assertEqual(verified["native_regression_gate"], "PASS_PINNED_NATIVE_MGBA_REGRESSION_ONLY")
+        self.assertEqual(len(verified["case_results"]), len(checks))
+        self.assertEqual(len(verified["hazard_observations"]), len(gaps))
+        self.assertFalse(any(row["observed"] is False for row in verified["hazard_observations"]))
+
+    def test_native_ingestion_rejects_case_execution_or_source_mismatch(self):
+        source = b"fixture-only native source bytes"
+        checks = sorted(native_gate.REQUIRED_TESTS)
+        gaps = sorted(native_gate.REQUIRED_NATIVE_GAPS)
+        lines = []
+        for name in checks:
+            lines.extend((f"PASS {name}", f"CASE {name} exit_code=0"))
+        for observation in gaps:
+            name, value = observation.split("=", 1)
+            lines.extend(
+                (
+                    f"OBSERVATION {observation}",
+                    f"CASE_OBSERVATION {name} observed={value} exit_code=0",
+                )
+            )
+        lines.append(
+            "SUMMARY hard_failures=0 native_gap_observations=4 "
+            "xgba_runtime_implemented=false phase1_mapping_complete=false"
+        )
+        log = "\n".join(lines) + "\n"
+        result = {
+            "source_revision": native_evidence.PIN,
+            "test_source_sha256": sha256(source),
+            "run_kind": "NATIVE_MGBA_SYNTHETIC_CARTRIDGE_ONLY",
+            "probe_suite_revision": native_evidence.PROBE_SUITE_REVISION,
+            "native_probe_exit_code": 0,
+            "external_XGBA_banking_implemented": False,
+            "phase1_mapping_complete": False,
+            "independent_semantic_reviews_approved": 0,
+            "positive_checks_passed": len(checks),
+            "positive_checks_failed": 0,
+            "native_gap_observations": gaps,
+        }
+        with self.assertRaisesRegex(native_evidence.EvidenceRejected, "NATIVE_CASE_EXIT_CODE_NONZERO"):
+            native_evidence.verify_case_log(log.replace("exit_code=0", "exit_code=1", 1), result, source)
+        with self.assertRaisesRegex(native_evidence.EvidenceRejected, "differs from executed"):
+            native_evidence.verify_case_log(log, result, b"different fixture")
+
+    def test_native_ingestion_binds_run_and_job_to_exact_pr_head(self):
+        head = "1" * 40
+        run = {
+            "id": 12,
+            "run_attempt": 1,
+            "head_sha": head,
+            "name": native_evidence.WORKFLOW_NAME,
+            "path": native_evidence.WORKFLOW_PATH,
+            "event": "push",
+            "status": "in_progress",
+            "repository": {"full_name": native_evidence.REPOSITORY},
+            "pull_requests": [{"number": 2}],
+        }
+        jobs = {
+            "jobs": [
+                {
+                    "id": 34,
+                    "run_id": 12,
+                    "name": native_evidence.JOB_NAME,
+                    "head_sha": head,
+                    "status": "in_progress",
+                    "conclusion": None,
+                    "steps": [
+                        {"name": name, "status": "completed", "conclusion": "success"}
+                        for name in (
+                            "Configure headless mGBA C core",
+                            "Compile and link unmodified pinned mGBA",
+                            "Analyze actual compiler targets and linked symbols",
+                        )
+                    ],
+                }
+            ]
+        }
+        context = {"run_id": 12, "run_attempt": 1, "head_sha": head}
+        verified = native_evidence.verify_actions_provenance(run, jobs, context)
+        self.assertEqual(verified["job_id"], 34)
+        self.assertEqual(verified["head_sha"], head)
+        for tamper in (
+            {**run, "head_sha": "2" * 40},
+            {**run, "status": "completed"},
+            {**run, "pull_requests": []},
+        ):
+            with self.assertRaises(native_evidence.EvidenceRejected):
+                native_evidence.verify_actions_provenance(tamper, jobs, context)
 
 
 if __name__ == "__main__":

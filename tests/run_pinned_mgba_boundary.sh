@@ -11,9 +11,14 @@ fi
 git -C "$MGBA" fetch origin "$PIN"
 git -C "$MGBA" checkout --detach "$PIN"
 test "$(git -C "$MGBA" rev-parse HEAD)" = "$PIN"
-test "$(git -C "$MGBA" hash-object src/gba/memory.c)" = "aa01fdcc7d6ae5ecdf8753efc63b3a60a1e8d3dc"
-test "$(git -C "$MGBA" hash-object src/gba/cart/matrix.c)" = "9ccbe883235b98bcf56cd609015e7b4003aa832c"
 test "$(git -C "$MGBA" hash-object src/arm/arm.c)" = "0b92d7f55f1fb853d4b1b9c9163ee086126066e2"
+test "$(git -C "$MGBA" hash-object src/gba/cart/matrix.c)" = "9ccbe883235b98bcf56cd609015e7b4003aa832c"
+test "$(git -C "$MGBA" hash-object src/gba/dma.c)" = "da2a800ba48cb32d6e10e42c3b3527ef406bad22"
+test "$(git -C "$MGBA" hash-object src/gba/gba.c)" = "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e"
+test "$(git -C "$MGBA" hash-object src/gba/memory.c)" = "aa01fdcc7d6ae5ecdf8753efc63b3a60a1e8d3dc"
+test "$(git -C "$MGBA" hash-object src/gba/serialize.c)" = "a307a51e751f412c64a7378323c56758304ebe85"
+test "$(git -C "$ROOT" hash-object tests/mgba_bank_boundary.c)" = "985206e60fdd28a729d02a61a1b21694fcb872d7"
+test "$(sha256sum "$ROOT/tests/mgba_bank_boundary.c" | cut -d ' ' -f 1)" = "eaccce9a4b8622d19c6db62ec4f2cd469e00f0ccf3ed056264f64aa66cdd54fa"
 echo "$PIN" > "$ROOT/audit-output/mgba_native_test_revision.txt"
 set -o pipefail
 cmake -S "$ROOT/tests" -B "$ROOT/build-mgba-boundary" -DCMAKE_BUILD_TYPE=Debug \

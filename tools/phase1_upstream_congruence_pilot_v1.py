@@ -132,12 +132,12 @@ LOCAL_EVIDENCE = {
         "442b6189fd22beec3426b770e8ceea08718013ed",
     ),
     "tests/mgba_bank_boundary.c": (
-        "88760d928e51104d58bdf30b8f42a37217908e4b66cca6cb629dba55c4c3be29",
-        "ebdae8082a91996ff34be4a2c4b2088fe00363aa",
+        "eaccce9a4b8622d19c6db62ec4f2cd469e00f0ccf3ed056264f64aa66cdd54fa",
+        "985206e60fdd28a729d02a61a1b21694fcb872d7",
     ),
     "tests/run_pinned_mgba_boundary.sh": (
-        "85746b2690a89c19a78ee754e8d1a224e3907790ddfc94cdec53b141ec64b0e8",
-        "6ac0a80b9d4a3b49cc57281996b0584fd0c13288",
+        "730fdbd17e2be80db38ac92f3665e9bfc2abefae4923f314e0a9faa6465633ba",
+        "6dd7d67bc0df2d96fc9923c7a727f3336d50ec09",
     ),
     "tests/CMakeLists.txt": (
         "7035354e527c93b37300b7dc4960d38457b78872cd940a52e8668938203346a5",
@@ -344,6 +344,17 @@ def _validate_candidate_evidence(
     """Validate a versioned behavioral claim; fixtures exercise this helper only."""
     if not isinstance(record, dict) or not isinstance(expected, dict):
         return ["BEHAVIORAL_RECORD_INVALID"]
+
+    def positive_int(value):
+        return type(value) is int and value > 0
+
+    def sha256_hex(value):
+        return (
+            isinstance(value, str)
+            and len(value) == 64
+            and all(character in "0123456789abcdef" for character in value)
+        )
+
     reasons = []
     supplied_digest = record.get("record_sha256")
     payload = {key: value for key, value in record.items() if key != "record_sha256"}
@@ -396,19 +407,22 @@ def _validate_candidate_evidence(
         counterexample_claim_ids = []
     if (
         tests.get("executed") is not True
+        or type(tests.get("exit_code")) is not int
         or tests.get("exit_code") != 0
         or not tests.get("test_source_refs")
-        or tests.get("positive_cases", 0) < 1
-        or tests.get("negative_counterexamples", 0) < 1
+        or not positive_int(tests.get("positive_cases"))
+        or not positive_int(tests.get("negative_counterexamples"))
         or tests.get("covered_claim_ids") != claim_ids
         or any(not isinstance(claim_id, str) or not claim_id for claim_id in counterexample_claim_ids)
         or not set(counterexample_claim_ids).issubset(set(claim_ids))
         or not counterexample_claim_ids
-        or not tests.get("result_sha256")
+        or not sha256_hex(tests.get("result_sha256"))
         or actions.get("head_sha") != expected.get("revision")
         or actions.get("conclusion") != "success"
         or actions.get("event") not in {"push", "pull_request"}
-        or actions.get("total_jobs", 0) < 1
+        or not positive_int(actions.get("total_jobs"))
+        or type(actions.get("successful_jobs")) is not int
+        or type(actions.get("executed_jobs")) is not int
         or actions.get("successful_jobs") != actions.get("total_jobs")
         or actions.get("executed_jobs") != actions.get("total_jobs")
     ):

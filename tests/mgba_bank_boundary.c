@@ -33,10 +33,13 @@ static int failures;
 static int observations;
 static void check(const char *label, bool condition) {
     printf("%s %s\n", condition ? "PASS" : "FAIL", label);
+    printf("CASE %s exit_code=%d\n", label, condition ? 0 : 1);
     if (!condition) ++failures;
 }
 static void observation(const char *label, bool condition) {
     printf("OBSERVATION %s=%s\n", label, condition ? "true" : "false");
+    printf("CASE_OBSERVATION %s observed=%s exit_code=0\n",
+           label, condition ? "true" : "false");
     ++observations;
 }
 static void put32(uint8_t *bytes, size_t offset, uint32_t data) {

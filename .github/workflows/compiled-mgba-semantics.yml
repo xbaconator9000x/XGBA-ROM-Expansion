@@ -5,9 +5,17 @@ on:
     paths:
       - 'tools/compiler_bindings_semantics.py'
       - 'tools/compiled_dependency_graph.py'
+      - 'tools/phase1_upstream_congruence_pilot_v1.py'
+      - 'tools/verify_phase1_mgba_boundary_evidence.py'
+      - 'tools/verify_native_mgba_regressions.py'
+      - 'tests/mgba_bank_boundary.c'
+      - 'tests/run_pinned_mgba_boundary.sh'
+      - 'tests/CMakeLists.txt'
+      - 'tests/test_phase1_upstream_congruence_pilot_v1.py'
       - '.github/workflows/compiled-mgba-semantics.yml'
 permissions:
   contents: read
+  actions: read
 jobs:
   compile-pinned-mgba:
     runs-on: ubuntu-latest
@@ -38,6 +46,10 @@ jobs:
         run: python3 tools/compiler_bindings_semantics.py
       - name: Evaluate actual GCC include selection and compiled object-symbol dependencies
         run: python3 tools/compiled_dependency_graph.py
+      - name: Verify native boundary evidence against exact Actions job
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/verify_phase1_mgba_boundary_evidence.py
       - name: Preserve compilation database and provenance
         if: always()
         uses: actions/upload-artifact@v4
