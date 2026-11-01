@@ -1,0 +1,204 @@
+{
+  "schema": "xgba.phase1.mgba_native_semantic_matrix.v1",
+  "classification": "SOURCE_GROUNDED_EVIDENCE_ONLY",
+  "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+  "pr_number": 2,
+  "source": {
+    "repository": "mgba-emu/mgba",
+    "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+    "dossier_archive": {
+      "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+      "sha256": "c47d1fea819e7df59f67bfe8d1bc4dc2650483d03563957145f7331ed099005b",
+      "git_blob_sha1": "143c373f9aae5b9cb24af39abb7d8244362d23b5"
+    }
+  },
+  "native_run": {
+    "workflow": ".github/workflows/compiled-mgba-semantics.yml",
+    "run_id": 41271029098,
+    "attempt": 2,
+    "job_id": 124754053197,
+    "head_sha": "a0b5cfa80ac0815644b46f8cc6db4108769eeabd",
+    "run_status": "completed",
+    "run_conclusion": "success",
+    "job_status": "completed",
+    "job_conclusion": "success",
+    "artifact_id": 13070546254,
+    "artifact_sha256": "25c4d0910fce915a6d057142cc297ff718b21e47186b41880d2a3d4c50a52371",
+    "test_source": {
+      "path": "tests/mgba_bank_boundary.c",
+      "git_blob_sha1": "985206e60fdd28a729d02a61a1b21694fcb872d7",
+      "sha256": "eaccce9a4b8622d19c6db62ec4f2cd469e00f0ccf3ed056264f64aa66cdd54fa"
+    },
+    "runtime_log_sha256": "20a78eef24c6b5194c05610d6caf4abd227272b54fe34ff6906ef4d028cd66ba",
+    "native_assertions_passed": 34,
+    "native_assertions_failed": 0,
+    "native_hazard_observations": [
+      "native_remap_leaves_prefetch_stale_until_refetch",
+      "native_savestate_CRC_mismatch_only_warns",
+      "native_savestate_external_bank_payload_change_unverified",
+      "native_matrix_accepts_physical_range_past_end"
+    ],
+    "evidence_classification": "NATIVE_EVIDENCE_ONLY",
+    "phase1_mapping_complete": false
+  },
+  "compiler_evidence": {
+    "configuration": "headless-mGBA; Qt/SDL/scripting-disabled; standard GNU C/C++ flags",
+    "compilation_units": 173,
+    "compiled_units_succeeded": 173,
+    "c_units": 168,
+    "cxx_units": 5,
+    "unique_pinned_headers_selected": 364,
+    "transitive_header_edges": 3126,
+    "symbol_code_candidate_edges": 1345,
+    "symbol_data_or_other_candidate_edges": 58,
+    "include_csv_sha256": "ae87cadfa72cebc9b5fd62fbfe45f178329b651a37469980b1b5c37a03c6aff6",
+    "symbol_candidate_csv_sha256": "b8b021bb922cee5bb9735ce4e7d03f0d9b8e5f90a82a517bfacb7ce885d83945",
+    "unresolved_symbol_references": "NOT_RECORDED",
+    "consumer_closure": "NOT_ESTABLISHED",
+    "limitations": [
+      "The build covers only this headless CMake configuration, not every upstream target or consumer.",
+      "Preprocessor output proves active transitive header selection, not direct includes, runtime reachability, or complete dependency closure.",
+      "Symbol edges are object-level candidate relationships, not call-site or runtime proof; unresolved references with no in-archive provider are omitted from the CSV.",
+      "The artifact preserves neither a complete external-link resolution set nor callback, function-pointer, or data-flow closure.",
+      "The host mGBA build does not verify XGBA runtime behavior."
+    ]
+  },
+  "license_assessment": {
+    "license": "MPL-2.0",
+    "pinned_license_path": "LICENSE",
+    "pinned_license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+    "source_file_notice_observed_in_matrix_c": true,
+    "scoped_obligations": [
+      "MPL-2.0 section 3.1 requires covered source-form distributions, including covered modifications, to be under MPL-2.0 and recipients to be informed how to obtain the license.",
+      "Section 3.2 requires covered executable-form software to have corresponding source form available by reasonable means and preserves recipients' MPL source rights.",
+      "Section 3.3 permits a larger work under chosen terms while retaining MPL requirements for covered software.",
+      "Section 3.4 prohibits removing or altering the substance of covered source notices."
+    ],
+    "project_distribution_clearance": "NOT_ASSESSED",
+    "legal_or_compatibility_opinion": false
+  },
+  "files": [
+    {
+      "path": "src/arm/arm.c",
+      "source_git_blob_sha1": "0b92d7f55f1fb853d4b1b9c9163ee086126066e2",
+      "source_sha256": "c241587e974ac29aa09ed4992c9244c7ac65fad938e61d45836dc457f57129d2",
+      "machine_dossier_sha256": "37c2acf57fc04d0327426d88d01b3353f46868be77fa73f3fa633fcc0a267934",
+      "compiler_include_rows": 9,
+      "unique_compiler_selected_headers": 8,
+      "per_file_include_rows_sha256": "e8a10022a6a4656c34fe696d4c066fa11ec37658baff04b6077d95bdd2b9f33c",
+      "symbol_candidate_rows": 20,
+      "per_file_symbol_rows_sha256": "77fd4813e4a49db501cc426f68bc439af9c1ef567420158abae2ee16e742f6a0",
+      "representative_symbol_candidates": ["ARMRun", "ARMSetPrivilegeMode", "_armTable", "_thumbTable"],
+      "source_anchors": ["ARMRun", "ARMRunLoop", "instruction fetch/prefetch state"],
+      "contract_ids": [],
+      "native_hazard_observations": ["native_remap_leaves_prefetch_stale_until_refetch"],
+      "open_obligations": ["Prove prefetch invalidation and active-region coherence across bank remap."]
+    },
+    {
+      "path": "src/gba/cart/matrix.c",
+      "source_git_blob_sha1": "9ccbe883235b98bcf56cd609015e7b4003aa832c",
+      "source_sha256": "6e47afc6992d3631d67f89cb201d7fe9784ef8a9e8dcb305c1ab5de48550ef8f",
+      "machine_dossier_sha256": "8998fbe6e0afc9b9a566c1891055f7526949b728356c125504d163eab97529aa",
+      "compiler_include_rows": 44,
+      "unique_compiler_selected_headers": 44,
+      "per_file_include_rows_sha256": "af45517b3ebb1c8581bace9ec68de6615f22e56de9ef3adcda023a4603c8d273",
+      "symbol_candidate_rows": 7,
+      "per_file_symbol_rows_sha256": "9350d8f82836a48c983882fefc3cfacfd1d3d084907abd969068177e596e38d8",
+      "representative_symbol_candidates": ["GBAMatrixWrite", "GBAMatrixSerialize", "GBAMatrixDeserialize"],
+      "source_anchors": ["_remapMatrix", "GBAMatrixWrite", "GBAMatrixSerialize", "GBAMatrixDeserialize"],
+      "contract_ids": [],
+      "native_hazard_observations": ["native_matrix_accepts_physical_range_past_end"],
+      "open_obligations": ["Validate physical backing bounds and seek/read outcomes before mutating mappings; add short-read coverage."]
+    },
+    {
+      "path": "src/gba/dma.c",
+      "source_git_blob_sha1": "da2a800ba48cb32d6e10e42c3b3527ef406bad22",
+      "source_sha256": "cd4c795f69ec16373e475b4c902e863e4a6db61cd2b9f1c4d851496d3202b9d1",
+      "machine_dossier_sha256": "2840c84bd7cb1f3c78c6947820a42d45042134e12ba005d27ed55b65822522fa",
+      "compiler_include_rows": 44,
+      "unique_compiler_selected_headers": 44,
+      "per_file_include_rows_sha256": "db35ebd6d92f26a39d7702ad120c6cd3f7c597f227029428640dc3a98da51fcf",
+      "symbol_candidate_rows": 24,
+      "per_file_symbol_rows_sha256": "ed8ee82787d9fc9bea62ff198b3dd33ef0eeb32ed653543ede6cbc128367eca2",
+      "representative_symbol_candidates": ["GBADMAUpdate", "GBADMARunHblank", "GBASavedataReadEEPROM"],
+      "source_anchors": ["GBADMAUpdate", "GBADMARunHblank", "GBADMASerialize", "GBADMADeserialize"],
+      "contract_ids": [],
+      "native_hazard_observations": [],
+      "native_related_cases": ["native_DMA3_16bit_ROM2_EX_reads_EEPROM", "native_DMA3_immediate_one_unit_completes"],
+      "open_obligations": ["The fixture does not test Matrix remap and DMA/peripheral arbitration as one scenario."]
+    },
+    {
+      "path": "src/gba/gba.c",
+      "source_git_blob_sha1": "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e",
+      "source_sha256": "e84eaba17f6c96ac7b78431afaee79d7633dd50118f92e31e4432793f80c4c7b",
+      "machine_dossier_sha256": "d1870b438fe6dd9bfa628a99d90189778e112588c14ae08f28fa379903595056",
+      "compiler_include_rows": 45,
+      "unique_compiler_selected_headers": 44,
+      "per_file_include_rows_sha256": "609b7c463071f41af7ff6d6140d08697f13b5175250723f87295090a1043e28c",
+      "symbol_candidate_rows": 102,
+      "per_file_symbol_rows_sha256": "649540df37f429e9398667dcdd36bba7d5945d8e993cb73909d95a6f2f14b45f",
+      "representative_symbol_candidates": ["GBALoadROM", "GBAUnloadROM", "GBAMatrixReset"],
+      "source_anchors": ["GBALoadROM", "GBAUnloadROM", "cartridge setup and teardown"],
+      "contract_ids": [
+        "XC23-ROM-UNLOAD-RESOURCE-OWNERSHIP",
+        "XC23-ROM-MATRIX-OVER32-LOAD",
+        "XC23-ROM-OVER32-NONMATRIX-CAPPED",
+        "XC23-ROM-LOAD-ACTIVE-REGION-REFRESH",
+        "XC23-ROM-PATCH-NEW-BACKING"
+      ],
+      "native_hazard_observations": [],
+      "open_obligations": ["The five source-order contracts are partial and marked NOT_RUN; they do not establish whole-file semantics."]
+    },
+    {
+      "path": "src/gba/memory.c",
+      "source_git_blob_sha1": "aa01fdcc7d6ae5ecdf8753efc63b3a60a1e8d3dc",
+      "source_sha256": "501dbbca7d5d7cbaa86240de2d6a4e2e1186b50f74dde11bcf2f323c4af8c437",
+      "machine_dossier_sha256": "4b18ab8b7b5f947457093503c6c085e0ba6677f321255d140720cb2965b07f54",
+      "compiler_include_rows": 50,
+      "unique_compiler_selected_headers": 50,
+      "per_file_include_rows_sha256": "2ca75043cba0ae10fcb5947c771f3ca6d9c7c97aa4c304ab0ab4aaaa7e8067f2",
+      "symbol_candidate_rows": 128,
+      "per_file_symbol_rows_sha256": "0187c5baf402c267fbd76e305958c8970ffef5b5960593c1adab398aabbb0801",
+      "representative_symbol_candidates": ["GBALoad8", "GBALoad16", "GBAMatrixWrite", "GBADMAInit"],
+      "source_anchors": ["GBALoad8", "GBALoad16", "GBALoad32", "GBAMemoryDeserialize"],
+      "contract_ids": ["XC23-ROM-COPY-ON-WRITE-PIPELINE"],
+      "native_hazard_observations": ["native_remap_leaves_prefetch_stale_until_refetch"],
+      "open_obligations": ["One partial copy-on-write order contract is marked NOT_RUN; DMA and Matrix consumer closure remains incomplete."]
+    },
+    {
+      "path": "src/gba/serialize.c",
+      "source_git_blob_sha1": "a307a51e751f412c64a7378323c56758304ebe85",
+      "source_sha256": "23947295749e6eeb27ab13d2a6d4c18bf88b587bcf3109e6d3e6bab5a5658dc3",
+      "machine_dossier_sha256": "0d42ee41e8db7c86bddca22c14889a251ead70cb0c6dd77bd2206f8fc4bd0e47",
+      "compiler_include_rows": 47,
+      "unique_compiler_selected_headers": 47,
+      "per_file_include_rows_sha256": "3024fc8ec116f7a240bbd98268935abe16263b0217df7f870097b7772a1b2579",
+      "symbol_candidate_rows": 70,
+      "per_file_symbol_rows_sha256": "534ef1a2ebd27174d75c63ffbfea58c3e8b7bd7d3743a484a7ad86422484d9bc",
+      "representative_symbol_candidates": ["GBASerialize", "GBADeserialize", "GBAMatrixDeserialize"],
+      "source_anchors": ["GBASerialize", "GBADeserialize", "ROM identity and restore checks"],
+      "contract_ids": [],
+      "native_hazard_observations": [
+        "native_savestate_CRC_mismatch_only_warns",
+        "native_savestate_external_bank_payload_change_unverified"
+      ],
+      "open_obligations": ["ROM CRC mismatch only warns; state does not establish identity of changed external bank payload."]
+    }
+  ],
+  "unresolved_obligations": [
+    "Compiler evidence is bounded to 173 configured translation units; compiler-selected headers are not complete consumer closure.",
+    "The symbol-edge CSV has no unresolved rows; its producer omits references with no in-archive provider, so unresolved external edges cannot be enumerated from this artifact.",
+    "No combined Matrix/DMA/peripheral arbitration case or Matrix short-read control ran.",
+    "Observed native hazards describe upstream behavior and are not proof of safe XGBA behavior.",
+    "Four files have no source-order contract rows; the two files with rows have only six partial rows total, all marked NOT_RUN.",
+    "Whole-file semantic maps, complete consumer/dependency closure, and distribution clearance are absent."
+  ],
+  "dispositions": {
+    "per_file": "NEEDS_REVIEW",
+    "needs_review_count": 6,
+    "upstream_verified_passed_count": 0,
+    "copilot_reviewed_passed_count": 0,
+    "legacy_external_independent_approved": 0,
+    "phase1_gate": "FAIL_INCOMPLETE"
+  }
+}

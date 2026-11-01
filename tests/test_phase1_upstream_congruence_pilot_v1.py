@@ -183,6 +183,67 @@ def refresh_record_digest(record):
 
 
 class UpstreamCongruencePilotTests(unittest.TestCase):
+    def test_native_semantic_matrix_reconciles_original_source_and_dossier_bytes(self):
+        repository_root = Path(__file__).resolve().parents[1]
+        matrix_path = repository_root / "docs/PHASE1_MGBA_NATIVE_SEMANTIC_MATRIX_20261101.json"
+        matrix = json.loads(matrix_path.read_text(encoding="utf-8"))
+        dossier_path = repository_root / "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz"
+        dossier_data = dossier_path.read_bytes()
+        self.assertEqual(sha256(dossier_data), pilot.DOSSIER_SHA256)
+        self.assertEqual(pilot.git_blob_sha(dossier_data), pilot.DOSSIER_BLOB)
+        self.assertEqual(matrix["source"]["dossier_archive"]["sha256"], pilot.DOSSIER_SHA256)
+        self.assertEqual(matrix["source"]["dossier_archive"]["git_blob_sha1"], pilot.DOSSIER_BLOB)
+
+        dossiers = {}
+        with gzip.open(dossier_path, "rt", encoding="utf-8") as stream:
+            for line in stream:
+                row = json.loads(line)
+                path = row.get("provenance", {}).get("path")
+                if path in pilot.PILOT_FILES:
+                    dossiers[path] = row
+
+        self.assertEqual(set(dossiers), set(pilot.PILOT_FILES))
+        files = {row["path"]: row for row in matrix["files"]}
+        self.assertEqual(set(files), set(pilot.PILOT_FILES))
+        for path, (blob_sha, source_sha) in pilot.PILOT_FILES.items():
+            row = files[path]
+            dossier = dossiers[path]
+            self.assertEqual(row["source_git_blob_sha1"], blob_sha)
+            self.assertEqual(row["source_sha256"], source_sha)
+            self.assertEqual(dossier["provenance"]["git_blob_sha"], blob_sha)
+            self.assertEqual(dossier["provenance"]["source_content_sha256"], source_sha)
+            self.assertEqual(row["machine_dossier_sha256"], sha256(canonical_bytes(dossier)))
+
+    def test_native_semantic_matrix_preserves_nonapproval_and_unresolved_boundaries(self):
+        repository_root = Path(__file__).resolve().parents[1]
+        matrix = json.loads(
+            (repository_root / "docs/PHASE1_MGBA_NATIVE_SEMANTIC_MATRIX_20261101.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(matrix["native_run"]["run_status"], "completed")
+        self.assertEqual(matrix["native_run"]["run_conclusion"], "success")
+        self.assertEqual(matrix["native_run"]["job_status"], "completed")
+        self.assertEqual(matrix["native_run"]["job_conclusion"], "success")
+        self.assertEqual(matrix["native_run"]["native_assertions_passed"], 34)
+        self.assertEqual(matrix["native_run"]["native_assertions_failed"], 0)
+        self.assertEqual(matrix["native_run"]["evidence_classification"], "NATIVE_EVIDENCE_ONLY")
+        self.assertEqual(matrix["compiler_evidence"]["consumer_closure"], "NOT_ESTABLISHED")
+        self.assertEqual(matrix["compiler_evidence"]["unresolved_symbol_references"], "NOT_RECORDED")
+        self.assertEqual(matrix["license_assessment"]["project_distribution_clearance"], "NOT_ASSESSED")
+        self.assertEqual(matrix["dispositions"]["phase1_gate"], "FAIL_INCOMPLETE")
+        self.assertEqual(matrix["dispositions"]["needs_review_count"], 6)
+        self.assertEqual(matrix["dispositions"]["upstream_verified_passed_count"], 0)
+        self.assertEqual(matrix["dispositions"]["copilot_reviewed_passed_count"], 0)
+        self.assertEqual(matrix["dispositions"]["legacy_external_independent_approved"], 0)
+        observed = {
+            observation
+            for row in matrix["files"]
+            for observation in row["native_hazard_observations"]
+        }
+        self.assertEqual(observed, set(matrix["native_run"]["native_hazard_observations"]))
+        self.assertEqual(len(observed), 4)
+
     def test_pinned_candidate_scope_and_zero_approval_boundary(self):
         self.assertEqual(len(pilot.PILOT_FILES), 6)
         self.assertEqual(pilot.INVENTORY_SIZE, 14834)
