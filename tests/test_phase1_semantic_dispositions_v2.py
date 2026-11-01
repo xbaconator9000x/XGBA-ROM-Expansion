@@ -65,6 +65,8 @@ class SemanticDispositionV2Tests(unittest.TestCase):
         report = self.build_report(results)
         self.assertEqual(report["v2_qualified_semantic_review_count"], 1)
         self.assertEqual(report["legacy_external_independent_approved"], 0)
+        self.assertEqual(report["legacy_p0_external_independent_approved"], 0)
+        self.assertEqual(report["legacy_p0_review_candidates"], 338)
         self.assertEqual(report["v2_completion_gate"], "FAIL_INCOMPLETE")
         self.assertEqual(report["policy_status"], "PROPOSAL_NOT_ACTIVATED")
         self.assertEqual(report["dispositions"][0]["disposition"], v2.PASSED)
@@ -108,6 +110,13 @@ class SemanticDispositionV2Tests(unittest.TestCase):
         })
         self.assertEqual(status, v2.NEEDS_REVIEW)
         self.assertIn("independent byte verification", reason)
+
+    def test_invalid_evidence_status_is_needs_review(self):
+        status, _ = v2._classify_result({
+            "status": "BLOCKED",
+            "blocker": "Evidence distinction has an unsupported status: compiled_native",
+        })
+        self.assertEqual(status, v2.NEEDS_REVIEW)
 
     def test_owner_self_review_or_spoofed_attestation_never_projects_to_pass(self):
         for blocker in (

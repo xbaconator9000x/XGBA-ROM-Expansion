@@ -29,6 +29,7 @@ NEEDS_REVIEW_BLOCKERS = (
     "Licensing is unresolved or lacks rationale",
     "Licensing clearance lacks pinned evidence",
     "Evidence distinctions are incomplete",
+    "Evidence distinction has an unsupported status:",
     "Claimed evidence lacks hashed artifacts:",
     "Non-source VERIFIED artifacts require independent byte verification:",
     "Unrun or unclaimed evidence lacks an explicit reason:",
@@ -118,6 +119,7 @@ def build_report(receipts, adapter_results, legacy_gate):
         "schema": SCHEMA,
         "policy_status": "PROPOSAL_NOT_ACTIVATED",
         "legacy_external_independent_approved": legacy_count,
+        "legacy_p0_external_independent_approved": LEGACY_APPROVALS,
         "legacy_p0_review_candidates": LEGACY_P0_CANDIDATES,
         "legacy_inventory_total": INVENTORY_SIZE,
         "v2_qualified_semantic_review_count": len(qualified),
@@ -160,6 +162,7 @@ def main(argv=None):
             "schema": SCHEMA,
             "policy_status": "PROPOSAL_NOT_ACTIVATED",
             "legacy_external_independent_approved": None,
+            "legacy_p0_external_independent_approved": None,
             "v2_qualified_semantic_review_count": 0,
             "v2_completion_gate": "FAIL_INCOMPLETE",
             "dispositions": [
