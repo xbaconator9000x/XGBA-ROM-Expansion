@@ -86,7 +86,14 @@ file-scoped; no combined-distribution licensing conclusion is made.
 
 ## CI status
 
-Local positive and adversarial controls passed before commit. Exact-head GitHub
-Actions status for this added workflow step must be reported only after
-retrieving the actual run, job, and step logs. A queued, permission-blocked, or
-zero-job `action_required` run is not an executed pass.
+The local positive and adversarial controls passed twice before commit. On the
+new head `5ecf0ac60b5854c3d027e7f070517bd3fa40e0ce`, exact-head Actions run
+[#41322742866](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41322742866)
+completed with conclusion `action_required`. The Actions API reports **zero
+jobs**, so no step log exists and the new witness has not executed in GitHub
+Actions. This is a permission blocker, not a green CI result; no permission
+check was bypassed. The previous successful run #41260407534 predates this
+change and does not validate this new test.
+
+CodeQL on the committed code/workflow change reported zero alerts for Actions,
+Python, and C++. No source pin, approval count, or shared gate was changed.
