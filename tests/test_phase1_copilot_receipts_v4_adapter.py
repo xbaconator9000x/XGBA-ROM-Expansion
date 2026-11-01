@@ -243,6 +243,36 @@ class CopilotReceiptV4AdapterTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "zero or incomplete jobs"):
             adapter.validate_exact_ci(api)
 
+    def test_boolean_action_metadata_fails_closed(self):
+        # Python bool is an int subclass: True must not impersonate IDs,
+        # attempt numbers, job IDs or a reported one-job count.
+        api = self.valid_api()
+        api.runs[0]["id"] = True
+        with self.assertRaisesRegex(ValueError, "valid ID"):
+            adapter.validate_exact_ci(api)
+
+        api = self.valid_api()
+        api.runs[0]["run_attempt"] = True
+        with self.assertRaisesRegex(ValueError, "invalid attempt"):
+            adapter.validate_exact_ci(api)
+
+        api = self.valid_api()
+        api.jobs[11][0]["id"] = True
+        with self.assertRaisesRegex(ValueError, "missing or duplicated"):
+            adapter.validate_exact_ci(api)
+
+        class BooleanTotalAPI(FixtureAPI):
+            def __call__(self, url):
+                response = super().__call__(url)
+                response["total_count"] = True
+                return response
+
+        valid = self.valid_api()
+        api = BooleanTotalAPI()
+        api.runs, api.jobs = valid.runs, valid.jobs
+        with self.assertRaisesRegex(ValueError, "job count is invalid"):
+            adapter.validate_exact_ci(api)
+
     def test_failed_or_nonexecuted_job_fails_closed(self):
         api = self.valid_api()
         api.jobs[11] = [fixture_job(101, conclusion="failure")]

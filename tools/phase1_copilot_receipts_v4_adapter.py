@@ -248,7 +248,7 @@ def validate_exact_ci(api, pull_number=PR_NUMBER, expected_head=PR8_HEAD, not_be
                 or run_started.astimezone(timezone.utc) <= receipt_time.astimezone(timezone.utc)
             ):
                 raise ValueError(f"Exact-head {event} Actions run predates the final receipt commit")
-        if not isinstance(run.get("id"), int) or run["id"] < 1:
+        if type(run.get("id")) is not int or run["id"] < 1:
             raise ValueError(f"Exact-head {event} Actions run has no valid ID")
         selected[event] = run
 
@@ -263,7 +263,7 @@ def validate_exact_ci(api, pull_number=PR_NUMBER, expected_head=PR8_HEAD, not_be
     job_counts = {}
     for event, run in selected.items():
         attempt = run.get("run_attempt")
-        if not isinstance(attempt, int) or attempt < 1:
+        if type(attempt) is not int or attempt < 1:
             raise ValueError(f"Exact-head {event} Actions run has invalid attempt")
         jobs = []
         seen = set()
@@ -282,7 +282,7 @@ def validate_exact_ci(api, pull_number=PR_NUMBER, expected_head=PR8_HEAD, not_be
             ):
                 raise ValueError(f"Exact-head {event} Actions job response is invalid")
             reported = response.get("total_count")
-            if not isinstance(reported, int) or reported < 0:
+            if type(reported) is not int or reported < 0:
                 raise ValueError(f"Exact-head {event} Actions job count is invalid")
             if total is None:
                 total = reported
@@ -290,7 +290,7 @@ def validate_exact_ci(api, pull_number=PR_NUMBER, expected_head=PR8_HEAD, not_be
                 raise ValueError(f"Exact-head {event} Actions job count changed during pagination")
             for job in page_jobs:
                 job_id = job.get("id")
-                if not isinstance(job_id, int) or job_id < 1 or job_id in seen:
+                if type(job_id) is not int or job_id < 1 or job_id in seen:
                     raise ValueError(f"Exact-head {event} Actions jobs are missing or duplicated")
                 seen.add(job_id)
                 jobs.append(job)
