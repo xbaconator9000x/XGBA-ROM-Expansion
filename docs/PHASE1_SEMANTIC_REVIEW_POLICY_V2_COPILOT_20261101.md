@@ -29,6 +29,8 @@ Versioned namespace: `xgba.phase1.semantic_review_policy.v2`.
 * `v2_qualified_semantic_review_count`: number of unique pinned files passing the new validator; never sum duplicate receipts or synthetic fixtures.
 * `v2_completion_gate`: remains `FAIL_INCOMPLETE` until inventory parity and all mandatory Phase 1 review and compatibility requirements are satisfied under the reviewed policy. The presence of three existing receipts alone cannot make it pass.
 
+The separately versioned prospective upstream-congruence lane is specified in [Phase 1 upstream-congruence lane v1](PHASE1_UPSTREAM_VERIFIED_POLICY_V1_20261101.md). It emits `UPSTREAM_VERIFIED/PASSED` only for immutable exact-byte evidence under that policy; it does not reinterpret Copilot receipts or legacy signatures. Future prospective completion reporting uses a deduplicated union of qualified Copilot and upstream source identities, while retaining the legacy external counters separately. The new lane is not activated by this proposal.
+
 ## Required implementation sequence
 
 1. Reconcile current PR #8 protocol/receipt register and PR #2 adapter; avoid merging incompatible v1 and v4 schemas by assumption. Preserve the old gate for historical reporting.
