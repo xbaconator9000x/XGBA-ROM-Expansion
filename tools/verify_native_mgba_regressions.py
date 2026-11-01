@@ -69,6 +69,12 @@ def extract(log:str,marker:str)->list[str]:
 def check(log:str,record:dict,source_bytes:bytes)->dict:
     if not isinstance(record,dict):
         raise EvidenceRejected("Missing machine-readable summary")
+    # Python bool subclasses int; False must never impersonate an executed zero
+    # exit status, zero failed assertions, or zero independent approvals.
+    for field in ("native_probe_exit_code", "independent_semantic_reviews_approved",
+                  "positive_checks_passed", "positive_checks_failed"):
+        if type(record.get(field)) is not int:
+            raise EvidenceRejected("Malformed integer evidence field: "+field)
     if record.get("source_revision")!=PIN:
         raise EvidenceRejected("Pinned mGBA revision mismatch")
     if record.get("test_source_sha256")!=sha(source_bytes):
@@ -144,6 +150,9 @@ def self_test()->None:
         (data,{**rec,"test_source_sha256":"0"*64},source),
         (data,{**rec,"source_revision":"wrong"},source),
         (data,{**rec,"native_probe_exit_code":139},source),
+        (data,{**rec,"native_probe_exit_code":False},source),
+        (data,{**rec,"independent_semantic_reviews_approved":False},source),
+        (data,{**rec,"positive_checks_failed":False},source),
         (data,{**rec,"positive_checks_passed":33},source),
         (data,{**rec,"phase1_mapping_complete":True},source),
         (data,{**rec,"native_gap_observations":[]},source),
