@@ -12,6 +12,7 @@ on:
       - 'tests/test_phase1_copilot_receipts.py'
       - 'tests/test_phase1_mapping_gate.py'
       - 'docs/phase1-review-readiness/copilot-semantic-review-receipts.jsonl'
+      - 'docs/phase1-review-readiness/analyst-*.md'
       - 'tools/verify_source_contracts.py'
       - 'tools/verify_p0_additive_source_contracts.py'
       - 'tools/verify_curated_p0_semantic_registry.py'
