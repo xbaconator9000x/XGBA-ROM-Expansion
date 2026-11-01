@@ -1,6 +1,7 @@
 import gzip
 import io
 import json
+import tempfile
 import sys
 import unittest
 from pathlib import Path
@@ -147,9 +148,36 @@ def evidence_fixture():
         },
         "unresolved_objections": [],
         "contradictory_evidence": [],
+        "risk_controls": [
+            {
+                "risk_id": risk_id,
+                "executed": True,
+                "outcome": requirement["outcome"],
+                "test_case": requirement["test_case"],
+                "result_sha256": "f" * 64,
+                "test_source_refs": [{**reference, "path": "tests/negative-controls.c"}],
+                "source_refs": [
+                    {
+                        "repository": pilot.PILOT_REPOSITORY,
+                        "path": path,
+                        "revision": pilot.PILOT_REVISION,
+                        "git_blob_sha1": pilot.PILOT_FILES[path][0],
+                        "source_sha256": pilot.PILOT_FILES[path][1],
+                    }
+                    for path in requirement["paths"]
+                ],
+            }
+            for risk_id, requirement in pilot.PILOT_RISK_CONTROLS.items()
+        ],
     }
     record["record_sha256"] = sha256(canonical_bytes(record))
     return record, identity
+
+
+def refresh_record_digest(record):
+    record["record_sha256"] = sha256(
+        canonical_bytes({key: value for key, value in record.items() if key != "record_sha256"})
+    )
 
 
 class UpstreamCongruencePilotTests(unittest.TestCase):
@@ -279,6 +307,15 @@ class UpstreamCongruencePilotTests(unittest.TestCase):
             pilot._validate_candidate_evidence(record, identity, validate_ref, validate_actions), []
         )
 
+    def test_behavioral_fixture_requires_versioned_risk_control_schema(self):
+        record, identity = evidence_fixture()
+        record["schema"] = "xgba.phase1.behavioral_congruence_evidence.v1"
+        refresh_record_digest(record)
+        reasons = pilot._validate_candidate_evidence(
+            record, identity, lambda _: True, lambda _: True
+        )
+        self.assertIn("BEHAVIORAL_SCHEMA_MISMATCH", reasons)
+
     def test_behavioral_fixture_requires_reference_and_actions_reverification(self):
         record, identity = evidence_fixture()
         reasons = pilot._validate_candidate_evidence(record, identity)
@@ -347,6 +384,79 @@ class UpstreamCongruencePilotTests(unittest.TestCase):
         )
         self.assertIn("REFERENCED_ARTIFACTS_NOT_REVERIFIED", reasons)
         self.assertIn("EXACT_HEAD_ACTIONS_PROVENANCE_NOT_REVERIFIED", reasons)
+
+    def test_behavioral_fixture_requires_every_risk_specific_negative_control(self):
+        record, identity = evidence_fixture()
+        for risk_id in pilot.PILOT_RISK_CONTROLS:
+            candidate = json.loads(json.dumps(record))
+            candidate["risk_controls"] = [
+                control
+                for control in candidate["risk_controls"]
+                if control["risk_id"] != risk_id
+            ]
+            refresh_record_digest(candidate)
+            reasons = pilot._validate_candidate_evidence(
+                candidate, identity, lambda _: True, lambda _: True
+            )
+            self.assertIn("RISK_SPECIFIC_NEGATIVE_CONTROLS_INCOMPLETE", reasons, risk_id)
+
+    def test_behavioral_fixture_rejects_unsafe_risk_control_claims(self):
+        for field, value in (
+            ("executed", False),
+            ("outcome", "SAFE_WITHOUT_COUNTEREXAMPLE"),
+            ("test_case", "unrelated_test"),
+            ("result_sha256", "not-a-digest"),
+            ("test_source_refs", []),
+        ):
+            record, identity = evidence_fixture()
+            record["risk_controls"][0][field] = value
+            refresh_record_digest(record)
+            reasons = pilot._validate_candidate_evidence(
+                record, identity, lambda _: True, lambda _: True
+            )
+            self.assertIn("RISK_SPECIFIC_NEGATIVE_CONTROLS_INCOMPLETE", reasons, field)
+
+    def test_behavioral_fixture_rejects_risk_control_source_substitution(self):
+        record, identity = evidence_fixture()
+        record["risk_controls"][0]["source_refs"][0]["source_sha256"] = "0" * 64
+        refresh_record_digest(record)
+        reasons = pilot._validate_candidate_evidence(
+            record, identity, lambda _: True, lambda _: True
+        )
+        self.assertIn("RISK_SPECIFIC_NEGATIVE_CONTROLS_INCOMPLETE", reasons)
+
+    def test_behavioral_fixture_rejects_duplicate_or_unknown_risk_controls(self):
+        record, identity = evidence_fixture()
+        record["risk_controls"].append(dict(record["risk_controls"][0]))
+        record["risk_controls"].append(
+            {**record["risk_controls"][0], "risk_id": "UNPINNED_RISK"}
+        )
+        refresh_record_digest(record)
+        reasons = pilot._validate_candidate_evidence(
+            record, identity, lambda _: True, lambda _: True
+        )
+        self.assertIn("RISK_SPECIFIC_NEGATIVE_CONTROLS_INCOMPLETE", reasons)
+
+    def test_native_build_report_blocks_when_pinned_checkout_is_absent(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            report = pilot._native_build_status(Path(temporary))
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertFalse(report["required_source_present"])
+        self.assertFalse(report["native_probe_executed"])
+        self.assertIn("PINNED_MGBA_SOURCE_CHECKOUT_ABSENT", report["reason_codes"])
+        self.assertEqual(report["preprocessor_closure"], "NOT_ESTABLISHED")
+        self.assertEqual(report["consumer_closure"], "NOT_ESTABLISHED")
+
+    def test_pilot_risk_obligations_are_explicit_and_never_report_executed(self):
+        obligations = pilot._risk_obligation_report()
+        self.assertEqual(
+            {obligation["risk_id"] for obligation in obligations},
+            set(pilot.PILOT_RISK_CONTROLS),
+        )
+        self.assertTrue(all(obligation["reason_code"] for obligation in obligations))
+        self.assertNotIn(
+            "PASSED", {obligation["evidence_state"] for obligation in obligations}
+        )
 
 
 if __name__ == "__main__":

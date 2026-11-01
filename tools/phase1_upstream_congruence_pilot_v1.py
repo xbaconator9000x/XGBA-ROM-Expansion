@@ -7,6 +7,8 @@ import csv
 import gzip
 import io
 import json
+import shutil
+import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
@@ -32,7 +34,7 @@ from phase1_upstream_verified_v1 import (
 )
 
 SCHEMA = "xgba.phase1.upstream_congruence_pilot.v1"
-BEHAVIOR_SCHEMA = "xgba.phase1.behavioral_congruence_evidence.v1"
+BEHAVIOR_SCHEMA = "xgba.phase1.behavioral_congruence_evidence.v2"
 INVENTORY_SIZE = 14834
 PR8_HEAD = "12bebda10473877e8f82faf3806d4fbbf0f882df"
 PR8_INDEX_PATH = "docs/phase1-review-readiness/inventory-source-index-20261101.json.gz"
@@ -69,6 +71,56 @@ PILOT_FILES = {
         "a307a51e751f412c64a7378323c56758304ebe85",
         "23947295749e6eeb27ab13d2a6d4c18bf88b587bcf3109e6d3e6bab5a5658dc3",
     ),
+}
+PILOT_RISK_CONTROLS = {
+    "MATRIX_BACKING_RANGE": {
+        "outcome": "UNSAFE_BEHAVIOR_REJECTED",
+        "test_case": "native_matrix_rejects_physical_range_past_end",
+        "paths": ["src/gba/cart/matrix.c"],
+    },
+    "MATRIX_SHORT_READ": {
+        "outcome": "SHORT_READ_REJECTED",
+        "test_case": "native_matrix_rejects_short_backing_read",
+        "paths": ["src/gba/cart/matrix.c"],
+    },
+    "PREFETCH_INVALIDATION": {
+        "outcome": "STALE_PREFETCH_REJECTED",
+        "test_case": "native_remap_invalidates_prefetch_before_next_step",
+        "paths": ["src/arm/arm.c", "src/gba/memory.c"],
+    },
+    "DMA_PERIPHERAL_INTERACTION": {
+        "outcome": "UNSAFE_INTERACTION_REJECTED",
+        "test_case": "native_dma_matrix_remap_preserves_peripheral_arbitration",
+        "paths": ["src/gba/dma.c", "src/gba/cart/matrix.c", "src/gba/memory.c"],
+    },
+    "SAVESTATE_BACKING_IDENTITY": {
+        "outcome": "ALTERED_BACKING_REJECTED",
+        "test_case": "native_savestate_rejects_changed_backing_identity",
+        "paths": ["src/gba/serialize.c", "src/gba/cart/matrix.c"],
+    },
+    "DEPENDENCY_CONSUMER_CLOSURE": {
+        "outcome": "INCOMPLETE_CLOSURE_REJECTED",
+        "test_case": "validator_rejects_incomplete_dependency_consumer_closure",
+        "paths": sorted(PILOT_FILES),
+    },
+    "DISTRIBUTION_LICENSE_CLEARANCE": {
+        "outcome": "UNCLEARED_LICENSE_REJECTED",
+        "test_case": "validator_rejects_unassessed_or_incompatible_license",
+        "paths": sorted(PILOT_FILES),
+    },
+}
+PILOT_SOURCE_EVIDENCE = {
+    "src/arm/CMakeLists.txt": "a86f0bea1f38aeb88222fb5b532b4ea9e256767f",
+    "src/gba/CMakeLists.txt": "71ab7bbb199ad95422e35ded5774c06a1b2e7c5c",
+    "src/gba/test/core.c": "25b8f3ce30b59c3ecde8ecb377ea80964888b0ae",
+}
+PILOT_CMAKE_MEMBERSHIP = {
+    "src/arm/arm.c": "src/arm/CMakeLists.txt",
+    "src/gba/cart/matrix.c": "src/gba/CMakeLists.txt",
+    "src/gba/dma.c": "src/gba/CMakeLists.txt",
+    "src/gba/gba.c": "src/gba/CMakeLists.txt",
+    "src/gba/memory.c": "src/gba/CMakeLists.txt",
+    "src/gba/serialize.c": "src/gba/CMakeLists.txt",
 }
 LOCAL_EVIDENCE = {
     "semantic-snapshots/current/resource_lifecycle_contracts.csv": (
@@ -361,6 +413,53 @@ def _validate_candidate_evidence(
         or actions.get("executed_jobs") != actions.get("total_jobs")
     ):
         reasons.append("PINNED_POSITIVE_AND_NEGATIVE_TEST_EXECUTION_MISSING")
+    risk_controls = record.get("risk_controls")
+    if not isinstance(risk_controls, list):
+        risk_controls = []
+    risk_control_map = {}
+    for control in risk_controls:
+        if not isinstance(control, dict):
+            continue
+        risk_id = control.get("risk_id")
+        if not isinstance(risk_id, str) or risk_id not in PILOT_RISK_CONTROLS:
+            reasons.append("RISK_SPECIFIC_NEGATIVE_CONTROLS_INCOMPLETE")
+        elif risk_id in risk_control_map:
+            reasons.append("RISK_SPECIFIC_NEGATIVE_CONTROLS_INCOMPLETE")
+        else:
+            risk_control_map[risk_id] = control
+    if set(risk_control_map) != set(PILOT_RISK_CONTROLS):
+        reasons.append("RISK_SPECIFIC_NEGATIVE_CONTROLS_INCOMPLETE")
+    risk_references = []
+    for risk_id, requirement in PILOT_RISK_CONTROLS.items():
+        control = risk_control_map.get(risk_id, {})
+        result_digest = control.get("result_sha256")
+        test_refs = control.get("test_source_refs")
+        source_refs = control.get("source_refs")
+        expected_source_refs = [
+            {
+                "repository": PILOT_REPOSITORY,
+                "path": path,
+                "revision": PILOT_REVISION,
+                "git_blob_sha1": PILOT_FILES[path][0],
+                "source_sha256": PILOT_FILES[path][1],
+            }
+            for path in requirement["paths"]
+        ]
+        if (
+            control.get("executed") is not True
+            or control.get("outcome") != requirement["outcome"]
+            or control.get("test_case") != requirement["test_case"]
+            or not isinstance(result_digest, str)
+            or len(result_digest) != 64
+            or any(character not in "0123456789abcdef" for character in result_digest)
+            or not isinstance(test_refs, list)
+            or not test_refs
+            or source_refs != expected_source_refs
+        ):
+            reasons.append("RISK_SPECIFIC_NEGATIVE_CONTROLS_INCOMPLETE")
+        else:
+            risk_references.extend(test_refs)
+            risk_references.extend(source_refs)
     licensing = record.get("licensing") if isinstance(record.get("licensing"), dict) else {}
     if licensing.get("distribution_clearance") != "CLEARED" or not licensing.get("evidence_refs"):
         reasons.append("LICENSING_SCOPE_NOT_CLEARED")
@@ -374,6 +473,7 @@ def _validate_candidate_evidence(
         dependencies,
         consumers,
         tests.get("test_source_refs", []),
+        risk_references,
         licensing.get("evidence_refs", []),
     )
     if any(not isinstance(group, list) for group in reference_groups):
@@ -390,6 +490,123 @@ def _validate_candidate_evidence(
     if not actions_verified:
         reasons.append("EXACT_HEAD_ACTIONS_PROVENANCE_NOT_REVERIFIED")
     return list(dict.fromkeys(reasons))
+
+
+def _native_build_status(root: Path) -> dict:
+    checkout = root / "upstream/mgba"
+    source_present = (checkout / "src/gba/cart/matrix.c").is_file() and not checkout.is_symlink()
+    cmake_present = shutil.which("cmake") is not None
+    compiler_present = shutil.which("cc") is not None
+    pinned_revision_verified = False
+    checkout_clean = False
+    if source_present:
+        try:
+            revision = subprocess.run(
+                ["git", "-C", str(checkout), "rev-parse", "HEAD"],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+            status = subprocess.run(
+                ["git", "-C", str(checkout), "status", "--porcelain", "--untracked-files=all"],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout
+            pinned_revision_verified = revision == PILOT_REVISION
+            checkout_clean = not status
+        except (OSError, subprocess.CalledProcessError):
+            pass
+    missing = []
+    if not source_present:
+        missing.append("PINNED_MGBA_SOURCE_CHECKOUT_ABSENT")
+    elif not pinned_revision_verified:
+        missing.append("PINNED_MGBA_REVISION_NOT_VERIFIED")
+    if source_present and not checkout_clean:
+        missing.append("PINNED_MGBA_CHECKOUT_NOT_CLEAN")
+    if not cmake_present:
+        missing.append("CMAKE_UNAVAILABLE")
+    if not compiler_present:
+        missing.append("C_COMPILER_UNAVAILABLE")
+    return {
+        "status": "BLOCKED" if missing else "READY_NOT_EXECUTED",
+        "checkout_path": "upstream/mgba",
+        "pinned_revision": PILOT_REVISION,
+        "required_source_present": source_present,
+        "pinned_revision_verified": pinned_revision_verified,
+        "checkout_clean": checkout_clean,
+        "cmake_available": cmake_present,
+        "c_compiler_available": compiler_present,
+        "native_probe_executed": False,
+        "preprocessor_closure": "NOT_ESTABLISHED",
+        "consumer_closure": "NOT_ESTABLISHED",
+        "reason_codes": missing or ["NATIVE_PROBE_NOT_EXECUTED"],
+        "configure_file": "tests/CMakeLists.txt",
+        "configure_guard": "Requires upstream/mgba/src/gba/cart/matrix.c and otherwise exits before configuration.",
+        "runner_caution": "Do not run the clone-capable runner when the pinned checkout is absent.",
+    }
+
+
+def _risk_obligation_report() -> list[dict]:
+    records = [
+        {
+            "risk_id": "MATRIX_BACKING_RANGE",
+            "paths": ["src/gba/cart/matrix.c"],
+            "source_finding": "_remapMatrix validates the virtual window but does not check the physical range against backing-file size before mapping.",
+            "fixture_case": "native_matrix_accepts_physical_range_past_end",
+            "evidence_state": "SOURCE_GAP_AND_FIXTURE_CASE_PRESENT_NOT_EXECUTED",
+            "reason_code": "MATRIX_BACKING_RANGE_CONTROL_NOT_EXECUTED",
+        },
+        {
+            "risk_id": "MATRIX_SHORT_READ",
+            "paths": ["src/gba/cart/matrix.c"],
+            "source_finding": "_remapMatrix calls VFile seek/read without checking their return values.",
+            "fixture_case": None,
+            "evidence_state": "SHORT_READ_CONTROL_NOT_PRESENT_OR_EXECUTED",
+            "reason_code": "MATRIX_SHORT_READ_CONTROL_MISSING",
+        },
+        {
+            "risk_id": "PREFETCH_INVALIDATION",
+            "paths": ["src/arm/arm.c", "src/gba/memory.c"],
+            "source_finding": "ARM/Thumb execution consumes active-region and prefetch state; remapping requires explicit fetch-state synchronization.",
+            "fixture_case": "native_remap_leaves_prefetch_stale_until_refetch",
+            "evidence_state": "STALE_PREFETCH_OBSERVATION_PRESENT_NOT_EXECUTED",
+            "reason_code": "PREFETCH_INVALIDATION_CONTROL_NOT_EXECUTED",
+        },
+        {
+            "risk_id": "DMA_PERIPHERAL_INTERACTION",
+            "paths": ["src/gba/dma.c", "src/gba/cart/matrix.c", "src/gba/memory.c"],
+            "source_finding": "DMA has ROM2_EX and EEPROM-specific paths; the fixture covers EEPROM reads but not concurrent Matrix remap arbitration.",
+            "fixture_case": "native_DMA3_16bit_ROM2_EX_reads_EEPROM",
+            "evidence_state": "PERIPHERAL_FIXTURE_PRESENT_CROSS_SUBSYSTEM_CASE_NOT_EXECUTED",
+            "reason_code": "DMA_MATRIX_INTERACTION_CONTROL_NOT_EXECUTED",
+        },
+        {
+            "risk_id": "SAVESTATE_BACKING_IDENTITY",
+            "paths": ["src/gba/serialize.c", "src/gba/cart/matrix.c"],
+            "source_finding": "A ROM CRC mismatch warns rather than rejecting state; external backing identity is not bound by that CRC check.",
+            "fixture_case": "native_savestate_external_bank_payload_change_unverified",
+            "evidence_state": "UNVERIFIED_BACKING_OBSERVATION_PRESENT_NOT_EXECUTED",
+            "reason_code": "SAVESTATE_BACKING_IDENTITY_CONTROL_NOT_EXECUTED",
+        },
+        {
+            "risk_id": "DEPENDENCY_CONSUMER_CLOSURE",
+            "paths": sorted(PILOT_FILES),
+            "source_finding": "Pinned CMake lists establish target membership only; lexical include candidates do not prove preprocessor, call, data-flow, or consumer closure.",
+            "fixture_case": None,
+            "evidence_state": "BUILD_AND_CONSUMER_CLOSURE_NOT_ESTABLISHED",
+            "reason_code": "PINNED_PREPROCESSOR_AND_CONSUMER_CLOSURE_NOT_ESTABLISHED",
+        },
+        {
+            "risk_id": "DISTRIBUTION_LICENSE_CLEARANCE",
+            "paths": sorted(PILOT_FILES),
+            "source_finding": "Pinned source headers and LICENSE identify MPL-2.0; distribution and compatibility clearance is not assessed.",
+            "fixture_case": None,
+            "evidence_state": "LICENSE_NOTICE_PRESENT_DISTRIBUTION_CLEARANCE_NOT_ASSESSED",
+            "reason_code": "LICENSE_DISTRIBUTION_CLEARANCE_NOT_ASSESSED",
+        },
+    ]
+    return records
 
 
 def _verify_local_evidence(root: Path) -> tuple[list[dict], dict]:
@@ -470,6 +687,8 @@ def reconcile(root: Path, index_bytes: bytes, pr8_dossier_bytes: bytes) -> dict:
     if not pilot_keys.issubset(lexical_component):
         raise EvidenceError("The selected mGBA ROM files are not dependency-connected in the index", "BLOCKED")
 
+    native_build = _native_build_status(root)
+    risk_obligations = _risk_obligation_report()
     candidates = []
     resolution_totals = Counter()
     direct_test_links = 0
@@ -506,6 +725,20 @@ def reconcile(root: Path, index_bytes: bytes, pr8_dossier_bytes: bytes) -> dict:
             reasons.append("NO_DIRECT_TEST_LINK_CANDIDATE")
         if row.get("direct_dependency_unresolved_count", 0):
             reasons.append("UNRESOLVED_LITERAL_INCLUDE_CANDIDATE")
+        file_contracts = [
+            {
+                "contract_id": contract["contract_id"],
+                "begin_line": int(contract["begin_line"]),
+                "end_line": int(contract["end_line"]),
+                "source_exact_anchors": json.loads(contract["source_exact_anchors"]),
+                "observed_semantics": contract["observed_semantics"],
+                "required_extension_invariant": contract["required_extension_invariant"],
+                "verification_type": contract["verification_type"],
+                "runtime_test_status": contract["runtime_test_status"],
+            }
+            for contract in contracts
+            if contract["path"] == path
+        ]
         candidates.append(
             {
                 "repository": PILOT_REPOSITORY,
@@ -520,6 +753,36 @@ def reconcile(root: Path, index_bytes: bytes, pr8_dossier_bytes: bytes) -> dict:
                 "behavioral_reason_codes": reasons,
                 "source_index_state": row["source_index_state"],
                 "semantic_review_state": row["semantic_review_state"],
+                "source_and_dossier_evidence": {
+                    "source_content_sha256": identity["source_sha256"],
+                    "source_byte_count": identity["source_bytes"],
+                    "source_identity_from_pinned_index": True,
+                    "source_bytes_reopened_in_this_run": False,
+                    "original_machine_dossier_sha256": row["machine_dossier"]["sha256"],
+                    "pr8_original_compressed_dossier_sha256": PR8_DOSSIER_SHA256,
+                    "pr2_original_compressed_dossier_sha256": DOSSIER_SHA256,
+                    "canonical_dossier_records_equal": True,
+                },
+                "source_contract_evidence": file_contracts,
+                "build_membership_evidence": {
+                    "cmake_file": PILOT_CMAKE_MEMBERSHIP[path],
+                    "cmake_git_blob_sha1": PILOT_SOURCE_EVIDENCE[
+                        PILOT_CMAKE_MEMBERSHIP[path]
+                    ],
+                    "membership_state": "SOURCE_LISTED_NOT_COMPILED",
+                    "preprocessor_and_consumer_closure": "NOT_ESTABLISHED",
+                    "build_status": native_build["status"],
+                },
+                "license_evidence": {
+                    "source_notice": "MPL-2.0",
+                    "license_file_git_blob_sha1": "14e2e1241fc846b57b8d9858349d6df4a79c23a8",
+                    "distribution_clearance": "NOT_ASSESSED",
+                },
+                "risk_obligations": [
+                    obligation
+                    for obligation in risk_obligations
+                    if path in obligation["paths"]
+                ],
                 "direct_dependency_candidates": len(row.get("direct_dependencies", [])),
                 "direct_dependency_resolution_counts": dict(sorted(resolution_counts.items())),
                 "direct_test_link_candidates": row.get("upstream_test_source_candidate_count", 0),
@@ -565,6 +828,27 @@ def reconcile(root: Path, index_bytes: bytes, pr8_dossier_bytes: bytes) -> dict:
             "source_contract_rows": len(contracts),
             "source_contract_files": sorted({row["path"] for row in contracts}),
             "runtime_paths_exercised": contract_summary["runtime_paths_exercised"],
+            "native_build_evidence": {
+                **native_build,
+                "cmake_evidence": {
+                    path: {"git_blob_sha1": blob, "pinned_revision": PILOT_REVISION}
+                    for path, blob in PILOT_SOURCE_EVIDENCE.items()
+                },
+                "configured_probe_options": {
+                    "BUILD_TEST": "OFF",
+                    "target": "xgba_mgba_bank_boundary",
+                    "external_fixture_source": "tests/mgba_bank_boundary.c",
+                },
+                "upstream_core_test_scope": [
+                    "GBACoreCreate",
+                    "platform",
+                    "reset",
+                    "loadNullROM",
+                ],
+                "upstream_core_test_blob_sha1": PILOT_SOURCE_EVIDENCE["src/gba/test/core.c"],
+                "upstream_core_tests_cover_pilot_risks": False,
+            },
+            "risk_obligations": risk_obligations,
             "direct_test_link_candidates": direct_test_links,
             "unresolved_literal_include_candidates": unresolved_edges,
             "license_distribution_clearance": license_state["distribution_clearance"],

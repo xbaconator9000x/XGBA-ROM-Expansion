@@ -49,7 +49,7 @@ The bounded dependency-connected pilot anchors six P0 source files at mGBA revis
 
 The six source-order contracts are not whole-file semantic maps. The existing native mGBA boundary fixture is pinned as test source but its checkpoint says it has not been compiled or executed. The source-index catalog likewise labels its test-source inventory as present but not executed and license-file presence as not distribution clearance. No test result or semantic signoff is inferred.
 
-The behavioral evidence schema `xgba.phase1.behavioral_congruence_evidence.v1` is deliberately separate from exact-byte v1. Its structural validator requires whole-file line coverage and claim IDs; source-backed semantic statements and specification references; complete dependency and consumer closure; positive and negative test coverage for the claims on the exact source revision with executed successful Actions jobs; license clearance; and no unresolved objections or contradictions. Each referenced artifact and Actions run must be independently reverified. Synthetic positive/negative unit fixtures exercise those checks only; they are not accepted by the live CLI, produce no receipt, and are excluded from all counts.
+The behavioral evidence schema `xgba.phase1.behavioral_congruence_evidence.v2` is deliberately separate from exact-byte v1 and supersedes the pilot's unactivated v1 evidence shape. Its structural validator requires whole-file line coverage and claim IDs; source-backed semantic statements and specification references; complete dependency and consumer closure; positive and negative test coverage for the claims on the exact source revision with executed successful Actions jobs; risk-specific negative controls; license clearance; and no unresolved objections or contradictions. Each referenced artifact and Actions run must be independently reverified. Synthetic positive/negative unit fixtures exercise those checks only; they are not accepted by the live CLI, produce no receipt, and are excluded from all counts.
 
 The candidate reason codes include:
 
@@ -63,6 +63,28 @@ The candidate reason codes include:
 
 The open native-ROM obligations include backing-file bounds and short-read handling during Matrix remaps, instruction prefetch invalidation and bank-switch arbitration, DMA/EEPROM/e-Reader interactions, and save-state backing identity. The source-anchored fixture describes probes for some cases but does not close these risks.
 
+## Source/build closure and per-file blockers
+
+The evaluator now emits, for each of the six candidates, the pinned source SHA-256 and byte count, the canonical original machine-dossier SHA-256, both independently pinned compressed-dossier archive hashes, CMake source-list membership, any source-contract rows with line spans and anchors, MPL-2.0 notice evidence, and applicable risk obligations. It explicitly reports that source bytes were not reopened in this reconciliation run. The two source-contract files (`src/gba/gba.c` and `src/gba/memory.c`) contribute six order contracts total; the remaining four files have no such contract rows. These partial rows are not whole-file semantic dispositions.
+
+At the pinned mGBA revision, `src/arm/CMakeLists.txt` (`a86f0bea1f38aeb88222fb5b532b4ea9e256767f`) lists `arm.c` in the ARM source set, and `src/gba/CMakeLists.txt` (`71ab7bbb199ad95422e35ded5774c06a1b2e7c5c`) lists the other five pilot files in the GBA source set. Its `test/core.c` entry (`25b8f3ce30b59c3ecde8ecb377ea80964888b0ae`) covers core creation/platform/reset/null-ROM behavior, not these Matrix boundary risks. The local native-probe CMake file pins the expected layout at `upstream/mgba`, sets `BUILD_TEST=OFF`, and stops at configuration if `src/gba/cart/matrix.c` is absent. These CMake lists establish build-target membership, not resolved compiler/preprocessor, runtime, or consumer closure.
+
+**Native build result: BLOCKED, not PASS.** This checkout has no `upstream/mgba/src/gba/cart/matrix.c` and no configured boundary-test build directory. CMake and a C compiler are available, but `tests/run_pinned_mgba_boundary.sh` can clone when the checkout is missing, so its clone path was not invoked. No native test was compiled or executed in this follow-up. Once the exact clean pin is available without using that clone path, the probe can be configured with `cmake -S tests -B <build-dir>`, built with `cmake --build <build-dir>`, and run with `ctest --test-dir <build-dir> --output-on-failure`. Until then, preprocessor and consumer closure remain `NOT_ESTABLISHED`.
+
+The seven named risk controls are required by the behavioral evidence validator. A control must identify the exact expected case and outcome, the matching immutable source blob/SHA-256 set, an executed negative test, a SHA-256 result, and reverified test-source references; missing, duplicate, unknown, malformed, mismatched-source, or non-executed controls block the evidence. The unit tests below use only synthetic records and never enter the CLI register or counters. The live report still marks all applicable obligations unresolved:
+
+| Risk/control | Source and fixture evidence | Current result |
+| --- | --- | --- |
+| Matrix physical backing range | `src/gba/cart/matrix.c`; fixture case `native_matrix_accepts_physical_range_past_end` | Source gap/case present; not executed; remains unresolved |
+| Matrix short read | `_remapMatrix` does not check VFile seek/read results; no short-read fixture case | Control absent and not executed |
+| ARM/Thumb prefetch invalidation | `src/arm/arm.c`, `src/gba/memory.c`; `native_remap_leaves_prefetch_stale_until_refetch` | Stale-prefetch observation present; not executed |
+| DMA/peripheral interaction | `src/gba/dma.c`, `src/gba/cart/matrix.c`, `src/gba/memory.c`; EEPROM DMA fixture exists | EEPROM path is separate from Matrix/DMA arbitration; combined case not executed |
+| Save-state backing identity | `src/gba/serialize.c`, `src/gba/cart/matrix.c`; CRC warning and changed external payload observations | Unsafe observations present; not executed |
+| Dependency/consumer closure | Pinned CMake membership and the lexical include component | Complete preprocessor/consumer closure not established |
+| Distribution/license clearance | Pinned source headers and `LICENSE` blob `14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e` identify MPL-2.0 | Distribution and compatibility clearance remain `NOT_ASSESSED` |
+
+Per-file dispositions remain `NEEDS_REVIEW` (six); none is `UPSTREAM_VERIFIED/PASSED`. Candidate rows carry the unresolved risk IDs and source-contract evidence; the pilot does not promote source inspection, test intentions, build metadata, or synthetic controls to a real receipt. The historical completion gate and legacy external-approval counts remain unchanged at `FAIL_INCOMPLETE`, `0/338` P0 and `0/14,834` total.
+
 ## Validation and counters
 
 Run the pilot unit fixtures with:
@@ -71,4 +93,4 @@ Run the pilot unit fixtures with:
 python3 -m unittest discover -s tests -p 'test_phase1_upstream_congruence_pilot_v1.py'
 ```
 
-The CLI currently reports `FAIL_INCOMPLETE`, `legacy_external_independent_approved=0`, `legacy_p0_external_independent_approved=0`, `behavioral_congruence_passed_count=0`, and six files remaining in this pilot. The pilot has no effect on the legacy `0/338` P0 or `0/14,834` external approval metrics. Any future prospective semantic total must union only separately validated dispositions by unique pinned identity; it must never add to or reinterpret the legacy external-review metric.
+The CLI reports `FAIL_INCOMPLETE`, `legacy_external_independent_approved=0`, `legacy_p0_external_independent_approved=0`, `behavioral_congruence_passed_count=0`, and six files remaining in this pilot. New synthetic negative-control tests validate only fail-closed evaluator behavior; they are not mGBA test results. The pilot has no effect on the legacy `0/338` P0 or `0/14,834` external approval metrics. Any future prospective semantic total must union only separately validated dispositions by unique pinned identity; it must never add to or reinterpret the legacy external-review metric.
