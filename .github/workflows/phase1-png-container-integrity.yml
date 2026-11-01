@@ -1,0 +1,22 @@
+name: Phase 1 PNG container integrity controls (no approvals)
+on:
+  push:
+    branches: ["phase1/binary-container-validation-20261027"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  png-container-negative-controls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax and binary-aware regression controls
+        run: |
+          python3 -m py_compile tools/phase1_bulk_triage.py tools/phase1_bulk_triage_integrity.py
+          python3 -m unittest discover -s tests -p 'test_phase1_bulk_triage.py' -v
+          python3 -m unittest discover -s tests -p 'test_phase1_png_container.py' -v
+      - name: Historical v1 and typed v2 2000-record integrity
+        run: |
+          python3 tools/phase1_bulk_triage_integrity.py
+          git diff --exit-code -- docs/phase1-machine-triage/integrity-000000-001999.json
