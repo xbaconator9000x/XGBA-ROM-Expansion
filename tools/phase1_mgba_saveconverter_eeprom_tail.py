@@ -18,6 +18,7 @@ MEMORY_HEADER_SHA256 = "fca671fc3bc5ab06641f6259ebf092688e1ba1ddd8eb80e4fba9a43c
 DOSSIER_BLOB = "3b982876c7d810a827af8c80c7e5d9231fdaa327"
 DOSSIER_SHA256 = "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
 DOSSIER_ROW_SHA256 = "dc4112a41e57a7496c02986e900cb3d089cc081ae36ee02f4df479d0fc890357"
+HARNESS_SHA256 = "90ef78f72ba584bb60e2edbd9e4e51ff0f68b279192fb8b9da7c00003b2f4e9b"
 FUNCTIONS = {
     "detect_from_size": (
         "void SaveConverter::detectFromSize(std::shared_ptr<VFileDevice> vf) {",
@@ -184,6 +185,8 @@ def verify_dossier(root):
 def parse_cases(output):
     require(output.count("PHASE1_EEPROM_DONE\n") == 1,
             "native Qt6 EEPROM harness did not finish")
+    require(output.count("PHASE1_EEPROM_CASE ") == 2,
+            "unexpected or malformed EEPROM case lines")
     cases = {}
     for match in CASE_RE.finditer(output):
         label = match.group(1)
@@ -209,6 +212,9 @@ def parse_cases(output):
             "c0c1c2c3c4c5c6c7c8c9cacbcccdcecf",
             "8-KiB EEPROM source sentinel changed")
     for case in cases.values():
+        require(case["converted_tail_preserved"] ==
+                (case["source_tail_hex"] == case["converted_tail_hex"]),
+                "converted-tail flag contradicts the emitted bytes")
         require(case["converted_tail_preserved"] is False,
                 "endian conversion unexpectedly preserved the sentinel RTC tail")
         require(case["roundtrip_tail_preserved"] is False,
@@ -245,6 +251,8 @@ def main():
     functions = source_functions(source)
     rejected = mutation_controls(source)
     harness = args.harness.read_text(encoding="utf-8")
+    require(hashlib.sha256(harness.encode()).hexdigest() == HARNESS_SHA256,
+            "EEPROM native test fixture SHA-256 changed")
     expanded = harness
     for name, marker in MARKERS.items():
         require(expanded.count(marker) == 1, "harness marker drift: " + marker)
