@@ -10,31 +10,54 @@ from pathlib import Path
 from phase1_firered_game_controller import make_schedule
 from phase1_firered_repeat_save import TRACE_NAMES, run, verify_game_written_slot, sha
 
-def counter3_ids(flash):
-    ids=[]
-    for physical in range(14,28):
-        sector=flash[physical*4096:(physical+1)*4096]
-        ident,chk,sig,ctr=struct.unpack_from("<HHII",sector,0xFF4)
-        if ident>=14 or sig!=0x08012025 or ctr!=3:
+def counter3_records(flash):
+    """Checksum-valid, uniquely identified counter-3 physical sectors."""
+    assert len(flash) == 131072
+    records = []
+    for physical in range(14, 28):
+        sector = flash[physical * 4096:(physical + 1) * 4096]
+        ident, chk, sig, ctr = struct.unpack_from("<HHII", sector, 0xFF4)
+        if ident >= 14 or sig != 0x08012025 or ctr != 3:
             continue
-        total=sum(struct.unpack_from("<992I",sector))&0xFFFFFFFF
-        if chk==(((total>>16)+total)&0xFFFF):
-            ids.append(ident)
-    assert len(ids)==len(set(ids)),("duplicate counter3 IDs",ids)
-    return ids
+        total = sum(struct.unpack_from("<992I", sector)) & 0xFFFFFFFF
+        if chk == (((total >> 16) + total) & 0xFFFF):
+            records.append((physical, ident))
+    ids = [ident for _, ident in records]
+    assert len(ids) == len(set(ids)), ("duplicate counter3 IDs", ids)
+    return records
+
+
+def counter3_ids(flash):
+    return [ident for _, ident in counter3_records(flash)]
+
 
 def assert_interrupted_snapshot(flash, original, event, threshold):
-    assert len(flash)==131072 and flash!=original
-    assert flash[:14*4096]==original[:14*4096], "Older counter2 slot modified"
-    verify_game_written_slot(flash,0,2)
-    ids=counter3_ids(flash)
-    assert threshold<=len(ids)<14
-    assert len(ids)==event["valid_counter3_sectors"], (
-        "Physical .sav disagrees with in-flight Flash",threshold,ids,event)
-    assert event["counter"]==3 and event["try_save_entries"]>=1
-    assert event["try_save_returns"]==0 and event["no_host_writes"]
-    assert event["no_graceful_close"]
+    """Fail-closed host .sav snapshot check; not hardware power-loss proof."""
+    assert isinstance(flash, (bytes, bytearray))
+    assert isinstance(original, (bytes, bytearray))
+    assert len(flash) == len(original) == 131072 and flash != original
+    assert type(event) is dict and type(threshold) is int and threshold in (1, 7, 13)
+    for field in ("counter", "valid_counter3_sectors",
+                  "try_save_entries", "try_save_returns"):
+        assert type(event.get(field)) is int, ("non-integer native evidence", field)
+    for field in ("no_host_writes", "no_graceful_close"):
+        assert event.get(field) is True, ("forged native boolean", field)
+    assert flash[:14 * 4096] == original[:14 * 4096], "Older counter2 slot modified"
+    verify_game_written_slot(flash, 0, 2)
+    records = counter3_records(flash)
+    ids = [ident for _, ident in records]
+    assert threshold <= len(ids) < 14
+    assert len(ids) == event["valid_counter3_sectors"], (
+        "Physical .sav disagrees with in-flight Flash", threshold, ids, event)
+    assert event["counter"] == 3 and event["try_save_entries"] >= 1
+    assert event["try_save_returns"] == 0
+    changed = [physical for physical in range(32)
+               if flash[physical * 4096:(physical + 1) * 4096]
+               != original[physical * 4096:(physical + 1) * 4096]]
+    expected = [physical for physical, _ in records]
+    assert changed == expected, ("unaccounted physical Flash changes", changed, expected)
     return ids
+
 
 def assert_snapshot_rejected(flash, original, event, threshold, label):
     try:
@@ -82,6 +105,18 @@ def main(a):
         altered_event=dict(event)
         altered_event["valid_counter3_sectors"]+=1
         assert_snapshot_rejected(interrupted,original,altered_event,threshold,"native sector count")
+        # Reject any extra changed physical sector, including unused tail space.
+        altered=bytearray(interrupted)
+        altered[28*4096+0x20]^=1
+        assert_snapshot_rejected(altered,original,event,threshold,"unaccounted tail sector")
+        active={physical for physical,_ in counter3_records(interrupted)}
+        unaccounted=next(physical for physical in range(14,28) if physical not in active)
+        altered=bytearray(interrupted)
+        altered[unaccounted*4096+0x20]^=1
+        assert_snapshot_rejected(altered,original,event,threshold,"unaccounted in-slot sector")
+        forged_event=dict(event)
+        forged_event["no_host_writes"]="true"
+        assert_snapshot_rejected(interrupted,original,forged_event,threshold,"forged truthy flag")
         cold=root/f"cut_counter3_{threshold}_coldboot.sav"
         shutil.copyfile(sav,cold)
         result=run(a,f"cut_counter3_{threshold}_coldboot",cold,"cold_boot",2400)
@@ -97,7 +132,8 @@ def main(a):
                 "recovered_counter":n["save_counter"],"recovered_status":n["save_status"],
                 "field_input_hits":n["field_get_player_input_hits"],
                 "physical_save_sha256":sha(sav),"host_flash_writes":0,
-                "tamper_controls_passed":["sector payload/checksum","native sector count"],
+                "tamper_controls_passed":["sector payload/checksum","native sector count",
+                    "unaccounted tail sector","unaccounted in-slot sector","forged truthy flag"],
                 "physical_power_cut_proven":False,"phase1_gate":"FAIL_INCOMPLETE",
                 "independent_approval":False}
         (root/f"cut_counter3_{threshold}.json").write_text(

@@ -13,6 +13,7 @@ on:
       - 'tools/phase1_firered_game_controller.py'
       - 'tools/phase1_firered_repeat_save.py'
       - 'tools/phase1_firered_interrupted_save.py'
+      - 'tests/test_phase1_firered_interrupted_save.py'
       - 'tools/phase1_firered_position_roundtrip.py'
       - 'tools/phase1_firered_no_flash_fault.py'
       - 'tools/phase1_firered_save_error_semantics.py'
@@ -36,6 +37,9 @@ jobs:
     timeout-minutes: 110
     steps:
       - uses: actions/checkout@v4
+      - name: Run synthetic-only interrupted-save integrity adversarial tests
+        run: |
+          python3 -m unittest discover -s tests -p 'test_phase1_firered_interrupted_save.py' -v
       - name: Install pinned FireRed and mGBA build prerequisites
         run: |
           sudo apt-get update -qq
