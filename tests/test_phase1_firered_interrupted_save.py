@@ -16,7 +16,8 @@ def baseline():
     for physical in range(28):
         counter=2 if physical<14 else 1
         struct.pack_into("<HHII",data,physical*SECTOR+0xFF4,
-                         physical%14,0,SIGNATURE,counter)
+                         (physical+1)%14 if physical<14 else physical%14,
+                         0,SIGNATURE,counter)
     return bytes(data)
 
 def partial(count):
@@ -29,6 +30,20 @@ def native(count):
     return dict(counter=3,valid_counter3_sectors=count,try_save_entries=1,
                 try_save_returns=0,no_host_writes=True,no_graceful_close=True)
 
+def rotated_partial(count, previous_start=2):
+    """Synthetic previous full slot and source-consistent next rotation."""
+    original=bytearray(baseline())
+    for physical in range(14):
+        struct.pack_into("<H",original,physical*SECTOR+0xFF4,
+                         (physical-previous_start)%14)
+    changed=bytearray(original)
+    next_start=(previous_start+1)%14
+    for ident in range(count):
+        physical=14+((next_start+ident)%14)
+        struct.pack_into("<HHII",changed,physical*SECTOR+0xFF4,
+                         ident,0,SIGNATURE,3)
+    return bytes(original),bytes(changed)
+
 class InterruptedSnapshotIntegrityTests(unittest.TestCase):
     def reject(self,data,event,threshold):
         with self.assertRaises(AssertionError):
@@ -40,6 +55,30 @@ class InterruptedSnapshotIntegrityTests(unittest.TestCase):
                 self.assertEqual(assert_interrupted_snapshot(
                     partial(count),baseline(),native(count),count),list(range(count)))
                 self.assertEqual(counter3_ids(partial(count)),list(range(count)))
+
+    def test_source_derived_rotated_native_layout(self):
+        # Native counter-2 save has ID0 at physical slot-0 index 2;
+        # third save writes ID0 at slot-1 index 3 and wraps at 14.
+        for count in (1,7,13):
+            with self.subTest(count=count):
+                original,changed=rotated_partial(count,previous_start=2)
+                ids=assert_interrupted_snapshot(changed,original,native(count),count)
+                self.assertEqual(sorted(ids),list(range(count)))
+                if count==13:
+                    self.assertEqual(ids,[11,12]+list(range(11)))
+
+    def test_swapped_checksum_valid_sectors_rejected(self):
+        data=bytearray(partial(7))
+        first=bytes(data[14*SECTOR:15*SECTOR])
+        second=bytes(data[15*SECTOR:16*SECTOR])
+        data[14*SECTOR:15*SECTOR]=second
+        data[15*SECTOR:16*SECTOR]=first
+        self.reject(data,native(7),7)
+
+    def test_nonprefix_checksum_valid_sector_rejected(self):
+        data=bytearray(partial(7))
+        struct.pack_into("<H",data,15*SECTOR+0xFF4,7)
+        self.reject(data,native(7),7)
 
     def test_unaccounted_tail_write_rejected(self):
         for count in (1,7,13):

@@ -49,6 +49,23 @@ def assert_interrupted_snapshot(flash, original, event, threshold):
     assert threshold <= len(ids) < 14
     assert len(ids) == event["valid_counter3_sectors"], (
         "Physical .sav disagrees with in-flight Flash", threshold, ids, event)
+    # Original pinned FireRed src/save.c: CopySaveSlotData identifies
+    # gLastWrittenSector by logical ID 0 (lines 449-452); the next full
+    # save increments it (145-149) and maps each logical ID to physical
+    # (lastWritten + id) % 14 (174-176). Derive from the complete
+    # previous game-written slot, never from the untrusted new records.
+    previous_zero = [physical for physical in range(14)
+                     if struct.unpack_from("<H", original,
+                                           physical * 4096 + 0xFF4)[0] == 0]
+    assert len(previous_zero) == 1, ("ambiguous prior sector zero", previous_zero)
+    next_start = (previous_zero[0] + 1) % 14
+    assert set(ids) == set(range(len(ids))), (
+        "counter3 logical IDs are not a completed prefix", ids)
+    for physical, ident in records:
+        expected_physical = 14 + ((next_start + ident) % 14)
+        assert physical == expected_physical, (
+            "counter3 sector violates pinned FireRed rotation",
+            physical, ident, expected_physical)
     assert event["counter"] == 3 and event["try_save_entries"] >= 1
     assert event["try_save_returns"] == 0
     changed = [physical for physical in range(32)

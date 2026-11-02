@@ -255,3 +255,30 @@ New pending diagnostic observes compiled ELF `gObjectEvents` and `CameraMove` wh
 ## Full physical-sector snapshot scope controls (2026-11-03; exact-head native CI pending)
 
 The interrupted-save checker now rejects **any changed 4-KiB sector** in the complete 128-KiB .sav unless it is a uniquely identified, checksum-valid counter-3 sector in physical slot 1. It rejects stray changes in unused tail sectors and in other slot-1 sectors, checks original counter-1/counter-2 slots, and requires native evidence flags to be genuine booleans and counts to be integers (not truthy strings or booleans). Three additional in-run tamper controls and 15 synthetic-only unittest methods are wired into the **existing** workflow. These do NOT establish native execution, arbitrary mid-command interruption, physical Flash power-loss durability, or semantic approval. If a real interrupted write touches additional incomplete sectors, the stricter check must report that gap rather than silently treating it as a completed write. New exact-head CI is pending; older green runs do not certify this change. Gate FAIL_INCOMPLETE; independent approvals remain zero.
+
+## Source-derived physical rotation regression (2026-11-03; pending new-head CI)
+
+The original pinned FireRed `src/save.c` (blob
+`36b960f375c92711aa49b99bdfe9c6b3a99d6b1c`) derives
+`gLastWrittenSector` from the physical position of logical sector ID 0
+during `CopySaveSlotData` (lines 449-452), increments it on the next
+full save (145-149), and writes each logical ID at
+`(gLastWrittenSector + id) % 14` within the counter-parity slot
+(174-176). This is a **source-level invariant**, not an assertion of
+hardware power-loss durability.
+
+The checker now derives the next physical rotation from the complete,
+checksum-valid previous counter-2 slot. It requires the partial counter-3
+generation to contain exactly logical IDs `0..N-1` at the source-defined
+physical positions, not merely any `N` valid unique IDs. Synthetic
+negative controls swap two fully checksum-valid sectors and substitute a
+non-prefix valid ID, both previously indistinguishable by checksum/count
+alone. A rotated synthetic control matches the previously observed
+counter-2 ID0 at physical index 2 and the third-save wraparound at 13
+sectors. This new verifier/test change is **not certified** until the
+exact new branch-head Actions run executes successfully; previous native
+results remain valid only at their original immutable commit.
+
+No upstream modification, new whole-file semantic disposition, physical
+Flash durability claim, external approval or Phase 2 work is introduced.
+The authoritative main gate remains `FAIL_INCOMPLETE`.
