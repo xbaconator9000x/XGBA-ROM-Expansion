@@ -14,6 +14,8 @@ on:
       - 'tests/test_phase1_copilot_receipts_v6_adapter.py'
       - 'tools/phase1_copilot_receipts_v6_historical_replay.py'
       - 'tests/test_phase1_copilot_receipts_v6_historical_replay.py'
+      - 'tools/phase1_copilot_receipts_v6_stale_head_negative.py'
+      - 'tests/test_phase1_copilot_receipts_v6_stale_head_negative.py'
       - 'tools/phase1_copilot_receipts_v7_adapter.py'
       - 'tests/test_phase1_copilot_receipts_v7_adapter.py'
       - 'docs/PHASE1_COPILOT_REVIEW_RECEIPTS_V1_PROPOSAL.md'
@@ -32,6 +34,8 @@ on:
       - 'tests/test_phase1_copilot_receipts_v6_adapter.py'
       - 'tools/phase1_copilot_receipts_v6_historical_replay.py'
       - 'tests/test_phase1_copilot_receipts_v6_historical_replay.py'
+      - 'tools/phase1_copilot_receipts_v6_stale_head_negative.py'
+      - 'tests/test_phase1_copilot_receipts_v6_stale_head_negative.py'
       - 'tools/phase1_copilot_receipts_v7_adapter.py'
       - 'tests/test_phase1_copilot_receipts_v7_adapter.py'
       - 'docs/PHASE1_COPILOT_REVIEW_RECEIPTS_V1_PROPOSAL.md'
@@ -231,11 +235,12 @@ jobs:
           test "$(git -C .phase1-live/pr8 rev-parse HEAD)" = "4c7c09b6257d2e88a2e19bab524e9d7174d3023e"
           test "$(git -C .phase1-live/upstreams/mgba rev-parse HEAD)" = "fd9dc5c2cbf234365068855851107e762fc6211b"
           python3 -m py_compile tools/phase1_copilot_receipts_v6_adapter.py
-      - name: Execute real seven-receipt v6 validator (fail closed)
+      - name: Verify v6 current-head rejection remains fail-closed (seven exact negative controls)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python3 tools/phase1_copilot_receipts_v6_adapter.py \
+          python3 -m unittest discover -s tests -p 'test_phase1_copilot_receipts_v6_stale_head_negative.py' -v
+          python3 tools/phase1_copilot_receipts_v6_stale_head_negative.py \
             --pr8-root "$GITHUB_WORKSPACE/.phase1-live/pr8" \
             --source-root "$GITHUB_WORKSPACE/.phase1-live/upstreams"
   v7-live-pinned-source-and-github-evidence:
