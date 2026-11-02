@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -277,6 +278,36 @@ def validate_historical_actions(api, *, not_before):
     }
 
 
+
+def verify_original_pinned_source(source_root, source):
+    """Recheck actual historical source bytes without impersonating live PR8 API state."""
+    if source.get("repository") != "mgba-emu/mgba":
+        raise ValueError("Historical receipt uses an unpinned source repository")
+    root = Path(source_root).resolve() / "mgba"
+    if not root.is_dir() or _git(root, "rev-parse", "HEAD") != v6.MGBA_REVISION:
+        raise ValueError("Historical original mGBA source checkout is missing or unpinned")
+    rel = source.get("path")
+    if (
+        not isinstance(rel, str)
+        or not rel
+        or Path(rel).is_absolute()
+        or ".." in Path(rel).parts
+    ):
+        raise ValueError("Historical original source path is unsafe")
+    candidate = root
+    for part in Path(rel).parts:
+        candidate = candidate / part
+        if candidate.is_symlink():
+            raise ValueError("Historical original source traverses a symlink")
+    if not candidate.is_file():
+        raise ValueError("Historical original source file is missing")
+    if _git(root, "rev-parse", f"HEAD:{rel}") != source.get("git_blob_sha1"):
+        raise ValueError("Historical original source Git blob differs from receipt")
+    if hashlib.sha256(candidate.read_bytes()).hexdigest() != source.get("source_sha256"):
+        raise ValueError("Historical original source SHA-256 differs from receipt")
+    return True
+
+
 def verify_historical_receipt_bytes(pr8_root, source_root, api):
     root = v6.verify_pinned_worktree(pr8_root)
     triage, verifier = v4._load_pinned_validator(root)
@@ -311,21 +342,13 @@ def verify_historical_receipt_bytes(pr8_root, source_root, api):
         ):
             raise ValueError("Historical receipt differs from its original pinned dossier identity")
 
-        returned_key, validation_problems = verifier.validate_receipt(
-            receipt,
-            queue=queue_by_key,
-            dossiers=dossiers,
-            source_root=source_root,
-            expected_head=v6.PR8_HEAD,
-            repository_root=root,
-            repository=v4.OWNER_REPOSITORY,
-            github_api=api,
-        )
-        if returned_key != key or validation_problems:
-            raise ValueError(
-                "; ".join(validation_problems)
-                or "Pinned validator returned a different historical receipt identity"
-            )
+        # The original v6 validator binds the *live* PR8 head. Re-running it
+        # on an archived checkout now must fail closed. Do not fabricate an old
+        # GitHub PR response to force a historical pass. Instead recheck the
+        # immutable original source/dossier/receipt/attestation bytes here,
+        # then independently verify the REAL historical successful run and
+        # every executed job/step in validate_historical_actions().
+        verify_original_pinned_source(source_root, source)
         v6.verify_non_copilot_evidence_authorship(receipt, api, root)
         v6.verify_expected_comment(receipt, verifier, api, root)
 

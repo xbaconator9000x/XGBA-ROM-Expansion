@@ -1,7 +1,10 @@
 import copy
 import contextlib
 import io
+import hashlib
 import sys
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
 from pathlib import Path
 import unittest
 from urllib.parse import urlparse
@@ -158,6 +161,43 @@ class FixtureAPI:
             if f"/actions/runs/{run_id}/attempts/" in path and path.endswith("/jobs"):
                 return copy.deepcopy(jobs)
         raise AssertionError(f"Unexpected paginated URL: {url}")
+
+
+class OriginalSourceReplayTests(unittest.TestCase):
+    def test_original_source_bytes_and_identity(self):
+        with TemporaryDirectory() as td:
+            root = Path(td) / "mgba"
+            rel = "include/mgba/internal/arm/isa-thumb.h"
+            target = root / rel
+            target.parent.mkdir(parents=True)
+            data = b"immutable historical source fixture"
+            target.write_bytes(data)
+            source = {
+                "repository": "mgba-emu/mgba",
+                "path": rel,
+                "git_blob_sha1": "a" * 40,
+                "source_sha256": hashlib.sha256(data).hexdigest(),
+            }
+            def git_ok(_root, *args):
+                return v6.MGBA_REVISION if args == ("rev-parse", "HEAD") else "a" * 40
+            with patch.object(replay, "_git", side_effect=git_ok):
+                self.assertTrue(replay.verify_original_pinned_source(td, source))
+                target.write_bytes(b"changed")
+                with self.assertRaisesRegex(ValueError, "SHA-256"):
+                    replay.verify_original_pinned_source(td, source)
+                target.write_bytes(data)
+            with patch.object(replay, "_git", return_value="0" * 40):
+                with self.assertRaisesRegex(ValueError, "unpinned"):
+                    replay.verify_original_pinned_source(td, source)
+            def bad_blob(_root, *args):
+                return v6.MGBA_REVISION if args == ("rev-parse", "HEAD") else "0" * 40
+            with patch.object(replay, "_git", side_effect=bad_blob):
+                with self.assertRaisesRegex(ValueError, "Git blob"):
+                    replay.verify_original_pinned_source(td, source)
+            source["path"] = "../escape"
+            with patch.object(replay, "_git", side_effect=git_ok):
+                with self.assertRaisesRegex(ValueError, "unsafe"):
+                    replay.verify_original_pinned_source(td, source)
 
 
 class V6HistoricalReplayTests(unittest.TestCase):
