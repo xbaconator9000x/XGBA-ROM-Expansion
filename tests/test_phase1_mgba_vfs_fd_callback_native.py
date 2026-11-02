@@ -77,6 +77,62 @@ class TestGbaCallbackEvidence(unittest.TestCase):
         with self.assertRaises(ValueError):
             runner.parse_output(GOOD.removesuffix("PHASE1_GBA_CALLBACK_DONE\n"))
 
+    # Native evidence must have one canonical decimal representation per value.
+    # The original parser accepted zero-padded and Unicode decimal digits.
+    def test_noncanonical_leading_zero_failed_sync(self):
+        self.assert_mutation_rejected("failure_async_ms=1", "failure_async_ms=01")
+
+    def test_noncanonical_leading_zero_failed_rtc(self):
+        self.assert_mutation_rejected("failure_rtc=0", "failure_rtc=00")
+
+    def test_noncanonical_negative_zero_dirty(self):
+        self.assert_mutation_rejected("failure_dirty=0", "failure_dirty=-0")
+
+    def test_noncanonical_leading_zero_failed_event(self):
+        self.assert_mutation_rejected("failure_script_events=1", "failure_script_events=001")
+
+    def test_noncanonical_leading_zero_retry(self):
+        self.assert_mutation_rejected("retry_async_ms=0", "retry_async_ms=00")
+
+    def test_noncanonical_leading_zero_retry_event(self):
+        self.assert_mutation_rejected("retry_script_events=1", "retry_script_events=01")
+
+    def test_noncanonical_leading_zero_retry_rtc(self):
+        self.assert_mutation_rejected("retry_rtc=0", "retry_rtc=00")
+
+    def test_noncanonical_leading_zero_success_sync(self):
+        self.assert_mutation_rejected("new_write_success_async_ms=2",
+                                      "new_write_success_async_ms=02")
+
+    def test_noncanonical_leading_zero_success_rtc(self):
+        self.assert_mutation_rejected("success_rtc=1", "success_rtc=01")
+
+    def test_noncanonical_leading_zero_success_event(self):
+        self.assert_mutation_rejected("success_script_events=2",
+                                      "success_script_events=02")
+
+    def test_noncanonical_unicode_decimal_digit(self):
+        self.assert_mutation_rejected("failure_async_ms=1", "failure_async_ms=\u0661")
+
+    def test_missing_source_function_rejected(self):
+        with self.assertRaises(ValueError):
+            runner.extract_function("void other(void) {}", "void target(void)")
+
+    def test_ambiguous_source_function_rejected(self):
+        with self.assertRaises(ValueError):
+            runner.extract_function("void target(void) {}\nvoid target(void) {}",
+                                    "void target(void)")
+
+    def test_unbalanced_source_function_rejected(self):
+        with self.assertRaises(ValueError):
+            runner.extract_function("void target(void) { if (1) { return; }",
+                                    "void target(void)")
+
+    def test_nested_source_function_extraction(self):
+        source = "void target(void) { if (1) { return; } }\nint after;"
+        self.assertEqual(runner.extract_function(source, "void target(void)"),
+                         "void target(void) { if (1) { return; } }")
+
     def test_fixture_hash(self):
         fixture = (ROOT / "tests/phase1_mgba_vfs_fd_callback_native.c").read_bytes()
         self.assertEqual(hashlib.sha256(fixture).hexdigest(),

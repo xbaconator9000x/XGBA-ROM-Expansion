@@ -148,3 +148,7 @@ CI success or failure; no job log or step evidence exists for this head. Local
 native execution and the 14 parser tests passed, but do not substitute for
 Actions execution. CodeQL reported zero alerts; secret scanning found no
 secrets in the changed files.
+
+## 2026-11-03 — canonical native-evidence parser and source-extractor negatives
+
+The bounded callback witness parser previously accepted alternative decimal encodings such as `failure_async_ms=01`, `failure_dirty=-0`, and Unicode decimal digits because its regular expression used `\\d+` and converted captures with `int()`. These values are numerically equivalent to the expected tuple but undermine a unique, auditable native evidence record. The existing parser now requires canonical ASCII decimal fields without leading zeros or negative zero. Fifteen new fail-closed unit tests cover all ten numeric fields, Unicode digits, and missing/duplicate/unbalanced/nested source extraction. The original pinned mGBA sources, compiled fixture and expected native observations remain unchanged. This change hardens **evidence transport only**; it is not a new emulator run, semantic approval, or physical persistence finding. The new exact-head Actions result must be checked separately; historical run #41485392440 predates this change.

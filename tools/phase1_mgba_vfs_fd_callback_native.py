@@ -122,10 +122,10 @@ FRONTEND_NO_CALLBACK = (
     "src/platform/libretro/libretro.c",
 )
 CASE_PATTERN = re.compile(
-    r"^PHASE1_GBA_CALLBACK_CASE failure_async_ms=(\d+) failure_rtc=(\d+) "
-    r"failure_dirty=(-?\d+) failure_script_events=(\d+) retry_async_ms=(\d+) "
-    r"retry_script_events=(\d+) retry_rtc=(\d+) new_write_success_async_ms=(\d+) "
-    r"success_rtc=(\d+) success_script_events=(\d+)$"
+    r"^PHASE1_GBA_CALLBACK_CASE failure_async_ms=((?:0|[1-9][0-9]*)) failure_rtc=((?:0|[1-9][0-9]*)) "
+    r"failure_dirty=((?:0|-?[1-9][0-9]*)) failure_script_events=((?:0|[1-9][0-9]*)) retry_async_ms=((?:0|[1-9][0-9]*)) "
+    r"retry_script_events=((?:0|[1-9][0-9]*)) retry_rtc=((?:0|[1-9][0-9]*)) new_write_success_async_ms=((?:0|[1-9][0-9]*)) "
+    r"success_rtc=((?:0|[1-9][0-9]*)) success_script_events=((?:0|[1-9][0-9]*))$"
 )
 
 
