@@ -120,4 +120,12 @@ result is a reproducible failure observation, not an instruction to patch
 upstream here. No independent review receipt is created and no approval or
 gate count changes.
 
-Exact-head GitHub Actions for this new batch: **not yet observed**.
+## Exact-head workflow status
+
+The workflow was triggered for commit
+`01eb42af254e10254760937b7e45f14491a72e3e` on the existing PR13 branch.
+GitHub Actions run [#41424775602](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41424775602)
+reported `action_required` with **zero jobs**. This is a workflow permission
+blocker, not an executed pass or failure; no Actions step evidence exists for
+this commit. The native tests and compile attempt listed above were executed
+locally only. No permission bypass or retry was attempted.
