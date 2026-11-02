@@ -15,6 +15,8 @@ on:
       - 'tools/phase1_mgba_saveconverter_qfile.py'
       - 'tests/phase1_mgba_saveconverter_qfile.cpp'
       - 'tests/test_phase1_mgba_saveconverter_qfile.py'
+      - 'tools/phase1_mgba_vfs_fd_native.py'
+      - 'tests/phase1_mgba_vfs_fd_native.c'
       - 'docs/phase1-review-readiness/mgba-savedata-boundary-witness-20261027.md'
       - 'docs/phase1-review-readiness/mgba-saveconverter-core-lifetime-asan-20261101.md'
       - 'docs/phase1-review-readiness/mgba-saveconverter-eeprom-tail-gba-off-20261102.md'
@@ -29,7 +31,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Syntax checks
-        run: python3 -m py_compile tools/phase1_mgba_savedata_boundary_witness.py tools/phase1_mgba_savedata_handoff_verify.py tools/phase1_mgba_saveconverter_eeprom_tail.py tools/phase1_mgba_saveconverter_gba_off.py tools/phase1_mgba_saveconverter_qfile.py
+        run: python3 -m py_compile tools/phase1_mgba_savedata_boundary_witness.py tools/phase1_mgba_savedata_handoff_verify.py tools/phase1_mgba_saveconverter_eeprom_tail.py tools/phase1_mgba_saveconverter_gba_off.py tools/phase1_mgba_saveconverter_qfile.py tools/phase1_mgba_vfs_fd_native.py
       - name: Fail-closed EEPROM parser and fixture controls
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_saveconverter_eeprom_tail.py" -v
       - name: Fail-closed QFile observation parser and 17 adversarial controls
@@ -38,6 +40,11 @@ jobs:
         run: |
           git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git /tmp/xgba-mgba-boundary
           git -C /tmp/xgba-mgba-boundary checkout --quiet fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Execute pinned Linux fd VFile and savedata cleanup
+        run: |
+          python3 tools/phase1_mgba_vfs_fd_native.py \
+            --checkout /tmp/xgba-mgba-boundary \
+            --harness tests/phase1_mgba_vfs_fd_native.c
       - name: Execute pinned C function bodies against bounded mock VFile
         run: python3 tools/phase1_mgba_savedata_boundary_witness.py --checkout /tmp/xgba-mgba-boundary
       - name: Execute pinned getStatePlatform body under ASan and UBSan
