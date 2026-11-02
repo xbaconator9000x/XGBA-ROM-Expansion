@@ -114,6 +114,49 @@ each target environment? Does the mapped save require explicit durable
 power-loss ordering of sectors on real hardware? Do not generalize
 the Linux `MAP_SHARED` observation to Android, Windows or GBA Flash.
 
+## Exact-head native interrupted-save checkpoint
+
+The existing input-driven interruption path passed on exact head
+`42c7e2c9590ed2659f1b88415e65d067694b2253`: [Actions #40689624769](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40689624769),
+job `122820803271`, step **“Observe input-driven real-ROM Flash changes
+without host writes.”** The pinned FireRed/agbcc/mGBA build completed the
+normal game-save control (`TrySavingData` entry/return 1/1, return 1,
+counter 1), then a second game save (entry/return 1/1, return 1, counter
+2, 862 Flash bytes changed). A separate emulator process recovered
+counter 2 and playable field input without saving or changing the `.sav`.
+The post-save checksum-corruption control rejected slot 0 and recovered
+counter 1.
+
+For the third controller-driven save, the native probe exited with `_exit`
+before `TrySavingData` returned after observing 1, 7, and 13 complete,
+checksum-valid counter-3 sectors in the mapped Flash image. All three
+resulting `.sav` files retained the complete counter-2 slot 0 and their
+counter-3 sector counts matched the native observations. Each separate
+cold boot selected the older counter-2 save (`save_status=255`), entered
+field input, made no save call, and made no Flash or `.sav` changes. The
+recorded interrupted `.sav` SHA-256 values were respectively
+`b72d47fbdf7906149026c2ca7893660c2fcb78946eb3df7cc4d5652a9fbf500e`,
+`0706c409e4443abb0da998c5a948281e58e1d4214b77d7d1292173f8e13e9b11`,
+and `2250e14b050b5057adb253bd03e43b54fb184555ed5997ee30493f8a0132217e`.
+The uploaded artifact is text-only; it does not contain ROMs or raw saves.
+
+This is actual game-issued Flash programming and abrupt emulator-process
+termination under the pinned Linux build, not a synthetic sector fixture.
+It establishes mapped `.sav` visibility and native loader fallback, not
+durable filesystem commit, cartridge power loss, or human new-game
+progression. The workflow pins FireRed, agbcc, and mGBA source revisions
+and checks relevant save-source blobs, but installs GNU ARM/binutils and
+other build prerequisites from unversioned Ubuntu package names; exact
+toolchain package versions are not part of this source-closure claim.
+
+The current follow-up adds two fail-closed harness tamper controls per
+interruption threshold: corrupting a persisted sector payload/checksum and
+altering the observed native sector count must both be rejected. These
+new controls require their own exact-head workflow run. Remaining limits
+include host page-cache visibility versus durable media, no physical
+power-cut experiment, no immutable GNU toolchain package pin, no
+independent approval, and Phase 1 `FAIL_INCOMPLETE`.
+
 ## Native player-position roundtrip investigation (pending exact-head CI)
 
 The new `tools/phase1_firered_position_roundtrip.py` checks a state change

@@ -23,6 +23,26 @@ def counter3_ids(flash):
     assert len(ids)==len(set(ids)),("duplicate counter3 IDs",ids)
     return ids
 
+def assert_interrupted_snapshot(flash, original, event, threshold):
+    assert len(flash)==131072 and flash!=original
+    assert flash[:14*4096]==original[:14*4096], "Older counter2 slot modified"
+    verify_game_written_slot(flash,0,2)
+    ids=counter3_ids(flash)
+    assert threshold<=len(ids)<14
+    assert len(ids)==event["valid_counter3_sectors"], (
+        "Physical .sav disagrees with in-flight Flash",threshold,ids,event)
+    assert event["counter"]==3 and event["try_save_entries"]>=1
+    assert event["try_save_returns"]==0 and event["no_host_writes"]
+    assert event["no_graceful_close"]
+    return ids
+
+def assert_snapshot_rejected(flash, original, event, threshold, label):
+    try:
+        assert_interrupted_snapshot(flash,original,event,threshold)
+    except AssertionError:
+        return
+    raise AssertionError("Tampered interrupted-save evidence was accepted: "+label)
+
 def main(a):
     root=Path(a.output)
     previous=root/"second_game_save.sav"
@@ -54,16 +74,14 @@ def main(a):
         assert len(lines)==1,(threshold,proc.stdout[-500:])
         event=lines[0]
         assert event["cut_threshold"]==threshold
-        assert threshold<=event["valid_counter3_sectors"]<14
-        assert event["try_save_entries"]>=1 and event["try_save_returns"]==0
-        assert event["counter"]==3 and event["no_host_writes"] and event["no_graceful_close"]
         interrupted=sav.read_bytes()
-        assert len(interrupted)==131072 and interrupted!=original
-        assert interrupted[:14*4096]==original[:14*4096], "Older counter2 slot modified"
-        verify_game_written_slot(interrupted,0,2)
-        ids=counter3_ids(interrupted)
-        assert len(ids)==event["valid_counter3_sectors"], (
-            "Physical .sav disagrees with in-flight Flash",threshold,ids,event)
+        ids=assert_interrupted_snapshot(interrupted,original,event,threshold)
+        damaged=bytearray(interrupted)
+        damaged[14*4096+0x20]^=1
+        assert_snapshot_rejected(damaged,original,event,threshold,"sector payload/checksum")
+        altered_event=dict(event)
+        altered_event["valid_counter3_sectors"]+=1
+        assert_snapshot_rejected(interrupted,original,altered_event,threshold,"native sector count")
         cold=root/f"cut_counter3_{threshold}_coldboot.sav"
         shutil.copyfile(sav,cold)
         result=run(a,f"cut_counter3_{threshold}_coldboot",cold,"cold_boot",2400)
@@ -79,6 +97,7 @@ def main(a):
                 "recovered_counter":n["save_counter"],"recovered_status":n["save_status"],
                 "field_input_hits":n["field_get_player_input_hits"],
                 "physical_save_sha256":sha(sav),"host_flash_writes":0,
+                "tamper_controls_passed":["sector payload/checksum","native sector count"],
                 "physical_power_cut_proven":False,"phase1_gate":"FAIL_INCOMPLETE",
                 "independent_approval":False}
         (root/f"cut_counter3_{threshold}.json").write_text(
