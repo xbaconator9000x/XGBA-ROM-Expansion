@@ -10,8 +10,11 @@ on:
       - 'tools/phase1_mapping_gate.py'
       - 'tools/phase1_copilot_receipts.py'
       - 'tools/phase1_mgba_arm_decode_emit_review_verify.py'
+      - 'tools/phase1_mgba_gba_memory_alias_audit.py'
       - 'tests/test_phase1_mgba_arm_decode_emit_review_verify.py'
+      - 'tests/test_phase1_mgba_gba_memory_alias_audit.py'
       - 'tests/phase1_mgba_arm_alignment_probe.c'
+      - 'tests/phase1_mgba_memory_object_probe.c'
       - 'tests/test_phase1_copilot_receipts.py'
       - 'tests/test_phase1_mapping_gate.py'
       - 'docs/phase1-review-readiness/copilot-semantic-review-receipts.jsonl'
@@ -69,16 +72,32 @@ jobs:
         run: test "$(git rev-parse --is-shallow-repository)" = "false"
       - name: Verify Python syntax
         run: |
-          python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py tools/phase1_copilot_receipts.py tools/phase1_mapping_gate.py tools/phase1_mgba_arm_decode_emit_review_verify.py
+          python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py tools/phase1_copilot_receipts.py tools/phase1_mapping_gate.py tools/phase1_mgba_arm_decode_emit_review_verify.py tools/phase1_mgba_gba_memory_alias_audit.py
           python3 tools/semantic_review_dossiers.py --self-test
           python3 tools/phase1_mapping_gate.py --self-test
           python3 -m unittest discover -s tests -p test_phase1_copilot_receipts.py -v
           python3 -m unittest discover -s tests -p test_phase1_mapping_gate.py -v
           python3 -m unittest discover -s tests -p test_phase1_mgba_arm_decode_emit_review_verify.py -v
+          python3 -m unittest discover -s tests -p test_phase1_mgba_gba_memory_alias_audit.py -v
       - name: Clone pinned sources and scan
         run: python3 tools/pinned_source_census.py --checkout --root upstream --out audit-output
       - name: Verify pinned mGBA ARM decode/emit review evidence
         run: python3 tools/phase1_mgba_arm_decode_emit_review_verify.py --source-root upstream/mgba
+      - name: Compile pinned mGBA GBA core with GCC and Clang strict aliasing
+        run: |
+          for cc in gcc clang; do
+            cmake -S upstream/mgba -B "/tmp/xgba-phase1-mgba-${cc}-strict" \
+              -DCMAKE_C_COMPILER="$cc" -DLIBMGBA_ONLY=ON -DBINARY_NAME=mgba \
+              -DM_CORE_GBA=ON -DM_CORE_GB=OFF -DENABLE_SCRIPTING=OFF \
+              -DBUILD_SHARED=OFF -DBUILD_STATIC=ON -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_C_FLAGS="-fstrict-aliasing" -DCMAKE_C_FLAGS_RELEASE="-O2 -DNDEBUG"
+            cmake --build "/tmp/xgba-phase1-mgba-${cc}-strict" --target mgba --parallel 2
+          done
+      - name: Verify pinned GBA memory callers and allocator alignment
+        run: |
+          python3 tools/phase1_mgba_gba_memory_alias_audit.py \
+            --source-root upstream/mgba \
+            --generated-include /tmp/xgba-phase1-mgba-gcc-strict/include
       - name: Verify original pinned ARM endian macro alignment (host UBSan only)
         shell: bash
         run: |
