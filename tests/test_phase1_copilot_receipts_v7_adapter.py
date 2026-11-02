@@ -283,6 +283,11 @@ class V7AdapterTests(unittest.TestCase):
             FixtureAPI(),
             FixtureAPI(runs=[runs[0]], jobs=api.jobs),
             FixtureAPI(runs=[runs[1]], jobs=api.jobs),
+            # A GitHub run can report success in metadata while its job census is empty.
+            # Zero-job or missing-step runs must never certify an independent review.
+            FixtureAPI(runs=[runs[0], runs[1]], jobs={11: [], 12: [fixture_job(102)]}),
+            FixtureAPI(runs=[runs[0], runs[1]], jobs={11: [fixture_job(101)], 12: []}),
+            FixtureAPI(runs=[runs[0], runs[1]], jobs={11: [dict(fixture_job(101), steps=[])], 12: [fixture_job(102)]}),
             FixtureAPI(
                 runs=[
                     fixture_run("pull_request", 11, status="action_required", conclusion="action_required"),
