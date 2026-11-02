@@ -31,6 +31,11 @@ QUEUE_SHA256 = v6.QUEUE_SHA256
 QUEUE_PATH = v6.QUEUE_PATH
 
 EIGHTH_KEY = ("mgba-emu/mgba", "include/mgba/internal/arm/emitter-thumb.h")
+EIGHTH_LICENSING_RATIONALE = (
+    "The pinned target and included emitter-inlines.h retain MPL-2.0 notices matching "
+    "the pinned root LICENSE. This is file-level notice mapping only; combined-work "
+    "and distribution clearance is not claimed."
+)
 EIGHTH_RECEIPT = {
     "blob": "7d27524b2e723696df642a72135bac024bbd8071",
     "source_sha256": "b7a0167782c8fd63665345ed4520bd00a530e792be712e111bd9b056900b7353",
@@ -128,6 +133,23 @@ def verify_pinned_worktree(root):
     return root
 
 
+def validate_semantic_scope(receipt):
+    source = receipt.get("source") if isinstance(receipt, dict) else None
+    key = (source.get("repository"), source.get("path")) if isinstance(source, dict) else None
+    expected = EXPECTED_RECEIPTS.get(key)
+    review = receipt.get("review") if isinstance(receipt, dict) else None
+    licensing = review.get("licensing") if isinstance(review, dict) else None
+    if (
+        key == EIGHTH_KEY
+        and isinstance(expected, dict)
+        and isinstance(licensing, dict)
+        and licensing.get("rationale") == EIGHTH_LICENSING_RATIONALE
+        and v4.receipt_digest(receipt) == expected.get("receipt_sha256")
+    ):
+        return v5.validate_semantic_scope(receipt, allow_v7_notice_mapping=True)
+    return v6.validate_semantic_scope(receipt)
+
+
 def validate_receipt_inventory(receipts):
     if not isinstance(receipts, list) or len(receipts) != len(EXPECTED_ORDER):
         raise ValueError("The v7 register must contain exactly eight pinned receipt records")
@@ -158,7 +180,7 @@ def validate_receipt_inventory(receipts):
             or target.get("evidence_commit") != expected["evidence_commit"]
         ):
             raise ValueError(f"Receipt {index + 1} is reordered, unknown, duplicated, modified, or mismatched")
-        v6.validate_semantic_scope(receipt)
+        validate_semantic_scope(receipt)
     return True
 
 

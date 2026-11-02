@@ -12,6 +12,8 @@ on:
       - 'tests/test_phase1_copilot_receipts_v5_historical_replay.py'
       - 'tools/phase1_copilot_receipts_v6_adapter.py'
       - 'tests/test_phase1_copilot_receipts_v6_adapter.py'
+      - 'tools/phase1_copilot_receipts_v6_historical_replay.py'
+      - 'tests/test_phase1_copilot_receipts_v6_historical_replay.py'
       - 'tools/phase1_copilot_receipts_v7_adapter.py'
       - 'tests/test_phase1_copilot_receipts_v7_adapter.py'
       - 'docs/PHASE1_COPILOT_REVIEW_RECEIPTS_V1_PROPOSAL.md'
@@ -28,6 +30,8 @@ on:
       - 'tests/test_phase1_copilot_receipts_v5_historical_replay.py'
       - 'tools/phase1_copilot_receipts_v6_adapter.py'
       - 'tests/test_phase1_copilot_receipts_v6_adapter.py'
+      - 'tools/phase1_copilot_receipts_v6_historical_replay.py'
+      - 'tests/test_phase1_copilot_receipts_v6_historical_replay.py'
       - 'tools/phase1_copilot_receipts_v7_adapter.py'
       - 'tests/test_phase1_copilot_receipts_v7_adapter.py'
       - 'docs/PHASE1_COPILOT_REVIEW_RECEIPTS_V1_PROPOSAL.md'
@@ -80,6 +84,15 @@ jobs:
         run: python3 -m py_compile tools/phase1_copilot_receipts_v6_adapter.py tests/test_phase1_copilot_receipts_v6_adapter.py
       - name: Run v6 adapter synthetic positive and adversarial controls
         run: python3 -m unittest discover -s tests -p 'test_phase1_copilot_receipts_v6_adapter.py' -v
+  v6-historical-replay-fail-closed-controls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check v6 historical replay syntax
+        run: python3 -m py_compile tools/phase1_copilot_receipts_v6_historical_replay.py tests/test_phase1_copilot_receipts_v6_historical_replay.py
+      - name: Run v6 historical replay synthetic and adversarial controls
+        run: python3 -m unittest discover -s tests -p 'test_phase1_copilot_receipts_v6_historical_replay.py' -v
   v7-adapter-fail-closed-controls:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -131,6 +144,52 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python3 tools/phase1_copilot_receipts_v5_historical_replay.py \
+            --historical-replay \
+            --pr8-root "$GITHUB_WORKSPACE/.phase1-live/pr8" \
+            --source-root "$GITHUB_WORKSPACE/.phase1-live/upstreams" \
+            --pr2-root "$GITHUB_WORKSPACE"
+  v6-historical-replay-pinned-evidence:
+    # Historical v6 evidence is deliberately distinct from current PR8 checks.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+      issues: read
+      pull-requests: read
+    steps:
+      - name: Check out existing PR2 adapter with complete ancestry
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check out exact historical seven-receipt PR8 commit
+        uses: actions/checkout@v4
+        with:
+          repository: xbaconator9000x/XGBA-ROM-Expansion
+          ref: 4c7c09b6257d2e88a2e19bab524e9d7174d3023e
+          fetch-depth: 0
+          persist-credentials: false
+          path: .phase1-live/pr8
+      - name: Check out immutable original mGBA source
+        uses: actions/checkout@v4
+        with:
+          repository: mgba-emu/mgba
+          ref: fd9dc5c2cbf234365068855851107e762fc6211b
+          persist-credentials: false
+          path: .phase1-live/upstreams/mgba
+      - name: Verify exact checkout identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C .phase1-live/pr8 rev-parse HEAD)" = "4c7c09b6257d2e88a2e19bab524e9d7174d3023e"
+          test "$(git -C .phase1-live/upstreams/mgba rev-parse HEAD)" = "fd9dc5c2cbf234365068855851107e762fc6211b"
+          python3 -m py_compile tools/phase1_copilot_receipts_v6_adapter.py tools/phase1_copilot_receipts_v6_historical_replay.py
+      - name: Replay immutable seven-receipt v6 validation evidence
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 tools/phase1_copilot_receipts_v6_historical_replay.py \
             --historical-replay \
             --pr8-root "$GITHUB_WORKSPACE/.phase1-live/pr8" \
             --source-root "$GITHUB_WORKSPACE/.phase1-live/upstreams" \

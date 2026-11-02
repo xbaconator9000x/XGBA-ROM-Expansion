@@ -73,7 +73,7 @@ def verify_pinned_worktree(root):
     return root
 
 
-def validate_semantic_scope(receipt):
+def validate_semantic_scope(receipt, *, allow_v7_notice_mapping=False):
     if not isinstance(receipt, dict) or receipt.get("schema") != "xgba.phase1.copilot_semantic_review_receipt.v4":
         raise ValueError("Unsupported v5 receipt schema")
     review = receipt.get("review")
@@ -125,13 +125,18 @@ def validate_semantic_scope(receipt):
     licensing = review.get("licensing")
     rationale = licensing.get("rationale", "") if isinstance(licensing, dict) else ""
     lower_rationale = rationale.lower() if isinstance(rationale, str) else ""
+    file_scope_terms = ("file-scoped", "source-file scoped", "source mapping")
+    distribution_limit = "not cleared" in lower_rationale
+    if allow_v7_notice_mapping is True:
+        file_scope_terms += ("file-level notice mapping",)
+        distribution_limit = distribution_limit or "distribution clearance is not claimed" in lower_rationale
     if (
         not isinstance(licensing, dict)
         or licensing.get("status") != "CLEARED"
         or not isinstance(licensing.get("evidence"), list)
         or not licensing["evidence"]
-        or not any(term in lower_rationale for term in ("file-scoped", "source-file scoped", "source mapping"))
-        or "not cleared" not in lower_rationale
+        or not any(term in lower_rationale for term in file_scope_terms)
+        or not distribution_limit
         or not any(term in lower_rationale for term in ("combined distribution", "combined-work", "larger work"))
     ):
         raise ValueError("Licensing scope or combined-distribution limitation is missing")

@@ -183,6 +183,12 @@ class V7AdapterTests(unittest.TestCase):
     def tearDown(self):
         adapter.EXPECTED_RECEIPTS = self.original_expected
 
+    def _refresh_fixture_digest(self, receipt):
+        key = (receipt["source"]["repository"], receipt["source"]["path"])
+        digest = v4.receipt_digest(receipt)
+        receipt["attestation"]["receipt_sha256"] = digest
+        adapter.EXPECTED_RECEIPTS[key]["receipt_sha256"] = digest
+
     def test_exact_eight_synthetic_records_pass_without_approving_a_review(self):
         self.assertTrue(adapter.validate_receipt_inventory(self.receipts))
         self.assertEqual(adapter.PR8_HEAD, "b455f218537f7aad7876f51ced2542486835c3bf")
@@ -268,6 +274,41 @@ class V7AdapterTests(unittest.TestCase):
             target[path[-1]] = value
             with self.subTest(path=path), self.assertRaises(ValueError):
                 v6.validate_semantic_scope(receipt)
+
+    def test_exact_eighth_receipt_license_disclaimer_is_v7_only(self):
+        receipt = self.receipts[-1]
+        receipt["review"]["licensing"]["rationale"] = adapter.EIGHTH_LICENSING_RATIONALE
+        self._refresh_fixture_digest(receipt)
+
+        self.assertTrue(adapter.validate_receipt_inventory(self.receipts))
+        with self.assertRaisesRegex(ValueError, "Licensing scope"):
+            v6.validate_semantic_scope(receipt)
+
+    def test_v7_license_exception_rejects_altered_disclaimer_and_missing_evidence(self):
+        original = copy.deepcopy(self.receipts[-1])
+        variants = []
+
+        altered = copy.deepcopy(original)
+        altered["review"]["licensing"]["rationale"] = (
+            adapter.EIGHTH_LICENSING_RATIONALE.replace(
+                "distribution clearance is not claimed",
+                "distribution clearance may be permitted",
+            )
+        )
+        variants.append(altered)
+
+        no_evidence = copy.deepcopy(original)
+        no_evidence["review"]["licensing"]["rationale"] = adapter.EIGHTH_LICENSING_RATIONALE
+        no_evidence["review"]["licensing"]["evidence"] = []
+        variants.append(no_evidence)
+
+        for receipt in variants:
+            self._refresh_fixture_digest(receipt)
+            records = copy.deepcopy(self.receipts)
+            records[-1] = receipt
+            with self.subTest(rationale=receipt["review"]["licensing"]["rationale"],
+                              evidence=receipt["review"]["licensing"]["evidence"]), self.assertRaises(ValueError):
+                adapter.validate_receipt_inventory(records)
 
     def test_exact_head_ci_rejects_missing_stale_blocked_or_unexecuted_runs(self):
         runs = [fixture_run("pull_request", 11), fixture_run("push", 12)]
