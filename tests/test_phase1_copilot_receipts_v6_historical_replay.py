@@ -46,7 +46,7 @@ def fixture_run(run_id, **changes):
             "status": "completed",
             "conclusion": "success",
             "run_started_at": "2026-11-02T01:47:07Z",
-            "pull_requests": [{"number": 8, "head": {"sha": v6.PR8_HEAD}}],
+            "pull_requests": [{"number": 8, "head": {"ref": replay.HISTORICAL_PR8_HEAD_BRANCH, "sha": v6.PR8_HEAD}}],
             "referenced_workflows": [{
                 "path": f"{v4.OWNER_REPOSITORY}/.github/workflows/phase1-census.yml@refs/pull/8/merge",
             }],
