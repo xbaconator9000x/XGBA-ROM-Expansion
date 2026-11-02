@@ -66,12 +66,16 @@ FRAME_ENDED_SIGNATURE = "void GBAFrameEnded(struct GBA* gba)"
 FRAME_ENDED_SHA256 = "79da6a49b3bdb7101a950cef81837a5f18d2f1bda6294fa3ffe589ae25679942"
 DEINIT_SIGNATURE = "void GBASavedataDeinit(struct GBASavedata* savedata)"
 DEINIT_SHA256 = "830e75777a5a94797eb4a5cc0d6294952340887bc5d5457ca4ea3d228a94f7d2"
-FIXTURE_SHA256 = "4062a96262dbc118876d6170b7d1a2aff5593d2cba003053e3d4cd2a3e734b7f"
+FIXTURE_SHA256 = "0669521df7e63cbe3e21a461e37fc1bc46ff802e9594c977830cf063f06c8374"
 CASE_LINES = (
     re.compile(r"^PHASE1_VFS_CASE mappings shared_child=(\d+) private_child=(\d+)$"),
     re.compile(
         r"^PHASE1_VFS_CASE cleanup async_ms=(\d+) sync_ms=(\d+) "
         r"fsync=(\d+) rtc=(\d+) dirty=(-?\d+) age=(\d+)$"
+    ),
+    re.compile(
+        r"^PHASE1_VFS_CASE failure async_ms=(\d+) fsync=(\d+) "
+        r"rtc=(\d+) dirty=(-?\d+) retried=(\d+) fsync_error=(\d+)$"
     ),
     re.compile(r"^PHASE1_VFS_CASE close active_mapping_survives=(\d+)$"),
 )
@@ -166,6 +170,8 @@ def verify_sources(source_root, checkout_identity):
                 require(provenance.get("git_blob_sha") == FILES[path][0] and
                         provenance.get("source_content_sha256") == FILES[path][1],
                         "machine-dossier source provenance changed: " + path)
+                require(path not in rows,
+                        'duplicate pinned machine-dossier row: ' + path)
                 rows[path] = True
     require(set(rows) == set(DOSSIER_ROWS),
             "machine dossier does not contain every pinned dependency row")
@@ -233,7 +239,9 @@ def parse_output(output):
             "cross-process shared/private mapping visibility changed")
     require(values[1] == (1, 1, 0, 1, 0, 100),
             "cleanup threshold or VFile sync/unmap observation changed")
-    require(values[2] == (1,),
+    require(values[2] == (1, 2, 0, 0, 0, 1),
+            "failed sync, retry, or fsync evidence changed")
+    require(values[3] == (1,),
             "closing the VFile unexpectedly invalidated its live mapping")
     return {
         "shared_map_child_byte": values[0][0],
@@ -244,7 +252,13 @@ def parse_output(output):
         "cleanup_rtc_write_calls": values[1][3],
         "dirty_after_cleanup": values[1][4],
         "dirty_age_frame": values[1][5],
-        "mapping_survived_vfile_close": bool(values[2][0]),
+        "failed_cleanup_async_calls": values[2][0],
+        "explicit_fsync_calls": values[2][1],
+        "failed_cleanup_rtc_writes": values[2][2],
+        "failed_cleanup_dirty": values[2][3],
+        "failed_cleanup_retries": values[2][4],
+        "fsync_error_propagated": bool(values[2][5]),
+        "mapping_survived_vfile_close": bool(values[3][0]),
     }
 
 
@@ -255,6 +269,8 @@ def reject_evidence_mutations(output):
         output.replace("async_ms=1", "async_ms=0", 1),
         output.replace("active_mapping_survives=1",
                        "active_mapping_survives=0", 1),
+        output.replace("failure async_ms=1", "failure async_ms=0", 1),
+        output.replace("fsync_error=1", "fsync_error=0", 1),
     )
     for changed in cases:
         try:

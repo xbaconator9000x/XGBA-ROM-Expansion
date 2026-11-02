@@ -38,11 +38,17 @@ PHASE1_INSERT_PINNED_GBASAVEDATACLEAN
 static unsigned asyncCalls;
 static unsigned syncCalls;
 static unsigned fsyncCalls;
+static bool failAsyncMsync;
+static bool failFsync;
 
 int __real_msync(void* memory, size_t size, int flags);
 int __wrap_msync(void* memory, size_t size, int flags) {
 	if (flags == MS_ASYNC) {
 		++asyncCalls;
+		if (failAsyncMsync) {
+			errno = EIO;
+			return -1;
+		}
 	} else if (flags == MS_SYNC) {
 		++syncCalls;
 	}
@@ -52,6 +58,10 @@ int __wrap_msync(void* memory, size_t size, int flags) {
 int __real_fsync(int fd);
 int __wrap_fsync(int fd) {
 	++fsyncCalls;
+	if (failFsync) {
+		errno = EIO;
+		return -1;
+	}
 	return __real_fsync(fd);
 }
 
@@ -182,6 +192,57 @@ static void test_cleanup_sync(const char* path) {
 	       savedata.dirty, savedata.dirtAge);
 }
 
+static void test_failed_cleanup_and_fsync(const char* path) {
+	asyncCalls = syncCalls = fsyncCalls = 0;
+	failAsyncMsync = true;
+	struct VFile* vf = VFileFromFD(make_file(path, 0x55));
+	if (!vf) {
+		fail("VFileFromFD failed-sync");
+	}
+	uint8_t* data = vf->map(vf, 4096, MAP_WRITE);
+	if (!data) {
+		fail("map failed-sync");
+	}
+	data[0] = 0xE7;
+	struct GBASavedata savedata = {
+		.vf = vf,
+		.dirty = mSAVEDATA_DIRT_NEW,
+		.mapMode = MAP_WRITE,
+		.data = data,
+		.size = 4096,
+	};
+	GBASavedataClean(&savedata, 200);
+	GBASavedataClean(&savedata, 216);
+	if (asyncCalls != 1 || savedata.dirty != 0 ||
+	    savedata.rtcWrites != 0) {
+		fprintf(stderr, "failed async sync did not follow original cleanup semantics\n");
+		exit(1);
+	}
+	failAsyncMsync = false;
+	GBASavedataClean(&savedata, 217);
+	unsigned retried = asyncCalls - 1;
+	if (retried || savedata.rtcWrites) {
+		fprintf(stderr, "failed sync retried without another dirty write\n");
+		exit(1);
+	}
+	bool normalFsync = vf->sync(vf, NULL, 0);
+	failFsync = true;
+	bool failedFsync = vf->sync(vf, NULL, 0);
+	failFsync = false;
+	if (!normalFsync || failedFsync || fsyncCalls != 2) {
+		fprintf(stderr, "fd fsync fallback or error propagation changed\n");
+		exit(1);
+	}
+	vf->unmap(vf, data, 4096);
+	if (!vf->close(vf)) {
+		fprintf(stderr, "failed-sync fixture close failed\n");
+		exit(1);
+	}
+	printf("PHASE1_VFS_CASE failure async_ms=%u fsync=%u rtc=%u dirty=%d retried=%u fsync_error=%u\n",
+	       asyncCalls, fsyncCalls, savedata.rtcWrites, savedata.dirty,
+	       retried, (unsigned) !failedFsync);
+}
+
 static void test_close_with_live_mapping(const char* path) {
 	struct VFile* vf = VFileFromFD(make_file(path, 0x44));
 	if (!vf) {
@@ -207,20 +268,24 @@ int main(void) {
 	char sharedPath[PATH_MAX];
 	char privatePath[PATH_MAX];
 	char cleanupPath[PATH_MAX];
+	char failurePath[PATH_MAX];
 	char activeClosePath[PATH_MAX];
 	snprintf(sharedPath, sizeof(sharedPath), "%s/shared.sav", directory);
 	snprintf(privatePath, sizeof(privatePath), "%s/private.sav", directory);
 	snprintf(cleanupPath, sizeof(cleanupPath), "%s/cleanup.sav", directory);
+	snprintf(failurePath, sizeof(failurePath), "%s/failure.sav", directory);
 	snprintf(activeClosePath, sizeof(activeClosePath), "%s/active-close.sav",
 	         directory);
 
 	test_mapping_visibility(sharedPath, privatePath);
 	test_cleanup_sync(cleanupPath);
+	test_failed_cleanup_and_fsync(failurePath);
 	test_close_with_live_mapping(activeClosePath);
 
 	unlink(sharedPath);
 	unlink(privatePath);
 	unlink(cleanupPath);
+	unlink(failurePath);
 	unlink(activeClosePath);
 	if (rmdir(directory) < 0) {
 		fail("remove temporary directory");

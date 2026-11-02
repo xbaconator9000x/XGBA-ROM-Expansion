@@ -143,3 +143,17 @@ execution above is local evidence from individually pinned source files.
 Earlier successful run #41438931700 predates this witness and does not validate
 it. No retry or permission bypass was attempted. No approval or gate count is
 changed.
+
+## Failed-sync and fsync fallback follow-up (2026-11-03; pending exact-head CI)
+
+The existing pinned native fixture now injects `EIO` from the actual
+`msync(MS_ASYNC)` callback during original `GBASavedataClean()` execution.
+It checks the cleared dirty flag, suppressed RTC write and lack of automatic
+retry absent another dirty write. It also calls the distinct no-buffer
+`sync(NULL, 0)` `fsync` path and checks its injected failure return. These
+are host-level controlled failures, not full mGBA runtime or power-loss
+proof. Original upstream files remain unchanged. The dossier parser rejects
+forged failure-path records and duplicate original dossier identities.
+New fixture SHA-256: `0669521df7e63cbe3e21a461e37fc1bc46ff802e9594c977830cf063f06c8374`. New synthetic parser tests and native
+execution are **pending** an exact-head CI run; earlier green checks do not
+validate this update.
