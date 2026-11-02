@@ -201,9 +201,14 @@ workflow, after the pinned mGBA checkout and Qt6 setup.
 
 The prior exact-head negative `M_CORE_GBA=OFF` result is recorded above and
 was re-executed in successful run #41431570207 at `25c7fdfa`. The matched
-`M_CORE_GBA=ON` control and the new QFile witness are **not yet observed in
-Actions** at this documentation point; no green result is claimed for the
-new workflow steps until their exact-head job logs are retrieved.
+`M_CORE_GBA=ON` control and the new QFile workflow step were added at code
+head `7aa1a4df61dac4a8c8859bed3a221de75df7f9bb`. Exact-head Actions run
+[#41433015615](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41433015615)
+reported `action_required` with zero jobs. This is a permission blocker, not
+a pass or a test failure; there is no job log or Actions execution evidence
+for either new step. The native QFile result above was executed locally.
+The `M_CORE_GBA=ON` compile has not been executed locally or in Actions in
+this task and remains `NEEDS_EVIDENCE`; no compile success is claimed.
 
 No upstream source, shared gate, approval count, or review receipt is changed.
 The authoritative Phase 1 gate remains `FAIL_INCOMPLETE`; independent
