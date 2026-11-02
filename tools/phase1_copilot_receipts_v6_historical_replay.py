@@ -209,7 +209,11 @@ def _validate_pr8_run(api, run_id, *, event, workflow_id, workflow_path, workflo
                 isinstance(item, dict)
                 and item.get("number") == v4.PR_NUMBER
                 and isinstance(item.get("head"), dict)
-                and item["head"].get("sha") == v6.PR8_HEAD
+                and item["head"].get("ref") == HISTORICAL_PR8_HEAD_BRANCH
+                # GitHub REST pull_requests[].head.sha is LIVE PR metadata,
+                # even inside an immutable historical Actions run. Never
+                # compare that mutable nested value to the historical SHA.
+                # The run's own immutable head_sha was checked above.
                 for item in pull_requests
             )
         ):

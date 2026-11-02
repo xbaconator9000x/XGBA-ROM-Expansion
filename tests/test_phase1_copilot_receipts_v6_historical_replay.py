@@ -310,7 +310,13 @@ class V6HistoricalReplayTests(unittest.TestCase):
     def test_historical_pr8_pr_requires_bound_head_and_census_workflow(self):
         api = FixtureAPI()
         run = api.runs[replay.HISTORICAL_PR8_PR_RUN_ID]
-        run["pull_requests"][0]["head"]["sha"] = "0" * 40
+        # GitHub mutates the nested PR head metadata on historical runs.
+        # The immutable run.head_sha must still be pinned to the old receipt.
+        run["pull_requests"][0]["head"]["sha"] = "b455f218537f7aad7876f51ced2542486835c3bf"
+        self.assertEqual(
+            replay.validate_historical_actions(api, not_before=NOT_BEFORE)["receipts"], 7
+        )
+        run["pull_requests"][0]["head"]["ref"] = "wrong-branch"
         with self.assertRaisesRegex(ValueError, "exact receipt head"):
             replay.validate_historical_actions(api, not_before=NOT_BEFORE)
 
