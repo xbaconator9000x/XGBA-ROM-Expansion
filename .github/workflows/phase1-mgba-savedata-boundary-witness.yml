@@ -14,6 +14,7 @@ on:
       - 'tools/phase1_mgba_saveconverter_gba_off.py'
       - 'tools/phase1_mgba_saveconverter_qfile.py'
       - 'tests/phase1_mgba_saveconverter_qfile.cpp'
+      - 'tests/test_phase1_mgba_saveconverter_qfile.py'
       - 'docs/phase1-review-readiness/mgba-savedata-boundary-witness-20261027.md'
       - 'docs/phase1-review-readiness/mgba-saveconverter-core-lifetime-asan-20261101.md'
       - 'docs/phase1-review-readiness/mgba-saveconverter-eeprom-tail-gba-off-20261102.md'
@@ -31,6 +32,8 @@ jobs:
         run: python3 -m py_compile tools/phase1_mgba_savedata_boundary_witness.py tools/phase1_mgba_savedata_handoff_verify.py tools/phase1_mgba_saveconverter_eeprom_tail.py tools/phase1_mgba_saveconverter_gba_off.py tools/phase1_mgba_saveconverter_qfile.py
       - name: Fail-closed EEPROM parser and fixture controls
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_saveconverter_eeprom_tail.py" -v
+      - name: Fail-closed QFile observation parser and 17 adversarial controls
+        run: python3 -m unittest discover -s tests -p "test_phase1_mgba_saveconverter_qfile.py" -v
       - name: Fetch exact pinned mGBA source
         run: |
           git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git /tmp/xgba-mgba-boundary
