@@ -8,6 +8,8 @@ on:
       - 'tests/test_phase1_copilot_receipts_v4_adapter.py'
       - 'tools/phase1_copilot_receipts_v5_adapter.py'
       - 'tests/test_phase1_copilot_receipts_v5_adapter.py'
+      - 'tools/phase1_copilot_receipts_v5_historical_replay.py'
+      - 'tests/test_phase1_copilot_receipts_v5_historical_replay.py'
       - 'tools/phase1_copilot_receipts_v6_adapter.py'
       - 'tests/test_phase1_copilot_receipts_v6_adapter.py'
       - 'docs/PHASE1_COPILOT_REVIEW_RECEIPTS_V1_PROPOSAL.md'
@@ -20,6 +22,8 @@ on:
       - 'tests/test_phase1_copilot_receipts_v4_adapter.py'
       - 'tools/phase1_copilot_receipts_v5_adapter.py'
       - 'tests/test_phase1_copilot_receipts_v5_adapter.py'
+      - 'tools/phase1_copilot_receipts_v5_historical_replay.py'
+      - 'tests/test_phase1_copilot_receipts_v5_historical_replay.py'
       - 'tools/phase1_copilot_receipts_v6_adapter.py'
       - 'tests/test_phase1_copilot_receipts_v6_adapter.py'
       - 'docs/PHASE1_COPILOT_REVIEW_RECEIPTS_V1_PROPOSAL.md'
@@ -54,6 +58,15 @@ jobs:
         run: python3 -m py_compile tools/phase1_copilot_receipts_v5_adapter.py tests/test_phase1_copilot_receipts_v5_adapter.py
       - name: Run v5 adapter synthetic positive and adversarial controls
         run: python3 -m unittest discover -s tests -p 'test_phase1_copilot_receipts_v5_adapter.py' -v
+  v5-historical-replay-fail-closed-controls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check historical replay syntax
+        run: python3 -m py_compile tools/phase1_copilot_receipts_v5_historical_replay.py tests/test_phase1_copilot_receipts_v5_historical_replay.py
+      - name: Run v5 historical replay synthetic and adversarial controls
+        run: python3 -m unittest discover -s tests -p 'test_phase1_copilot_receipts_v5_historical_replay.py' -v
   v6-adapter-fail-closed-controls:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -63,9 +76,8 @@ jobs:
         run: python3 -m py_compile tools/phase1_copilot_receipts_v6_adapter.py tests/test_phase1_copilot_receipts_v6_adapter.py
       - name: Run v6 adapter synthetic positive and adversarial controls
         run: python3 -m unittest discover -s tests -p 'test_phase1_copilot_receipts_v6_adapter.py' -v
-  v5-live-pinned-source-and-github-evidence:
-    # Separate from synthetic controls: execute the actual v5 adapter against
-    # original pinned source bytes, all 14,834 dossiers and live GitHub evidence.
+  v5-historical-replay-pinned-evidence:
+    # Historical evidence is deliberately distinct from current PR8 v6 checks.
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -77,6 +89,7 @@ jobs:
       - name: Check out existing PR2 adapter at this exact workflow head
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           persist-credentials: false
       - name: Check out exact historical PR8 receipt and complete ancestry
         uses: actions/checkout@v4
@@ -100,13 +113,15 @@ jobs:
           test "$(git -C .phase1-live/pr8 rev-parse HEAD)" = "3ee4b1117f2976b6ea41098f5456634da18a50f8"
           test "$(git -C .phase1-live/upstreams/mgba rev-parse HEAD)" = "fd9dc5c2cbf234365068855851107e762fc6211b"
           python3 -m py_compile tools/phase1_copilot_receipts_v5_adapter.py
-      - name: Execute real four-receipt v5 validator (fail closed)
+      - name: Replay immutable four-receipt v5 validation evidence
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python3 tools/phase1_copilot_receipts_v5_adapter.py \
+          python3 tools/phase1_copilot_receipts_v5_historical_replay.py \
+            --historical-replay \
             --pr8-root "$GITHUB_WORKSPACE/.phase1-live/pr8" \
-            --source-root "$GITHUB_WORKSPACE/.phase1-live/upstreams"
+            --source-root "$GITHUB_WORKSPACE/.phase1-live/upstreams" \
+            --pr2-root "$GITHUB_WORKSPACE"
   v6-live-pinned-source-and-github-evidence:
     # Separate from synthetic controls: validate all seven records without
     # treating the fixtures, evidence workpaper, or transport commit as approvals.
