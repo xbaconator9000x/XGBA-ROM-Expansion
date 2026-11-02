@@ -20,6 +20,7 @@ on:
       - 'docs/phase1-review-readiness/mgba-savedata-boundary-witness-20261027.md'
       - 'docs/phase1-review-readiness/mgba-saveconverter-core-lifetime-asan-20261101.md'
       - 'docs/phase1-review-readiness/mgba-saveconverter-eeprom-tail-gba-off-20261102.md'
+      - 'docs/phase1-review-readiness/mgba-vfs-fd-linux-backend-20261102.md'
       - '.github/workflows/phase1-mgba-savedata-boundary-witness.yml'
   workflow_dispatch:
 permissions:
