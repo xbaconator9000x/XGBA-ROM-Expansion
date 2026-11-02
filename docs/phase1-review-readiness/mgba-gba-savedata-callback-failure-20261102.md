@@ -133,11 +133,18 @@ This is a native, source-extracted Linux host observation with controlled
 not prove real power-loss durability, disk persistence or corruption, a real
 frontend's presentation of the callback, Windows/Android/other VFile behavior,
 save-file restart/interoperability, stock gameplay, or physical Flash. It
-does not modify or fix the upstream behavior. The exact-head Actions result
-will be recorded after the existing workflow runs; a permission-blocked
-zero-job result will not be represented as success.
+does not modify or fix the upstream behavior.
 
 Baseline only: exact-head run
 [#41485392440](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41485392440),
 job `125414254600`, succeeded on the prior head `6abd6cb`. That run predates
 this callback integration and does not validate the new witness.
+
+The new exact-head PR Actions run
+[#41487467667](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41487467667)
+matches code head `49226946ae0389fe09f5ba1a36375b896da6fcd9` but concluded
+`action_required` with zero jobs. This is a workflow-permission blocker, not
+CI success or failure; no job log or step evidence exists for this head. Local
+native execution and the 14 parser tests passed, but do not substitute for
+Actions execution. CodeQL reported zero alerts; secret scanning found no
+secrets in the changed files.
