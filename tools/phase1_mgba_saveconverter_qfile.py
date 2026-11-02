@@ -89,9 +89,11 @@ def reject_source_mutations(source):
 
 
 def parse_output(output):
-    require(output.count("PHASE1_QFILE_DONE\n") == 1,
-            "native QFile test did not finish")
-    match = CASE_PATTERN.search(output)
+    end_marker = "\nPHASE1_QFILE_DONE\n"
+    require(output.endswith(end_marker) and
+            output.count("PHASE1_QFILE_DONE\n") == 1,
+            "native QFile output missing unique terminal marker")
+    match = CASE_PATTERN.fullmatch(output[:-len(end_marker)])
     require(match is not None, "native QFile observations missing or malformed")
     groups = match.groups()
     text_groups = {14, 19}
@@ -103,7 +105,8 @@ def parse_output(output):
     open_failure = values[16:21]
     open_error_text_hex = groups[19]
     require(temporary[0] == 1 and temporary[1] == 0 and
-            temporary[2] > 0 and temporary[3] == 0 and
+            temporary[2] == len("pinned-converter-qfile-payload") and
+            temporary[3] == 0 and
             temporary[4] == 1 and temporary[5] == 0 and
             temporary[6] == 1 and temporary[7] == 0,
             "native temporary-file QFile control did not persist exact payload")
