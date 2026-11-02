@@ -11,6 +11,7 @@ on:
       - 'tools/phase1_copilot_receipts.py'
       - 'tools/phase1_mgba_arm_decode_emit_review_verify.py'
       - 'tests/test_phase1_mgba_arm_decode_emit_review_verify.py'
+      - 'tests/phase1_mgba_arm_alignment_probe.c'
       - 'tests/test_phase1_copilot_receipts.py'
       - 'tests/test_phase1_mapping_gate.py'
       - 'docs/phase1-review-readiness/copilot-semantic-review-receipts.jsonl'
@@ -78,6 +79,38 @@ jobs:
         run: python3 tools/pinned_source_census.py --checkout --root upstream --out audit-output
       - name: Verify pinned mGBA ARM decode/emit review evidence
         run: python3 tools/phase1_mgba_arm_decode_emit_review_verify.py --source-root upstream/mgba
+      - name: Verify original pinned ARM endian macro alignment (host UBSan only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C upstream/mgba rev-parse HEAD)" = "fd9dc5c2cbf234365068855851107e762fc6211b"
+          test "$(git -C upstream/mgba hash-object include/mgba-util/common.h)" = "923e93086adfa09c9a55fcc2f0f6fa4d560e5888"
+          test "$(git -C upstream/mgba hash-object include/mgba/internal/arm/macros.h)" = "4832f054611044e63f1e2393fe4072f48004545a"
+          python3 - <<'PY'
+          from pathlib import Path
+          common = Path("upstream/mgba/include/mgba-util/common.h").read_text()
+          aliases = Path("upstream/mgba/include/mgba/internal/arm/macros.h").read_text()
+          probe = Path("tests/phase1_mgba_arm_alignment_probe.c").read_text()
+          checks = [(common, "#define LOAD_32LE(DEST, ADDR, ARR) DEST = *(uint32_t*) ((uintptr_t) (ARR) + (size_t) (ADDR))"), (common, "#define STORE_32LE(SRC, ADDR, ARR) *(uint32_t*) ((uintptr_t) (ARR) + (size_t) (ADDR)) = SRC"),
+                    (aliases, "#define LOAD_32 LOAD_32LE"), (aliases, "#define STORE_32 STORE_32LE")]
+          for src, line in checks:
+              assert src.splitlines().count(line) == 1, "missing/duplicate/mutated pinned macro"
+          for _, line in checks[:2]:
+              assert probe.splitlines().count(line) == 1, "host probe macro diverges from pinned original"
+          assert "Mozilla Public" in common and "Mozilla Public" in aliases
+          print("ARM_ALIGNMENT_SOURCE_PASS pinned=2 macros=2 aliases=2 approvals=0")
+          PY
+          for cc in gcc clang; do
+            command -v "$cc"
+            "$cc" -std=c11 -O2 -g -Wall -Wextra -fsanitize=alignment -fno-sanitize-recover=alignment tests/phase1_mgba_arm_alignment_probe.c -o "/tmp/xgba-arm-alignment-$cc"
+            "/tmp/xgba-arm-alignment-$cc" > /tmp/xgba-arm-aligned.log 2>&1
+            grep -qx 'aligned=44332211' /tmp/xgba-arm-aligned.log
+            if "/tmp/xgba-arm-alignment-$cc" x > /tmp/xgba-arm-store.log 2>&1; then echo "missing expected misaligned store failure"; exit 1; fi
+            grep -q 'runtime error: store to misaligned address' /tmp/xgba-arm-store.log
+            if "/tmp/xgba-arm-alignment-$cc" x y > /tmp/xgba-arm-load.log 2>&1; then echo "missing expected misaligned load failure"; exit 1; fi
+            grep -q 'runtime error: load of misaligned address' /tmp/xgba-arm-load.log
+            echo "ARM_ALIGNMENT_UBSAN_PASS compiler=$cc aligned=PASS load=EXPECTED_UB store=EXPECTED_UB"
+          done
       - name: Verify pinned Poryscript compiler parsing and emission tests
         working-directory: upstream/poryscript
         run: |
