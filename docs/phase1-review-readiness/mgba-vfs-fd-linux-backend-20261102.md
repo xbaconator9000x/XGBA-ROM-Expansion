@@ -133,7 +133,13 @@ successful `MS_ASYNC`/`MS_SYNC` calls and cross-process page-cache visibility
 are **not** a power-loss durability guarantee. The harness is not a Qt/QFile
 test and does not establish save-file behavior at the Qt boundary.
 
-The exact-head Actions result and job log for the commit containing this
-witness will be added after the existing PR13 workflow actually executes. A
-pending or permission-blocked workflow is not evidence of CI success. No
-approval or gate count is changed.
+Exact-head PR Actions run
+[#41477561270](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41477561270)
+was created for head `2f533a1a693f356760e69544747739d221664f83` and is
+`action_required` with **zero jobs**. This is a workflow-permission blocker;
+there is no job log or Actions execution evidence for the new step, and no
+claim is made that CI or checkout-mode tree verification passed. The native
+execution above is local evidence from individually pinned source files.
+Earlier successful run #41438931700 predates this witness and does not validate
+it. No retry or permission bypass was attempted. No approval or gate count is
+changed.
