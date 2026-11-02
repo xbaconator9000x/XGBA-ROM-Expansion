@@ -12,6 +12,7 @@ from pathlib import Path
 import phase1_copilot_receipts_v4_adapter as v4
 import phase1_copilot_receipts_v6_adapter as v6
 
+PINNED_MGBA_REVISION = "fd9dc5c2cbf234365068855851107e762fc6211b"
 HISTORICAL_PR2_HEAD = "efcd6f2fcd6342c583dd67d38c3fde73e5fb582b"
 HISTORICAL_PR2_ADAPTER_BLOB = "2209fb7c5ec776c107eb47870aeb29b0fffc1636"
 HISTORICAL_PR2_WORKFLOW_BLOB = "2439bf050e77953044455498ea7064d095c90092"
@@ -284,7 +285,7 @@ def verify_original_pinned_source(source_root, source):
     if source.get("repository") != "mgba-emu/mgba":
         raise ValueError("Historical receipt uses an unpinned source repository")
     root = Path(source_root).resolve() / "mgba"
-    if not root.is_dir() or _git(root, "rev-parse", "HEAD") != v6.MGBA_REVISION:
+    if not root.is_dir() or _git(root, "rev-parse", "HEAD") != PINNED_MGBA_REVISION:
         raise ValueError("Historical original mGBA source checkout is missing or unpinned")
     rel = source.get("path")
     if (

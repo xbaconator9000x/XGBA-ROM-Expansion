@@ -179,7 +179,7 @@ class OriginalSourceReplayTests(unittest.TestCase):
                 "source_sha256": hashlib.sha256(data).hexdigest(),
             }
             def git_ok(_root, *args):
-                return v6.MGBA_REVISION if args == ("rev-parse", "HEAD") else "a" * 40
+                return replay.PINNED_MGBA_REVISION if args == ("rev-parse", "HEAD") else "a" * 40
             with patch.object(replay, "_git", side_effect=git_ok):
                 self.assertTrue(replay.verify_original_pinned_source(td, source))
                 target.write_bytes(b"changed")
@@ -190,7 +190,7 @@ class OriginalSourceReplayTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "unpinned"):
                     replay.verify_original_pinned_source(td, source)
             def bad_blob(_root, *args):
-                return v6.MGBA_REVISION if args == ("rev-parse", "HEAD") else "0" * 40
+                return replay.PINNED_MGBA_REVISION if args == ("rev-parse", "HEAD") else "0" * 40
             with patch.object(replay, "_git", side_effect=bad_blob):
                 with self.assertRaisesRegex(ValueError, "Git blob"):
                     replay.verify_original_pinned_source(td, source)
