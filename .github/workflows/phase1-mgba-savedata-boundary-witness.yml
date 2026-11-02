@@ -8,8 +8,12 @@ on:
       - 'tests/phase1_mgba_saveconverter_native.cpp'
       - 'tools/phase1_mgba_saveconverter_core_lifetime.py'
       - 'tests/phase1_mgba_saveconverter_core_lifetime.cpp'
+      - 'tools/phase1_mgba_saveconverter_eeprom_tail.py'
+      - 'tests/phase1_mgba_saveconverter_eeprom_tail.cpp'
+      - 'tools/phase1_mgba_saveconverter_gba_off.py'
       - 'docs/phase1-review-readiness/mgba-savedata-boundary-witness-20261027.md'
       - 'docs/phase1-review-readiness/mgba-saveconverter-core-lifetime-asan-20261101.md'
+      - 'docs/phase1-review-readiness/mgba-saveconverter-eeprom-tail-gba-off-20261102.md'
       - '.github/workflows/phase1-mgba-savedata-boundary-witness.yml'
   workflow_dispatch:
 permissions:
@@ -21,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Syntax checks
-        run: python3 -m py_compile tools/phase1_mgba_savedata_boundary_witness.py tools/phase1_mgba_savedata_handoff_verify.py
+        run: python3 -m py_compile tools/phase1_mgba_savedata_boundary_witness.py tools/phase1_mgba_savedata_handoff_verify.py tools/phase1_mgba_saveconverter_eeprom_tail.py tools/phase1_mgba_saveconverter_gba_off.py
       - name: Fetch exact pinned mGBA source
         run: |
           git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git /tmp/xgba-mgba-boundary
@@ -37,10 +41,20 @@ jobs:
       - name: Install native Qt6 Core for SaveConverter witness
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends qt6-base-dev pkg-config g++
+          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-multimedia-dev pkg-config g++
       - name: Execute pinned SaveConverter body with native Qt6 QIODevice
         run: |
           python3 -m py_compile tools/phase1_mgba_saveconverter_native.py
           python3 tools/phase1_mgba_saveconverter_native.py \
             --checkout /tmp/xgba-mgba-boundary \
             --harness tests/phase1_mgba_saveconverter_native.cpp
+      - name: Execute pinned EEPROM RTC-tail conversion with native Qt6
+        run: |
+          python3 tools/phase1_mgba_saveconverter_eeprom_tail.py \
+            --checkout /tmp/xgba-mgba-boundary \
+            --harness tests/phase1_mgba_saveconverter_eeprom_tail.cpp \
+            --root .
+      - name: Compile pinned Qt translation unit with GBA core disabled
+        run: |
+          python3 tools/phase1_mgba_saveconverter_gba_off.py \
+            --checkout /tmp/xgba-mgba-boundary
