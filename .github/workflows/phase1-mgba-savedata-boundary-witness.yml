@@ -17,11 +17,15 @@ on:
       - 'tests/test_phase1_mgba_saveconverter_qfile.py'
       - 'tools/phase1_mgba_vfs_fd_native.py'
       - 'tests/phase1_mgba_vfs_fd_native.c'
+      - 'tools/phase1_mgba_vfs_fd_callback_native.py'
+      - 'tests/phase1_mgba_vfs_fd_callback_native.c'
+      - 'tests/test_phase1_mgba_vfs_fd_callback_native.py'
       - 'tests/test_phase1_mgba_vfs_fd_native.py'
       - 'docs/phase1-review-readiness/mgba-savedata-boundary-witness-20261027.md'
       - 'docs/phase1-review-readiness/mgba-saveconverter-core-lifetime-asan-20261101.md'
       - 'docs/phase1-review-readiness/mgba-saveconverter-eeprom-tail-gba-off-20261102.md'
       - 'docs/phase1-review-readiness/mgba-vfs-fd-linux-backend-20261102.md'
+      - 'docs/phase1-review-readiness/mgba-gba-savedata-callback-failure-20261102.md'
       - '.github/workflows/phase1-mgba-savedata-boundary-witness.yml'
   workflow_dispatch:
 permissions:
@@ -33,13 +37,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Syntax checks
-        run: python3 -m py_compile tools/phase1_mgba_savedata_boundary_witness.py tools/phase1_mgba_savedata_handoff_verify.py tools/phase1_mgba_saveconverter_eeprom_tail.py tools/phase1_mgba_saveconverter_gba_off.py tools/phase1_mgba_saveconverter_qfile.py tools/phase1_mgba_vfs_fd_native.py
+        run: python3 -m py_compile tools/phase1_mgba_savedata_boundary_witness.py tools/phase1_mgba_savedata_handoff_verify.py tools/phase1_mgba_saveconverter_eeprom_tail.py tools/phase1_mgba_saveconverter_gba_off.py tools/phase1_mgba_saveconverter_qfile.py tools/phase1_mgba_vfs_fd_native.py tools/phase1_mgba_vfs_fd_callback_native.py
       - name: Fail-closed EEPROM parser and fixture controls
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_saveconverter_eeprom_tail.py" -v
       - name: Fail-closed QFile observation parser and 17 adversarial controls
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_saveconverter_qfile.py" -v
       - name: Fail-closed Linux VFile native evidence controls
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_vfs_fd_native.py" -v
+      - name: Fail-closed GBA savedata callback evidence controls
+        run: python3 -m unittest discover -s tests -p "test_phase1_mgba_vfs_fd_callback_native.py" -v
       - name: Fetch exact pinned mGBA source
         run: |
           git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git /tmp/xgba-mgba-boundary
@@ -49,6 +55,11 @@ jobs:
           python3 tools/phase1_mgba_vfs_fd_native.py \
             --checkout /tmp/xgba-mgba-boundary \
             --harness tests/phase1_mgba_vfs_fd_native.c
+      - name: Execute pinned GBA failed-sync callback integration
+        run: |
+          python3 tools/phase1_mgba_vfs_fd_callback_native.py \
+            --checkout /tmp/xgba-mgba-boundary \
+            --harness tests/phase1_mgba_vfs_fd_callback_native.c
       - name: Execute pinned C function bodies against bounded mock VFile
         run: python3 tools/phase1_mgba_savedata_boundary_witness.py --checkout /tmp/xgba-mgba-boundary
       - name: Execute pinned getStatePlatform body under ASan and UBSan
