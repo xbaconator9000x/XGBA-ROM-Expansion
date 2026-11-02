@@ -10,6 +10,7 @@ on:
       - 'tools/phase1_mapping_gate.py'
       - 'tools/phase1_copilot_receipts.py'
       - 'tools/phase1_mgba_arm_decode_emit_review_verify.py'
+      - 'tests/test_phase1_mgba_arm_decode_emit_review_verify.py'
       - 'tests/test_phase1_copilot_receipts.py'
       - 'tests/test_phase1_mapping_gate.py'
       - 'docs/phase1-review-readiness/copilot-semantic-review-receipts.jsonl'
@@ -72,6 +73,7 @@ jobs:
           python3 tools/phase1_mapping_gate.py --self-test
           python3 -m unittest discover -s tests -p test_phase1_copilot_receipts.py -v
           python3 -m unittest discover -s tests -p test_phase1_mapping_gate.py -v
+          python3 -m unittest discover -s tests -p test_phase1_mgba_arm_decode_emit_review_verify.py -v
       - name: Clone pinned sources and scan
         run: python3 tools/pinned_source_census.py --checkout --root upstream --out audit-output
       - name: Verify pinned mGBA ARM decode/emit review evidence

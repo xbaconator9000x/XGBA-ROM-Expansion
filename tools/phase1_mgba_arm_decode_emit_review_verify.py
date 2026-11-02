@@ -186,7 +186,7 @@ def require_source(source_root: Path, path: str, expected_blob: str, expected_sh
 def check_anchors(raw: bytes, path: str, anchors: list[tuple[int, str]]) -> None:
     lines = raw.decode("utf-8").splitlines()
     for line_number, expected in anchors:
-        if line_number > len(lines) or lines[line_number - 1].strip() != expected:
+        if line_number < 1 or line_number > len(lines) or lines[line_number - 1].strip() != expected:
             raise ValueError(f"Pinned source anchor mismatch: {path}:{line_number}")
 
 
@@ -248,9 +248,9 @@ def verify_sources(source_root: Path) -> int:
             ["git", "-C", str(source_root), "rev-parse", "HEAD"], text=True,
             stderr=subprocess.DEVNULL,
         ).strip()
-    except (OSError, subprocess.CalledProcessError):
-        commit = None
-    if commit is not None and commit != PIN:
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise ValueError("Pinned mGBA Git checkout HEAD is unavailable") from exc
+    if commit != PIN:
         raise ValueError(f"Source checkout is not the pinned commit: {commit}")
 
     blobs = {}
@@ -266,11 +266,21 @@ def verify_sources(source_root: Path) -> int:
         blobs[path] = raw
 
     negative_source_mutations = 0
-    for path, raw in blobs.items():
-        mutated = raw + b"\nXGBA_PHASE1_NEGATIVE_MUTATION\n"
-        if git_blob(mutated) == git_blob(raw) or sha256(mutated) == sha256(raw):
-            raise AssertionError(f"Source mutation was not detected: {path}")
-        negative_source_mutations += 1
+    with tempfile.TemporaryDirectory(prefix="xgba-arm-mutated-") as temp:
+        negative_root = Path(temp)
+        for path, raw in blobs.items():
+            mutated = raw + b"\nXGBA_PHASE1_NEGATIVE_MUTATION\n"
+            target_path = negative_root / path
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            target_path.write_bytes(mutated)
+            try:
+                require_source(negative_root, path, git_blob(raw), sha256(raw))
+            except ValueError as exc:
+                if "Pinned source identity mismatch" not in str(exc):
+                    raise
+            else:
+                raise AssertionError(f"Mutated source passed the actual verifier: {path}")
+            negative_source_mutations += 1
     license_text = blobs["LICENSE"]
     if b"Mozilla Public License" not in license_text:
         raise ValueError("Pinned root license does not contain the MPL text")
