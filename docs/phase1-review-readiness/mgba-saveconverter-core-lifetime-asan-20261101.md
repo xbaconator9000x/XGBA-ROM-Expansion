@@ -97,3 +97,11 @@ change and does not validate this new test.
 
 CodeQL on the committed code/workflow change reported zero alerts for Actions,
 Python, and C++. No source pin, approval count, or shared gate was changed.
+
+## 2026-11-02 owner-authorized exact-head CI re-execution attempt (non-approving)
+
+After the repository owner reduced repeated fork-workflow approval prompts, the previous PR13 exact-head pull-request run [41322907862](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41322907862) at `6d6e2889ed88956d81d0afe0013f28a4740992d1` still reported `action_required` and **zero executed jobs**; it cannot be represented as a sanitizer pass. This appended evidence note is a deliberate, substantive update to an **already watched path** of the **existing** `phase1-mgba-savedata-boundary-witness.yml` PR workflow, to trigger a fresh current-head execution without bypassing GitHub security or asking for repeated manual approval.
+
+The intended new execution must actually fetch immutable `mgba-emu/mgba@fd9dc5c2cbf234365068855851107e762fc6211b`, verify original `SaveConverter.cpp` bytes and the source-derived `getStatePlatform()` fixture, compile and execute the bounded GBA/GB null and non-null ASan+UBSan cases, reject source/evidence mutations, and preserve prior native Qt6 QIODevice and mock-VFile cases. The original pinned source is **not** patched. A green run would support only the controlled native-host witness, **not** a full Qt application, native QFile failure, real .sav restart, stock gameplay, physical Flash, or combined-distribution license clearance. If the new run remains `action_required`, that remains a permissions blocker; if a job actually fails, its real step log must be investigated before any repair.
+
+No new PR/workflow/scheduler, main/audit/gate change, independent approval, or Phase 2 work is introduced by this retry note. The authoritative gate remains `FAIL_INCOMPLETE` with historical external approvals 0/338 P0 and 0/14,834 total.
