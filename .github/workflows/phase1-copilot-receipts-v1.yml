@@ -126,7 +126,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: xbaconator9000x/XGBA-ROM-Expansion
-          ref: 487da72f27dfc4e634cecc11b4dbdd596ec05e00
+          ref: 4c7c09b6257d2e88a2e19bab524e9d7174d3023e
           fetch-depth: 0
           persist-credentials: false
           path: .phase1-live/pr8
@@ -141,7 +141,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git -C .phase1-live/pr8 rev-parse HEAD)" = "487da72f27dfc4e634cecc11b4dbdd596ec05e00"
+          test "$(git -C .phase1-live/pr8 rev-parse HEAD)" = "4c7c09b6257d2e88a2e19bab524e9d7174d3023e"
           test "$(git -C .phase1-live/upstreams/mgba rev-parse HEAD)" = "fd9dc5c2cbf234365068855851107e762fc6211b"
           python3 -m py_compile tools/phase1_copilot_receipts_v6_adapter.py
       - name: Execute real seven-receipt v6 validator (fail closed)

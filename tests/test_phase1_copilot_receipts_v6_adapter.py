@@ -150,7 +150,8 @@ class V6AdapterTests(unittest.TestCase):
 
     def test_exact_seven_ordered_synthetic_register_passes(self):
         self.assertTrue(adapter.validate_receipt_inventory(self.receipts))
-        self.assertEqual(adapter.PR8_HEAD, "487da72f27dfc4e634cecc11b4dbdd596ec05e00")
+        self.assertEqual(adapter.PR8_HEAD, "4c7c09b6257d2e88a2e19bab524e9d7174d3023e")
+        self.assertEqual(adapter.RECEIPT_COMMIT, "487da72f27dfc4e634cecc11b4dbdd596ec05e00")
 
     def test_v5_receipts_and_historical_register_prefix_are_preserved(self):
         self.assertEqual(adapter.EXPECTED_ORDER[:4], v5.EXPECTED_ORDER)
@@ -158,6 +159,9 @@ class V6AdapterTests(unittest.TestCase):
             self.assertEqual(self.original_expected[key], v5.EXPECTED_RECEIPTS[key])
         self.assertEqual(adapter.REGISTER_BLOB, "0c5b50003b89d346d04c86e52774c4e01e9d321b")
         self.assertEqual(adapter.EVIDENCE_COMMIT, "e2cae6f1c073be4ee04691a57915adf740868279")
+        self.assertEqual(adapter.CI_RETRY_BLOB, "ddc399dbe9cd05561a2cc25e5c9aeca31fa5b995")
+        for key in adapter.EXPECTED_ORDER[4:]:
+            self.assertEqual(adapter.EXPECTED_RECEIPTS[key]["receipt_commit"], adapter.RECEIPT_COMMIT)
 
     def test_reordered_duplicate_missing_and_extra_receipts_fail(self):
         variants = [

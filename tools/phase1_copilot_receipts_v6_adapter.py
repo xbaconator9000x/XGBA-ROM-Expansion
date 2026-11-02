@@ -15,11 +15,14 @@ from urllib.parse import urlencode
 import phase1_copilot_receipts_v4_adapter as v4
 import phase1_copilot_receipts_v5_adapter as v5
 
-PR8_HEAD = "487da72f27dfc4e634cecc11b4dbdd596ec05e00"
+PR8_HEAD = "4c7c09b6257d2e88a2e19bab524e9d7174d3023e"
+RECEIPT_COMMIT = "487da72f27dfc4e634cecc11b4dbdd596ec05e00"
 REGISTER_BLOB = "0c5b50003b89d346d04c86e52774c4e01e9d321b"
 EVIDENCE_COMMIT = "e2cae6f1c073be4ee04691a57915adf740868279"
 EVIDENCE_PATH = "docs/phase1-review-readiness/mgba-arm-three-headers-chatgpt-source-evidence-20261102.md"
 EVIDENCE_BLOB = "c26ab43096c4b217952cf17840bfc9ddf7ba8b20"
+CI_RETRY_PATH = "docs/phase1-review-readiness/analyst-ci-execution-provenance-20261102.md"
+CI_RETRY_BLOB = "ddc399dbe9cd05561a2cc25e5c9aeca31fa5b995"
 DOSSIERS_BLOB = v5.DOSSIERS_BLOB
 DOSSIERS_SHA256 = v5.DOSSIERS_SHA256
 DOSSIERS_PATH = v5.DOSSIERS_PATH
@@ -43,7 +46,7 @@ EXPECTED_RECEIPTS.update({
         "dossier_sha256": "05d586e5055c29f4b983f57b1e4b16a1ed4f13c1ad3279c14abfaecb77e7f419",
         "receipt_sha256": "68d40e2e26b63751fd5ebe5b2c6d8088d1ee4435174946782d87c24dc2eb7361",
         "evidence_commit": EVIDENCE_COMMIT,
-        "receipt_commit": PR8_HEAD,
+        "receipt_commit": RECEIPT_COMMIT,
     },
     ("mgba-emu/mgba", "include/mgba/internal/arm/emitter-inlines.h"): {
         "blob": "38bab70bddf08f6160461ab73a1649a2bdbd256f",
@@ -51,7 +54,7 @@ EXPECTED_RECEIPTS.update({
         "dossier_sha256": "8f51aeccbdc79e89725255663e8467bdc9f7f2441637edb069b222efce8cd441",
         "receipt_sha256": "a9a92f196fb14985d9d7dbe36e647ed5bc17ab67c74c9426c0b7c2f92dfe3bf8",
         "evidence_commit": EVIDENCE_COMMIT,
-        "receipt_commit": PR8_HEAD,
+        "receipt_commit": RECEIPT_COMMIT,
     },
     ("mgba-emu/mgba", "include/mgba/internal/arm/isa-thumb.h"): {
         "blob": "69839d47a0f67d6b9c10eb635da388d0cf88cfb9",
@@ -59,7 +62,7 @@ EXPECTED_RECEIPTS.update({
         "dossier_sha256": "3c8da4a3778cfdf0a1a3897e28db762f1bcb031a217e5aa30b9ffbed8a9cc4c6",
         "receipt_sha256": "f4fa4d806cb13b7b8518a675e244bb476fe9ac73d31ef1f04e7c3fdbdbcec2ad",
         "evidence_commit": EVIDENCE_COMMIT,
-        "receipt_commit": PR8_HEAD,
+        "receipt_commit": RECEIPT_COMMIT,
     },
 })
 EXPECTED_BLOBS = {
@@ -70,6 +73,7 @@ EXPECTED_BLOBS = {
     v5.DOSSIERS_PATH: DOSSIERS_BLOB,
     v5.QUEUE_PATH: QUEUE_BLOB,
     EVIDENCE_PATH: EVIDENCE_BLOB,
+    CI_RETRY_PATH: CI_RETRY_BLOB,
 }
 
 
@@ -99,9 +103,12 @@ def verify_pinned_worktree(root):
     current = (root / RECEIPT_PATH).read_bytes().splitlines(keepends=True)
     if len(previous) != 4 or current[:4] != previous:
         raise ValueError("The original four receipt lines were not preserved byte-for-byte")
-    if v4._git(root, "rev-parse", f"{PR8_HEAD}^") != EVIDENCE_COMMIT:
+    if v4._git(root, "rev-parse", f"{RECEIPT_COMMIT}^") != EVIDENCE_COMMIT:
         raise ValueError("Seven-receipt introduction does not directly follow its evidence commit")
-    v4._git(root, "merge-base", "--is-ancestor", EVIDENCE_COMMIT, PR8_HEAD)
+    if v4._git(root, "rev-parse", f"{PR8_HEAD}^") != RECEIPT_COMMIT:
+        raise ValueError("Exact CI retry head is not the direct child of the immutable receipt-introduction commit")
+    v4._git(root, "merge-base", "--is-ancestor", EVIDENCE_COMMIT, RECEIPT_COMMIT)
+    v4._git(root, "merge-base", "--is-ancestor", RECEIPT_COMMIT, PR8_HEAD)
     if hashlib.sha256((root / DOSSIERS_PATH).read_bytes()).hexdigest() != DOSSIERS_SHA256:
         raise ValueError("Original compressed machine dossier archive SHA-256 mismatch")
     if hashlib.sha256((root / QUEUE_PATH).read_bytes()).hexdigest() != QUEUE_SHA256:
