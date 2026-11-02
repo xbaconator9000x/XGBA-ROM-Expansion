@@ -21,7 +21,7 @@ class PinnedARMVerifierTests(unittest.TestCase):
         self.target.parent.mkdir(parents=True, exist_ok=True)
         self.target.write_bytes(self.raw)
         self.blob = hashlib.sha1(
-            b"blob " + str(len(self.raw)).encode() + b"\\0" + self.raw
+            b"blob " + str(len(self.raw)).encode() + b"\0" + self.raw
         ).hexdigest()
         self.digest = hashlib.sha256(self.raw).hexdigest()
 
