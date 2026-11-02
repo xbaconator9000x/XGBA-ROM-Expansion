@@ -12,6 +12,8 @@ on:
       - 'tests/test_phase1_copilot_receipts_v5_historical_replay.py'
       - 'tools/phase1_copilot_receipts_v6_adapter.py'
       - 'tests/test_phase1_copilot_receipts_v6_adapter.py'
+      - 'tools/phase1_copilot_receipts_v7_adapter.py'
+      - 'tests/test_phase1_copilot_receipts_v7_adapter.py'
       - 'docs/PHASE1_COPILOT_REVIEW_RECEIPTS_V1_PROPOSAL.md'
       - '.github/workflows/phase1-copilot-receipts-v1.yml'
   push:
@@ -26,6 +28,8 @@ on:
       - 'tests/test_phase1_copilot_receipts_v5_historical_replay.py'
       - 'tools/phase1_copilot_receipts_v6_adapter.py'
       - 'tests/test_phase1_copilot_receipts_v6_adapter.py'
+      - 'tools/phase1_copilot_receipts_v7_adapter.py'
+      - 'tests/test_phase1_copilot_receipts_v7_adapter.py'
       - 'docs/PHASE1_COPILOT_REVIEW_RECEIPTS_V1_PROPOSAL.md'
       - '.github/workflows/phase1-copilot-receipts-v1.yml'
 permissions:
@@ -76,6 +80,15 @@ jobs:
         run: python3 -m py_compile tools/phase1_copilot_receipts_v6_adapter.py tests/test_phase1_copilot_receipts_v6_adapter.py
       - name: Run v6 adapter synthetic positive and adversarial controls
         run: python3 -m unittest discover -s tests -p 'test_phase1_copilot_receipts_v6_adapter.py' -v
+  v7-adapter-fail-closed-controls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check v7 adapter and test syntax
+        run: python3 -m py_compile tools/phase1_copilot_receipts_v7_adapter.py tests/test_phase1_copilot_receipts_v7_adapter.py
+      - name: Run v7 adapter synthetic positive and adversarial controls
+        run: python3 -m unittest discover -s tests -p 'test_phase1_copilot_receipts_v7_adapter.py' -v
   v5-historical-replay-pinned-evidence:
     # Historical evidence is deliberately distinct from current PR8 v6 checks.
     runs-on: ubuntu-latest
@@ -164,5 +177,48 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python3 tools/phase1_copilot_receipts_v6_adapter.py \
+            --pr8-root "$GITHUB_WORKSPACE/.phase1-live/pr8" \
+            --source-root "$GITHUB_WORKSPACE/.phase1-live/upstreams"
+  v7-live-pinned-source-and-github-evidence:
+    # Separate eight-receipt lane; v6 remains pinned to its original seven-record head.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+      issues: read
+      pull-requests: read
+    steps:
+      - name: Check out existing PR2 adapter at this exact workflow head
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check out exact eight-receipt PR8 commit and complete ancestry
+        uses: actions/checkout@v4
+        with:
+          repository: xbaconator9000x/XGBA-ROM-Expansion
+          ref: b455f218537f7aad7876f51ced2542486835c3bf
+          fetch-depth: 0
+          persist-credentials: false
+          path: .phase1-live/pr8
+      - name: Check out immutable original mGBA source
+        uses: actions/checkout@v4
+        with:
+          repository: mgba-emu/mgba
+          ref: fd9dc5c2cbf234365068855851107e762fc6211b
+          persist-credentials: false
+          path: .phase1-live/upstreams/mgba
+      - name: Verify exact checkout identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C .phase1-live/pr8 rev-parse HEAD)" = "b455f218537f7aad7876f51ced2542486835c3bf"
+          test "$(git -C .phase1-live/upstreams/mgba rev-parse HEAD)" = "fd9dc5c2cbf234365068855851107e762fc6211b"
+          python3 -m py_compile tools/phase1_copilot_receipts_v7_adapter.py
+      - name: Execute real eight-receipt v7 validator (fail closed)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 tools/phase1_copilot_receipts_v7_adapter.py \
             --pr8-root "$GITHUB_WORKSPACE/.phase1-live/pr8" \
             --source-root "$GITHUB_WORKSPACE/.phase1-live/upstreams"
