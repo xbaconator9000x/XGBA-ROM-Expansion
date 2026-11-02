@@ -139,3 +139,72 @@ This audit found two fail-closed witness-integrity gaps in the new harness: (1) 
 **Evidence classification:** local Python parser tests can validate the fail-closed logic; the original native Qt6 and GBA-off observations remain **local-only** until an exact-head GitHub Actions job actually executes. The previous PR13 head `51aeefcb00afcc95c5704ea43e4a2519851a8e0d` had PR Actions run [#41425212981](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41425212981) with `action_required` and **zero jobs**, not a green result. The separate earlier ASan and Qt6 short-write evidence [#41379194866](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41379194866) remains valid at its own historical exact head; it does not validate these newly added EEPROM tests.
 
 **Next distinct evidence:** execute the new tests in GitHub Actions; then seek a pinned `M_CORE_GBA=ON` object-compile control and real `QFile`/save-file error-propagation evidence, without modifying upstream or claiming stock gameplay, .sav restart, physical Flash, combined licensing clearance or independent semantic approval. Legacy main gate remains `FAIL_INCOMPLETE`, external approvals 0/338 P0 and 0/14,834 overall.
+
+## Native QFile and GBA-enabled compile controls (2026-11-02; non-approving)
+
+This follow-up addresses the two next bounded evidence tasks in one existing
+PR13 workflow. It does not repeat the prior mock-QIODevice injection or
+EEPROM conversion tests.
+
+### Real QFile / `/dev/full`
+
+The test extracts the exact pinned `SaveConverter::convert()` body and checks
+the whole-file Git blob/SHA-256 and body SHA-256
+`d38981bdacba444256aa2dc69f8d856d95321fb2ed18aff8a3e99c45d66ef410`. The
+published native C++ fixture is pinned at SHA-256
+`9ac9be1aaaf91bbf3d818f791f839f76ba76ce00a556d5f7462f1392cf7fcd55`.
+For observation only, the fixture maps the body's `QFile` identifier to a
+small `QFile` subclass; its open, write and close methods delegate to real
+Qt6 `QFile`, not a fault-injected `QIODevice`. The source body otherwise
+executes as extracted. Three source mutations are rejected.
+
+Locally executed with Qt6 Core 6.4.2 and GCC 13.3.0:
+
+| Case | Open / error | `write()` return / error after write | `close()` / error after close | File bytes | Dialogs |
+| --- | --- | --- | --- | --- | --- |
+| Temporary file | success / `NoError` | 30 / `NoError` | called / `NoError` | exact payload | 0 |
+| Linux `/dev/full` (character device major 1, minor 7) | success / `NoError` | 30 / `NoError` | called / `ResourceError` (`No space left on device`) | sink | 0 |
+| Missing-parent path | failure / `OpenError` | not called | not called | none | 1 |
+
+This native host run observed that Qt6 accepted all 30 bytes into its write
+path for `/dev/full` but reported `ResourceError` on close. The exact pinned
+source ignores the write return and does not inspect the post-close error;
+because open succeeded, its failed-open-only dialog was not shown. The
+temporary-file case confirms real QFile persistence for a private test
+temporary path only. This does not establish behavior on user save files,
+other platforms, stock gameplay, `.sav` restart/interoperability, or physical
+Flash.
+
+Local command:
+
+```sh
+python3 -m py_compile tools/phase1_mgba_saveconverter_qfile.py
+python3 tools/phase1_mgba_saveconverter_qfile.py \
+  --source-file /tmp/mgba-SaveConverter-pinned.cpp \
+  --harness tests/phase1_mgba_saveconverter_qfile.cpp
+```
+
+The temporary source copy used for this local run independently matched the
+pinned source Git blob and SHA-256 above. The existing workflow instead uses
+the exact pinned Git checkout.
+
+### Matched GBA-enabled/disabled object compile
+
+The existing CMake helper now accepts `--core-gba ON|OFF`, applies the same
+Qt6 CMake configuration to separate build directories, verifies the
+generated Qt target's actual `M_CORE_GBA` compile definition, and captures
+the real generated compiler command. The `ON` control must produce a
+non-empty `SaveConverter.cpp.o` artifact and records its SHA-256. The `OFF`
+control retains the expected unguarded GBA-symbol compiler diagnostics and
+requires no object artifact. Both variants are wired into the existing
+workflow, after the pinned mGBA checkout and Qt6 setup.
+
+The prior exact-head negative `M_CORE_GBA=OFF` result is recorded above and
+was re-executed in successful run #41431570207 at `25c7fdfa`. The matched
+`M_CORE_GBA=ON` control and the new QFile witness are **not yet observed in
+Actions** at this documentation point; no green result is claimed for the
+new workflow steps until their exact-head job logs are retrieved.
+
+No upstream source, shared gate, approval count, or review receipt is changed.
+The authoritative Phase 1 gate remains `FAIL_INCOMPLETE`; independent
+approvals remain zero.

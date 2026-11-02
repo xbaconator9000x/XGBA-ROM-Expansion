@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Verify the pinned Qt SaveConverter translation unit with M_CORE_GBA disabled."""
+"""Compile the pinned Qt SaveConverter object with the selected GBA-core setting."""
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -27,21 +28,27 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkout", type=Path, required=True)
     parser.add_argument("--build-dir", type=Path)
+    parser.add_argument("--core-gba", choices=("ON", "OFF"), default="OFF")
     args = parser.parse_args()
     checkout = args.checkout.resolve()
-    build = (args.build_dir or Path("/tmp/xgba-mgba-gba-off-qt")).resolve()
+    build = (args.build_dir or Path(
+        "/tmp/xgba-mgba-gba-" + args.core_gba.lower() + "-qt"
+    )).resolve()
     require(subprocess.check_output(
         ["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True
     ).strip() == PIN, "wrong pinned mGBA revision")
     require(subprocess.check_output(
         ["git", "-C", str(checkout), "rev-parse", "HEAD:" + SOURCE], text=True
     ).strip() == SOURCE_BLOB, "pinned SaveConverter source blob changed")
+    require(subprocess.check_output(
+        ["git", "-C", str(checkout), "hash-object", SOURCE], text=True
+    ).strip() == SOURCE_BLOB, "pinned SaveConverter worktree blob changed")
 
     configure = [
         "cmake", "-S", str(checkout), "-B", str(build),
         "-DCMAKE_BUILD_TYPE=Debug", "-DCMAKE_CXX_COMPILER=g++",
         "-DLIBMGBA_ONLY=OFF", "-DDISABLE_FRONTENDS=OFF",
-        "-DM_CORE_GBA=OFF", "-DM_CORE_GB=ON", "-DBUILD_QT=ON",
+        "-DM_CORE_GBA=" + args.core_gba, "-DM_CORE_GB=ON", "-DBUILD_QT=ON",
         "-DBUILD_SDL=OFF", "-DBUILD_GL=OFF", "-DBUILD_GLES2=OFF",
         "-DBUILD_GLES3=OFF", "-DENABLE_SCRIPTING=OFF",
         "-DENABLE_DEBUGGERS=OFF", "-DUSE_FFMPEG=OFF",
@@ -61,8 +68,10 @@ def main():
     generated = build_make.read_text(encoding="utf-8")
     flags = flags_file.read_text(encoding="utf-8")
     require(SOURCE in generated, "Qt target omits pinned SaveConverter.cpp")
-    require(re.search(r"(^|\s)-DM_CORE_GBA(\s|$)", flags) is None,
-            "M_CORE_GBA unexpectedly enabled in Qt target")
+    core_flag = re.search(r"(^|\s)-DM_CORE_GBA(\s|$)", flags) is not None
+    require(core_flag == (args.core_gba == "ON"),
+            "Qt target compile definitions do not match M_CORE_GBA=" +
+            args.core_gba)
 
     autogen = run([
         "cmake", "-E", "cmake_autogen", str(autogen_info), "Debug"
@@ -77,50 +86,87 @@ def main():
             "Qt UI generation failed:\n" + generated_ui.stdout[-8000:])
 
     target = "qt/CMakeFiles/mgba-qt.dir/SaveConverter.cpp.o"
+    artifact = build / target
+    if artifact.exists():
+        artifact.unlink()
     compile_result = run([
         "make", "-C", str(build), "-f",
         "qt/CMakeFiles/mgba-qt.dir/build.make", target, "VERBOSE=1"
     ], timeout=120)
     diagnostics = compile_result.stdout
-    expected_errors = (
-        "SaveConverter.cpp:277:30: error: ‘GBASavedataSharkPortGetPayload’ was not declared",
-        "SaveConverter.cpp:293:30: error: ‘GBASavedataGSVGetPayload’ was not declared",
-        "SaveConverter.cpp:281:37: error: ‘GBA_SIZE_FLASH1M’ was not declared",
+    expected_errors = ()
+    if args.core_gba == "ON":
+        require(compile_result.returncode == 0,
+                "M_CORE_GBA=ON SaveConverter object compile failed:\n" +
+                diagnostics[-12000:])
+        require(artifact.is_file() and artifact.stat().st_size > 0,
+                "M_CORE_GBA=ON object artifact missing or empty")
+        require("SaveConverter.cpp.o" in diagnostics,
+                "compiler did not report building SaveConverter object")
+    else:
+        expected_errors = (
+            "SaveConverter.cpp:277:30: error: ‘GBASavedataSharkPortGetPayload’ was not declared",
+            "SaveConverter.cpp:293:30: error: ‘GBASavedataGSVGetPayload’ was not declared",
+            "SaveConverter.cpp:281:37: error: ‘GBA_SIZE_FLASH1M’ was not declared",
+        )
+        missing = [line for line in expected_errors if line not in diagnostics]
+        require(compile_result.returncode != 0 and not missing,
+                "expected GBA-disabled compile-closure diagnostics were absent: " +
+                repr(missing) + "\n" + diagnostics[-12000:])
+        require("SaveConverter.cpp.o" in diagnostics,
+                "compiler did not attempt the pinned SaveConverter object")
+        require(not artifact.exists(),
+                "M_CORE_GBA=OFF compile unexpectedly produced an object")
+
+    compiler_command = next(
+        (line.strip() for line in diagnostics.splitlines()
+         if "g++" in line and "SaveConverter.cpp" in line and " -c " in line),
+        None,
     )
-    missing = [line for line in expected_errors if line not in diagnostics]
-    require(compile_result.returncode != 0 and not missing,
-            "expected GBA-disabled compile-closure diagnostics were absent: " +
-            repr(missing) + "\n" + diagnostics[-12000:])
-    require("SaveConverter.cpp.o" in diagnostics,
-            "compiler did not attempt the pinned SaveConverter object")
-    require("M_CORE_GBA" not in flags,
-            "M_CORE_GBA leaked into compile definitions")
+    require(compiler_command is not None,
+            "verbose generated compile command was not captured")
+    source_sha = hashlib.sha256((checkout / SOURCE).read_bytes()).hexdigest()
 
     evidence = {
-        "class": "PINNED_MGBA_QT_M_CORE_GBA_OFF_TRANSLATION_UNIT_COMPILE",
+        "class": "PINNED_MGBA_QT_M_CORE_GBA_" +
+                 args.core_gba + "_TRANSLATION_UNIT_COMPILE",
         "mgba_commit": PIN,
         "source": SOURCE,
         "source_blob": SOURCE_BLOB,
+        "source_sha256": source_sha,
         "qt6_core_version": subprocess.check_output(
             ["pkg-config", "--modversion", "Qt6Core"], text=True
         ).strip(),
         "cmake_configure": configure,
+        "compiler_command": compiler_command,
+        "compiler_diagnostics": [
+            line.strip() for line in diagnostics.splitlines()
+            if "warning:" in line or "error:" in line
+        ][:100],
         "target": "mgba-qt",
         "isolated_translation_unit_target": target,
-        "m_core_gba": False,
-        "translation_unit_compiled": False,
+        "m_core_gba": args.core_gba == "ON",
+        "translation_unit_compiled": compile_result.returncode == 0,
         "expected_diagnostic_lines": list(expected_errors),
         "actual_compile_exit_code": compile_result.returncode,
-        "compile_closure_result": "EXPECTED_FAILURE_GBA_SYMBOLS_UNGUARDED",
+        "compile_closure_result": (
+            "COMPILED" if args.core_gba == "ON"
+            else "EXPECTED_FAILURE_GBA_SYMBOLS_UNGUARDED"
+        ),
+        "object_artifact_sha256": (
+            hashlib.sha256(artifact.read_bytes()).hexdigest()
+            if artifact.exists() else None
+        ),
         "full_qt_frontend_linked": False,
         "independent_approvals": 0,
         "gate": "FAIL_INCOMPLETE",
     }
-    print("PHASE1_GBA_OFF_EVIDENCE " +
+    print("PHASE1_GBA_" + args.core_gba + "_EVIDENCE " +
           json.dumps(evidence, sort_keys=True))
-    for line in diagnostics.splitlines():
-        if "SaveConverter.cpp:" in line and "error:" in line:
-            print("PHASE1_GBA_OFF_DIAGNOSTIC " + line.strip())
+    if args.core_gba == "OFF":
+        for line in diagnostics.splitlines():
+            if "SaveConverter.cpp:" in line and "error:" in line:
+                print("PHASE1_GBA_OFF_DIAGNOSTIC " + line.strip())
 
 
 if __name__ == "__main__":

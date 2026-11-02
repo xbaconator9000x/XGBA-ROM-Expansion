@@ -12,6 +12,8 @@ on:
       - 'tests/phase1_mgba_saveconverter_eeprom_tail.cpp'
       - 'tests/test_phase1_mgba_saveconverter_eeprom_tail.py'
       - 'tools/phase1_mgba_saveconverter_gba_off.py'
+      - 'tools/phase1_mgba_saveconverter_qfile.py'
+      - 'tests/phase1_mgba_saveconverter_qfile.cpp'
       - 'docs/phase1-review-readiness/mgba-savedata-boundary-witness-20261027.md'
       - 'docs/phase1-review-readiness/mgba-saveconverter-core-lifetime-asan-20261101.md'
       - 'docs/phase1-review-readiness/mgba-saveconverter-eeprom-tail-gba-off-20261102.md'
@@ -26,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Syntax checks
-        run: python3 -m py_compile tools/phase1_mgba_savedata_boundary_witness.py tools/phase1_mgba_savedata_handoff_verify.py tools/phase1_mgba_saveconverter_eeprom_tail.py tools/phase1_mgba_saveconverter_gba_off.py
+        run: python3 -m py_compile tools/phase1_mgba_savedata_boundary_witness.py tools/phase1_mgba_savedata_handoff_verify.py tools/phase1_mgba_saveconverter_eeprom_tail.py tools/phase1_mgba_saveconverter_gba_off.py tools/phase1_mgba_saveconverter_qfile.py
       - name: Fail-closed EEPROM parser and fixture controls
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_saveconverter_eeprom_tail.py" -v
       - name: Fetch exact pinned mGBA source
@@ -57,7 +59,20 @@ jobs:
             --checkout /tmp/xgba-mgba-boundary \
             --harness tests/phase1_mgba_saveconverter_eeprom_tail.cpp \
             --root .
+      - name: Execute pinned SaveConverter with native Qt6 QFile
+        run: |
+          python3 tools/phase1_mgba_saveconverter_qfile.py \
+            --checkout /tmp/xgba-mgba-boundary \
+            --harness tests/phase1_mgba_saveconverter_qfile.cpp
+      - name: Compile pinned Qt translation unit with GBA core enabled
+        run: |
+          python3 tools/phase1_mgba_saveconverter_gba_off.py \
+            --checkout /tmp/xgba-mgba-boundary \
+            --core-gba ON \
+            --build-dir /tmp/xgba-mgba-gba-on-qt
       - name: Compile pinned Qt translation unit with GBA core disabled
         run: |
           python3 tools/phase1_mgba_saveconverter_gba_off.py \
-            --checkout /tmp/xgba-mgba-boundary
+            --checkout /tmp/xgba-mgba-boundary \
+            --core-gba OFF \
+            --build-dir /tmp/xgba-mgba-gba-off-qt
