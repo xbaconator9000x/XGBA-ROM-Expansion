@@ -16,9 +16,9 @@ GitHub PR/Actions read responses; malformed or unavailable values are not
 repaired or inferred.
 
 Manifest SHA-256:
-`77bd93912da0d95c1eed90b1e0105a9615972a8091cad3a9ac5b8371eeba3445`.
+`05da629c77418e9fd632646acf2f18ff5d9d092f9599d047af9961adc001aad1`.
 Checker SHA-256:
-`cad01530abd61506f26ee835c477ec6fdac9fe43cdcd7fadc4926e2cdd2c5628`.
+`1cc1b1dd79cd08ff5ca4704b3e107e9580bd6ab87a4ca2b6e536fb90645dc594`.
 
 ## First concrete blocker
 
@@ -168,6 +168,42 @@ also rejects empty/duplicate PR scopes, dependency cycles, and incomplete or
 non-topological PR order.
 Its only result is integration metadata readiness; it never edits approvals,
 queues, gates, pins, branches, or PR state.
+
+Workflow evidence is classified per required workflow as `executed_success`,
+`executed_failure`, `action_required_zero_job`, `pending`, `missing`, or
+`stale_head_base`. A successful conclusion alone is insufficient: the latest
+applicable run attempt must have a complete, nonempty job list, and every
+executed job must have completed successfully (skipped jobs are allowed only
+alongside at least one successful job). If a newer current-head attempt is
+authorization-blocked or pending, an older success does not override it.
+Each completed job's recorded attempt must match the selected run attempt.
+Blocker output includes the run URL, attempt, job URLs when available, tested
+and reported head/base SHAs, and a specific next action. Authorization-blocked
+runs are never retried or counted as green automatically. If public job details
+are unavailable, evidence is reported missing/unverified rather than inferred
+from the run conclusion.
+
+### PR #35–37 workflow and dependency snapshot — 2026-11-04
+
+These observations are limited to the three requested open draft PRs; they are
+not a blanket exact-head coverage claim for the other draft branches.
+
+| PR | Current head | Current required PR workflow evidence | Branch relationship |
+|---|---|---|---|
+| #35 | `9a31fb1dfa0a08f95a06a3c2bf8cd431aafccd29` | Workflow `401590285`, run [#41037997890](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41037997890), attempt 2, job `124019365309`: completed success. The earlier failed run #41035833259 was on stale head `b21c5f67…`, not this head. | Based on `main` at `de2a775…`; its savedata review extends the existing mGBA boundary-test path and reviews/overlaps work in #12/#13, but is not stacked on either branch. |
+| #36 | `fc54588319aea2a798f2455fb594c367209f8b85` | Workflow `401588179`, run [#41850174614](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41850174614): `action_required`, zero jobs. This is not a test failure or pass. The older successful run #41035493919 tested stale head `2c2805ea…`. | Based on `main` at `de2a775…`; review packet concerns #16/#20 but its branch is not based on either implementation branch. |
+| #37 | `b0ef759d9af830661a4d562c78db9436dbd85e9f` | Workflow `401606059`, run [#41050705648](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41050705648), attempt 2, job `124718548504`: completed success for the checker workflow as it existed at that head. | Based on `main` at `de2a775…`; this is the stack-audit/checker branch. It references #35/#36 as overlap/review packets, but is not based on either. |
+
+The three PR heads are sibling branches on the same recorded main base, not an
+ordered #35 → #36 → #37 stack. Relevant overlap edges are review relationships:
+#35 covers savedata implementation/evidence areas associated with #12/#13;
+#36 reviews Poryscript/FireRed ABI areas associated with #16/#20; #37 audits
+the wider stack and records #35/#36 without duplicating their source reviews.
+No other PR branch was modified or assigned a new dependency. PR #36's
+authorization blocker requires a maintainer to review the workflow changes and
+approve that specific run under the repository's configured Actions policy;
+after authorization, verify execution, job attempts, and current head/base
+provenance. Do not retry or treat it as green before that evidence exists.
 
 Focused fixtures: `python3 -m unittest discover -s tests -p test_copilot_check_integration_readiness.py`.
 

@@ -24,6 +24,281 @@ def _pr_number(value):
         return None
 
 
+def _workflow_ref(run, number):
+    refs = run.get("pull_requests", [])
+    for ref in refs:
+        ref_number = (
+            _pr_number(ref.get("number"))
+            if isinstance(ref, dict)
+            else _pr_number(ref)
+        )
+        if ref_number == number:
+            return ref
+    return None
+
+
+def _run_provenance(run, number, observed, commit_details):
+    """Return whether the executed commit is this PR's current head/base."""
+    ref = _workflow_ref(run, number)
+    if ref is None:
+        return False, "run is not scoped to this PR"
+
+    head_sha = observed.get("head_sha")
+    base_sha = observed.get("base_sha")
+    executed_sha = run.get("head_sha")
+    if not isinstance(executed_sha, str) or not SHA1.fullmatch(executed_sha):
+        return False, "executed commit SHA is missing or malformed"
+    if (
+        run.get("event") == "pull_request_target"
+        and executed_sha == base_sha
+        and executed_sha != head_sha
+    ):
+        return False, "pull_request_target executed only base code"
+
+    if executed_sha == head_sha:
+        if isinstance(ref, dict):
+            if ref.get("head_sha") not in (None, head_sha):
+                return False, "PR head provenance is stale"
+            if ref.get("base_sha") not in (None, base_sha):
+                return False, "PR base provenance is stale"
+        return True, "exact current PR head"
+
+    if not isinstance(ref, dict):
+        return False, "run does not bind the executed commit to current PR head/base"
+    if ref.get("head_sha") != head_sha or ref.get("base_sha") != base_sha:
+        return False, "PR head/base provenance is stale"
+
+    commit = commit_details.get(executed_sha)
+    if not isinstance(commit, dict) or commit.get("sha") != executed_sha:
+        return False, "merge commit object was not independently verified"
+    if commit.get("parents") != [base_sha, head_sha]:
+        return False, "merge commit parents do not match current PR base/head"
+    return True, "verified merge commit with exact base/head parents"
+
+
+def classify_workflow_evidence(number, workflow_id, observed, runs, commit_details):
+    """Classify the latest exact-scope run, retaining URLs and actionable detail."""
+    candidates = [
+        run
+        for run in runs
+        if isinstance(run, dict)
+        and run.get("workflow_id") == workflow_id
+        and _workflow_ref(run, number) is not None
+    ]
+    base_result = {
+        "pr_number": number,
+        "workflow_id": workflow_id,
+        "expected_head_sha": observed.get("head_sha"),
+        "expected_base_sha": observed.get("base_sha"),
+        "run_id": None,
+        "run_attempt": None,
+        "event": None,
+        "executed_sha": None,
+        "reported_head_sha": None,
+        "reported_base_sha": None,
+        "run_url": None,
+        "job_urls": [],
+        "detail": "",
+    }
+    if not candidates:
+        return dict(base_result, status="missing",
+                    detail="no run for this PR and required workflow was observed")
+
+    current, stale = [], []
+    for run in candidates:
+        matches, provenance = _run_provenance(run, number, observed, commit_details)
+        item = (run, provenance)
+        (current if matches else stale).append(item)
+
+    def run_rank(item):
+        run = item[0]
+        return (
+            str(run.get("created_at") or ""),
+            run.get("run_number") if isinstance(run.get("run_number"), int) else 0,
+            run.get("run_attempt") if isinstance(run.get("run_attempt"), int) else 0,
+            run.get("id") if isinstance(run.get("id"), int) else 0,
+        )
+
+    if not current:
+        run, provenance = max(stale, key=run_rank)
+        return dict(
+            base_result,
+            status="stale_head_base",
+            run_id=run.get("id"),
+            run_attempt=run.get("run_attempt"),
+            event=run.get("event"),
+            executed_sha=run.get("head_sha"),
+            reported_head_sha=(
+                _workflow_ref(run, number).get("head_sha")
+                if isinstance(_workflow_ref(run, number), dict)
+                else None
+            ),
+            reported_base_sha=(
+                _workflow_ref(run, number).get("base_sha")
+                if isinstance(_workflow_ref(run, number), dict)
+                else None
+            ),
+            run_url=run.get("html_url"),
+            detail=provenance,
+        )
+
+    run, provenance = max(current, key=run_rank)
+    result = dict(
+        base_result,
+        run_id=run.get("id"),
+        run_attempt=run.get("run_attempt"),
+        event=run.get("event"),
+        executed_sha=run.get("head_sha"),
+        reported_head_sha=(
+            _workflow_ref(run, number).get("head_sha")
+            if isinstance(_workflow_ref(run, number), dict)
+            else None
+        ),
+        reported_base_sha=(
+            _workflow_ref(run, number).get("base_sha")
+            if isinstance(_workflow_ref(run, number), dict)
+            else None
+        ),
+        run_url=run.get("html_url"),
+        provenance=provenance,
+    )
+    jobs = run.get("jobs")
+    if (
+        not isinstance(run.get("run_attempt"), int)
+        or isinstance(run.get("run_attempt"), bool)
+        or run.get("run_attempt") < 1
+    ):
+        return dict(result, status="missing",
+                    detail="run attempt number is absent or malformed")
+
+    if run.get("status") in ("queued", "in_progress", "requested", "waiting"):
+        return dict(result, status="pending", detail="workflow run has not completed")
+    if run.get("conclusion") == "action_required" or run.get("status") == "action_required":
+        if isinstance(jobs, dict) and jobs.get("available") is True:
+            if jobs.get("total_count") == 0:
+                return dict(
+                    result,
+                    status="action_required_zero_job",
+                    detail=(
+                        "GitHub requires workflow authorization; no job executed. "
+                        "A maintainer with write access must approve the run in GitHub Actions."
+                    ),
+                )
+            return dict(
+                result,
+                status="missing",
+                detail="action_required run unexpectedly reports jobs; inspect run metadata",
+            )
+        return dict(
+            result,
+            status="missing",
+            detail="action_required run has no verified job-count response",
+        )
+
+    if run.get("status") != "completed":
+        return dict(result, status="pending",
+                    detail="workflow run is not in a completed state")
+    if not isinstance(jobs, dict) or jobs.get("available") is not True:
+        return dict(result, status="missing",
+                    detail="job execution evidence is unavailable")
+    job_rows = jobs.get("jobs")
+    total_count = jobs.get("total_count")
+    if (
+        not isinstance(total_count, int)
+        or isinstance(total_count, bool)
+        or total_count < 0
+        or not isinstance(job_rows, list)
+        or not jobs.get("complete", True)
+        or len(job_rows) != total_count
+    ):
+        return dict(result, status="missing",
+                    detail="workflow job list is malformed or incomplete")
+    result["job_urls"] = [
+        job.get("html_url")
+        for job in job_rows
+        if isinstance(job, dict) and isinstance(job.get("html_url"), str)
+    ]
+    if total_count == 0:
+        return dict(result, status="missing",
+                    detail="completed run has no executed job evidence")
+
+    job_statuses = [job.get("status") for job in job_rows if isinstance(job, dict)]
+    job_conclusions = [
+        job.get("conclusion") for job in job_rows if isinstance(job, dict)
+    ]
+    if len(job_statuses) != total_count:
+        return dict(result, status="missing",
+                    detail="workflow job records contain malformed entries")
+    if any(
+        not isinstance(job.get("run_attempt"), int)
+        or isinstance(job.get("run_attempt"), bool)
+        or job.get("run_attempt") != run.get("run_attempt")
+        for job in job_rows
+    ):
+        return dict(
+            result,
+            status="missing",
+            detail="job attempt provenance is absent or does not match the selected run attempt",
+        )
+    if any(status != "completed" for status in job_statuses):
+        return dict(result, status="pending",
+                    detail="one or more workflow jobs have not completed")
+    if (
+        run.get("conclusion") == "success"
+        and all(conclusion in ("success", "skipped") for conclusion in job_conclusions)
+        and "success" in job_conclusions
+    ):
+        return dict(result, status="executed_success",
+                    detail="completed run and all executed jobs succeeded")
+    return dict(result, status="executed_failure",
+                detail="completed run or one or more jobs did not succeed")
+
+
+def _format_workflow_blocker(evidence):
+    status = evidence["status"]
+    workflow_id = evidence["workflow_id"]
+    number = evidence["pr_number"]
+    run = "run %s" % evidence["run_id"] if evidence["run_id"] is not None else "no run"
+    if evidence.get("run_attempt") is not None:
+        run += " attempt %s" % evidence["run_attempt"]
+    url = evidence.get("run_url") or "unavailable"
+    detail = evidence["detail"]
+    if status == "action_required_zero_job":
+        action = (
+            "Required action: a maintainer with write access must approve this "
+            "workflow run at %s; do not retry or count it as green." % url
+        )
+    elif status == "pending":
+        action = "Required action: wait for the run/jobs to complete; do not infer success."
+    elif status == "executed_failure":
+        action = "Required action: inspect run/job logs before deciding on a repair; no retry was requested."
+    elif status == "stale_head_base":
+        action = "Required action: obtain evidence on the current head/base; stale evidence is not reusable."
+    else:
+        action = "Required action: restore or query complete exact-scope run/job evidence."
+    job_urls = ",".join(evidence.get("job_urls", [])) or "unavailable"
+    return (
+        "PR #%d required evidence absent: workflow #%d status=%s, %s, URL=%s, "
+        "job_URLs=%s, tested_head=%s, tested_base=%s, executed_sha=%s, "
+        "reported_head=%s, reported_base=%s; "
+        "%s; %s" % (
+            number,
+            workflow_id,
+            status,
+            run,
+            url,
+            job_urls,
+            evidence.get("expected_head_sha") or "unknown",
+            evidence.get("expected_base_sha") or "unknown",
+            evidence.get("executed_sha") or "unknown",
+            evidence.get("reported_head_sha") or "unknown",
+            evidence.get("reported_base_sha") or "unknown",
+            detail,
+            action,
+        )
+    )
+
+
 def validate(manifest, snapshot):
     """Return readiness blockers; never interprets CI as semantic approval."""
     issues = []
@@ -296,73 +571,59 @@ def validate(manifest, snapshot):
             issues.append("PR #%d has duplicate required workflow IDs" % number)
             continue
         for workflow_id in workflow_ids:
-            candidates = [
-                run
-                for run in runs
-                if isinstance(run, dict)
-                and run.get("workflow_id") == workflow_id
-                and any(
-                    _pr_number(ref.get("number") if isinstance(ref, dict) else ref) == number
-                    for ref in run.get("pull_requests", [])
-                )
-            ]
-            passing = [
-                run
-                for run in candidates
-                if run.get("status") == "completed" and run.get("conclusion") == "success"
-            ]
-            qualified = []
-            for run in passing:
-                executed_sha = run.get("head_sha")
-                for ref in run.get("pull_requests", []):
-                    ref_number = (
-                        _pr_number(ref.get("number"))
-                        if isinstance(ref, dict)
-                        else _pr_number(ref)
-                    )
-                    if ref_number != number:
-                        continue
-                    if not SHA1.fullmatch(str(executed_sha or "")):
-                        continue
-                    if executed_sha == observed.get("head_sha"):
-                        if (
-                            run.get("event") == "pull_request_target"
-                            and executed_sha == observed.get("base_sha")
-                        ):
-                            continue
-                        qualified.append(run)
-                        continue
-                    if not isinstance(ref, dict):
-                        continue
-                    if (
-                        ref.get("head_sha") != observed.get("head_sha")
-                        or ref.get("base_sha") != observed.get("base_sha")
-                    ):
-                        continue
-                    commit = commit_details.get(executed_sha)
-                    if not isinstance(commit, dict) or commit.get("sha") != executed_sha:
-                        continue
-                    parents = commit.get("parents")
-                    if (
-                        isinstance(parents, list)
-                        and parents == [observed.get("base_sha"), observed.get("head_sha")]
-                    ):
-                        qualified.append(run)
-            if not qualified:
-                if not candidates:
-                    detail = "required workflow #%d was not observed for the PR" % workflow_id
-                elif not passing:
-                    detail = "required workflow #%d has no successful completed run" % workflow_id
-                else:
-                    detail = (
-                        "green workflow #%d lacks matching current head/base provenance"
-                        % workflow_id
-                    )
-                issues.append("PR #%d required evidence absent: %s" % (number, detail))
+            evidence = classify_workflow_evidence(
+                number, workflow_id, observed, runs, commit_details
+            )
+            if evidence["status"] != "executed_success":
+                issue = _format_workflow_blocker(evidence)
+                if evidence["status"] == "stale_head_base":
+                    issue += "; green workflow lacks matching current head/base provenance"
+                issues.append(issue)
 
     for number in live_prs.keys() - expected_prs.keys():
         issues.append("unexpected PR #%d is absent from the pinned manifest" % number)
     return issues
+
+
+def workflow_evidence_report(manifest, snapshot):
+    """Return per-workflow classifications suitable for CLI reporting."""
+    if not isinstance(manifest, dict) or not isinstance(snapshot, dict):
+        return []
+    prs = manifest.get("pull_requests")
+    live_prs = snapshot.get("pull_requests")
+    runs = snapshot.get("workflow_runs")
+    commit_details = snapshot.get("commit_details", {})
+    workflow_ids = manifest.get("required_workflow_ids")
+    if (
+        not isinstance(prs, list)
+        or not isinstance(live_prs, dict)
+        or not isinstance(runs, list)
+        or not isinstance(commit_details, dict)
+        or not isinstance(workflow_ids, dict)
+    ):
+        return []
+    report = []
+    for pr in prs:
+        if not isinstance(pr, dict):
+            continue
+        number = pr.get("number")
+        if not isinstance(number, int) or isinstance(number, bool):
+            continue
+        observed = live_prs.get(str(number), live_prs.get(number))
+        if not isinstance(observed, dict):
+            continue
+        ids = workflow_ids.get(str(number))
+        if not isinstance(ids, list):
+            continue
+        for workflow_id in ids:
+            if not isinstance(workflow_id, int) or isinstance(workflow_id, bool):
+                continue
+            report.append(
+                classify_workflow_evidence(
+                    number, workflow_id, observed, runs, commit_details
+                )
+            )
+    return report
 
 
 def fetch_public_snapshot(manifest):
@@ -426,13 +687,89 @@ def fetch_public_snapshot(manifest):
                     })
                 runs.append({
                     "id": run.get("id"),
+                    "run_number": run.get("run_number"),
+                    "run_attempt": run.get("run_attempt"),
                     "workflow_id": run.get("workflow_id"),
                     "event": run.get("event"),
                     "status": run.get("status"),
                     "conclusion": run.get("conclusion"),
                     "head_sha": run.get("head_sha"),
+                    "html_url": run.get("html_url"),
+                    "created_at": run.get("created_at"),
+                    "updated_at": run.get("updated_at"),
                     "pull_requests": refs,
                 })
+        for run in runs:
+            if not isinstance(run.get("id"), int):
+                continue
+            required_prs = {
+                _pr_number(ref.get("number"))
+                for ref in run.get("pull_requests", [])
+                if isinstance(ref, dict)
+            }
+            if not any(
+                number in required_prs
+                and run.get("workflow_id") in required_ids.get(str(number), [])
+                for number in wanted
+            ):
+                continue
+            attempt = run.get("run_attempt")
+            attempt_path = (
+                "/repos/%s/%s/actions/runs/%s/attempts/%s/jobs"
+                % (owner, repo, run["id"], attempt)
+                if isinstance(attempt, int) and not isinstance(attempt, bool) and attempt > 0
+                else "/repos/%s/%s/actions/runs/%s/jobs" % (owner, repo, run["id"])
+            )
+            job_rows = []
+            total_count = None
+            complete = True
+            try:
+                page = 1
+                while True:
+                    response = get_json(
+                        attempt_path,
+                        {"per_page": 100, "page": page},
+                    )
+                    if not isinstance(response, dict) or not isinstance(
+                        response.get("jobs"), list
+                    ):
+                        raise ValueError("workflow job response is malformed")
+                    if total_count is None:
+                        total_count = response.get("total_count")
+                        if not isinstance(total_count, int) or isinstance(total_count, bool):
+                            raise ValueError("workflow job count is malformed")
+                    for job in response["jobs"]:
+                        if not isinstance(job, dict):
+                            continue
+                        job_rows.append({
+                            "id": job.get("id"),
+                            "name": job.get("name"),
+                            "status": job.get("status"),
+                            "conclusion": job.get("conclusion"),
+                            "html_url": job.get("html_url"),
+                            "run_attempt": job.get("run_attempt"),
+                        })
+                    if len(job_rows) >= total_count or not response["jobs"]:
+                        break
+                    page += 1
+                    if page > 20:
+                        complete = False
+                        break
+                if len(job_rows) != total_count:
+                    complete = False
+                run["jobs"] = {
+                    "available": True,
+                    "total_count": total_count,
+                    "jobs": job_rows,
+                    "complete": complete,
+                }
+            except (HTTPError, URLError, TimeoutError, KeyError, ValueError):
+                run["jobs"] = {
+                    "available": False,
+                    "total_count": None,
+                    "jobs": [],
+                    "complete": False,
+                }
         commit_details = {}
         for run in runs:
             if run.get("event") not in ("pull_request", "pull_request_target"):
@@ -494,11 +831,22 @@ def recorded_snapshot(manifest):
                 continue
             runs.append({
                 "id": observed.get("id"),
+                "run_number": observed.get("run_number"),
+                "run_attempt": observed.get("run_attempt"),
                 "workflow_id": observed.get("workflow_id"),
                 "event": observed.get("event"),
                 "status": "completed",
                 "conclusion": "success",
                 "head_sha": observed.get("head_sha"),
+                "html_url": observed.get("html_url"),
+                "created_at": observed.get("created_at"),
+                "updated_at": observed.get("updated_at"),
+                "jobs": observed.get("jobs", {
+                    "available": False,
+                    "total_count": None,
+                    "jobs": [],
+                    "complete": False,
+                }),
                 "pull_requests": [number],
             })
     return {
@@ -537,6 +885,30 @@ def main(argv=None):
         print("BLOCKED: %s" % exc, file=sys.stderr)
         return 2
     issues = validate(manifest, snapshot)
+    for evidence in workflow_evidence_report(manifest, snapshot):
+        run = str(evidence.get("run_id") or "none")
+        attempt = str(evidence.get("run_attempt") or "none")
+        print(
+            "WORKFLOW_EVIDENCE PR #%s workflow #%s status=%s run=%s attempt=%s "
+            "event=%s expected_head=%s expected_base=%s executed_sha=%s "
+            "reported_head=%s reported_base=%s run_url=%s job_urls=%s detail=%s"
+            % (
+                evidence["pr_number"],
+                evidence["workflow_id"],
+                evidence["status"],
+                run,
+                attempt,
+                evidence.get("event") or "unknown",
+                evidence.get("expected_head_sha") or "unknown",
+                evidence.get("expected_base_sha") or "unknown",
+                evidence.get("executed_sha") or "unknown",
+                evidence.get("reported_head_sha") or "unknown",
+                evidence.get("reported_base_sha") or "unknown",
+                evidence.get("run_url") or "unavailable",
+                ",".join(evidence.get("job_urls", [])) or "unavailable",
+                evidence["detail"],
+            )
+        )
     for item in manifest.get("integration_order", []):
         print("%s. %s" % (item["order"], item["action"]))
     if issues:

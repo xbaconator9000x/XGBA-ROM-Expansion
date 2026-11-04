@@ -5,12 +5,20 @@ import json
 from pathlib import Path
 import unittest
 
-from tools.copilot_check_integration_readiness import validate
+from tools.copilot_check_integration_readiness import (
+    classify_workflow_evidence,
+    _format_workflow_blocker,
+    validate,
+)
 
 
 FIXTURE = (
     Path(__file__).parent
     / "fixtures/copilot-integration-readiness/valid_merge_sha.json"
+)
+CLASSIFICATIONS = (
+    Path(__file__).parent
+    / "fixtures/copilot-integration-readiness/workflow_classifications.json"
 )
 
 
@@ -19,6 +27,9 @@ class IntegrationReadinessTests(unittest.TestCase):
         fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
         self.manifest = fixture["manifest"]
         self.snapshot = fixture["snapshot"]
+        self.classification_fixture = json.loads(
+            CLASSIFICATIONS.read_text(encoding="utf-8")
+        )
 
     def test_exact_merge_sha_with_head_and_base_provenance_passes(self):
         self.assertEqual(validate(self.manifest, self.snapshot), [])
@@ -197,6 +208,131 @@ class IntegrationReadinessTests(unittest.TestCase):
             any("lacks matching current head/base provenance" in issue
                 for issue in validate(self.manifest, snapshot))
         )
+
+    def test_workflow_evidence_classification_fixtures(self):
+        observed = {
+            "head_sha": self.classification_fixture["pull_request"]["head_sha"],
+            "base_sha": self.classification_fixture["pull_request"]["base_sha"],
+        }
+        cases = self.classification_fixture["cases"]
+        expected = {
+            "executed_success": "executed_success",
+            "executed_failure": "executed_failure",
+            "action_required_zero_job": "action_required_zero_job",
+            "pending": "pending",
+            "missing": "missing",
+            "stale_head": "stale_head_base",
+            "stale_base": "stale_head_base",
+        }
+        for case_name, expected_status in expected.items():
+            with self.subTest(case=case_name):
+                result = classify_workflow_evidence(
+                    77,
+                    42,
+                    observed,
+                    cases[case_name]["runs"],
+                    {},
+                )
+                self.assertEqual(result["status"], expected_status)
+
+    def test_newer_authorization_blocked_attempt_supersedes_older_success(self):
+        observed = {
+            "head_sha": self.classification_fixture["pull_request"]["head_sha"],
+            "base_sha": self.classification_fixture["pull_request"]["base_sha"],
+        }
+        cases = self.classification_fixture["cases"]
+        older = copy.deepcopy(cases["executed_success"]["runs"][0])
+        newer = copy.deepcopy(cases["action_required_zero_job"]["runs"][0])
+        older.update(id=200, run_number=20, run_attempt=1, created_at="2026-11-04T10:00:00Z")
+        newer.update(id=200, run_number=20, run_attempt=2, created_at="2026-11-04T10:00:00Z")
+        result = classify_workflow_evidence(77, 42, observed, [older, newer], {})
+        self.assertEqual(result["status"], "action_required_zero_job")
+        self.assertEqual(result["run_attempt"], 2)
+        blocker = _format_workflow_blocker(result)
+        self.assertIn(result["run_url"], blocker)
+        self.assertIn("expected_head_sha", result)
+        self.assertIn("tested_head=%s" % observed["head_sha"], blocker)
+        self.assertIn("tested_base=%s" % observed["base_sha"], blocker)
+        self.assertIn("maintainer with write access must approve", blocker)
+        self.assertIn("do not retry or count it as green", blocker)
+
+    def test_missing_or_incomplete_job_scope_never_counts_as_success(self):
+        observed = {
+            "head_sha": self.classification_fixture["pull_request"]["head_sha"],
+            "base_sha": self.classification_fixture["pull_request"]["base_sha"],
+        }
+        run = copy.deepcopy(
+            self.classification_fixture["cases"]["executed_success"]["runs"][0]
+        )
+        run["jobs"]["complete"] = False
+        result = classify_workflow_evidence(77, 42, observed, [run], {})
+        self.assertEqual(result["status"], "missing")
+
+        run = copy.deepcopy(
+            self.classification_fixture["cases"]["executed_success"]["runs"][0]
+        )
+        run["jobs"]["jobs"][0]["run_attempt"] = 1
+        result = classify_workflow_evidence(77, 42, observed, [run], {})
+        self.assertEqual(result["status"], "missing")
+
+        run["jobs"]["jobs"][0]["run_attempt"] = run["run_attempt"]
+        result = classify_workflow_evidence(77, 42, observed, [run], {})
+        self.assertEqual(result["status"], "executed_success")
+
+        run["jobs"]["complete"] = True
+        run["jobs"]["total_count"] = 0
+        run["jobs"]["jobs"] = []
+        result = classify_workflow_evidence(77, 42, observed, [run], {})
+        self.assertEqual(result["status"], "missing")
+
+    def test_stale_success_and_pull_request_target_base_are_not_counted(self):
+        observed = {
+            "head_sha": self.classification_fixture["pull_request"]["head_sha"],
+            "base_sha": self.classification_fixture["pull_request"]["base_sha"],
+        }
+        stale = copy.deepcopy(
+            self.classification_fixture["cases"]["stale_head"]["runs"][0]
+        )
+        issue = validate(
+            {
+                "pull_requests": [{
+                    "number": 77,
+                    "head": {"ref": "topic", "sha": observed["head_sha"]},
+                    "base": {"ref": "main", "sha": observed["base_sha"]},
+                    "depends_on": [],
+                    "required_evidence": ["evidence"],
+                }],
+                "main": {"ref": "main", "sha": observed["base_sha"]},
+                "required_workflow_ids": {"77": [42]},
+                "pull_request_order": [77],
+                "integration_order": [{"order": 1, "action": "Integrate"}],
+            },
+            {
+                "main": {"sha": observed["base_sha"]},
+                "pull_requests": {
+                    "77": {
+                        "head_sha": observed["head_sha"],
+                        "base_sha": observed["base_sha"],
+                        "base_ref": "main",
+                        "state": "open",
+                        "draft": True,
+                        "merged": False,
+                    }
+                },
+                "workflow_runs": [stale],
+                "commit_details": {},
+            },
+        )
+        self.assertTrue(any("stale_head_base" in item for item in issue))
+        self.assertTrue(any(stale["html_url"] in item for item in issue))
+
+        target = copy.deepcopy(
+            self.classification_fixture["cases"]["executed_success"]["runs"][0]
+        )
+        target["event"] = "pull_request_target"
+        target["head_sha"] = observed["base_sha"]
+        result = classify_workflow_evidence(77, 42, observed, [target], {})
+        self.assertEqual(result["status"], "stale_head_base")
 
 
 if __name__ == "__main__":

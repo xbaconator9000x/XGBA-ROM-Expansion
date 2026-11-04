@@ -12,6 +12,7 @@ on:
       - "semantic-snapshots/independent-reviews/curated-p0-intake-20261029.json"
       - "semantic-snapshots/independent-reviews/queue.json"
       - "tests/fixtures/copilot-integration-readiness/valid_merge_sha.json"
+      - "tests/fixtures/copilot-integration-readiness/workflow_classifications.json"
       - "tests/test_copilot_check_integration_readiness.py"
       - "tests/test_phase1_ci_context.py"
       - "tests/test_phase1_continuous.py"
@@ -52,7 +53,10 @@ jobs:
             tests/test_xgba_rom_compatibility_preflight.py
       - name: Verify pinned offline fixture
         run: |
-          echo "eb445e9b6763638c0e52423fd48368c641533274106828e86857253d94a81c17  tests/fixtures/copilot-integration-readiness/valid_merge_sha.json" | sha256sum --check
+          printf '%s\n' \
+            "1e0f095cd56738ae31f7418dc79cc63fef5a8e41cb23423aef40c5954155443e  tests/fixtures/copilot-integration-readiness/valid_merge_sha.json" \
+            "70dcb3b13e5a81d32c7cf21997342d129931a02d6b6b20a3d2b50d8c83004bc1  tests/fixtures/copilot-integration-readiness/workflow_classifications.json" \
+            | sha256sum --check
       - name: Validate Phase 1 independent-review queue without changing it
         run: python3 tools/phase1_independent_queue_validate.py
       - name: Run existing isolated Phase 1 Python regression suites
