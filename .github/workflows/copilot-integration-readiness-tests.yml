@@ -17,6 +17,7 @@ on:
       - "tests/fixtures/copilot-integration-readiness/base_sha_reconciliation.json"
       - "tests/fixtures/copilot-integration-readiness/live_observations_20261104.json"
       - "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json"
+      - "tests/fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json"
       - "tests/test_copilot_check_integration_readiness.py"
       - "tests/test_phase1_ci_context.py"
       - "tests/test_phase1_continuous.py"
@@ -63,6 +64,7 @@ jobs:
             "b6155a4eb45ac73c85cf9f542e6556f3e82ee70474078b6f97761f5831e0bc56  tests/fixtures/copilot-integration-readiness/base_sha_reconciliation.json" \
             "a07df2ed1afe824ff184def096afb3e499bdc99fcfe98f74dc13b7c84610bacf  tests/fixtures/copilot-integration-readiness/live_observations_20261104.json" \
             "37e2a5b7a007972a98986684701cd50626f46b5f0e3ec05e3c16ae3494b7df6f  tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json" \
+            "5648c1772da65ae6a758e605a28aaffacf5036a5f5741fae845a50cc60e6b7b4  tests/fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json" \
             | sha256sum --check
       - name: Validate Phase 1 independent-review queue without changing it
         run: python3 tools/phase1_independent_queue_validate.py

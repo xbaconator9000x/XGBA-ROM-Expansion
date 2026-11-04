@@ -1,6 +1,7 @@
 """Offline fail-closed fixtures for PR integration provenance."""
 
 import copy
+import hashlib
 import json
 from pathlib import Path
 import unittest
@@ -34,8 +35,16 @@ WORKFLOW_ID_RECONCILIATION = (
     Path(__file__).parent
     / "fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json"
 )
+STALE_WORKFLOW_RECONCILIATION = (
+    Path(__file__).parent
+    / "fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json"
+)
 MANIFEST = (
     Path(__file__).parent.parent / "development/copilot-integration/manifest.json"
+)
+BLOCKER_TRIAGE = (
+    Path(__file__).parent.parent
+    / "development/copilot-integration/blocker-triage-20261104.json"
 )
 
 
@@ -556,6 +565,134 @@ class IntegrationReadinessTests(unittest.TestCase):
         self.assertEqual(live_runs[35]["jobs"]["total"], 1)
         self.assertEqual(live_runs[36]["jobs"]["total"], 2)
         self.assertEqual(live_runs[37]["jobs"]["total"], 0)
+
+    def test_nine_stale_workflow_rows_have_source_linked_live_reconciliation(self):
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        triage = json.loads(BLOCKER_TRIAGE.read_text(encoding="utf-8"))
+        reconciliation = json.loads(
+            STALE_WORKFLOW_RECONCILIATION.read_text(encoding="utf-8")
+        )
+        expected_prs = {2, 8, 11, 13, 15, 19, 20, 21, 24}
+        manifest_prs = {pr["number"]: pr for pr in manifest["pull_requests"]}
+        blockers = {
+            blocker["id"]: blocker
+            for blocker in triage["blockers"]
+            if blocker["category"] == "stale_workflow_evidence"
+        }
+        rows = {row["pr_number"]: row for row in reconciliation["rows"]}
+
+        self.assertEqual(set(rows), expected_prs)
+        self.assertEqual(len(blockers), len(expected_prs))
+        self.assertEqual(reconciliation["policy"]["phase1_gate"], "FAIL_INCOMPLETE")
+        self.assertEqual(reconciliation["policy"]["independent_approvals"], 0)
+        self.assertFalse(reconciliation["policy"]["ci_is_semantic_approval"])
+        for path, digest in reconciliation["source_sha256"].items():
+            self.assertEqual(
+                hashlib.sha256(
+                    (Path(__file__).parent.parent / path).read_bytes()
+                ).hexdigest(),
+                digest,
+            )
+        for number, row in rows.items():
+            pinned = manifest_prs[number]
+            self.assertEqual(row["manifest"]["head_sha"], pinned["head"]["sha"])
+            self.assertEqual(row["manifest"]["base_ref"], pinned["base"]["ref"])
+            self.assertEqual(row["manifest"]["base_sha"], pinned["base"]["sha"])
+            self.assertEqual(
+                row["manifest"]["required_workflow_id"],
+                manifest["required_workflow_ids"][str(number)][0],
+            )
+            self.assertIn(row["blocker_id"], blockers)
+            self.assertEqual(blockers[row["blocker_id"]]["pr_number"], number)
+            self.assertEqual(
+                row["live_pr"]["url"],
+                "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/%d"
+                % number,
+            )
+            self.assertEqual(len(row["workflow"]["blob_sha"]), 40)
+            int(row["workflow"]["blob_sha"], 16)
+            self.assertTrue(row["workflow"]["required_events"])
+            self.assertNotEqual(row["classification"], "executed_success")
+            for run in row["observed_runs"]:
+                self.assertIn(run["event"], row["workflow"]["required_events"])
+                self.assertGreaterEqual(run["attempt"], 1)
+                self.assertEqual(
+                    len(run["jobs"]["ids"]), run["jobs"]["count"]
+                )
+                self.assertEqual(len(run["jobs"]["urls"]), run["jobs"]["count"])
+                self.assertEqual(
+                    run["jobs"]["successful"], run["jobs"]["count"]
+                )
+                self.assertTrue(
+                    run["url"].startswith(
+                        "https://github.com/xbaconator9000x/"
+                        "XGBA-ROM-Expansion/actions/runs/"
+                    )
+                )
+
+        self.assertEqual(
+            rows[8]["live_compare"]["status"], "diverged"
+        )
+        self.assertEqual(rows[8]["live_compare"]["behind_by"], 49)
+        self.assertEqual(rows[13]["classification"], "action_required_zero_job")
+        self.assertEqual(rows[13]["observed_runs"][0]["jobs"]["count"], 0)
+        self.assertEqual(rows[20]["observed_runs"][0]["id"], 40795259266)
+        self.assertEqual(rows[20]["observed_runs"][0]["jobs"]["count"], 5)
+
+    def test_nine_row_run_provenance_never_promotes_head_only_success(self):
+        reconciliation = json.loads(
+            STALE_WORKFLOW_RECONCILIATION.read_text(encoding="utf-8")
+        )
+        for row in reconciliation["rows"]:
+            for run in row["observed_runs"]:
+                job_data = run["jobs"]
+                jobs = [
+                    {
+                        "id": job_id,
+                        "status": "completed",
+                        "conclusion": (
+                            "success"
+                            if index < job_data["successful"]
+                            else "failure"
+                        ),
+                        "run_attempt": run["attempt"],
+                        "html_url": job_data["urls"][index],
+                    }
+                    for index, job_id in enumerate(job_data["ids"])
+                ]
+                evidence = {
+                    "id": run["id"],
+                    "workflow_id": row["manifest"]["required_workflow_id"],
+                    "run_attempt": run["attempt"],
+                    "event": run["event"],
+                    "status": "completed",
+                    "conclusion": run["conclusion"],
+                    "head_sha": run["head_sha"],
+                    "html_url": run["url"],
+                    "pull_requests": [{"number": row["pr_number"]}],
+                    "jobs": {
+                        "available": True,
+                        "total_count": job_data["count"],
+                        "jobs": jobs,
+                        "complete": True,
+                    },
+                }
+                result = classify_workflow_evidence(
+                    row["pr_number"],
+                    row["manifest"]["required_workflow_id"],
+                    {
+                        "head_sha": row["live_pr"]["head_sha"],
+                        "base_sha": row["live_pr"]["base_sha"],
+                        "base_ref": row["live_pr"]["base_ref"],
+                    },
+                    [evidence],
+                    {},
+                )
+                self.assertEqual(result["status"], row["classification"])
+                self.assertNotEqual(result["status"], "executed_success")
+                if run["conclusion"] == "success":
+                    self.assertIsNone(result["reported_base_sha"])
+                    self.assertIn("base", result["detail"].lower())
 
     def test_triage_remains_serializable_for_malformed_manifest(self):
         report = blocker_triage_report(
