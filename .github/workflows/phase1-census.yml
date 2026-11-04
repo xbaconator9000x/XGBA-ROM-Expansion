@@ -11,6 +11,7 @@ on:
       - 'tools/phase1_copilot_receipts.py'
       - 'tools/phase1_mgba_arm_decode_emit_review_verify.py'
       - 'tools/phase1_mgba_gba_memory_alias_audit.py'
+      - 'tools/phase1_third_packet_sources_260_299_verify.py'
       - 'tests/test_phase1_mgba_arm_decode_emit_review_verify.py'
       - 'tests/test_phase1_mgba_gba_memory_alias_audit.py'
       - 'tests/phase1_mgba_arm_alignment_probe.c'
@@ -19,6 +20,7 @@ on:
       - 'tests/test_phase1_mapping_gate.py'
       - 'docs/phase1-review-readiness/copilot-semantic-review-receipts.jsonl'
       - 'docs/phase1-review-readiness/analyst-*.md'
+      - 'docs/phase1-review-readiness/analyst-third-packet-source-handoff-260-299-20261104.json'
       - 'tools/verify_source_contracts.py'
       - 'tools/verify_p0_additive_source_contracts.py'
       - 'tools/verify_curated_p0_semantic_registry.py'
@@ -72,13 +74,15 @@ jobs:
         run: test "$(git rev-parse --is-shallow-repository)" = "false"
       - name: Verify Python syntax
         run: |
-          python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py tools/phase1_copilot_receipts.py tools/phase1_mapping_gate.py tools/phase1_mgba_arm_decode_emit_review_verify.py tools/phase1_mgba_gba_memory_alias_audit.py
+          python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py tools/phase1_copilot_receipts.py tools/phase1_mapping_gate.py tools/phase1_mgba_arm_decode_emit_review_verify.py tools/phase1_mgba_gba_memory_alias_audit.py tools/phase1_third_packet_sources_260_299_verify.py
           python3 tools/semantic_review_dossiers.py --self-test
           python3 tools/phase1_mapping_gate.py --self-test
           python3 -m unittest discover -s tests -p test_phase1_copilot_receipts.py -v
           python3 -m unittest discover -s tests -p test_phase1_mapping_gate.py -v
           python3 -m unittest discover -s tests -p test_phase1_mgba_arm_decode_emit_review_verify.py -v
           python3 -m unittest discover -s tests -p test_phase1_mgba_gba_memory_alias_audit.py -v
+      - name: Verify pinned FireRed partial source handoff indices 260–299
+        run: python3 tools/phase1_third_packet_sources_260_299_verify.py
       - name: Clone pinned sources and scan
         run: python3 tools/pinned_source_census.py --checkout --root upstream --out audit-output
       - name: Verify pinned mGBA ARM decode/emit review evidence
