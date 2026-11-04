@@ -1,24 +1,38 @@
 #!/usr/bin/env python3
 """Execute pinned FireRed ROOT Makefile Poryscript generation and data object."""
-import argparse, hashlib, json, re, shutil, subprocess
+import argparse, hashlib, json, re, shutil, subprocess, tempfile
 from pathlib import Path
 PINS = {
  "firered": ("ce6406d8c2eaf46d543c8a2606de0c3cb1951982", {
   "Makefile":"8b454dbd18eb0069fa5851d788697190890a5b37",
   "data/event_scripts.s":"88d75946a7300ccf952f4a36c283966c6aebf5c0",
-  "tools/preproc/preproc.cpp":"20c2de51b635a5d59f2b4e1ecd93d8fc2748ebe1"}),
+  "tools/preproc/preproc.cpp":"20c2de51b635a5d59f2b4e1ecd93d8fc2748ebe1",
+  "tools/preproc/Makefile":"606318944c63673ec2488bb2f89712a1cc4e4950"}),
  "poryscript": ("c32481161c767b25a3425fa9f1f8729927ff3d55",{
   "README.md":"c77e022eb86e74a41b184daac5953d14c72cacc3"}),
  "porymap": ("26b919d7ff4b54152de010abd5bf344af2ebe116",{
   "src/project.cpp":"d43b0949303433111d4478ad76117c2b3445dd13"})}
 TARGET="AUTO_GEN_TARGETS += $(patsubst %.pory,%.inc,$(shell find data/ -type f -name '*.pory'))"
 RULE="data/%.inc: data/%.pory; $(SCRIPT) -i $< -o $@ -fc tools/poryscript/font_config.json -cc tools/poryscript/command_config.json"
+ROOT_MAKE_FLAGS=["NODEP=1","SETUP_PREREQS=0"]
 def check(x,msg):
  if not x: raise RuntimeError(msg)
 def cmd(args,cwd=None,ok=True):
  p=subprocess.run(args,cwd=cwd,text=True,capture_output=True)
  if ok: check(p.returncode==0,str(args)+" failed: "+p.stderr[-2000:]+p.stdout[-1000:])
  return p
+def reject_tool_build_failure(fr):
+ marker="PHASE1_INJECTED_PREPROC_BUILD_FAILURE"
+ with tempfile.TemporaryDirectory(prefix="phase1-preproc-failure-") as temp:
+  compiler=Path(temp)/"failing-cxx"
+  compiler.write_text("#!/bin/sh\necho "+marker+" >&2\nexit 73\n")
+  compiler.chmod(0o755)
+  try:
+   cmd(["make","-B","-C",str(fr/"tools/preproc"),"CXX="+str(compiler)])
+  except RuntimeError as error:
+   check(marker in str(error),"tool build failure diagnostic missing")
+   return True
+  raise RuntimeError("pinned original preproc build failure was accepted")
 def source_contract(fr,ps,pm):
  check("AUTO_GEN_TARGETS :=" in fr and "generated: $(AUTO_GEN_TARGETS)" in fr,"root generated target drift")
  check("$(DATA_ASM_BUILDDIR)/%.o: $(DATA_ASM_SUBDIR)/%.s" in fr,"original data rule drift")
@@ -59,6 +73,7 @@ def main():
  cmd(["go","build","-o",str(cli),"."],cwd=ps)
  for name in ("font_config.json","command_config.json"):
   shutil.copyfile(ps/name,cli.parent/name)
+ injected_failure_rejected=reject_tool_build_failure(fr)
  cmd(["make","-C",str(fr/"tools/preproc"),"-j2"])
  probe=fr/"data/maps/XGBAProbe";probe.mkdir(parents=True,exist_ok=True)
  inp=probe/"scripts.pory";inp.write_text("mapscripts XGBAProbe_MapScripts {}\n")
@@ -69,31 +84,33 @@ def main():
  (fr/"Makefile").write_text(overlay)
  (fr/"data/event_scripts.s").write_text(event+'\n\t.include "data/maps/XGBAProbe/scripts.inc"\n')
  try:
-  database=cmd(["make","-qp","NODEP=1"],cwd=fr,ok=False)
+  database=cmd(["make","-qp",*ROOT_MAKE_FLAGS],cwd=fr,ok=False)
   database_output=database.stdout+database.stderr
   check(database.returncode in (0,1),
         "root make database parse failed (exit %d):\n%s"%
         (database.returncode,database_output))
   check(any(line.startswith("generated:") and "data/maps/XGBAProbe/scripts.inc" in line for line in database.stdout.splitlines()),"root generated target omits Poryscript output")
-  cmd(["make","NODEP=1","data/maps/XGBAProbe/scripts.inc"],cwd=fr)
+  cmd(["make",*ROOT_MAKE_FLAGS,"data/maps/XGBAProbe/scripts.inc"],cwd=fr)
   check(inc.is_file() and b"XGBAProbe_MapScripts" in inc.read_bytes(),"root generated output missing")
   generated=inc.read_bytes()
-  cmd(["make","NODEP=1","build/firered/data/event_scripts.o"],cwd=fr)
+  cmd(["make",*ROOT_MAKE_FLAGS,"build/firered/data/event_scripts.o"],cwd=fr)
   check(obj.is_file(),"root event object absent")
   symbols=cmd(["arm-none-eabi-nm",str(obj)]).stdout
   check(len(re.findall(r"\bXGBAProbe_MapScripts\b",symbols))==1,"original event object symbol missing")
-  nochange=cmd(["make","-n","NODEP=1","data/maps/XGBAProbe/scripts.inc"],cwd=fr).stdout
+  nochange=cmd(["make","-n",*ROOT_MAKE_FLAGS,"data/maps/XGBAProbe/scripts.inc"],cwd=fr).stdout
   check("poryscript -i" not in nochange,"unchanged input regenerated")
   (fr/"Makefile").write_text(overlay.replace(RULE+"\n","",1));inc.unlink()
-  check(cmd(["make","NODEP=1","data/maps/XGBAProbe/scripts.inc"],cwd=fr,ok=False).returncode!=0,"missing rule accepted")
+  check(cmd(["make",*ROOT_MAKE_FLAGS,"data/maps/XGBAProbe/scripts.inc"],cwd=fr,ok=False).returncode!=0,"missing rule accepted")
   (fr/"Makefile").write_text(overlay);inp.write_text("mapscripts Broken {\n")
-  check(cmd(["make","NODEP=1","data/maps/XGBAProbe/scripts.inc"],cwd=fr,ok=False).returncode!=0,"malformed source accepted")
+  check(cmd(["make",*ROOT_MAKE_FLAGS,"data/maps/XGBAProbe/scripts.inc"],cwd=fr,ok=False).returncode!=0,"malformed source accepted")
   inp.write_text("mapscripts XGBAProbe_MapScripts {}\n")
-  cmd(["make","NODEP=1","data/maps/XGBAProbe/scripts.inc"],cwd=fr)
+  cmd(["make",*ROOT_MAKE_FLAGS,"data/maps/XGBAProbe/scripts.inc"],cwd=fr)
   check(inc.read_bytes()==generated,"recovery changed generated bytes")
   evidence={"class":"PINNED_FIRERED_ROOT_MAKE_PORYSCRIPT_EVENT_OBJECT",
    "upstream_pins":{k:v[0] for k,v in PINS.items()},
    "source_blobs":{k:v[1] for k,v in PINS.items()},
+   "incidental_root_tool_build_disabled_for_test_targets":True,
+   "original_preproc_build_failure_rejected":injected_failure_rejected,
    "root_generated_target_discovered":True,"original_root_event_object_compiled":True,
    "original_event_source_preserved_with_one_test_include":True,
    "generated_symbol_linkable_object":True,"unchanged_skips_generation":True,
@@ -105,6 +122,10 @@ def main():
    "independent_approvals":0,"phase1_gate":"FAIL_INCOMPLETE"}
   def verify(d):
    check(d["source_mutations_rejected"]==8,"source negative drift")
+   check(d["incidental_root_tool_build_disabled_for_test_targets"] is True,
+         "unrelated root tool bootstrap was not disabled")
+   check(d["original_preproc_build_failure_rejected"] is True,
+         "original required-tool failure was not rejected")
    for k in ("root_generated_target_discovered","original_root_event_object_compiled",
     "original_event_source_preserved_with_one_test_include","generated_symbol_linkable_object",
     "unchanged_skips_generation","missing_rule_rejected","malformed_input_rejected","recovery_byte_identical"):
@@ -120,7 +141,7 @@ def main():
    {"missing_rule_rejected":False},{"malformed_input_rejected":False},
    {"recovery_byte_identical":False},{"full_rom_linked":True},{"mgba_runtime_executed":True},
    {"porymap_gui_executed":True},{"independent_approvals":1},{"phase1_gate":"PASS"},
-   {"event_object_sha256":""}]
+   {"event_object_sha256":""},{"original_preproc_build_failure_rejected":False}]
   for i,change in enumerate(negatives):
    try: verify({**evidence,**change})
    except RuntimeError: continue
