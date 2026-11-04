@@ -5,6 +5,7 @@ on:
     paths:
       - ".github/workflows/copilot-integration-readiness-tests.yml"
       - "development/copilot-integration/manifest.json"
+      - "development/copilot-integration/blocker-triage-20261104.json"
       - "docs/integration/copilot-stack-readiness-20261030.md"
       - "docs/PHASE1_STATUS.md"
       - "semantic-snapshots/current/phase1_mapping_gate.json"
@@ -14,6 +15,7 @@ on:
       - "tests/fixtures/copilot-integration-readiness/valid_merge_sha.json"
       - "tests/fixtures/copilot-integration-readiness/workflow_classifications.json"
       - "tests/fixtures/copilot-integration-readiness/base_sha_reconciliation.json"
+      - "tests/fixtures/copilot-integration-readiness/live_observations_20261104.json"
       - "tests/test_copilot_check_integration_readiness.py"
       - "tests/test_phase1_ci_context.py"
       - "tests/test_phase1_continuous.py"
@@ -58,6 +60,7 @@ jobs:
             "1e0f095cd56738ae31f7418dc79cc63fef5a8e41cb23423aef40c5954155443e  tests/fixtures/copilot-integration-readiness/valid_merge_sha.json" \
             "70dcb3b13e5a81d32c7cf21997342d129931a02d6b6b20a3d2b50d8c83004bc1  tests/fixtures/copilot-integration-readiness/workflow_classifications.json" \
             "b6155a4eb45ac73c85cf9f542e6556f3e82ee70474078b6f97761f5831e0bc56  tests/fixtures/copilot-integration-readiness/base_sha_reconciliation.json" \
+            "a07df2ed1afe824ff184def096afb3e499bdc99fcfe98f74dc13b7c84610bacf  tests/fixtures/copilot-integration-readiness/live_observations_20261104.json" \
             | sha256sum --check
       - name: Validate Phase 1 independent-review queue without changing it
         run: python3 tools/phase1_independent_queue_validate.py
@@ -97,3 +100,19 @@ jobs:
           assert "**Decision: FAIL_INCOMPLETE." in status
           assert "Independent whole-file semantic dispositions approved: 0/14,834." in status
           PY
+      - name: Reproduce source-linked blocker triage without clearing blockers
+        run: |
+          set +e
+          python3 tools/copilot_check_integration_readiness.py \
+            --offline \
+            --live-observations tests/fixtures/copilot-integration-readiness/live_observations_20261104.json \
+            --triage-json \
+            > "$RUNNER_TEMP/blocker-triage.json"
+          status=$?
+          set -e
+          if [ "$status" -ne 1 ]; then
+            cat "$RUNNER_TEMP/blocker-triage.json"
+            echo "Expected recorded blocker report to remain blocked; got $status"
+            exit 1
+          fi
+          cmp development/copilot-integration/blocker-triage-20261104.json "$RUNNER_TEMP/blocker-triage.json"

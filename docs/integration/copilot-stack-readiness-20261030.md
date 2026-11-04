@@ -15,22 +15,29 @@ the proposed topological sequence. The eight malformed historical base literals
 are preserved separately from their evidence-backed PR-metadata corrections;
 the mismatch and stale dependency remain explicit.
 
-Manifest SHA-256:
+Manifest SHA-256 (unchanged):
 `7413cf43416489ac1254bedba94575420c5fd285d7e6ccaa2fde0474f4b59fb6`.
-Checker SHA-256:
-`1cc1b1dd79cd08ff5ca4704b3e107e9580bd6ab87a4ca2b6e536fb90645dc594`.
+Current checker SHA-256:
+`3bd00d09ef3519c1a45423cbf094c601fdd38221c7e0240169bedf6690d1f06b`.
 Base reconciliation fixture SHA-256:
 `b6155a4eb45ac73c85cf9f542e6556f3e82ee70474078b6f97761f5831e0bc56`.
+Live observation fixture SHA-256:
+`a07df2ed1afe824ff184def096afb3e499bdc99fcfe98f74dc13b7c84610bacf`.
+Generated blocker triage SHA-256:
+`f87c618981d8006b30adc3178eeed68bc9ecb41801dded28ac0289cfbfc73659`.
 
-## First concrete blocker
+## First concrete blocker in the recorded snapshot (2026-10-30)
 
-PR #8 is based on `8eb234e3508d55621ecc03531823036d336fa4d1`, while its declared
+The 2026-10-30 snapshot showed PR #8 based on
+`8eb234e3508d55621ecc03531823036d336fa4d1`, while its declared
 parent PR #7 currently has head `03608155216b4f283fd92b7c5d795dd066698244`.
 Those SHAs do not match. PR #8's queried green run #40449595853 is on
 `3f8fab19de2248aeee846cc344769ff069031398`, not PR #8's current head
 `a03acca40614db990756aa88730688dcf084ee31`. Resolve the intended parent/base,
 refresh the branch, and obtain current-head evidence before considering its
-children.
+children. The focused 2026-11-04 live reconciliation later observed #8's base
+matching #7's head; the stale-main parent and unverified current-head workflow
+evidence remain blockers.
 
 There was an additional data-integrity blocker: the recorded base literal
 `18dee74bf3042326645eb850f6f1a4fea29f6` for PRs #11, #12, #14–18, and #21 is
@@ -208,9 +215,10 @@ with `--snapshot FILE`. It fails closed for absent PR/dependency data,
 changed head/base/main SHAs, malformed SHAs, absent successful evidence, stale
 green runs, and PR merge-SHA runs lacking matching actual head/base provenance.
 An exact PR-head run is accepted only when its executed SHA equals the current
-PR head. A merge-SHA run requires a direct commit lookup whose immutable commit
-object has exactly the current base SHA as first parent and PR head SHA as
-second parent; the mutable `merge_sha` field alone is not trusted.
+PR head and its run PR record explicitly matches the current head and base SHA.
+A merge-SHA run requires a direct commit lookup whose immutable commit object
+has exactly the current base SHA as first parent and PR head SHA as second
+parent; the mutable `merge_sha` field alone is not trusted.
 `pull_request_target` runs executing only base code are rejected. The checker
 also rejects empty/duplicate PR scopes, dependency cycles, and incomplete or
 non-topological PR order.
@@ -231,27 +239,65 @@ runs are never retried or counted as green automatically. If public job details
 are unavailable, evidence is reported missing/unverified rather than inferred
 from the run conclusion.
 
-### PR #35–37 workflow and dependency snapshot — 2026-11-04
+### Focused live reconciliation — 2026-11-04
 
-These observations are limited to the three requested open draft PRs; they are
-not a blanket exact-head coverage claim for the other draft branches.
+The recorded offline manifest remains a historical snapshot, not an assertion
+that these are the latest live PR states. Current PR metadata and exact run/job
+reads were made for #7/#8, #13, #27, and #35–37. A machine-readable supplement
+is pinned in
+[`live_observations_20261104.json`](../../tests/fixtures/copilot-integration-readiness/live_observations_20261104.json).
 
-| PR | Current head | Current required PR workflow evidence | Branch relationship |
+| PR | Live head / base | Exact-head workflow observation | Meaning |
 |---|---|---|---|
-| #35 | `9a31fb1dfa0a08f95a06a3c2bf8cd431aafccd29` | Workflow `401590285`, run [#41037997890](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41037997890), attempt 2, job `124019365309`: completed success. The earlier failed run #41035833259 was on stale head `b21c5f67…`, not this head. | Based on `main` at `de2a775…`; its savedata review extends the existing mGBA boundary-test path and reviews/overlaps work in #12/#13, but is not stacked on either branch. |
-| #36 | `fc54588319aea2a798f2455fb594c367209f8b85` | Workflow `401588179`, run [#41850174614](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41850174614): `action_required`, zero jobs. This is not a test failure or pass. The older successful run #41035493919 tested stale head `2c2805ea…`. | Based on `main` at `de2a775…`; review packet concerns #16/#20 but its branch is not based on either implementation branch. |
-| #37 | `b0ef759d9af830661a4d562c78db9436dbd85e9f` | Workflow `401606059`, run [#41050705648](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41050705648), attempt 2, job `124718548504`: completed success for the checker workflow as it existed at that head. | Based on `main` at `de2a775…`; this is the stack-audit/checker branch. It references #35/#36 as overlap/review packets, but is not based on either. |
+| #7 | Head `03608155216b4f283fd92b7c5d795dd066698244`; base main `f848fb21d3056e3f5653154cd48a699a52c8d5a5` | Not included in this focused workflow query. | Still based on stale main. #8's current PR metadata base now equals this exact #7 head, unlike the older base SHA recorded in the offline manifest. |
+| #8 | Head `995e00904384191170075e8a57d18161ef1a2ec2`; base #7 head `03608155216b4f283fd92b7c5d795dd066698244` | Not included in this focused workflow query. | The live #8 → #7 base relationship now matches; the stale-main parent #7 and current-head evidence remain blockers. This newer metadata does not rewrite the recorded offline snapshot. |
+| #13 | Head `0bf5a496df18ef9e3c6cf39ef361ffbe93931c6a`; base #12 head `9ed9d2630a098525e7703853de0b804c56658da9` | Workflow `398059096`, run [#41853164293](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41853164293), attempt 2: success, 1/1 job; exact current head. | Actual CI success. The Actions read exposed the PR number and head but not the run-time base SHA, so exact base provenance remains unverified. |
+| #27 | Head `2cb51ea83a3ef4c3186d19d2f9a80e88fa5d2f36`; base #14 head `618861ff17a4b9cfbb180f5531cf58d8414cbd03` | Workflow `399979453`, run [#41871074286](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41871074286), attempt 1: `action_required`, 0 jobs. | Authorization gate, not a code failure or success. A maintainer with write access must approve the existing run; do not retry or treat as green. The required workflow ID is not yet pinned for #27 in the manifest. |
+| #35 | Head `9a31fb1dfa0a08f95a06a3c2bf8cd431aafccd29`; base main `de2a775184d69411016ff683a8075af72ef4a58d` | Workflow `401590285`, run [#41037997890](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41037997890), attempt 2: success, 1/1 job; exact current head. | Savedata review packet overlaps #12/#13. It is not stacked on either. Run-time base SHA was not returned; neither CI nor owner review is independent semantic approval. |
+| #36 | Head `fc54588319aea2a798f2455fb594c367209f8b85`; base main `de2a775184d69411016ff683a8075af72ef4a58d` | Workflow `401588179`, run [#41850174614](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41850174614), attempt 2: success, 2/2 jobs; exact current head. | Poryscript ABI review packet overlaps #16/#20, but is not stacked on either. Run-time base SHA was not returned; CI is not semantic approval. |
+| #37 | Head `9233dfe2800f4deeed729fade251047a35a793ed`; base main `de2a775184d69411016ff683a8075af72ef4a58d` | Workflow `401606059`, run [#41871673473](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41871673473), attempt 1: `action_required`, 0 jobs. | This PR's current workflow is permission-gated, not green. No retry was requested. |
 
-The three PR heads are sibling branches on the same recorded main base, not an
-ordered #35 → #36 → #37 stack. Relevant overlap edges are review relationships:
-#35 covers savedata implementation/evidence areas associated with #12/#13;
-#36 reviews Poryscript/FireRed ABI areas associated with #16/#20; #37 audits
-the wider stack and records #35/#36 without duplicating their source reviews.
-No other PR branch was modified or assigned a new dependency. PR #36's
-authorization blocker requires a maintainer to review the workflow changes and
-approve that specific run under the repository's configured Actions policy;
-after authorization, verify execution, job attempts, and current head/base
-provenance. Do not retry or treat it as green before that evidence exists.
+#35, #36, and #37 are sibling branches based on main, not an ordered stack. The
+run/job APIs returned current heads and job attempts, but did not expose the
+base SHA used by those PR-event executions. The checker now rejects an exact
+head run whose PR run record omits current head/base provenance; a green exact
+head alone cannot silently substitute for base-bound evidence. For a merge-SHA
+run, the checker still requires a verified merge commit whose ordered parents
+are exactly the current base and PR head.
+
+### Per-blocker reproducible triage
+
+`development/copilot-integration/blocker-triage-20261104.json` contains one
+source-linked record for every one of the **44** blockers emitted from the
+recorded manifest: 7 stale-main bases, 9 stale dependency bases, 19 workflow
+IDs not pinned in that snapshot, and 9 runs without acceptable exact
+head/base provenance. Each entry retains its original checker issue, exact
+manifest head/base, source URLs, and concrete closure action. The attached
+live observations are supplemental and never clear historical offline
+blockers. Regenerate the file with:
+
+```bash
+python3 tools/copilot_check_integration_readiness.py \
+  --offline \
+  --live-observations tests/fixtures/copilot-integration-readiness/live_observations_20261104.json \
+  --triage-json \
+  > development/copilot-integration/blocker-triage-20261104.json
+```
+
+The offline checker continues to return blocked (exit 1). Current PR metadata
+shows #8's base relationship to #7 has advanced beyond the stale relationship
+captured by the historical manifest; refreshing the stack, testing each
+current head/base, and reconciling all other bases and workflow IDs remain
+unresolved. The first actionable integration steps are to reconcile stale root
+PRs against current main in the manifest order (#2, #3, #4, #6, #7, #23, #25);
+PR #7 must be reconciled before its child PR #8. The
+Phase 1 gate remains `FAIL_INCOMPLETE`, with zero independent semantic
+approvals; source scans and CI do not change that gate.
+
+The report is reproducible with `--triage-json`; it does not change the
+checker’s exit status. By default it uses the recorded snapshot only. The
+optional `--live-observations` file is a dated, read-only API receipt, not a
+replacement for a fresh live query.
 
 Focused fixtures: `python3 -m unittest discover -s tests -p test_copilot_check_integration_readiness.py`.
 

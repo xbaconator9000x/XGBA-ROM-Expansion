@@ -6,6 +6,7 @@ from pathlib import Path
 import unittest
 
 from tools.copilot_check_integration_readiness import (
+    blocker_triage_report,
     classify_workflow_evidence,
     _format_workflow_blocker,
     recorded_snapshot,
@@ -24,6 +25,10 @@ CLASSIFICATIONS = (
 BASE_RECONCILIATION = (
     Path(__file__).parent
     / "fixtures/copilot-integration-readiness/base_sha_reconciliation.json"
+)
+LIVE_OBSERVATIONS = (
+    Path(__file__).parent
+    / "fixtures/copilot-integration-readiness/live_observations_20261104.json"
 )
 MANIFEST = (
     Path(__file__).parent.parent / "development/copilot-integration/manifest.json"
@@ -49,11 +54,30 @@ class IntegrationReadinessTests(unittest.TestCase):
 
     def test_exact_pr_head_sha_is_valid_evidence(self):
         snapshot = copy.deepcopy(self.snapshot)
-        snapshot["workflow_runs"][0]["head_sha"] = (
-            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        )
+        snapshot["workflow_runs"][0]["head_sha"] = "a" * 40
         snapshot["workflow_runs"][0]["event"] = "pull_request"
+        snapshot["workflow_runs"][0]["pull_requests"][0] = {
+            "number": 77,
+            "head_sha": "a" * 40,
+            "base_sha": "b" * 40,
+        }
         self.assertEqual(validate(self.manifest, snapshot), [])
+
+    def test_exact_pr_head_without_current_base_provenance_is_rejected(self):
+        snapshot = copy.deepcopy(self.snapshot)
+        snapshot["workflow_runs"][0]["head_sha"] = "a" * 40
+        snapshot["workflow_runs"][0]["event"] = "pull_request"
+        snapshot["workflow_runs"][0]["pull_requests"][0] = {
+            "number": 77,
+            "head_sha": "a" * 40,
+        }
+        issues = validate(self.manifest, snapshot)
+        self.assertTrue(
+            any(
+                "PR head/base provenance is missing or stale" in issue
+                for issue in issues
+            )
+        )
 
     def test_unrelated_executed_sha_is_rejected_even_with_matching_pr_refs(self):
         snapshot = copy.deepcopy(self.snapshot)
@@ -343,6 +367,23 @@ class IntegrationReadinessTests(unittest.TestCase):
         self.assertIn("maintainer with write access must approve", blocker)
         self.assertIn("do not retry or count it as green", blocker)
 
+    def test_action_required_is_reported_even_without_head_base_provenance(self):
+        observed = {
+            "head_sha": self.classification_fixture["pull_request"]["head_sha"],
+            "base_sha": self.classification_fixture["pull_request"]["base_sha"],
+        }
+        run = copy.deepcopy(
+            self.classification_fixture["cases"]["action_required_zero_job"]["runs"][0]
+        )
+        run["pull_requests"] = [77]
+        result = classify_workflow_evidence(77, 42, observed, [run], {})
+        self.assertEqual(result["status"], "action_required_zero_job")
+        self.assertEqual(result["provenance_status"], "stale_head_base")
+        self.assertIn("lacks current PR head/base provenance", result["detail"])
+        blocker = _format_workflow_blocker(result)
+        self.assertIn("maintainer with write access must approve", blocker)
+        self.assertIn("provenance", blocker)
+
     def test_missing_or_incomplete_job_scope_never_counts_as_success(self):
         observed = {
             "head_sha": self.classification_fixture["pull_request"]["head_sha"],
@@ -420,6 +461,57 @@ class IntegrationReadinessTests(unittest.TestCase):
         target["head_sha"] = observed["base_sha"]
         result = classify_workflow_evidence(77, 42, observed, [target], {})
         self.assertEqual(result["status"], "stale_head_base")
+
+    def test_offline_blocker_triage_is_complete_and_preserves_policy(self):
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        snapshot = recorded_snapshot(manifest)
+        issues = validate(manifest, snapshot)
+        live_observations = json.loads(LIVE_OBSERVATIONS.read_text(encoding="utf-8"))
+        report = blocker_triage_report(
+            manifest, snapshot, issues, "f" * 64, live_observations
+        )
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertEqual(report["blocker_count"], len(issues))
+        self.assertEqual(
+            [item["issue"] for item in report["blockers"]],
+            issues,
+        )
+        self.assertEqual(
+            report["category_counts"],
+            {
+                "stale_dependency_base": 9,
+                "stale_main_base": 7,
+                "stale_workflow_evidence": 9,
+                "unverified_workflow_id": 19,
+            },
+        )
+        self.assertEqual(report["policy"]["phase1_gate"], "FAIL_INCOMPLETE")
+        self.assertEqual(report["policy"]["independent_approvals"], 0)
+        self.assertFalse(report["policy"]["ci_is_semantic_approval"])
+        self.assertEqual(len({item["id"] for item in report["blockers"]}), len(issues))
+        self.assertTrue(all(item["closure_action"] for item in report["blockers"]))
+        self.assertTrue(all(item["source_refs"] for item in report["blockers"]))
+        live_runs = {
+            run["pr_number"]: run
+            for run in report["live_observations"]["workflow_runs"]
+        }
+        self.assertEqual(live_runs[13]["jobs"]["total"], 1)
+        self.assertEqual(len(live_runs[13]["job_urls"]), 1)
+        self.assertEqual(live_runs[27]["conclusion"], "action_required")
+        self.assertEqual(live_runs[27]["jobs"]["total"], 0)
+        self.assertEqual(live_runs[35]["jobs"]["total"], 1)
+        self.assertEqual(live_runs[36]["jobs"]["total"], 2)
+        self.assertEqual(live_runs[37]["jobs"]["total"], 0)
+
+    def test_triage_remains_serializable_for_malformed_manifest(self):
+        report = blocker_triage_report(
+            None,
+            {},
+            ["manifest must be a JSON object"],
+        )
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertEqual(report["blockers"][0]["category"], "other_readiness_blocker")
+        self.assertIsNone(report["blockers"][0]["pr_number"])
 
 
 if __name__ == "__main__":

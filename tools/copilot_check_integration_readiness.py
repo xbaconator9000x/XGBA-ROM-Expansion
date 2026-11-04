@@ -2,6 +2,8 @@
 """Observational, fail-closed readiness check for the audited draft PR stack."""
 
 import argparse
+from collections import Counter
+import hashlib
 import json
 import re
 import sys
@@ -54,14 +56,12 @@ def _run_provenance(run, number, observed, commit_details):
         and executed_sha != head_sha
     ):
         return False, "pull_request_target executed only base code"
-
     if executed_sha == head_sha:
-        if isinstance(ref, dict):
-            if ref.get("head_sha") not in (None, head_sha):
-                return False, "PR head provenance is stale"
-            if ref.get("base_sha") not in (None, base_sha):
-                return False, "PR base provenance is stale"
-        return True, "exact current PR head"
+        if not isinstance(ref, dict):
+            return False, "run does not report PR head/base provenance"
+        if ref.get("head_sha") != head_sha or ref.get("base_sha") != base_sha:
+            return False, "PR head/base provenance is missing or stale"
+        return True, "exact current PR head and base provenance"
 
     if not isinstance(ref, dict):
         return False, "run does not bind the executed commit to current PR head/base"
@@ -98,6 +98,7 @@ def classify_workflow_evidence(number, workflow_id, observed, runs, commit_detai
         "reported_base_sha": None,
         "run_url": None,
         "job_urls": [],
+        "provenance_status": "unverified",
         "detail": "",
     }
     if not candidates:
@@ -121,9 +122,10 @@ def classify_workflow_evidence(number, workflow_id, observed, runs, commit_detai
 
     if not current:
         run, provenance = max(stale, key=run_rank)
-        return dict(
+        result = dict(
             base_result,
             status="stale_head_base",
+            provenance_status="stale_head_base",
             run_id=run.get("id"),
             run_attempt=run.get("run_attempt"),
             event=run.get("event"),
@@ -141,6 +143,28 @@ def classify_workflow_evidence(number, workflow_id, observed, runs, commit_detai
             run_url=run.get("html_url"),
             detail=provenance,
         )
+        jobs = run.get("jobs")
+        if run.get("status") in ("queued", "in_progress", "requested", "waiting"):
+            result.update(
+                status="pending",
+                detail="run is pending, but current head/base provenance is unverified: "
+                + provenance,
+            )
+        elif (
+            run.get("conclusion") == "action_required"
+            and isinstance(jobs, dict)
+            and jobs.get("available") is True
+            and jobs.get("total_count") == 0
+        ):
+            result.update(
+                status="action_required_zero_job",
+                detail=(
+                    "GitHub requires workflow authorization; zero jobs executed. "
+                    "The run also lacks current PR head/base provenance: "
+                    + provenance
+                ),
+            )
+        return result
 
     run, provenance = max(current, key=run_rank)
     result = dict(
@@ -161,6 +185,7 @@ def classify_workflow_evidence(number, workflow_id, observed, runs, commit_detai
         ),
         run_url=run.get("html_url"),
         provenance=provenance,
+        provenance_status="verified",
     )
     jobs = run.get("jobs")
     if (
@@ -585,6 +610,154 @@ def validate(manifest, snapshot):
     return issues
 
 
+def _triage_details(issue):
+    if "is based on stale main SHA" in issue:
+        return (
+            "stale_main_base",
+            "Refresh or explicitly reconcile this PR against the current main SHA, "
+            "review the resulting diff, then collect evidence for the refreshed head/base.",
+        )
+    if "base SHA " in issue and "does not match dependency PR" in issue:
+        return (
+            "stale_dependency_base",
+            "Reconcile the child PR base to its declared parent's exact current head; "
+            "compare the resulting tree before refreshing downstream children.",
+        )
+    if "dependency branch does not match its base ref" in issue:
+        return (
+            "dependency_ref_mismatch",
+            "Reconcile the declared dependency branch and PR base ref, then verify the "
+            "parent-child relationship from live PR metadata.",
+        )
+    if "required workflow ID is unverified" in issue:
+        return (
+            "unverified_workflow_id",
+            "Identify and pin the required workflow ID from the workflow definition and "
+            "observed run; then query its complete exact-scope run/job evidence.",
+        )
+    if "status=stale_head_base" in issue:
+        return (
+            "stale_workflow_evidence",
+            "Obtain a new authorized run for the current PR head/base and verify the "
+            "run attempt and every job; stale green evidence is not reusable.",
+        )
+    if "required evidence absent:" in issue:
+        return (
+            "incomplete_workflow_evidence",
+            "Query or restore the complete run, attempt, and job records for the required "
+            "workflow; if execution is authorization-gated, obtain maintainer approval "
+            "without treating the gated run as success.",
+        )
+    if "base SHA changed" in issue or "base ref changed" in issue:
+        return (
+            "changed_pr_base",
+            "Reconcile the manifest with the current PR base ref and SHA after verifying "
+            "the intended dependency; do not substitute a merge-base or target-ref tip.",
+        )
+    if "head SHA changed" in issue:
+        return (
+            "changed_pr_head",
+            "Reconcile the manifest with the current PR head, then require workflow "
+            "evidence executed on that exact head.",
+        )
+    return (
+        "other_readiness_blocker",
+        "Resolve the specific manifest or API-snapshot discrepancy in the issue, then "
+        "rerun the fail-closed checker.",
+    )
+
+
+def blocker_triage_report(
+    manifest, snapshot, issues, manifest_sha256=None, live_observations=None
+):
+    """Create one actionable, source-linked record for every readiness issue."""
+    if not isinstance(manifest, dict):
+        manifest = {}
+    repository = manifest.get("repository", "unknown/unknown")
+    if not isinstance(repository, str):
+        repository = "unknown/unknown"
+    owner, _, repo = repository.partition("/")
+    policy = manifest.get("policy")
+    if not isinstance(policy, dict):
+        policy = {}
+    raw_prs = manifest.get("pull_requests")
+    if not isinstance(raw_prs, list):
+        raw_prs = []
+    pull_requests = {
+        pr.get("number"): pr
+        for pr in raw_prs
+        if isinstance(pr, dict) and isinstance(pr.get("number"), int)
+    }
+    blockers = []
+    counts = Counter()
+    for index, issue in enumerate(issues, 1):
+        match = re.search(r"PR #(\d+)", issue)
+        number = int(match.group(1)) if match else None
+        pr = pull_requests.get(number, {})
+        category, action = _triage_details(issue)
+        counts[category] += 1
+        run_match = re.search(r"\brun (\d+)\b", issue)
+        run_id = int(run_match.group(1)) if run_match else None
+        source_refs = [
+            "development/copilot-integration/manifest.json",
+        ]
+        if number is not None:
+            source_refs.append(
+                "https://github.com/%s/%s/pull/%d" % (owner, repo, number)
+            )
+        if run_id is not None:
+            source_refs.append(
+                "https://github.com/%s/%s/actions/runs/%d"
+                % (owner, repo, run_id)
+            )
+        blockers.append({
+            "id": "B%03d" % index,
+            "pr_number": number,
+            "category": category,
+            "issue": issue,
+            "closure_action": action,
+            "manifest_head_sha": (
+                pr.get("head", {}).get("sha")
+                if isinstance(pr.get("head"), dict)
+                else None
+            ),
+            "manifest_base_ref": (
+                pr.get("base", {}).get("ref")
+                if isinstance(pr.get("base"), dict)
+                else None
+            ),
+            "manifest_base_sha": (
+                pr.get("base", {}).get("sha")
+                if isinstance(pr.get("base"), dict)
+                else None
+            ),
+            "observed_run_id": run_id,
+            "source_refs": source_refs,
+        })
+    return {
+        "schema_version": 1,
+        "repository": repository,
+        "status": "BLOCKED" if blockers else "READY",
+        "basis": "recorded_manifest_snapshot_only",
+        "live_state_note": (
+            "The blocker list is reproduced from the pinned offline manifest. "
+            "Supplemental live observations are separate and do not clear blockers."
+        ),
+        "manifest_sha256": manifest_sha256,
+        "blocker_count": len(blockers),
+        "category_counts": dict(sorted(counts.items())),
+        "policy": {
+            "phase": policy.get("phase"),
+            "phase1_gate": policy.get("phase1_gate"),
+            "independent_approvals": policy.get("independent_approvals"),
+            "ci_is_semantic_approval": policy.get("ci_is_semantic_approval"),
+            "semantic_review": "not evaluated by this integration checker",
+        },
+        "live_observations": live_observations,
+        "blockers": blockers,
+    }
+
+
 def workflow_evidence_report(manifest, snapshot):
     """Return per-workflow classifications suitable for CLI reporting."""
     if not isinstance(manifest, dict) or not isinstance(snapshot, dict):
@@ -870,9 +1043,20 @@ def main(argv=None):
         action="store_true",
         help="evaluate only the observations already recorded in the manifest",
     )
+    parser.add_argument(
+        "--triage-json",
+        action="store_true",
+        help="emit every readiness blocker with its closure action and source references",
+    )
+    parser.add_argument(
+        "--live-observations",
+        type=Path,
+        help="attach a read-only, source-linked live API observation record to JSON triage",
+    )
     args = parser.parse_args(argv)
     try:
-        manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
+        manifest_bytes = args.manifest.read_bytes()
+        manifest = json.loads(manifest_bytes.decode("utf-8"))
         if args.offline and args.snapshot:
             parser.error("--offline and --snapshot are mutually exclusive")
         snapshot = (
@@ -881,10 +1065,27 @@ def main(argv=None):
             else recorded_snapshot(manifest) if args.offline
             else fetch_public_snapshot(manifest)
         )
+        live_observations = (
+            json.loads(args.live_observations.read_text(encoding="utf-8"))
+            if args.live_observations
+            else None
+        )
+        if live_observations is not None and not isinstance(live_observations, dict):
+            raise ValueError("--live-observations must contain a JSON object")
     except (OSError, ValueError, RuntimeError) as exc:
         print("BLOCKED: %s" % exc, file=sys.stderr)
         return 2
     issues = validate(manifest, snapshot)
+    if args.triage_json:
+        report = blocker_triage_report(
+            manifest,
+            snapshot,
+            issues,
+            hashlib.sha256(manifest_bytes).hexdigest(),
+            live_observations,
+        )
+        print(json.dumps(report, indent=2, sort_keys=True))
+        return 1 if issues else 0
     for evidence in workflow_evidence_report(manifest, snapshot):
         run = str(evidence.get("run_id") or "none")
         attempt = str(evidence.get("run_attempt") or "none")
