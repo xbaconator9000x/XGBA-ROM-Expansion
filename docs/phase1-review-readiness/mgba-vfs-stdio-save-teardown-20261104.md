@@ -135,9 +135,18 @@ The exact pre-change PR13 head
 `0bf5a496df18ef9e3c6cf39ef361ffbe93931c6a` had successful Actions rerun
 [#41853164293](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41853164293),
 job `126701990749`, 20/20 executed steps. It validates only that earlier head.
-New exact-head PR and push workflow status will be recorded after this package
-is committed. The workflow remains the existing PR13 workflow; no new
-workflow, scheduler, branch, or PR is added.
+Exact-head PR Actions
+[#41881695685](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41881695685)
+for `b540768f5e8baad5b0724f36eadde8269ad6a485` is `action_required`; the API
+reports zero jobs, so there is no job or step log and no CI pass for this
+package. The base branch had no matching workflow run. The existing workflow
+does not subscribe to `push`, and no push-triggered run was found. This is a
+permission blocker, not a code failure or green result.
+
+The local source-directory native run and 18 focused tests passed. Secret
+scanning found no secrets, and CodeQL reported zero alerts for Actions, Python,
+and C++. The workflow remains the existing PR13 workflow; no new workflow,
+scheduler, branch, or PR is added.
 
 This evidence remains non-approving. Gate stays `FAIL_INCOMPLETE`;
 independent approvals remain zero.
