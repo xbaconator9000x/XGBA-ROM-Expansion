@@ -1,0 +1,28 @@
+name: Phase 1 pinned FireRed save relocation review (no approvals)
+on:
+  pull_request:
+    paths:
+      - 'tools/phase1_firered_load_save_review.py'
+      - 'docs/PHASE1_FIRERED_LOAD_SAVE_RELOCATION_REVIEW_2026-10-27.md'
+      - '.github/workflows/phase1_firered_load_save_review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-source-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout audit repository
+        uses: actions/checkout@v4
+        with:
+          path: audit
+      - name: Checkout exact pinned FireRed
+        uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: pinned-firered
+          persist-credentials: false
+      - name: Verify whole file, dependencies and negative controls
+        run: python3 audit/tools/phase1_firered_load_save_review.py --source-root pinned-firered
