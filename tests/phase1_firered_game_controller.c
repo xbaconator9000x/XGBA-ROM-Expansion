@@ -12,6 +12,20 @@
 #include <unistd.h>
 
 struct InputEvent { unsigned frame, keys; };
+#define FLASH_PROGRAM_TRACE_CAPACITY 64
+#define FLASH_SECTOR_SIZE 4096
+struct FlashProgramObservation {
+    unsigned sector;
+    unsigned return_value;
+    unsigned changed_bytes;
+    unsigned entry_frame;
+    unsigned return_frame;
+    uint32_t entry_pc;
+    uint32_t return_pc;
+    int dirty_before;
+    int dirty_after;
+    unsigned dirt_age_after;
+};
 static void die(const char *s) { fprintf(stderr, "ERROR: %s\n", s); exit(2); }
 static uint32_t optional_pinned_address(const char *name, int code) {
     const char *raw = getenv(name);
@@ -44,6 +58,13 @@ int main(int argc, char **argv) {
     uint32_t pending_try_save_return_pc = 0;
     unsigned try_save_return_hits = 0, first_try_save_return_frame = 0;
     unsigned first_try_save_return_value = 0xFFFFFFFFU;
+    unsigned flash_program_entry_hits = 0, flash_program_count = 0;
+    uint32_t pending_flash_program_return_pc = 0;
+    unsigned pending_flash_program_entry_frame = 0;
+    unsigned pending_flash_program_sector = 0;
+    int pending_flash_program_dirty = 0;
+    uint8_t pending_flash_program_before[FLASH_SECTOR_SIZE];
+    struct FlashProgramObservation flash_program_observations[FLASH_PROGRAM_TRACE_CAPACITY] = {0};
     unsigned long long trace_steps = 0;
     uint32_t gmain_addr = 0, sb1_ptr_addr = 0;
     uint32_t lock_addr = optional_pinned_address("XGBA_PHASE1_LOCK_ADDR", 0);
@@ -57,6 +78,9 @@ int main(int argc, char **argv) {
     uint32_t init_objects_local_target = optional_pinned_address("XGBA_PHASE1_INIT_OBJECTS_LOCAL_ADDR", 1);
     uint32_t load_map_target = optional_pinned_address("XGBA_PHASE1_CB2_LOAD_MAP_ADDR", 1);
     uint32_t load_map_steps_target = optional_pinned_address("XGBA_PHASE1_LOAD_MAP_STEPS_ADDR", 1);
+    uint32_t flash_program_target = optional_pinned_address("XGBA_PHASE1_PROGRAM_FLASH_SECTOR_ADDR", 1);
+    if (tracing && !flash_program_target)
+        die("compiled ProgramFlashSectorAndVerify trace target absent");
     uint32_t flash_present_addr = optional_pinned_address("XGBA_PHASE1_FLASH_PRESENT_ADDR", 0);
     uint32_t save_attempt_status_addr = optional_pinned_address("XGBA_PHASE1_SAVE_ATTEMPT_STATUS_ADDR", 0);
     const int inject_no_flash = getenv("XGBA_PHASE1_INJECT_NO_FLASH") != NULL;
@@ -154,6 +178,52 @@ int main(int argc, char **argv) {
                 struct ARMCore *cpu = gba->cpu;
                 uint32_t executing = (uint32_t)cpu->gprs[ARM_PC]
                     - (cpu->executionMode == MODE_THUMB ? 4U : 8U);
+                if (pending_flash_program_return_pc &&
+                    executing == pending_flash_program_return_pc) {
+                    if (flash_program_count >= FLASH_PROGRAM_TRACE_CAPACITY)
+                        die("compiled Flash-program trace capacity exceeded");
+                    struct GBASavedata *save = &gba->memory.savedata;
+                    if (save->type != GBA_SAVEDATA_FLASH1M || !save->data ||
+                        GBASavedataSize(save) != 131072 ||
+                        pending_flash_program_sector >= 32)
+                        die("mGBA Flash mapping changed during compiled sector program");
+                    struct FlashProgramObservation *observation =
+                        &flash_program_observations[flash_program_count++];
+                    observation->sector = pending_flash_program_sector;
+                    observation->return_value = (unsigned)cpu->gprs[0];
+                    observation->entry_frame = pending_flash_program_entry_frame;
+                    observation->return_frame = frame + 1;
+                    observation->entry_pc = flash_program_target;
+                    observation->return_pc = pending_flash_program_return_pc;
+                    observation->dirty_before = pending_flash_program_dirty;
+                    observation->dirty_after = save->dirty;
+                    observation->dirt_age_after = save->dirtAge;
+                    const uint8_t *sector_data =
+                        save->data + pending_flash_program_sector * FLASH_SECTOR_SIZE;
+                    for (unsigned byte = 0; byte < FLASH_SECTOR_SIZE; ++byte)
+                        observation->changed_bytes +=
+                            pending_flash_program_before[byte] != sector_data[byte];
+                    pending_flash_program_return_pc = 0;
+                }
+                if (flash_program_target && executing == flash_program_target) {
+                    if (pending_flash_program_return_pc)
+                        die("nested compiled Flash-sector program trace");
+                    struct GBASavedata *save = &gba->memory.savedata;
+                    unsigned sector = (unsigned)cpu->gprs[0] & 0xFFFFU;
+                    uint32_t return_pc = (uint32_t)cpu->gprs[ARM_LR] & ~1U;
+                    if (save->type != GBA_SAVEDATA_FLASH1M || !save->data ||
+                        GBASavedataSize(save) != 131072 || sector >= 32 ||
+                        return_pc < 0x08000000U || return_pc >= 0x0A000000U)
+                        die("invalid compiled Flash-sector program precondition");
+                    ++flash_program_entry_hits;
+                    pending_flash_program_sector = sector;
+                    pending_flash_program_entry_frame = frame + 1;
+                    pending_flash_program_dirty = save->dirty;
+                    memcpy(pending_flash_program_before,
+                           save->data + sector * FLASH_SECTOR_SIZE,
+                           FLASH_SECTOR_SIZE);
+                    pending_flash_program_return_pc = return_pc;
+                }
                 /* Source-pinned TrySavingData is a normal Thumb subroutine.
                  * Capture the caller return PC from LR at actual entry.
                  * Observe execution of that return PC and R0 at the return,
@@ -321,6 +391,8 @@ int main(int argc, char **argv) {
         if (save->dirty && !first_dirty) first_dirty = frame + 1;
     }
     if (no_flash_fault_active) die("faulted TrySavingData did not return");
+    if (pending_flash_program_return_pc)
+        die("compiled ProgramFlashSectorAndVerify did not return before observation ended");
     /* Fail closed: no Flash1M baseline means no valid zero-change observation.
      * The environment override is an explicit harness-only negative control;
      * it never writes emulator memory or the cartridge save device. */
@@ -338,6 +410,31 @@ int main(int argc, char **argv) {
         for (size_t i = 0; i < baseline_size; ++i)
             if (baseline[i] != gba->memory.savedata.data[i]) ++changed_bytes;
     }
+    char flash_program_trace[FLASH_PROGRAM_TRACE_CAPACITY * 384 + 4];
+    size_t flash_trace_used = 0;
+    flash_program_trace[flash_trace_used++] = '[';
+    for (unsigned i = 0; i < flash_program_count; ++i) {
+        const struct FlashProgramObservation *observation = &flash_program_observations[i];
+        int written = snprintf(flash_program_trace + flash_trace_used,
+            sizeof(flash_program_trace) - flash_trace_used,
+            "%s{\"sector\":%u,\"return_value\":%u,\"changed_bytes\":%u,"
+            "\"entry_pc\":%u,\"return_pc\":%u,\"entry_frame\":%u,"
+            "\"return_frame\":%u,\"dirty_before\":%d,\"dirty_after\":%d,"
+            "\"dirt_age_after\":%u,\"mapped_flash_effect_observed\":%s}",
+            i ? "," : "", observation->sector, observation->return_value,
+            observation->changed_bytes, observation->entry_pc, observation->return_pc,
+            observation->entry_frame, observation->return_frame,
+            observation->dirty_before, observation->dirty_after,
+            observation->dirt_age_after,
+            observation->changed_bytes && observation->dirty_after ? "true" : "false");
+        if (written < 0 || (size_t)written >= sizeof(flash_program_trace) - flash_trace_used)
+            die("compiled Flash-program trace JSON buffer exhausted");
+        flash_trace_used += (size_t)written;
+    }
+    if (flash_trace_used + 2 > sizeof(flash_program_trace))
+        die("compiled Flash-program trace JSON buffer exhausted");
+    flash_program_trace[flash_trace_used++] = ']';
+    flash_program_trace[flash_trace_used] = '\0';
     uint32_t sb2 = core->busRead32(core, (uint32_t)strtoul(argv[7], NULL, 0));
     unsigned marker = (sb2 >= 0x02000000U && sb2 < 0x0203F000U)
         ? core->busRead8(core, sb2 + 0xB80U) : 0xFFFFFFFFU;
@@ -393,7 +490,12 @@ int main(int argc, char **argv) {
            "\"avatar_controllable_frames\":%u,\"avatar_prevent_step_frames\":%u,"
            "\"host_ram_fault_injection\":%s,\"no_flash_fault_entries\":%u,"
            "\"no_flash_original\":%u,\"no_flash_restored\":%s,\"first_try_save_attempt_status\":%u,"
-           "\"game_save_callsite_verified\":false}\n",
+           "\"game_save_callsite_verified\":false,"
+           "\"program_flash_sector_and_verify_target\":%u,"
+           "\"program_flash_sector_and_verify_entry_hits\":%u,"
+           "\"program_flash_sector_and_verify_return_hits\":%u,"
+           "\"flash_program_observation_layer\":\"compiled FireRed return plus mGBA mapped bytes/dirty state; callback entry not directly counted\","
+           "\"flash_program_trace\":%s}\n",
            core->frameCounter(core), count, gba->memory.savedata.type,
            baseline_frame, changed_bytes, frames_with_changed_data,
            first_change, first_dirty,
@@ -438,7 +540,9 @@ int main(int argc, char **argv) {
            init_objects_local_hits, cb2_load_map_hits, load_map_steps_hits,
            avatar_controllable_frames, avatar_prevent_step_frames,
            inject_no_flash ? "true" : "false", no_flash_fault_entries, no_flash_original,
-           no_flash_restored ? "true" : "false", first_try_save_attempt_status);
+           no_flash_restored ? "true" : "false", first_try_save_attempt_status,
+           flash_program_target, flash_program_entry_hits, flash_program_count,
+           flash_program_trace);
     core->setKeys(core, 0);
     core->deinit(core);
     free(baseline);

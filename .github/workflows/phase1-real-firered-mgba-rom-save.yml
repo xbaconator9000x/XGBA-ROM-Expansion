@@ -23,7 +23,10 @@ on:
       - 'tools/phase1_real_firered_mgba_fixtures.py'
       - 'tools/phase1_firered_mixed_counter_native.py'
       - 'tools/phase1_firered_storage_init_order.py'
+      - 'tools/phase1_firered_save_path_closure.py'
+      - 'tests/test_phase1_firered_save_path_closure.py'
       - 'docs/phase1-review-readiness/firered-mixed-counter-native-20261028.md'
+      - 'docs/phase1-review-readiness/firered-save-path-closure-20261028.md'
       - 'tools/phase1_firered_continue_warp.py'
       - 'tools/phase1_real_firered_mgba_adversarial.py'
       - 'docs/phase1-review-readiness/real-firered-mgba-runtime-20261028.md'
@@ -40,6 +43,7 @@ jobs:
       - name: Run synthetic-only interrupted-save integrity adversarial tests
         run: |
           python3 -m unittest discover -s tests -p 'test_phase1_firered_interrupted_save.py' -v
+          python3 -m unittest discover -s tests -p 'test_phase1_firered_save_path_closure.py' -v
       - name: Install pinned FireRed and mGBA build prerequisites
         run: |
           sudo apt-get update -qq
@@ -68,7 +72,41 @@ jobs:
           git -C upstream/pokefirered hash-object data/layouts/layouts.json | grep -Fx 41d0eb1b5e51fa75d535b5a098bae2bd650f710d
           git -C upstream/pokefirered hash-object include/main.h | grep -Fx 31b22a3faa75409125257396913689a6a37c98ac
           git -C upstream/pokefirered hash-object src/field_control_avatar.c | grep -Fx b1b6465941133b927505be92d189a7c283e4722f
-          git -C upstream/pokefirered hash-object src/overworld.c | grep -Fx 339014da46ae8543143edc99ab72bf7496203a0d
+      - name: Verify pinned original save-path closure and emit per-file dossiers
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/results
+          python3 -m py_compile tools/phase1_firered_save_path_closure.py
+          python3 tools/phase1_firered_save_path_closure.py \
+            --firered-source upstream/pokefirered \
+            --agbcc-source upstream/agbcc \
+            --mgba-source upstream/mgba \
+            --output evidence/results
+      - name: Record actual GNU ARM, preprocessing, and host tool identities
+        run: |
+          set -euo pipefail
+          python3 - <<'PYTOOLS'
+          import hashlib,json,shutil,subprocess
+          from pathlib import Path
+          tools=("arm-none-eabi-gcc","arm-none-eabi-cpp","arm-none-eabi-as",
+                 "arm-none-eabi-ld","arm-none-eabi-nm","cpp","make","python3","cmake","ninja")
+          records={}
+          for name in tools:
+              path=shutil.which(name)
+              if not path:
+                  raise SystemExit("Required build tool absent: "+name)
+              resolved=Path(path).resolve()
+              version=subprocess.run([path,"--version"],check=True,capture_output=True,text=True).stdout.splitlines()[0]
+              records[name]={"path":str(resolved),"version":version,
+                             "binary_sha256":hashlib.sha256(resolved.read_bytes()).hexdigest()}
+          records["package_versions_pinned"]=False
+          records["system_package_source"]="Ubuntu runner packages installed by unversioned package names"
+          records["upstream_commits"]={
+              "pokefirered":"ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+              "agbcc":"da598c1d918402c42c0c0d7128ba14567f3175e9",
+              "mgba":"fd9dc5c2cbf234365068855851107e762fc6211b"}
+          Path("evidence/results/toolchain_provenance.json").write_text(json.dumps(records,indent=2,sort_keys=True)+"\n")
+          PYTOOLS
       - name: Verify pinned save-error source semantics and tamper controls
         run: |
           set -euo pipefail
@@ -268,6 +306,37 @@ jobs:
           test -n "$start_menu_save" && test -n "$dialog_do_save" && test -n "$try_saving_data"
           test -n "$return_field_local" && test -n "$overworld" && test -n "$cb1_overworld"
           test -n "$show_start_menu" && test -n "$field_get_player_input" && test -n "$gmain" && test -n "$sb1"
+          program_flash_sector=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="ProgramFlashSectorAndVerify" {print "0x"$1;exit}')
+          test -n "$program_flash_sector"
+          export XGBA_PHASE1_PROGRAM_FLASH_SECTOR_ADDR="$program_flash_sector"
+          python3 - <<'PYSYMBOLS'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          elf=Path("upstream/pokefirered/pokefirered.elf")
+          rom=Path("upstream/pokefirered/pokefirered.gba")
+          symbols={}
+          output=subprocess.run(["arm-none-eabi-nm","-n",str(elf)],check=True,capture_output=True,text=True).stdout
+          wanted=("StartMenuSaveCallback","SaveDialogCB_DoSave","TrySavingData",
+                  "TryWriteSector","ProgramFlashSectorAndVerify")
+          for line in output.splitlines():
+              fields=line.split()
+              if len(fields)==3 and fields[2] in wanted:
+                  symbols.setdefault(fields[2],[]).append("0x"+fields[0])
+          if not all(name in symbols for name in ("StartMenuSaveCallback","SaveDialogCB_DoSave",
+                                                   "TrySavingData","ProgramFlashSectorAndVerify")):
+              raise SystemExit("Required linked save-path symbols missing: "+repr(symbols))
+          libraries=sorted(Path("upstream/mgba/build").glob("libmgba.so*"))
+          if not libraries:
+              raise SystemExit("Pinned shared mGBA library missing")
+          library=libraries[0]
+          record={"elf_sha256":hashlib.sha256(elf.read_bytes()).hexdigest(),
+                  "rom_sha256":hashlib.sha256(rom.read_bytes()).hexdigest(),
+                  "mgba_shared_library":str(library.resolve()),
+                  "mgba_shared_library_sha256":hashlib.sha256(library.read_bytes()).hexdigest(),
+                  "symbols":symbols,"program_flash_sector_and_verify_target":symbols["ProgramFlashSectorAndVerify"][0],
+                  "revision":0,"phase1_gate":"FAIL_INCOMPLETE","independent_approval":False}
+          Path("evidence/results/save_path_elf_symbols.json").write_text(json.dumps(record,indent=2,sort_keys=True)+"\n")
+          PYSYMBOLS
           lock_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="sLockFieldControls" {print "0x"$1;exit}')
           avatar_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="gPlayerAvatar" {print "0x"$1;exit}')
           player_step_addr=$(arm-none-eabi-nm upstream/pokefirered/pokefirered.elf | awk '$3=="player_step" {print "0x"$1;exit}')
@@ -311,6 +380,7 @@ jobs:
           grep -q "cannot open input schedule" valid-object-events-address.log
           printf 'Pinned field control: lock=%s avatar=%s player_step=%s\n' "$lock_addr" "$avatar_addr" "$player_step_addr"
           printf 'Compiled save callsites: start=%s dialog=%s try=%s\n' "$start_menu_save" "$dialog_do_save" "$try_saving_data"
+          printf 'Compiled sector-program trace target: %s\n' "$program_flash_sector"
           python3 tools/phase1_firered_game_controller.py \
             --rom upstream/pokefirered/pokefirered.gba \
             --fixtures evidence/fixtures --probe ./game-controller-probe \
@@ -401,7 +471,9 @@ jobs:
           name: phase1-real-firered-mgba-runtime-text-evidence
           path: |
             evidence/results/*.json
+            evidence/results/source_dossiers/
             evidence/results/fixture_manifest.json
+            evidence/results/source_path_closure.sha256
             rom-sha256.txt
             mgba-perf.txt
             mgba-config.log

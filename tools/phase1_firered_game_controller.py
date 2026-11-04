@@ -8,9 +8,11 @@ import struct
 import os
 import subprocess
 from pathlib import Path
+from phase1_firered_save_path_closure import validate_native_flash_trace
 
 TRACE_CASES = ("menu_navigation", "pallet_null_layout", "pallet_valid",
-               "pallet_save_navigation", "pallet_save_dense_confirm", "cold_boot")
+               "pallet_save_navigation", "pallet_save_dense_confirm", "cold_boot",
+               "no_input")
 
 def sha(p):
     return hashlib.sha256(Path(p).read_bytes()).hexdigest()
@@ -125,6 +127,10 @@ def main(a):
                         "try_saving_data_entry_hits", "first_try_save_arg",
                         "try_saving_data_return_hits", "first_try_saving_data_return_frame",
                         "first_try_saving_data_return_value",
+                        "program_flash_sector_and_verify_target",
+                        "program_flash_sector_and_verify_entry_hits",
+                        "program_flash_sector_and_verify_return_hits",
+                        "flash_program_observation_layer", "flash_program_trace",
                         "title_task_hits", "init_main_menu_hits",
                         "execute_main_menu_hits", "return_to_field_hits",
                         "continue_saved_game_hits", "return_field_local_hits",
@@ -137,6 +143,13 @@ def main(a):
                 assert key in d, (name, key)
         if name == "pallet_valid":
             assert d["field_get_player_input_hits"] > 0 and d["show_start_menu_hits"] > 0, d
+        if name == "no_input":
+            assert d["start_menu_save_hits"] == 0
+            assert d["save_dialog_do_save_hits"] == 0
+            assert d["try_saving_data_entry_hits"] == 0
+            assert d["program_flash_sector_and_verify_entry_hits"] == 0
+            assert d["program_flash_sector_and_verify_return_hits"] == 0
+            validate_native_flash_trace(d["flash_program_trace"], no_save=True)
         if name == "pallet_save_dense_confirm":
             assert d["start_menu_save_hits"] > 0, ("Save cursor path regressed", d)
             assert d["save_dialog_do_save_hits"] > 0 and d["try_saving_data_entry_hits"] > 0, (
@@ -145,7 +158,14 @@ def main(a):
                 "TrySavingData did not return source-defined SAVE_STATUS_OK=1", d)
             assert d["flash_changed_bytes"] > 0 and d["save_counter"] == 1, (
                 "No native Flash transaction/counter increment", d)
+            assert d["program_flash_sector_and_verify_target"] > 0
+            assert d["program_flash_sector_and_verify_entry_hits"] == 14
+            assert d["program_flash_sector_and_verify_return_hits"] == 14
+            assert validate_native_flash_trace(d["flash_program_trace"]) == list(range(14, 28)), d
+            assert all(row["mapped_flash_effect_observed"] for row in d["flash_program_trace"]), d
         after = sha(save)
+        if name == "no_input":
+            assert before == after, "No-input synthetic control changed physical .sav"
         if name == "pallet_save_dense_confirm":
             assert before != after, ("No persisted game-controlled Flash write", before, after)
         record = {
@@ -254,6 +274,9 @@ def main(a):
         "Cold boot failed to recover playable field", cb)
     assert cb["try_saving_data_entry_hits"] == 0 and cb["try_saving_data_return_hits"] == 0 and cb["flash_changed_bytes"] == 0, (
         "Cold boot control unexpectedly performed a second save", cb)
+    assert cb["program_flash_sector_and_verify_entry_hits"] == 0
+    assert cb["program_flash_sector_and_verify_return_hits"] == 0
+    validate_native_flash_trace(cb["flash_program_trace"], no_save=True)
     assert sha(cold) == cold_before, "Cold boot modified physical save without Save command"
     cold_record = {
         "case": "cold_boot_game_generated",
@@ -264,12 +287,17 @@ def main(a):
         "slot1_all_sector_checksums_verified": True,
         "named_player_map_and_field_recovered": True,
         "try_saving_data_return_status_verified_on_first_boot": True,
+        "program_flash_sector_trace": dense["native"]["flash_program_trace"],
+        "mGBA_flash_callback_entry_counted": False,
+        "mGBA_mapped_sector_and_dirty_effects_observed": True,
+        "game_initiated_save_verified": True,
         "phase1_gate": "FAIL_INCOMPLETE", "independent_approval": False,
     }
     (root / "cold_boot_game_generated.json").write_text(
         json.dumps(cold_record, indent=2, sort_keys=True) + "\n")
     results.append(cold_record)
     dense["game_controlled_flash_and_coldboot_observed"] = True
+    dense["game_initiated_save_verified"] = True
     (root / "pallet_save_dense_confirm.json").write_text(
         json.dumps(dense, indent=2, sort_keys=True) + "\n")
     print(json.dumps({
@@ -285,6 +313,8 @@ def main(a):
         "first_boot_try_save_return_value": dense["native"]["first_try_saving_data_return_value"],
         "first_boot_try_save_return_hits": dense["native"]["try_saving_data_return_hits"],
         "host_flash_writes": cb["host_flash_writes"],
+        "game_initiated_save_verified": dense["game_initiated_save_verified"],
+        "mGBA_flash_callback_entry_counted": False,
     }), flush=True)
 
     # Deliberate missing-baseline negative control. The native probe must fail,
@@ -302,6 +332,7 @@ def main(a):
         "analyst_prepared_complete_file_reviews": 0, "independent_approvals": 0,
         "phase1_gates": "FAIL_INCOMPLETE",
         "limits": ["TrySavingData entry/return instrumented; return status must be exact-head CI verified",
+                   "Compiled sector-program entry/return and per-sector mGBA mapped-byte/dirty effects are traced; callback entries are not directly counted",
                    "Original playable fixture was synthetic, although subsequent Flash was game-written",
                    "Controller schedule not equivalent to human verified gameplay",
                    "No XGBA-expanded ROM interoperability or independent semantic approval"],
