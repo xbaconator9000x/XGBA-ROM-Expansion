@@ -1,0 +1,66 @@
+name: Phase 1 compiled Poryscript FireRed map-table relocation witness
+on:
+  push:
+    branches:
+      - 'phase1/**'
+    paths:
+      - 'tools/verify_poryscript_compiled_map_table.py'
+      - 'docs/PHASE1_P0_PORYSCRIPT_COMPILED_MAP_TABLE_RELOCATIONS_2026-10-27.md'
+      - '.github/workflows/phase1-poryscript-compiled-map-table.yml'
+  pull_request:
+    paths:
+      - 'tools/verify_poryscript_compiled_map_table.py'
+      - 'docs/PHASE1_P0_PORYSCRIPT_COMPILED_MAP_TABLE_RELOCATIONS_2026-10-27.md'
+      - '.github/workflows/phase1-poryscript-compiled-map-table.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pinned-arm-map-table:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/poryscript
+          ref: c32481161c767b25a3425fa9f1f8729927ff3d55
+          path: upstream-poryscript
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - name: Ensure ARM assembler and linker
+        run: |
+          if ! command -v clang >/dev/null || ! command -v ld.lld >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y clang lld
+          fi
+          clang --version | head -1
+          ld.lld --version
+      - name: Verify pinned Poryscript emitter optimized and unoptimized map-script output
+        working-directory: upstream-poryscript
+        run: go test ./emitter -run '^TestEmitMapScripts$' -count=1
+      - name: Verify synthetic negative controls and pinned ARM source-to-relocation witness
+        run: |
+          python3 -m py_compile tools/verify_poryscript_compiled_map_table.py
+          python3 tools/verify_poryscript_compiled_map_table.py --self-test
+          python3 tools/verify_poryscript_compiled_map_table.py \
+            --poryscript upstream-poryscript \
+            --firered upstream-firered \
+            --output phase1-evidence/poryscript-compiled-map-table.json
+      - name: Archive bounded reproducible evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-poryscript-compiled-map-table
+          path: phase1-evidence/
+          if-no-files-found: warn
+          retention-days: 30
