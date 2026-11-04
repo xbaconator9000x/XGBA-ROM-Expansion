@@ -70,7 +70,10 @@ def main():
  (fr/"data/event_scripts.s").write_text(event+'\n\t.include "data/maps/XGBAProbe/scripts.inc"\n')
  try:
   database=cmd(["make","-qp","NODEP=1"],cwd=fr,ok=False)
-  check(database.returncode in (0,1),"root make database parse failed: "+database.stderr[-1500:])
+  database_output=database.stdout+database.stderr
+  check(database.returncode in (0,1),
+        "root make database parse failed (exit %d):\n%s"%
+        (database.returncode,database_output))
   check(any(line.startswith("generated:") and "data/maps/XGBAProbe/scripts.inc" in line for line in database.stdout.splitlines()),"root generated target omits Poryscript output")
   cmd(["make","NODEP=1","data/maps/XGBAProbe/scripts.inc"],cwd=fr)
   check(inc.is_file() and b"XGBAProbe_MapScripts" in inc.read_bytes(),"root generated output missing")
