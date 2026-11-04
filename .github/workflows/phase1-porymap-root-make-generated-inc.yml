@@ -49,6 +49,13 @@ jobs:
       - name: Execute original root Makefile generated target and data/event_scripts.o
         run: |
           set -euo pipefail
+          git -C pinned-firered hash-object map_data_rules.mk | grep -Fx b32b85a91d9460642345ca983c37d165e820741f
+          git -C pinned-firered hash-object include/constants/event_objects.h | grep -Fx 9d8c514f9e2d634d40d215bf657f33041c55c28e
+          git -C pinned-firered hash-object tools/mapjson/Makefile | grep -Fx 100e809c6c27e6c04d3b6f2406ff288922d80c13
+          git -C pinned-firered hash-object tools/mapjson/mapjson.cpp | grep -Fx 8d8ec4e4e6e1c011b06f00819abe40bad10d19d5
+          git -C pinned-firered hash-object tools/mapjson/mapjson.h | grep -Fx 6e961a28ec0e2c6a017e7dda2e9d81f07e3e3ceb
+          git -C pinned-firered hash-object tools/mapjson/json11.cpp | grep -Fx fcacdbeb39c3110e4564f57a8f26b7bb34678a7e
+          git -C pinned-firered hash-object tools/mapjson/json11.h | grep -Fx c04c4362f9784006c7a45ad04729fab1c77dd1d9
           mkdir -p phase1-evidence
           python3 -m py_compile tools/phase1_porymap_root_make_integration.py
           python3 tools/phase1_porymap_root_make_integration.py \
