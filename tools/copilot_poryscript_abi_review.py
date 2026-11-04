@@ -346,14 +346,46 @@ def validate_closure_record(record, archive_root=ROOT):
     return files, ranges
 
 
+FILE_INSPECTION_SCHEMAS = {
+    "copilot-poryscript-abi-file-inspection/v1": {
+        "reviewer_id": "copilot-issue33-file-inspection-followup",
+        "reviewer_identity": (
+            "@copilot (GitHub Copilot Coding Agent; issue #33 "
+            "review-readiness follow-up)"
+        ),
+        "expected_files": {
+            ("huderlem/poryscript", "emitter/emitter.go"),
+            ("huderlem/poryscript", "parser/parser.go"),
+            ("pret/pokefirered", "src/script.c"),
+            ("mgba-emu/mgba", "src/gba/memory.c"),
+        },
+        "prior_head": "fc54588319aea2a798f2455fb594c367209f8b85",
+    },
+    "copilot-poryscript-abi-file-inspection/v2": {
+        "reviewer_id": "copilot-issue33-firered-dispatch-followup",
+        "reviewer_identity": (
+            "@copilot (GitHub Copilot Coding Agent; issue #33 "
+            "FireRed dispatch follow-up)"
+        ),
+        "expected_files": {
+            ("pret/pokefirered", "asm/macros/map.inc"),
+            ("pret/pokefirered", "data/script_cmd_table.inc"),
+            ("pret/pokefirered", "src/scrcmd.c"),
+            ("pret/pokefirered", "src/overworld.c"),
+        },
+        "prior_head": "18de5e859392906e1da4aed800daf15e497d63c5",
+    },
+}
+
+
 def validate_file_inspection_record(record, closure_record):
-    require(record.get("schema") ==
-            "copilot-poryscript-abi-file-inspection/v1",
+    schema_config = FILE_INSPECTION_SCHEMAS.get(record.get("schema"))
+    require(schema_config is not None,
             "unsupported file-inspection record schema")
+    expected_files = schema_config["expected_files"]
     reviewer = record.get("reviewer", {})
-    require(reviewer.get("id") == "copilot-issue33-file-inspection-followup" and
-            reviewer.get("identity") ==
-            "@copilot (GitHub Copilot Coding Agent; issue #33 review-readiness follow-up)" and
+    require(reviewer.get("id") == schema_config["reviewer_id"] and
+            reviewer.get("identity") == schema_config["reviewer_identity"] and
             reviewer.get("source_interpreter_identity") ==
             "xbaconator9000x (author of the original PR #20 witness implementation)" and
             reviewer.get("identity") != reviewer.get("source_interpreter_identity") and
@@ -377,21 +409,21 @@ def validate_file_inspection_record(record, closure_record):
             "file-inspection record must remain non-approving and Phase 1 only")
 
     basis = record.get("basis", {})
-    require(basis.get("prior_exact_head") ==
-            "fc54588319aea2a798f2455fb594c367209f8b85" and
-            basis.get("prior_workflow_run_id") == 41850174614 and
-            basis.get("prior_review_record_job_id") == 126702487227 and
-            basis.get("prior_actual_cli_job_id") == 126702487573 and
-            basis.get("prior_run_note"),
-            "prior exact-head validation provenance is incomplete")
+    require(basis.get("prior_exact_head") == schema_config["prior_head"],
+            "file-inspection prior head differs")
+    if record["schema"].endswith("/v1"):
+        require(basis.get("prior_workflow_run_id") == 41850174614 and
+                basis.get("prior_review_record_job_id") == 126702487227 and
+                basis.get("prior_actual_cli_job_id") == 126702487573 and
+                basis.get("prior_run_note"),
+                "prior exact-head validation provenance is incomplete")
+    else:
+        require(basis.get("prior_successful_exact_head_run") == 41850174614 and
+                basis.get("current_run_status_at_recording") ==
+                "Latest PR workflow run 41891419634 was action_required with zero jobs; no push-triggered run was available.",
+                "current exact-head CI blocker provenance is incomplete")
 
     closure_files, closure_ranges = validate_closure_record(closure_record)
-    expected_files = {
-        ("huderlem/poryscript", "emitter/emitter.go"),
-        ("huderlem/poryscript", "parser/parser.go"),
-        ("pret/pokefirered", "src/script.c"),
-        ("mgba-emu/mgba", "src/gba/memory.c"),
-    }
     files = record.get("files", [])
     require(len(files) == len(expected_files),
             "file-inspection receipt must contain the four scoped files")
@@ -450,9 +482,12 @@ def validate_file_inspection_record(record, closure_record):
 
     summary = record.get("summary", {})
     require(seen == expected_files and
-            summary.get("files_with_full_source_text_retrieved") == 4 and
+            summary.get("files_with_full_source_text_retrieved",
+                        summary.get("files_with_complete_source_text_retrieved")) == 4 and
             summary.get("whole_file_semantic_reviews") == 0 and
-            summary.get("new_copilot_reviewed_passed_files") == 0 and
+            summary.get("new_copilot_reviewed_passed_files",
+                        summary.get("new_files_with_whole_file_semantic_disposition")) == 0 and
+            summary.get("new_qualifying_copilot_receipts", 0) == 0 and
             summary.get("new_approvals") == 0 and
             summary.get("phase1_gate") == "FAIL_INCOMPLETE",
             "file-inspection summary overstates review completion")
@@ -564,7 +599,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--record", type=Path, default=DEFAULT_RECORD)
     parser.add_argument("--closure-record", type=Path)
-    parser.add_argument("--file-inspection-record", type=Path)
+    parser.add_argument("--file-inspection-record", type=Path, action="append")
     parser.add_argument("--poryscript-root", type=Path)
     parser.add_argument("--firered-root", type=Path)
     parser.add_argument("--agbcc-root", type=Path)
@@ -576,11 +611,11 @@ def main():
     if args.file_inspection_record:
         require(args.closure_record is not None,
                 "--file-inspection-record requires --closure-record")
-        inspection = json.loads(
-            args.file_inspection_record.read_text(encoding="utf-8")
-        )
-        print(json.dumps(validate_file_inspection_record(inspection, record),
-                         sort_keys=True))
+        results = []
+        for inspection_path in args.file_inspection_record:
+            inspection = json.loads(inspection_path.read_text(encoding="utf-8"))
+            results.append(validate_file_inspection_record(inspection, record))
+        print(json.dumps(results, sort_keys=True))
         return
     roots = {}
     if args.poryscript_root:

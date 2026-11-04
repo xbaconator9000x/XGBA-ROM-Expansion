@@ -1,0 +1,287 @@
+{
+  "schema": "copilot-poryscript-abi-file-inspection/v2",
+  "recorded_at": "2026-11-04",
+  "scope": "Distinct Phase 1 FireRed map-script dispatch and command-table source inspection. Does not repeat prior Poryscript emitter/parser, src/script.c, mGBA reader, or CLI/ARM witness work.",
+  "basis": {
+    "prior_exact_head": "18de5e859392906e1da4aed800daf15e497d63c5",
+    "prior_successful_exact_head_run": 41850174614,
+    "current_run_status_at_recording": "Latest PR workflow run 41891419634 was action_required with zero jobs; no push-triggered run was available.",
+    "prior_run_scope": "Run 41850174614 passed both jobs for the earlier closure receipt; it does not validate this new record or establish semantic approval."
+  },
+  "reviewer": {
+    "id": "copilot-issue33-firered-dispatch-followup",
+    "identity": "@copilot (GitHub Copilot Coding Agent; issue #33 FireRed dispatch follow-up)",
+    "source_interpreter_identity": "xbaconator9000x (author of the original PR #20 witness implementation)",
+    "distinct_from_source_interpreter": true,
+    "authenticated_github_review_attribution": false,
+    "independent_human_attestation": false,
+    "attribution_blocker": "The available GitHub tools cannot submit an authenticated Copilot pull-request review. No qualifying reviewer attribution is claimed."
+  },
+  "accounting": {
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "approved_p0": 0,
+    "p0_total": 338,
+    "approved_total": 0,
+    "inventory_total": 14834,
+    "whole_file_semantic_reviews": 0,
+    "new_qualifying_copilot_receipts": 0,
+    "phase2_started": false,
+    "shared_queue_register_gate_modified": false
+  },
+  "files": [
+    {
+      "repository": "pret/pokefirered",
+      "path": "asm/macros/map.inc",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "83ef472c926ce767c9133ab9bd6922280b38bb2d",
+      "sha256": "571fa86a3ef5da94e84b935046871b77859b0d45233ed64a400c05b61812e611",
+      "dossier_record_line_sha256": "8e1421693c25ce8f0219ac69fea32dde006f576ea5136679f2dc4331ad71dc6c",
+      "extent": "Complete pinned file retrieved; source identity and full-file digest are bound to the existing closure dossier. Focused semantic observations below are not exhaustive review of unrelated map macros.",
+      "evidence_ranges": [
+        {
+          "start": 9,
+          "end": 20,
+          "sha256": "3336348ca865050d5e3ec192a58504ac03f1074a52758f9223b5e1f0bfc27f45"
+        }
+      ],
+      "source_observations": [
+        "map_script emits a one-byte type followed by a four-byte script relocation; map_script_2 emits two 16-bit operands followed by a four-byte script relocation.",
+        "The macro file defines serialization shape only; it does not validate tag category, duplicate tags, table operand validity, alignment, or termination policy."
+      ],
+      "dependency_links": [
+        {
+          "repository": "pret/pokefirered",
+          "path": "src/script.c",
+          "direction": "outbound",
+          "relation": "MapHeaderGetScriptTable and MapHeaderCheckScriptTable consume the emitted records."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "data/event_scripts.s",
+          "direction": "inbound",
+          "relation": "Authored map script assembly is included in event script inputs."
+        },
+        {
+          "repository": "huderlem/poryscript",
+          "path": "emitter/emitter.go",
+          "direction": "inbound",
+          "relation": "Poryscript output uses these assembler macro names and operands."
+        }
+      ],
+      "license_evidence": {
+        "status": "UNRESOLVED",
+        "unresolved": "A complete applicable license determination for FireRed source and transitive build inputs was not established."
+      },
+      "validation": {
+        "source_identity": "GitHub pinned file response reported the expected Git blob; the previous exact-head CI verified this dossier row and bounded range.",
+        "related_native_evidence": "Prior actual CLI/GNU ARM fixture verified record encodings and relocations for synthetic input; this tranche did not rerun it."
+      },
+      "unresolved_obligations": [
+        "O-PARSER-SHAPE",
+        "O-CONDITION-SENTINEL",
+        "O-BOUNDS",
+        "O-LICENSING",
+        "O-ATTESTATION",
+        "O-WHOLEFILE"
+      ],
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "data/script_cmd_table.inc",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "c5d112d9ea66d258d5a372dda89b9ad96ed2b1e1",
+      "sha256": "6b59babf9b8a33bdc37a322a1a4b6e2261426126097330f305823e53415b1389",
+      "dossier_record_line_sha256": "f871a3dfe00919885fa6f0c8660471de7d119ac696c8660dffc31801f6345dba",
+      "extent": "Complete pinned opcode table retrieved; semantic notes concern opcode-to-handler dispatch and end sentinel, not every command's behavior.",
+      "evidence_ranges": [
+        {
+          "start": 3,
+          "end": 19,
+          "sha256": "e011b4c7f1ed2b105c8aa86d0f232de54c9fb24eb933ac69c9ae4322b995a289"
+        },
+        {
+          "start": 218,
+          "end": 219,
+          "sha256": "718efc20fb3bf1bd8cecbf6824721c3044a6d64e529d08042839c3ebbb383920"
+        }
+      ],
+      "source_observations": [
+        "The table is an ordered .4byte vector of ScrCmd_* handlers indexed by the script opcode byte; gScriptCmdTableEnd follows the final entry as a separate end marker.",
+        "The table's ordered mapping is an ABI with command emitters and bytecode readers; changing an entry or ordering changes behavior even when map-table layout is unchanged."
+      ],
+      "dependency_links": [
+        {
+          "repository": "pret/pokefirered",
+          "path": "src/script.c",
+          "direction": "inbound",
+          "relation": "RunScriptCommand indexes ctx->cmdTable with the bytecode opcode and checks cmdTableEnd."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "src/scrcmd.c",
+          "direction": "outbound",
+          "relation": "Table symbols resolve to command handlers implemented in this translation unit."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "include/script.h",
+          "direction": "outbound",
+          "relation": "Declares script command function and ScriptContext interfaces."
+        }
+      ],
+      "license_evidence": {
+        "status": "UNRESOLVED",
+        "unresolved": "A complete applicable license determination for FireRed source and transitive build inputs was not established."
+      },
+      "validation": {
+        "source_identity": "GitHub pinned file response reported the expected Git blob; the previous exact-head CI verified this dossier row and bounded ranges.",
+        "negative_evidence": "No opcode-table mutation or native command dispatch test was run in this tranche."
+      },
+      "unresolved_obligations": [
+        "O-DEPENDENCIES",
+        "O-LICENSING",
+        "O-ATTESTATION",
+        "O-WHOLEFILE"
+      ],
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "src/scrcmd.c",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "97b695ee2f6fca80a3b78f52f6a444f696fe5814",
+      "sha256": "898dad5a07ce0a125731b998654d86808885a8d48163d607478a5e70c1cac553",
+      "dossier_record_line_sha256": "285dc8bae4f1f32f98519c3de5b7aae7f3ecce5f6196b66f19f87ed7ab912f6e",
+      "extent": "Complete pinned file retrieved and its bytes rehashed to the expected Git blob and SHA-256; bounded behavior review only for map-script-relevant command handlers.",
+      "evidence_ranges": [
+        {
+          "start": 118,
+          "end": 168,
+          "sha256": "cf168ec36b8cf7aebf9ae505ec914b9e32e1d3eeb09f1cd6124319249918085a"
+        },
+        {
+          "start": 286,
+          "end": 335,
+          "sha256": "9515423f245acd8a24966cd3093c4ecab5c4e015509e5a6b68cbb38c15147cd3"
+        }
+      ],
+      "source_observations": [
+        "ScrCmd_goto and ScrCmd_call read 32-bit pointer operands bytewise via ScriptReadWord, then delegate control-flow changes to ScriptJump or ScriptCall.",
+        "ScrCmd_goto_if and ScrCmd_call_if read a condition byte and a pointer operand, then use sScriptConditionTable and comparisonResult to decide whether to transfer control.",
+        "Other pointer-bearing commands such as loadword and setptr also consume 32-bit operands; their meanings and bounds depend on emitted script bytes and caller conventions.",
+        "This file contains many unrelated command implementations; their full behavior and every callee contract are not reviewed here."
+      ],
+      "dependency_links": [
+        {
+          "repository": "pret/pokefirered",
+          "path": "data/script_cmd_table.inc",
+          "direction": "inbound",
+          "relation": "Opcode table selects ScrCmd_* functions."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "src/script.c",
+          "direction": "outbound",
+          "relation": "ScriptReadWord and control-flow helpers interpret command operands."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "include/script.h",
+          "direction": "outbound",
+          "relation": "Script command signatures and context declarations."
+        }
+      ],
+      "license_evidence": {
+        "status": "UNRESOLVED",
+        "unresolved": "A complete applicable license determination for FireRed source and transitive build inputs was not established."
+      },
+      "validation": {
+        "source_identity": "Complete file bytes retrieved from the immutable commit; Git blob and SHA-256 match the closure receipt.",
+        "negative_evidence": "No native command interpreter build or command-level mutation test was run in this tranche."
+      },
+      "unresolved_obligations": [
+        "O-DEPENDENCIES",
+        "O-LICENSING",
+        "O-ATTESTATION",
+        "O-WHOLEFILE"
+      ],
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "src/overworld.c",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "339014da46ae8543143edc99ab72bf7496203a0d",
+      "sha256": "df352e738b56856765aec65adc6fdea0a4b25fe567bc760d4ce2d34afc6ff7e2",
+      "dossier_record_line_sha256": "4c746f1f87a1550eb30d6ee9d84679f5258df83a6a599aad6e8202a948764b06",
+      "extent": "Complete pinned file retrieved and its bytes rehashed to the expected Git blob and SHA-256; bounded map-header lookup and transition call-path review only.",
+      "evidence_ranges": [
+        {
+          "start": 541,
+          "end": 562,
+          "sha256": "70536592f474c60620d16010cde7af21df49c232d26894d5b8992542d692789d"
+        },
+        {
+          "start": 760,
+          "end": 808,
+          "sha256": "31f634eeea4cd01baa951c522a250ada14f96fba2124b71a9e8c84b35f07f552"
+        }
+      ],
+      "source_observations": [
+        "Overworld_GetMapHeaderByGroupAndId directly indexes gMapGroups[mapGroup][mapNum]; LoadCurrentMapData copies that header into gMapHeader.",
+        "The map transition path calls RunOnTransitionMapScript after loading the header and before subsequent map initialization; the actual table lookup is delegated to the FireRed script interpreter.",
+        "This code does not add table bounds checking; map group/index validity and the script table pointer are upstream caller/data invariants."
+      ],
+      "dependency_links": [
+        {
+          "repository": "pret/pokefirered",
+          "path": "include/global.fieldmap.h",
+          "direction": "outbound",
+          "relation": "MapHeader and gMapGroups declaration/layout."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "src/script.c",
+          "direction": "outbound",
+          "relation": "RunOnTransitionMapScript resolves and invokes the selected script."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "src/event_data.c",
+          "direction": "outbound",
+          "relation": "Separate event-flag/variable APIs are called by command handlers, not the map-header lookup itself."
+        }
+      ],
+      "license_evidence": {
+        "status": "UNRESOLVED",
+        "unresolved": "A complete applicable license determination for FireRed source and transitive build inputs was not established."
+      },
+      "validation": {
+        "source_identity": "Complete file bytes retrieved from the immutable commit; Git blob and SHA-256 match the closure receipt.",
+        "negative_evidence": "No malformed map group/index or map-script table runtime test was run in this tranche."
+      },
+      "unresolved_obligations": [
+        "O-BOUNDS",
+        "O-DEPENDENCIES",
+        "O-LICENSING",
+        "O-ATTESTATION",
+        "O-WHOLEFILE"
+      ],
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE"
+    }
+  ],
+  "summary": {
+    "files_with_complete_source_text_retrieved": 4,
+    "whole_file_semantic_reviews": 0,
+    "new_files_with_whole_file_semantic_disposition": 0,
+    "new_copilot_reviewed_passed_files": 0,
+    "new_qualifying_copilot_receipts": 0,
+    "new_approvals": 0,
+    "phase1_gate": "FAIL_INCOMPLETE"
+  }
+}

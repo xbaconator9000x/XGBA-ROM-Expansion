@@ -82,7 +82,8 @@ jobs:
             --mgba-root upstream-mgba
           python3 tools/copilot_poryscript_abi_review.py \
             --closure-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/closure-review.json \
-            --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/file-inspection-followup.json
+            --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/file-inspection-followup.json \
+            --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/fire-red-script-dispatch-followup.json
 
   actual-cli-abi-closure:
     needs: review-record

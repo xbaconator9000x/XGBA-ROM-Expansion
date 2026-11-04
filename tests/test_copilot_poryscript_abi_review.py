@@ -32,6 +32,11 @@ class PoryscriptAbiReviewTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
+        cls.dispatch_inspection = json.loads(
+            (DEFAULT_RECORD.parent / "fire-red-script-dispatch-followup.json").read_text(
+                encoding="utf-8"
+            )
+        )
 
     def test_record_is_pinned_and_non_approving(self):
         sources = validate_record(self.record)
@@ -173,6 +178,40 @@ class PoryscriptAbiReviewTests(unittest.TestCase):
         changed = copy.deepcopy(self.inspection)
         changed["reviewer"]["authenticated_github_review_attribution"] = True
         with self.assertRaisesRegex(ValueError, "missing authenticated attribution"):
+            validate_file_inspection_record(changed, self.closure)
+
+    def test_fire_red_dispatch_inspection_is_pinned_and_non_approving(self):
+        result = validate_file_inspection_record(
+            self.dispatch_inspection, self.closure
+        )
+        self.assertEqual(result["files_with_full_source_text_retrieved"], 4)
+        self.assertEqual(result["whole_file_semantic_reviews"], 0)
+        self.assertEqual(result["new_qualifying_copilot_receipts"], 0)
+        self.assertEqual(result["phase1_gate"], "FAIL_INCOMPLETE")
+        self.assertEqual(
+            {item["path"] for item in self.dispatch_inspection["files"]},
+            {
+                "asm/macros/map.inc",
+                "data/script_cmd_table.inc",
+                "src/scrcmd.c",
+                "src/overworld.c",
+            },
+        )
+
+    def test_fire_red_dispatch_receipt_rejects_dossier_and_dependency_mutations(self):
+        changed = copy.deepcopy(self.dispatch_inspection)
+        changed["files"][0]["dossier_record_line_sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "source/dossier identity differs"):
+            validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.dispatch_inspection)
+        changed["files"][0]["dependency_links"][0]["path"] = "missing.c"
+        with self.assertRaisesRegex(ValueError, "dependency lacks a pinned endpoint"):
+            validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.dispatch_inspection)
+        changed["files"][0]["evidence_ranges"][0]["sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "line evidence differs from closure"):
             validate_file_inspection_record(changed, self.closure)
 
     def test_probe_expected_object_mutations_are_sensitive(self):
