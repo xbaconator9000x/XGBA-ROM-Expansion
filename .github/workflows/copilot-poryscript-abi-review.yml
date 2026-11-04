@@ -19,10 +19,28 @@ jobs:
   review-record:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    outputs:
+      run_native_probe: ${{ steps.native-scope.outputs.run_native_probe }}
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
           persist-credentials: false
+      - name: Determine whether the pinned CLI fixture changed
+        id: native-scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" != "pull_request" ]]; then
+            echo "run_native_probe=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "$BASE_SHA" HEAD | grep -Eq '^(tools/copilot_poryscript_abi_review_probes.py|semantic-snapshots/independent-reviews/copilot-poryscript-abi/closure-review.json)$'; then
+            echo "run_native_probe=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_native_probe=false" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/checkout@v4
         with:
           repository: huderlem/poryscript
@@ -62,8 +80,13 @@ jobs:
             --firered-root upstream-firered \
             --agbcc-root upstream-agbcc \
             --mgba-root upstream-mgba
+          python3 tools/copilot_poryscript_abi_review.py \
+            --closure-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/closure-review.json \
+            --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/file-inspection-followup.json
 
   actual-cli-abi-closure:
+    needs: review-record
+    if: needs.review-record.outputs.run_native_probe == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

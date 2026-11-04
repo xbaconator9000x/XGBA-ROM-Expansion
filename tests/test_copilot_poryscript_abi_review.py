@@ -10,6 +10,7 @@ from tools.copilot_poryscript_abi_review import (
     DEFAULT_RECORD,
     ROOT,
     validate_closure_record,
+    validate_file_inspection_record,
     git_blob_sha1,
     validate_record,
     verify_source_entry,
@@ -23,6 +24,11 @@ class PoryscriptAbiReviewTests(unittest.TestCase):
         cls.record = json.loads(DEFAULT_RECORD.read_text(encoding="utf-8"))
         cls.closure = json.loads(
             (DEFAULT_RECORD.parent / "closure-review.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        cls.inspection = json.loads(
+            (DEFAULT_RECORD.parent / "file-inspection-followup.json").read_text(
                 encoding="utf-8"
             )
         )
@@ -140,6 +146,34 @@ class PoryscriptAbiReviewTests(unittest.TestCase):
         changed["coverage"]["dependency_edges"][0][1] = "missing.c"
         with self.assertRaisesRegex(ValueError, "endpoint lacks"):
             validate_closure_record(changed)
+
+    def test_file_inspection_records_are_linked_and_non_approving(self):
+        result = validate_file_inspection_record(self.inspection, self.closure)
+        self.assertEqual(result["files_with_full_source_text_retrieved"], 4)
+        self.assertEqual(result["whole_file_semantic_reviews"], 0)
+        self.assertEqual(result["new_qualifying_copilot_receipts"], 0)
+        self.assertEqual(result["phase1_gate"], "FAIL_INCOMPLETE")
+        self.assertTrue(all(
+            item["verdict"] == "NEEDS_EVIDENCE" and
+            item["whole_file_semantic_disposition"] is False
+            for item in self.inspection["files"]
+        ))
+
+    def test_file_inspection_rejects_identity_verdict_and_attribution_mutations(self):
+        changed = copy.deepcopy(self.inspection)
+        changed["files"][0]["git_blob_sha1"] = "0" * 40
+        with self.assertRaisesRegex(ValueError, "source/dossier identity differs"):
+            validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.inspection)
+        changed["files"][0]["verdict"] = "APPROVED"
+        with self.assertRaisesRegex(ValueError, "must not claim whole-file disposition"):
+            validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.inspection)
+        changed["reviewer"]["authenticated_github_review_attribution"] = True
+        with self.assertRaisesRegex(ValueError, "missing authenticated attribution"):
+            validate_file_inspection_record(changed, self.closure)
 
     def test_probe_expected_object_mutations_are_sensitive(self):
         raw, _, relocations = expected_rodata()

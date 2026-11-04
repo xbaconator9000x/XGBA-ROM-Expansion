@@ -346,6 +346,126 @@ def validate_closure_record(record, archive_root=ROOT):
     return files, ranges
 
 
+def validate_file_inspection_record(record, closure_record):
+    require(record.get("schema") ==
+            "copilot-poryscript-abi-file-inspection/v1",
+            "unsupported file-inspection record schema")
+    reviewer = record.get("reviewer", {})
+    require(reviewer.get("id") == "copilot-issue33-file-inspection-followup" and
+            reviewer.get("identity") ==
+            "@copilot (GitHub Copilot Coding Agent; issue #33 review-readiness follow-up)" and
+            reviewer.get("source_interpreter_identity") ==
+            "xbaconator9000x (author of the original PR #20 witness implementation)" and
+            reviewer.get("identity") != reviewer.get("source_interpreter_identity") and
+            reviewer.get("distinct_from_source_interpreter") is True,
+            "file-inspection reviewer identity is missing or not distinct")
+    require(reviewer.get("authenticated_github_review_attribution") is False and
+            reviewer.get("independent_human_attestation") is False and
+            reviewer.get("attribution_blocker"),
+            "file-inspection record must state its missing authenticated attribution")
+
+    accounting = record.get("accounting", {})
+    require(accounting.get("phase1_gate") == "FAIL_INCOMPLETE" and
+            accounting.get("approved_p0") == 0 and
+            accounting.get("p0_total") == 338 and
+            accounting.get("approved_total") == 0 and
+            accounting.get("inventory_total") == 14834 and
+            accounting.get("whole_file_semantic_reviews") == 0 and
+            accounting.get("new_qualifying_copilot_receipts") == 0 and
+            accounting.get("phase2_started") is False and
+            accounting.get("shared_queue_register_gate_modified") is False,
+            "file-inspection record must remain non-approving and Phase 1 only")
+
+    basis = record.get("basis", {})
+    require(basis.get("prior_exact_head") ==
+            "fc54588319aea2a798f2455fb594c367209f8b85" and
+            basis.get("prior_workflow_run_id") == 41850174614 and
+            basis.get("prior_review_record_job_id") == 126702487227 and
+            basis.get("prior_actual_cli_job_id") == 126702487573 and
+            basis.get("prior_run_note"),
+            "prior exact-head validation provenance is incomplete")
+
+    closure_files, closure_ranges = validate_closure_record(closure_record)
+    expected_files = {
+        ("huderlem/poryscript", "emitter/emitter.go"),
+        ("huderlem/poryscript", "parser/parser.go"),
+        ("pret/pokefirered", "src/script.c"),
+        ("mgba-emu/mgba", "src/gba/memory.c"),
+    }
+    files = record.get("files", [])
+    require(len(files) == len(expected_files),
+            "file-inspection receipt must contain the four scoped files")
+    seen = set()
+    for item in files:
+        key = (item.get("repository"), item.get("path"))
+        require(key in expected_files and key not in seen,
+                "unknown or duplicate file-inspection identity: " + str(key))
+        seen.add(key)
+        require(item.get("commit") == PINS[key[0]],
+                "file-inspection source pin differs: " + str(key))
+        source = closure_files.get(key)
+        require(source is not None and
+                item.get("git_blob_sha1") == source["git_blob_sha1"] and
+                item.get("sha256") == source["sha256"] and
+                item.get("dossier_record_line_sha256") ==
+                source["dossier_record_line_sha256"],
+                "file-inspection source/dossier identity differs: " + str(key))
+        require(item.get("extent") and
+                item.get("whole_file_semantic_disposition") is False and
+                item.get("verdict") == "NEEDS_EVIDENCE" and
+                item.get("source_observations"),
+                "file-inspection record must not claim whole-file disposition")
+
+        cited_ranges = {}
+        for citation in item.get("evidence_ranges", []):
+            start, end = citation.get("start"), citation.get("end")
+            range_key = (key, start, end)
+            require(range_key in closure_ranges and
+                    closure_ranges[range_key] == citation.get("sha256"),
+                    "file-inspection line evidence differs from closure: " +
+                    str(range_key))
+            cited_ranges[range_key] = citation["sha256"]
+        expected_ranges = {
+            range_key: digest for range_key, digest in closure_ranges.items()
+            if range_key[0] == key
+        }
+        require(cited_ranges == expected_ranges and cited_ranges,
+                "file-inspection must cite every existing bounded range: " +
+                str(key))
+
+        dependencies = item.get("dependency_links", [])
+        require(dependencies, "file-inspection dependencies are required: " + str(key))
+        for dependency in dependencies:
+            target = (dependency.get("repository"), dependency.get("path"))
+            require(target in closure_files and
+                    dependency.get("direction") in {"inbound", "outbound"} and
+                    dependency.get("relation"),
+                    "file-inspection dependency lacks a pinned endpoint: " +
+                    str(target))
+        for objection in item.get("unresolved_obligations", []):
+            require(any(entry.get("id") == objection and
+                        entry.get("status") == "UNRESOLVED"
+                        for entry in closure_record.get("objections", [])),
+                    "file-inspection references a resolved or unknown objection")
+
+    summary = record.get("summary", {})
+    require(seen == expected_files and
+            summary.get("files_with_full_source_text_retrieved") == 4 and
+            summary.get("whole_file_semantic_reviews") == 0 and
+            summary.get("new_copilot_reviewed_passed_files") == 0 and
+            summary.get("new_approvals") == 0 and
+            summary.get("phase1_gate") == "FAIL_INCOMPLETE",
+            "file-inspection summary overstates review completion")
+    return {
+        "status": "PASS_FILE_PROVENANCE_NOT_SEMANTIC_APPROVAL",
+        "files_with_full_source_text_retrieved": 4,
+        "whole_file_semantic_reviews": 0,
+        "new_qualifying_copilot_receipts": 0,
+        "approval_count_changed": False,
+        "phase1_gate": "FAIL_INCOMPLETE",
+    }
+
+
 def verify_closure_sources(record, roots, source_files_only=False,
                            archive_root=ROOT):
     files, ranges = validate_closure_record(record, archive_root)
@@ -444,6 +564,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--record", type=Path, default=DEFAULT_RECORD)
     parser.add_argument("--closure-record", type=Path)
+    parser.add_argument("--file-inspection-record", type=Path)
     parser.add_argument("--poryscript-root", type=Path)
     parser.add_argument("--firered-root", type=Path)
     parser.add_argument("--agbcc-root", type=Path)
@@ -452,6 +573,15 @@ def main():
     args = parser.parse_args()
     record_path = args.closure_record or args.record
     record = json.loads(record_path.read_text(encoding="utf-8"))
+    if args.file_inspection_record:
+        require(args.closure_record is not None,
+                "--file-inspection-record requires --closure-record")
+        inspection = json.loads(
+            args.file_inspection_record.read_text(encoding="utf-8")
+        )
+        print(json.dumps(validate_file_inspection_record(inspection, record),
+                         sort_keys=True))
+        return
     roots = {}
     if args.poryscript_root:
         roots["huderlem/poryscript"] = args.poryscript_root.resolve()
