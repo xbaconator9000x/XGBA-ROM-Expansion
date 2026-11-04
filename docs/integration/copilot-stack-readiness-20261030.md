@@ -15,16 +15,22 @@ the proposed topological sequence. The eight malformed historical base literals
 are preserved separately from their evidence-backed PR-metadata corrections;
 the mismatch and stale dependency remain explicit.
 
-Manifest SHA-256 (unchanged):
-`7413cf43416489ac1254bedba94575420c5fd285d7e6ccaa2fde0474f4b59fb6`.
+Manifest SHA-256 after workflow-ID reconciliation:
+`99accfcada883f086468e8f62c55a252ee24076dba777575584aaf15e60e52cf`.
 Current checker SHA-256:
 `3bd00d09ef3519c1a45423cbf094c601fdd38221c7e0240169bedf6690d1f06b`.
 Base reconciliation fixture SHA-256:
 `b6155a4eb45ac73c85cf9f542e6556f3e82ee70474078b6f97761f5831e0bc56`.
 Live observation fixture SHA-256:
 `a07df2ed1afe824ff184def096afb3e499bdc99fcfe98f74dc13b7c84610bacf`.
-Generated blocker triage SHA-256:
+Workflow-ID reconciliation fixture SHA-256:
+`37e2a5b7a007972a98986684701cd50626f46b5f0e3ec05e3c16ae3494b7df6f`.
+Historical blocker triage SHA-256 (before the 19 workflow IDs were pinned):
 `f87c618981d8006b30adc3178eeed68bc9ecb41801dded28ac0289cfbfc73659`.
+That prior report is retained as historical evidence. The current offline run
+still has 44 blockers, now classified as 19 incomplete workflow-evidence
+records, 9 stale dependency bases, 7 stale-main bases, and 9 stale workflow
+records; pinning an ID did not clear any required-evidence blocker.
 
 ## First concrete blocker in the recorded snapshot (2026-10-30)
 
@@ -91,10 +97,11 @@ parent head is the older `a03acca40614db990756aa88730688dcf084ee31`, whereas
 live PR #8 is now at `995e00904384191170075e8a57d18161ef1a2ec2`. The repair
 does not refresh those branches or claim readiness.
 
-The #6 PR body cites passing run #40255555421 at `dacbcf31…`, not current head
-`14536d85…`. The #7 body cites later passing evidence at `5bb4cad4…`, while the
-PR metadata currently reports head `03608155…`. Those body-cited results were
-not confirmed as exact-current-head runs.
+The #6 PR body cites run #40255555421 at `dacbcf31…`, which is stale for current
+head `14536d85…`. The separate latest run #40255605435 was queried and does test
+that exact PR head; its job and steps succeeded. The #7 body cites later passing
+evidence at `5bb4cad4…`, while the PR metadata currently reports head
+`03608155…`; that body-cited result remains stale.
 
 ## Stack inventory and ordering
 
@@ -156,10 +163,40 @@ duplicating their work.
 | #21 | 40510922233 | success / `a324b99b486d56d57eab94049a2a25ad091a862b` | Exact head; PR-event base SHA was not returned. |
 | #24 | 40525408728 | success / `b6f0cee6a4b5ec25c2eb39eaf4340b65e8da10d8` | Exact branch head; push event, not PR merge-base evidence. |
 
-Run IDs and SHA values are recorded in the machine-readable manifest. Only the
-runs listed above were queried directly here. Other workflow results mentioned
-in PR descriptions are **unverified** in this audit, not promoted to confirmed
-evidence.
+The table above is the initial stack audit's selected-run inventory. The
+2026-11-04 workflow-ID addendum below records additional direct run/job reads for
+the 19 manifest rows whose required workflow IDs were previously absent. Other
+workflow results mentioned only in PR descriptions remain **unverified**, not
+promoted to confirmed evidence.
+
+### Workflow-ID reconciliation — 2026-11-04
+
+The manifest now pins one PR-specific required workflow ID for each of the 19
+previously unpinned rows: #3–7, #10, #12, #14, #16–18, #22–23, #25–28, and
+#35–36. Each ID is present in a public Actions run record associated with that
+PR; the selected run IDs, attempt numbers, events, tested head SHAs, job URLs,
+job counts, and successful-step counts are in
+[`workflow_id_reconciliation_20261104.json`](../../tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json).
+The fixture also records each original manifest head/base next to the live PR
+metadata values. No historical head/base pin was silently refreshed.
+
+| PRs | Selected run/event | Observed result | Remaining limitation |
+|---|---|---|---|
+| #3–7, #10, #12, #14, #16–18, #22–23 | Pull-request event; run IDs and attempt/job/step details in fixture | Each selected current-head run's jobs and steps succeeded | Actions did not expose the run-time PR base SHA; success does not establish exact-base provenance. |
+| #25–26 | Push events #40530840996 and #40562863462 | Each push run's sole job and all returned steps succeeded | Push evidence is not PR-event coverage. |
+| #27 | PR run #41871074286 | `action_required`, zero jobs | Multiple current-head PR workflows are gated; no run is green until a maintainer authorizes execution. |
+| #28 | Push run #41892151360 | `action_required`, zero jobs | Current-head push authorization only; no PR-event execution evidence. |
+| #35 | PR run #41037997890, attempt 2 | 1/1 job and 14/14 returned steps succeeded at current live head `9a31fb1…` | Manifest head remains stale at `d9a46bb…`; Actions did not expose run-time base SHA. |
+| #36 | PR run #41891419634 | `action_required`, zero jobs at current live head `18de5e8…` | Earlier success #41850174614 was for stale head `fc545883…`; no current-head job executed. |
+
+Current live PR #27, #28, #35, and #36 heads differ from their preserved
+manifest pins. The selected PR #27 and #36 authorization gates and PR #28
+push-only gate remain blocked; they are not failures and are not passing
+evidence. The #25/#26 push results similarly do not satisfy PR-event coverage.
+For all 19 rows, live base values are observed separately from the Actions
+records; since run-time base SHA is unavailable, the checker must continue
+requiring exact head-and-base provenance and must not promote these green
+head-only results to merge readiness.
 
 Artifacts were available for #8, #20, and #24 only: #8 run #40449595853
 artifact #12709673369 digest

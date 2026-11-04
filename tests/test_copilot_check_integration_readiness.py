@@ -30,6 +30,10 @@ LIVE_OBSERVATIONS = (
     Path(__file__).parent
     / "fixtures/copilot-integration-readiness/live_observations_20261104.json"
 )
+WORKFLOW_ID_RECONCILIATION = (
+    Path(__file__).parent
+    / "fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json"
+)
 MANIFEST = (
     Path(__file__).parent.parent / "development/copilot-integration/manifest.json"
 )
@@ -283,6 +287,56 @@ class IntegrationReadinessTests(unittest.TestCase):
             )
         )
 
+    def test_nineteen_workflow_ids_are_pinned_to_observed_run_job_evidence(self):
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        reconciliation = json.loads(
+            WORKFLOW_ID_RECONCILIATION.read_text(encoding="utf-8")
+        )
+        expected_prs = {
+            3, 4, 5, 6, 7, 10, 12, 14, 16, 17, 18, 22, 23,
+            25, 26, 27, 28, 35, 36,
+        }
+        rows = {row["pr"]: row for row in reconciliation["rows"]}
+        self.assertEqual(set(rows), expected_prs)
+        manifest_prs = {pr["number"]: pr for pr in manifest["pull_requests"]}
+        for number, row in rows.items():
+            with self.subTest(pr=number):
+                pr = manifest_prs[number]
+                self.assertEqual(
+                    manifest["required_workflow_ids"][str(number)],
+                    [row["workflow_id"]],
+                )
+                self.assertEqual(row["manifest"]["head"], pr["head"]["sha"])
+                self.assertEqual(row["manifest"]["base_ref"], pr["base"]["ref"])
+                self.assertEqual(row["manifest"]["base"], pr["base"]["sha"])
+                self.assertEqual(row["live"]["base_ref"], row["manifest"]["base_ref"])
+                self.assertEqual(row["live"]["base"], row["manifest"]["base"])
+                self.assertEqual(row["run"]["head"], row["live"]["head"])
+                self.assertEqual(
+                    row["run"]["event"],
+                    "push" if number in {25, 26, 28} else "pull_request",
+                )
+                self.assertEqual(
+                    row["run"]["id"],
+                    int(row["run"]["url"].rsplit("/", 1)[1]),
+                )
+                jobs = row["jobs"]
+                self.assertEqual(jobs["count"], len(jobs["job_ids"]))
+                self.assertEqual(jobs["success"], jobs["count"])
+                self.assertEqual(jobs["successful_steps"], jobs["steps"])
+                if row["run"]["conclusion"] == "success":
+                    self.assertGreater(jobs["count"], 0)
+                else:
+                    self.assertEqual(row["run"]["conclusion"], "action_required")
+                    self.assertEqual(jobs["count"], 0)
+                    self.assertEqual(jobs["steps"], 0)
+
+        self.assertIn("not the run-time PR base SHA", reconciliation["base_provenance_limit"])
+        for number in (27, 28, 35, 36):
+            self.assertNotEqual(rows[number]["manifest"]["head"], rows[number]["live"]["head"])
+        self.assertEqual(manifest["policy"]["phase1_gate"], "FAIL_INCOMPLETE")
+        self.assertEqual(manifest["policy"]["independent_approvals"], 0)
+
     def test_changed_head_or_base_sha_fails_closed(self):
         snapshot = copy.deepcopy(self.snapshot)
         snapshot["pull_requests"]["77"]["head_sha"] = "dddddddddddddddddddddddddddddddddddddddd"
@@ -479,10 +533,10 @@ class IntegrationReadinessTests(unittest.TestCase):
         self.assertEqual(
             report["category_counts"],
             {
+                "incomplete_workflow_evidence": 19,
                 "stale_dependency_base": 9,
                 "stale_main_base": 7,
                 "stale_workflow_evidence": 9,
-                "unverified_workflow_id": 19,
             },
         )
         self.assertEqual(report["policy"]["phase1_gate"], "FAIL_INCOMPLETE")

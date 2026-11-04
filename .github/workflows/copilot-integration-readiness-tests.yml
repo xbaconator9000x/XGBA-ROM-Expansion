@@ -16,6 +16,7 @@ on:
       - "tests/fixtures/copilot-integration-readiness/workflow_classifications.json"
       - "tests/fixtures/copilot-integration-readiness/base_sha_reconciliation.json"
       - "tests/fixtures/copilot-integration-readiness/live_observations_20261104.json"
+      - "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json"
       - "tests/test_copilot_check_integration_readiness.py"
       - "tests/test_phase1_ci_context.py"
       - "tests/test_phase1_continuous.py"
@@ -61,6 +62,7 @@ jobs:
             "70dcb3b13e5a81d32c7cf21997342d129931a02d6b6b20a3d2b50d8c83004bc1  tests/fixtures/copilot-integration-readiness/workflow_classifications.json" \
             "b6155a4eb45ac73c85cf9f542e6556f3e82ee70474078b6f97761f5831e0bc56  tests/fixtures/copilot-integration-readiness/base_sha_reconciliation.json" \
             "a07df2ed1afe824ff184def096afb3e499bdc99fcfe98f74dc13b7c84610bacf  tests/fixtures/copilot-integration-readiness/live_observations_20261104.json" \
+            "37e2a5b7a007972a98986684701cd50626f46b5f0e3ec05e3c16ae3494b7df6f  tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json" \
             | sha256sum --check
       - name: Validate Phase 1 independent-review queue without changing it
         run: python3 tools/phase1_independent_queue_validate.py
@@ -115,4 +117,18 @@ jobs:
             echo "Expected recorded blocker report to remain blocked; got $status"
             exit 1
           fi
-          cmp development/copilot-integration/blocker-triage-20261104.json "$RUNNER_TEMP/blocker-triage.json"
+          python3 - "$RUNNER_TEMP/blocker-triage.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          report = json.loads(Path(sys.argv[1]).read_text())
+          assert report["status"] == "BLOCKED"
+          assert report["blocker_count"] == 44
+          assert report["category_counts"] == {
+              "incomplete_workflow_evidence": 19,
+              "stale_dependency_base": 9,
+              "stale_main_base": 7,
+              "stale_workflow_evidence": 9,
+          }
+          PY
