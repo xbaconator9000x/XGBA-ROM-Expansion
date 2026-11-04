@@ -1,4 +1,4 @@
-# XGBA ROM Expansion — source-grounded interoperability research
+# This is a test.
 
 ## Current project status
 
