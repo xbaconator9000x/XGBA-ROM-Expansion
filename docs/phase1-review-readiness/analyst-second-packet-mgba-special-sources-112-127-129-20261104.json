@@ -58,7 +58,7 @@
       "anchors": [
         {"line": 398, "contains": "find_package(${QT}LinguistTools)"},
         {"line": 402, "contains": "file(GLOB TS_FILES"},
-        {"line": 409, "contains": "mgba-template.ts"},
+        {"line": 409, "contains": "template.ts"},
         {"line": 413, "contains": "qt_add_translation"},
         {"line": 415, "contains": "qt5_add_translation"},
         {"line": 434, "contains": "/translations/"}
@@ -111,7 +111,7 @@
       "path": "src/third-party/sqlite3/sqlite3.h",
       "git_blob_sha1": "76c567d050a0e148af0fb8c619731057f86e83f9",
       "sha256": "4340a24cda7bc436d62459c3c5237f67b9ab716ddca872faf8052d0ce0d97119",
-      "anchors": [{"line": 1, "contains": "SQLite"}]
+      "anchors": [{"line": 12, "contains": "This header file defines the interface that the SQLite library"}]
     }
   ],
   "dependency_edges": [
