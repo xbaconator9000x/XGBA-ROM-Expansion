@@ -8,6 +8,7 @@ import unittest
 from tools.copilot_check_integration_readiness import (
     classify_workflow_evidence,
     _format_workflow_blocker,
+    recorded_snapshot,
     validate,
 )
 
@@ -19,6 +20,13 @@ FIXTURE = (
 CLASSIFICATIONS = (
     Path(__file__).parent
     / "fixtures/copilot-integration-readiness/workflow_classifications.json"
+)
+BASE_RECONCILIATION = (
+    Path(__file__).parent
+    / "fixtures/copilot-integration-readiness/base_sha_reconciliation.json"
+)
+MANIFEST = (
+    Path(__file__).parent.parent / "development/copilot-integration/manifest.json"
 )
 
 
@@ -170,6 +178,85 @@ class IntegrationReadinessTests(unittest.TestCase):
         self.assertTrue(
             any("manifest base SHA is malformed" in issue
                 for issue in validate(manifest, self.snapshot))
+        )
+
+    def test_eight_base_rows_use_verified_full_sha_and_keep_stale_dependency(self):
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        reconciliation = json.loads(
+            BASE_RECONCILIATION.read_text(encoding="utf-8")
+        )
+        expected_numbers = {11, 12, 14, 15, 16, 17, 18, 21}
+        rows = {
+            pr["number"]: pr
+            for pr in manifest["pull_requests"]
+            if pr["number"] in expected_numbers
+        }
+        evidence = {
+            pr["number"]: pr for pr in reconciliation["pull_requests"]
+        }
+        self.assertEqual(set(rows), expected_numbers)
+        self.assertEqual(set(evidence), expected_numbers)
+        self.assertEqual(
+            manifest["base_sha_reconciliation"]["reconciled_at"],
+            reconciliation["observed_at"],
+        )
+        self.assertEqual(
+            reconciliation["reported_pr_base_sha"],
+            "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+        )
+        self.assertEqual(
+            reconciliation["observed_base_ref_tip_sha"],
+            "995e00904384191170075e8a57d18161ef1a2ec2",
+        )
+        self.assertNotEqual(
+            reconciliation["reported_pr_base_sha"],
+            reconciliation["observed_base_ref_tip_sha"],
+        )
+        for number, pr in rows.items():
+            with self.subTest(pr=number):
+                self.assertEqual(pr["depends_on"], [8])
+                self.assertEqual(pr["base"]["ref"], reconciliation["shared_child_base_ref"])
+                self.assertEqual(pr["base"]["sha"], reconciliation["reported_pr_base_sha"])
+                self.assertEqual(
+                    pr["base"]["reported_sha"],
+                    reconciliation["original_malformed_manifest_sha"],
+                )
+                self.assertEqual(
+                    evidence[number]["manifest_head_sha"], pr["head"]["sha"]
+                )
+                self.assertEqual(evidence[number]["base_ref"], pr["base"]["ref"])
+                self.assertEqual(
+                    evidence[number]["merge_base_sha"],
+                    reconciliation["shared_merge_base_sha"],
+                )
+                self.assertNotEqual(
+                    pr["base"]["sha"], evidence[number]["merge_base_sha"]
+                )
+
+        issues = validate(manifest, recorded_snapshot(manifest))
+        for number in expected_numbers:
+            with self.subTest(stale_dependency=number):
+                self.assertTrue(
+                    any(
+                        "PR #%d base SHA %s does not match dependency PR #8 head"
+                        % (number, reconciliation["reported_pr_base_sha"])
+                        in issue
+                        for issue in issues
+                    )
+                )
+
+    def test_reconciled_sha_must_match_pr_metadata_not_merge_base(self):
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        snapshot = recorded_snapshot(manifest)
+        pr = next(item for item in manifest["pull_requests"] if item["number"] == 11)
+        pr["base"]["sha"] = "18dee74bf3042326645eb13ae7df3c551325b5a8"
+        issues = validate(manifest, snapshot)
+        self.assertTrue(
+            any(
+                "PR #11 base SHA changed" in issue
+                and "observed b76a2b686d4acf4302b9dacfad28494660d9b5f9" in issue
+                for issue in issues
+            )
         )
 
     def test_changed_head_or_base_sha_fails_closed(self):

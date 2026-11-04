@@ -2,6 +2,13 @@
   "schema_version": 1,
   "repository": "xbaconator9000x/XGBA-ROM-Expansion",
   "observed_at": "2026-10-30",
+  "base_sha_reconciliation": {
+    "reconciled_at": "2026-11-04",
+    "fixture": "tests/fixtures/copilot-integration-readiness/base_sha_reconciliation.json",
+    "classification": "malformed recorded values corrected from PR metadata; stale dependency preserved",
+    "source": "public GitHub PR metadata and compare API; see pinned fixture",
+    "unresolved": "PR base SHA metadata b76a2b686d4acf4302b9dacfad28494660d9b5f9 disagrees with current target-ref tip 995e00904384191170075e8a57d18161ef1a2ec2"
+  },
   "main": {
     "ref": "main",
     "sha": "de2a775184d69411016ff683a8075af72ef4a58d"
@@ -119,7 +126,7 @@
       "number": 11,
       "title": "binary-aware machine-triage v2 with fail-closed legacy integrity",
       "head": {"ref": "phase1/binary-aware-triage-issue9-20261027", "sha": "a59756ee192659ac60988195bf7e5f1a4fea29f6"},
-      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
+      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9", "reported_sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
       "depends_on": [8],
       "required_evidence": ["successful workflow with exact head/base provenance"],
       "observed_runs": [{"id": 40468447957, "workflow_id": 397970898, "conclusion": "success", "event": "push", "head_sha": "26402b704480cbeb3fe9fe467a1d4b2c75ac54c3", "matches_current_head": false, "base_provenance": "not applicable to push event"}]
@@ -128,7 +135,7 @@
       "number": 12,
       "title": "pinned mGBA savedata whole-file review handoff",
       "head": {"ref": "phase1/mgba-savedata-review-handoff-20261027", "sha": "9ed9d2630a098525e7703853de0b804c56658da9"},
-      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
+      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9", "reported_sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
       "depends_on": [8],
       "required_evidence": ["successful workflow with exact head/base provenance"],
       "observed_runs": []
@@ -146,7 +153,7 @@
       "number": 14,
       "title": "pinned Porymap Qt JSON writer failure boundary",
       "head": {"ref": "phase1/porymap-qt-writer-failure-boundary-20261027", "sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03"},
-      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
+      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9", "reported_sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
       "depends_on": [8],
       "required_evidence": ["successful workflow with exact head/base provenance"],
       "observed_runs": []
@@ -155,7 +162,7 @@
       "number": 15,
       "title": "FireRed save-block relocation and encryption whole-file review",
       "head": {"ref": "phase1/firered-load-save-relocation-review-20261027", "sha": "7c283d21b48ef3b2276a225465b59ff492364a12"},
-      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
+      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9", "reported_sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
       "depends_on": [8],
       "required_evidence": ["successful workflow with exact head/base provenance"],
       "observed_runs": [{"id": 40492941829, "workflow_id": 398142984, "conclusion": "success", "event": "pull_request", "head_sha": "7c283d21b48ef3b2276a225465b59ff492364a12", "matches_current_head": true, "base_provenance": "PR number returned; exact base SHA not exposed"}]
@@ -164,7 +171,7 @@
       "number": 16,
       "title": "compiled Poryscript/FireRed map-table relocation witness",
       "head": {"ref": "phase1/poryscript-compiled-map-table-20261027", "sha": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d"},
-      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
+      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9", "reported_sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
       "depends_on": [8],
       "required_evidence": ["successful workflow with exact head/base provenance"],
       "observed_runs": []
@@ -173,7 +180,7 @@
       "number": 17,
       "title": "pinned FireRed Flash bank/timer/write whole-file review",
       "head": {"ref": "phase1/firered-flash-bank-timer-review-20261027", "sha": "302465862501f542250d719444b3a9831406f6ac"},
-      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
+      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9", "reported_sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
       "depends_on": [8],
       "required_evidence": ["successful workflow with exact head/base provenance"],
       "observed_runs": []
@@ -182,7 +189,7 @@
       "number": 18,
       "title": "FireRed/mGBA Flash1M override and chip-ID contract",
       "head": {"ref": "phase1/firered-mgba-flash-identification-contract-20261027", "sha": "61a49f48e372272ff2ffcc720e21366bd91507bd"},
-      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
+      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9", "reported_sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
       "depends_on": [8],
       "required_evidence": ["successful workflow with exact head/base provenance"],
       "observed_runs": []
@@ -209,7 +216,7 @@
       "number": 21,
       "title": "pinned FireRed root Makefile build and ROM geometry contract",
       "head": {"ref": "phase1/firered-root-build-rom-geometry-20261027", "sha": "a324b99b486d56d57eab94049a2a25ad091a862b"},
-      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
+      "base": {"ref": "phase1/review-readiness-handoff-20261027", "sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9", "reported_sha": "18dee74bf3042326645eb850f6f1a4fea29f6"},
       "depends_on": [8],
       "required_evidence": ["successful workflow with exact head/base provenance"],
       "observed_runs": [{"id": 40510922233, "workflow_id": 398273014, "conclusion": "success", "event": "pull_request", "head_sha": "a324b99b486d56d57eab94049a2a25ad091a862b", "matches_current_head": true, "base_provenance": "PR number returned; exact base SHA not exposed"}],

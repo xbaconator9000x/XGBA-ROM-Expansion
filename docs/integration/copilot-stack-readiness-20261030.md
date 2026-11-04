@@ -11,14 +11,16 @@ approval totals, the independent-review queue, or the gate.
 The machine-readable record is
 [`development/copilot-integration/manifest.json`](../../development/copilot-integration/manifest.json).
 It records PR head/base values, dependency edges, observed workflow-run IDs and
-the proposed topological sequence. SHA-1 strings below are transcribed from
-GitHub PR/Actions read responses; malformed or unavailable values are not
-repaired or inferred.
+the proposed topological sequence. The eight malformed historical base literals
+are preserved separately from their evidence-backed PR-metadata corrections;
+the mismatch and stale dependency remain explicit.
 
 Manifest SHA-256:
-`05da629c77418e9fd632646acf2f18ff5d9d092f9599d047af9961adc001aad1`.
+`7413cf43416489ac1254bedba94575420c5fd285d7e6ccaa2fde0474f4b59fb6`.
 Checker SHA-256:
 `1cc1b1dd79cd08ff5ca4704b3e107e9580bd6ab87a4ca2b6e536fb90645dc594`.
+Base reconciliation fixture SHA-256:
+`b6155a4eb45ac73c85cf9f542e6556f3e82ee70474078b6f97761f5831e0bc56`.
 
 ## First concrete blocker
 
@@ -30,11 +32,57 @@ Those SHAs do not match. PR #8's queried green run #40449595853 is on
 refresh the branch, and obtain current-head evidence before considering its
 children.
 
-There is an additional data-integrity blocker: the PR API returned the base
-string `18dee74bf3042326645eb850f6f1a4fea29f6` (37 characters) for PRs #11, #12,
-#14–18, and #21. It is not a full Git SHA and is preserved verbatim in the
-manifest. The checker rejects it rather than padding or guessing missing
-characters.
+There was an additional data-integrity blocker: the recorded base literal
+`18dee74bf3042326645eb850f6f1a4fea29f6` for PRs #11, #12, #14–18, and #21 is
+malformed and cannot be repaired by padding. On 2026-11-04, a bounded public
+API reconciliation replaced the active `base.sha` values with the full
+`b76a2b686d4acf4302b9dacfad28494660d9b5f9` SHA returned by each PR metadata
+read, preserving the original literal as `base.reported_sha`. This repairs the
+malformed data, not the dependency relationship; the child PRs remain stale
+relative to PR #8.
+
+### Eight-child base identity reconciliation — 2026-11-04
+
+The read-only public GitHub PR responses report the same base ref and base SHA
+for all eight children. The repository branch listing reports that ref's tip as
+PR #8's current head instead, and GitHub's compare API independently reports
+`18dee74bf3042326645eb13ae7df3c551325b5a8` as the merge base of PR #8's live
+head and each child's live head. These are three distinct identities and are
+not interchangeable:
+
+- PR metadata base SHA: `b76a2b686d4acf4302b9dacfad28494660d9b5f9`.
+- Current target-ref tip / PR #8 head: `995e00904384191170075e8a57d18161ef1a2ec2`.
+- Common merge base for these child heads: `18dee74bf3042326645eb13ae7df3c551325b5a8`.
+
+The PR-object base SHA versus target-ref tip discrepancy is explicitly
+unresolved. The checker is not relaxed to accept the merge base as the current
+base or parent head. The manifest therefore remains blocked on the stale
+dependency; its original malformed values remain in `base.reported_sha` for
+auditability. Exact per-PR heads and public compare URLs are recorded in
+[`base_sha_reconciliation.json`](../../tests/fixtures/copilot-integration-readiness/base_sha_reconciliation.json).
+The direct unauthenticated PR REST fetch was unavailable in this environment;
+the PR and branch identities were read through the GitHub read tools, while
+public compare responses supplied each immutable merge-base identity. The
+offline checker now reports **44 readiness issues** rather than stopping at the
+eight malformed-SHA errors: each of the eight rows has an explicit stale
+dependency diagnostic, alongside the pre-existing stale-head, missing-workflow,
+and evidence blockers. This remains blocked, not a green dashboard.
+
+| PR | Manifest head at 2026-10-30 | Live PR head read 2026-11-04 | PR metadata base ref / SHA | GitHub compare merge base | Classification |
+|---|---|---|---|---|---|
+| #11 | `a59756ee192659ac60988195bf7e5f1a4fea29f6` | `2021d98987c7c895288f9b70ad756ab9608f4ea0` | `phase1/review-readiness-handoff-20261027` / `b76a2b686d4acf4302b9dacfad28494660d9b5f9` | `18dee74bf3042326645eb13ae7df3c551325b5a8` | Malformed literal repaired; dependency on #8 stale. |
+| #12 | `9ed9d2630a098525e7703853de0b804c56658da9` | `9ed9d2630a098525e7703853de0b804c56658da9` | Same / same | Same | Malformed literal repaired; dependency on #8 stale. |
+| #14 | `618861ff17a4b9cfbb180f5531cf58d8414cbd03` | `618861ff17a4b9cfbb180f5531cf58d8414cbd03` | Same / same | Same | Malformed literal repaired; dependency on #8 stale. |
+| #15 | `7c283d21b48ef3b2276a225465b59ff492364a12` | `7c283d21b48ef3b2276a225465b59ff492364a12` | Same / same | Same | Malformed literal repaired; dependency on #8 stale. |
+| #16 | `dd6fb2c8e6ec15818ccb841760b540a04dc8212d` | `dd6fb2c8e6ec15818ccb841760b540a04dc8212d` | Same / same | Same | Malformed literal repaired; dependency on #8 stale. |
+| #17 | `302465862501f542250d719444b3a9831406f6ac` | `302465862501f542250d719444b3a9831406f6ac` | Same / same | Same | Malformed literal repaired; dependency on #8 stale. |
+| #18 | `61a49f48e372272ff2ffcc720e21366bd91507bd` | `61a49f48e372272ff2ffcc720e21366bd91507bd` | Same / same | Same | Malformed literal repaired; dependency on #8 stale. |
+| #21 | `a324b99b486d56d57eab94049a2a25ad091a862b` | `a324b99b486d56d57eab94049a2a25ad091a862b` | Same / same | Same | Malformed literal repaired; dependency on #8 stale. |
+
+The existing dependency edges remain #8 → #11/#12/#14–18/#21. Their recorded
+parent head is the older `a03acca40614db990756aa88730688dcf084ee31`, whereas
+live PR #8 is now at `995e00904384191170075e8a57d18161ef1a2ec2`. The repair
+does not refresh those branches or claim readiness.
 
 The #6 PR body cites passing run #40255555421 at `dacbcf31…`, not current head
 `14536d85…`. The #7 body cites later passing evidence at `5bb4cad4…`, while the
@@ -63,7 +111,7 @@ duplicating their work.
 | #2, #3, #4, #6, #7 | `main` | Root branches use older main SHAs than `de2a775…`; refresh/reconcile before integration. |
 | #5 | #3 | Body says it carries #4's EEPROM packet. Treat #5 as the integration candidate for that shared content; compare actual trees before deciding whether #4 is independently needed. |
 | #10, #8 | #7 branch | Siblings. #10's base equals #7's reported head; #8's base does not. Reconcile #7 first, then refresh both children as needed. |
-| #11, #12, #14–18, #21 | #8 branch | Their base value is the older `18dee…` handoff checkpoint, not #8's current `a03…` head. Base SHA from the API is malformed (37 chars) for this group. |
+| #11, #12, #14–18, #21 | #8 branch | Malformed recorded base literals were reconciled to the exact PR metadata SHA; current PR #8/head and merge-base evidence still show the child branches are stale. |
 | #13 | #12 | Base equals #12's reported head; current run #40480788248 is green on the exact #13 head, but the available Actions result did not expose actual base SHA provenance. |
 | #19 | #11 | Base equals #11's reported head. Run #40505350595 is green on exact head `8ba12ff…` (push/source-head evidence; no PR merge-base claim). |
 | #20 | #16 | Base equals #16's reported head. Run #40506170513 is green on `58713218…`, not current #20 head `afb5fc17…`. |

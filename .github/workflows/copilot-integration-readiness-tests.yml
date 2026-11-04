@@ -13,6 +13,7 @@ on:
       - "semantic-snapshots/independent-reviews/queue.json"
       - "tests/fixtures/copilot-integration-readiness/valid_merge_sha.json"
       - "tests/fixtures/copilot-integration-readiness/workflow_classifications.json"
+      - "tests/fixtures/copilot-integration-readiness/base_sha_reconciliation.json"
       - "tests/test_copilot_check_integration_readiness.py"
       - "tests/test_phase1_ci_context.py"
       - "tests/test_phase1_continuous.py"
@@ -56,6 +57,7 @@ jobs:
           printf '%s\n' \
             "1e0f095cd56738ae31f7418dc79cc63fef5a8e41cb23423aef40c5954155443e  tests/fixtures/copilot-integration-readiness/valid_merge_sha.json" \
             "70dcb3b13e5a81d32c7cf21997342d129931a02d6b6b20a3d2b50d8c83004bc1  tests/fixtures/copilot-integration-readiness/workflow_classifications.json" \
+            "b6155a4eb45ac73c85cf9f542e6556f3e82ee70474078b6f97761f5831e0bc56  tests/fixtures/copilot-integration-readiness/base_sha_reconciliation.json" \
             | sha256sum --check
       - name: Validate Phase 1 independent-review queue without changing it
         run: python3 tools/phase1_independent_queue_validate.py
@@ -72,8 +74,13 @@ jobs:
             echo "Expected the incomplete recorded snapshot to exit 1; got $status"
             exit 1
           fi
-          grep -Fq "BLOCKED (8 readiness issues):" "$RUNNER_TEMP/copilot-readiness.txt"
-          grep -Fq "manifest base SHA is malformed" "$RUNNER_TEMP/copilot-readiness.txt"
+          grep -Fq "BLOCKED (" "$RUNNER_TEMP/copilot-readiness.txt"
+          grep -Fq "PR #11 base SHA b76a2b686d4acf4302b9dacfad28494660d9b5f9 does not match dependency PR #8 head" "$RUNNER_TEMP/copilot-readiness.txt"
+          if grep -Fq "manifest base SHA is not a full" "$RUNNER_TEMP/copilot-readiness.txt"; then
+            cat "$RUNNER_TEMP/copilot-readiness.txt"
+            echo "Reconciled base rows must not remain malformed"
+            exit 1
+          fi
       - name: Preserve Phase 1 gate and approval totals
         run: |
           python3 - <<'PY'
