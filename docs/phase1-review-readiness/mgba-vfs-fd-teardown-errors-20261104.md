@@ -15,25 +15,25 @@ blobs. The compressed dossier is Git blob
 `3b982876c7d810a827af8c80c7e5d9231fdaa327`, SHA-256
 `1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609`.
 
-| Pinned file | Git blob | Source SHA-256 | Canonical dossier row SHA-256 |
-|---|---|---|---|
-| `src/util/vfs/vfs-fd.c` | `2535bd0fb76740745ae038d5523ead28658f1035` | `0073a68b6688f1baa26acaf609af52e9f29308605e449e7c3182c9f4d768da44` | `bb351807533d3de29f1f87c2c3a644a70c67430f556e83e219b1e25292589942` |
-| `src/util/vfs/vfs-mem.c` | `048194e2dd2d0b3b395a852d2092c694663c88a2` | `6b5951a0cd634d398a69ce57766298bd32d5e6410ee0aa4e8b8894c6aaa5829b` | `3c95e0a322b5aff0655ec59a1c1f5d34a740a21676da0bf5cce444d2434248ce` |
-| `src/gba/savedata.c` | `fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb` | `9887e36795ae51e39eecad09565d27d3feabe316d3e595b17f288e3205e13161` | `99a6b3e97c52d67712e10204e08ced8819c7330e899b9f767aa280fc330c42e0` |
-| `src/gba/gba.c` | `c30bd943909dc00df0b5b9932e6d9ddb6e1c404e` | `e84eaba17f6c96ac7b78431afaee79d7633dd50118f92e31e4432793f80c4c7b` | `d1870b438fe6dd9bfa628a99d90189778e112588c14ae08f28fa379903595056` |
-| `src/gba/core.c` | `6bfc518bb8899205c07d1d0fc091a287cb42f874` | `47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596` | `3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784` |
-| `src/core/scripting.c` | `7ccb51e897685ce24b37dabc76beb27427331b4f` | `8bb8d2ca9a744b51a96d5258b7a1cec49b724f92ae843a1504b22d4ae9d138b1` | `9975d4c10ec523f164e9e0292ae795ccb8522343d7b926c233bee159de08abc8` |
-| `src/script/stdlib.c` | `f84b62515315c119ec4ff5b9fb6df4de4517c738` | `52c9fc2d9490f3f158f20c8eddfed07440ec22e4f174043f96e3704599c87b99` | `db8b3609ef7ae747d57b1b3a163dd9af6fbbf9c22d661b2a5261e274cbae6ad1` |
-| `include/mgba-util/vfs.h` | `6c9bd299153af4c3c9cd5487f2425a2481331ee5` | `4c829529f21c424196b4d1efe25ce11227312437cf1aa5028cae94a741bf6656` | `5d4c30179d703f5b013badf083d6c99c736186091873d65edcb3f0943c2763dd` |
-| `include/mgba-util/common.h` | `923e93086adfa09c9a55fcc2f0f6fa4d560e5888` | `ec13354a050e4a7432232214b9991dd74000980ab2b8949389af0871cc1b799f` | `b0a970a0105d3d1b109325bda5fedc99cff7a182cb010f24f826944faa0616ec` |
-| `include/mgba-util/dllexports.h` | `a44480df6ec26821b8616650b2575ba794848eca` | `96871f8861195f4ff9fedd861ff07ed5b0a10a0e7642d6a780a8221cafd163d4` | `5a0c3158c1515885d4f326ea52cc891074b5e0cd54e40460eab89d55a1746070` |
-| `include/mgba-util/vector.h` | `c837379e2102ca6535db2b292233bd4983c3532c` | `ae8d9ed36475bda93ab3d2ff581163cedd289b2275c5254b76ba9e4285696375` | `6a1179a47870dc93b443eff57599611d1b8d43d87560de25863a9e5805d83eb7` |
-| `include/mgba-util/memory.h` | `325f748f6fddc33a5539739ebc6eff6f3bb42bad` | `509b56f31b2a279d954a16799501a1585cf7aa55f917a180432283b0205c198c` | `cf858e1e109d1346cab0d7b30bcd119c207cfb84e9b45a3e73321c1e3576315e` |
-| `include/mgba-util/math.h` | `f7b3269c9d51967765379b951ba6f43d24c61865` | `04f5ee1686f4b30744d4e62caef4cf16f2f4b80682b88a87e7e18cf117fd421e` | `87d819c03b064e4665a27b5563f4a7261cfcdad051913229884d4f72cfd813f9` |
-| `include/mgba/core/core.h` | `64ddf851ef00ab09416a9c1c9b5a88798fcd6fc8` | `e77d0b72af5b76d9b66292968359122a15ab5c4c624d684af7ad339fa700e7a9` | `0fb39db4601aad348aa35a4adbb7a4a41b05a26128957595547a95bc72208a87` |
-| `include/mgba/gba/core.h` | `5cb0e468c100730a65199e9daeda78c2a885227d` | `9e9eb686f85856a6c9b659f0c99d4eb5f5c831120970d616f8554a448f558c8d` | `08637ccef3dea51935b64aeea0a34d40008862ebc3eed75f7385df0394ebbd22` |
-| `include/mgba/internal/gba/gba.h` | `65e994dc63a304cc9fb207536f09bb2c8a6cf3e5` | `b50fc8ae1467f9ac1c6be3ba8452e22027571ff5c886695edb9be529d7962d4e` | `d6e61894ce31db089d3fd04e64e0938d1e689fb6c7498a8056fced405bf2bba0` |
-| `include/mgba/internal/gba/savedata.h` | `6227be25e8c9d2c1cc14c06ded34389b96138577` | `30481cada83cc0e3a88b55298f3081cc660e18e55ca7f5a57356e6f2a75224dc` | `eaee2c8bdb65c51e4f40daeb80af916f57ed430c48c88286562363f687ca6de9` |
+| Pinned file | Git blob | Source SHA-256 | Canonical dossier row SHA-256 | Review disposition |
+|---|---|---|---|---|
+| `src/util/vfs/vfs-fd.c` | `2535bd0fb76740745ae038d5523ead28658f1035` | `0073a68b6688f1baa26acaf609af52e9f29308605e449e7c3182c9f4d768da44` | `bb351807533d3de29f1f87c2c3a644a70c67430f556e83e219b1e25292589942` | Full pinned TU compiled and native failure paths executed. |
+| `src/util/vfs/vfs-mem.c` | `048194e2dd2d0b3b395a852d2092c694663c88a2` | `6b5951a0cd634d398a69ce57766298bd32d5e6410ee0aa4e8b8894c6aaa5829b` | `3c95e0a322b5aff0655ec59a1c1f5d34a740a21676da0bf5cce444d2434248ce` | Full pinned TU compiled and memory-backend controls executed. |
+| `src/gba/savedata.c` | `fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb` | `9887e36795ae51e39eecad09565d27d3feabe316d3e595b17f288e3205e13161` | `99a6b3e97c52d67712e10204e08ced8819c7330e899b9f767aa280fc330c42e0` | Seven exact bodies extracted, compiled, and executed with bounded support stubs. |
+| `src/gba/gba.c` | `c30bd943909dc00df0b5b9932e6d9ddb6e1c404e` | `e84eaba17f6c96ac7b78431afaee79d7633dd50118f92e31e4432793f80c4c7b` | `d1870b438fe6dd9bfa628a99d90189778e112588c14ae08f28fa379903595056` | `GBAUnloadROM` extracted, compiled, and executed; `GBADestroy` source-pinned and audited only. |
+| `src/gba/core.c` | `6bfc518bb8899205c07d1d0fc091a287cb42f874` | `47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596` | `3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784` | `_GBACoreDeinit` source-pinned and audited only; not compiled or executed. |
+| `src/core/scripting.c` | `7ccb51e897685ce24b37dabc76beb27427331b4f` | `8bb8d2ca9a744b51a96d5258b7a1cec49b724f92ae843a1504b22d4ae9d138b1` | `9975d4c10ec523f164e9e0292ae795ccb8522343d7b926c233bee159de08abc8` | Callback/error path source-pinned and audited only; not compiled or executed. |
+| `src/script/stdlib.c` | `f84b62515315c119ec4ff5b9fb6df4de4517c738` | `52c9fc2d9490f3f158f20c8eddfed07440ec22e4f174043f96e3704599c87b99` | `db8b3609ef7ae747d57b1b3a163dd9af6fbbf9c22d661b2a5261e274cbae6ad1` | Script-facing registration path source-pinned and audited only; not compiled or executed. |
+| `include/mgba-util/vfs.h` | `6c9bd299153af4c3c9cd5487f2425a2481331ee5` | `4c829529f21c424196b4d1efe25ce11227312437cf1aa5028cae94a741bf6656` | `5d4c30179d703f5b013badf083d6c99c736186091873d65edcb3f0943c2763dd` | Direct harness compile input; interface contract inspected. |
+| `include/mgba-util/common.h` | `923e93086adfa09c9a55fcc2f0f6fa4d560e5888` | `ec13354a050e4a7432232214b9991dd74000980ab2b8949389af0871cc1b799f` | `b0a970a0105d3d1b109325bda5fedc99cff7a182cb010f24f826944faa0616ec` | Source/header pin and dependency-closure validation only. |
+| `include/mgba-util/dllexports.h` | `a44480df6ec26821b8616650b2575ba794848eca` | `96871f8861195f4ff9fedd861ff07ed5b0a10a0e7642d6a780a8221cafd163d4` | `5a0c3158c1515885d4f326ea52cc891074b5e0cd54e40460eab89d55a1746070` | Source/header pin and dependency-closure validation only. |
+| `include/mgba-util/vector.h` | `c837379e2102ca6535db2b292233bd4983c3532c` | `ae8d9ed36475bda93ab3d2ff581163cedd289b2275c5254b76ba9e4285696375` | `6a1179a47870dc93b443eff57599611d1b8d43d87560de25863a9e5805d83eb7` | Source/header pin and dependency-closure validation only. |
+| `include/mgba-util/memory.h` | `325f748f6fddc33a5539739ebc6eff6f3bb42bad` | `509b56f31b2a279d954a16799501a1585cf7aa55f917a180432283b0205c198c` | `cf858e1e109d1346cab0d7b30bcd119c207cfb84e9b45a3e73321c1e3576315e` | Direct harness compile input; allocation contract inspected. |
+| `include/mgba-util/math.h` | `f7b3269c9d51967765379b951ba6f43d24c61865` | `04f5ee1686f4b30744d4e62caef4cf16f2f4b80682b88a87e7e18cf117fd421e` | `87d819c03b064e4665a27b5563f4a7261cfcdad051913229884d4f72cfd813f9` | Source/header pin and dependency-closure validation only. |
+| `include/mgba/core/core.h` | `64ddf851ef00ab09416a9c1c9b5a88798fcd6fc8` | `e77d0b72af5b76d9b66292968359122a15ab5c4c624d684af7ad339fa700e7a9` | `0fb39db4601aad348aa35a4adbb7a4a41b05a26128957595547a95bc72208a87` | Core teardown interface source-pinned and audited only. |
+| `include/mgba/gba/core.h` | `5cb0e468c100730a65199e9daeda78c2a885227d` | `9e9eb686f85856a6c9b659f0c99d4eb5f5c831120970d616f8554a448f558c8d` | `08637ccef3dea51935b64aeea0a34d40008862ebc3eed75f7385df0394ebbd22` | GBA teardown interface source-pinned and audited only. |
+| `include/mgba/internal/gba/gba.h` | `65e994dc63a304cc9fb207536f09bb2c8a6cf3e5` | `b50fc8ae1467f9ac1c6be3ba8452e22027571ff5c886695edb9be529d7962d4e` | `d6e61894ce31db089d3fd04e64e0938d1e689fb6c7498a8056fced405bf2bba0` | GBA structure/source closure pinned and audited only. |
+| `include/mgba/internal/gba/savedata.h` | `6227be25e8c9d2c1cc14c06ded34389b96138577` | `30481cada83cc0e3a88b55298f3081cc660e18e55ca7f5a57356e6f2a75224dc` | `eaee2c8bdb65c51e4f40daeb80af916f57ed430c48c88286562363f687ca6de9` | Savedata structure/source closure pinned and audited only. |
 
 These source files and headers carry MPL-2.0 notices. Only source-derived
 function bodies are extracted to a temporary build file; no mGBA source is
@@ -141,9 +141,14 @@ fault-injection assumption. No callback error report is inferred.
 
 Targeted local parser and native checks are included in the existing
 `phase1-mgba-savedata-boundary-witness.yml` workflow. Its checkout mode checks
-the exact pinned commit and source tree before running this harness. Exact-head
-Actions execution for this package is pending; earlier green Actions runs
-validate only their own earlier heads. No CI success is claimed here.
+the exact pinned commit and source tree before running this harness. The exact
+code-bearing head `f239c0e42eb089ce5be7fb6d784853c645841d06` has PR Actions run
+[#41852469153](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41852469153):
+conclusion `action_required`, with zero jobs. No job or step executed; this is a
+permission blocker, not CI success or a code failure. The workflow is
+pull-request-only, so no push-event run exists. Earlier green Actions runs
+validate only their own earlier heads. CodeQL on the code-bearing commit
+reported zero alerts; secret scanning was clean.
 
 Historical base-branch run #40475162042 failed an earlier savedata source
 anchor at line 154; the subsequent base-branch run #40475197646 passed after
