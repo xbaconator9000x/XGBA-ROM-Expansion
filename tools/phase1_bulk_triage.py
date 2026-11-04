@@ -30,6 +30,52 @@ def structure(data):
         hits=[i for i,line in enumerate(lines,1) if re.search(pattern,line,re.I)]
         if hits:flags[name]=hits
     return {'source_lines':len(lines),'nonblank_lines':sum(bool(x.strip()) for x in lines),'whole_blob_sha256':digest(data),'all_lines_sha256':digest(b'\n'.join(lines)),'includes':inc,'conditional_directive_lines':conditional,'risk_flags_line_anchors':flags,'limits':['Structural anchors are not parsed semantics or execution proof','Whole-file independent semantic review still required']}
+BINARY_EXTENSIONS={'.bin':'opaque_binary','.elf':'compiled_binary','.o':'compiled_binary','.a':'compiled_binary','.jpg':'image_binary','.jpeg':'image_binary','.gif':'image_binary','.bmp':'image_binary','.wav':'audio_binary','.mid':'audio_binary','.ogg':'audio_binary','.zip':'archive_binary'}
+TEXT_SOURCE_EXT={'.c','.h','.cpp','.hpp','.cc','.s','.asm','.py','.sh','.ld','.go','.rs'}
+TEXT_DATA_EXT={'.json','.md','.txt','.mk','.yaml','.yml','.toml','.ini','.csv','.inc','.xml','.qrc','.pro','.cmake','.js','.ts','.html','.css','.map'}
+def valid_png(data):
+    import struct,zlib
+    if not data.startswith(b'\x89PNG\r\n\x1a\n'):return False
+    pos=8;first=True
+    while pos+12<=len(data):
+        n=struct.unpack('>I',data[pos:pos+4])[0]
+        if n>len(data)-pos-12:return False
+        tag=data[pos+4:pos+8];payload=data[pos+8:pos+8+n]
+        crc=struct.unpack('>I',data[pos+8+n:pos+12+n])[0]
+        if zlib.crc32(tag+payload)&0xffffffff!=crc:return False
+        if first:
+            if tag!=b'IHDR' or n!=13:return False
+            width,height=struct.unpack('>II',payload[:8])
+            if not width or not height or payload[8] not in (1,2,4,8,16) or payload[9] not in (0,2,3,4,6):return False
+            first=False
+        pos+=12+n
+        if tag==b'IEND':return n==0 and pos==len(data)
+    return False
+def valid_gba_header(data):
+    return (len(data)>=0xc0 and data[0xb2]==0x96
+            and data[0xbd]==((-sum(data[0xa0:0xbd])-0x19)&0xff))
+def file_kind(path,data):
+    ext=Path(path).suffix.lower()
+    if ext=='.png' or data.startswith(b'\x89PNG\r\n\x1a\n'):
+        return 'image_png' if valid_png(data) else 'unknown_binary'
+    if ext=='.gba':
+        return 'compiled_rom' if valid_gba_header(data) else 'unknown_binary'
+    if ext in BINARY_EXTENSIONS:
+        return BINARY_EXTENSIONS[ext] if (b'\x00' in data or any(x>127 for x in data)) else 'unknown_binary'
+    if b'\x00' in data:return 'unknown_binary'
+    try:data.decode('utf-8')
+    except UnicodeDecodeError:return 'unknown_binary'
+    if ext in TEXT_SOURCE_EXT:return 'text_source'
+    if ext in TEXT_DATA_EXT or Path(path).name in ('Makefile','CMakeLists.txt','LICENSE','README','.gitignore','.gitattributes'):return 'authored_text'
+    return 'unknown_binary'
+def typed_structure(path,data):
+    kind=file_kind(path,data)
+    if kind in ('text_source','authored_text'):
+        result=structure(data)
+        result['file_kind']=kind
+        result['structure_schema']='xgba-phase1-typed-structure-v2'
+        return result
+    return {'structure_schema':'xgba-phase1-typed-structure-v2','file_kind':kind,'byte_length':len(data),'whole_blob_sha256':digest(data),'format_signature_hex':data[:16].hex(),'source_lines':None,'nonblank_lines':None,'all_lines_sha256':None,'includes':[],'conditional_directive_lines':[],'risk_flags_line_anchors':{},'limits':['Binary bytes are not source-code lines','Format-specific producer/consumer and layout review required','Extension/signature alone does not prove binary semantics']}
 def read_queue(root):
     with gzip.open(root/'semantic_review_queue.csv.gz','rt',encoding='utf-8',newline='') as f:q=list(csv.DictReader(f))
     if len(q)!=TOTAL or len({(r['repo'],r['path']) for r in q})!=TOTAL:raise ValueError('Queue inventory size or uniqueness failure')
@@ -69,10 +115,14 @@ def build(root,register,out,limit,offset,source_root=None):
         if source_root is not None:
             data=source_bytes(source_root,r['repo'],PINS[r['repo']],r['path'],r['blob_sha'])
             if str(len(data))!=str(p['tracked_bytes']):raise ValueError('Pinned byte count mismatch: '+r['path'])
-            item['whole_file_structure']=structure(data)
+            item['whole_file_structure']=typed_structure(r['path'],data)
+            if item['whole_file_structure']['file_kind'] not in ('text_source','authored_text'):
+                item['machine_triage']={'lexical_evidence_applicable':False,'unverified_dependency_hints':{'incoming_include_candidates':m['incoming_include_candidates'],'unresolved_include_candidates':m['unresolved_include_candidates']},'limits':['Dossier lexical and symbol samples suppressed for non-text file kind; dossier SHA preserved']}
+            else:
+                item['machine_triage']['lexical_evidence_applicable']=True
         records.append(item)
     if len({(r['identity']['repository'],r['identity']['path']) for r in records})!=len(records):raise ValueError('Duplicate batch output')
-    result={'schema':'xgba-phase1-machine-triage-v1','snapshot_gate':'FAIL_INCOMPLETE','inventory_total':TOTAL,'prepared_register_baseline':len(prepared),'selected_count':len(records),'offset':offset,'source_reverified':source_root is not None,'records':records}
+    result={'schema':'xgba-phase1-machine-triage-v2','snapshot_gate':'FAIL_INCOMPLETE','inventory_total':TOTAL,'prepared_register_baseline':len(prepared),'selected_count':len(records),'offset':offset,'source_reverified':source_root is not None,'records':records}
     out.parent.mkdir(parents=True,exist_ok=True);out.write_bytes(canonical(result)+b'\n')
     if json.loads(out.read_text())!=result:raise ValueError('Output round-trip failed')
     print(json.dumps({'selected':len(records),'prepared_unchanged':len(prepared),'approved_unchanged':0,'source_reverified':source_root is not None,'output_sha256':digest(out.read_bytes())},sort_keys=True))
