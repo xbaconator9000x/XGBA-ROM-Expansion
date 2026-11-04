@@ -10,11 +10,16 @@
 #include "loadingscreen.h"
 #include <QApplication>
 #include <QAction>
+#include <QAbstractButton>
 #include <QComboBox>
 #include <QDir>
+#include <QDialogButtonBox>
+#include <QEvent>
 #include <QFile>
 #include <QFileInfo>
 #include <QFileSystemWatcher>
+#include <QMessageBox>
+#include <QPointer>
 #include <QSaveFile>
 #include <QElapsedTimer>
 #include <QEventLoop>
@@ -109,8 +114,33 @@ int main(int argc,char **argv) {
         QObject::connect(create,&QAction::triggered,[&]{++triggers;});
         create->trigger();
         need(triggers==1,"actual_new_map_action");
+        NewMapDialog *cancelDialog=window.findChild<NewMapDialog*>();
+        need(cancelDialog!=nullptr,"actual_new_map_cancel_dialog");
+        QCoreApplication::processEvents();
+        need(cancelDialog->isVisible() && cancelDialog->isModal() &&
+             cancelDialog->windowModality()==Qt::WindowModal,
+             "actual_new_map_cancel_modal");
+        auto *cancelButtons=cancelDialog->findChild<QDialogButtonBox*>("buttonBox");
+        need(cancelButtons && cancelButtons->button(QDialogButtonBox::Cancel),
+             "actual_new_map_cancel_button");
+        const QString cancelledName="XGBAPhase1GuiNewMapCancelled";
+        QLineEdit *cancelName=cancelDialog->findChild<QLineEdit*>("lineEdit_Name");
+        need(cancelName!=nullptr,"actual_new_map_cancel_name");
+        cancelName->setText(cancelledName);
+        QPointer<NewMapDialog> cancelledDialog(cancelDialog);
+        cancelButtons->button(QDialogButtonBox::Cancel)->click();
+        QCoreApplication::sendPostedEvents(nullptr,QEvent::DeferredDelete);
+        need(cancelledDialog.isNull() && !project->isLoadedMap(cancelledName) &&
+             window.editor->map==base,"actual_new_map_cancel_preserved_editor");
+
+        create->trigger();
+        need(triggers==2,"second_actual_new_map_action");
         NewMapDialog *dialog=window.findChild<NewMapDialog*>();
         need(dialog!=nullptr,"actual_new_map_dialog");
+        QCoreApplication::processEvents();
+        need(dialog->isVisible() && dialog->isModal() &&
+             dialog->windowModality()==Qt::WindowModal,
+             "actual_new_map_accept_modal");
         QLineEdit *nameEdit=dialog->findChild<QLineEdit*>("lineEdit_Name");
         QComboBox *group=dialog->findChild<QComboBox*>("comboBox_Group");
         QComboBox *layout=dialog->findChild<QComboBox*>("comboBox_LayoutID");
@@ -121,7 +151,10 @@ int main(int argc,char **argv) {
         need(gi>=0 && li>=0,"existing_group_and_layout");
         group->setCurrentIndex(gi);
         layout->setCurrentIndex(li);
-        dialog->accept();
+        auto *acceptButtons=dialog->findChild<QDialogButtonBox*>("buttonBox");
+        need(acceptButtons && acceptButtons->button(QDialogButtonBox::Ok),
+             "actual_new_map_accept_button");
+        acceptButtons->button(QDialogButtonBox::Ok)->click();
         Map *map=project->getMap(name);
         need(map && project->isLoadedMap(name),"dialog_created_map");
         need(window.editor->map==map,"gui_selected_new_map");
@@ -202,31 +235,102 @@ int main(int argc,char **argv) {
         }
         need(delivered>0,"post_replace_file_changed_signal");
 
-        // Deterministically make QSaveFile's final target path disappear after
-        // its temporary file is open; this tests failed commit preservation,
-        // not Porymap's QFile writer or physical durability.
-        const QString failureDir=root+"/phase1-rename-failure";
-        const QString movedFailureDir=failureDir+".moved";
-        need(QDir().mkpath(failureDir),"rename_failure_directory");
-        const QString failurePath=failureDir+"/sentinel.json";
-        QFile sentinel(failurePath);
-        need(sentinel.open(QIODevice::WriteOnly),"rename_failure_sentinel_open");
-        need(sentinel.write("old",3)==3,"rename_failure_sentinel_write");
-        sentinel.close();
-        QSaveFile failedCommit(failurePath);
-        need(failedCommit.open(QIODevice::WriteOnly),"rename_failure_open");
-        need(failedCommit.write("new",3)==3,"rename_failure_write");
-        need(QDir().rename(failureDir,movedFailureDir),"rename_failure_inject");
+        const QString permissionName="XGBAPhase1PermissionDenied";
+        const QString permissionJson=root+"/data/maps/"+permissionName+"/map.json";
+        create->trigger();
+        need(triggers==3,"permission_map_action");
+        NewMapDialog *permissionDialog=window.findChild<NewMapDialog*>();
+        need(permissionDialog!=nullptr,"permission_map_dialog");
+        QCoreApplication::processEvents();
+        need(permissionDialog->isVisible() && permissionDialog->isModal(),
+             "permission_map_modal");
+        QLineEdit *permissionNameEdit=permissionDialog->findChild<QLineEdit*>("lineEdit_Name");
+        QComboBox *permissionGroup=permissionDialog->findChild<QComboBox*>("comboBox_Group");
+        QComboBox *permissionLayout=permissionDialog->findChild<QComboBox*>("comboBox_LayoutID");
+        need(permissionNameEdit && permissionGroup && permissionLayout,"permission_map_fields");
+        permissionNameEdit->setText(permissionName);
+        const int permissionGroupIndex=permissionGroup->findText(project->groupNames.first());
+        const int permissionLayoutIndex=permissionLayout->findText(base->layoutId());
+        need(permissionGroupIndex>=0 && permissionLayoutIndex>=0,"permission_map_settings");
+        permissionGroup->setCurrentIndex(permissionGroupIndex);
+        permissionLayout->setCurrentIndex(permissionLayoutIndex);
+        auto *permissionButtons=permissionDialog->findChild<QDialogButtonBox*>("buttonBox");
+        need(permissionButtons && permissionButtons->button(QDialogButtonBox::Ok),
+             "permission_map_accept_button");
+        permissionButtons->button(QDialogButtonBox::Ok)->click();
+        Map *permissionMap=project->getMap(permissionName);
+        need(permissionMap && window.editor->map==permissionMap &&
+             !permissionMap->isPersistedToFile(),"permission_map_unpersisted");
+        const QString permissionDir=QFileInfo(permissionJson).absolutePath();
+        need(QDir().mkpath(permissionDir),"permission_map_directory");
+        const auto writablePermissions=QFileInfo(permissionDir).permissions();
+        const auto readOnlyDirectory=QFile::ReadOwner|QFile::ExeOwner|
+                                     QFile::ReadGroup|QFile::ExeGroup|
+                                     QFile::ReadOther|QFile::ExeOther;
+        need(QFile::setPermissions(permissionDir,readOnlyDirectory),
+             "permission_denial_inject");
+        QFile deniedProbe(permissionJson);
+        need(!deniedProbe.open(QIODevice::WriteOnly) &&
+             deniedProbe.error()==QFileDevice::PermissionsError,
+             "permission_denial_probe");
+        need(!QFileInfo::exists(permissionJson),"permission_map_not_yet_persisted");
+        save->trigger();
+        need(QFile::setPermissions(permissionDir,writablePermissions),
+             "permission_denial_save_restore");
+        need(!QFileInfo::exists(permissionJson) && !permissionMap->isPersistedToFile() &&
+             window.editor->map==permissionMap,"permission_denied_first_save_state");
+        QMessageBox *saveError=nullptr;
+        elapsed.start();
+        while (!saveError && elapsed.elapsed()<4000) {
+            QCoreApplication::processEvents(QEventLoop::AllEvents,50);
+            saveError=qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+            if (!saveError) QThread::msleep(10);
+        }
+        need(saveError!=nullptr,"save_error_dialog_shown");
+        const bool errorReported=
+            saveError->text()==QStringLiteral("Failed to save some project changes.") &&
+            saveError->isModal() &&
+            saveError->informativeText().contains(QStringLiteral("Please see")) &&
+            saveError->detailedText().contains(QStringLiteral("Could not open"));
+        QAbstractButton *errorOk=saveError->button(QMessageBox::Ok);
+        need(errorOk!=nullptr,"save_error_dialog_ok");
+        errorOk->click();
+        QCoreApplication::processEvents();
+        need(errorReported,"save_error_dialog_details");
+        need(QDir(permissionDir).removeRecursively(),"permission_map_cleanup");
+
+        const QByteArray beforeFailedCommit=bytes(json);
+        QSaveFile failedCommit(json);
+        failedCommit.setDirectWriteFallback(false);
+        need(failedCommit.open(QIODevice::WriteOnly),"failed_commit_open");
+        const QByteArray failedBytes=beforeFailedCommit+"\n";
+        need(failedCommit.write(failedBytes)==failedBytes.size(),"failed_commit_write");
+        const auto mapDirectoryPermissions=QFileInfo(dir).permissions();
+        need(QFile::setPermissions(dir,readOnlyDirectory),"failed_commit_permission_inject");
         const bool failedCommitAccepted=failedCommit.commit();
-        need(QDir().rename(movedFailureDir,failureDir),"rename_failure_restore");
-        need(!failedCommitAccepted,"rename_failure_commit_must_fail");
-        need(bytes(failurePath)=="old","rename_failure_preserves_old_bytes");
-        QFile::remove(failurePath);
-        need(QDir().rmdir(failureDir),"rename_failure_cleanup");
+        need(QFile::setPermissions(dir,mapDirectoryPermissions),"failed_commit_permission_restore");
+        need(!failedCommitAccepted,"failed_commit_must_fail");
+        need(bytes(json)==beforeFailedCommit,"failed_commit_preserves_old_bytes");
+        need(watcher->files().contains(json),"watcher_retained_after_failed_commit");
+        delivered=0;
+        QFile touchedAfterFailure(json);
+        need(touchedAfterFailure.open(QIODevice::WriteOnly|QIODevice::Append),
+             "post_failure_watch_open");
+        need(touchedAfterFailure.write("\n",1)==1 && touchedAfterFailure.flush(),
+             "post_failure_watch_write");
+        touchedAfterFailure.close();
+        elapsed.start();
+        while (delivered==0 && elapsed.elapsed()<4000) {
+            QCoreApplication::processEvents(QEventLoop::AllEvents,50);
+            QThread::msleep(10);
+        }
+        need(delivered>0,"post_failure_watch_signal");
 
         QJsonObject out;
         out["original_mainwindow_qaction"]=true;
         out["original_newmapdialog_accept"]=true;
+        out["actual_modal_newmap_cancel_preserved_editor"]=true;
+        out["actual_modal_newmap_accept_selected_map"]=true;
         out["new_map_unpersisted_until_save"]=true;
         out["matched_qfile_enospc"]=true;
         out["gui_false_clean_missing_script_on_retry"]=true;
@@ -239,13 +343,18 @@ int main(int argc,char **argv) {
         out["atomic_replace_file_changed_signal"]=atomicReplaceSignals>0;
         out["watcher_rearmed_after_atomic_replace"]=watcher->files().contains(json);
         out["post_replace_file_changed_signal"]=true;
-        out["rename_failure_commit_rejected"]=true;
-        out["rename_failure_old_bytes_preserved"]=true;
+        out["permission_denied_first_save_rejected"]=true;
+        out["permission_failure_preserved_unpersisted_editor_map"]=true;
+        out["save_error_dialog_reported"]=true;
+        out["failed_commit_rejected"]=true;
+        out["failed_commit_old_bytes_preserved"]=true;
+        out["watcher_retained_after_failed_commit"]=true;
+        out["post_failure_watch_signal"]=true;
         out["file_changed_signal_tested"]=true;
         out["stock_gameplay"]=false;
-        out["modal_editor_state_exercised"]=false;
+        out["human_modal_interaction"]=false;
         out["fsync_failure_injected"]=false;
-        out["permission_failure_injected"]=false;
+        out["permission_failure_injected"]=true;
         out["physical_durability_tested"]=false;
         out["phase1_gate"]="FAIL_INCOMPLETE";
         out["independent_approvals"]=0;

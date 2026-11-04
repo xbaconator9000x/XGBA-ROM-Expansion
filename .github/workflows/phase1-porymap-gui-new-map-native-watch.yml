@@ -43,6 +43,8 @@ jobs:
           git -C upstream-porymap hash-object src/mainwindow.cpp | grep -Fx 08ce1a7a599ef825967717b69626984cdc6d772b
           git -C upstream-porymap hash-object src/project.cpp | grep -Fx d43b0949303433111d4478ad76117c2b3445dd13
           git -C upstream-porymap hash-object src/ui/newmapdialog.cpp | grep -Fx c8a028025bf1a9aabb8fd96cccf3d0a76214bb0e
+          git -C upstream-porymap hash-object src/ui/message.cpp | grep -Fx 8dfe553c2794370b210ac09aebfc7c42c03a080b
+          git -C upstream-porymap hash-object src/log.cpp | grep -Fx d2cde0a452c6bcb61d72e6ec669082d50d7ee283
           mkdir -p upstream-porymap/tests
           cp tests/porymap_qt_gui_new_map_watch.cpp upstream-porymap/tests/
           python3 - <<'PY'

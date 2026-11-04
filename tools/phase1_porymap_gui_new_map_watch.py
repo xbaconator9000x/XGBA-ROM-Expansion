@@ -6,15 +6,21 @@ PIN_P="26b919d7ff4b54152de010abd5bf344af2ebe116"
 PIN_F="ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
 BLOBS={"src/mainwindow.cpp":"08ce1a7a599ef825967717b69626984cdc6d772b",
 "src/project.cpp":"d43b0949303433111d4478ad76117c2b3445dd13",
-"src/ui/newmapdialog.cpp":"c8a028025bf1a9aabb8fd96cccf3d0a76214bb0e"}
+"src/ui/newmapdialog.cpp":"c8a028025bf1a9aabb8fd96cccf3d0a76214bb0e",
+"src/ui/message.cpp":"8dfe553c2794370b210ac09aebfc7c42c03a080b",
+"src/log.cpp":"d2cde0a452c6bcb61d72e6ec669082d50d7ee283"}
 TRUE=("original_mainwindow_qaction","original_newmapdialog_accept","new_map_unpersisted_until_save",
 "matched_qfile_enospc","gui_false_clean_missing_script_on_retry","watch_missing_before_save",
 "watch_not_auto_rearmed_after_save","manual_watch_recovery","native_qt6","synthetic_new_map",
+"actual_modal_newmap_cancel_preserved_editor","actual_modal_newmap_accept_selected_map",
 "atomic_replace_committed","atomic_replace_file_changed_signal",
 "watcher_rearmed_after_atomic_replace","post_replace_file_changed_signal",
-"rename_failure_commit_rejected","rename_failure_old_bytes_preserved","file_changed_signal_tested")
-FALSE=("stock_gameplay","modal_editor_state_exercised","fsync_failure_injected",
-       "permission_failure_injected","physical_durability_tested")
+"permission_denied_first_save_rejected","permission_failure_preserved_unpersisted_editor_map",
+"save_error_dialog_reported","failed_commit_rejected","failed_commit_old_bytes_preserved",
+"watcher_retained_after_failed_commit","post_failure_watch_signal","file_changed_signal_tested",
+"permission_failure_injected")
+FALSE=("stock_gameplay","human_modal_interaction","fsync_failure_injected",
+       "physical_durability_tested")
 COLD_TRUE=("fresh_process","original_mainwindow_project_reopened","new_map_reloaded",
            "map_json_valid","watcher_registered_on_reopen")
 def need(ok,msg):
