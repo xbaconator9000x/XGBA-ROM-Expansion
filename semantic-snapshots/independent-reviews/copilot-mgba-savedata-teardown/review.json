@@ -1,0 +1,300 @@
+{
+  "schema": "xgba.copilot.mgba_savedata_teardown_review.v1",
+  "review_scope": "Phase 1 review of PR #13 pinned mGBA VFile teardown error evidence; evidence review only, not implementation or semantic approval",
+  "review_date": "2026-11-04",
+  "reviewer": {
+    "identity": "GitHub Copilot Coding Agent (@copilot), task-specific PR #35 review",
+    "source_packet_interpreter": "GitHub Copilot Coding Agent workpapers on PR #13, heads f239c0e42eb089ce5be7fb6d784853c645841d06 and b540768f5e8baad5b0724f36eadde8269ad6a485",
+    "identity_limitation": "This is a distinct source/evidence audit task, not a claim of a separate human reviewer. No maintainer approval or independent approval is claimed.",
+    "approval_eligible": false
+  },
+  "target": {
+    "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+    "pull_request": 35,
+    "expected_head_before_review": "9a31fb1dfa0a08f95a06a3c2bf8cd431aafccd29",
+    "write_policy": "Existing PR #35 head only; expected-head fast-forward. No new branch, PR, workflow, scheduler, main-branch change, PR #13 edit, or other-branch edit."
+  },
+  "upstream": {
+    "repository": "mgba-emu/mgba",
+    "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+    "source_retrieval": "Individual raw files fetched from that immutable revision to /tmp; Git blob and full-byte SHA-256 independently recomputed.",
+    "machine_dossier": {
+      "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+      "git_blob_sha1": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+      "sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609",
+      "verification": "Downloaded from PR #13 head d4a753a8909f364ed133eda4b4253a06a985b9ab; compressed bytes, Git blob, and all 20 canonical source rows independently matched."
+    },
+    "licensing": {
+      "notice": "MPL-2.0",
+      "verification": "The first 800 bytes of each of the 20 pinned C/header files contains the Mozilla Public License v. 2.0 notice.",
+      "distribution_conclusion": "No licensing conclusion for any combined distribution is implied."
+    }
+  },
+  "phase1_state": {
+    "decision": "FAIL_INCOMPLETE",
+    "p0_candidates": 338,
+    "p0_approved_before": 0,
+    "p0_approved_after": 0,
+    "inventory_total": 14834,
+    "approved_before": 0,
+    "approved_after": 0,
+    "phase2_started": false,
+    "shared_gate_or_register_edited": false
+  },
+  "source_files": [
+    {"path":"src/util/vfs/vfs-fd.c","git_blob_sha1":"2535bd0fb76740745ae038d5523ead28658f1035","source_sha256":"0073a68b6688f1baa26acaf609af52e9f29308605e449e7c3182c9f4d768da44","dossier_row_sha256":"bb351807533d3de29f1f87c2c3a644a70c67430f556e83e219b1e25292589942","review_scope":"POSIX and alternate VFileFD close/unmap/sync implementations; complete file identity verified.","objections":["fd-void-unmap","fd-close","cross-platform-durability"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"src/util/vfs/vfs-mem.c","git_blob_sha1":"048194e2dd2d0b3b395a852d2092c694663c88a2","source_sha256":"6b5951a0cd634d398a69ce57766298bd32d5e6410ee0aa4e8b8894c6aaa5829b","dossier_row_sha256":"3c95e0a322b5aff0655ec59a1c1f5d34a740a21676da0bf5cce444d2434248ce","review_scope":"Memory VFile ownership, unmap, sync, and close contracts; complete file identity verified.","objections":["memory-backend"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"src/util/vfs/vfs-file.c","git_blob_sha1":"4a63e53f842b31b24d6188e6525ddcf121a0c7da","source_sha256":"77737a3fa897db96e31f1f5e56faa0c06afa0cc86c7697642b28026308ba0921","dossier_row_sha256":"263f5e29518c63b6c0cfb36819debd8c57dfc630a6490376255e2f1fd1fe3849","review_scope":"Complete stdio backend; map/unmap/truncate/sync/close error return paths and test backend selection examined.","objections":["stdio-teardown","stdio-close","cross-platform-durability"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"src/util/vfs.c","git_blob_sha1":"3158c52659a83333cb23aeb0dd7ea4bba35908fc","source_sha256":"7b94fe172db57a97fef22047e79378bba3c8848b0808bca014d3a6554c1adc06","dossier_row_sha256":"47d41523b021d9d124e30aae47163dd32773f50223bcde11b82d4b27508107a2","review_scope":"Backend dispatch branches; the native stdio fixture enables ENABLE_VFS_FILE and does not establish every frontend/platform selection.","objections":["backend-dispatch"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"src/gba/savedata.c","git_blob_sha1":"fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb","source_sha256":"9887e36795ae51e39eecad09565d27d3feabe316d3e595b17f288e3205e13161","dossier_row_sha256":"99a6b3e97c52d67712e10204e08ced8819c7330e899b9f767aa280fc330c42e0","review_scope":"Deinit, mask/unmask, load, clean, and RTC/sync result propagation related to teardown.","objections":["savedata-result-sinks","mask-unmask","dirty-notification"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"src/gba/gba.c","git_blob_sha1":"c30bd943909dc00df0b5b9932e6d9ddb6e1c404e","source_sha256":"e84eaba17f6c96ac7b78431afaee79d7633dd50118f92e31e4432793f80c4c7b","dossier_row_sha256":"d1870b438fe6dd9bfa628a99d90189778e112588c14ae08f28fa379903595056","review_scope":"GBAUnloadROM/GBADestroy caller chain, GBALoadSave setup, and separate GBAFrameEnded callback boundary.","objections":["savedata-result-sinks","mask-unmask","dirty-notification"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"src/gba/core.c","git_blob_sha1":"6bfc518bb8899205c07d1d0fc091a287cb42f874","source_sha256":"47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596","dossier_row_sha256":"3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784","review_scope":"_GBACoreDeinit to GBADestroy call edge; source-audited, not compiled or executed by the teardown fixtures.","objections":["caller-chain"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"src/core/scripting.c","git_blob_sha1":"7ccb51e897685ce24b37dabc76beb27427331b4f","source_sha256":"8bb8d2ca9a744b51a96d5258b7a1cec49b724f92ae843a1504b22d4ae9d138b1","dossier_row_sha256":"9975d4c10ec523f164e9e0292ae795ccb8522343d7b926c233bee159de08abc8","review_scope":"Included by the PR #13 teardown closure; no script/frontend error display was exercised or established.","objections":["callback-boundary","dependency-only"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"src/script/stdlib.c","git_blob_sha1":"f84b62515315c119ec4ff5b9fb6df4de4517c738","source_sha256":"52c9fc2d9490f3f158f20c8eddfed07440ec22e4f174043f96e3704599c87b99","dossier_row_sha256":"db8b3609ef7ae747d57b1b3a163dd9af6fbbf9c22d661b2a5261e274cbae6ad1","review_scope":"Included by the PR #13 teardown closure; no script-facing teardown error contract was observed in the tested path.","objections":["callback-boundary","dependency-only"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"include/mgba-util/vfs.h","git_blob_sha1":"6c9bd299153af4c3c9cd5487f2425a2481331ee5","source_sha256":"4c829529f21c424196b4d1efe25ce11227312437cf1aa5028cae94a741bf6656","dossier_row_sha256":"5d4c30179d703f5b013badf083d6c99c736186091873d65edcb3f0943c2763dd","review_scope":"VFile function-pointer contracts, including ssize_t I/O, void unmap/truncate, bool close/sync.","objections":["fd-void-unmap","fd-close","stdio-teardown","savedata-result-sinks"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"include/mgba-util/common.h","git_blob_sha1":"923e93086adfa09c9a55fcc2f0f6fa4d560e5888","source_sha256":"ec13354a050e4a7432232214b9991dd74000980ab2b8949389af0871cc1b799f","dossier_row_sha256":"b0a970a0105d3d1b109325bda5fedc99cff7a182cb010f24f826944faa0616ec","review_scope":"Transitive compile dependency only; no independent teardown behavior claim.","objections":["dependency-only"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"include/mgba-util/dllexports.h","git_blob_sha1":"a44480df6ec26821b8616650b2575ba794848eca","source_sha256":"96871f8861195f4ff9fedd861ff07ed5b0a10a0e7642d6a780a8221cafd163d4","dossier_row_sha256":"5a0c3158c1515885d4f326ea52cc891074b5e0cd54e40460eab89d55a1746070","review_scope":"Transitive compile dependency only; no independent teardown behavior claim.","objections":["dependency-only"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"include/mgba-util/vector.h","git_blob_sha1":"c837379e2102ca6535db2b292233bd4983c3532c","source_sha256":"ae8d9ed36475bda93ab3d2ff581163cedd289b2275c5254b76ba9e4285696375","dossier_row_sha256":"6a1179a47870dc93b443eff57599611d1b8d43d87560de25863a9e5805d83eb7","review_scope":"Transitive compile dependency for the fd backend; no independent teardown behavior claim.","objections":["dependency-only"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"include/mgba-util/memory.h","git_blob_sha1":"325f748f6fddc33a5539739ebc6eff6f3bb42bad","source_sha256":"509b56f31b2a279d954a16799501a1585cf7aa55f917a180432283b0205c198c","dossier_row_sha256":"cf858e1e109d1346cab0d7b30bcd119c207cfb84e9b45a3e73321c1e3576315e","review_scope":"Allocator API dependency; allocation-failure behavior is not covered by these witnesses.","objections":["dependency-only","allocation-failure"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"include/mgba-util/math.h","git_blob_sha1":"f7b3269c9d51967765379b951ba6f43d24c61865","source_sha256":"04f5ee1686f4b30744d4e62caef4cf16f2f4b80682b88a87e7e18cf117fd421e","dossier_row_sha256":"87d819c03b064e4665a27b5563f4a7261cfcdad051913229884d4f72cfd813f9","review_scope":"Transitive compile dependency only; no independent teardown behavior claim.","objections":["dependency-only"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"include/mgba/core/core.h","git_blob_sha1":"64ddf851ef00ab09416a9c1c9b5a88798fcd6fc8","source_sha256":"e77d0b72af5b76d9b66292968359122a15ab5c4c624d684af7ad339fa700e7a9","dossier_row_sha256":"0fb39db4601aad348aa35a4adbb7a4a41b05a26128957595547a95bc72208a87","review_scope":"mCore deinit pointer returns void; interface contract only.","objections":["caller-chain"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"include/mgba/gba/core.h","git_blob_sha1":"5cb0e468c100730a65199e9daeda78c2a885227d","source_sha256":"9e9eb686f85856a6c9b659f0c99d4eb5f5c831120970d616f8554a448f558c8d","dossier_row_sha256":"08637ccef3dea51935b64aeea0a34d40008862ebc3eed75f7385df0394ebbd22","review_scope":"GBA core public interface compile dependency; no frontend error handling established.","objections":["caller-chain","callback-boundary"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"include/mgba/internal/gba/gba.h","git_blob_sha1":"65e994dc63a304cc9fb207536f09bb2c8a6cf3e5","source_sha256":"b50fc8ae1467f9ac1c6be3ba8452e22027571ff5c886695edb9be529d7962d4e","dossier_row_sha256":"d6e61894ce31db089d3fd04e64e0938d1e689fb6c7498a8056fced405bf2bba0","review_scope":"GBA savedata/VFile state structure used by the unload and callback paths.","objections":["savedata-result-sinks","caller-chain"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"include/mgba/internal/gba/savedata.h","git_blob_sha1":"6227be25e8c9d2c1cc14c06ded34389b96138577","source_sha256":"30481cada83cc0e3a88b55298f3081cc660e18e55ca7f5a57356e6f2a75224dc","dossier_row_sha256":"eaee2c8bdb65c51e4f40daeb80af916f57ed430c48c88286562363f687ca6de9","review_scope":"Savedata state/API declarations; layout and lifecycle dependency only.","objections":["savedata-result-sinks","mask-unmask"],"verdict":"NEEDS_EVIDENCE","independent_approval":false},
+    {"path":"include/mgba/internal/defines.h","git_blob_sha1":"67b8ec8fd2f51ee2c0c6231443af752158397b03","source_sha256":"167896b30ed7f1cd3f9e5cbc99ee994a48a094b3e95989ab2f9e1ebf8cf4b46b","dossier_row_sha256":"05a6cd7248412bb03041f85841bf51db1f6a52e4b27bea5ac19c15ffa36a7bc2","review_scope":"mSavedataClean inline dirty-state transition used by GBASavedataClean; exact helper body hash-pinned by PR #13.","objections":["dirty-notification"],"verdict":"NEEDS_EVIDENCE","independent_approval":false}
+  ],
+  "objection_resolution_matrix": [
+    {
+      "id": "fd-void-unmap",
+      "source_lines": ["src/util/vfs/vfs-fd.c:151-155","src/gba/savedata.c:71-105","include/mgba-util/vfs.h:35-45"],
+      "objection": "Do not treat mapped teardown as a reporting or durability boundary: the VFile interface returns void from unmap, and the POSIX implementation ignores both msync(MS_SYNC) and munmap results.",
+      "resolution": "Confirmed from complete pinned source. PR #13's fd fixture wraps the syscalls, observes both failures and their order, and confirms savedata pointers are cleared. The injected close wrapper and visible file bytes are host-specific observations only.",
+      "evidence_ids": ["fd-native-6-case-fixture"],
+      "remaining": "No actual power-loss, reboot, kernel failure, other OS, or real filesystem teardown-failure evidence. Candidate remains NEEDS_EVIDENCE.",
+      "status": "SOURCE_CONFIRMED; HOST_INJECTION_BOUNDED"
+    },
+    {
+      "id": "fd-close",
+      "source_lines": ["src/util/vfs/vfs-fd.c:102-116","src/gba/gba.c:168-176"],
+      "objection": "A bool close result exists, but GBAUnloadROM ignores realVf->close and clears the pointer. The test's simulated close failure is not proof that a real failed close leaves the descriptor open or retryable.",
+      "resolution": "Confirmed source and fixture: injected close returns before the real syscall, the VFile wrapper remains allocated, and the fixture safely retries it. This models the caller's ignored false result but not POSIX close-on-error semantics on every host.",
+      "evidence_ids": ["fd-native-6-case-fixture"],
+      "remaining": "Actual OS close failure state is unresolved; retained wrapper lifetime/leak behavior after GBAUnloadROM is not repaired or approved.",
+      "status": "SOURCE_CONFIRMED; INJECTION_ASSUMPTION_EXPLICIT"
+    },
+    {
+      "id": "memory-backend",
+      "source_lines": ["src/util/vfs/vfs-mem.c:139-152","src/util/vfs/vfs-mem.c:284-330"],
+      "objection": "Do not generalize POSIX or stdio teardown results to memory VFiles: unmap is a no-op, sync reports true, and close ownership differs between borrowed memory and VFileMemChunk.",
+      "resolution": "Confirmed in pinned implementation and the sixth fd matrix case. The controls establish ownership distinctions for those memory VFiles only.",
+      "evidence_ids": ["fd-native-6-case-fixture"],
+      "remaining": "Allocation failures and other memory-backed callers are not covered. Candidate remains NEEDS_EVIDENCE.",
+      "status": "SOURCE_CONFIRMED; BACKEND_SPECIFIC"
+    },
+    {
+      "id": "stdio-teardown",
+      "source_lines": ["src/util/vfs/vfs-file.c:66-73","src/util/vfs/vfs-file.c:91-116","src/util/vfs/vfs-file.c:118-159"],
+      "objection": "The stdio backend has multiple distinct result paths: unmap returns void and ignores fseek/fwrite; truncate ignores zero-fill fwrite; sync returns false on short element write or fflush failure; close returns false after fclose failure while retaining its VFile wrapper.",
+      "resolution": "Confirmed by complete pinned source and the seven-case stdio fixture's source-derived method hashes. Controlled cases demonstrate mapped short-unmap, injected fflush failure, /dev/full write failure, and close error without treating them as filesystem-wide behavior.",
+      "evidence_ids": ["stdio-native-7-case-fixture","stdio-local-workpaper"],
+      "remaining": "The fixture does not test short writes in _vffTruncate or all map/seek failure paths; no exact-head PR CI ran this stdio code. Candidate remains NEEDS_EVIDENCE.",
+      "status": "SOURCE_CONFIRMED; PR13_CI_BLOCKED"
+    },
+    {
+      "id": "stdio-close",
+      "source_lines": ["src/util/vfs/vfs-file.c:66-73","src/gba/gba.c:168-176"],
+      "objection": "A retained wrapper after fclose reports failure is not evidence that the underlying FILE stream is safe to retry. GBAUnloadROM drops the realVf pointer regardless.",
+      "resolution": "The seven-case test confirms the cookie close callback returned EIO and the wrapper was retained, then manually frees the wrapper; it intentionally does not retry fclose. This is correctly narrower than the fd fake-close assumption.",
+      "evidence_ids": ["stdio-native-7-case-fixture","stdio-local-workpaper"],
+      "remaining": "No retry safety, frontend error, or resource-recovery conclusion; the wrapper ownership/lifetime after caller drop remains unresolved.",
+      "status": "SOURCE_CONFIRMED; RETRY_UNPROVEN"
+    },
+    {
+      "id": "savedata-result-sinks",
+      "source_lines": ["src/gba/savedata.c:71-105","src/gba/savedata.c:194-226","src/gba/gba.c:168-176"],
+      "objection": "Close, unmap, and write errors are not uniformly returned to savedata callers. In the raw load path the write count overwrites the read count and success checks only non-negativity; mapped load uses a different exact-length result.",
+      "resolution": "Confirmed source. The stdio test's controlled 3-of-8 raw output write returns success; the mapped masked-read fixture shows unmask ignores GBASavedataLoad's false result and clears maskWriteback.",
+      "evidence_ids": ["stdio-native-7-case-fixture","fd-native-6-case-fixture"],
+      "remaining": "No complete native matrix of negative read, zero/short/failed writes, read errors, allocation failure, or all call sites. Local workpaper reports are not the current exact-head CI.",
+      "status": "SOURCE_CONFIRMED; PARTIAL_NATIVE_CASES"
+    },
+    {
+      "id": "mask-unmask",
+      "source_lines": ["src/gba/savedata.c:107-135","src/gba/gba.c:168-176"],
+      "objection": "Masked and unmasked teardown have different VFile ownership and result propagation; do not infer successful writeback from unmask completion.",
+      "resolution": "The fd fixture combines short masked read with injected sync/unmap/close errors; the stdio fixture independently checks short read and subsequent writeback visibility. The code clears maskWriteback and ignores relevant results.",
+      "evidence_ids": ["fd-native-6-case-fixture","stdio-native-7-case-fixture"],
+      "remaining": "No exact-head workflow execution for current PR13 head, nor frontend/real-game behavior. Candidate remains NEEDS_EVIDENCE.",
+      "status": "SOURCE_CONFIRMED; HOST_CASES_ONLY"
+    },
+    {
+      "id": "dirty-notification",
+      "source_lines": ["include/mgba/internal/defines.h:mSavedataClean","src/gba/savedata.c:586-604","src/gba/gba.c:967-1007"],
+      "objection": "A dirty-to-clean transition or callback cannot be treated as evidence that sync succeeded or that a user was notified.",
+      "resolution": "Source shows dirty state is updated before VFile sync; failed sync skips RTC write; GBAFrameEnded tests wasDirty && !dirty independently of sync. The stdio /dev/full case observes cleared dirty state and no RTC write, but does not execute the frame callback or a frontend.",
+      "evidence_ids": ["stdio-native-7-case-fixture"],
+      "remaining": "No exact frontend callback/UI behavior and no exact-head CI for stdio package. Candidate remains NEEDS_EVIDENCE.",
+      "status": "SOURCE_CONFIRMED; CALLBACK_SOURCE_ONLY"
+    },
+    {
+      "id": "backend-dispatch",
+      "source_lines": ["src/util/vfs.c:30-58","src/util/vfs/vfs-file.c:29-40"],
+      "objection": "A stdio fixture compiled with ENABLE_VFS_FILE does not establish the backend selected by every mGBA frontend or platform.",
+      "resolution": "The workpaper verifies the specific compile-time dispatch order and test configuration. The fd, memory, and stdio backends are separate contracts.",
+      "evidence_ids": ["stdio-native-7-case-fixture","stdio-local-workpaper"],
+      "remaining": "No full frontend/platform build matrix. Candidate remains NEEDS_EVIDENCE.",
+      "status": "SOURCE_CONFIRMED; CONFIGURATION_BOUNDED"
+    },
+    {
+      "id": "caller-chain",
+      "source_lines": ["src/gba/core.c:309-330","include/mgba/core/core.h:56-58","src/gba/gba.c:140-196"],
+      "objection": "The teardown call chain must distinguish void core/deinit and VFile unmap contracts from bool close; tests do not compile the full GBA core lifecycle.",
+      "resolution": "Pinned source traces _GBACoreDeinit -> GBADestroy -> GBAUnloadROM -> savedata unmask/deinit -> VFile unmap/close. PR #13 workpaper explicitly labels the full core chain source-audited, not compiled or executed.",
+      "evidence_ids": ["fd-native-6-case-fixture","fd-local-workpaper"],
+      "remaining": "No full-core compiled teardown run or frontend ownership audit. Candidate remains NEEDS_EVIDENCE.",
+      "status": "SOURCE_CONFIRMED; CALLER_RUNTIME_NOT_EXECUTED"
+    },
+    {
+      "id": "callback-boundary",
+      "source_lines": ["src/gba/gba.c:967-1007","src/core/scripting.c","src/script/stdlib.c"],
+      "objection": "Do not claim a script callback or UI error notification from teardown observations.",
+      "resolution": "The relevant callback condition is in GBAFrameEnded, not GBAUnloadROM. The PR #13 teardown workpapers expressly do not claim a native script/UI error callback; the two scripting files remain closure references rather than validated callback behavior.",
+      "evidence_ids": ["fd-local-workpaper","stdio-local-workpaper"],
+      "remaining": "Frontend callback consumers have not been independently traced/executed. Candidate remains NEEDS_EVIDENCE.",
+      "status": "BOUNDED_NEGATIVE_EVIDENCE"
+    },
+    {
+      "id": "dependency-only",
+      "source_lines": ["source_files: complete pinned source/header set"],
+      "objection": "Transitive headers included in the workpapers' build/dependency closure must not be silently presented as independently reviewed teardown semantics.",
+      "resolution": "Their exact blobs, bytes, dossier rows, and MPL notices are verified; files explicitly marked dependency-only make no behavioral claim.",
+      "evidence_ids": ["fd-local-workpaper","stdio-local-workpaper"],
+      "remaining": "No semantic disposition is proposed for dependency-only files. Candidate remains NEEDS_EVIDENCE.",
+      "status": "IDENTITY_AND_LICENSE_ONLY"
+    },
+    {
+      "id": "allocation-failure",
+      "source_lines": ["include/mgba-util/memory.h:13-14","src/util/vfs/vfs-mem.c:284-330"],
+      "objection": "The memory-map declarations and memory-backed VFile constructors do not establish allocation-failure behavior across teardown callers.",
+      "resolution": "The pinned header declares anonymousMemoryMap and mappedMemoryFree only; PR13's six fd cases include ordinary memory-backend ownership but do not inject allocation failure.",
+      "evidence_ids": ["fd-native-6-case-fixture","fd-local-workpaper"],
+      "remaining": "No allocation-failure injection or caller-wide recovery evidence. Candidate remains NEEDS_EVIDENCE.",
+      "status": "SOURCE_DECLARATION_ONLY; UNTESTED"
+    },
+    {
+      "id": "cross-platform-durability",
+      "source_lines": ["src/util/vfs/vfs-fd.c:151-229","src/util/vfs/vfs-fd.c:246-280","src/util/vfs/vfs-file.c:147-159"],
+      "objection": "Fresh-process reads through the same host kernel/page cache do not establish durable persistence, emulator behavior, physical Flash, or cross-platform error semantics.",
+      "resolution": "Both PR #13 workpapers explicitly distinguish Linux fault injection and page-cache visibility from process-crash/reboot, power loss, fsync durability, non-Linux backends, stock gameplay, and physical media.",
+      "evidence_ids": ["fd-local-workpaper","stdio-local-workpaper"],
+      "remaining": "Windows, stdio truncation failures, 3DS/PSP2, crash/power-loss, and end-user save behavior remain untested.",
+      "status": "UNRESOLVED"
+    }
+  ],
+  "evidence": [
+    {"id":"fd-local-workpaper","path":"docs/phase1-review-readiness/mgba-vfs-fd-teardown-errors-20261104.md","sha256":"513844ce6449577d95d3e6c8b6656aec6360c332463b68030d5a8a122cf55aa3","source_head":"d4a753a8909f364ed133eda4b4253a06a985b9ab","class":"PR13_WORKPAPER_NOT_APPROVAL"},
+    {"id":"stdio-local-workpaper","path":"docs/phase1-review-readiness/mgba-vfs-stdio-save-teardown-20261104.md","sha256":"7d66a11f1f520acba5fb53205eaf8a084b4935aace64ca6313b519c5edcabaff","source_head":"d4a753a8909f364ed133eda4b4253a06a985b9ab","class":"PR13_WORKPAPER_NOT_APPROVAL"},
+    {"id":"fd-native-runner","path":"tools/phase1_mgba_vfs_fd_teardown_native.py","sha256":"8279c3869ac97535ff68d4551ffbed74b437d0455937dcf0424e114cedd07f80","source_head":"d4a753a8909f364ed133eda4b4253a06a985b9ab","class":"TEST_ORCHESTRATOR"},
+    {"id":"stdio-native-runner","path":"tools/phase1_mgba_vfs_stdio_native.py","sha256":"613817d083b1947aeba09b854184c0fea9bfa9ece6edf38ae0eb3e029006f86c","source_head":"d4a753a8909f364ed133eda4b4253a06a985b9ab","class":"TEST_ORCHESTRATOR"},
+    {"id":"fd-native-6-case-fixture","path":"tests/phase1_mgba_vfs_fd_teardown_native.c","sha256":"c731670c511ceaf53db2fac8372efe5bfa36ad443bf8808b675b740e4e2cbe9f","source_head":"d4a753a8909f364ed133eda4b4253a06a985b9ab","class":"TEST_SOURCE_LOCAL_RESULT_REPORTED"},
+    {"id":"stdio-native-7-case-fixture","path":"tests/phase1_mgba_vfs_stdio_native.c","sha256":"2458e0ed4e5cafc1e60dbac18e2bc5945b718377bd25b55213e63f55bf5c7a39","source_head":"d4a753a8909f364ed133eda4b4253a06a985b9ab","class":"TEST_SOURCE_LOCAL_RESULT_REPORTED"},
+    {"id":"fd-parser-tests","path":"tests/test_phase1_mgba_vfs_fd_teardown_native.py","sha256":"b195d6e0b875bf4128169d2a73853d21a3e1868f3296ed4c9190fc1fd7601b90","source_head":"d4a753a8909f364ed133eda4b4253a06a985b9ab","class":"20_PARSER_EXTRACTION_UNIT_TEST_METHODS_NOT_20_NATIVE_CASES"},
+    {"id":"stdio-parser-tests","path":"tests/test_phase1_mgba_vfs_stdio_native.py","sha256":"3021e7b6711d5b332cc77fda8d2647d19f701813061e693a5286d3559bd78cc5","source_head":"d4a753a8909f364ed133eda4b4253a06a985b9ab","class":"18_PARSER_EXTRACTION_UNIT_TEST_METHODS_NOT_18_NATIVE_CASES"},
+    {"id":"pr13-workflow","path":".github/workflows/phase1-mgba-savedata-boundary-witness.yml","sha256":"05e2484774727689589beeddb4e6ee3bf0861e8390dff0aa5fde9eb20d75b665","source_head":"d4a753a8909f364ed133eda4b4253a06a985b9ab","class":"PULL_REQUEST_AND_MANUAL_ONLY_NO_PUSH_TRIGGER"},
+    {"id":"pinned-machine-dossier","path":"semantic-snapshots/current/candidate_review_dossiers.jsonl.gz","sha256":"1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609","source_head":"d4a753a8909f364ed133eda4b4253a06a985b9ab","class":"MACHINE_METADATA_NOT_SEMANTIC_APPROVAL"},
+    {"id":"governing-review-protocol","path":"docs/PHASE1_SYSTEM_BATCH_REVIEW_PROTOCOL_2026-10-27.md","sha256":"4ea2c7f8ccfab81b667f84e4732eea19beb492897a157df331580f428e6a133b","source_head":"phase1/mgba-savedata-boundary-witness-20261027","class":"PROCEDURE_ONLY_FAIL_INCOMPLETE"}
+  ],
+  "test_provenance": {
+    "fd": {
+      "native_case_count_claimed": 6,
+      "native_case_names": ["success","sync_failure","unmap_failure","close_failure","masked_writeback_short_read","memory"],
+      "parser_test_methods": 20,
+      "parser_test_sha256": "b195d6e0b875bf4128169d2a73853d21a3e1868f3296ed4c9190fc1fd7601b90",
+      "fixture_sha256": "c731670c511ceaf53db2fac8372efe5bfa36ad443bf8808b675b740e4e2cbe9f",
+      "reported_local_executable_sha256": "52484a99978b046220d89e3ad9832043f07775c0a308dbf76c6adf404c9036c5",
+      "source_harness_tested_by_current_review": false,
+      "local_result_independently_reproduced": false
+    },
+    "stdio": {
+      "native_case_count_claimed": 7,
+      "native_case_names": ["regular_lifecycle","mapped_short_unmap","raw_short_load","unmask_short_read","injected_flush","dev_full_clean","unload_close_error"],
+      "parser_test_methods": 18,
+      "parser_test_sha256": "3021e7b6711d5b332cc77fda8d2647d19f701813061e693a5286d3559bd78cc5",
+      "fixture_sha256": "2458e0ed4e5cafc1e60dbac18e2bc5945b718377bd25b55213e63f55bf5c7a39",
+      "reported_local_executable_sha256": "11f10fff88bd1a4e1cfccb3e819256d07fc9c0bd1cb1855b29a8d749bd29642e",
+      "source_harness_tested_by_current_review": false,
+      "local_result_independently_reproduced": false
+    },
+    "interpretation": "The six and seven rows are native fixture cases described by PR13 workpapers. The 20 and 18 counts are Python parser/extraction test methods; they are not native failure-injection cases."
+  },
+  "workflow_evidence": {
+    "pr13": {
+      "workflow_file": ".github/workflows/phase1-mgba-savedata-boundary-witness.yml",
+      "events": ["pull_request","workflow_dispatch"],
+      "push_trigger": false,
+      "code_bearing_fd_head": {
+        "sha": "f239c0e42eb089ce5be7fb6d784853c645841d06",
+        "run_id": 41852469153,
+        "event": "pull_request",
+        "conclusion": "action_required",
+        "jobs": 0,
+        "job_step_logs": false
+      },
+      "prior_fd_code_same_docs_head": {
+        "sha": "0bf5a496df18ef9e3c6cf39ef361ffbe93931c6a",
+        "run_id": 41853164293,
+        "job_id": 126701990749,
+        "conclusion": "success",
+        "executed_steps": 20,
+        "fd_parser_step": {"name":"Fail-closed Linux VFile teardown evidence controls","number":7,"conclusion":"success"},
+        "fd_native_step": {"name":"Execute pinned native VFile teardown error matrix","number":11,"conclusion":"success"},
+        "changed_commit_class": "PR13 follow-up record/workpaper change after f239c0e; not the latest PR13 head",
+        "artifacts": 0
+      },
+      "code_bearing_stdio_head": {
+        "sha": "b540768f5e8baad5b0724f36eadde8269ad6a485",
+        "run_id": 41881695685,
+        "event": "pull_request",
+        "conclusion": "action_required",
+        "jobs": 0,
+        "job_step_logs": false
+      },
+      "current_head": {
+        "sha": "d4a753a8909f364ed133eda4b4253a06a985b9ab",
+        "run_id": 41882603072,
+        "event": "pull_request",
+        "conclusion": "action_required",
+        "jobs": 0,
+        "job_step_logs": false
+      },
+      "push_run_found": false
+    },
+    "pr35": {
+      "reviewed_head": "9a31fb1dfa0a08f95a06a3c2bf8cd431aafccd29",
+      "run_id": 41037997890,
+      "attempt": 2,
+      "conclusion": "success",
+      "interpretation": "This exact-head PR35 workflow validated the earlier savedata packet only; it did not include this teardown review package, and is not CI for a later PR35 commit."
+    },
+    "promotion_gate": "No new candidate can be marked COPILOT_REVIEWED/PASSED: current PR13 head has no executed job, PR35 run predates this packet, and PR13 has no push-triggered workflow coverage."
+  },
+  "per_file_verdict": "NEEDS_EVIDENCE",
+  "all_new_files_independent_approval": false,
+  "unresolved_obligations": [
+    "Obtain authenticated distinct maintainer review/attribution for the per-file source interpretations; this record is not an approval.",
+    "Run the existing PR13 workflow at the exact current code-bearing head with permitted Actions execution; current d4a753a run has action_required and zero jobs.",
+    "No push-event workflow exists for PR13; exact-head PR and push coverage is incomplete.",
+    "Do not repeat already-green FD native tests locally; prior executed PR13 run 41853164293 is at earlier head 0bf5a49 and does not cover the current stdio head.",
+    "No fsync/power-loss/reboot durability, physical Flash, stock gameplay, frontend notification, Windows/3DS/PSP2, or complete VFile backend matrix.",
+    "No stdio truncate short-write, all fseek/fread/map failures, negative/short source reads across paths, or allocation-failure injection.",
+    "No conclusion that a failed POSIX close leaves an fd open; the fd wrapper injects failure before calling the real close.",
+    "No conclusion that a retained VFileFILE wrapper is retry-safe after fclose failure; the stdio fixture deliberately does not retry.",
+    "The complete GBA core and frontend lifecycle are not compiled/executed by these extracted-body fixtures."
+  ],
+  "audit_trail": [
+    "PR35 live head checked before changes: 9a31fb1dfa0a08f95a06a3c2bf8cd431aafccd29.",
+    "PR13 live head checked before changes: d4a753a8909f364ed133eda4b4253a06a985b9ab.",
+    "Complete pinned original source files and compressed dossier retrieved individually to /tmp; no repository clone or upstream source edit.",
+    "Native error cases were not rerun; claims were checked against test source, source hashes, workpapers, workflow metadata, and available Actions step records."
+  ]
+}
