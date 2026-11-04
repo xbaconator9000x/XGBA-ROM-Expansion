@@ -15,11 +15,13 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QFileSystemWatcher>
+#include <QSaveFile>
 #include <QElapsedTimer>
 #include <QEventLoop>
 #include <QThread>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonParseError>
 #include <QLineEdit>
 #include <QStandardPaths>
 #include <iostream>
@@ -40,7 +42,9 @@ static int count(const QByteArray &s, const QByteArray &n) {
 int main(int argc,char **argv) {
     QApplication app(argc,argv);
     QStandardPaths::setTestModeEnabled(true);
-    need(argc==2,"usage_PROJECT_ROOT");
+    const bool coldReopen=argc==3 &&
+        QString::fromLocal8Bit(argv[2])==QStringLiteral("--cold-reopen");
+    need(argc==2 || coldReopen,"usage_PROJECT_ROOT");
     porysplash=new PorymapLoadingScreen;
     const QString root=QString::fromLocal8Bit(argv[1]);
     need(QFileInfo(root).isDir(),"project_root");
@@ -56,6 +60,34 @@ int main(int argc,char **argv) {
     porymapConfig.shownInGameReloadMessage=true;
     porymapConfig.monitorFiles=true;
     need(porymapConfig.save(),"startup_config");
+    if(coldReopen) {
+        MainWindow window(nullptr);
+        window.initialize();
+        need(window.editor && window.editor->project,"cold_reopen_project");
+        const QString name="XGBAPhase1GuiNewMapFailure";
+        const QString json=root+"/data/maps/"+name+"/map.json";
+        need(window.editor->setMap(name),"cold_reopen_new_map");
+        Map *map=window.editor->map;
+        need(map && map->isPersistedToFile(),"cold_reopen_persisted_map");
+        QJsonParseError error;
+        const QJsonDocument doc=QJsonDocument::fromJson(bytes(json),&error);
+        need(error.error==QJsonParseError::NoError &&
+             doc.object().value("name").toString()==name,"cold_reopen_disk_json");
+        QFileSystemWatcher *watcher=window.editor->project->findChild<QFileSystemWatcher*>();
+        need(watcher && watcher->files().contains(json),"cold_reopen_watcher");
+        QJsonObject out;
+        out["fresh_process"]=true;
+        out["original_mainwindow_project_reopened"]=true;
+        out["new_map_reloaded"]=true;
+        out["map_json_valid"]=true;
+        out["watcher_registered_on_reopen"]=true;
+        out["phase1_gate"]="FAIL_INCOMPLETE";
+        out["independent_approvals"]=0;
+        std::cout<<"PHASE1_GUI_NEWMAP_COLD="<<QJsonDocument(out).toJson(QJsonDocument::Compact).constData()<<std::endl;
+        delete porysplash;
+        porysplash=nullptr;
+        return 0;
+    }
     {
         MainWindow window(nullptr);
         window.initialize();
@@ -131,26 +163,67 @@ int main(int argc,char **argv) {
         need(!watcher->files().contains(json),"new_map_watcher_not_auto_rearmed");
         need(project->watchFile(json),"manual_watch_recovery");
         need(watcher->files().contains(json),"manual_watch_attached");
-        // Actual Linux/Qt event delivery, distinct from watcher registration.
-        // Append legal JSON whitespace, leaving map contents semantically unchanged.
+        // Observe native Qt delivery and Project::recordFileChange rearming
+        // after QSaveFile atomically replaces the watched map file.
         int delivered=0;
         QObject::connect(watcher,&QFileSystemWatcher::fileChanged,
                          &window,[&](const QString &path) {
             if (path==json) ++delivered;
         });
+        const QByteArray beforeReplace=bytes(json);
+        QSaveFile atomicReplace(json);
+        need(atomicReplace.open(QIODevice::WriteOnly),"atomic_replace_open");
+        const QByteArray replacedBytes=beforeReplace+"\n";
+        need(atomicReplace.write(replacedBytes)==replacedBytes.size(),"atomic_replace_write");
+        need(atomicReplace.commit(),"atomic_replace_commit");
+        QElapsedTimer elapsed;
+        elapsed.start();
+        while ((delivered==0 || !watcher->files().contains(json)) &&
+              elapsed.elapsed()<4000) {
+           QCoreApplication::processEvents(QEventLoop::AllEvents,50);
+           QThread::msleep(10);
+        }
+        need(delivered>0,"atomic_replace_file_changed_signal");
+        need(watcher->files().contains(json),"atomic_replace_watcher_rearmed");
+        const int atomicReplaceSignals=delivered;
+
+        // A second mutation proves the re-armed watch remains live.
+        delivered=0;
         QFile touched(json);
         need(touched.open(QIODevice::WriteOnly|QIODevice::Append),
-             "watched_json_append_open");
+            "watched_json_append_open");
         need(touched.write("\n",1)==1 && touched.flush(),
              "watched_json_append_flush");
         touched.close();
-        QElapsedTimer elapsed;
         elapsed.start();
         while (delivered==0 && elapsed.elapsed()<4000) {
             QCoreApplication::processEvents(QEventLoop::AllEvents,50);
             QThread::msleep(10);
         }
-        need(delivered>0,"actual_original_qt_filechanged_signal");
+        need(delivered>0,"post_replace_file_changed_signal");
+
+        // Deterministically make QSaveFile's final target path disappear after
+        // its temporary file is open; this tests failed commit preservation,
+        // not Porymap's QFile writer or physical durability.
+        const QString failureDir=root+"/phase1-rename-failure";
+        const QString movedFailureDir=failureDir+".moved";
+        need(QDir().mkpath(failureDir),"rename_failure_directory");
+        const QString failurePath=failureDir+"/sentinel.json";
+        QFile sentinel(failurePath);
+        need(sentinel.open(QIODevice::WriteOnly),"rename_failure_sentinel_open");
+        need(sentinel.write("old",3)==3,"rename_failure_sentinel_write");
+        sentinel.close();
+        QSaveFile failedCommit(failurePath);
+        need(failedCommit.open(QIODevice::WriteOnly),"rename_failure_open");
+        need(failedCommit.write("new",3)==3,"rename_failure_write");
+        need(QDir().rename(failureDir,movedFailureDir),"rename_failure_inject");
+        const bool failedCommitAccepted=failedCommit.commit();
+        need(QDir().rename(movedFailureDir,failureDir),"rename_failure_restore");
+        need(!failedCommitAccepted,"rename_failure_commit_must_fail");
+        need(bytes(failurePath)=="old","rename_failure_preserves_old_bytes");
+        QFile::remove(failurePath);
+        need(QDir().rmdir(failureDir),"rename_failure_cleanup");
+
         QJsonObject out;
         out["original_mainwindow_qaction"]=true;
         out["original_newmapdialog_accept"]=true;
@@ -162,8 +235,18 @@ int main(int argc,char **argv) {
         out["manual_watch_recovery"]=true;
         out["native_qt6"]=true;
         out["synthetic_new_map"]=true;
+        out["atomic_replace_committed"]=true;
+        out["atomic_replace_file_changed_signal"]=atomicReplaceSignals>0;
+        out["watcher_rearmed_after_atomic_replace"]=watcher->files().contains(json);
+        out["post_replace_file_changed_signal"]=true;
+        out["rename_failure_commit_rejected"]=true;
+        out["rename_failure_old_bytes_preserved"]=true;
         out["file_changed_signal_tested"]=true;
         out["stock_gameplay"]=false;
+        out["modal_editor_state_exercised"]=false;
+        out["fsync_failure_injected"]=false;
+        out["permission_failure_injected"]=false;
+        out["physical_durability_tested"]=false;
         out["phase1_gate"]="FAIL_INCOMPLETE";
         out["independent_approvals"]=0;
         std::cout<<"PHASE1_GUI_NEWMAP="<<QJsonDocument(out).toJson(QJsonDocument::Compact).constData()<<std::endl;

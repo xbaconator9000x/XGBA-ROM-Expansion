@@ -55,7 +55,7 @@ jobs:
           Path("upstream-porymap/porymap-phase1-gui-new-map.pro").write_text(s)
           PY
           (cd upstream-porymap && qmake6 porymap-phase1-gui-new-map.pro -o Makefile.phase1gui && make -f Makefile.phase1gui -j4) > phase1-gui-new-map-build.log 2>&1 || { tail -100 phase1-gui-new-map-build.log; exit 1; }
-      - name: Execute actual MainWindow QAction, original dialog, save and watcher registration
+      - name: Execute MainWindow new-map, atomic watcher replacement, and fresh-process reopen
         run: |
           set -euo pipefail
           python3 - <<'PY'
@@ -68,7 +68,12 @@ jobs:
           PY
           mkdir -p phase1-evidence
           QT_QPA_PLATFORM=offscreen timeout 180s upstream-porymap/porymap-phase1-gui-new-map "$PWD/phase1-project/pokefirered" > phase1-evidence/gui-new-map.log 2>&1 || { tail -100 phase1-evidence/gui-new-map.log; exit 1; }
-          python3 tools/phase1_porymap_gui_new_map_watch.py --porymap upstream-porymap --firered upstream-firered --log phase1-evidence/gui-new-map.log --output phase1-evidence/gui-new-map.json
+          QT_QPA_PLATFORM=offscreen timeout 120s upstream-porymap/porymap-phase1-gui-new-map "$PWD/phase1-project/pokefirered" --cold-reopen > phase1-evidence/gui-new-map-cold.log 2>&1 || { tail -100 phase1-evidence/gui-new-map-cold.log; exit 1; }
+          python3 tools/phase1_porymap_gui_new_map_watch.py \
+            --porymap upstream-porymap --firered upstream-firered \
+            --log phase1-evidence/gui-new-map.log \
+            --cold-log phase1-evidence/gui-new-map-cold.log \
+            --output phase1-evidence/gui-new-map.json
       - name: Preserve text evidence and build diagnostics
         if: always()
         uses: actions/upload-artifact@v4

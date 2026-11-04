@@ -9,8 +9,14 @@ BLOBS={"src/mainwindow.cpp":"08ce1a7a599ef825967717b69626984cdc6d772b",
 "src/ui/newmapdialog.cpp":"c8a028025bf1a9aabb8fd96cccf3d0a76214bb0e"}
 TRUE=("original_mainwindow_qaction","original_newmapdialog_accept","new_map_unpersisted_until_save",
 "matched_qfile_enospc","gui_false_clean_missing_script_on_retry","watch_missing_before_save",
-"watch_not_auto_rearmed_after_save","manual_watch_recovery","native_qt6","synthetic_new_map","file_changed_signal_tested")
-FALSE=("stock_gameplay",)
+"watch_not_auto_rearmed_after_save","manual_watch_recovery","native_qt6","synthetic_new_map",
+"atomic_replace_committed","atomic_replace_file_changed_signal",
+"watcher_rearmed_after_atomic_replace","post_replace_file_changed_signal",
+"rename_failure_commit_rejected","rename_failure_old_bytes_preserved","file_changed_signal_tested")
+FALSE=("stock_gameplay","modal_editor_state_exercised","fsync_failure_injected",
+       "permission_failure_injected","physical_durability_tested")
+COLD_TRUE=("fresh_process","original_mainwindow_project_reopened","new_map_reloaded",
+           "map_json_valid","watcher_registered_on_reopen")
 def need(ok,msg):
     if not ok: raise ValueError(msg)
 def git(root,*args):
@@ -24,6 +30,16 @@ def verify(log):
     need(all(o[x] is True for x in TRUE),"native positive assertion")
     need(all(o[x] is False for x in FALSE),"negative scope")
     need(o["phase1_gate"]=="FAIL_INCOMPLETE" and o["independent_approvals"]==0,"gate/approvals")
+    return o
+def verify_cold(log):
+    rows=[x.split("=",1)[1] for x in log.splitlines()
+          if x.startswith("PHASE1_GUI_NEWMAP_COLD=")]
+    need(len(rows)==1,"exactly one cold-reopen evidence line")
+    o=json.loads(rows[0])
+    need(set(o)==set(COLD_TRUE)|{"phase1_gate","independent_approvals"},"cold evidence field set")
+    need(all(o[x] is True for x in COLD_TRUE),"fresh-process reopen assertion")
+    need(o["phase1_gate"]=="FAIL_INCOMPLETE" and o["independent_approvals"]==0,
+         "cold gate/approvals")
     return o
 def negatives(log):
     base=verify(log); n=0
@@ -39,21 +55,41 @@ def negatives(log):
         except ValueError: n+=1
         else: raise AssertionError("negative escaped "+key)
     return n
+def cold_negatives(log):
+    base=verify_cold(log); n=0
+    for key in list(COLD_TRUE)+["phase1_gate","independent_approvals"]:
+        changed=dict(base)
+        changed[key]=(not base[key]) if isinstance(base[key],bool) else (
+            "PASS" if key=="phase1_gate" else 1)
+        marker="PHASE1_GUI_NEWMAP_COLD="+json.dumps(changed,separators=(",",":"))
+        line=next(x for x in log.splitlines() if x.startswith("PHASE1_GUI_NEWMAP_COLD="))
+        mutated=log.replace(line,marker,1)
+        need(mutated!=log,"ineffective cold negative")
+        try: verify_cold(mutated)
+        except ValueError: n+=1
+        else: raise AssertionError("cold transcript mutation escaped "+key)
+    return n
 def main():
     p=argparse.ArgumentParser()
-    for x in ("porymap","firered","log","output"):p.add_argument("--"+x,required=True,type=Path)
+    for x in ("porymap","firered","log","cold-log","output"):
+        p.add_argument("--"+x,required=True,type=Path)
     a=p.parse_args()
     need(git(a.porymap,"rev-parse","HEAD")==PIN_P,"porymap pin")
     need(git(a.firered,"rev-parse","HEAD")==PIN_F,"firered pin")
     for path,sha in BLOBS.items():need(git(a.porymap,"hash-object",path)==sha,"source drift "+path)
     log=a.log.read_text()
     result=verify(log); n=negatives(log)
+    cold_log=a.cold_log.read_text()
+    cold=verify_cold(cold_log); cold_n=cold_negatives(cold_log)
     out={"evidence_class":"NATIVE_ORIGINAL_MAINWINDOW_NEWMAP_QT",
          "porymap_pin":PIN_P,"firered_pin":PIN_F,"source_blobs":BLOBS,
          "native_transcript_sha256":hashlib.sha256(log.encode()).hexdigest(),
+         "cold_reopen_transcript_sha256":hashlib.sha256(cold_log.encode()).hexdigest(),
          "assertions":result,"transcript_mutations_rejected":n,
+         "cold_reopen_assertions":cold,"cold_transcript_mutations_rejected":cold_n,
          "phase1_gate":"FAIL_INCOMPLETE","independent_approvals":0}
     a.output.parent.mkdir(parents=True,exist_ok=True)
     a.output.write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
-    print("PORYMAP_GUI_NEWMAP_NATIVE_PASS negatives=%d gate=FAIL_INCOMPLETE approvals=0"%n)
+    print("PORYMAP_GUI_NEWMAP_NATIVE_PASS negatives=%d cold_negatives=%d gate=FAIL_INCOMPLETE approvals=0"%
+          (n,cold_n))
 if __name__=="__main__":main()
