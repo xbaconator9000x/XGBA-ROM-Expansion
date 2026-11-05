@@ -19,7 +19,7 @@ RECORD = Path(
     "semantic-snapshots/independent-reviews/copilot-mgba-savedata/"
     "source-objection-receipts.json"
 )
-RECORD_SHA256 = "ab3bf0832a018ec03618a01ee114a344590f02ec4bd625b34ba203de2c45d969"
+RECORD_SHA256 = "f8345bfd99798c84bd8a4f2b889d52e00ecce888f72bc257d0996b36c6dd31a0"
 MATRIX_SHA256 = "f7ce0e81169b6b4a3724e7d0d8385ad6bd80b3f2c50e3a5243402fafecd0d084"
 EXPECTED_RECEIPTS = {
     "fd-close-result",
@@ -261,7 +261,7 @@ def validate(record: dict, matrix_context, source_bytes=None) -> None:
         and push.get("event") == "push"
         and push.get("run_count") == 0
         and provenance.get("new_receipt_test_claim")
-        == "No Actions run is yet claimed for this receipt change.",
+        == "Exact-head PR run 41997123172 is action_required with zero jobs; no receipt verifier or native tests executed.",
         "test provenance is missing or overclaims PR13/PR35 execution",
     )
 

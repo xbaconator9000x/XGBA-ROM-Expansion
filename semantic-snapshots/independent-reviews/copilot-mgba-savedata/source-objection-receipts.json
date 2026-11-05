@@ -52,7 +52,7 @@
       "branch": "copilot/review-pinned-mgba-savedata",
       "run_count": 0
     },
-    "new_receipt_test_claim": "No Actions run is yet claimed for this receipt change."
+    "new_receipt_test_claim": "Exact-head PR run 41997123172 is action_required with zero jobs; no receipt verifier or native tests executed."
   },
   "source_files": [
     {
