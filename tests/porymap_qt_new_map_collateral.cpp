@@ -45,14 +45,14 @@ static bool sameFileIdentity(const QString &path, const struct stat &expected) {
     return ::stat(nativePath.constData(), &actual) == 0 &&
            actual.st_dev == expected.st_dev && actual.st_ino == expected.st_ino;
 }
-static bool waitForSignal(int &signals, int expected, int timeoutMs = 4000) {
+static bool waitForSignal(int &signalCount, int expected, int timeoutMs = 4000) {
     QElapsedTimer timer;
     timer.start();
-    while (signals < expected && timer.elapsed() < timeoutMs) {
+    while (signalCount < expected && timer.elapsed() < timeoutMs) {
         QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
         QThread::msleep(10);
     }
-    return signals >= expected;
+    return signalCount >= expected;
 }
 static void coldReopen(const QString &root) {
     need(projectConfig.load(root) && userConfig.load(root), "cold project configs");
