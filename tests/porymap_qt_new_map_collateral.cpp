@@ -156,10 +156,12 @@ static void coldReopen(const QString &root) {
     const bool failedCommitAccepted = failedReplacement.commit();
     const auto failedCommitError = failedReplacement.error();
     const bool restoredPermissions = QFile::setPermissions(watchedDir, oldPermissions);
-    need(!failedCommitAccepted &&
-         failedCommitError == QFileDevice::RenameError &&
-         deniedFd < 0 && deniedErrno == EACCES && restoredPermissions,
-         "script failed replacement commit rejected");
+    need(!failedCommitAccepted, "script failed replacement commit unexpectedly succeeded");
+    need(failedCommitError == QFileDevice::RenameError,
+         "script failed replacement commit error was not RenameError");
+    need(deniedFd < 0 && deniedErrno == EACCES,
+         "script permission control did not fail with EACCES");
+    need(restoredPermissions, "script directory permissions were not restored");
     need(readBytes(watchedScript) == oldScriptBytes &&
          sameFileIdentity(watchedScript, oldScriptStat),
          "script failed replacement preserves bytes and inode");
