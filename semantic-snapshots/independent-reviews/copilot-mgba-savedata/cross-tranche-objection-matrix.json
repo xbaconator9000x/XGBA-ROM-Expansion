@@ -1,0 +1,415 @@
+{
+  "schema": "xgba.copilot.mgba_savedata_cross_tranche_objection_matrix.v1",
+  "review": {
+    "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+    "pull_request": 35,
+    "comment_id": 6649003109,
+    "reviewer": "GitHub Copilot Coding Agent (@copilot), reviewer-side cross-tranche synthesis",
+    "prior_interpreter": "xbaconator9000x, PR #13 source and native-test workpapers",
+    "identity_limit": "Source-grounded objection matrix only; not a distinct human reviewer, receipt, approval, or validator authorization.",
+    "approval_eligible": false,
+    "expected_parent_head": "11d68642e705b72958203daee19f3022458a4cf5"
+  },
+  "pinned_source": {
+    "repository": "mgba-emu/mgba",
+    "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+    "original_inventory_path": "semantic-snapshots/independent-reviews/copilot-mgba-savedata-teardown/review.json",
+    "original_inventory_sha256": "b3bec6ce260d6184fc22a859b9c5bbc518348966cb0092a4fbe56f296667c475",
+    "machine_dossier_path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "machine_dossier_git_blob_sha1": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "machine_dossier_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609",
+    "source_basis": "Synthesize the three existing disjoint 5+6+9 source-review tranches and original 20-file identities; do not claim new whole-file review readiness or repeat the native tests.",
+    "whole_file_census_repeated": false
+  },
+  "file_dispositions": [
+    {
+      "path": "src/util/vfs/vfs-fd.c",
+      "git_blob_sha1": "2535bd0fb76740745ae038d5523ead28658f1035",
+      "source_sha256": "0073a68b6688f1baa26acaf609af52e9f29308605e449e7c3182c9f4d768da44",
+      "dossier_row_sha256": "bb351807533d3de29f1f87c2c3a644a70c67430f556e83e219b1e25292589942",
+      "source_lines": ["src/util/vfs/vfs-fd.c:102-117", "src/util/vfs/vfs-fd.c:134-155", "src/util/vfs/vfs-fd.c:232-280"],
+      "source_contract": "FD close returns bool; POSIX unmap is void and ignores msync/munmap results; sync is a separate result path.",
+      "objections": [
+        {"id": "fd-close-result", "disposition": "RESOLVED_SOURCE_ONLY", "resolution": "GBA unload drops the realVf pointer without consuming close's bool; fixture-injected failure before real close does not establish OS close-on-error or retry behavior."},
+        {"id": "fd-unmap-is-not-a-durability-result", "disposition": "RESOLVED_SOURCE_ONLY", "resolution": "The POSIX unmap implementation ignores both syscall results and cannot report them through the VFile void slot."}
+      ],
+      "unresolved": ["Real host close failure state and retry safety", "Crash, reboot, power-loss, filesystem, and non-POSIX persistence semantics"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "src/util/vfs/vfs-mem.c",
+      "git_blob_sha1": "048194e2dd2d0b3b395a852d2092c694663c88a2",
+      "source_sha256": "6b5951a0cd634d398a69ce57766298bd32d5e6410ee0aa4e8b8894c6aaa5829b",
+      "dossier_row_sha256": "3c95e0a322b5aff0655ec59a1c1f5d34a740a21676da0bf5cce444d2434248ce",
+      "source_lines": ["src/util/vfs/vfs-mem.c:34-152", "src/util/vfs/vfs-mem.c:154-234", "src/util/vfs/vfs-mem.c:237-331"],
+      "source_contract": "Borrowed-memory wrappers do not own caller storage; VFileMemChunk owns its anonymous allocation. Memory unmap is a no-op, sync reports success without I/O, and mutable borrowed storage can short-write.",
+      "objections": [
+        {"id": "memory-ownership-and-persistence", "disposition": "RESOLVED_SOURCE_ONLY", "resolution": "The constructors, close callbacks, no-op unmap, and in-memory sync semantics distinguish borrowed buffers from owned chunks; this is not durable persistence."},
+        {"id": "memory-allocation-and-size-bounds", "disposition": "NEEDS_EVIDENCE", "resolution": "The earlier tranche identifies unchecked anonymous allocation and size_t-to-uint32_t capacity rounding; allocation-failure and boundary behavior remain untested."}
+      ],
+      "unresolved": ["anonymousMemoryMap/mappedMemoryFree implementation and failure behavior", "Allocation failure, large-size overflow, zero-size and short-write caller recovery"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "src/util/vfs/vfs-file.c",
+      "git_blob_sha1": "4a63e53f842b31b24d6188e6525ddcf121a0c7da",
+      "source_sha256": "77737a3fa897db96e31f1f5e56faa0c06afa0cc86c7697642b28026308ba0921",
+      "dossier_row_sha256": "263f5e29518c63b6c0cfb36819debd8c57dfc630a6490376255e2f1fd1fe3849",
+      "source_lines": ["src/util/vfs/vfs-file.c:66-73", "src/util/vfs/vfs-file.c:91-159"],
+      "source_contract": "stdio close reports fclose failure; sync checks fwrite and fflush; map/unmap and truncate contain void/result-loss paths.",
+      "objections": [
+        {"id": "stdio-flush-close-and-short-io", "disposition": "RESOLVED_SOURCE_ONLY", "resolution": "The source distinguishes fflush/fclose bool results from void unmap/truncate paths; local fixture cases are not proof for every filesystem or caller."},
+        {"id": "stdio-retry-and-failure-coverage", "disposition": "NEEDS_EVIDENCE", "resolution": "No retry-safe fclose contract or complete fseek/map/truncate short-write matrix is established."}
+      ],
+      "unresolved": ["Truncate short writes and all seek/map failures", "Frontend handling and resource ownership after a failed fclose"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "src/util/vfs.c",
+      "git_blob_sha1": "3158c52659a83333cb23aeb0dd7ea4bba35908fc",
+      "source_sha256": "7b94fe172db57a97fef22047e79378bba3c8848b0808bca014d3a6554c1adc06",
+      "dossier_row_sha256": "47d41523b021d9d124e30aae47163dd32773f50223bcde11b82d4b27508107a2",
+      "source_lines": ["src/util/vfs.c:21-169", "src/util/vfs.c:287-352"],
+      "source_contract": "VFileOpen dispatches through compile-time backend selection; scalar helpers return the backend's reported count rather than requiring full transfers.",
+      "objections": [
+        {"id": "backend-selection-and-count-contract", "disposition": "RESOLVED_SOURCE_ONLY", "resolution": "The source establishes backend-selection branches and count propagation, but not which branch a downstream build selects."},
+        {"id": "frontend-backend-coverage", "disposition": "NEEDS_EVIDENCE", "resolution": "No complete platform/frontend build matrix exists in the review packet."}
+      ],
+      "unresolved": ["Actual downstream backend configuration", "Backend-specific short-I/O behavior in supported product builds"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "src/gba/savedata.c",
+      "git_blob_sha1": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "source_sha256": "9887e36795ae51e39eecad09565d27d3feabe316d3e595b17f288e3205e13161",
+      "dossier_row_sha256": "99a6b3e97c52d67712e10204e08ced8819c7330e899b9f767aa280fc330c42e0",
+      "source_lines": ["src/gba/savedata.c:71-135", "src/gba/savedata.c:157-226", "src/gba/savedata.c:586-666", "src/gba/savedata.c:759-777"],
+      "source_contract": "Deinit/mask/load/clone/clean/RTC paths consume VFile methods with distinct signed counts, bools, and void results; several output/teardown outcomes are not propagated uniformly.",
+      "objections": [
+        {"id": "savedata-read-write-and-teardown-sinks", "disposition": "RESOLVED_SOURCE_ONLY", "resolution": "Raw-load write count overwrites the read count and success checks non-negativity; mapped load differs; clone does not check the output write result; mask/unmask and deinit ignore selected results."},
+        {"id": "rtc-negative-reads-and-persistence", "disposition": "NEEDS_EVIDENCE", "resolution": "RTC read converts signed I/O to size_t before validation; RTC/serialization round trip, cold restart, and durable persistence are not established."}
+      ],
+      "unresolved": ["Negative/short RTC reads and all savedata I/O failure branches", "Complete serializer and frontend consumers", "Cold restart and durable persistence"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "src/gba/gba.c",
+      "git_blob_sha1": "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e",
+      "source_sha256": "e84eaba17f6c96ac7b78431afaee79d7633dd50118f92e31e4432793f80c4c7b",
+      "dossier_row_sha256": "d1870b438fe6dd9bfa628a99d90189778e112588c14ae08f28fa379903595056",
+      "source_lines": ["src/gba/gba.c:140-196", "src/gba/gba.c:967-1007"],
+      "source_contract": "GBAUnloadROM invokes savedata teardown and discards the realVf close result; GBAFrameEnded's dirty-transition callback is a separate frame path.",
+      "objections": [
+        {"id": "unload-close-and-callback-separation", "disposition": "RESOLVED_SOURCE_ONLY", "resolution": "The source separates shutdown close handling from frame-end dirty notification; a callback is not a sync/durability result."},
+        {"id": "frontend-callback-and-resource-outcome", "disposition": "NEEDS_EVIDENCE", "resolution": "No complete frontend/embedder callback consumer or shutdown error presentation was exercised."}
+      ],
+      "unresolved": ["Full GBA lifecycle execution", "Frontend callback, error display, and resource recovery"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "src/gba/core.c",
+      "git_blob_sha1": "6bfc518bb8899205c07d1d0fc091a287cb42f874",
+      "source_sha256": "47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596",
+      "dossier_row_sha256": "3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784",
+      "source_lines": ["src/gba/core.c:309-330", "src/gba/core.c:1469-1506", "src/gba/core.c:1641-1729"],
+      "source_contract": "Core deinit is void; savedataClone uses a caller-provided output VFile and has zero-valued no-data/failure ambiguity; savedataRestore returns only a bounded source-level result.",
+      "objections": [
+        {"id": "core-savedata-return-sinks", "disposition": "RESOLVED_SOURCE_ONLY", "resolution": "The implementation and interface bound what these methods can report; the lifecycle fixture does not compile or invoke these mCore methods."},
+        {"id": "consumer-distinguishes-no-save-from-failure", "disposition": "NEEDS_EVIDENCE", "resolution": "Actual mCore consumers and failure reporting have not been traced or tested."}
+      ],
+      "unresolved": ["Allocation/constructor/close failure handling at consumers", "Actual caller distinction between no savedata and failure"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "src/core/scripting.c",
+      "git_blob_sha1": "7ccb51e897685ce24b37dabc76beb27427331b4f",
+      "source_sha256": "8bb8d2ca9a744b51a96d5258b7a1cec49b724f92ae843a1504b22d4ae9d138b1",
+      "dossier_row_sha256": "9975d4c10ec523f164e9e0292ae795ccb8522343d7b926c233bee159de08abc8",
+      "source_lines": ["src/core/scripting.c:414-465", "src/core/scripting.c:535-674", "src/core/scripting.c:1028-1062", "src/core/scripting.c:1426-1540"],
+      "source_contract": "Script state wrappers return serializer/load booleans but ignore selected VFile close results; buffer save maps/copies; savedataUpdated forwards an event without a persistence result.",
+      "objections": [
+        {"id": "script-state-and-callback-result-contract", "disposition": "RESOLVED_SOURCE_ONLY", "resolution": "Wrapper return values and ignored map/close/callback outcomes are bounded by source; this does not establish script-engine or frontend behavior."},
+        {"id": "script-runtime-consumers", "disposition": "NEEDS_EVIDENCE", "resolution": "No full scripting translation-unit runtime, UI, or consumer error path was exercised."}
+      ],
+      "unresolved": ["Script engine and frontend call sites", "Real save-state/RTC round trip and error presentation"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "src/script/stdlib.c",
+      "git_blob_sha1": "f84b62515315c119ec4ff5b9fb6df4de4517c738",
+      "source_sha256": "52c9fc2d9490f3f158f20c8eddfed07440ec22e4f174043f96e3704599c87b99",
+      "dossier_row_sha256": "db8b3609ef7ae747d57b1b3a163dd9af6fbbf9c22d661b2a5261e274cbae6ad1",
+      "source_lines": ["src/script/stdlib.c:20-103", "src/script/stdlib.c:199-307"],
+      "source_contract": "The savedataUpdated documentation means save data was modified; exported save-state flags do not define persistence success or serializer behavior.",
+      "objections": [
+        {"id": "callback-documentation-is-not-persistence", "disposition": "RESOLVED_SOURCE_ONLY", "resolution": "The API text and exported constants do not promise a successful VFile sync or a durable save."},
+        {"id": "script-and-rtc-runtime", "disposition": "NEEDS_EVIDENCE", "resolution": "No script execution or RTC/save-state round trip is established."}
+      ],
+      "unresolved": ["Runtime callback consumers", "RTC serializer behavior and user-visible persistence"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "include/mgba-util/vfs.h",
+      "git_blob_sha1": "6c9bd299153af4c3c9cd5487f2425a2481331ee5",
+      "source_sha256": "4c829529f21c424196b4d1efe25ce11227312437cf1aa5028cae94a741bf6656",
+      "dossier_row_sha256": "5d4c30179d703f5b013badf083d6c99c736186091873d65edcb3f0943c2763dd",
+      "source_lines": ["include/mgba-util/vfs.h:35-50"],
+      "source_contract": "VFile read/write return ssize_t; close/sync return bool; unmap/truncate return void.",
+      "objections": [
+        {"id": "vfile-return-type-contract", "disposition": "RESOLVED_SOURCE_ONLY", "resolution": "The interface signatures define which failures callers can observe; void methods cannot return errors through this API."}
+      ],
+      "unresolved": ["Backend-specific implementation and caller adherence beyond the reviewed closure"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "include/mgba-util/common.h",
+      "git_blob_sha1": "923e93086adfa09c9a55fcc2f0f6fa4d560e5888",
+      "source_sha256": "ec13354a050e4a7432232214b9991dd74000980ab2b8949389af0871cc1b799f",
+      "dossier_row_sha256": "b0a970a0105d3d1b109325bda5fedc99cff7a182cb010f24f826944faa0616ec",
+      "source_lines": ["include/mgba-util/common.h:19-90", "include/mgba-util/common.h:104-135", "include/mgba-util/common.h:146-263"],
+      "source_contract": "Shared platform, integer, size, and byte-order declarations are compile dependencies; they do not prove a backend configuration or persistence behavior.",
+      "objections": [
+        {"id": "platform-compile-dependency", "disposition": "NEEDS_EVIDENCE", "resolution": "The header's source role is bounded, but target-specific compile coverage is absent."}
+      ],
+      "unresolved": ["Consumer platform configurations and downstream build matrix"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "include/mgba-util/dllexports.h",
+      "git_blob_sha1": "a44480df6ec26821b8616650b2575ba794848eca",
+      "source_sha256": "96871f8861195f4ff9fedd861ff07ed5b0a10a0e7642d6a780a8221cafd163d4",
+      "dossier_row_sha256": "5a0c3158c1515885d4f326ea52cc891074b5e0cd54e40460eab89d55a1746070",
+      "source_lines": ["include/mgba-util/dllexports.h:6-19"],
+      "source_contract": "MGBA_EXPORT varies with static/shared and MSVC build definitions and does not change savedata semantics.",
+      "objections": [
+        {"id": "export-build-configuration", "disposition": "NEEDS_EVIDENCE", "resolution": "The conditional export contract is source-visible; consumer linkage configuration has not been built."}
+      ],
+      "unresolved": ["Actual consumer static/shared/DLL configuration"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "include/mgba-util/vector.h",
+      "git_blob_sha1": "c837379e2102ca6535db2b292233bd4983c3532c",
+      "source_sha256": "ae8d9ed36475bda93ab3d2ff581163cedd289b2275c5254b76ba9e4285696375",
+      "dossier_row_sha256": "6a1179a47870dc93b443eff57599611d1b8d43d87560de25863a9e5805d83eb7",
+      "source_lines": ["include/mgba-util/vector.h:17-35", "include/mgba-util/vector.h:37-112", "include/mgba-util/vector.h:114-128"],
+      "source_contract": "Vector capacity helpers call calloc/realloc without surfacing allocation failures; this is a dependency, not a save durability primitive.",
+      "objections": [
+        {"id": "vector-allocation-failure", "disposition": "NEEDS_EVIDENCE", "resolution": "Allocation failure and relevant consumer recovery are not covered by the native VFile evidence."}
+      ],
+      "unresolved": ["Relevant allocation-failure consumers and recovery"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "include/mgba-util/memory.h",
+      "git_blob_sha1": "325f748f6fddc33a5539739ebc6eff6f3bb42bad",
+      "source_sha256": "509b56f31b2a279d954a16799501a1585cf7aa55f917a180432283b0205c198c",
+      "dossier_row_sha256": "cf858e1e109d1346cab0d7b30bcd119c207cfb84e9b45a3e73321c1e3576315e",
+      "source_lines": ["include/mgba-util/memory.h:9-16"],
+      "source_contract": "anonymousMemoryMap returns void*; mappedMemoryFree returns void. The interface exposes no explicit allocation error beyond a possible null pointer.",
+      "objections": [
+        {"id": "anonymous-memory-implementation", "disposition": "NEEDS_EVIDENCE", "resolution": "Implementation, null handling, and cleanup behavior are outside the 20-file closure."}
+      ],
+      "unresolved": ["Pinned platform implementation and allocation failure/cleanup behavior"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "include/mgba-util/math.h",
+      "git_blob_sha1": "f7b3269c9d51967765379b951ba6f43d24c61865",
+      "source_sha256": "04f5ee1686f4b30744d4e62caef4cf16f2f4b80682b88a87e7e18cf117fd421e",
+      "dossier_row_sha256": "87d819c03b064e4665a27b5563f4a7261cfcdad051913229884d4f72cfd813f9",
+      "source_lines": ["include/mgba-util/math.h:13-101", "include/mgba-util/math.h:103-145"],
+      "source_contract": "The VFileMem growth path's toPow2 helper accepts uint32_t while its caller passes size_t; large-size representability is not proven.",
+      "objections": [
+        {"id": "to-pow2-size-domain", "disposition": "NEEDS_EVIDENCE", "resolution": "No caller-side supported-size bound or boundary execution is available."}
+      ],
+      "unresolved": ["Supported address-width and size bounds", "Boundary overflow behavior"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "include/mgba/core/core.h",
+      "git_blob_sha1": "64ddf851ef00ab09416a9c1c9b5a88798fcd6fc8",
+      "source_sha256": "e77d0b72af5b76d9b66292968359122a15ab5c4c624d684af7ad339fa700e7a9",
+      "dossier_row_sha256": "0fb39db4601aad348aa35a4adbb7a4a41b05a26128957595547a95bc72208a87",
+      "source_lines": ["include/mgba/core/core.h:56-57", "include/mgba/core/core.h:161-164"],
+      "source_contract": "The public mCore interface declares void deinit and savedataClone/savedataRestore callback signatures; this bounds API return sinks only.",
+      "objections": [
+        {"id": "mcore-api-return-contract", "disposition": "RESOLVED_SOURCE_ONLY", "resolution": "Function-pointer result contracts are source-defined; frontend interpretation and error display are not."},
+        {"id": "mcore-consumer-closure", "disposition": "NEEDS_EVIDENCE", "resolution": "The actual external embedder/frontend caller graph is incomplete."}
+      ],
+      "unresolved": ["Frontend/embedder caller outcomes and error presentation"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "include/mgba/gba/core.h",
+      "git_blob_sha1": "5cb0e468c100730a65199e9daeda78c2a885227d",
+      "source_sha256": "9e9eb686f85856a6c9b659f0c99d4eb5f5c831120970d616f8554a448f558c8d",
+      "dossier_row_sha256": "08637ccef3dea51935b64aeea0a34d40008862ebc3eed75f7385df0394ebbd22",
+      "source_lines": ["include/mgba/gba/core.h:13-17"],
+      "source_contract": "The public GBA factory declaration provides a creation boundary but no save teardown status contract.",
+      "objections": [
+        {"id": "gba-factory-caller-boundary", "disposition": "NEEDS_EVIDENCE", "resolution": "Factory consumers and destruction-result handling remain outside the selected source closure."}
+      ],
+      "unresolved": ["Public factory callers and shutdown/error handling"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "include/mgba/internal/gba/gba.h",
+      "git_blob_sha1": "65e994dc63a304cc9fb207536f09bb2c8a6cf3e5",
+      "source_sha256": "b50fc8ae1467f9ac1c6be3ba8452e22027571ff5c886695edb9be529d7962d4e",
+      "dossier_row_sha256": "d6e61894ce31db089d3fd04e64e0938d1e689fb6c7498a8056fced405bf2bba0",
+      "source_lines": ["include/mgba/internal/gba/gba.h:65-105", "include/mgba/internal/gba/gba.h:145-146"],
+      "source_contract": "GBA state stores VFile/savedata and callback pointers; GBADestroy is void.",
+      "objections": [
+        {"id": "gba-destroy-return-contract", "disposition": "RESOLVED_SOURCE_ONLY", "resolution": "The internal structure and destructor declaration define the local contract; caller lifecycle and external ownership remain unresolved."},
+        {"id": "gba-ownership-runtime", "disposition": "NEEDS_EVIDENCE", "resolution": "No full core creation/destruction execution or external caller closure is included."}
+      ],
+      "unresolved": ["Full GBA lifecycle and external ownership graph"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "include/mgba/internal/gba/savedata.h",
+      "git_blob_sha1": "6227be25e8c9d2c1cc14c06ded34389b96138577",
+      "source_sha256": "30481cada83cc0e3a88b55298f3081cc660e18e55ca7f5a57356e6f2a75224dc",
+      "dossier_row_sha256": "eaee2c8bdb65c51e4f40daeb80af916f57ed430c48c88286562363f687ca6de9",
+      "source_lines": ["include/mgba/internal/gba/savedata.h:64-104", "include/mgba/internal/gba/savedata.h:118-125"],
+      "source_contract": "Savedata state declares dirty, VFile, mask/writeback, and RTC data fields and serializer/read/write methods; declarations do not establish serializer effects.",
+      "objections": [
+        {"id": "savedata-layout-and-api", "disposition": "RESOLVED_SOURCE_ONLY", "resolution": "The in-memory fields and API signatures are source-visible."},
+        {"id": "rtc-serialization-runtime", "disposition": "NEEDS_EVIDENCE", "resolution": "Implementations, callers, and state round trips are outside the declaration-only evidence."}
+      ],
+      "unresolved": ["RTC serialization implementation and caller chain", "Restart and persistence semantics"],
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "include/mgba/internal/defines.h",
+      "git_blob_sha1": "67b8ec8fd2f51ee2c0c6231443af752158397b03",
+      "source_sha256": "167896b30ed7f1cd3f9e5cbc99ee994a48a094b3e95989ab2f9e1ebf8cf4b46b",
+      "dossier_row_sha256": "05a6cd7248412bb03041f85841bf51db1f6a52e4b27bea5ac19c15ffa36a7bc2",
+      "source_lines": ["include/mgba/internal/defines.h:9-28"],
+      "source_contract": "mSavedataClean's dirty-to-clean predicate has a strict age threshold and exposes no VFile sync result.",
+      "objections": [
+        {"id": "dirty-state-is-not-sync-result", "disposition": "RESOLVED_SOURCE_ONLY", "resolution": "The helper's source contract is distinct from sync success; the callback/dirty transition must not be interpreted as durable-write confirmation."}
+      ],
+      "unresolved": ["Runtime retry/notification behavior after failed sync"],
+      "license_notice": "MPL-2.0"
+    }
+  ],
+  "dependency_edges": [
+    {
+      "from": "include/mgba-util/vfs.h",
+      "to": ["src/util/vfs/vfs-fd.c", "src/util/vfs/vfs-file.c", "src/util/vfs/vfs-mem.c", "src/util/vfs.c"],
+      "contract": "Abstract signed read/write counts, bool close/sync, void unmap/truncate; concrete backends do not share identical error or ownership semantics."
+    },
+    {
+      "from": "src/util/vfs.c",
+      "to": ["src/gba/gba.c", "src/core/scripting.c"],
+      "contract": "Compile-time dispatch chooses a backend; savedata and script state wrappers consume VFiles, so test-backend evidence cannot establish all platform paths."
+    },
+    {
+      "from": "src/gba/savedata.c",
+      "to": ["src/gba/gba.c", "src/gba/core.c", "include/mgba/internal/gba/savedata.h", "include/mgba/internal/defines.h"],
+      "contract": "GBA unload, core savedata clone/restore, state declarations, and dirty transition provide distinct callers and result sinks."
+    },
+    {
+      "from": "src/gba/gba.c",
+      "to": ["src/core/scripting.c", "src/script/stdlib.c"],
+      "contract": "Frame-end savedataUpdated notification is a modification event, not a VFile sync, serialization, or persistence result."
+    },
+    {
+      "from": "src/core/scripting.c",
+      "to": ["src/script/stdlib.c", "include/mgba/core/core.h"],
+      "contract": "Script APIs expose serializer/load booleans and callback names; ignored VFile close/map outcomes and external script consumer behavior remain separate."
+    },
+    {
+      "from": "include/mgba-util/memory.h",
+      "to": ["src/util/vfs/vfs-mem.c", "include/mgba-util/math.h"],
+      "contract": "Memory VFile growth depends on anonymous mapping and capacity arithmetic; declaration-only identity does not prove allocation bounds or failure recovery."
+    }
+  ],
+  "evidence_classes": [
+    {
+      "id": "pinned-source-analysis",
+      "class": "SOURCE_ONLY",
+      "claim_limit": "May resolve source/API/caller-flow objections only; not runtime proof."
+    },
+    {
+      "id": "pr13-teardown-fixtures",
+      "class": "PR13_WORKPAPER_REPORTED_LOCAL_LINUX_NATIVE_HOST_FIXTURES",
+      "source_paths": ["tests/phase1_mgba_vfs_fd_teardown_native.c", "tests/phase1_mgba_vfs_stdio_native.c"],
+      "source_sha256": ["c731670c511ceaf53db2fac8372efe5bfa36ad443bf8808b675b740e4e2cbe9f", "2458e0ed4e5cafc1e60dbac18e2bc5945b718377bd25b55213e63f55bf5c7a39"],
+      "limits": ["Local workpaper results, not current PR35 Actions", "Linux host syscall/stdio injection, not full emulator gameplay", "Not cold restart, physical Flash, reboot, or power-loss durability"]
+    },
+    {
+      "id": "pr13-savedata-callback-witness",
+      "class": "PR13_WORKPAPER_REPORTED_LOCAL_LINUX_SOURCE_EXTRACTED_NATIVE_HOST_WITNESS",
+      "fixture_path": "tests/phase1_mgba_vfs_fd_callback_native.c",
+      "fixture_sha256": "4963287bf10a7e2a3cd5e52788bc3aa518d70319fafb8e580c1a9b935059b6d4",
+      "runner_path": "tools/phase1_mgba_vfs_fd_callback_native.py",
+      "runner_sha256": "cc67ed3f5fd9b3a6a9e7f30076b38422dc19a43b3530a6576b97b4f1ed13bb53",
+      "local_log_sha256": "95d5ad944151504b3b80293c9b064ab6a7ec3d60a2aa7244581f76905efbd939",
+      "observed_scope": "Extracted GBASavedataClean/GBAFrameEnded and callback registration with an injected Linux msync failure.",
+      "limits": ["Not the full mGBA runtime or script engine", "Not a game/save round trip, cold restart, physical Flash, or durable persistence", "Local result, not exact-head PR35 CI"]
+    },
+    {
+      "id": "pr35-pinned-native-regression",
+      "class": "NATIVE_MGBA_SYNTHETIC_CARTRIDGE_CI",
+      "run_id": 41920176499,
+      "head_sha": "da037a0f87e0bc71c09ca158cab7bf7c85b5ebbb",
+      "job_id": 126922594700,
+      "test_source_sha256": "233206a92473469d5ebcd74cdcdedaf6e49395cb67b0cbe19cb2d3a0e2fead18",
+      "runtime_log_sha256": "334addf291ce91cd7f2419b7dc8b4780b63825959ce28c8f13af3aa5c7e23000",
+      "observed": "43 synthetic-ROM assertions including nine savedata cases and four hazard observations.",
+      "limits": ["Earlier PR35 head, not this matrix commit", "Does not run PR13 teardown fixtures", "Not a stock game/save, physical Flash, or durability test"]
+    },
+    {
+      "id": "exact-parent-pr35-check",
+      "class": "ACTIONS_BLOCKED_NO_JOB_EXECUTION",
+      "run_id": 41957555966,
+      "head_sha": "11d68642e705b72958203daee19f3022458a4cf5",
+      "event": "pull_request",
+      "conclusion": "action_required",
+      "job_count": 0,
+      "logs": "No jobs and no failed-job logs were available."
+    },
+    {
+      "id": "push-coverage-check",
+      "class": "NO_PUSH_TRIGGER_OR_RUN",
+      "workflow_events": ["pull_request", "workflow_dispatch"],
+      "push_event_run_count": 0
+    }
+  ],
+  "license_boundary": {
+    "all_twenty_file_notices": "MPL-2.0, as recorded in the existing pinned source inventory",
+    "dossier_and_source_hashes_bound": true,
+    "transitive_dependency_closure_complete": false,
+    "combined_distribution_legal_conclusion": false,
+    "disposition": "NEEDS_EVIDENCE"
+  },
+  "unresolved_cross_file_obligations": [
+    "No complete native matrix of negative/short/zero/failed read and write counts, failed truncate, NULL map, close, sync, allocation, and all caller result sinks.",
+    "No complete GBA core/frontend/script caller execution or user-facing failure/retry behavior.",
+    "No complete RTC and serializer implementation/caller closure, state round trip, or cold restart.",
+    "No crash, reboot, power-loss, physical Flash, or durable-persistence evidence.",
+    "No Windows, 3DS, PSP2, and all configured stdio/fd backend selection/build matrix.",
+    "No complete transitive dependency/licensing review for combined distribution.",
+    "The current checkout does not contain docs/PHASE1_SYSTEM_BATCH_REVIEW_PROTOCOL_2026-10-27.md; its hash is referenced by the earlier audit, but its content was not re-read here."
+  ],
+  "phase1_state": {
+    "decision": "FAIL_INCOMPLETE",
+    "p0_approved_before": 0,
+    "p0_approved_after": 0,
+    "approved_before": 0,
+    "approved_after": 0,
+    "phase2_started": false,
+    "shared_gate_or_register_edited": false,
+    "semantic_approval": false
+  },
+  "verdict_policy": {
+    "allowed_objection_dispositions": ["RESOLVED_SOURCE_ONLY", "NEEDS_EVIDENCE"],
+    "file_level_semantic_approval": false,
+    "external_approved": false,
+    "promotion_requires": ["separate attributable reviewer receipt", "successful exact-head validator", "qualifying executed PR and push CI", "closed dependency and license obligations"],
+    "validation_workflow_is_not_reviewer": true
+  }
+}

@@ -10,6 +10,7 @@ on:
       - 'tools/copilot_mgba_fd_stdio_handoff_verify.py'
       - 'tools/copilot_mgba_gba_lifecycle_handoff_verify.py'
       - 'tools/copilot_mgba_final_source_tranche_verify.py'
+      - 'tools/copilot_mgba_cross_tranche_matrix_verify.py'
       - 'tools/verify_native_mgba_regressions.py'
       - 'semantic-snapshots/independent-reviews/copilot-mgba-savedata/**'
       - 'docs/PHASE1_STATUS.md'
@@ -45,6 +46,7 @@ jobs:
             tools/copilot_mgba_fd_stdio_handoff_verify.py \
             tools/copilot_mgba_gba_lifecycle_handoff_verify.py \
             tools/copilot_mgba_final_source_tranche_verify.py \
+            tools/copilot_mgba_cross_tranche_matrix_verify.py \
             tools/verify_native_mgba_regressions.py
           python3 tools/verify_native_mgba_regressions.py --self-test
       - name: Fetch immutable mGBA source pin
@@ -121,6 +123,11 @@ jobs:
           python3 tools/copilot_mgba_final_source_tranche_verify.py \
             --checkout upstream/mgba \
             --self-test
+      - name: Verify cross-tranche savedata objection matrix
+        run: |
+          python3 tools/copilot_mgba_cross_tranche_matrix_verify.py \
+            --checkout upstream/mgba \
+            --self-test
       - name: Write workflow-only run identity and exact hashes
         if: always()
         run: |
@@ -136,6 +143,8 @@ jobs:
               tools/copilot_mgba_savedata_review.py \
               tools/copilot_mgba_final_source_tranche_verify.py \
               semantic-snapshots/independent-reviews/copilot-mgba-savedata/final-source-tranche-handoff.json \
+              tools/copilot_mgba_cross_tranche_matrix_verify.py \
+              semantic-snapshots/independent-reviews/copilot-mgba-savedata/cross-tranche-objection-matrix.json \
               tools/verify_native_mgba_regressions.py \
               audit-output/mgba-boundary-runtime.log \
               audit-output/mgba-boundary-configure.log \
