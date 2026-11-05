@@ -27,6 +27,10 @@ on:
       - 'tests/test_phase1_mgba_cross_backend_observability.py'
       - 'docs/phase1-review-readiness/mgba-cross-backend-save-observability-20261105.json'
       - 'docs/phase1-review-readiness/mgba-cross-backend-save-observability-20261105.md'
+      - 'tools/phase1_mgba_platform_observer_closure.py'
+      - 'tests/test_phase1_mgba_platform_observer_closure.py'
+      - 'docs/phase1-review-readiness/mgba-platform-save-observer-closure-20261105.json'
+      - 'docs/phase1-review-readiness/mgba-platform-save-observer-closure-20261105.md'
       - 'tools/phase1_mgba_vfs_fd_callback_native.py'
       - 'tests/phase1_mgba_vfs_fd_callback_native.c'
       - 'tests/test_phase1_mgba_vfs_fd_callback_native.py'
@@ -48,7 +52,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Syntax checks
-        run: python3 -m py_compile tools/phase1_mgba_savedata_boundary_witness.py tools/phase1_mgba_savedata_handoff_verify.py tools/phase1_mgba_saveconverter_eeprom_tail.py tools/phase1_mgba_saveconverter_gba_off.py tools/phase1_mgba_saveconverter_qfile.py tools/phase1_mgba_vfs_fd_native.py tools/phase1_mgba_vfs_fd_teardown_native.py tools/phase1_mgba_vfs_stdio_native.py tools/phase1_mgba_cross_backend_observability.py tools/phase1_mgba_vfs_fd_callback_native.py
+        run: python3 -m py_compile tools/phase1_mgba_savedata_boundary_witness.py tools/phase1_mgba_savedata_handoff_verify.py tools/phase1_mgba_saveconverter_eeprom_tail.py tools/phase1_mgba_saveconverter_gba_off.py tools/phase1_mgba_saveconverter_qfile.py tools/phase1_mgba_vfs_fd_native.py tools/phase1_mgba_vfs_fd_teardown_native.py tools/phase1_mgba_vfs_stdio_native.py tools/phase1_mgba_cross_backend_observability.py tools/phase1_mgba_platform_observer_closure.py tools/phase1_mgba_vfs_fd_callback_native.py
       - name: Fail-closed EEPROM parser and fixture controls
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_saveconverter_eeprom_tail.py" -v
       - name: Fail-closed QFile observation parser and 17 adversarial controls
@@ -61,6 +65,8 @@ jobs:
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_vfs_stdio_native.py" -v
       - name: Fail-closed cross-backend save observability controls
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_cross_backend_observability.py" -v
+      - name: Fail-closed platform save observer closure controls
+        run: python3 -m unittest discover -s tests -p "test_phase1_mgba_platform_observer_closure.py" -v
       - name: Fail-closed GBA savedata callback evidence controls
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_vfs_fd_callback_native.py" -v
       - name: Fetch exact pinned mGBA source
@@ -70,6 +76,10 @@ jobs:
       - name: Verify pinned cross-backend error observers
         run: |
           python3 tools/phase1_mgba_cross_backend_observability.py \
+            --checkout /tmp/xgba-mgba-boundary
+      - name: Verify pinned platform save observers
+        run: |
+          python3 tools/phase1_mgba_platform_observer_closure.py \
             --checkout /tmp/xgba-mgba-boundary
       - name: Execute pinned Linux fd VFile and savedata cleanup
         run: |
