@@ -35,6 +35,10 @@ on:
       - 'tests/test_phase1_mgba_fault_observer_handoff.py'
       - 'docs/phase1-review-readiness/mgba-fault-to-observer-handoff-20261105.json'
       - 'docs/phase1-review-readiness/mgba-fault-to-observer-handoff-20261105.md'
+      - 'tools/phase1_mgba_observer_receipt_eligibility.py'
+      - 'tests/test_phase1_mgba_observer_receipt_eligibility.py'
+      - 'docs/phase1-review-readiness/mgba-observer-receipt-eligibility-20261105.json'
+      - 'docs/phase1-review-readiness/mgba-observer-receipt-eligibility-20261105.md'
       - 'tools/phase1_mgba_vfs_fd_callback_native.py'
       - 'tests/phase1_mgba_vfs_fd_callback_native.c'
       - 'tests/test_phase1_mgba_vfs_fd_callback_native.py'
@@ -46,6 +50,15 @@ on:
       - 'docs/phase1-review-readiness/mgba-gba-savedata-callback-failure-20261102.md'
       - 'docs/phase1-review-readiness/mgba-vfs-stdio-save-teardown-20261104.md'
       - '.github/workflows/phase1-mgba-savedata-boundary-witness.yml'
+  push:
+    branches:
+      - 'phase1/mgba-savedata-boundary-witness-20261027'
+    paths:
+      - 'tools/phase1_mgba_observer_receipt_eligibility.py'
+      - 'tests/test_phase1_mgba_observer_receipt_eligibility.py'
+      - 'docs/phase1-review-readiness/mgba-observer-receipt-eligibility-20261105.json'
+      - 'docs/phase1-review-readiness/mgba-observer-receipt-eligibility-20261105.md'
+      - '.github/workflows/phase1-mgba-savedata-boundary-witness.yml'
   workflow_dispatch:
 permissions:
   contents: read
@@ -56,7 +69,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Syntax checks
-        run: python3 -m py_compile tools/phase1_mgba_savedata_boundary_witness.py tools/phase1_mgba_savedata_handoff_verify.py tools/phase1_mgba_saveconverter_eeprom_tail.py tools/phase1_mgba_saveconverter_gba_off.py tools/phase1_mgba_saveconverter_qfile.py tools/phase1_mgba_vfs_fd_native.py tools/phase1_mgba_vfs_fd_teardown_native.py tools/phase1_mgba_vfs_stdio_native.py tools/phase1_mgba_cross_backend_observability.py tools/phase1_mgba_platform_observer_closure.py tools/phase1_mgba_fault_observer_handoff.py tools/phase1_mgba_vfs_fd_callback_native.py
+        run: python3 -m py_compile tools/phase1_mgba_savedata_boundary_witness.py tools/phase1_mgba_savedata_handoff_verify.py tools/phase1_mgba_saveconverter_eeprom_tail.py tools/phase1_mgba_saveconverter_gba_off.py tools/phase1_mgba_saveconverter_qfile.py tools/phase1_mgba_vfs_fd_native.py tools/phase1_mgba_vfs_fd_teardown_native.py tools/phase1_mgba_vfs_stdio_native.py tools/phase1_mgba_cross_backend_observability.py tools/phase1_mgba_platform_observer_closure.py tools/phase1_mgba_fault_observer_handoff.py tools/phase1_mgba_observer_receipt_eligibility.py tools/phase1_mgba_vfs_fd_callback_native.py
       - name: Fail-closed EEPROM parser and fixture controls
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_saveconverter_eeprom_tail.py" -v
       - name: Fail-closed QFile observation parser and 17 adversarial controls
@@ -73,6 +86,8 @@ jobs:
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_platform_observer_closure.py" -v
       - name: Fail-closed fault-to-observer handoff controls
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_fault_observer_handoff.py" -v
+      - name: Fail-closed observer receipt eligibility controls
+        run: python3 -m unittest discover -s tests -p "test_phase1_mgba_observer_receipt_eligibility.py" -v
       - name: Fail-closed GBA savedata callback evidence controls
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_vfs_fd_callback_native.py" -v
       - name: Fetch exact pinned mGBA source
@@ -91,6 +106,11 @@ jobs:
         run: |
           python3 tools/phase1_mgba_fault_observer_handoff.py \
             --checkout /tmp/xgba-mgba-boundary
+      - name: Emit pinned observer receipt eligibility report
+        run: |
+          python3 tools/phase1_mgba_observer_receipt_eligibility.py \
+            --checkout /tmp/xgba-mgba-boundary \
+            --head-sha "${{ github.event.pull_request.head.sha || github.sha }}"
       - name: Execute pinned Linux fd VFile and savedata cleanup
         run: |
           python3 tools/phase1_mgba_vfs_fd_native.py \
