@@ -10,6 +10,8 @@ on:
       - 'docs/phase1-review-readiness/porymap-event-script-consumer-closure-20261105.md'
       - 'tools/phase1_porymap_external_editor_boundary.py'
       - 'docs/phase1-review-readiness/porymap-external-editor-preference-boundary-20261105.md'
+      - 'tools/phase1_porymap_external_script_reload.py'
+      - 'docs/phase1-review-readiness/porymap-external-script-reload-boundary-20261105.md'
       - 'tools/qt_metaobject_contracts.py'
       - '.github/workflows/compiled-porymap-semantics.yml'
   pull_request:
@@ -18,6 +20,8 @@ on:
       - 'docs/phase1-review-readiness/porymap-event-script-consumer-closure-20261105.md'
       - 'tools/phase1_porymap_external_editor_boundary.py'
       - 'docs/phase1-review-readiness/porymap-external-editor-preference-boundary-20261105.md'
+      - 'tools/phase1_porymap_external_script_reload.py'
+      - 'docs/phase1-review-readiness/porymap-external-script-reload-boundary-20261105.md'
       - '.github/workflows/compiled-porymap-semantics.yml'
 permissions:
   contents: read
@@ -52,6 +56,13 @@ jobs:
             --dossier docs/phase1-review-readiness/porymap-event-script-consumer-closure-20261105.md \
             --output porymap-compiler-evidence/porymap-script-consumer-source-closure.json \
             --archive porymap-compiler-evidence/porymap-script-consumer-source-closure.tar.gz
+      - name: Exercise pinned external-script watcher and launch boundaries
+        run: |
+          python3 tools/phase1_porymap_external_script_reload.py \
+            --porymap upstream/porymap \
+            --dossier docs/phase1-review-readiness/porymap-external-script-reload-boundary-20261105.md \
+            --output porymap-compiler-evidence/porymap-external-script-reload-boundary.json \
+            --archive porymap-compiler-evidence/porymap-external-script-reload-boundary.tar.gz
       - name: Configure original qmake Qt application
         run: |
           set -o pipefail
