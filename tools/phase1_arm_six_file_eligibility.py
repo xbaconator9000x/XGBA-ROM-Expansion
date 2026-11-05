@@ -114,6 +114,11 @@ def _git_blob(data: bytes) -> str:
     return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
 
 
+def _has_mpl_2_notice(data: bytes) -> bool:
+    normalized = b" ".join(data.split())
+    return b"Mozilla Public License" in normalized and b"2.0." in normalized
+
+
 def _run_git(root: Path, *args: str) -> str:
     return subprocess.check_output(["git", "-C", str(root), *args], text=True).strip()
 
@@ -264,8 +269,7 @@ def build_report(source_root: Path, snapshot_root: Path, repository_root: Path) 
             _git_blob(source) != blob
             or _sha256(source) != source_sha
             or row_sha != spec["dossier"]
-            or b"Mozilla Public License" not in source
-            or b"2.0." not in source
+            or not _has_mpl_2_notice(source)
         ):
             raise ValueError(f"Dependency source, dossier, or license identity mismatch: {path}")
         lines = source.decode("utf-8", "strict").splitlines()

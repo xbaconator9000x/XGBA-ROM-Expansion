@@ -100,6 +100,14 @@ def valid_report():
 
 
 class ARMSixFileEligibilityTests(unittest.TestCase):
+    def test_wrapped_mpl_notice_is_recognized(self):
+        self.assertTrue(
+            eligibility._has_mpl_2_notice(
+                b"Mozilla Public\nLicense, v. 2.0."
+            )
+        )
+        self.assertFalse(eligibility._has_mpl_2_notice(b"Mozilla Public License"))
+
     def test_analysis_authorship_is_pinned_to_original_commit(self):
         self.assertEqual(
             eligibility._copilot_analysis_authorship(eligibility.ROOT),
