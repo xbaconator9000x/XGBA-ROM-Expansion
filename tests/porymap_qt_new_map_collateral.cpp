@@ -163,8 +163,10 @@ static void coldReopen(const QString &root) {
               << " denied_errno=" << deniedErrno
               << " permissions_restored=" << restoredPermissions << std::endl;
     need(!failedCommitAccepted, "script failed replacement commit unexpectedly succeeded");
-    need(failedCommitError == QFileDevice::RenameError,
-         "script failed replacement commit error was not RenameError");
+    need(failedCommitError == QFileDevice::UnspecifiedError,
+         "script failed replacement commit error was not UnspecifiedError");
+    need(failedCommitErrorString == "Unknown error",
+         "script failed replacement commit error string changed");
     need(deniedFd < 0 && deniedErrno == EACCES,
          "script permission control did not fail with EACCES");
     need(restoredPermissions, "script directory permissions were not restored");
@@ -228,6 +230,10 @@ static void coldReopen(const QString &root) {
     out["script_text_outputs_reloaded"] = true;
     out["original_script_parser_reloaded"] = true;
     out["qsavefile_permission_commit_rejected"] = true;
+    out["qsavefile_failed_commit_error_code"] = static_cast<int>(failedCommitError);
+    out["qsavefile_failed_commit_error_string"] =
+        QString::fromUtf8(failedCommitErrorString);
+    out["permission_control_errno"] = deniedErrno;
     out["qsavefile_failed_old_bytes_preserved"] = true;
     out["qsavefile_failed_old_inode_preserved"] = true;
     out["qsavefile_atomic_replace_committed"] = true;
