@@ -123,16 +123,25 @@ def _copilot_analysis_authorship(repository_root: Path) -> dict:
     data = path.read_bytes()
     if _sha256(data) != ANALYSIS_SHA256:
         raise ValueError("ARM analysis authorship evidence hash mismatch")
+    commit_blob = _run_git(repository_root, "rev-parse", f"{ANALYSIS_COMMIT}:{ANALYSIS_PATH}")
+    if commit_blob != _git_blob(data):
+        raise ValueError("ARM analysis commit does not contain the pinned evidence bytes")
+    ancestor = subprocess.run(
+        ["git", "-C", str(repository_root), "merge-base", "--is-ancestor", ANALYSIS_COMMIT, "HEAD"],
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
     fields = _run_git(
         repository_root,
-        "log",
-        "-1",
+        "show",
+        "-s",
         "--format=%H%x00%an%x00%ae",
-        "--",
-        ANALYSIS_PATH,
+        ANALYSIS_COMMIT,
     ).split("\0")
     if (
-        len(fields) != 3
+        ancestor.returncode != 0
+        or len(fields) != 3
         or fields[0] != ANALYSIS_COMMIT
         or str(COPILOT_ID) not in fields[2]
         or "copilot" not in fields[1].casefold()

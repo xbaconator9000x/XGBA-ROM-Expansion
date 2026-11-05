@@ -100,6 +100,17 @@ def valid_report():
 
 
 class ARMSixFileEligibilityTests(unittest.TestCase):
+    def test_analysis_authorship_is_pinned_to_original_commit(self):
+        self.assertEqual(
+            eligibility._copilot_analysis_authorship(eligibility.ROOT),
+            {
+                "path": eligibility.ANALYSIS_PATH,
+                "sha256": eligibility.ANALYSIS_SHA256,
+                "commit": eligibility.ANALYSIS_COMMIT,
+                "author": {"login": eligibility.COPILOT_LOGIN, "id": eligibility.COPILOT_ID},
+            },
+        )
+
     def test_exact_nonapproving_matrix_passes(self):
         eligibility.validate_report(valid_report())
 
