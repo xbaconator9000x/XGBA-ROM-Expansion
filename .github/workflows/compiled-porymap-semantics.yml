@@ -15,6 +15,9 @@ on:
       - 'tools/phase1_porymap_regionmap_persistence.py'
       - 'tests/phase1_porymap_regionmap_persistence.cpp'
       - 'docs/phase1-review-readiness/porymap-regionmap-persistence-boundary-20261105.md'
+      - 'tools/phase1_porymap_regionmap_project_caller.py'
+      - 'tests/phase1_porymap_regionmap_project_caller.cpp'
+      - 'docs/phase1-review-readiness/porymap-regionmap-project-caller-20261105.md'
       - 'tools/qt_metaobject_contracts.py'
       - '.github/workflows/compiled-porymap-semantics.yml'
   pull_request:
@@ -28,6 +31,9 @@ on:
       - 'tools/phase1_porymap_regionmap_persistence.py'
       - 'tests/phase1_porymap_regionmap_persistence.cpp'
       - 'docs/phase1-review-readiness/porymap-regionmap-persistence-boundary-20261105.md'
+      - 'tools/phase1_porymap_regionmap_project_caller.py'
+      - 'tests/phase1_porymap_regionmap_project_caller.cpp'
+      - 'docs/phase1-review-readiness/porymap-regionmap-project-caller-20261105.md'
       - '.github/workflows/compiled-porymap-semantics.yml'
 permissions:
   contents: read
@@ -78,6 +84,15 @@ jobs:
             --output porymap-compiler-evidence/porymap-regionmap-persistence.json \
             --archive porymap-compiler-evidence/porymap-regionmap-persistence.tar.gz \
             --log porymap-compiler-evidence/porymap-regionmap-persistence.log
+      - name: Verify pinned RegionMap entry-to-Project caller boundary
+        run: |
+          python3 tools/phase1_porymap_regionmap_project_caller.py \
+            --porymap upstream/porymap \
+            --harness tests/phase1_porymap_regionmap_project_caller.cpp \
+            --dossier docs/phase1-review-readiness/porymap-regionmap-project-caller-20261105.md \
+            --output porymap-compiler-evidence/porymap-regionmap-project-caller.json \
+            --archive porymap-compiler-evidence/porymap-regionmap-project-caller.tar.gz \
+            --log porymap-compiler-evidence/porymap-regionmap-project-caller.log
       - name: Configure original qmake Qt application
         run: |
           set -o pipefail
