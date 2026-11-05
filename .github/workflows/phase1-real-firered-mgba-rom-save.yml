@@ -24,13 +24,28 @@ on:
       - 'tools/phase1_firered_mixed_counter_native.py'
       - 'tools/phase1_firered_storage_init_order.py'
       - 'tools/phase1_firered_save_path_closure.py'
+      - 'tools/phase1_firered_ci_provenance.py'
       - 'tests/test_phase1_firered_save_path_closure.py'
+      - 'tests/test_phase1_firered_ci_provenance.py'
       - 'docs/phase1-review-readiness/firered-mixed-counter-native-20261028.md'
       - 'docs/phase1-review-readiness/firered-save-path-closure-20261028.md'
       - 'tools/phase1_firered_continue_warp.py'
       - 'tools/phase1_real_firered_mgba_adversarial.py'
       - 'docs/phase1-review-readiness/real-firered-mgba-runtime-20261028.md'
       - 'docs/phase1-review-readiness/real-firered-mgba-save-loader-steptrace-20261028.md'
+  pull_request:
+    branches:
+      - phase1/firered-mgba-save-loader-steptrace-20261028
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - '.github/workflows/phase1-real-firered-mgba-rom-save.yml'
+      - 'tests/phase1_firered_game_controller.c'
+      - 'tests/test_phase1_firered_save_path_closure.py'
+      - 'tests/test_phase1_firered_ci_provenance.py'
+      - 'tools/phase1_firered_game_controller.py'
+      - 'tools/phase1_firered_save_path_closure.py'
+      - 'tools/phase1_firered_ci_provenance.py'
+      - 'docs/phase1-review-readiness/firered-save-path-closure-20261028.md'
   workflow_dispatch:
 permissions:
   contents: read
@@ -40,10 +55,29 @@ jobs:
     timeout-minutes: 110
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Record and validate exact workflow head and base provenance
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+          GITHUB_WORKFLOW_REF: ${{ github.workflow_ref }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/results
+          python3 tools/phase1_firered_ci_provenance.py \
+            --event "$GITHUB_EVENT_PATH" \
+            --output evidence/results/workflow_provenance.json
       - name: Run synthetic-only interrupted-save integrity adversarial tests
         run: |
           python3 -m unittest discover -s tests -p 'test_phase1_firered_interrupted_save.py' -v
           python3 -m unittest discover -s tests -p 'test_phase1_firered_save_path_closure.py' -v
+          python3 -m unittest discover -s tests -p 'test_phase1_firered_ci_provenance.py' -v
       - name: Install pinned FireRed and mGBA build prerequisites
         run: |
           sudo apt-get update -qq
@@ -464,6 +498,15 @@ jobs:
             --field-get-player-input "$field_get_player_input" --gmain "$gmain" --sb1 "$sb1" \
             --output evidence/controller
           cp evidence/controller/*.json evidence/results/
+      - name: Finalize run provenance
+        if: always() && hashFiles('evidence/results/workflow_provenance.json') != ''
+        env:
+          JOB_CONCLUSION: ${{ job.status }}
+        run: |
+          python3 tools/phase1_firered_ci_provenance.py \
+            --finalize \
+            --output evidence/results/workflow_provenance.json \
+            --job-conclusion "$JOB_CONCLUSION"
       - name: Upload only text evidence, never source-built ROM or raw saves
         if: always()
         uses: actions/upload-artifact@v4

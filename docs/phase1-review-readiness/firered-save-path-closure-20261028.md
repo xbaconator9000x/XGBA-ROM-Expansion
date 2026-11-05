@@ -98,6 +98,29 @@ controls for duplicate/corrupted sector IDs, failed program return, invalid
 return PC, missing mapped-byte change, missing dirty state, boolean forgeries,
 and an unexpected Flash program in the no-input control.
 
+## Exact-head workflow provenance
+
+The existing workflow now has a narrowly scoped `pull_request` trigger for the
+stacked base branch and relevant save-path files. It checks out
+`pull_request.head.sha` rather than GitHub's PR merge SHA, and records the head,
+merge SHA, run ID/attempt/URL, event, and base identity. Before running the
+evidence steps, it fetches the current base and requires it to match the event's
+base SHA and to be an ancestor of the PR head. A failed preflight writes a
+fail-closed provenance record so the always-run finalizer can include it in the
+text artifact. The record's PR-success bit is set only when the complete job
+concludes successfully with exact-head and fresh-base checks intact.
+
+The controller evidence distinguishes its synthetic input `.sav` from the
+game-generated output `.sav`; the latter is accepted only with compiled
+save-menu/`TrySavingData` entry and return observations, all 14 sector writes,
+and mapped Flash changes. This prevents a synthetic fixture alone from being
+reported as a game-generated save; it does not turn CI provenance into an
+independent semantic approval. Existing push evidence is a separate event and
+cannot substitute for the required PR run. At the earlier checkpoint, push
+run `41892151360` attempt 2 succeeded, while no PR-triggered run existed
+because the workflow had no `pull_request` trigger. Exact-head status for this
+change remains pending its own push and PR workflow executions.
+
 All per-file records are `NEEDS_EVIDENCE`; no machine receipt is marked
 `COPILOT_REVIEWED/PASSED`. Promote no claim until the exact final-head native
 workflow produces its source manifest, toolchain identities, ELF symbol map,

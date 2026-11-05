@@ -8,6 +8,7 @@ import struct
 import os
 import subprocess
 from pathlib import Path
+from phase1_firered_ci_provenance import validate_game_save_evidence
 from phase1_firered_save_path_closure import validate_native_flash_trace
 
 TRACE_CASES = ("menu_navigation", "pallet_null_layout", "pallet_valid",
@@ -170,15 +171,26 @@ def main(a):
             assert before != after, ("No persisted game-controlled Flash write", before, after)
         record = {
             "case": name, "source_fixture": "synthetic_" + fixture,
+            "input_save_origin": "synthetic_fixture",
+            "output_save_origin": ("game_generated" if name == "pallet_save_dense_confirm"
+                                   else "unchanged_fixture_copy" if before == after else "unclassified"),
             "input_schedule_sha256": sha(schedule), "before_sha256": before,
             "after_sha256": after, "physical_save_changed": before != after,
-            "native": d, "game_initiated_save_verified": False,
+            "native": d, "game_initiated_save_verified": name == "pallet_save_dense_confirm",
             "cold_boot_player_state_verified": False,
             "overworld_input_path_observed": bool(d["field_get_player_input_hits"] and d["callback2_overworld_frames"]),
             "save_menu_index_two_attempted": name in ("pallet_save_navigation", "pallet_save_dense_confirm"),
             "interpretation": "Input-driven real-ROM observation. Changed Flash alone is insufficient to prove save callsite or complete game roundtrip.",
             "phase1_gate": "FAIL_INCOMPLETE", "independent_approval": False,
         }
+        provenance_path = root.parent / "results" / "workflow_provenance.json"
+        if provenance_path.exists():
+            provenance = json.loads(provenance_path.read_text())
+            record["workflow_run_provenance"] = {
+                key: provenance.get(key) for key in
+                ("run_id", "run_attempt", "event_name", "head_sha", "base_ref", "base_sha")
+            }
+        validate_game_save_evidence(record)
         (root / (name + ".json")).write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
         print(json.dumps({"case": name, "physical_save_changed": before != after,
                           "flash_changed_bytes": d["flash_changed_bytes"],
@@ -281,6 +293,9 @@ def main(a):
     cold_record = {
         "case": "cold_boot_game_generated",
         "source_fixture": "physical_flash_written_by_compiled_TrySavingData",
+        "input_save_origin": "game_generated_prior_process",
+        "output_save_origin": "unchanged_game_generated_save",
+        "game_initiated_save_verified": False,
         "before_sha256": cold_before, "after_sha256": sha(cold),
         "physical_save_changed": False, "native": cb,
         "slot1_sector_ids": ids,
@@ -293,11 +308,15 @@ def main(a):
         "game_initiated_save_verified": True,
         "phase1_gate": "FAIL_INCOMPLETE", "independent_approval": False,
     }
+    if provenance_path.exists():
+        cold_record["workflow_run_provenance"] = {
+            key: provenance.get(key) for key in
+            ("run_id", "run_attempt", "event_name", "head_sha", "base_ref", "base_sha")
+        }
     (root / "cold_boot_game_generated.json").write_text(
         json.dumps(cold_record, indent=2, sort_keys=True) + "\n")
     results.append(cold_record)
     dense["game_controlled_flash_and_coldboot_observed"] = True
-    dense["game_initiated_save_verified"] = True
     (root / "pallet_save_dense_confirm.json").write_text(
         json.dumps(dense, indent=2, sort_keys=True) + "\n")
     print(json.dumps({
