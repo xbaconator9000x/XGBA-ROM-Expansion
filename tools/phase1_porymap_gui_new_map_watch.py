@@ -19,9 +19,11 @@ TRUE=("original_mainwindow_qaction","original_newmapdialog_accept","new_map_unpe
 "permission_test_unprivileged","permission_os_denial_eacces","permission_qfile_open_denied",
 "save_error_dialog_reported","failed_commit_rejected","failed_commit_original_file_rollback",
 "failed_commit_old_bytes_preserved",
+"watcher_recovered_after_post_replace_append","watcher_recovered_after_permission_failure",
 "watcher_recovered_after_failed_commit","post_failure_watch_signal","file_changed_signal_tested",
 "permission_failure_injected")
-OBSERVED=("watcher_retained_after_failed_commit",)
+OBSERVED=("watcher_retained_after_failed_commit","watcher_retained_after_post_replace_append",
+          "watcher_retained_after_permission_failure")
 FALSE=("stock_gameplay","human_modal_interaction","fsync_failure_injected",
        "physical_durability_tested")
 COLD_TRUE=("fresh_process","original_mainwindow_project_reopened","new_map_reloaded",

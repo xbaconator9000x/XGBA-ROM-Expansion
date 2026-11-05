@@ -238,6 +238,11 @@ int main(int argc,char **argv) {
             QThread::msleep(10);
         }
         need(delivered>0,"post_replace_file_changed_signal");
+        const bool watcherRetainedAfterPostReplaceAppend=watcher->files().contains(json);
+        const bool watcherRecoveredAfterPostReplaceAppend=project->watchFile(json) &&
+                                                           watcher->files().contains(json);
+        need(watcherRecoveredAfterPostReplaceAppend,
+             "watcher_recovery_after_post_replace_append");
 
         const QString permissionName="XGBAPhase1PermissionDenied";
         const QString permissionJson=root+"/data/maps/"+permissionName+"/map.json";
@@ -340,6 +345,11 @@ int main(int argc,char **argv) {
         errorOk->click();
         QCoreApplication::processEvents();
         need(errorReported,"save_error_dialog_details");
+        const bool watcherRetainedAfterPermissionFailure=watcher->files().contains(json);
+        const bool watcherRecoveredAfterPermissionFailure=project->watchFile(json) &&
+                                                           watcher->files().contains(json);
+        need(watcherRecoveredAfterPermissionFailure,
+             "watcher_recovery_after_permission_failure");
         need(QDir(permissionDir).removeRecursively(),"permission_map_cleanup");
 
         const QByteArray beforeFailedCommit=bytes(json);
@@ -413,6 +423,10 @@ int main(int argc,char **argv) {
         out["failed_commit_old_bytes_preserved"]=true;
         out["watcher_retained_after_failed_commit"]=watcherRetainedAfterFailure;
         out["watcher_recovered_after_failed_commit"]=watcherRecoveredAfterFailure;
+        out["watcher_retained_after_post_replace_append"]=watcherRetainedAfterPostReplaceAppend;
+        out["watcher_recovered_after_post_replace_append"]=watcherRecoveredAfterPostReplaceAppend;
+        out["watcher_retained_after_permission_failure"]=watcherRetainedAfterPermissionFailure;
+        out["watcher_recovered_after_permission_failure"]=watcherRecoveredAfterPermissionFailure;
         out["post_failure_watch_signal"]=true;
         out["file_changed_signal_tested"]=true;
         out["stock_gameplay"]=false;
