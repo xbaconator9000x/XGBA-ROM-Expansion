@@ -9,6 +9,7 @@ from pathlib import Path
 import unittest
 
 from tools.copilot_check_integration_readiness import (
+    blocker_action_closure_report,
     blocker_triage_report,
     classify_main_base_ancestry,
     classify_stacked_dependency_observation,
@@ -58,6 +59,10 @@ DEPENDENCY_RECONCILIATION = (
 CLOSURE_INDEX = (
     Path(__file__).parent.parent
     / "development/copilot-integration/closure-index-20261105.json"
+)
+ACTION_CLOSURE = (
+    Path(__file__).parent.parent
+    / "development/copilot-integration/action-closure-20261105.json"
 )
 MANIFEST = (
     Path(__file__).parent.parent / "development/copilot-integration/manifest.json"
@@ -1116,6 +1121,108 @@ class IntegrationReadinessTests(unittest.TestCase):
         self.assertEqual(report["status"], "BLOCKED")
         self.assertEqual(report["blocker_count"], 44)
         self.assertEqual(report["findings"], [])
+
+    def _action_closure_inputs(self):
+        fixture = json.loads(ACTION_CLOSURE.read_text(encoding="utf-8"))
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        triage = json.loads(BLOCKER_TRIAGE.read_text(encoding="utf-8"))
+        receipt_path = (
+            "tests/fixtures/copilot-integration-readiness/"
+            "workflow_id_reconciliation_20261104.json"
+        )
+        receipts = json.loads((MANIFEST.parents[2] / receipt_path).read_text(encoding="utf-8"))
+        paths = (
+            "development/copilot-integration/manifest.json",
+            "development/copilot-integration/blocker-triage-20261104.json",
+            "development/copilot-integration/closure-index-20261105.json",
+            receipt_path,
+        )
+        hashes = {
+            path: hashlib.sha256((MANIFEST.parents[2] / path).read_bytes()).hexdigest()
+            for path in paths
+        }
+        return fixture, manifest, triage, receipts, hashes
+
+    def test_action_closure_reclassifies_only_verified_ids_and_keeps_both_blocked(self):
+        fixture, manifest, triage, receipts, hashes = self._action_closure_inputs()
+        report = blocker_action_closure_report(
+            fixture, manifest, triage, receipts, hashes
+        )
+        self.assertEqual(report["status"], "UNVERIFIED")
+        self.assertEqual(report["findings"], [])
+        self.assertEqual(report["selected_blocker_count"], 2)
+        self.assertEqual(report["selected_resolved_count"], 0)
+        self.assertEqual(report["selected_blocked_count"], 2)
+        self.assertEqual(report["phase1_gate"], "FAIL_INCOMPLETE")
+        self.assertEqual(report["independent_approvals"], 0)
+        self.assertEqual([row["blocker_id"] for row in report["rows"]], ["B043", "B044"])
+        self.assertTrue(all(
+            row["before_fingerprint_sha256"]
+            and row["current_evidence_fingerprint_sha256"]
+            and row["after_fingerprint_sha256"]
+            for row in report["rows"]
+        ))
+        self.assertEqual(report["validation_gate"]["repair_validation"], "UNVERIFIED")
+        self.assertFalse(report["validation_gate"]["push_event_configured"])
+
+    def test_action_closure_rejects_stale_or_unauthorized_success_provenance(self):
+        fixture, manifest, triage, receipts, hashes = self._action_closure_inputs()
+        mutations = (
+            ("missing ID", lambda value: value["rows"].pop(),
+             "scope must contain exactly B043 and B044"),
+            ("duplicate ID", lambda value: value["rows"].append(copy.deepcopy(value["rows"][0])),
+             "scope must contain exactly B043 and B044"),
+            ("wrong current head", lambda value: value["rows"][0]["current_run"].update(
+                head_sha="f" * 40
+            ), "not an exact-head action_required zero-job observation"),
+            ("stale run attempt", lambda value: value["rows"][0]["current_run"].update(
+                attempt=0
+            ), "not an exact-head action_required zero-job observation"),
+            ("missing required event", lambda value: value["rows"][1]["current_run"].update(
+                event="push"
+            ), "not an exact-head action_required zero-job observation"),
+            ("invented run identity", lambda value: value["rows"][1]["current_run"].update(
+                run_id=123
+            ), "not an exact-head action_required zero-job observation"),
+            ("nonzero jobs", lambda value: value["rows"][0]["current_run"].update(
+                job_count=1, job_ids=[999]
+            ), "not an exact-head action_required zero-job observation"),
+            ("fabricated run base", lambda value: value["rows"][0]["current_run"].update(
+                reported_run_base_sha="de2a775184d69411016ff683a8075af72ef4a58d"
+            ), "not an exact-head action_required zero-job observation"),
+            ("unauthorized pass", lambda value: value["rows"][0]["after"].update(
+                status="READY", resolved=True
+            ), "after-disposition clears or misstates"),
+            ("fake exact-head PR CI", lambda value: value["validation_gate"].update(
+                pr_conclusion="success", pr_job_count=1
+            ), "validation gate is missing, stale, or falsely green"),
+            ("fake push coverage", lambda value: value["validation_gate"].update(
+                push_event_configured=True, push_event_coverage="passed"
+            ), "validation gate is missing, stale, or falsely green"),
+            ("changed source hash", lambda value: value["source_hashes"].update({
+                "development/copilot-integration/manifest.json": "0" * 64
+            }), "source hash mismatch"),
+        )
+        for name, mutate, expected in mutations:
+            altered = copy.deepcopy(fixture)
+            with self.subTest(mutation=name):
+                mutate(altered)
+                report = blocker_action_closure_report(
+                    altered, manifest, triage, receipts, hashes
+                )
+                self.assertEqual(report["status"], "BLOCKED")
+                self.assertTrue(any(expected in finding for finding in report["findings"]))
+
+    def test_action_closure_cli_stays_unverified_until_pr_and_push_ci_execute(self):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            status = main(["--action-closure", str(ACTION_CLOSURE)])
+        self.assertEqual(status, 1)
+        report = json.loads(output.getvalue())
+        self.assertEqual(report["status"], "UNVERIFIED")
+        self.assertEqual(report["selected_blocked_count"], 2)
+        self.assertEqual(report["validation_gate"]["pr_conclusion"], "action_required")
+        self.assertEqual(report["validation_gate"]["pr_job_count"], 0)
 
 
 if __name__ == "__main__":

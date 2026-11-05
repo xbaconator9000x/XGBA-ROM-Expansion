@@ -1,0 +1,150 @@
+{
+  "schema": "copilot-integration-action-closure-v1",
+  "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+  "observed_at": "2026-11-05T06:42:10Z",
+  "scope": "B043 and B044 only; operational reclassification, not blocker resolution",
+  "source_hashes": {
+    "development/copilot-integration/manifest.json": "99accfcada883f086468e8f62c55a252ee24076dba777575584aaf15e60e52cf",
+    "development/copilot-integration/blocker-triage-20261104.json": "f87c618981d8006b30adc3178eeed68bc9ecb41801dded28ac0289cfbfc73659",
+    "development/copilot-integration/closure-index-20261105.json": "78f7a0c2af374b5c5e167af4ad1212b7a399c17d232cd39b7a53bb2e4668b784",
+    "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json": "37e2a5b7a007972a98986684701cd50626f46b5f0e3ec05e3c16ae3494b7df6f"
+  },
+  "policy": {
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "independent_approvals": 0,
+    "p0_approvals": 0,
+    "total_historical_approvals": 0,
+    "source_pins_changed": false,
+    "semantic_approval_from_ci": false
+  },
+  "rows": [
+    {
+      "blocker_id": "B043",
+      "pr_number": 35,
+      "before": {
+        "category": "unverified_workflow_id",
+        "status": "BLOCKED",
+        "manifest_head_sha": "d9a46bbdf50cf67a6b52322a68f56caace2aef7e",
+        "manifest_base_ref": "main",
+        "manifest_base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+        "observed_run_id": null
+      },
+      "prior_evidence": {
+        "workflow_id": 401590285,
+        "run_id": 41037997890,
+        "attempt": 2,
+        "event": "pull_request",
+        "conclusion": "success",
+        "head_sha": "9a31fb1dfa0a08f95a06a3c2bf8cd431aafccd29",
+        "jobs": 1,
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41037997890"
+      },
+      "current_pr": {
+        "head_sha": "88fffdf44c5c452abf6119f0ac0e7278d1704afc",
+        "base_ref": "main",
+        "base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/35"
+      },
+      "current_run": {
+        "workflow_id": 401590285,
+        "run_id": 41963795822,
+        "attempt": 1,
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "action_required",
+        "head_sha": "88fffdf44c5c452abf6119f0ac0e7278d1704afc",
+        "reported_run_base_sha": null,
+        "run_time_base_provenance": "unavailable_actions_api",
+        "job_count": 0,
+        "job_ids": [],
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41963795822"
+      },
+      "after": {
+        "category": "stale_manifest_head_and_action_required_zero_job",
+        "status": "BLOCKED",
+        "workflow_id": 401590285,
+        "head_matches_current_pr": true,
+        "head_matches_immutable_manifest": false,
+        "run_time_base_provenance": "unavailable",
+        "required_human_action": "A maintainer with write access must authorize the run in GitHub Actions, then inspect the executed jobs and steps. Do not retry or treat authorization as success.",
+        "action_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41963795822",
+        "resolved": false
+      }
+    },
+    {
+      "blocker_id": "B044",
+      "pr_number": 36,
+      "before": {
+        "category": "unverified_workflow_id",
+        "status": "BLOCKED",
+        "manifest_head_sha": "ce87e9d76d03599970596f3ebe159492f921f56c",
+        "manifest_base_ref": "main",
+        "manifest_base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+        "observed_run_id": null
+      },
+      "prior_evidence": {
+        "workflow_id": 401588179,
+        "run_id": 41891419634,
+        "attempt": 1,
+        "event": "pull_request",
+        "conclusion": "action_required",
+        "head_sha": "18de5e859392906e1da4aed800daf15e497d63c5",
+        "jobs": 0,
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41891419634"
+      },
+      "current_pr": {
+        "head_sha": "3d16cc671a80c531e789d53d467ce4961d3f436c",
+        "base_ref": "main",
+        "base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/36"
+      },
+      "current_run": {
+        "workflow_id": 401588179,
+        "run_id": 41958394595,
+        "attempt": 1,
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "action_required",
+        "head_sha": "3d16cc671a80c531e789d53d467ce4961d3f436c",
+        "reported_run_base_sha": null,
+        "run_time_base_provenance": "unavailable_actions_api",
+        "job_count": 0,
+        "job_ids": [],
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41958394595"
+      },
+      "after": {
+        "category": "stale_manifest_head_and_action_required_zero_job",
+        "status": "BLOCKED",
+        "workflow_id": 401588179,
+        "head_matches_current_pr": true,
+        "head_matches_immutable_manifest": false,
+        "run_time_base_provenance": "unavailable",
+        "required_human_action": "A maintainer with write access must authorize the run in GitHub Actions, then inspect the executed jobs and steps. Do not retry or treat authorization as success.",
+        "action_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41958394595",
+        "resolved": false
+      }
+    }
+  ],
+  "validation_gate": {
+    "pr37_head_sha": "e7a7bb76540dc556d356cc9f5046988eaa5f4487",
+    "pr_workflow_id": 401606059,
+    "pr_run_id": 41970778177,
+    "pr_run_attempt": 1,
+    "pr_event": "pull_request",
+    "pr_conclusion": "action_required",
+    "pr_job_count": 0,
+    "pr_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41970778177",
+    "push_event_configured": false,
+    "push_event_coverage": "not_configured",
+    "repair_validation": "UNVERIFIED",
+    "required_action": "Authorize the exact-head PR workflow, then verify actual jobs. The existing workflow has no push trigger; do not infer push coverage."
+  },
+  "remaining_blockers": {
+    "original_blocker_count": 44,
+    "selected_blocker_count": 2,
+    "selected_resolved_count": 0,
+    "selected_blocked_count": 2,
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "independent_approvals": 0
+  }
+}

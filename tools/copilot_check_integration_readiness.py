@@ -1846,6 +1846,246 @@ def closure_index_report(index, manifest, triage, package_documents, actual_hash
     }
 
 
+def blocker_action_closure_report(fixture, manifest, triage, workflow_receipts, actual_hashes):
+    """Validate current action dispositions for the selected workflow-ID blockers."""
+    findings = []
+    if not isinstance(fixture, dict):
+        fixture = {}
+        findings.append("action-closure evidence must be a JSON object")
+    if fixture.get("schema") != "copilot-integration-action-closure-v1":
+        findings.append("action-closure evidence schema is missing or unsupported")
+    if fixture.get("repository") != "xbaconator9000x/XGBA-ROM-Expansion":
+        findings.append("action-closure repository identity does not match")
+    if not isinstance(manifest, dict) or not isinstance(triage, dict):
+        findings.append("manifest and immutable blocker triage are required")
+        manifest = manifest if isinstance(manifest, dict) else {}
+        triage = triage if isinstance(triage, dict) else {}
+    source_hashes = fixture.get("source_hashes")
+    if not isinstance(source_hashes, dict) or not isinstance(actual_hashes, dict):
+        findings.append("action-closure source hashes are missing")
+        source_hashes = source_hashes if isinstance(source_hashes, dict) else {}
+        actual_hashes = actual_hashes if isinstance(actual_hashes, dict) else {}
+    if set(source_hashes) != set(actual_hashes):
+        findings.append("action-closure source hash set does not match checked sources")
+    for path, digest in source_hashes.items():
+        if (
+            not isinstance(digest, str)
+            or not re.fullmatch(r"[0-9a-f]{64}", digest)
+            or actual_hashes.get(path) != digest
+        ):
+            findings.append("action-closure source hash mismatch: %s" % path)
+
+    original_rows = {
+        row.get("id"): row
+        for row in triage.get("blockers", [])
+        if isinstance(row, dict) and isinstance(row.get("id"), str)
+    }
+    manifest_rows = {
+        row.get("number"): row
+        for row in manifest.get("pull_requests", [])
+        if isinstance(row, dict) and isinstance(row.get("number"), int)
+    }
+    receipt_rows = {
+        row.get("pr"): row
+        for row in workflow_receipts.get("rows", [])
+        if isinstance(row, dict) and isinstance(row.get("pr"), int)
+    } if isinstance(workflow_receipts, dict) else {}
+    rows = fixture.get("rows")
+    if not isinstance(rows, list) or len(rows) != 2:
+        findings.append("action-closure scope must contain exactly B043 and B044")
+        rows = rows if isinstance(rows, list) else []
+    if [row.get("blocker_id") for row in rows if isinstance(row, dict)] != [
+        "B043", "B044"
+    ]:
+        findings.append("action-closure rows must be ordered B043, B044 exactly once")
+
+    report_rows = []
+    for row in rows:
+        if not isinstance(row, dict):
+            findings.append("action-closure row is malformed")
+            continue
+        blocker_id = row.get("blocker_id")
+        original = original_rows.get(blocker_id)
+        if original is None:
+            findings.append("%s is absent from immutable blocker triage" % blocker_id)
+            continue
+        number = original.get("pr_number")
+        if (
+            row.get("pr_number") != number
+            or original.get("category") != "unverified_workflow_id"
+            or row.get("before", {}).get("category") != original.get("category")
+            or row.get("before", {}).get("status") != "BLOCKED"
+            or row.get("before", {}).get("manifest_head_sha")
+            != original.get("manifest_head_sha")
+            or row.get("before", {}).get("manifest_base_sha")
+            != original.get("manifest_base_sha")
+            or row.get("before", {}).get("manifest_base_ref")
+            != original.get("manifest_base_ref")
+            or row.get("before", {}).get("observed_run_id")
+            != original.get("observed_run_id")
+        ):
+            findings.append("%s before-disposition differs from its immutable triage row" % blocker_id)
+        pr_manifest = manifest_rows.get(number)
+        if not isinstance(pr_manifest, dict):
+            findings.append("%s has no pinned manifest row" % blocker_id)
+            continue
+        workflow_ids = manifest.get("required_workflow_ids", {}).get(str(number))
+        workflow_id = row.get("current_run", {}).get("workflow_id")
+        if (
+            not isinstance(workflow_ids, list)
+            or len(workflow_ids) != 1
+            or workflow_ids[0] != workflow_id
+        ):
+            findings.append("%s workflow ID is not verified by the pinned manifest" % blocker_id)
+        receipt = receipt_rows.get(number)
+        prior = row.get("prior_evidence")
+        if (
+            not isinstance(receipt, dict)
+            or not isinstance(prior, dict)
+            or receipt.get("workflow_id") != workflow_id
+            or receipt.get("run", {}).get("id") != prior.get("run_id")
+            or receipt.get("run", {}).get("head") != prior.get("head_sha")
+        ):
+            findings.append("%s historical evidence does not match the pinned reconciliation" % blocker_id)
+
+        current_pr = row.get("current_pr")
+        current_run = row.get("current_run")
+        after = row.get("after")
+        if not isinstance(current_pr, dict) or not isinstance(current_run, dict):
+            findings.append("%s current PR/run evidence is missing" % blocker_id)
+            continue
+        manifest_head = (pr_manifest.get("head") or {}).get("sha")
+        run_id = current_run.get("run_id")
+        expected_run_url = (
+            "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/%s"
+            % run_id
+        )
+        current_valid = (
+            current_pr.get("url")
+            == "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/%s" % number
+            and isinstance(current_pr.get("head_sha"), str)
+            and SHA1.fullmatch(current_pr["head_sha"])
+            and isinstance(current_pr.get("base_sha"), str)
+            and SHA1.fullmatch(current_pr["base_sha"])
+            and current_run.get("workflow_id") == workflow_id
+            and isinstance(run_id, int) and not isinstance(run_id, bool)
+            and isinstance(current_run.get("attempt"), int)
+            and not isinstance(current_run.get("attempt"), bool)
+            and current_run.get("attempt") > 0
+            and current_run.get("event") == "pull_request"
+            and current_run.get("status") == "completed"
+            and current_run.get("conclusion") == "action_required"
+            and current_run.get("head_sha") == current_pr.get("head_sha")
+            and current_run.get("reported_run_base_sha") is None
+            and current_run.get("run_time_base_provenance")
+            == "unavailable_actions_api"
+            and current_run.get("job_count") == 0
+            and current_run.get("job_ids") == []
+            and current_run.get("url") == expected_run_url
+            and current_pr.get("base_ref") == (pr_manifest.get("base") or {}).get("ref")
+            and current_pr.get("base_sha") == (pr_manifest.get("base") or {}).get("sha")
+            and current_pr.get("head_sha") != manifest_head
+        )
+        if not current_valid:
+            findings.append("%s current run is not an exact-head action_required zero-job observation" % blocker_id)
+        expected_after = {
+            "category": "stale_manifest_head_and_action_required_zero_job",
+            "status": "BLOCKED",
+            "workflow_id": workflow_id,
+            "head_matches_current_pr": current_run.get("head_sha")
+            == current_pr.get("head_sha"),
+            "head_matches_immutable_manifest": current_run.get("head_sha")
+            == manifest_head,
+            "run_time_base_provenance": "unavailable",
+            "required_human_action": (
+                "A maintainer with write access must authorize the run in GitHub Actions, "
+                "then inspect the executed jobs and steps. Do not retry or treat "
+                "authorization as success."
+            ),
+            "action_url": expected_run_url,
+            "resolved": False,
+        }
+        if after != expected_after:
+            findings.append("%s after-disposition clears or misstates an unresolved action" % blocker_id)
+        before_fingerprint = hashlib.sha256(json.dumps(
+            original, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")).hexdigest()
+        evidence_fingerprint = hashlib.sha256(json.dumps(
+            {"current_pr": current_pr, "current_run": current_run},
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")).hexdigest()
+        after_fingerprint = hashlib.sha256(json.dumps(
+            after, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")).hexdigest()
+        report_rows.append({
+            "blocker_id": blocker_id,
+            "pr_number": number,
+            "source_refs": original.get("source_refs", []),
+            "before": row.get("before"),
+            "prior_evidence": prior,
+            "after": after,
+            "before_fingerprint_sha256": before_fingerprint,
+            "current_evidence_fingerprint_sha256": evidence_fingerprint,
+            "after_fingerprint_sha256": after_fingerprint,
+            "current_run_url": current_run.get("url"),
+            "current_pr_url": current_pr.get("url"),
+            "status": "BLOCKED",
+        })
+
+    gate = fixture.get("validation_gate")
+    if not isinstance(gate, dict) or any((
+        gate.get("pr37_head_sha") != "e7a7bb76540dc556d356cc9f5046988eaa5f4487",
+        gate.get("pr_workflow_id") != 401606059,
+        gate.get("pr_run_id") != 41970778177,
+        gate.get("pr_run_attempt") != 1,
+        gate.get("pr_event") != "pull_request",
+        gate.get("pr_conclusion") != "action_required",
+        gate.get("pr_job_count") != 0,
+        gate.get("push_event_configured") is not False,
+        gate.get("push_event_coverage") != "not_configured",
+        gate.get("repair_validation") != "UNVERIFIED",
+        gate.get("pr_url")
+        != "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41970778177",
+    )):
+        findings.append("exact-head PR/push validation gate is missing, stale, or falsely green")
+    expected_policy = {
+        "phase1_gate": "FAIL_INCOMPLETE",
+        "independent_approvals": 0,
+        "p0_approvals": 0,
+        "total_historical_approvals": 0,
+        "source_pins_changed": False,
+        "semantic_approval_from_ci": False,
+    }
+    if fixture.get("policy") != expected_policy:
+        findings.append("action-closure policy changes protected Phase 1 state")
+    remaining = fixture.get("remaining_blockers")
+    if not isinstance(remaining, dict) or any((
+        remaining.get("original_blocker_count") != 44,
+        remaining.get("selected_blocker_count") != 2,
+        remaining.get("selected_resolved_count") != 0,
+        remaining.get("selected_blocked_count") != 2,
+        remaining.get("phase1_gate") != "FAIL_INCOMPLETE",
+        remaining.get("independent_approvals") != 0,
+    )):
+        findings.append("remaining blocker totals are missing or inconsistent")
+    return {
+        "status": "UNVERIFIED" if not findings else "BLOCKED",
+        "observed_at": fixture.get("observed_at"),
+        "source_hashes": actual_hashes,
+        "selected_blocker_count": len(report_rows),
+        "selected_resolved_count": 0,
+        "selected_blocked_count": len(report_rows),
+        "phase1_gate": "FAIL_INCOMPLETE",
+        "independent_approvals": 0,
+        "repair_validation": "UNVERIFIED",
+        "findings": sorted(set(findings)),
+        "rows": report_rows,
+        "validation_gate": gate,
+        "remaining_blockers": remaining,
+    }
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
@@ -1879,10 +2119,51 @@ def main(argv=None):
         type=Path,
         help="validate the deduplicated B001-B044 evidence index without network access",
     )
+    parser.add_argument(
+        "--action-closure",
+        type=Path,
+        help="validate the bounded before/after workflow-action closure evidence offline",
+    )
     args = parser.parse_args(argv)
     try:
         manifest_bytes = args.manifest.read_bytes()
         manifest = json.loads(manifest_bytes.decode("utf-8"))
+        if args.action_closure:
+            if (
+                args.snapshot or args.offline or args.live_observations
+                or args.triage_json or args.dependency_observations
+                or args.closure_index
+            ):
+                parser.error("--action-closure is a standalone offline mode")
+            source_paths = {
+                "development/copilot-integration/manifest.json":
+                    ROOT / "development/copilot-integration/manifest.json",
+                "development/copilot-integration/blocker-triage-20261104.json":
+                    ROOT / "development/copilot-integration/blocker-triage-20261104.json",
+                "development/copilot-integration/closure-index-20261105.json":
+                    ROOT / "development/copilot-integration/closure-index-20261105.json",
+                "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json":
+                    ROOT / "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json",
+            }
+            triage = json.loads(source_paths[
+                "development/copilot-integration/blocker-triage-20261104.json"
+            ].read_text(encoding="utf-8"))
+            closure_index = json.loads(source_paths[
+                "development/copilot-integration/closure-index-20261105.json"
+            ].read_text(encoding="utf-8"))
+            workflow_receipts = json.loads(source_paths[
+                "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json"
+            ].read_text(encoding="utf-8"))
+            actual_hashes = {
+                path: hashlib.sha256(source.read_bytes()).hexdigest()
+                for path, source in source_paths.items()
+            }
+            fixture = json.loads(args.action_closure.read_text(encoding="utf-8"))
+            report = blocker_action_closure_report(
+                fixture, manifest, triage, workflow_receipts, actual_hashes
+            )
+            print(json.dumps(report, indent=2, sort_keys=True))
+            return 1 if report["status"] != "READY" else 0
         if args.closure_index:
             if args.snapshot or args.offline or args.live_observations or args.triage_json or args.dependency_observations:
                 parser.error("--closure-index is a standalone offline mode")
