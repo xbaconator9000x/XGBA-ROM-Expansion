@@ -16,7 +16,8 @@ TRUE=("original_mainwindow_qaction","original_newmapdialog_accept","new_map_unpe
 "atomic_replace_committed","atomic_replace_file_changed_signal",
 "watcher_rearmed_after_atomic_replace","post_replace_file_changed_signal",
 "permission_denied_first_save_rejected","permission_failure_preserved_unpersisted_editor_map",
-"permission_test_unprivileged","save_error_dialog_reported","failed_commit_rejected","failed_commit_old_bytes_preserved",
+"permission_test_unprivileged","permission_os_denial_eacces","permission_qfile_open_denied",
+"save_error_dialog_reported","failed_commit_rejected","failed_commit_old_bytes_preserved",
 "watcher_retained_after_failed_commit","post_failure_watch_signal","file_changed_signal_tested",
 "permission_failure_injected")
 FALSE=("stock_gameplay","human_modal_interaction","fsync_failure_injected",

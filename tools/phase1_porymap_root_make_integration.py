@@ -13,6 +13,12 @@ PINS = {
   "tools/mapjson/mapjson.h":"6e961a28ec0e2c6a017e7dda2e9d81f07e3e3ceb",
   "tools/mapjson/json11.cpp":"fcacdbeb39c3110e4564f57a8f26b7bb34678a7e",
   "tools/mapjson/json11.h":"c04c4362f9784006c7a45ad04729fab1c77dd1d9",
+  "json_data_rules.mk":"eec18467a57cce082a4307b3d667c4c4448b1b3a",
+  "tools/jsonproc/Makefile":"653d585679acd560b5965aa42c8f22b4e493aae1",
+  "tools/jsonproc/jsonproc.cpp":"68b1c73ba454c9c19c6f307a129e51457c45f030",
+  "tools/jsonproc/jsonproc.h":"575fb3756c0351234a5d4f40badf67033c04ed20",
+  "tools/jsonproc/inja.hpp":"5b469745fb30a1c92d46929b7c819ec38effc0cf",
+  "tools/jsonproc/nlohmann/json.hpp":"33a91164c7979ed8475e51fd107f900af4172306",
   "tools/preproc/preproc.cpp":"20c2de51b635a5d59f2b4e1ecd93d8fc2748ebe1",
   "tools/preproc/Makefile":"606318944c63673ec2488bb2f89712a1cc4e4950"}),
  "poryscript": ("c32481161c767b25a3425fa9f1f8729927ff3d55",{
@@ -33,6 +39,7 @@ LAYOUTS_RULE="$(LAYOUTS_OUTDIR)/layouts.inc $(LAYOUTS_OUTDIR)/layouts_table.inc 
 LAYOUTS_RECIPE="$(MAPJSON) layouts firered $< $(LAYOUTS_OUTDIR) $(INCLUDECONSTS_OUTDIR)"
 GENERATED_HEADER_TARGETS=[MAP_GROUPS_TARGET,LAYOUTS_TARGET,MAP_EVENT_IDS_TARGET]
 MAPJSON_BUILD_RULE="mapjson$(EXE): $(SRCS) $(HEADERS)"
+JSONPROC_BUILD_RULE="jsonproc$(EXE): $(SRCS) $(HEADERS)"
 def check(x,msg):
  if not x: raise RuntimeError(msg)
 def cmd(args,cwd=None,ok=True):
@@ -51,7 +58,8 @@ def reject_tool_build_failure(fr):
    check(marker in str(error),"tool build failure diagnostic missing")
    return True
   raise RuntimeError("pinned original preproc build failure was accepted")
-def source_contract(fr,ps,pm,map_rules,mapjson_make,event_objects,event_source):
+def source_contract(fr,ps,pm,map_rules,mapjson_make,json_rules,jsonproc_make,
+                    jsonproc_source,event_objects,event_source):
  check("AUTO_GEN_TARGETS :=" in fr and "generated: $(AUTO_GEN_TARGETS)" in fr,"root generated target drift")
  check("$(DATA_ASM_BUILDDIR)/%.o: $(DATA_ASM_SUBDIR)/%.s" in fr,"original data rule drift")
  check("$(PREPROC) $< charmap.txt | $(CPP) $(INCLUDE_SCANINC_ARGS) - | $(PREPROC) -ie $< charmap.txt | $(AS) $(ASFLAGS) -o $@" in fr,"native recipe drift")
@@ -70,6 +78,16 @@ def source_contract(fr,ps,pm,map_rules,mapjson_make,event_objects,event_source):
        "original mapjson build rule drift")
  check("SRCS := json11.cpp mapjson.cpp" in mapjson_make and "HEADERS := mapjson.h" in mapjson_make,
        "original mapjson source set drift")
+ check("include json_data_rules.mk" in fr and
+       "AUTO_GEN_TARGETS += $(DATA_SRC_SUBDIR)/wild_encounters.h" in json_rules and
+       "$(JSONPROC) $^ $@" in json_rules,
+       "original jsonproc generated-target dependency drift")
+ check(JSONPROC_BUILD_RULE in jsonproc_make and
+       "$(CXX) $(CXXFLAGS) $(INCLUDES) $(SRCS) -o $@ $(LDFLAGS)" in jsonproc_make and
+       "SRCS := jsonproc.cpp" in jsonproc_make,
+       "original jsonproc build rule drift")
+ check("#include <inja.hpp>" in jsonproc_source,
+       "original jsonproc template dependency drift")
  check('#include "constants/map_event_ids.h"' in event_objects,
        "original event object generated-header dependency drift")
  check('#include "constants/event_objects.h"' in event_source,
@@ -94,8 +112,12 @@ def main():
  readme=(ps/"README.md").read_text();project=(pm/"src/project.cpp").read_text()
  map_rules=(fr/"map_data_rules.mk").read_text()
  mapjson_make=(fr/"tools/mapjson/Makefile").read_text()
+ json_rules=(fr/"json_data_rules.mk").read_text()
+ jsonproc_make=(fr/"tools/jsonproc/Makefile").read_text()
+ jsonproc_source=(fr/"tools/jsonproc/jsonproc.cpp").read_text()
  event_objects=(fr/"include/constants/event_objects.h").read_text()
- source_contract(make,readme,project,map_rules,mapjson_make,event_objects,event)
+ source_contract(make,readme,project,map_rules,mapjson_make,json_rules,jsonproc_make,
+                 jsonproc_source,event_objects,event)
  mutations=[(0,"AUTO_GEN_TARGETS :=","AUTO_GEN_TARGETS ="),
   (0,"generated: $(AUTO_GEN_TARGETS)","generated:"),
   (0,"$(PREPROC) -ie $< charmap.txt","cat"),
@@ -115,13 +137,19 @@ def main():
   (3,LAYOUTS_RECIPE,LAYOUTS_RECIPE.replace("layouts firered","wrong_mode firered")),
   (4,MAPJSON_BUILD_RULE,"mapjson$(EXE):"),
   (4,"$(CXX) $(CXXFLAGS) $(SRCS) -o $@ $(LDFLAGS)","false"),
-  (5,'#include "constants/map_event_ids.h"',""),
-  (6,'#include "constants/event_objects.h"',""),
-  (6,'#include "constants/layouts.h',"")]
+  (5,"AUTO_GEN_TARGETS += $(DATA_SRC_SUBDIR)/wild_encounters.h","AUTO_GEN_TARGETS +="),
+  (5,"$(JSONPROC) $^ $@","false"),
+  (6,JSONPROC_BUILD_RULE,"jsonproc$(EXE):"),
+  (6,"$(CXX) $(CXXFLAGS) $(INCLUDES) $(SRCS) -o $@ $(LDFLAGS)","false"),
+  (7,"#include <inja.hpp>",""),
+  (8,'#include "constants/map_event_ids.h"',""),
+  (9,'#include "constants/event_objects.h"',""),
+  (9,'#include "constants/layouts.h',"")]
  for i,(n,old,new) in enumerate(mutations):
-  sources=[make,readme,project,map_rules,mapjson_make,event_objects,event]
+  sources=[make,readme,project,map_rules,mapjson_make,json_rules,jsonproc_make,
+           jsonproc_source,event_objects,event]
   check(old in sources[n],"mutation anchor missing "+str(i))
-  sources[n]=sources[n].replace(old,new) if i==2 else sources[n].replace(old,new,1)
+  sources[n]=sources[n].replace(old,new)
   try: source_contract(*sources)
   except RuntimeError: continue
   raise RuntimeError("source mutation escaped "+str(i))
@@ -132,6 +160,7 @@ def main():
  injected_failure_rejected=reject_tool_build_failure(fr)
  cmd(["make","-C",str(fr/"tools/preproc"),"-j2"])
  cmd(["make","-C",str(fr/"tools/mapjson"),"-j2"])
+ cmd(["make","-C",str(fr/"tools/jsonproc"),"-j2"])
  probe=fr/"data/maps/XGBAProbe";probe.mkdir(parents=True,exist_ok=True)
  inp=probe/"scripts.pory";inp.write_text("mapscripts XGBAProbe_MapScripts {}\n")
  inc=probe/"scripts.inc";obj=fr/"build/firered/data/event_scripts.o"
@@ -214,6 +243,7 @@ def main():
    "incidental_root_tool_build_disabled_for_test_targets":True,
    "original_preproc_build_failure_rejected":injected_failure_rejected,
    "pinned_mapjson_tool_built":True,
+   "pinned_jsonproc_tool_built":True,
    "map_event_ids_generated_by_original_root_rule":True,
    "root_generated_target_executed":True,
    "generated_headers_command":"make NODEP=1 SETUP_PREREQS=0 generated",
@@ -226,6 +256,7 @@ def main():
    "map_event_ids_input_manifest_sha256":header_provenance[MAP_EVENT_IDS_TARGET]["input_manifest_sha256"],
    "map_event_ids_sha256":header_provenance[MAP_EVENT_IDS_TARGET]["sha256"],
    "mapjson_tool_sha256":hashlib.sha256((fr/"tools/mapjson/mapjson").read_bytes()).hexdigest(),
+   "jsonproc_tool_sha256":hashlib.sha256((fr/"tools/jsonproc/jsonproc").read_bytes()).hexdigest(),
    "absent_map_event_header_regenerated":absent_headers_regenerated,
    "stale_map_event_header_regenerated":stale_headers_regenerated,
    "generated_map_event_ids_consumed_by_original_object":True,
@@ -244,7 +275,8 @@ def main():
          "unrelated root tool bootstrap was not disabled")
    check(d["original_preproc_build_failure_rejected"] is True,
          "original required-tool failure was not rejected")
-   for k in ("pinned_mapjson_tool_built","map_event_ids_generated_by_original_root_rule",
+   for k in ("pinned_mapjson_tool_built","pinned_jsonproc_tool_built",
+     "map_event_ids_generated_by_original_root_rule",
      "root_generated_target_executed","absent_generated_headers_regenerated",
      "stale_generated_headers_regenerated","absent_map_event_header_regenerated",
      "stale_map_event_header_regenerated",
@@ -274,7 +306,8 @@ def main():
          d["map_event_ids_sha256"]==map_event_provenance["sha256"],
          "map-event provenance aliases disagree")
    check(d["map_event_ids_input_count"]>0,"map event generation inputs missing")
-   for k in ("map_event_ids_input_manifest_sha256","map_event_ids_sha256","mapjson_tool_sha256"):
+   for k in ("map_event_ids_input_manifest_sha256","map_event_ids_sha256",
+             "mapjson_tool_sha256","jsonproc_tool_sha256"):
     check(re.fullmatch(r"[0-9a-f]{64}",d[k]) is not None,"map event provenance missing "+k)
    check(d["evidence_mutations_rejected"]==len(negatives)+1,"evidence negative drift")
    for k in ("root_generated_target_discovered","original_root_event_object_compiled",
@@ -295,6 +328,7 @@ def main():
    {"root_generated_target_executed":False},{"absent_generated_headers_regenerated":False},
    {"stale_generated_headers_regenerated":False},{"generated_header_provenance":{}},
    {"pinned_mapjson_tool_built":False},{"map_event_ids_generated_by_original_root_rule":False},
+   {"pinned_jsonproc_tool_built":False},{"jsonproc_tool_sha256":""},
    {"absent_map_event_header_regenerated":False},{"stale_map_event_header_regenerated":False},
    {"generated_map_event_ids_consumed_by_original_object":False},{"map_event_ids_input_count":0},
    {"map_event_ids_input_manifest_sha256":""},{"map_event_ids_sha256":""},

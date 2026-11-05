@@ -31,10 +31,13 @@
 #include <QStandardPaths>
 #include <iostream>
 #include <cstdlib>
+#include <cerrno>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 static void need(bool b, const char *why) {
-    if (!b) { std::cerr << "FAIL " << why << std::endl; std::exit(3); }
+    if (!b) { std::cerr << "FAIL " << why << std::endl; std::_Exit(3); }
 }
 static QByteArray bytes(const QString &p) {
     QFile f(p); need(f.open(QIODevice::ReadOnly), "read_file");
@@ -264,6 +267,16 @@ int main(int argc,char **argv) {
              !permissionMap->isPersistedToFile(),"permission_map_unpersisted");
         const QString permissionDir=QFileInfo(permissionJson).absolutePath();
         need(QDir().mkpath(permissionDir),"permission_map_directory");
+        const QByteArray permissionDirBytes=QFile::encodeName(permissionDir);
+        const QByteArray permissionProbeBytes=QFile::encodeName(permissionJson);
+        const QByteArray writableControlBytes=
+            QFile::encodeName(permissionDir+"/permission-write-control");
+        int writableControl=::open(writableControlBytes.constData(),
+                                   O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC,0600);
+        need(writableControl>=0,"permission_writable_control_open");
+        ::close(writableControl);
+        need(::unlink(writableControlBytes.constData())==0,
+             "permission_writable_control_cleanup");
         const auto writablePermissions=QFileInfo(permissionDir).permissions();
         const auto readOnlyDirectory=QFile::ReadOwner|QFile::ExeOwner|
                                      QFile::ReadGroup|QFile::ExeGroup|
@@ -271,9 +284,37 @@ int main(int argc,char **argv) {
         need(geteuid()!=0,"permission_test_requires_unprivileged_process");
         need(QFile::setPermissions(permissionDir,readOnlyDirectory),
              "permission_denial_inject");
+        struct stat permissionDirStat {};
+        need(::stat(permissionDirBytes.constData(),&permissionDirStat)==0 &&
+             permissionDirStat.st_uid==geteuid() &&
+             (permissionDirStat.st_mode&S_IWUSR)==0,
+             "permission_denial_mode_effective");
+        errno=0;
+        int deniedFd=::open(permissionProbeBytes.constData(),
+                            O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC,0600);
+        const int permissionErrno=errno;
+        if (deniedFd>=0) {
+            ::close(deniedFd);
+            ::unlink(permissionProbeBytes.constData());
+        }
+        std::cerr << "permission probe: euid=" << geteuid()
+                  << " owner=" << permissionDirStat.st_uid
+                  << " mode=" << std::oct << (permissionDirStat.st_mode&0777) << std::dec
+                  << " open_errno=" << permissionErrno
+                  << " expected_EACCES=" << EACCES << std::endl;
+        need(deniedFd<0 && permissionErrno==EACCES,
+             "permission_os_open_must_fail_eacces");
         QFile deniedProbe(permissionJson);
-        need(!deniedProbe.open(QIODevice::WriteOnly) &&
-             deniedProbe.error()==QFileDevice::PermissionsError,
+        const bool qfileOpenDenied=!deniedProbe.open(QIODevice::WriteOnly);
+        const auto qfilePermissionError=deniedProbe.error();
+        if (!qfileOpenDenied) {
+            deniedProbe.close();
+            QFile::remove(permissionJson);
+        }
+        std::cerr << "QFile permission probe: opened=" << !qfileOpenDenied
+                  << " error=" << static_cast<int>(qfilePermissionError)
+                  << " error_string=" << deniedProbe.errorString().toStdString() << std::endl;
+        need(qfileOpenDenied && qfilePermissionError!=QFileDevice::NoError,
              "permission_denial_probe");
         need(!QFileInfo::exists(permissionJson),"permission_map_not_yet_persisted");
         save->trigger();
@@ -348,6 +389,8 @@ int main(int argc,char **argv) {
         out["permission_denied_first_save_rejected"]=true;
         out["permission_failure_preserved_unpersisted_editor_map"]=true;
         out["permission_test_unprivileged"]=geteuid()!=0;
+        out["permission_os_denial_eacces"]=permissionErrno==EACCES;
+        out["permission_qfile_open_denied"]=qfileOpenDenied;
         out["save_error_dialog_reported"]=true;
         out["failed_commit_rejected"]=true;
         out["failed_commit_old_bytes_preserved"]=true;

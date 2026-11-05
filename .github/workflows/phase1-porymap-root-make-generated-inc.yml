@@ -56,6 +56,12 @@ jobs:
           git -C pinned-firered hash-object tools/mapjson/mapjson.h | grep -Fx 6e961a28ec0e2c6a017e7dda2e9d81f07e3e3ceb
           git -C pinned-firered hash-object tools/mapjson/json11.cpp | grep -Fx fcacdbeb39c3110e4564f57a8f26b7bb34678a7e
           git -C pinned-firered hash-object tools/mapjson/json11.h | grep -Fx c04c4362f9784006c7a45ad04729fab1c77dd1d9
+          git -C pinned-firered hash-object json_data_rules.mk | grep -Fx eec18467a57cce082a4307b3d667c4c4448b1b3a
+          git -C pinned-firered hash-object tools/jsonproc/Makefile | grep -Fx 653d585679acd560b5965aa42c8f22b4e493aae1
+          git -C pinned-firered hash-object tools/jsonproc/jsonproc.cpp | grep -Fx 68b1c73ba454c9c19c6f307a129e51457c45f030
+          git -C pinned-firered hash-object tools/jsonproc/jsonproc.h | grep -Fx 575fb3756c0351234a5d4f40badf67033c04ed20
+          git -C pinned-firered hash-object tools/jsonproc/inja.hpp | grep -Fx 5b469745fb30a1c92d46929b7c819ec38effc0cf
+          git -C pinned-firered hash-object tools/jsonproc/nlohmann/json.hpp | grep -Fx 33a91164c7979ed8475e51fd107f900af4172306
           mkdir -p phase1-evidence
           python3 -m py_compile tools/phase1_porymap_root_make_integration.py
           python3 tools/phase1_porymap_root_make_integration.py \

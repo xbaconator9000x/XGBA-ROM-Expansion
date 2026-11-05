@@ -68,3 +68,18 @@ Pinned `data/event_scripts.s` also includes the generated `constants/layouts.h`.
 The harness now builds the pinned `preproc` and `mapjson` tools, then invokes the original root target `make NODEP=1 SETUP_PREREQS=0 generated` before the event-object build. The pinned root target covers all three original generated headers: `map_groups.h`, `layouts.h`, and `map_event_ids.h`. It requires all three to be initially absent, deletes them and requires byte-identical regeneration, then makes each older than its JSON input and requires the original target to regenerate it. The evidence records each generated-header SHA-256, its input count and path/content manifest SHA-256, plus the tool identity. Source checks and scoped source-mutation controls now include the groups and layouts target/rule/recipe and the event-script `layouts.h` include. The existing required-preproc compiler-failure negative remains active; no generated contents are hand-authored and no pinned source is modified.
 
 This is the harness repair and source-grounded diagnosis, not a successful runtime result. The failed run uploaded no root-Make evidence artifact. Exact-head push run [#41930521496](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41930521496) also failed at the same `layouts.h` prerequisite. Runtime verification of the expanded prerequisite chain requires new exact-head push and PR jobs. Phase 1 remains FAIL_INCOMPLETE with 0/14,834 independent approvals.
+
+## 2026-11-05 original `jsonproc` tool prerequisite (CI pending)
+
+The expanded original `generated` target reached the JSON-backed FireRed targets and then failed in exact-head PR run [#41951099483](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41951099483), attempt 2, job `127105399134`, step 7:
+
+```text
+tools/jsonproc/jsonproc: No such file or directory
+make: *** [json_data_rules.mk:6: src/data/wild_encounters.h] Error 127
+```
+
+This is another omitted prerequisite in the test setup. The original root `make_tools.mk` includes `jsonproc` among its tools, while the targeted harness had built only `preproc` and `mapjson`. The actual root `generated` target also includes JSON-derived headers from `json_data_rules.mk`; it correctly invokes the original `$(JSONPROC)` recipe and failed because the harness had not built that executable.
+
+The harness now builds the unchanged pinned `tools/jsonproc` with its original Makefile (`make -C tools/jsonproc -j2`) after `preproc` and `mapjson` and before invoking root `generated`. It pins the connected `json_data_rules.mk`, JSONPROC Makefile, C++ source, headers, and bundled template/JSON headers by exact Git blob identity, and records the built executable SHA-256. It continues to execute and validate the original generated target and rejects genuine preprocessor build failure through the existing controlled compiler-negative test. No generated file is fabricated and no validation is disabled. The bundled Inja and nlohmann headers each contain MIT notices; this test uploads only text evidence and does not distribute those upstream sources or binaries.
+
+The failure run uploaded no root-Make JSON artifact. Its repaired exact-head execution is still required; Phase 1 remains FAIL_INCOMPLETE with 0/14,834 independent approvals.
