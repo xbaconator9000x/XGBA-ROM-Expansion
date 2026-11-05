@@ -12,6 +12,9 @@ on:
       - 'docs/phase1-review-readiness/porymap-external-editor-preference-boundary-20261105.md'
       - 'tools/phase1_porymap_external_script_reload.py'
       - 'docs/phase1-review-readiness/porymap-external-script-reload-boundary-20261105.md'
+      - 'tools/phase1_porymap_regionmap_persistence.py'
+      - 'tests/phase1_porymap_regionmap_persistence.cpp'
+      - 'docs/phase1-review-readiness/porymap-regionmap-persistence-boundary-20261105.md'
       - 'tools/qt_metaobject_contracts.py'
       - '.github/workflows/compiled-porymap-semantics.yml'
   pull_request:
@@ -22,6 +25,9 @@ on:
       - 'docs/phase1-review-readiness/porymap-external-editor-preference-boundary-20261105.md'
       - 'tools/phase1_porymap_external_script_reload.py'
       - 'docs/phase1-review-readiness/porymap-external-script-reload-boundary-20261105.md'
+      - 'tools/phase1_porymap_regionmap_persistence.py'
+      - 'tests/phase1_porymap_regionmap_persistence.cpp'
+      - 'docs/phase1-review-readiness/porymap-regionmap-persistence-boundary-20261105.md'
       - '.github/workflows/compiled-porymap-semantics.yml'
 permissions:
   contents: read
@@ -63,6 +69,15 @@ jobs:
             --dossier docs/phase1-review-readiness/porymap-external-script-reload-boundary-20261105.md \
             --output porymap-compiler-evidence/porymap-external-script-reload-boundary.json \
             --archive porymap-compiler-evidence/porymap-external-script-reload-boundary.tar.gz
+      - name: Exercise pinned RegionMap save and dirty-state boundaries
+        run: |
+          python3 tools/phase1_porymap_regionmap_persistence.py \
+            --porymap upstream/porymap \
+            --harness tests/phase1_porymap_regionmap_persistence.cpp \
+            --dossier docs/phase1-review-readiness/porymap-regionmap-persistence-boundary-20261105.md \
+            --output porymap-compiler-evidence/porymap-regionmap-persistence.json \
+            --archive porymap-compiler-evidence/porymap-regionmap-persistence.tar.gz \
+            --log porymap-compiler-evidence/porymap-regionmap-persistence.log
       - name: Configure original qmake Qt application
         run: |
           set -o pipefail
