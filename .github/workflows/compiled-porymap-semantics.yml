@@ -8,12 +8,16 @@ on:
       - 'tools/porymap_shared_semantics.py'
       - 'tools/phase1_porymap_script_consumer_closure.py'
       - 'docs/phase1-review-readiness/porymap-event-script-consumer-closure-20261105.md'
+      - 'tools/phase1_porymap_external_editor_boundary.py'
+      - 'docs/phase1-review-readiness/porymap-external-editor-preference-boundary-20261105.md'
       - 'tools/qt_metaobject_contracts.py'
       - '.github/workflows/compiled-porymap-semantics.yml'
   pull_request:
     paths:
       - 'tools/phase1_porymap_script_consumer_closure.py'
       - 'docs/phase1-review-readiness/porymap-event-script-consumer-closure-20261105.md'
+      - 'tools/phase1_porymap_external_editor_boundary.py'
+      - 'docs/phase1-review-readiness/porymap-external-editor-preference-boundary-20261105.md'
       - '.github/workflows/compiled-porymap-semantics.yml'
 permissions:
   contents: read
@@ -34,6 +38,13 @@ jobs:
           git -C upstream/porymap fetch --quiet origin 26b919d7ff4b54152de010abd5bf344af2ebe116
           git -C upstream/porymap checkout --quiet --detach 26b919d7ff4b54152de010abd5bf344af2ebe116
           test "$(git -C upstream/porymap rev-parse HEAD)" = 26b919d7ff4b54152de010abd5bf344af2ebe116
+      - name: Inventory external-editor preference and compile original config writer
+        run: |
+          python3 tools/phase1_porymap_external_editor_boundary.py \
+            --porymap upstream/porymap \
+            --dossier docs/phase1-review-readiness/porymap-external-editor-preference-boundary-20261105.md \
+            --output porymap-compiler-evidence/porymap-external-editor-boundary.json \
+            --archive porymap-compiler-evidence/porymap-external-editor-boundary.tar.gz
       - name: Inventory pinned event-script consumer source closure
         run: |
           python3 tools/phase1_porymap_script_consumer_closure.py \
