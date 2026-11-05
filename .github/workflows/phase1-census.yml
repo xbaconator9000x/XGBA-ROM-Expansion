@@ -11,10 +11,12 @@ on:
       - 'tools/phase1_copilot_receipts.py'
       - 'tools/phase1_arm_receipt_status.py'
       - 'tools/phase1_mgba_arm_decode_emit_review_verify.py'
+      - 'tools/phase1_mgba_arm_decoder_abi_probe.py'
       - 'tools/phase1_mgba_gba_memory_alias_audit.py'
       - 'tools/phase1_third_packet_sources_260_299_verify.py'
       - 'tools/phase1_second_packet_special_sources_verify.py'
       - 'tests/test_phase1_mgba_arm_decode_emit_review_verify.py'
+      - 'tests/test_phase1_mgba_arm_decoder_abi_probe.py'
       - 'tests/test_phase1_mgba_gba_memory_alias_audit.py'
       - 'tests/phase1_mgba_arm_alignment_probe.c'
       - 'tests/phase1_mgba_memory_object_probe.c'
@@ -79,13 +81,14 @@ jobs:
         run: test "$(git rev-parse --is-shallow-repository)" = "false"
       - name: Verify Python syntax
         run: |
-          python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py tools/phase1_copilot_receipts.py tools/phase1_arm_receipt_status.py tools/phase1_mapping_gate.py tools/phase1_mgba_arm_decode_emit_review_verify.py tools/phase1_mgba_gba_memory_alias_audit.py tools/phase1_third_packet_sources_260_299_verify.py tools/phase1_second_packet_special_sources_verify.py
+          python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py tools/phase1_copilot_receipts.py tools/phase1_arm_receipt_status.py tools/phase1_mapping_gate.py tools/phase1_mgba_arm_decode_emit_review_verify.py tools/phase1_mgba_arm_decoder_abi_probe.py tools/phase1_mgba_gba_memory_alias_audit.py tools/phase1_third_packet_sources_260_299_verify.py tools/phase1_second_packet_special_sources_verify.py
           python3 tools/semantic_review_dossiers.py --self-test
           python3 tools/phase1_mapping_gate.py --self-test
           python3 -m unittest discover -s tests -p test_phase1_copilot_receipts.py -v
           python3 -m unittest discover -s tests -p test_phase1_arm_receipt_status.py -v
           python3 -m unittest discover -s tests -p test_phase1_mapping_gate.py -v
           python3 -m unittest discover -s tests -p test_phase1_mgba_arm_decode_emit_review_verify.py -v
+          python3 -m unittest discover -s tests -p test_phase1_mgba_arm_decoder_abi_probe.py -v
           python3 -m unittest discover -s tests -p test_phase1_mgba_gba_memory_alias_audit.py -v
       - name: Verify pinned FireRed partial source handoff indices 260–299
         run: python3 tools/phase1_third_packet_sources_260_299_verify.py
@@ -95,6 +98,11 @@ jobs:
         run: python3 tools/phase1_second_packet_special_sources_verify.py --source-root upstream/mgba
       - name: Verify pinned mGBA ARM decode/emit review evidence
         run: python3 tools/phase1_mgba_arm_decode_emit_review_verify.py --source-root upstream/mgba
+      - name: Probe pinned ARM decoder record layout with Clang ARM target
+        run: |
+          python3 tools/phase1_mgba_arm_decoder_abi_probe.py \
+            --source-root upstream/mgba \
+            --output audit-output/arm_decoder_abi_probe.json
       - name: Compile pinned mGBA GBA core with GCC and Clang strict aliasing
         run: |
           for cc in gcc clang; do
