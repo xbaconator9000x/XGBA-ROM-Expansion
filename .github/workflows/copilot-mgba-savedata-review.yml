@@ -8,6 +8,7 @@ on:
       - 'tests/CMakeLists.txt'
       - 'tools/copilot_mgba_savedata_review.py'
       - 'tools/copilot_mgba_fd_stdio_handoff_verify.py'
+      - 'tools/copilot_mgba_gba_lifecycle_handoff_verify.py'
       - 'tools/verify_native_mgba_regressions.py'
       - 'semantic-snapshots/independent-reviews/copilot-mgba-savedata/**'
       - 'docs/PHASE1_STATUS.md'
@@ -41,6 +42,7 @@ jobs:
           python3 -m py_compile \
             tools/copilot_mgba_savedata_review.py \
             tools/copilot_mgba_fd_stdio_handoff_verify.py \
+            tools/copilot_mgba_gba_lifecycle_handoff_verify.py \
             tools/verify_native_mgba_regressions.py
           python3 tools/verify_native_mgba_regressions.py --self-test
       - name: Fetch immutable mGBA source pin
@@ -105,6 +107,11 @@ jobs:
       - name: Verify fd and stdio error-propagation handoff
         run: |
           python3 tools/copilot_mgba_fd_stdio_handoff_verify.py \
+            --checkout upstream/mgba \
+            --self-test
+      - name: Verify GBA savedata lifecycle handoff
+        run: |
+          python3 tools/copilot_mgba_gba_lifecycle_handoff_verify.py \
             --checkout upstream/mgba \
             --self-test
       - name: Write workflow-only run identity and exact hashes
