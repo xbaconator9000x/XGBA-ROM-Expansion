@@ -162,7 +162,8 @@ def source_negatives(sources):
     for path, (_, anchors) in ALL_FILES.items():
         anchor = anchors[0]
         changed = dict(sources)
-        changed[path] = sources[path].replace(anchor, anchor + "_MUTATED", 1)
+        mutated_anchor = anchor[:1] + "_MUTATED_" + anchor[1:]
+        changed[path] = sources[path].replace(anchor, mutated_anchor, 1)
         try:
             verify_contracts(changed)
         except ValueError:
