@@ -6,13 +6,17 @@ on:
     paths:
       - 'tests/porymap_qt_new_map_collateral.cpp'
       - 'tools/phase1_porymap_new_map_qt_retry.py'
+      - 'tools/phase1_porymap_transaction_matrix.py'
       - 'docs/phase1-review-readiness/porymap-new-map-native-qt-retry-20261029.md'
+      - 'docs/phase1-review-readiness/porymap-cross-file-transaction-rollback-20261105.md'
       - '.github/workflows/phase1-porymap-new-map-native-qt.yml'
   pull_request:
     paths:
       - 'tests/porymap_qt_new_map_collateral.cpp'
       - 'tools/phase1_porymap_new_map_qt_retry.py'
+      - 'tools/phase1_porymap_transaction_matrix.py'
       - 'docs/phase1-review-readiness/porymap-new-map-native-qt-retry-20261029.md'
+      - 'docs/phase1-review-readiness/porymap-cross-file-transaction-rollback-20261105.md'
       - '.github/workflows/phase1-porymap-new-map-native-qt.yml'
   workflow_dispatch:
 permissions:
@@ -57,7 +61,7 @@ jobs:
           PY
           (cd upstream-porymap && qmake6 porymap-phase1-new-map.pro -o Makefile.phase1new && make -f Makefile.phase1new -j4) > phase1-new-map-build.log 2>&1 || { tail -100 phase1-new-map-build.log; exit 1; }
           test -x upstream-porymap/porymap-phase1-new-map
-      - name: Execute two distinct original Qt new-map failure and retry cases
+      - name: Execute mixed native Project writes and fresh-process reopen
         run: |
           set -euo pipefail
           python3 - <<'PY'
@@ -70,8 +74,57 @@ jobs:
           assert (dest/"data/maps/PalletTown/map.json").is_file()
           PY
           mkdir -p phase1-evidence
-          QT_QPA_PLATFORM=offscreen timeout 180s upstream-porymap/porymap-phase1-new-map "$PWD/phase1-project/pokefirered" > phase1-evidence/native-new-map.log 2>&1 || { tail -100 phase1-evidence/native-new-map.log; exit 1; }
-          python3 tools/phase1_porymap_new_map_qt_retry.py --porymap upstream-porymap --firered upstream-firered --log phase1-evidence/native-new-map.log --output phase1-evidence/native-new-map.json
+          test_home="$(mktemp -d /tmp/phase1-porymap-transaction-home.XXXXXX)"
+          if [ "$(id -u)" -eq 0 ]; then
+            test_uid="$(id -u nobody)"
+            test_gid="$(id -g nobody)"
+            chown -R "$test_uid:$test_gid" phase1-project/pokefirered
+            chown "$test_uid:$test_gid" "$test_home"
+            chmod 700 "$test_home"
+            run_native() {
+              setpriv --reuid="$test_uid" --regid="$test_gid" --clear-groups --no-new-privs \
+                env HOME="$test_home" QT_QPA_PLATFORM=offscreen timeout "$@"
+            }
+          else
+            run_native() {
+              env HOME="$test_home" QT_QPA_PLATFORM=offscreen timeout "$@"
+            }
+          fi
+          if [ "$(id -u)" -eq 0 ]; then
+            strace -f -yy -s 256 -e trace=write -o phase1-evidence/native-new-map.strace \
+              setpriv --reuid="$test_uid" --regid="$test_gid" --clear-groups --no-new-privs \
+              env HOME="$test_home" QT_QPA_PLATFORM=offscreen timeout 180s \
+              upstream-porymap/porymap-phase1-new-map "$PWD/phase1-project/pokefirered" \
+              > phase1-evidence/native-new-map.log 2>&1 || {
+                tail -100 phase1-evidence/native-new-map.log
+                exit 1
+              }
+          else
+            strace -f -yy -s 256 -e trace=write -o phase1-evidence/native-new-map.strace \
+              env HOME="$test_home" QT_QPA_PLATFORM=offscreen timeout 180s \
+              upstream-porymap/porymap-phase1-new-map "$PWD/phase1-project/pokefirered" \
+              > phase1-evidence/native-new-map.log 2>&1 || {
+                tail -100 phase1-evidence/native-new-map.log
+                exit 1
+              }
+          fi
+          run_native 120s upstream-porymap/porymap-phase1-new-map \
+            "$PWD/phase1-project/pokefirered" --cold-reopen \
+            > phase1-evidence/native-new-map-cold.log 2>&1 || {
+              tail -100 phase1-evidence/native-new-map-cold.log
+              exit 1
+            }
+          python3 tools/phase1_porymap_new_map_qt_retry.py \
+            --porymap upstream-porymap --firered upstream-firered \
+            --log phase1-evidence/native-new-map.log \
+            --output phase1-evidence/native-new-map-legacy.json
+          python3 tools/phase1_porymap_transaction_matrix.py \
+            --porymap upstream-porymap --firered upstream-firered \
+            --log phase1-evidence/native-new-map.log \
+            --cold-log phase1-evidence/native-new-map-cold.log \
+            --trace phase1-evidence/native-new-map.strace \
+            --dossier docs/phase1-review-readiness/porymap-cross-file-transaction-rollback-20261105.md \
+            --output phase1-evidence/transaction-matrix.json
       - name: Preserve native transcript and build diagnostics
         if: always()
         uses: actions/upload-artifact@v4
