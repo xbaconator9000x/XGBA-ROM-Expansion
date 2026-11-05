@@ -17,6 +17,7 @@ from tools.copilot_check_integration_readiness import (
     dependency_readiness_report,
     _format_workflow_blocker,
     closure_index_report,
+    closure_package_linkage_report,
     main,
     missing_required_workflow_events,
     recorded_snapshot,
@@ -68,6 +69,10 @@ ACTION_CLOSURE = (
 WORKFLOW_ID_CORRECTION = (
     Path(__file__).parent.parent
     / "development/copilot-integration/workflow-id-correction-20261105.json"
+)
+PACKAGE_LINKAGE = (
+    Path(__file__).parent.parent
+    / "development/copilot-integration/package-linkage-20261105.json"
 )
 MANIFEST = (
     Path(__file__).parent.parent / "development/copilot-integration/manifest.json"
@@ -1126,6 +1131,114 @@ class IntegrationReadinessTests(unittest.TestCase):
         self.assertEqual(report["status"], "BLOCKED")
         self.assertEqual(report["blocker_count"], 44)
         self.assertEqual(report["findings"], [])
+
+    def _package_linkage_inputs(self):
+        index = json.loads(CLOSURE_INDEX.read_text(encoding="utf-8"))
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        triage = json.loads(BLOCKER_TRIAGE.read_text(encoding="utf-8"))
+        package_paths = set(index["source_hashes"]) - {
+            "development/copilot-integration/manifest.json",
+            "development/copilot-integration/blocker-triage-20261104.json",
+        }
+        documents = {
+            path: json.loads((MANIFEST.parents[2] / path).read_text(encoding="utf-8"))
+            for path in package_paths
+        }
+        hashes = {
+            path: hashlib.sha256((MANIFEST.parents[2] / path).read_bytes()).hexdigest()
+            for path in index["source_hashes"]
+        }
+        fixture = json.loads(PACKAGE_LINKAGE.read_text(encoding="utf-8"))
+        return fixture, index, manifest, triage, documents, hashes
+
+    def test_package_linkage_reports_nine_identity_checked_blockers(self):
+        fixture, index, manifest, triage, documents, hashes = self._package_linkage_inputs()
+        report = closure_package_linkage_report(
+            fixture, index, manifest, triage, documents, hashes
+        )
+        self.assertEqual(report["evidence_validation"], "VALID")
+        self.assertEqual(report["row_count"], 9)
+        self.assertEqual(report["selected_blocked_count"], 9)
+        self.assertEqual(report["selected_resolved_count"], 0)
+        self.assertEqual(
+            [row["blocker_id"] for row in report["rows"]],
+            ["B%03d" % number for number in range(12, 21)],
+        )
+        self.assertTrue(all(row["status"] == "BLOCKED" for row in report["rows"]))
+
+    def test_package_linkage_rejects_tampered_identity_and_status(self):
+        mutations = (
+            ("package head", lambda docs: docs[
+                "development/copilot-integration/dependency-base-reconciliation-20261105.json"
+            ]["rows"][0]["manifest"].update(head_sha="f" * 40)),
+            ("package base", lambda docs: docs[
+                "development/copilot-integration/dependency-base-reconciliation-20261105.json"
+            ]["rows"][0]["manifest"].update(base_sha="f" * 40)),
+            ("package base ref", lambda docs: docs[
+                "development/copilot-integration/dependency-base-reconciliation-20261105.json"
+            ]["rows"][0]["manifest"].update(base_ref="invented")),
+            ("package blocker", lambda docs: docs[
+                "development/copilot-integration/dependency-base-reconciliation-20261105.json"
+            ]["rows"][0].update(blocker_id="B044")),
+            ("package PR", lambda docs: docs[
+                "development/copilot-integration/dependency-base-reconciliation-20261105.json"
+            ]["rows"][0].update(pr_number=999)),
+            ("package workflow", lambda docs: docs[
+                "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json"
+            ]["rows"][next(
+                index for index, row in enumerate(docs[
+                    "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json"
+                ]["rows"]) if row["pr"] == 10
+            )].update(workflow_id=999999)),
+            ("missing package workflow", lambda docs: docs[
+                "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json"
+            ]["rows"][next(
+                index for index, row in enumerate(docs[
+                    "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json"
+                ]["rows"]) if row["pr"] == 10
+            )].pop("workflow_id")),
+        )
+        for name, mutate in mutations:
+            fixture, index, manifest, triage, documents, hashes = self._package_linkage_inputs()
+            with self.subTest(mutation=name):
+                mutate(documents)
+                report = closure_package_linkage_report(
+                    fixture, index, manifest, triage, documents, hashes
+                )
+                self.assertEqual(report["evidence_validation"], "BLOCKED")
+                self.assertTrue(report["findings"])
+
+    def test_package_linkage_rejects_duplicate_missing_hash_and_resolution(self):
+        fixture, index, manifest, triage, documents, hashes = self._package_linkage_inputs()
+        mutations = (
+            ("duplicate", lambda value: value["rows"].append(copy.deepcopy(value["rows"][0]))),
+            ("missing", lambda value: value["rows"].pop()),
+            ("fabricated source hash", lambda value: value["source_hashes"].update({
+                "development/copilot-integration/manifest.json": "0" * 64
+            })),
+            ("fabricated resolution", lambda value: value["rows"][0].update(
+                after_status="RESOLVED"
+            )),
+        )
+        for name, mutate in mutations:
+            altered = copy.deepcopy(fixture)
+            with self.subTest(mutation=name):
+                mutate(altered)
+                report = closure_package_linkage_report(
+                    altered, index, manifest, triage, documents, hashes
+                )
+                self.assertEqual(report["evidence_validation"], "BLOCKED")
+                self.assertTrue(report["findings"])
+
+    def test_package_linkage_cli_is_offline_and_stays_blocked(self):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            status = main(["--package-linkage", str(PACKAGE_LINKAGE)])
+        self.assertEqual(status, 1)
+        report = json.loads(output.getvalue())
+        self.assertEqual(report["evidence_validation"], "VALID")
+        self.assertEqual(report["phase1_gate"], "FAIL_INCOMPLETE")
+        self.assertEqual(report["selected_blocked_count"], 9)
 
     def _action_closure_inputs(self):
         fixture = json.loads(ACTION_CLOSURE.read_text(encoding="utf-8"))

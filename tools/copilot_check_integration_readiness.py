@@ -1744,6 +1744,95 @@ def closure_index_report(index, manifest, triage, package_documents, actual_hash
                 )
             if package_record is None:
                 findings.append("%s evidence package record is absent" % blocker_id)
+            else:
+                package_pr = package_record.get(
+                    "pr_number", package_record.get("pr")
+                )
+                if package_pr != number:
+                    findings.append(
+                        "%s evidence package PR identity does not match original triage"
+                        % blocker_id
+                    )
+                if (
+                    category != "unverified_workflow_id"
+                    and package_record.get("blocker_id") != blocker_id
+                ):
+                    findings.append(
+                        "%s evidence package blocker identity does not match original triage"
+                        % blocker_id
+                    )
+                package_manifest = package_record.get("manifest")
+                if not isinstance(package_manifest, dict):
+                    findings.append(
+                        "%s evidence package has no manifest identity" % blocker_id
+                    )
+                else:
+                    package_head = package_manifest.get(
+                        "head_sha", package_manifest.get("head")
+                    )
+                    package_base = package_manifest.get(
+                        "base_sha", package_manifest.get("base")
+                    )
+                    if package_head != manifest_head:
+                        findings.append(
+                            "%s evidence package head differs from immutable manifest pin"
+                            % blocker_id
+                        )
+                    if package_base != manifest_base:
+                        findings.append(
+                            "%s evidence package base differs from immutable manifest pin"
+                            % blocker_id
+                        )
+                    if package_manifest.get("base_ref") != manifest_base_ref:
+                        findings.append(
+                            "%s evidence package base ref differs from immutable manifest pin"
+                            % blocker_id
+                        )
+                    manifest_head_ref = (
+                        (pr_manifest.get("head") or {}).get("ref")
+                        if isinstance(pr_manifest.get("head"), dict)
+                        else None
+                    )
+                    if (
+                        "head_ref" in package_manifest
+                        and package_manifest.get("head_ref") != manifest_head_ref
+                    ):
+                        findings.append(
+                            "%s evidence package head ref differs from immutable manifest pin"
+                            % blocker_id
+                        )
+                required_ids = manifest.get("required_workflow_ids", {})
+                pinned_ids = (
+                    required_ids.get(str(number))
+                    if isinstance(required_ids, dict)
+                    else None
+                )
+                package_workflow = package_record.get("workflow")
+                package_workflow_id = package_record.get(
+                    "workflow_id",
+                    package_record.get(
+                        "required_workflow_id",
+                        package_workflow.get("id")
+                        if isinstance(package_workflow, dict)
+                        else package_record.get("manifest", {}).get(
+                            "required_workflow_id"
+                        )
+                        if isinstance(package_record.get("manifest"), dict)
+                        else None,
+                    ),
+                )
+                if category == "unverified_workflow_id" and package_workflow_id is None:
+                    findings.append(
+                        "%s evidence package workflow ID is missing" % blocker_id
+                    )
+                if package_workflow_id is not None and (
+                    not isinstance(pinned_ids, list)
+                    or package_workflow_id not in pinned_ids
+                ):
+                    findings.append(
+                        "%s evidence package workflow ID is not in the manifest pins"
+                        % blocker_id
+                    )
         current = current_by_number.get(number)
         if current:
             current_head, current_base_ref, current_base = current[1:]
@@ -1772,6 +1861,12 @@ def closure_index_report(index, manifest, triage, package_documents, actual_hash
                 "evidence_package": source_path,
                 "evidence_record_present": package_record is not None,
                 "evidence_record": package_record,
+                "evidence_record_sha256": hashlib.sha256(json.dumps(
+                    package_record,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")).hexdigest()
+                if package_record is not None else None,
                 "closure_action": original.get("closure_action"),
             })
 
@@ -1843,6 +1938,126 @@ def closure_index_report(index, manifest, triage, package_documents, actual_hash
         "base_provenance_limit": index.get("base_provenance_limit"),
         "findings": sorted(set(findings)),
         "rows": expanded_rows,
+    }
+
+
+def closure_package_linkage_report(
+    fixture, index, manifest, triage, package_documents, actual_hashes
+):
+    """Validate a bounded before/after report of cross-category package identity links."""
+    findings = []
+    if not isinstance(fixture, dict):
+        fixture = {}
+        findings.append("package-linkage evidence must be a JSON object")
+    if fixture.get("schema") != "copilot-integration-package-linkage-v1":
+        findings.append("package-linkage schema is missing or unsupported")
+    if fixture.get("repository") != "xbaconator9000x/XGBA-ROM-Expansion":
+        findings.append("package-linkage repository identity does not match")
+    if fixture.get("scope") != (
+        "B012-B020; generic cross-category linkage validation only, "
+        "not a repeat of base or workflow evidence review"
+    ):
+        findings.append("package-linkage scope is missing or changed")
+    expected_policy = {
+        "phase1_gate": "FAIL_INCOMPLETE",
+        "independent_approvals": 0,
+        "p0_approvals": 0,
+        "total_historical_approvals": 0,
+        "source_pins_changed": False,
+        "semantic_approval_from_ci": False,
+    }
+    if fixture.get("policy") != expected_policy:
+        findings.append("package-linkage policy does not preserve Phase 1 gate and approval totals")
+    expected_ids = ["B%03d" % number for number in range(12, 21)]
+    rows = fixture.get("rows")
+    if not isinstance(rows, list) or [
+        row.get("blocker_id") for row in rows if isinstance(row, dict)
+    ] != expected_ids:
+        findings.append("package-linkage scope must contain B012-B020 exactly once in order")
+        rows = rows if isinstance(rows, list) else []
+    if len(rows) != len(expected_ids):
+        findings.append("package-linkage row count must be exactly nine")
+    if not isinstance(actual_hashes, dict):
+        actual_hashes = {}
+        findings.append("package-linkage source hashes are unavailable")
+    if fixture.get("source_hashes") != actual_hashes:
+        findings.append("package-linkage source hashes differ from checked source files")
+    index_report = closure_index_report(
+        index, manifest, triage, package_documents, actual_hashes
+    )
+    if index_report["findings"]:
+        findings.extend(
+            "cross-category closure index: %s" % finding
+            for finding in index_report["findings"]
+        )
+    report_rows_by_id = {
+        row.get("id"): row
+        for row in index_report["rows"]
+        if isinstance(row, dict)
+    }
+    original_rows = {
+        row.get("id"): row
+        for row in triage.get("blockers", [])
+        if isinstance(row, dict) and isinstance(row.get("id"), str)
+    } if isinstance(triage, dict) else {}
+    report_rows = []
+    for row in rows:
+        if not isinstance(row, dict):
+            findings.append("package-linkage row is malformed")
+            continue
+        blocker_id = row.get("blocker_id")
+        expected = report_rows_by_id.get(blocker_id)
+        original = original_rows.get(blocker_id)
+        if expected is None or original is None:
+            findings.append("%s is absent from closure index or immutable triage" % blocker_id)
+            continue
+        before = {
+            "package_identity_binding": "record_presence_only",
+            "status": "BLOCKED",
+            "resolved": False,
+        }
+        after = {
+            "package_identity_binding": "checked_against_original_triage_and_manifest",
+            "status": "BLOCKED",
+            "resolved": False,
+        }
+        expected_row = {
+            "blocker_id": blocker_id,
+            "pr_number": original.get("pr_number"),
+            "category": original.get("category"),
+            "evidence_package": expected.get("evidence_package"),
+            "manifest_head_sha": expected.get("manifest_identity", {}).get("head_sha"),
+            "manifest_base_ref": expected.get("manifest_identity", {}).get("base_ref"),
+            "manifest_base_sha": expected.get("manifest_identity", {}).get("base_sha"),
+            "original_triage_sha256": hashlib.sha256(json.dumps(
+                original, sort_keys=True, separators=(",", ":")
+            ).encode("utf-8")).hexdigest(),
+            "evidence_record_sha256": expected.get("evidence_record_sha256"),
+            "before": before,
+            "after": after,
+        }
+        if row != {
+            "blocker_id": blocker_id,
+            "before_status": "BLOCKED",
+            "after_status": "BLOCKED",
+        }:
+            findings.append("%s before/after identity linkage does not match checked sources" % blocker_id)
+        report_rows.append({
+            **expected_row,
+            "status": "BLOCKED",
+        })
+    return {
+        "schema": "xgba.phase1.package_linkage_report.v1",
+        "status": "BLOCKED",
+        "evidence_validation": "BLOCKED" if findings else "VALID",
+        "row_count": len(report_rows),
+        "selected_resolved_count": 0,
+        "selected_blocked_count": len(report_rows),
+        "original_blocker_count": 44,
+        "phase1_gate": "FAIL_INCOMPLETE",
+        "independent_approvals": 0,
+        "findings": sorted(set(findings)),
+        "rows": report_rows,
     }
 
 
@@ -2383,10 +2598,64 @@ def main(argv=None):
         type=Path,
         help="validate selected workflow-ID evidence corrections without resolving blockers",
     )
+    parser.add_argument(
+        "--package-linkage",
+        type=Path,
+        help="validate before/after package identity links for B012-B020 offline",
+    )
     args = parser.parse_args(argv)
     try:
         manifest_bytes = args.manifest.read_bytes()
         manifest = json.loads(manifest_bytes.decode("utf-8"))
+        if args.package_linkage:
+            if (
+                args.snapshot or args.offline or args.live_observations
+                or args.triage_json or args.dependency_observations
+                or args.closure_index or args.action_closure
+                or args.workflow_id_correction
+            ):
+                parser.error("--package-linkage is a standalone offline mode")
+            source_paths = {
+                "development/copilot-integration/manifest.json":
+                    ROOT / "development/copilot-integration/manifest.json",
+                "development/copilot-integration/blocker-triage-20261104.json":
+                    ROOT / "development/copilot-integration/blocker-triage-20261104.json",
+                "development/copilot-integration/closure-index-20261105.json":
+                    ROOT / "development/copilot-integration/closure-index-20261105.json",
+                "development/copilot-integration/dependency-base-reconciliation-20261105.json":
+                    ROOT / "development/copilot-integration/dependency-base-reconciliation-20261105.json",
+                "tests/fixtures/copilot-integration-readiness/stale_main_base_evidence_20261105.json":
+                    ROOT / "tests/fixtures/copilot-integration-readiness/stale_main_base_evidence_20261105.json",
+                "tests/fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json":
+                    ROOT / "tests/fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json",
+                "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json":
+                    ROOT / "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json",
+            }
+            triage = json.loads(source_paths[
+                "development/copilot-integration/blocker-triage-20261104.json"
+            ].read_text(encoding="utf-8"))
+            index = json.loads(source_paths[
+                "development/copilot-integration/closure-index-20261105.json"
+            ].read_text(encoding="utf-8"))
+            package_documents = {
+                path: json.loads(source.read_text(encoding="utf-8"))
+                for path, source in source_paths.items()
+                if path not in (
+                    "development/copilot-integration/manifest.json",
+                    "development/copilot-integration/blocker-triage-20261104.json",
+                    "development/copilot-integration/closure-index-20261105.json",
+                )
+            }
+            actual_hashes = {
+                path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
+                for path in index.get("source_hashes", {})
+            }
+            fixture = json.loads(args.package_linkage.read_text(encoding="utf-8"))
+            report = closure_package_linkage_report(
+                fixture, index, manifest, triage, package_documents, actual_hashes
+            )
+            print(json.dumps(report, indent=2, sort_keys=True))
+            return 1
         if args.workflow_id_correction:
             if (
                 args.snapshot or args.offline or args.live_observations

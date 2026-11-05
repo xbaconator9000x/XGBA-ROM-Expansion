@@ -1,0 +1,33 @@
+{
+  "schema": "copilot-integration-package-linkage-v1",
+  "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+  "observed_at": "2026-11-05T08:39:09Z",
+  "scope": "B012-B020; generic cross-category linkage validation only, not a repeat of base or workflow evidence review",
+  "source_hashes": {
+    "development/copilot-integration/manifest.json": "99accfcada883f086468e8f62c55a252ee24076dba777575584aaf15e60e52cf",
+    "development/copilot-integration/blocker-triage-20261104.json": "f87c618981d8006b30adc3178eeed68bc9ecb41801dded28ac0289cfbfc73659",
+    "development/copilot-integration/dependency-base-reconciliation-20261105.json": "c10504f3a05c7875b8a71afd119de5ed1e1074a672a567723823bde0b5cd4486",
+    "tests/fixtures/copilot-integration-readiness/stale_main_base_evidence_20261105.json": "62ce1ae030ca8739918f9dca5139f7b4b410e9351aa425d1f1d4db7823b27604",
+    "tests/fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json": "5648c1772da65ae6a758e605a28aaffacf5036a5f5741fae845a50cc60e6b7b4",
+    "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json": "37e2a5b7a007972a98986684701cd50626f46b5f0e3ec05e3c16ae3494b7df6f"
+  },
+  "policy": {
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "independent_approvals": 0,
+    "p0_approvals": 0,
+    "total_historical_approvals": 0,
+    "source_pins_changed": false,
+    "semantic_approval_from_ci": false
+  },
+  "rows": [
+    {"blocker_id": "B012", "before_status": "BLOCKED", "after_status": "BLOCKED"},
+    {"blocker_id": "B013", "before_status": "BLOCKED", "after_status": "BLOCKED"},
+    {"blocker_id": "B014", "before_status": "BLOCKED", "after_status": "BLOCKED"},
+    {"blocker_id": "B015", "before_status": "BLOCKED", "after_status": "BLOCKED"},
+    {"blocker_id": "B016", "before_status": "BLOCKED", "after_status": "BLOCKED"},
+    {"blocker_id": "B017", "before_status": "BLOCKED", "after_status": "BLOCKED"},
+    {"blocker_id": "B018", "before_status": "BLOCKED", "after_status": "BLOCKED"},
+    {"blocker_id": "B019", "before_status": "BLOCKED", "after_status": "BLOCKED"},
+    {"blocker_id": "B020", "before_status": "BLOCKED", "after_status": "BLOCKED"}
+  ]
+}
