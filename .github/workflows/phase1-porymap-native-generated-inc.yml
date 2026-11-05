@@ -7,11 +7,15 @@ on:
       - '.github/workflows/phase1-porymap-native-generated-inc.yml'
       - 'tools/phase1_porymap_native_generated_inc.py'
       - 'docs/phase1-review-readiness/porymap-native-generated-inc-20261029.md'
+      - 'tools/phase1_poryscript_compiler_source_closure.py'
+      - 'docs/phase1-review-readiness/poryscript-compiler-source-closure-20261105.md'
   pull_request:
     paths:
       - '.github/workflows/phase1-porymap-native-generated-inc.yml'
       - 'tools/phase1_porymap_native_generated_inc.py'
       - 'docs/phase1-review-readiness/porymap-native-generated-inc-20261029.md'
+      - 'tools/phase1_poryscript_compiler_source_closure.py'
+      - 'docs/phase1-review-readiness/poryscript-compiler-source-closure-20261105.md'
   workflow_dispatch:
 permissions:
   contents: read
@@ -58,11 +62,23 @@ jobs:
             --firered upstream-firered \
             --output phase1-evidence/porymap-native-generated-inc.json
           python3 -m json.tool phase1-evidence/porymap-native-generated-inc.json >/dev/null
-      - name: Archive text-only executable dependency evidence
+      - name: Inventory pinned Poryscript compiler source closure
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_poryscript_compiler_source_closure.py
+          python3 tools/phase1_poryscript_compiler_source_closure.py \
+            --porymap upstream-porymap \
+            --poryscript upstream-poryscript \
+            --firered upstream-firered \
+            --dossier docs/phase1-review-readiness/poryscript-compiler-source-closure-20261105.md \
+            --output phase1-evidence/poryscript-compiler-source-closure.json \
+            --archive phase1-evidence/poryscript-compiler-source-closure.tar.gz
+          python3 -m json.tool phase1-evidence/poryscript-compiler-source-closure.json >/dev/null
+      - name: Archive generated-include and compiler-source evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: phase1-porymap-native-generated-inc-text
-          path: phase1-evidence/*.json
+          name: phase1-porymap-native-generated-inc-source-closure
+          path: phase1-evidence/*
           if-no-files-found: warn
           retention-days: 30
