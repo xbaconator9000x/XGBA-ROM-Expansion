@@ -17,9 +17,11 @@ TRUE=("original_mainwindow_qaction","original_newmapdialog_accept","new_map_unpe
 "watcher_rearmed_after_atomic_replace","post_replace_file_changed_signal",
 "permission_denied_first_save_rejected","permission_failure_preserved_unpersisted_editor_map",
 "permission_test_unprivileged","permission_os_denial_eacces","permission_qfile_open_denied",
-"save_error_dialog_reported","failed_commit_rejected","failed_commit_old_bytes_preserved",
-"watcher_retained_after_failed_commit","post_failure_watch_signal","file_changed_signal_tested",
+"save_error_dialog_reported","failed_commit_rejected","failed_commit_original_file_rollback",
+"failed_commit_old_bytes_preserved",
+"watcher_recovered_after_failed_commit","post_failure_watch_signal","file_changed_signal_tested",
 "permission_failure_injected")
+OBSERVED=("watcher_retained_after_failed_commit",)
 FALSE=("stock_gameplay","human_modal_interaction","fsync_failure_injected",
        "physical_durability_tested")
 COLD_TRUE=("fresh_process","original_mainwindow_project_reopened","new_map_reloaded",
@@ -33,9 +35,11 @@ def verify(log):
     lines=[x.split("=",1)[1] for x in log.splitlines() if x.startswith("PHASE1_GUI_NEWMAP=")]
     need(len(lines)==1,"exactly one GUI evidence line")
     o=json.loads(lines[0])
-    need(set(o)==set(TRUE)|set(FALSE)|{"phase1_gate","independent_approvals"},"evidence field set")
+    need(set(o)==set(TRUE)|set(FALSE)|set(OBSERVED)|
+         {"phase1_gate","independent_approvals"},"evidence field set")
     need(all(o[x] is True for x in TRUE),"native positive assertion")
     need(all(o[x] is False for x in FALSE),"negative scope")
+    need(all(type(o[x]) is bool for x in OBSERVED),"native observed state")
     need(o["phase1_gate"]=="FAIL_INCOMPLETE" and o["independent_approvals"]==0,"gate/approvals")
     return o
 def verify_cold(log):
@@ -50,9 +54,11 @@ def verify_cold(log):
     return o
 def negatives(log):
     base=verify(log); n=0
-    for key in list(TRUE)+list(FALSE)+["phase1_gate","independent_approvals"]:
+    for key in list(TRUE)+list(FALSE)+list(OBSERVED)+["phase1_gate","independent_approvals"]:
         changed=dict(base)
-        changed[key]= (not base[key]) if isinstance(base[key],bool) else ("PASS" if key=="phase1_gate" else 1)
+        changed[key]= ("not-a-boolean" if key in OBSERVED else
+                       (not base[key]) if isinstance(base[key],bool) else
+                       ("PASS" if key=="phase1_gate" else 1))
         marker="PHASE1_GUI_NEWMAP="+json.dumps(changed,separators=(",",":"))
         for line in log.splitlines():
             if line.startswith("PHASE1_GUI_NEWMAP="): break

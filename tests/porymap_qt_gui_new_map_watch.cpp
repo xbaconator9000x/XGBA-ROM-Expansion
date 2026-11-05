@@ -343,6 +343,11 @@ int main(int argc,char **argv) {
         need(QDir(permissionDir).removeRecursively(),"permission_map_cleanup");
 
         const QByteArray beforeFailedCommit=bytes(json);
+        const QByteArray watchedJsonPath=QFile::encodeName(json);
+        struct stat originalFileStat {};
+        need(::stat(watchedJsonPath.constData(),&originalFileStat)==0,
+             "failed_commit_original_file_stat");
+        need(watcher->files().contains(json),"watcher_before_failed_commit");
         QSaveFile failedCommit(json);
         failedCommit.setDirectWriteFallback(false);
         need(failedCommit.open(QIODevice::WriteOnly),"failed_commit_open");
@@ -353,8 +358,19 @@ int main(int argc,char **argv) {
         const bool failedCommitAccepted=failedCommit.commit();
         need(QFile::setPermissions(dir,mapDirectoryPermissions),"failed_commit_permission_restore");
         need(!failedCommitAccepted,"failed_commit_must_fail");
+        struct stat rolledBackFileStat {};
+        need(::stat(watchedJsonPath.constData(),&rolledBackFileStat)==0 &&
+             rolledBackFileStat.st_dev==originalFileStat.st_dev &&
+             rolledBackFileStat.st_ino==originalFileStat.st_ino,
+             "failed_commit_original_file_rollback");
         need(bytes(json)==beforeFailedCommit,"failed_commit_preserves_old_bytes");
-        need(watcher->files().contains(json),"watcher_retained_after_failed_commit");
+        const bool watcherRetainedAfterFailure=watcher->files().contains(json);
+        const bool watcherRecoveredAfterFailure=project->watchFile(json) &&
+                                                watcher->files().contains(json);
+        need(watcherRecoveredAfterFailure,"watcher_recovery_after_failed_commit");
+        std::cerr << "failed commit recovery: error=" << failedCommit.errorString().toStdString()
+                  << " watcher_retained=" << watcherRetainedAfterFailure
+                  << " original_inode_preserved=1" << std::endl;
         delivered=0;
         QFile touchedAfterFailure(json);
         need(touchedAfterFailure.open(QIODevice::WriteOnly|QIODevice::Append),
@@ -393,8 +409,10 @@ int main(int argc,char **argv) {
         out["permission_qfile_open_denied"]=qfileOpenDenied;
         out["save_error_dialog_reported"]=true;
         out["failed_commit_rejected"]=true;
+        out["failed_commit_original_file_rollback"]=true;
         out["failed_commit_old_bytes_preserved"]=true;
-        out["watcher_retained_after_failed_commit"]=true;
+        out["watcher_retained_after_failed_commit"]=watcherRetainedAfterFailure;
+        out["watcher_recovered_after_failed_commit"]=watcherRecoveredAfterFailure;
         out["post_failure_watch_signal"]=true;
         out["file_changed_signal_tested"]=true;
         out["stock_gameplay"]=false;
