@@ -338,6 +338,8 @@
       "class": "PR13_WORKPAPER_REPORTED_LOCAL_LINUX_NATIVE_HOST_FIXTURES",
       "source_paths": ["tests/phase1_mgba_vfs_fd_teardown_native.c", "tests/phase1_mgba_vfs_stdio_native.c"],
       "source_sha256": ["c731670c511ceaf53db2fac8372efe5bfa36ad443bf8808b675b740e4e2cbe9f", "2458e0ed4e5cafc1e60dbac18e2bc5945b718377bd25b55213e63f55bf5c7a39"],
+      "fixture_sources_present_in_this_checkout": false,
+      "local_results_independently_reproduced": false,
       "limits": ["Local workpaper results, not current PR35 Actions", "Linux host syscall/stdio injection, not full emulator gameplay", "Not cold restart, physical Flash, reboot, or power-loss durability"]
     },
     {
@@ -348,8 +350,10 @@
       "runner_path": "tools/phase1_mgba_vfs_fd_callback_native.py",
       "runner_sha256": "cc67ed3f5fd9b3a6a9e7f30076b38422dc19a43b3530a6576b97b4f1ed13bb53",
       "local_log_sha256": "95d5ad944151504b3b80293c9b064ab6a7ec3d60a2aa7244581f76905efbd939",
-      "observed_scope": "Extracted GBASavedataClean/GBAFrameEnded and callback registration with an injected Linux msync failure.",
-      "limits": ["Not the full mGBA runtime or script engine", "Not a game/save round trip, cold restart, physical Flash, or durable persistence", "Local result, not exact-head PR35 CI"]
+      "reported_scope": "The prior handoff reports extracted GBASavedataClean/GBAFrameEnded under injected Linux msync failure and a savedataUpdated observation; it does not establish full mCore/script/frontend callback execution.",
+      "fixture_source_and_workpaper_present_in_this_checkout": false,
+      "local_result_independently_reproduced": false,
+      "limits": ["Historical workpaper-reported local result only", "Not the full mGBA runtime or script engine", "Not a game/save round trip, cold restart, physical Flash, or durable persistence", "Not exact-head PR35 CI"]
     },
     {
       "id": "pr35-pinned-native-regression",

@@ -39,7 +39,7 @@ DOSSIER = Path("semantic-snapshots/current/candidate_review_dossiers.jsonl.gz")
 GATE = Path("semantic-snapshots/current/phase1_mapping_gate.json")
 WORKFLOW = Path(".github/workflows/copilot-mgba-savedata-review.yml")
 
-MATRIX_SHA256 = "cef746229ddd522f30c9df2eba1276eeeb0ac0a8aa8a2af568414e6d979aab04"
+MATRIX_SHA256 = "f7ce0e81169b6b4a3724e7d0d8385ad6bd80b3f2c50e3a5243402fafecd0d084"
 BASE_SHA256 = "b3bec6ce260d6184fc22a859b9c5bbc518348966cb0092a4fbe56f296667c475"
 FD_HANDOFF_SHA256 = "e6333debeed736a58146bf1834b5960ca464cd1116216e67cf6edb5b8a765320"
 LIFECYCLE_HANDOFF_SHA256 = "994e10c0cf611a9d247d23335972d9d3d0f300731274562d7d11b5ecd98e6b06"
@@ -59,6 +59,7 @@ EXPECTED_CONTROLS = [
     "source-hash-mismatch",
     "incomplete-20-file-closure",
     "false-native-gameplay-label",
+    "callback-full-runtime-overclaim",
     "missing-file-license",
     "combined-license-overclaim",
     "approval-promotion",
@@ -227,6 +228,8 @@ def validate(
             "c731670c511ceaf53db2fac8372efe5bfa36ad443bf8808b675b740e4e2cbe9f",
             "2458e0ed4e5cafc1e60dbac18e2bc5945b718377bd25b55213e63f55bf5c7a39",
         ]
+        and host.get("fixture_sources_present_in_this_checkout") is False
+        and host.get("local_results_independently_reproduced") is False
         and all(term in " ".join(host.get("limits", [])) for term in
                 ("not current PR35 Actions", "not full emulator gameplay", "power-loss durability")),
         "PR13 local host evidence is overclaimed or misidentified",
@@ -239,8 +242,13 @@ def validate(
         == "cc67ed3f5fd9b3a6a9e7f30076b38422dc19a43b3530a6576b97b4f1ed13bb53"
         and callback.get("local_log_sha256")
         == "95d5ad944151504b3b80293c9b064ab6a7ec3d60a2aa7244581f76905efbd939"
+        and "does not establish full mCore/script/frontend callback execution"
+        in callback.get("reported_scope", "")
+        and callback.get("fixture_source_and_workpaper_present_in_this_checkout") is False
+        and callback.get("local_result_independently_reproduced") is False
         and all(term in " ".join(callback.get("limits", [])) for term in
-                ("Not the full mGBA runtime", "physical Flash", "not exact-head PR35 CI")),
+                ("Historical workpaper-reported local result only", "Not the full mGBA runtime",
+                 "physical Flash", "Not exact-head PR35 CI")),
         "PR13 callback fixture provenance or evidence limits changed",
     )
     synthetic = by_id["pr35-pinned-native-regression"]
@@ -408,6 +416,12 @@ def run_controls(context) -> int:
         "false-native-gameplay-label",
         lambda value: value["evidence_classes"][3].update(
             {"class": "NATIVE_MGBA_GAMEPLAY_PHYSICAL_FLASH"}
+        ),
+    )
+    control(
+        "callback-full-runtime-overclaim",
+        lambda value: value["evidence_classes"][2].update(
+            reported_scope="The full mCore script and frontend runtime callback was executed."
         ),
     )
     control(
