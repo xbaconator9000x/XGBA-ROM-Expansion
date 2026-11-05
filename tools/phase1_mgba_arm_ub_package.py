@@ -49,7 +49,7 @@ ANCHOR_LINES = {
         (31, "#define ARM_SXT_16(I) (((int16_t) (I) << 16) >> 16)"),
     ],
     "decoder_thumb": [
-        (221, "int8_t immediate = opcode;"),
+        (221, "int8_t immediate = opcode; \\"),
         (222, "info->op1.immediate = immediate << 1; \\"),
         (273, "int16_t immediate = (opcode & 0x07FF) << 5;"),
         (276, "info->op3.immediate = (((int32_t) immediate) << 7);"),
