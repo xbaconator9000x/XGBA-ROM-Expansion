@@ -717,6 +717,412 @@ def validate(manifest, snapshot):
     return issues
 
 
+def classify_stacked_dependency_observation(observation):
+    """Classify one parent/child relation without treating green CI as approval."""
+    findings = []
+
+    def add(code, detail):
+        findings.append({"code": code, "detail": detail})
+
+    if not isinstance(observation, dict):
+        return {"status": "BLOCKED", "findings": [
+            {"code": "invalid_observation", "detail": "dependency observation is missing"}
+        ]}
+
+    manifest = observation.get("manifest")
+    live = observation.get("live_pr")
+    dependency = observation.get("dependency")
+    if not isinstance(dependency, dict) or not dependency.get("url"):
+        add("missing_dependency", "declared parent PR metadata is missing")
+        dependency = {}
+    if not isinstance(manifest, dict) or not isinstance(live, dict):
+        add("missing_pr_metadata", "manifest or live child PR metadata is missing")
+        manifest = manifest if isinstance(manifest, dict) else {}
+        live = live if isinstance(live, dict) else {}
+
+    child_head = live.get("head_sha")
+    child_base = live.get("base_sha")
+    parent_head = dependency.get("live_head_sha")
+    expected_child_head = manifest.get("head_sha")
+    expected_child_base = manifest.get("base_sha")
+    expected_parent_head = dependency.get("manifest_head_sha")
+    required_shas = (
+        child_head,
+        child_base,
+        parent_head,
+        expected_child_head,
+        expected_child_base,
+        expected_parent_head,
+    )
+    if any(not isinstance(sha, str) or not SHA1.fullmatch(sha)
+           for sha in required_shas):
+        add("invalid_sha_provenance", "manifest or live dependency SHA is missing or malformed")
+    else:
+        if child_head != expected_child_head:
+            add("changed_child_head", "live child head differs from its manifest pin")
+        if child_base != expected_child_base:
+            add("changed_child_base", "live child base differs from its manifest pin")
+        if parent_head != expected_parent_head:
+            add("changed_dependency_head", "live dependency head differs from its manifest pin")
+        if child_base != parent_head:
+            add(
+                "stale_dependency_base",
+                "live child base SHA does not equal the dependency's live head SHA",
+            )
+        if live.get("base_ref") != dependency.get("branch"):
+            add("dependency_ref_mismatch", "live child base ref differs from the dependency branch")
+
+    compare = observation.get("compare")
+    if not isinstance(compare, dict):
+        add("unverified_ancestry", "GitHub compare ancestry evidence is missing")
+    else:
+        left = compare.get("left_sha", compare.get("base_sha"))
+        right = compare.get("right_sha", compare.get("head_sha"))
+        merge_base = compare.get("merge_base_sha")
+        if (
+            not isinstance(left, str)
+            or not SHA1.fullmatch(left)
+            or not isinstance(right, str)
+            or not SHA1.fullmatch(right)
+            or {left, right} != {child_head, parent_head}
+            or not isinstance(merge_base, str)
+            or not SHA1.fullmatch(merge_base)
+            or compare.get("url") not in (
+                "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/compare/%s...%s"
+                % (left, right),
+                "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/compare/%s...%s"
+                % (right, left),
+            )
+        ):
+            add("unverified_ancestry", "compare evidence does not bind both live heads")
+        elif merge_base != parent_head:
+            add(
+                "dependency_history_diverged",
+                "the dependency head is not the recorded merge base of the child and parent heads",
+            )
+
+    workflow = observation.get("workflow")
+    if not isinstance(workflow, dict):
+        add("missing_workflow", "required workflow definition or run evidence is missing")
+        workflow = {}
+    required_events = workflow.get("required_automatic_events")
+    configured_events = workflow.get("configured_events")
+    runs = workflow.get("runs")
+    if not isinstance(required_events, list) or not required_events:
+        add("missing_required_events", "workflow required-event list is missing")
+        required_events = []
+    if (
+        not isinstance(configured_events, list)
+        or not configured_events
+        or any(not isinstance(event, str) or not event for event in configured_events)
+    ):
+        add("missing_configured_events", "workflow configured-event list is missing or malformed")
+        configured_events = []
+    if not isinstance(runs, list):
+        add("missing_workflow_runs", "workflow run records are missing")
+        runs = []
+
+    for event in required_events:
+        if event not in configured_events:
+            add("unconfigured_required_event", "required %s event is not configured" % event)
+        event_runs = [run for run in runs
+                      if isinstance(run, dict) and run.get("event") == event]
+        if not event_runs:
+            add("missing_event", "no recorded %s run exists" % event)
+            continue
+        matching_head = [
+            run for run in event_runs
+            if run.get("head_sha") == child_head
+        ]
+        if not matching_head:
+            add("stale_workflow_head", "recorded %s runs do not test the live child head" % event)
+            continue
+        run = max(matching_head, key=lambda item: (
+            item.get("attempt") if isinstance(item.get("attempt"), int) else 0,
+            item.get("id") if isinstance(item.get("id"), int) else 0,
+        ))
+        run_id = run.get("id")
+        if (
+            not isinstance(run_id, int)
+            or isinstance(run_id, bool)
+            or run_id < 1
+            or run.get("url") != (
+                "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/%s"
+                % run_id
+            )
+            or not isinstance(run.get("head_sha"), str)
+            or not SHA1.fullmatch(run.get("head_sha", ""))
+        ):
+            add("invalid_workflow_run_identity", "%s run ID, URL, or head SHA is invalid" % event)
+        if (
+            not isinstance(run.get("attempt"), int)
+            or isinstance(run.get("attempt"), bool)
+            or run["attempt"] < 1
+            or run.get("status") != "completed"
+        ):
+            add("incomplete_workflow_run", "%s run attempt is missing or incomplete" % event)
+            continue
+        if run.get("conclusion") != "success":
+            add("workflow_not_successful", "%s run did not conclude successfully" % event)
+            continue
+        jobs = run.get("jobs")
+        if not isinstance(jobs, list) or not jobs:
+            add("missing_executed_jobs", "%s run has no verified job records" % event)
+            continue
+        for job in jobs:
+            if (
+                not isinstance(job, dict)
+                or not isinstance(job.get("id"), int)
+                or isinstance(job.get("id"), bool)
+                or job.get("conclusion") != "success"
+                or not isinstance(job.get("steps_completed"), int)
+                or isinstance(job.get("steps_completed"), bool)
+                or job.get("steps_completed", 0) <= 0
+                or job.get("successful_steps") != job.get("steps_completed")
+                or not isinstance(job.get("critical_steps"), list)
+                or not job.get("critical_steps")
+                or job.get("url") != (
+                    "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/%s/job/%s"
+                    % (run_id, job.get("id"))
+                )
+            ):
+                add("incomplete_job_evidence", "%s run has incomplete or unsuccessful job/step evidence" % event)
+                break
+        if event == "pull_request" and (
+            run.get("base_sha") != live.get("base_sha")
+            or run.get("base_provenance") != "reported by Actions API"
+        ):
+            add(
+                "unverified_workflow_base",
+                "successful pull_request run does not expose the live PR base SHA",
+            )
+
+    return {
+        "status": "READY" if not findings else "BLOCKED",
+        "findings": findings,
+        "workflow_runs_are_semantic_approval": False,
+    }
+
+
+def dependency_readiness_report(fixture, manifest, actual_source_hashes=None):
+    """Reconcile a dated dependency observation against immutable manifest pins."""
+    if not isinstance(fixture, dict):
+        fixture = {}
+    source_findings = []
+    if not isinstance(manifest, dict):
+        source_findings.append({
+            "code": "invalid_manifest",
+            "detail": "manifest is not a JSON object",
+        })
+        manifest = {}
+    pinned_hashes = fixture.get("source_hashes")
+    if not isinstance(pinned_hashes, dict):
+        pinned_hashes = {}
+        source_findings.append({
+            "code": "missing_source_hashes",
+            "detail": "dated evidence does not pin its manifest and triage sources",
+        })
+    expected_source_paths = {
+        "development/copilot-integration/manifest.json",
+        "development/copilot-integration/blocker-triage-20261104.json",
+        "tests/fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json",
+    }
+    if set(pinned_hashes) != expected_source_paths:
+        source_findings.append({
+            "code": "source_hash_set_mismatch",
+            "detail": "dated evidence must pin the manifest, original triage, and prior workflow receipt",
+        })
+    if actual_source_hashes is not None and not isinstance(actual_source_hashes, dict):
+        source_findings.append({
+            "code": "invalid_source_hashes",
+            "detail": "observed source hashes are not a JSON object",
+        })
+        actual_source_hashes = {}
+    if actual_source_hashes is not None:
+        for path, expected in pinned_hashes.items():
+            observed = actual_source_hashes.get(path)
+            if (
+                not isinstance(expected, str)
+                or not re.fullmatch(r"[0-9a-f]{64}", expected)
+                or observed != expected
+            ):
+                source_findings.append({
+                    "code": "source_hash_mismatch",
+                    "detail": "%s does not match the SHA-256 pinned by the observation" % path,
+                })
+
+    prs = manifest.get("pull_requests") if isinstance(manifest, dict) else None
+    expected_prs = {
+        pr.get("number"): pr
+        for pr in prs
+        if (
+            isinstance(pr, dict)
+            and isinstance(pr.get("number"), int)
+            and not isinstance(pr.get("number"), bool)
+        )
+    } if isinstance(prs, list) else {}
+    expected_dependencies = {
+        number: pr.get("depends_on", [])
+        for number, pr in expected_prs.items()
+        if number == 8
+        or (
+            isinstance(pr.get("depends_on"), list)
+            and 8 in pr.get("depends_on", [])
+        )
+    }
+    rows = fixture.get("rows")
+    if not isinstance(rows, list):
+        rows = []
+        source_findings.append({
+            "code": "missing_dependency_rows",
+            "detail": "dated evidence has no dependency rows",
+        })
+    by_number = {
+        row.get("pr_number"): row
+        for row in rows
+        if (
+            isinstance(row, dict)
+            and isinstance(row.get("pr_number"), int)
+            and not isinstance(row.get("pr_number"), bool)
+        )
+    }
+    report_rows = []
+    for number in sorted(set(expected_dependencies) | set(by_number)):
+        row = by_number.get(number)
+        expected_pr = expected_prs.get(number)
+        if row is None or expected_pr is None:
+            report_rows.append({
+                "pr_number": number,
+                "status": "BLOCKED",
+                "findings": [{
+                    "code": "missing_dependency_record",
+                    "detail": "manifest dependency or dated live observation is missing",
+                }],
+            })
+            continue
+        expected_dependency = expected_dependencies[number]
+        dependency_number = row.get("dependency_pr")
+        findings = []
+        if expected_dependency != [dependency_number]:
+            findings.append({
+                "code": "manifest_dependency_mismatch",
+                "detail": "dated evidence does not match the manifest dependency edge",
+            })
+        manifest_row = row.get("manifest")
+        if not isinstance(manifest_row, dict) or any((
+            manifest_row.get("head_sha") != (
+                expected_pr.get("head", {}).get("sha")
+                if isinstance(expected_pr.get("head"), dict) else None
+            ),
+            manifest_row.get("base_ref") != (
+                expected_pr.get("base", {}).get("ref")
+                if isinstance(expected_pr.get("base"), dict) else None
+            ),
+            manifest_row.get("base_sha") != (
+                expected_pr.get("base", {}).get("sha")
+                if isinstance(expected_pr.get("base"), dict) else None
+            ),
+        )):
+            findings.append({
+                "code": "manifest_pin_mismatch",
+                "detail": "dated evidence does not match the current manifest's immutable PR pins",
+            })
+        classified = classify_stacked_dependency_observation(row)
+        findings.extend(classified["findings"])
+        workflow = row.get("workflow")
+        required_workflow_ids = manifest.get("required_workflow_ids", {})
+        pinned_ids = (
+            required_workflow_ids.get(str(number))
+            if isinstance(required_workflow_ids, dict)
+            else None
+        )
+        if (
+            not isinstance(workflow, dict)
+            or not isinstance(pinned_ids, list)
+            or workflow.get("id") not in pinned_ids
+        ):
+            findings.append({
+                "code": "workflow_id_mismatch",
+                "detail": "observed workflow ID is not pinned for this PR in the manifest",
+            })
+        source_pins = workflow.get("source_pins") if isinstance(workflow, dict) else None
+        if (
+            not isinstance(source_pins, list)
+            or any(
+                not isinstance(pin, str)
+                or not re.fullmatch(r"[^@\s]+@(?:[0-9a-f]{40})", pin)
+                for pin in source_pins
+            )
+        ):
+            findings.append({
+                "code": "invalid_source_pin",
+                "detail": "upstream source pin list is malformed",
+            })
+        if (
+            not isinstance(workflow, dict)
+            or not isinstance(workflow.get("blob_sha"), str)
+            or not SHA1.fullmatch(workflow.get("blob_sha", ""))
+            or workflow.get("verified_at_head_sha")
+            != (row.get("live_pr", {}).get("head_sha")
+                if isinstance(row.get("live_pr"), dict) else None)
+        ):
+            findings.append({
+                "code": "workflow_source_unverified",
+                "detail": "workflow source blob is not bound to the observed current PR head",
+            })
+        report_rows.append({
+            "blocker_id": row.get("blocker_id"),
+            "pr_number": number,
+            "dependency_pr": dependency_number,
+            "status": "READY" if not findings and classified["status"] == "READY" else "BLOCKED",
+            "findings": findings,
+            "closure_action": row.get("closure_action"),
+            "live_pr_url": row.get("live_pr", {}).get("url")
+            if isinstance(row.get("live_pr"), dict) else None,
+            "dependency_url": row.get("dependency", {}).get("url")
+            if isinstance(row.get("dependency"), dict) else None,
+        })
+    if set(by_number) != set(expected_dependencies) or len(by_number) != len(rows):
+        source_findings.append({
+            "code": "dependency_row_set_mismatch",
+            "detail": "dated evidence must contain each and only each manifest dependency row",
+        })
+
+    policy = fixture.get("policy")
+    approval_count = policy.get("independent_approvals") if isinstance(policy, dict) else None
+    policy_matches = (
+        isinstance(policy, dict)
+        and policy.get("phase1_gate") == "FAIL_INCOMPLETE"
+        and isinstance(approval_count, int)
+        and not isinstance(approval_count, bool)
+        and approval_count == 0
+        and policy.get("historical_external_approvals_p0") == "0/338"
+        and policy.get("historical_external_approvals_total") == "0/14834"
+        and policy.get("source_pins_changed") is False
+        and policy.get("semantic_approval_from_ci") is False
+    )
+    if not policy_matches:
+        source_findings.append({
+            "code": "policy_mismatch",
+            "detail": "Phase 1 gate, approval total, source pins, or CI semantics are not preserved",
+        })
+    blocked = bool(source_findings) or any(row["status"] != "READY" for row in report_rows)
+    return {
+        "schema": "xgba.phase1.dependency_readiness_report.v1",
+        "status": "BLOCKED" if blocked else "READY",
+        "source_findings": source_findings,
+        "row_count": len(report_rows),
+        "blocked_count": sum(row["status"] == "BLOCKED" for row in report_rows),
+        "phase1_gate": policy.get("phase1_gate") if isinstance(policy, dict) else None,
+        "independent_approvals": policy.get("independent_approvals")
+        if isinstance(policy, dict) else None,
+        "first_concrete_blocker": fixture.get("first_concrete_blocker"),
+        "safe_integration_order": fixture.get("safe_integration_order"),
+        "dependency_advance": fixture.get("dependency_advance"),
+        "rows": report_rows,
+    }
+
+
 def _triage_details(issue):
     if "is based on stale main SHA" in issue:
         return (
@@ -1204,10 +1610,42 @@ def main(argv=None):
         type=Path,
         help="attach a read-only, source-linked live API observation record to JSON triage",
     )
+    parser.add_argument(
+        "--dependency-observations",
+        type=Path,
+        help="classify a dated, source-linked stacked-dependency observation without network access",
+    )
     args = parser.parse_args(argv)
     try:
         manifest_bytes = args.manifest.read_bytes()
         manifest = json.loads(manifest_bytes.decode("utf-8"))
+        if args.dependency_observations:
+            if args.snapshot or args.offline or args.live_observations or args.triage_json:
+                parser.error("--dependency-observations is a standalone offline mode")
+            observation = json.loads(
+                args.dependency_observations.read_text(encoding="utf-8")
+            )
+            source_paths = {
+                "development/copilot-integration/manifest.json":
+                    ROOT / "development/copilot-integration/manifest.json",
+                "development/copilot-integration/blocker-triage-20261104.json":
+                    ROOT / "development/copilot-integration/blocker-triage-20261104.json",
+                "tests/fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json":
+                    ROOT / "tests/fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json",
+            }
+            actual_hashes = {
+                path: hashlib.sha256(source.read_bytes()).hexdigest()
+                for path, source in source_paths.items()
+                if source.is_file()
+            }
+            actual_hashes[
+                "development/copilot-integration/manifest.json"
+            ] = hashlib.sha256(manifest_bytes).hexdigest()
+            report = dependency_readiness_report(
+                observation, manifest, actual_hashes
+            )
+            print(json.dumps(report, indent=2, sort_keys=True))
+            return 1 if report["status"] == "BLOCKED" else 0
         if args.offline and args.snapshot:
             parser.error("--offline and --snapshot are mutually exclusive")
         snapshot = (

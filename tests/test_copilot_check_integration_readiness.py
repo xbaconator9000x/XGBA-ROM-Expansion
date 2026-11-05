@@ -1,7 +1,9 @@
 """Offline fail-closed fixtures for PR integration provenance."""
 
 import copy
+from contextlib import redirect_stdout
 import hashlib
+import io
 import json
 from pathlib import Path
 import unittest
@@ -9,8 +11,11 @@ import unittest
 from tools.copilot_check_integration_readiness import (
     blocker_triage_report,
     classify_main_base_ancestry,
+    classify_stacked_dependency_observation,
     classify_workflow_evidence,
+    dependency_readiness_report,
     _format_workflow_blocker,
+    main,
     missing_required_workflow_events,
     recorded_snapshot,
     validate,
@@ -44,6 +49,10 @@ STALE_WORKFLOW_RECONCILIATION = (
 STALE_MAIN_RECONCILIATION = (
     Path(__file__).parent
     / "fixtures/copilot-integration-readiness/stale_main_base_evidence_20261105.json"
+)
+DEPENDENCY_RECONCILIATION = (
+    Path(__file__).parent.parent
+    / "development/copilot-integration/dependency-base-reconciliation-20261105.json"
 )
 MANIFEST = (
     Path(__file__).parent.parent / "development/copilot-integration/manifest.json"
@@ -794,6 +803,126 @@ class IntegrationReadinessTests(unittest.TestCase):
         self.assertEqual(
             classify_main_base_ancestry(altered)[0], "diverged_or_inconsistent"
         )
+
+    def test_nine_dependency_observations_remain_source_linked_and_blocked(self):
+        fixture = json.loads(DEPENDENCY_RECONCILIATION.read_text(encoding="utf-8"))
+        manifest_bytes = MANIFEST.read_bytes()
+        manifest = json.loads(manifest_bytes)
+        actual_hashes = {
+            path: hashlib.sha256((MANIFEST.parents[2] / path).read_bytes()).hexdigest()
+            for path in fixture["source_hashes"]
+        }
+        report = dependency_readiness_report(fixture, manifest, actual_hashes)
+        rows = {row["pr_number"]: row for row in report["rows"]}
+
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertEqual(report["row_count"], 9)
+        self.assertEqual(report["blocked_count"], 9)
+        self.assertEqual(set(rows), {8, 11, 12, 14, 15, 16, 17, 18, 21})
+        self.assertEqual(report["phase1_gate"], "FAIL_INCOMPLETE")
+        self.assertEqual(report["independent_approvals"], 0)
+        self.assertEqual(report["first_concrete_blocker"]["pr_number"], 8)
+        self.assertEqual(report["dependency_advance"]["ahead_by"], 32)
+        self.assertEqual(len(report["safe_integration_order"]), 3)
+        self.assertEqual(report["source_findings"], [])
+        self.assertIn("dependency_history_diverged",
+                      [item["code"] for item in rows[8]["findings"]])
+        self.assertIn("stale_workflow_head",
+                      [item["code"] for item in rows[8]["findings"]])
+        for number in {11, 12, 14, 15, 16, 17, 18, 21}:
+            codes = {item["code"] for item in rows[number]["findings"]}
+            self.assertIn("stale_dependency_base", codes)
+            self.assertIn("dependency_history_diverged", codes)
+            self.assertIn("unverified_workflow_base", codes)
+        self.assertIn("changed_child_head",
+                      [item["code"] for item in rows[11]["findings"]])
+
+    def test_dependency_observation_rejects_mutated_or_missing_evidence(self):
+        fixture = json.loads(DEPENDENCY_RECONCILIATION.read_text(encoding="utf-8"))
+        baseline = fixture["rows"][3]
+        result = classify_stacked_dependency_observation(baseline)
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertIn("stale_dependency_base",
+                      [item["code"] for item in result["findings"]])
+
+        mutations = (
+            ("missing dependency", lambda row: row.update(dependency=None),
+             "missing_dependency"),
+            ("wrong child SHA", lambda row: row["compare"].update(right_sha="f" * 40),
+             "unverified_ancestry"),
+            ("missing ancestry", lambda row: row.update(compare=None),
+             "unverified_ancestry"),
+            ("mismatched compare URL", lambda row: row["compare"].update(
+                url="https://github.com/xbaconator9000x/XGBA-ROM-Expansion/compare/" + "f" * 40 + "..." + "e" * 40),
+             "unverified_ancestry"),
+            ("unconfigured required event", lambda row: row["workflow"].update(
+                configured_events=["workflow_dispatch"]),
+             "unconfigured_required_event"),
+            ("missing required event", lambda row: row["workflow"].update(
+                runs=[run for run in row["workflow"]["runs"] if run["event"] != "push"]),
+             "missing_event"),
+            ("wrong-head green run", lambda row: next(
+                run for run in row["workflow"]["runs"] if run["event"] == "push"
+            ).update(head_sha="f" * 40), "stale_workflow_head"),
+            ("unverified green PR base", lambda row: next(
+                run for run in row["workflow"]["runs"] if run["event"] == "pull_request"
+            ).update(base_sha=row["live_pr"]["base_sha"]), "unverified_workflow_base"),
+            ("invented run ID", lambda row: next(
+                run for run in row["workflow"]["runs"] if run["event"] == "push"
+            ).update(id=999999), "invalid_workflow_run_identity"),
+            ("missing executed steps", lambda row: next(
+                run for run in row["workflow"]["runs"] for job in run["jobs"]
+            )["jobs"][0].update(successful_steps=0), "incomplete_job_evidence"),
+        )
+        for name, mutate, code in mutations:
+            altered = copy.deepcopy(baseline)
+            with self.subTest(mutation=name):
+                mutate(altered)
+                result = classify_stacked_dependency_observation(altered)
+                self.assertEqual(result["status"], "BLOCKED")
+                self.assertIn(code, [item["code"] for item in result["findings"]])
+
+    def test_dependency_report_fails_on_stale_source_hash_and_missing_row(self):
+        fixture = json.loads(DEPENDENCY_RECONCILIATION.read_text(encoding="utf-8"))
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        actual_hashes = {
+            path: hashlib.sha256((MANIFEST.parents[2] / path).read_bytes()).hexdigest()
+            for path in fixture["source_hashes"]
+        }
+
+        stale_hashes = dict(actual_hashes)
+        stale_hashes["development/copilot-integration/manifest.json"] = "0" * 64
+        report = dependency_readiness_report(fixture, manifest, stale_hashes)
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertIn("source_hash_mismatch",
+                      [item["code"] for item in report["source_findings"]])
+
+        missing_row = copy.deepcopy(fixture)
+        missing_row["rows"].pop()
+        report = dependency_readiness_report(missing_row, manifest, actual_hashes)
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertIn("dependency_row_set_mismatch",
+                      [item["code"] for item in report["source_findings"]])
+
+        altered_policy = copy.deepcopy(fixture)
+        altered_policy["policy"]["source_pins_changed"] = True
+        report = dependency_readiness_report(altered_policy, manifest, actual_hashes)
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertIn("policy_mismatch",
+                      [item["code"] for item in report["source_findings"]])
+
+    def test_dependency_observation_cli_is_offline_and_fails_closed(self):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            status = main([
+                "--dependency-observations",
+                str(DEPENDENCY_RECONCILIATION),
+            ])
+        self.assertEqual(status, 1)
+        report = json.loads(output.getvalue())
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertEqual(report["row_count"], 9)
+        self.assertEqual(report["blocked_count"], 9)
 
     def test_snapshot_with_missing_main_ancestry_fails_closed(self):
         manifest = copy.deepcopy(self.manifest)
