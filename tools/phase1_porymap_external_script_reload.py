@@ -338,11 +338,6 @@ static bool waitForInvalidation(QCoreApplication &app, Map &map, int previous) {
 
 int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);
-    if (argc > 1) {
-        if (argc == 3 && QString::fromLocal8Bit(argv[1]) == "--helper")
-            return writeFile(QString::fromLocal8Bit(argv[2]), "started") ? 23 : 24;
-        return 25;
-    }
     QTemporaryDir temporary("porymap-external-script-reload-XXXXXX");
     if (!temporary.isValid())
         return 2;
@@ -388,9 +383,11 @@ int main(int argc, char **argv) {
         || Editor::openedLine != 3)
         return 8;
 
-    const QString helperPath = QCoreApplication::applicationFilePath();
+    const QString helperPath = "/usr/bin/touch";
     const QString markerPath = QDir(temporary.path()).filePath("launch-marker");
-    const QString command = QString("\"%1\" --helper %2").arg(helperPath, markerPath);
+    if (!QFileInfo(helperPath).isExecutable())
+        return 9;
+    const QString command = QString("%1 %2").arg(helperPath, markerPath);
     qint64 pid = 0;
     const bool launchReturnedTrue = Editor::startDetachedProcess(command, temporary.path(), &pid);
     QElapsedTimer launchTimer;
@@ -478,10 +475,7 @@ def build_and_run(sources):
            .replace("@PARSEUTIL_FUNCTIONS@", functions["parse"])
            .replace("@MAP_FUNCTIONS@", functions["map"])
            .replace("@EDITOR_FUNCTIONS@", functions["editor"]))
-    with tempfile.TemporaryDirectory(
-        prefix="phase1-porymap-external-script-",
-        dir=Path(__file__).resolve().parents[1],
-    ) as directory:
+    with tempfile.TemporaryDirectory(prefix="phase1-porymap-external-script-") as directory:
         temp = Path(directory)
         source_path = temp / "native.cpp"
         binary_path = temp / "native"
