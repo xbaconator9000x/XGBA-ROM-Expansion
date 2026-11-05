@@ -70,7 +70,7 @@ REUSED_FILES = {
          "scriptLabels.append(event->getScripts());",
          'scriptLabels.removeAll("0x0");',
          "QString Map::getScriptsFilepath() const {",
-         "usePoryScript && !QFile::exists(path + extension)",
+         "usePoryscript && !QFile::exists(path + extension)",
          "extension = Project::getScriptFileExtension(false)",
          "emit openScriptRequested(label);"),
     ),
