@@ -338,6 +338,8 @@ static bool waitForInvalidation(QCoreApplication &app, Map &map, int previous) {
 
 int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);
+    if (argc == 3 && QString::fromLocal8Bit(argv[1]) == "--helper")
+        return writeFile(QString::fromLocal8Bit(argv[2]), "started") ? 23 : 24;
     QTemporaryDir temporary("porymap-external-script-reload-XXXXXX");
     if (!temporary.isValid())
         return 2;
@@ -383,19 +385,9 @@ int main(int argc, char **argv) {
         || Editor::openedLine != 3)
         return 8;
 
-    const QString helperPath = QDir(temporary.path()).filePath("helper with spaces.sh");
+    const QString helperPath = QCoreApplication::applicationFilePath();
     const QString markerPath = QDir(temporary.path()).filePath("launch marker.txt");
-    QFile helper(helperPath);
-    const QByteArray helperContents = "#!/bin/sh\nprintf started > \"$1\"\nexit 23\n";
-    if (!helper.open(QIODevice::WriteOnly)
-        || helper.write(helperContents) != helperContents.size())
-        return 9;
-    helper.close();
-    if (!helper.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner
-                               | QFileDevice::ExeOwner))
-        return 10;
-
-    const QString command = QString("\"%1\" \"%2\"").arg(helperPath, markerPath);
+    const QString command = QString("\"%1\" --helper \"%2\"").arg(helperPath, markerPath);
     qint64 pid = 0;
     const bool launchReturnedTrue = Editor::startDetachedProcess(command, temporary.path(), &pid);
     QElapsedTimer launchTimer;
@@ -407,8 +399,14 @@ int main(int argc, char **argv) {
     const bool helperMarkerObserved = QFileInfo::exists(markerPath);
     const bool missingProgramRejected = !Editor::startDetachedProcess(
         "/__phase1_missing_external_editor__/not-found", temporary.path(), nullptr);
-    if (!launchReturnedTrue || pid <= 0 || !helperMarkerObserved || !missingProgramRejected)
+    if (!launchReturnedTrue)
         return 11;
+    if (pid <= 0)
+        return 12;
+    if (!helperMarkerObserved)
+        return 13;
+    if (!missingProgramRejected)
+        return 14;
 
     std::cout << "{\"script_path\":\"" << scriptPath.toStdString()
               << "\",\"initial_label_cached\":true"
