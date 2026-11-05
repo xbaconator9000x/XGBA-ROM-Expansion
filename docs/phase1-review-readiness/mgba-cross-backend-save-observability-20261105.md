@@ -124,6 +124,13 @@ observed, and any injected-error record that claims persistence success. Its
 local `--source-dir` mode checks each fetched source file byte-for-byte but does
 not attest whole-tree identity; the existing workflow uses `--checkout`.
 
+The exact-head PR Actions run
+[#41983780464](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41983780464)
+at commit `a79091043fa8e3a71c668656e7a0166fef2c1a46` concluded
+`action_required`. GitHub reported zero jobs and the logs query reported zero
+total jobs, so no workflow step executed; this is a permission blocker, not a
+CI pass or failure. The focused suite and source-dir verifier passed locally.
+
 The focused suite contains 19 positive/adversarial tests. Prior native
 observations remain host-specific controlled injections; this package does not
 run a real Qt/SDL/libretro/Python frontend, stock gameplay, a physical cartridge,
