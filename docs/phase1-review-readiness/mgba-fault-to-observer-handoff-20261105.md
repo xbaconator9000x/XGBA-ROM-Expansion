@@ -65,8 +65,23 @@ claim. No independent semantic approval or gate change is made.
 Local validation compiled and ran the host witness successfully with GCC
 13.3.0. It observed one failed async sync, one exact failure INFO log, one
 success-control INFO log, one failed-sync callback, no retry without a new
-write, and no persistence acknowledgment. The native executable SHA-256 was
+write, and no persistence acknowledgment. The local native executable
+SHA-256 was
 `495a8184ab1d58ca6f2ace4f938cfd7a67428611b42226f3b4babdab3cf85ce5`.
 The machine-matrix controls and callback parser controls also passed locally.
-Exact-head Actions evidence for this addendum is recorded after its run
-completes; local execution is not CI evidence.
+
+Exact-head PR Actions run
+[#42031254653](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42031254653)
+for code commit `5b327cb70f3a6a8e1c111e8cec4d9fad1759542d` completed
+**SUCCESS**. Job `127257979773` succeeded, including the 18-test observer
+handoff suite, 34-test callback/logger suite, exact-checkout pinned-source
+verification (`source_tree_identity_verified=true`), and the native callback
+and log witness. Its emitted native artifact SHA-256 was
+`d10f9157189452c9f172677ee73affbea5049a856ffb927e38c93a5a9094097f`.
+The recorded observations included one injected failed sync, one exact
+failure INFO log at level 8, one success-control INFO log, one callback after
+the failed sync, zero retries without a new write, and zero persistence
+acknowledgments. The workflow is pull-request-triggered; no push-triggered
+run was present. This Actions result validates those checks at the cited code
+head only; it is not semantic approval or evidence of frontend visibility,
+save-file persistence, physical Flash, or power-loss durability.
