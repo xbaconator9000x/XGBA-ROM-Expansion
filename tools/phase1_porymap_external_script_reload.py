@@ -338,8 +338,11 @@ static bool waitForInvalidation(QCoreApplication &app, Map &map, int previous) {
 
 int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);
-    if (argc == 3 && QString::fromLocal8Bit(argv[1]) == "--helper")
-        return writeFile(QString::fromLocal8Bit(argv[2]), "started") ? 23 : 24;
+    if (argc > 1) {
+        if (argc == 3 && QString::fromLocal8Bit(argv[1]) == "--helper")
+            return writeFile(QString::fromLocal8Bit(argv[2]), "started") ? 23 : 24;
+        return 25;
+    }
     QTemporaryDir temporary("porymap-external-script-reload-XXXXXX");
     if (!temporary.isValid())
         return 2;
@@ -386,8 +389,8 @@ int main(int argc, char **argv) {
         return 8;
 
     const QString helperPath = QCoreApplication::applicationFilePath();
-    const QString markerPath = QDir(temporary.path()).filePath("launch marker.txt");
-    const QString command = QString("\"%1\" --helper \"%2\"").arg(helperPath, markerPath);
+    const QString markerPath = QDir(temporary.path()).filePath("launch-marker");
+    const QString command = QString("\"%1\" --helper %2").arg(helperPath, markerPath);
     qint64 pid = 0;
     const bool launchReturnedTrue = Editor::startDetachedProcess(command, temporary.path(), &pid);
     QElapsedTimer launchTimer;
