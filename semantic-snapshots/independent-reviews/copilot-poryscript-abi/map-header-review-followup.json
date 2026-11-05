@@ -1,0 +1,578 @@
+{
+  "schema": "copilot-poryscript-abi-file-inspection/v3",
+  "recorded_at": "2026-11-05",
+  "scope": "Disjoint Phase 1 whole-source inspection handoff for the pinned FireRed map-header producer, generated assembly consumers, and authored map-script inclusion path. Does not repeat prior ABI, Poryscript emitter/parser, script interpreter, or FireRed command-dispatch tranches.",
+  "basis": {
+    "prior_exact_head": "af2fa85f62ed9a3f965207b80068f83277177736",
+    "prior_pr_run_id": 41927842244,
+    "prior_pr_run_attempt": 2,
+    "prior_review_record_job_id": 126922717623,
+    "prior_actual_cli_job_id": 126922862763,
+    "prior_pr_run_conclusion": "success",
+    "push_run_status": "NO_PUSH_TRIGGERED_RUN",
+    "prior_run_note": "The baseline PR workflow retry completed successfully for the prior exact head and both jobs passed. It predates this handoff. No push-triggered run was found for the branch; this does not validate this receipt or establish semantic approval."
+  },
+  "reviewer": {
+    "id": "copilot-issue33-map-header-tranche",
+    "identity": "@copilot (GitHub Copilot Coding Agent; issue #33 FireRed map-header review tranche)",
+    "source_interpreter_identity": "xbaconator9000x (author of the original PR #20 witness implementation)",
+    "distinct_from_source_interpreter": true,
+    "authenticated_github_review_attribution": false,
+    "independent_human_attestation": false,
+    "attribution_blocker": "The available GitHub tools cannot submit an authenticated Copilot pull-request review. No qualifying reviewer attribution is claimed."
+  },
+  "accounting": {
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "approved_p0": 0,
+    "p0_total": 338,
+    "approved_total": 0,
+    "inventory_total": 14834,
+    "whole_file_semantic_reviews": 0,
+    "new_qualifying_copilot_receipts": 0,
+    "phase2_started": false,
+    "shared_queue_register_gate_modified": false
+  },
+  "review_handoff": {
+    "status": "READY_FOR_INDEPENDENT_REVIEW_NOT_APPROVAL",
+    "pending_requirements": [
+      "authenticated_independent_reviewer",
+      "complete_semantic_objection_resolution",
+      "applicable_source_license_review",
+      "exact_head_pr_and_push_ci"
+    ],
+    "scope_limit": "All seven complete pinned files were read, but this handoff is not an exhaustive semantic disposition of unrelated map generation or event-script behavior."
+  },
+  "negative_controls": [
+    {
+      "id": "NC-SOURCE-IDENTITY",
+      "test": "test_map_header_handoff_rejects_source_and_dossier_mutations",
+      "description": "Mutating any selected file's pinned source blob or full-byte digest must fail validation."
+    },
+    {
+      "id": "NC-DOSSIER-IDENTITY",
+      "test": "test_map_header_handoff_rejects_source_and_dossier_mutations",
+      "description": "Mutating any selected file's original dossier-line digest must fail validation."
+    },
+    {
+      "id": "NC-RANGE-HASH",
+      "test": "test_map_header_handoff_rejects_range_and_dependency_mutations",
+      "description": "Mutating a cited source range digest must fail validation."
+    },
+    {
+      "id": "NC-DEPENDENCY-ENDPOINT",
+      "test": "test_map_header_handoff_rejects_range_and_dependency_mutations",
+      "description": "Replacing a dependency with an endpoint absent from the pinned closure must fail validation."
+    },
+    {
+      "id": "NC-VERDICT",
+      "test": "test_map_header_handoff_rejects_verdict_and_review_claim_mutations",
+      "description": "An approval verdict or whole-file semantic disposition claim must fail validation."
+    },
+    {
+      "id": "NC-ATTRIBUTION",
+      "test": "test_map_header_handoff_rejects_verdict_and_review_claim_mutations",
+      "description": "Fabricating authenticated reviewer attribution must fail validation."
+    }
+  ],
+  "files": [
+    {
+      "repository": "pret/pokefirered",
+      "path": "tools/mapjson/mapjson.cpp",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "8d8ec4e4e6e1c011b06f00819abe40bad10d19d5",
+      "sha256": "c8a4af233a24c70ee49f2739bec7b313da8f50e15d2a25b31db1d40cc179aab9",
+      "full_source_sha256": "c8a4af233a24c70ee49f2739bec7b313da8f50e15d2a25b31db1d40cc179aab9",
+      "dossier_record_line_sha256": "b271592ab18fe66b77ef4186b135f90d95f54bc99166ffda18aa96e33fbeb915",
+      "byte_length": 28254,
+      "line_count": 740,
+      "complete_source_inspection": true,
+      "source_extent": "COMPLETE_PINNED_FILE_READ",
+      "extent": "Complete 740-line source fetched from the immutable upstream commit, checked against its Git blob and SHA-256, and read end-to-end. Semantic notes are scoped to map-header pointer and generated-include emission.",
+      "evidence_ranges": [
+        {
+          "start": 122,
+          "end": 184,
+          "sha256": "8ba5d231949bb14096a6e51a19c6c2e4b22cab4951dfa7b475705573ab311568"
+        },
+        {
+          "start": 436,
+          "end": 455,
+          "sha256": "c3c51819b8f4f484d99a435b58d8ecef728e0946f38dd1aae5f5b4a3bf4f867e"
+        }
+      ],
+      "supplemental_evidence_ranges": [
+        {
+          "start": 488,
+          "end": 503,
+          "sha256": "920e139caac5559547514dfd7a5e1dab914dd706a93b82bfe2951b961c8f8ca8"
+        }
+      ],
+      "source_observations": [
+        "generate_map_header_text emits a 32-bit map-script pointer to either the configured shared_scripts_map label or the current map's _MapScripts label; it does not emit the script records themselves.",
+        "generate_headers_text includes each map's generated header.inc in map-group order, while generate_groups_text emits the map-group pointer arrays and gMapGroups table.",
+        "The generated header's _MapScripts target is a symbol contract with separately authored script assembly; this source does not validate that the target label exists or that the referenced table is well formed."
+      ],
+      "dependency_links": [
+        {
+          "repository": "pret/pokefirered",
+          "path": "map_data_rules.mk",
+          "direction": "inbound",
+          "relation": "Make rules invoke the map and groups generator modes."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "data/maps.s",
+          "direction": "outbound",
+          "relation": "Generated map header and group include files are assembled by the maps data source."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "src/overworld.c",
+          "direction": "outbound",
+          "relation": "Map-group and map-header data are selected by the overworld map-loading path."
+        }
+      ],
+      "license_evidence": {
+        "status": "UNRESOLVED",
+        "evidence_checked": "The pinned repository root listing contained no LICENSE, LICENSE.md, or COPYING file.",
+        "unresolved": "No applicable source license or transitive dependency license determination is established."
+      },
+      "validation": {
+        "source_identity": "Complete raw source bytes fetched from the immutable pinned commit; Git blob and SHA-256 match the existing source dossier row.",
+        "execution_scope": "Source inspection only; no mapjson executable, generated output, assembler, linked ROM, or gameplay was executed for this tranche."
+      },
+      "unresolved_obligations": [
+        "O-INTEGRATION",
+        "O-DEPENDENCIES",
+        "O-LICENSING",
+        "O-ATTESTATION",
+        "O-WHOLEFILE"
+      ],
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "map_data_rules.mk",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "b32b85a91d9460642345ca983c37d165e820741f",
+      "sha256": "e8698d24501c59e73fec9f64ef87c19ba8983d53bcb0592e49e82369ef5378be",
+      "full_source_sha256": "e8698d24501c59e73fec9f64ef87c19ba8983d53bcb0592e49e82369ef5378be",
+      "dossier_record_line_sha256": "e9440e7996791763a84d0688d1110f708e15e4a7efcaaf2407ff33e00135989f",
+      "byte_length": 2402,
+      "line_count": 40,
+      "complete_source_inspection": true,
+      "source_extent": "COMPLETE_PINNED_FILE_READ",
+      "extent": "Complete 40-line pinned build-rule file read end-to-end. Findings are limited to generator invocation and maps assembly prerequisites.",
+      "evidence_ranges": [
+        {
+          "start": 22,
+          "end": 34,
+          "sha256": "8ab9f506aa15af3762d7713275f4c657be5a875fb3961416ed3d0a46c8f02464"
+        }
+      ],
+      "source_observations": [
+        "Per-map map.json rules invoke MAPJSON map firered to generate header.inc, events.inc, and connections.inc; map_groups.json invokes the groups mode for aggregate headers and group data.",
+        "The maps.o target depends on generated header and group includes and assembles data/maps.s through the preprocessor, CPP, preprocessor include expansion, and assembler.",
+        "These rules do not invoke Poryscript, and generated outputs are not archived as source evidence in this tranche."
+      ],
+      "dependency_links": [
+        {
+          "repository": "pret/pokefirered",
+          "path": "tools/mapjson/mapjson.cpp",
+          "direction": "outbound",
+          "relation": "MAPJSON executes this pinned producer for per-map and map-group artifacts."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "data/maps.s",
+          "direction": "outbound",
+          "relation": "The maps.o target assembles the source with generated map header/group includes."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "Makefile",
+          "direction": "inbound",
+          "relation": "Root build includes the map data rules."
+        }
+      ],
+      "license_evidence": {
+        "status": "UNRESOLVED",
+        "evidence_checked": "The pinned repository root listing contained no LICENSE, LICENSE.md, or COPYING file.",
+        "unresolved": "No applicable source license determination is established."
+      },
+      "validation": {
+        "source_identity": "Complete raw source bytes fetched from the immutable pinned commit; Git blob and SHA-256 match the existing source dossier row.",
+        "execution_scope": "Build-rule source inspection only; no root ROM build or generated-file comparison was run."
+      },
+      "unresolved_obligations": [
+        "O-INTEGRATION",
+        "O-DEPENDENCIES",
+        "O-LICENSING",
+        "O-ATTESTATION",
+        "O-WHOLEFILE"
+      ],
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "data/maps.s",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "fc88d8fc2521e92db22264bf6cf33966fda977ba",
+      "sha256": "5ad1da0c025c658bb07209b34cc0c68f595d6a00d67f1944af8a9820ac3c6b52",
+      "full_source_sha256": "5ad1da0c025c658bb07209b34cc0c68f595d6a00d67f1944af8a9820ac3c6b52",
+      "dossier_record_line_sha256": "c37c44477f74bbdfe03fa192a0eecb38b9b2f196f12c60d571d34ff8938c6591",
+      "byte_length": 489,
+      "line_count": 17,
+      "complete_source_inspection": true,
+      "source_extent": "COMPLETE_PINNED_FILE_READ",
+      "extent": "Complete 17-line pinned assembly source read end-to-end. This is a generated-data consumer, not a map-script record producer.",
+      "evidence_ranges": [
+        {
+          "start": 11,
+          "end": 17,
+          "sha256": "7ec03c6a8fbca3ab8d3a5a507d03dc973931e4739000a30770d94b3a14fc7401"
+        }
+      ],
+      "source_observations": [
+        "The .rodata section includes layouts, generated map headers, map groups, and map connections; it contains no inline map-script records.",
+        "The map-script pointer is reached through the generated per-map header include, so exact generated output and relocation/link evidence are separate from this source file."
+      ],
+      "dependency_links": [
+        {
+          "repository": "pret/pokefirered",
+          "path": "map_data_rules.mk",
+          "direction": "inbound",
+          "relation": "The maps.o rule declares this assembly input and generated include prerequisites."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "tools/mapjson/mapjson.cpp",
+          "direction": "inbound",
+          "relation": "The included map header and group assembly sources are emitted by mapjson."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "src/overworld.c",
+          "direction": "outbound",
+          "relation": "Overworld map selection consumes the assembled map groups and headers."
+        }
+      ],
+      "license_evidence": {
+        "status": "UNRESOLVED",
+        "evidence_checked": "The pinned repository root listing contained no LICENSE, LICENSE.md, or COPYING file.",
+        "unresolved": "No applicable source license determination is established."
+      },
+      "validation": {
+        "source_identity": "Complete raw source bytes fetched from the immutable pinned commit; Git blob and SHA-256 match the existing source dossier row.",
+        "execution_scope": "Source inspection only; assembled object bytes and link relocations are not produced by this tranche."
+      },
+      "unresolved_obligations": [
+        "O-INTEGRATION",
+        "O-DEPENDENCIES",
+        "O-LICENSING",
+        "O-ATTESTATION",
+        "O-WHOLEFILE"
+      ],
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "include/global.fieldmap.h",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "e2828ec0cb1439718e830fbef4366770b3b77b1c",
+      "sha256": "34a8c91e10803ba48b97a2df8a721ca37fad7572b2ff951a4ab7ec15a5f050eb",
+      "full_source_sha256": "34a8c91e10803ba48b97a2df8a721ca37fad7572b2ff951a4ab7ec15a5f050eb",
+      "dossier_record_line_sha256": "f333b657b10bdabd7b00d843754c5cecfd8486661aeac820951d2245763f4528",
+      "byte_length": 12127,
+      "line_count": 400,
+      "complete_source_inspection": true,
+      "source_extent": "COMPLETE_PINNED_FILE_READ",
+      "extent": "Complete 400-line pinned C header read end-to-end. ABI notes are limited to MapHeader layout and the mapScripts pointer field.",
+      "evidence_ranges": [
+        {
+          "start": 191,
+          "end": 210,
+          "sha256": "4e6424cf5acae1ad05c0a5d007d9f95684340c42b8121350a6f7681e820f6f07"
+        }
+      ],
+      "source_observations": [
+        "MapHeader declares mapScripts as a const u8 pointer at documented offset 0x08, after mapLayout and events pointers and before connections.",
+        "MapHeader has no explicit map-script table byte length; this header declaration alone does not establish bounds or malformed-table safety."
+      ],
+      "dependency_links": [
+        {
+          "repository": "pret/pokefirered",
+          "path": "src/overworld.c",
+          "direction": "outbound",
+          "relation": "The overworld code copies and uses the MapHeader selected from map groups."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "src/script.c",
+          "direction": "outbound",
+          "relation": "Script table readers resolve map script pointers obtained from the active map header."
+        }
+      ],
+      "license_evidence": {
+        "status": "UNRESOLVED",
+        "evidence_checked": "The pinned repository root listing contained no LICENSE, LICENSE.md, or COPYING file.",
+        "unresolved": "No applicable source license determination is established."
+      },
+      "validation": {
+        "source_identity": "Complete raw source bytes fetched from the immutable pinned commit; Git blob and SHA-256 match the existing source dossier row.",
+        "execution_scope": "Header/source inspection only; no compiled C ABI or malformed map-header execution was run."
+      },
+      "unresolved_obligations": [
+        "O-BOUNDS",
+        "O-DEPENDENCIES",
+        "O-LICENSING",
+        "O-ATTESTATION",
+        "O-WHOLEFILE"
+      ],
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "data/event_scripts.s",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "88d75946a7300ccf952f4a36c283966c6aebf5c0",
+      "sha256": "3b1bd10d26c0a74fb3452ab42fc9d14dfca785f8b71389db06c71f5dfdd50a27",
+      "full_source_sha256": "3b1bd10d26c0a74fb3452ab42fc9d14dfca785f8b71389db06c71f5dfdd50a27",
+      "dossier_record_line_sha256": "4920d38314e4c88c0e006dcfe5b8d8f8d59040a8c1e765b6d049dd0dc88be88e",
+      "byte_length": 55643,
+      "line_count": 1362,
+      "complete_source_inspection": true,
+      "source_extent": "COMPLETE_PINNED_FILE_READ",
+      "extent": "Complete 1362-line assembly source read end-to-end. Scope observations cover script-data assembly, tag/macro includes, and map-script file inclusion; remaining script and text bodies were read but not semantically dispositioned.",
+      "evidence_ranges": [
+        {
+          "start": 90,
+          "end": 105,
+          "sha256": "0a8310dbe298f688f7077c0dc43f0743ae6e378a1659f9abe58cab4546b24b5c"
+        }
+      ],
+      "supplemental_evidence_ranges": [
+        {
+          "start": 27,
+          "end": 48,
+          "sha256": "aa567342c19eac7ef6545263c4874dd0a503e62694fe25ec9870760c3d371743"
+        },
+        {
+          "start": 310,
+          "end": 316,
+          "sha256": "503188023f089b34492a426af202154b59b44abfd09a447c9ced7a0151546be3"
+        }
+      ],
+      "source_observations": [
+        "The source includes constants/map_scripts.h and asm/macros/event.inc, opens the script_data section, includes script_cmd_table.inc, then includes many authored per-map scripts including Route18/scripts.inc.",
+        "The Route18 include establishes source ownership of its named script labels and table records; data/maps.s separately assembles generated map headers that point to map-script labels.",
+        "This aggregate file contains unrelated scripts and text; successful inclusion does not prove that every generated map-header pointer resolves or that each table is valid."
+      ],
+      "dependency_links": [
+        {
+          "repository": "pret/pokefirered",
+          "path": "Makefile",
+          "direction": "inbound",
+          "relation": "The root build's event script assembly input includes this source."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "data/maps/Route18/scripts.inc",
+          "direction": "outbound",
+          "relation": "This file includes the authored Route18 map script records and bodies."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "include/constants/map_scripts.h",
+          "direction": "outbound",
+          "relation": "Included constants provide the numeric map-script tags."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "asm/macros/map.inc",
+          "direction": "outbound",
+          "relation": "The event macro include closure supplies map_script and map_script_2 assembly forms."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "data/script_cmd_table.inc",
+          "direction": "outbound",
+          "relation": "The assembled script_data section also includes the opcode handler table."
+        }
+      ],
+      "license_evidence": {
+        "status": "UNRESOLVED",
+        "evidence_checked": "The pinned repository root listing contained no LICENSE, LICENSE.md, or COPYING file.",
+        "unresolved": "No applicable source license determination is established."
+      },
+      "validation": {
+        "source_identity": "Complete raw source bytes fetched from the immutable pinned commit; Git blob and SHA-256 match the existing source dossier row.",
+        "execution_scope": "Source inspection only; no assembler invocation or symbol-resolution/link test was run for this file."
+      },
+      "unresolved_obligations": [
+        "O-INTEGRATION",
+        "O-DEPENDENCIES",
+        "O-LICENSING",
+        "O-ATTESTATION",
+        "O-WHOLEFILE"
+      ],
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "data/maps/Route18/scripts.inc",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "4f5e9019f886db1a4930b13e73a43a0bc4e83586",
+      "sha256": "6424a79cd71dcdc8a46436cd375fd7b3a202f5fb1ddaea2dad7cc6ea2ce662dc",
+      "full_source_sha256": "6424a79cd71dcdc8a46436cd375fd7b3a202f5fb1ddaea2dad7cc6ea2ce662dc",
+      "dossier_record_line_sha256": "bb23e37abe3b522b1377fe13fee408d32080b1f78a89be4dee9e51aecbce5272",
+      "byte_length": 660,
+      "line_count": 28,
+      "complete_source_inspection": true,
+      "source_extent": "COMPLETE_PINNED_FILE_READ",
+      "extent": "Complete 28-line pinned authored assembly file read end-to-end. This file is authored FireRed assembly, not Poryscript-generated output.",
+      "evidence_ranges": [
+        {
+          "start": 1,
+          "end": 18,
+          "sha256": "46b713f2677f09556f617d1f5a3fa5b2b0581acd47259dd457a0a567c21323f0"
+        }
+      ],
+      "supplemental_evidence_ranges": [
+        {
+          "start": 19,
+          "end": 28,
+          "sha256": "fcbb6b48164630d0a171bd744e44f790cf0a54f8c7803a8cd00005627d9bbdf5"
+        }
+      ],
+      "source_observations": [
+        "Route18_MapScripts is authored and contains two one-byte map_script tags followed by a separate .byte 0 outer sentinel.",
+        "The authored Route18_OnWarp table contains one map_script_2 record with VAR_MAP_SCENE_ROUTE16 and value 1, followed by a separate .2byte 0 conditional-table sentinel.",
+        "The script body labels are authored in this file and referenced by the map-table entries; this example does not test duplicate tags, zero operands, malformed tables, or runtime bounds."
+      ],
+      "dependency_links": [
+        {
+          "repository": "pret/pokefirered",
+          "path": "data/event_scripts.s",
+          "direction": "inbound",
+          "relation": "The aggregate event-script assembly includes this source file."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "asm/macros/map.inc",
+          "direction": "outbound",
+          "relation": "The map_script and map_script_2 macros define the authored record encodings."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "include/constants/map_scripts.h",
+          "direction": "outbound",
+          "relation": "The table tag operands are defined by these constants."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "src/script.c",
+          "direction": "outbound",
+          "relation": "The script interpreter reads map-script table records and dispatches the selected script."
+        }
+      ],
+      "license_evidence": {
+        "status": "UNRESOLVED",
+        "evidence_checked": "The pinned repository root listing contained no LICENSE, LICENSE.md, or COPYING file.",
+        "unresolved": "No applicable source license determination is established."
+      },
+      "validation": {
+        "source_identity": "Complete raw source bytes fetched from the immutable pinned commit; Git blob and SHA-256 match the existing source dossier row.",
+        "execution_scope": "Authored-source inspection only; this table was not assembled or executed by FireRed or mGBA in this tranche."
+      },
+      "unresolved_obligations": [
+        "O-PARSER-SHAPE",
+        "O-CONDITION-SENTINEL",
+        "O-BOUNDS",
+        "O-LICENSING",
+        "O-ATTESTATION",
+        "O-WHOLEFILE"
+      ],
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "include/constants/map_scripts.h",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "1353de360cf1e00b6efbb26ec59c4822c99b59bf",
+      "sha256": "02f8c3a4dd660d5b11f7d4af1f5a6d4530a994df33ba8304024e2a5ba004afc8",
+      "full_source_sha256": "02f8c3a4dd660d5b11f7d4af1f5a6d4530a994df33ba8304024e2a5ba004afc8",
+      "dossier_record_line_sha256": "89a24d87bd9d83cff71923785c72529311083b2999098d464a5d2967919e7860",
+      "byte_length": 443,
+      "line_count": 12,
+      "complete_source_inspection": true,
+      "source_extent": "COMPLETE_PINNED_FILE_READ",
+      "extent": "Complete 12-line pinned constants header read end-to-end. Findings cover tag values and do not infer validity checks from the constants themselves.",
+      "evidence_ranges": [
+        {
+          "start": 4,
+          "end": 10,
+          "sha256": "722319e60ede58f007c7b6db5a4d7dc30b847d502e896ab5e3d12b06479edf3a"
+        }
+      ],
+      "source_observations": [
+        "The header assigns map-script tag values 1 through 7; the direct and conditional table values used by the Route18 example are ON_TRANSITION=3 and ON_WARP_INTO_MAP_TABLE=4.",
+        "This header defines no zero tag constant or validation policy; sentinel and tag-category semantics belong to macro and reader consumers."
+      ],
+      "dependency_links": [
+        {
+          "repository": "pret/pokefirered",
+          "path": "data/event_scripts.s",
+          "direction": "inbound",
+          "relation": "The event-script assembly includes this constants header."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "data/maps/Route18/scripts.inc",
+          "direction": "outbound",
+          "relation": "The authored map table uses the transition and warp-table tag constants."
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "src/script.c",
+          "direction": "outbound",
+          "relation": "The script reader switches on the numeric map-script type tags."
+        }
+      ],
+      "license_evidence": {
+        "status": "UNRESOLVED",
+        "evidence_checked": "The pinned repository root listing contained no LICENSE, LICENSE.md, or COPYING file.",
+        "unresolved": "No applicable source license determination is established."
+      },
+      "validation": {
+        "source_identity": "Complete raw source bytes fetched from the immutable pinned commit; Git blob and SHA-256 match the existing source dossier row.",
+        "execution_scope": "Source inspection only; no tag dispatch runtime was executed."
+      },
+      "unresolved_obligations": [
+        "O-PARSER-SHAPE",
+        "O-DEPENDENCIES",
+        "O-LICENSING",
+        "O-ATTESTATION",
+        "O-WHOLEFILE"
+      ],
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE"
+    }
+  ],
+  "summary": {
+    "files_with_full_source_text_retrieved": 7,
+    "complete_source_files_read": 7,
+    "source_identity_records": 7,
+    "whole_file_semantic_reviews": 0,
+    "new_copilot_reviewed_passed_files": 0,
+    "new_qualifying_copilot_receipts": 0,
+    "new_approvals": 0,
+    "phase1_gate": "FAIL_INCOMPLETE"
+  }
+}

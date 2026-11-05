@@ -375,6 +375,48 @@ FILE_INSPECTION_SCHEMAS = {
         },
         "prior_head": "18de5e859392906e1da4aed800daf15e497d63c5",
     },
+    "copilot-poryscript-abi-file-inspection/v3": {
+        "reviewer_id": "copilot-issue33-map-header-tranche",
+        "reviewer_identity": (
+            "@copilot (GitHub Copilot Coding Agent; issue #33 "
+            "FireRed map-header review tranche)"
+        ),
+        "expected_files": {
+            ("pret/pokefirered", "tools/mapjson/mapjson.cpp"),
+            ("pret/pokefirered", "map_data_rules.mk"),
+            ("pret/pokefirered", "data/maps.s"),
+            ("pret/pokefirered", "include/global.fieldmap.h"),
+            ("pret/pokefirered", "data/event_scripts.s"),
+            ("pret/pokefirered", "data/maps/Route18/scripts.inc"),
+            ("pret/pokefirered", "include/constants/map_scripts.h"),
+        },
+        "supplemental_ranges": {
+            ("pret/pokefirered", "tools/mapjson/mapjson.cpp"): {
+                (488, 503):
+                    "920e139caac5559547514dfd7a5e1dab914dd706a93b82bfe2951b961c8f8ca8",
+            },
+            ("pret/pokefirered", "data/event_scripts.s"): {
+                (27, 48):
+                    "aa567342c19eac7ef6545263c4874dd0a503e62694fe25ec9870760c3d371743",
+                (310, 316):
+                    "503188023f089b34492a426af202154b59b44abfd09a447c9ced7a0151546be3",
+            },
+            ("pret/pokefirered", "data/maps/Route18/scripts.inc"): {
+                (19, 28):
+                    "fcbb6b48164630d0a171bd744e44f790cf0a54f8c7803a8cd00005627d9bbdf5",
+            },
+        },
+        "source_dimensions": {
+            ("pret/pokefirered", "tools/mapjson/mapjson.cpp"): (28254, 740),
+            ("pret/pokefirered", "map_data_rules.mk"): (2402, 40),
+            ("pret/pokefirered", "data/maps.s"): (489, 17),
+            ("pret/pokefirered", "include/global.fieldmap.h"): (12127, 400),
+            ("pret/pokefirered", "data/event_scripts.s"): (55643, 1362),
+            ("pret/pokefirered", "data/maps/Route18/scripts.inc"): (660, 28),
+            ("pret/pokefirered", "include/constants/map_scripts.h"): (443, 12),
+        },
+        "prior_head": "af2fa85f62ed9a3f965207b80068f83277177736",
+    },
 }
 
 
@@ -411,22 +453,31 @@ def validate_file_inspection_record(record, closure_record):
     basis = record.get("basis", {})
     require(basis.get("prior_exact_head") == schema_config["prior_head"],
             "file-inspection prior head differs")
-    if record["schema"].endswith("/v1"):
+    if record["schema"] == "copilot-poryscript-abi-file-inspection/v1":
         require(basis.get("prior_workflow_run_id") == 41850174614 and
                 basis.get("prior_review_record_job_id") == 126702487227 and
                 basis.get("prior_actual_cli_job_id") == 126702487573 and
                 basis.get("prior_run_note"),
                 "prior exact-head validation provenance is incomplete")
-    else:
+    elif record["schema"] == "copilot-poryscript-abi-file-inspection/v2":
         require(basis.get("prior_successful_exact_head_run") == 41850174614 and
                 basis.get("current_run_status_at_recording") ==
                 "Latest PR workflow run 41891419634 was action_required with zero jobs; no push-triggered run was available.",
                 "current exact-head CI blocker provenance is incomplete")
+    else:
+        require(basis.get("prior_pr_run_id") == 41927842244 and
+                basis.get("prior_pr_run_attempt") == 2 and
+                basis.get("prior_review_record_job_id") == 126922717623 and
+                basis.get("prior_actual_cli_job_id") == 126922862763 and
+                basis.get("prior_pr_run_conclusion") == "success" and
+                basis.get("push_run_status") == "NO_PUSH_TRIGGERED_RUN" and
+                basis.get("prior_run_note"),
+                "map-header tranche baseline CI provenance is incomplete")
 
     closure_files, closure_ranges = validate_closure_record(closure_record)
     files = record.get("files", [])
     require(len(files) == len(expected_files),
-            "file-inspection receipt must contain the four scoped files")
+            "file-inspection receipt has an unexpected scoped file count")
     seen = set()
     for item in files:
         key = (item.get("repository"), item.get("path"))
@@ -447,6 +498,19 @@ def validate_file_inspection_record(record, closure_record):
                 item.get("verdict") == "NEEDS_EVIDENCE" and
                 item.get("source_observations"),
                 "file-inspection record must not claim whole-file disposition")
+        if record["schema"] == "copilot-poryscript-abi-file-inspection/v3":
+            require(item.get("complete_source_inspection") is True and
+                    item.get("source_extent") == "COMPLETE_PINNED_FILE_READ" and
+                    item.get("full_source_sha256") == source["sha256"] and
+                    (item.get("byte_length"), item.get("line_count")) ==
+                    schema_config["source_dimensions"][key],
+                    "map-header handoff lacks complete source identity: " +
+                    str(key))
+            license_evidence = item.get("license_evidence", {})
+            require(license_evidence.get("status") == "UNRESOLVED" and
+                    license_evidence.get("unresolved"),
+                    "map-header handoff must retain unresolved license review: " +
+                    str(key))
 
         cited_ranges = {}
         for citation in item.get("evidence_ranges", []):
@@ -464,6 +528,18 @@ def validate_file_inspection_record(record, closure_record):
         require(cited_ranges == expected_ranges and cited_ranges,
                 "file-inspection must cite every existing bounded range: " +
                 str(key))
+        if record["schema"] == "copilot-poryscript-abi-file-inspection/v3":
+            expected_supplemental = schema_config["supplemental_ranges"].get(
+                key, {}
+            )
+            supplemental = {
+                (citation.get("start"), citation.get("end")):
+                    citation.get("sha256")
+                for citation in item.get("supplemental_evidence_ranges", [])
+            }
+            require(supplemental == expected_supplemental,
+                    "map-header supplemental source evidence differs: " +
+                    str(key))
 
         dependencies = item.get("dependency_links", [])
         require(dependencies, "file-inspection dependencies are required: " + str(key))
@@ -481,9 +557,43 @@ def validate_file_inspection_record(record, closure_record):
                     "file-inspection references a resolved or unknown objection")
 
     summary = record.get("summary", {})
+    expected_source_count = len(expected_files)
+    if record["schema"] == "copilot-poryscript-abi-file-inspection/v3":
+        required_controls = {
+            "NC-SOURCE-IDENTITY":
+                "test_map_header_handoff_rejects_source_and_dossier_mutations",
+            "NC-DOSSIER-IDENTITY":
+                "test_map_header_handoff_rejects_source_and_dossier_mutations",
+            "NC-RANGE-HASH":
+                "test_map_header_handoff_rejects_range_and_dependency_mutations",
+            "NC-DEPENDENCY-ENDPOINT":
+                "test_map_header_handoff_rejects_range_and_dependency_mutations",
+            "NC-VERDICT":
+                "test_map_header_handoff_rejects_verdict_and_review_claim_mutations",
+            "NC-ATTRIBUTION":
+                "test_map_header_handoff_rejects_verdict_and_review_claim_mutations",
+        }
+        controls = {
+            item.get("id"): item.get("test")
+            for item in record.get("negative_controls", [])
+        }
+        require(controls == required_controls,
+                "map-header handoff negative-control set is incomplete")
+        require(record.get("review_handoff", {}).get("status") ==
+                "READY_FOR_INDEPENDENT_REVIEW_NOT_APPROVAL" and
+                record["review_handoff"].get("pending_requirements") ==
+                ["authenticated_independent_reviewer",
+                 "complete_semantic_objection_resolution",
+                 "applicable_source_license_review",
+                 "exact_head_pr_and_push_ci"],
+                "map-header review handoff omits required independent review")
+        require(summary.get("complete_source_files_read") == expected_source_count and
+                summary.get("source_identity_records") == expected_source_count,
+                "map-header handoff overstates complete source inspection")
     require(seen == expected_files and
             summary.get("files_with_full_source_text_retrieved",
-                        summary.get("files_with_complete_source_text_retrieved")) == 4 and
+                        summary.get("files_with_complete_source_text_retrieved")) ==
+            expected_source_count and
             summary.get("whole_file_semantic_reviews") == 0 and
             summary.get("new_copilot_reviewed_passed_files",
                         summary.get("new_files_with_whole_file_semantic_disposition")) == 0 and
@@ -493,7 +603,12 @@ def validate_file_inspection_record(record, closure_record):
             "file-inspection summary overstates review completion")
     return {
         "status": "PASS_FILE_PROVENANCE_NOT_SEMANTIC_APPROVAL",
-        "files_with_full_source_text_retrieved": 4,
+        "files_with_full_source_text_retrieved": expected_source_count,
+        "complete_source_files_read": (
+            expected_source_count
+            if record["schema"] == "copilot-poryscript-abi-file-inspection/v3"
+            else 0
+        ),
         "whole_file_semantic_reviews": 0,
         "new_qualifying_copilot_receipts": 0,
         "approval_count_changed": False,
