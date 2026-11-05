@@ -153,7 +153,16 @@ def pinned_file(root, path):
 def verify_contracts(sources):
     for path, (_, anchors) in ALL_FILES.items():
         for anchor in anchors:
-            require(anchor in sources[path], "source contract changed: " + path + ": " + anchor)
+            if anchor not in sources[path]:
+                context = ""
+                if path == "src/core/map.cpp":
+                    start = sources[path].find("QString Map::getScriptsFilepath() const {")
+                    if start >= 0:
+                        end = sources[path].find("\n}", start)
+                        context = "; filepath function=" + repr(sources[path][start:end + 2])
+                    else:
+                        context = "; filepath function not found"
+                raise ValueError("source contract changed: " + path + ": " + anchor + context)
     # Keep the caller-to-parser route explicit rather than inferring it from names alone.
     require(
         sources["src/ui/eventframes.cpp"].index("map->getScriptLabels(")
