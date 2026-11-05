@@ -1,0 +1,638 @@
+{
+  "schema": "copilot-poryscript-abi-file-inspection/v4",
+  "recorded_at": "2026-11-05",
+  "scope": "Phase 1 only. A disjoint 16-file Poryscript emitter/conditional-output and FireRed command/event-data/assembly-preprocessor tranche. This is a review handoff, not a whole-file semantic approval or a repeat of the CLI/GNU ARM witness.",
+  "basis": {
+    "prior_exact_head": "d7636c7048d02cdc7b73df277258312744e9ddd9",
+    "prior_pr_run_id": 41944574482,
+    "prior_pr_run_status": "action_required",
+    "prior_pr_run_jobs": 0,
+    "prior_push_run_status": "NO_PUSH_TRIGGERED_RUN",
+    "prior_run_note": "The latest run on the prior exact head required workflow authorization and executed zero jobs; no push-triggered run was available. Earlier successful runs cover only earlier heads."
+  },
+  "reviewer": {
+    "id": "copilot-issue33-poryscript-firered-followup",
+    "identity": "@copilot (GitHub Copilot Coding Agent; issue #33 Poryscript–FireRed ABI follow-up)",
+    "source_interpreter_identity": "xbaconator9000x (author of the original PR #20 witness implementation)",
+    "distinct_from_source_interpreter": true,
+    "authenticated_github_review_attribution": false,
+    "independent_human_attestation": false,
+    "attribution_blocker": "The available GitHub tools cannot submit an authenticated Copilot pull-request review. No qualifying reviewer attribution is claimed."
+  },
+  "accounting": {
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "approved_p0": 0,
+    "p0_total": 338,
+    "approved_total": 0,
+    "inventory_total": 14834,
+    "whole_file_semantic_reviews": 0,
+    "new_qualifying_copilot_receipts": 0,
+    "phase2_started": false,
+    "shared_queue_register_gate_modified": false
+  },
+  "license_sources": [
+    {
+      "repository": "huderlem/poryscript",
+      "path": "LICENSE.md",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "git_blob_sha1": "bc574ff56a7df993996053c7b2afec43e80bdd64",
+      "sha256": "de6e3c2adfef309c6e3089a9943adb61d2087e9c6df8d77f5b8c2963535f9c8e",
+      "dossier_record_line_sha256": "a2b7fabf0cdc52ad897ab8d911f5cf789cff98ab7f1975ec0fc0bc983ac864c0",
+      "assessment": "Pinned license source identity only; applicability is not adjudicated."
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "tools/preproc/LICENSE",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "534d15349e029564350a0865a7b68708b1967024",
+      "sha256": "809f71217c9a794bb915fbc615d8d3b003b861bdfff8e4a1af4760bf9248a058",
+      "dossier_record_line_sha256": "1c8b29b7a6d08826e9777db58b62e532d742bc44b5bc3b99613a34c4465a5c12",
+      "assessment": "Local preprocessor license source identity only; applicability to all FireRed sources and dependencies is not adjudicated."
+    }
+  ],
+  "files": [
+    {
+      "repository": "huderlem/poryscript",
+      "path": "ast/ast.go",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "git_blob_sha1": "d76e4155e56daf00245cb54c30edace568e49012",
+      "sha256": "19edae49c98e162d3e36089ece95cdda7d0397f91dbe7f0d81750b94d4179a79",
+      "dossier_record_line_sha256": "cb3be448c542a368ae8f652a7b1f57744b4645a0a3069223257427a6e0b666ba",
+      "byte_length": 13127,
+      "line_count": 462,
+      "full_source_bytes_retrieved": true,
+      "whole_file_semantic_disposition": false,
+      "extent": "Complete immutable file bytes are bound to the pinned source and dossier; ABI observations are scoped to map-script AST node shapes.",
+      "evidence_ranges": [],
+      "supplemental_evidence_ranges": [
+        {"start": 408, "end": 462, "sha256": "edfb32347be0c56ad3b655699c1a8d7df52cb20c7fb4be02348ee2f20adb5655"}
+      ],
+      "source_observations": [
+        "MapScript and TableMapScript are represented as separate node forms; table entries carry a variable, comparison value, and script reference or inline body.",
+        "These AST definitions describe shape but do not by themselves guarantee parser rejection of duplicate tags, table/direct mismatches, or zero operands."
+      ],
+      "dependency_links": [
+        {"repository": "huderlem/poryscript", "path": "parser/parser.go", "direction": "outbound", "relation": "Parser constructs these map-script nodes."},
+        {"repository": "huderlem/poryscript", "path": "emitter/emitter.go", "direction": "outbound", "relation": "Emitter consumes map-script node variants."},
+        {"repository": "huderlem/poryscript", "path": "emitter/emitter_test.go", "direction": "outbound", "relation": "Pinned output tests exercise map-script AST emission."}
+      ],
+      "license_evidence": {"status": "UNRESOLVED", "path": "LICENSE.md", "unresolved": "Poryscript has a pinned license file, but applicability and reviewer licensing assessment remain incomplete."},
+      "unresolved_obligations": ["O-PARSER-SHAPE", "O-LICENSING", "O-ATTESTATION", "O-WHOLEFILE"],
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "huderlem/poryscript",
+      "path": "emitter/branch.go",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "git_blob_sha1": "9413b4699597e453c4ca8df4e1d6be9c68d250a2",
+      "sha256": "2dfddf0c1d059d8b3aa0db921e28a1509d3bbc2074390ab24a7655e1568aa594",
+      "dossier_record_line_sha256": "d00bb5880b54d40f5e4cca6486502e3fc2a6a3c3364c2a14dcb182f67615d43d",
+      "byte_length": 7109,
+      "line_count": 197,
+      "full_source_bytes_retrieved": true,
+      "whole_file_semantic_disposition": false,
+      "extent": "Complete immutable file bytes are bound; inspection follows emitted branch/comparison command names and operands.",
+      "evidence_ranges": [],
+      "supplemental_evidence_ranges": [
+        {"start": 1, "end": 197, "sha256": "2dfddf0c1d059d8b3aa0db921e28a1509d3bbc2074390ab24a7655e1568aa594"}
+      ],
+      "source_observations": [
+        "Branch emission maps flag, variable, and defeated-trainer comparisons to FireRed command macro text and selects value-versus-variable comparison forms.",
+        "Generated conditional command operands rely on the FireRed macro and interpreter contracts; this file does not establish runtime validation or table bounds."
+      ],
+      "dependency_links": [
+        {"repository": "huderlem/poryscript", "path": "ast/ast.go", "direction": "inbound", "relation": "Branch emitter consumes parsed AST expressions."},
+        {"repository": "pret/pokefirered", "path": "asm/macros/event.inc", "direction": "outbound", "relation": "Emitted conditional command names and operands are defined by these macros."},
+        {"repository": "pret/pokefirered", "path": "src/scrcmd.c", "direction": "outbound", "relation": "FireRed command handlers interpret emitted conditions."}
+      ],
+      "license_evidence": {"status": "UNRESOLVED", "path": "LICENSE.md", "unresolved": "Poryscript license applicability and reviewer licensing assessment remain incomplete."},
+      "unresolved_obligations": ["O-PARSER-SHAPE", "O-CONDITION-SENTINEL", "O-LICENSING", "O-ATTESTATION", "O-WHOLEFILE"],
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "huderlem/poryscript",
+      "path": "emitter/chunk.go",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "git_blob_sha1": "bb3a6514988eb2699022551d3dbfe2bdce260377",
+      "sha256": "25cb53a50ddccf1a5d9000ae6336e11a21f8ff6e2087940393667fc8ff045ed2",
+      "dossier_record_line_sha256": "5fef35721a45668e1642c3112ac6e234bbcecdf446440de79ae374321a766e28",
+      "byte_length": 4759,
+      "line_count": 144,
+      "full_source_bytes_retrieved": true,
+      "whole_file_semantic_disposition": false,
+      "extent": "Complete immutable file and existing closure excerpts are bound; observations cover label ownership and generated chunk termination only.",
+      "evidence_ranges": [
+        {"start": 21, "end": 37, "sha256": "2f240944e84385e482e7f4693f14fc18a7a8d977783faf42027345bbf1d9cd43"},
+        {"start": 67, "end": 85, "sha256": "b4e82e50fa4476fe4bacaee0dbdffdd3f88a8b1225234bd3706cc3f138d6e15d"},
+        {"start": 126, "end": 143, "sha256": "7ac6dea09d3020689a0ba03e2bb3ca238cac516c84934d0a114f21845a3bac44"}
+      ],
+      "supplemental_evidence_ranges": [],
+      "source_observations": [
+        "Chunk generation chooses local/global labels, emitted control-flow terminators, and automatic return/end behavior; authored labels are preserved and collision checks apply to generated names.",
+        "The label behavior does not prove that external assembler inputs or generated pointers satisfy the runtime table ABI."
+      ],
+      "dependency_links": [
+        {"repository": "huderlem/poryscript", "path": "ast/ast.go", "direction": "inbound", "relation": "Chunks are produced from parsed statements and labels."},
+        {"repository": "huderlem/poryscript", "path": "emitter/emitter.go", "direction": "outbound", "relation": "Top-level emitter writes generated chunks."},
+        {"repository": "pret/pokefirered", "path": "asm/macros/map.inc", "direction": "outbound", "relation": "Generated map script labels are consumed by map record macros."}
+      ],
+      "license_evidence": {"status": "UNRESOLVED", "path": "LICENSE.md", "unresolved": "Poryscript license applicability and reviewer licensing assessment remain incomplete."},
+      "unresolved_obligations": ["O-PARSER-SHAPE", "O-CONDITION-SENTINEL", "O-LICENSING", "O-ATTESTATION", "O-WHOLEFILE"],
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "huderlem/poryscript",
+      "path": "main.go",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "git_blob_sha1": "10db05ef1518460da78b0bd41f22bb091917a385",
+      "sha256": "56b6a1346300a8dd02fb065d96442417b033b0f5a86b679a90b51535939d44e0",
+      "dossier_record_line_sha256": "de6eee8194c9d5a74d3683f1a4b7b85429087c5eec3feb0524d5f62e0084f261",
+      "byte_length": 4422,
+      "line_count": 155,
+      "full_source_bytes_retrieved": true,
+      "whole_file_semantic_disposition": false,
+      "extent": "Complete immutable file and existing closure excerpts are bound; observations trace CLI options into parser and emitter setup.",
+      "evidence_ranges": [
+        {"start": 47, "end": 82, "sha256": "ad2241d7d1536d9a0874e16fad27368802399169652ff1b8ac372f9ae41641d4"},
+        {"start": 131, "end": 155, "sha256": "a71b183b9a8c4ac0a769d6c93b2b80e2df9efa800b5b6383732cdb64e1b9b62f"}
+      ],
+      "supplemental_evidence_ranges": [],
+      "source_observations": [
+        "CLI options and input parsing feed emitter output; compile switches are passed into parser construction and therefore select Poryswitch branches before assembly emission.",
+        "CLI wiring does not validate assembler macro semantics, link relocations, or target-ROM execution."
+      ],
+      "dependency_links": [
+        {"repository": "huderlem/poryscript", "path": "parser/parser.go", "direction": "outbound", "relation": "CLI constructs the parser with command configuration and switches."},
+        {"repository": "huderlem/poryscript", "path": "emitter/emitter.go", "direction": "outbound", "relation": "Parsed program is passed to the assembly emitter."},
+        {"repository": "huderlem/poryscript", "path": "go.mod", "direction": "outbound", "relation": "Module metadata identifies the Go CLI build context."}
+      ],
+      "license_evidence": {"status": "UNRESOLVED", "path": "LICENSE.md", "unresolved": "Poryscript license applicability and reviewer licensing assessment remain incomplete."},
+      "unresolved_obligations": ["O-PARSER-SHAPE", "O-INTEGRATION", "O-LICENSING", "O-ATTESTATION", "O-WHOLEFILE"],
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "huderlem/poryscript",
+      "path": "emitter/emitter_test.go",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "git_blob_sha1": "4c3209166937384a0dc26fc83a0341a5dac48ca5",
+      "sha256": "c1816cc9ffec49566cda032e5927ee57718ecb947c45e485817af1766874e6a8",
+      "dossier_record_line_sha256": "24673a43f9731e8d495c2f9be69492607369133c75bf924e82b6c35df794c278",
+      "byte_length": 68343,
+      "line_count": 3585,
+      "full_source_bytes_retrieved": true,
+      "whole_file_semantic_disposition": false,
+      "extent": "Complete immutable test file bytes are bound; only map-script emission and Poryswitch fixtures are ABI-relevant to this handoff.",
+      "evidence_ranges": [],
+      "supplemental_evidence_ranges": [
+        {"start": 1626, "end": 1850, "sha256": "56853cc49e4766285e2ed96ed516d8c1a8d652cb161bc02edc60ff2a65b2b2e8"},
+        {"start": 2183, "end": 2596, "sha256": "590583b639434d63a88e1ad494625325f3ce943cff71af5c07caf622fd577c11"}
+      ],
+      "source_observations": [
+        "TestEmitMapScripts expects 5-byte outer records, a separate one-byte zero sentinel, 8-byte conditional records, a separate two-byte zero sentinel, and generated conditional labels.",
+        "TestEmitPoryswitchStatements checks Ruby/Sapphire and language switch combinations, including fallback output; it compares emitted assembly text and is not a native execution test.",
+        "These tests do not exercise malformed map-script tags, duplicate entries, zero operands, linker/runtime bounds, or full ROM gameplay."
+      ],
+      "dependency_links": [
+        {"repository": "huderlem/poryscript", "path": "emitter/emitter.go", "direction": "inbound", "relation": "Tests assert assembly emitted by this package."},
+        {"repository": "huderlem/poryscript", "path": "parser/parser.go", "direction": "inbound", "relation": "Test fixtures parse map-script and Poryswitch source."},
+        {"repository": "pret/pokefirered", "path": "asm/macros/map.inc", "direction": "outbound", "relation": "Expected assembly uses FireRed map-script macro spellings."}
+      ],
+      "license_evidence": {"status": "UNRESOLVED", "path": "LICENSE.md", "unresolved": "Poryscript license applicability and reviewer licensing assessment remain incomplete."},
+      "unresolved_obligations": ["O-PARSER-SHAPE", "O-CONDITION-SENTINEL", "O-INTEGRATION", "O-LICENSING", "O-ATTESTATION", "O-WHOLEFILE"],
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "huderlem/poryscript",
+      "path": "go.mod",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "git_blob_sha1": "edec42698b10015283f4cda9b11d658efc2872c7",
+      "sha256": "23809cd3f1ae00603890a319e1c64438e5b4a161eca1a18719b342964a0a7a83",
+      "dossier_record_line_sha256": "ab7514f7e7ecc74a8b58230807e91b00ebda12a0099cec6ddbd085cdc1c27146",
+      "byte_length": 47,
+      "line_count": 3,
+      "full_source_bytes_retrieved": true,
+      "whole_file_semantic_disposition": false,
+      "extent": "Complete immutable module file bytes are bound; this metadata does not establish compiler/runtime parity.",
+      "evidence_ranges": [],
+      "supplemental_evidence_ranges": [
+        {"start": 1, "end": 3, "sha256": "23809cd3f1ae00603890a319e1c64438e5b4a161eca1a18719b342964a0a7a83"}
+      ],
+      "source_observations": [
+        "The module declares Go 1.13 and no external module dependencies; the native CLI witness remains a separate build/runtime evidence obligation."
+      ],
+      "dependency_links": [
+        {"repository": "huderlem/poryscript", "path": "main.go", "direction": "inbound", "relation": "CLI is built in this Go module."},
+        {"repository": "huderlem/poryscript", "path": "emitter/emitter_test.go", "direction": "outbound", "relation": "Pinned emitter tests belong to this module."}
+      ],
+      "license_evidence": {"status": "UNRESOLVED", "path": "LICENSE.md", "unresolved": "Poryscript license applicability and reviewer licensing assessment remain incomplete."},
+      "unresolved_obligations": ["O-INTEGRATION", "O-LICENSING", "O-ATTESTATION", "O-WHOLEFILE"],
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "asm/macros/event.inc",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "142ad979d7d3093244087a247fa2b4883424f77f",
+      "sha256": "848e5e791adeddbe7ae7fe2717729af666a8d8aa163ab7781c74bfd49ce58671",
+      "dossier_record_line_sha256": "addbedbac7c766587c5989dad90848eec65087d8223924577af8fbb40d3332a1",
+      "byte_length": 56947,
+      "line_count": 1858,
+      "full_source_bytes_retrieved": true,
+      "whole_file_semantic_disposition": false,
+      "extent": "Complete immutable macro file bytes are bound; inspection follows command serialization, comparison helpers, and branch macros.",
+      "evidence_ranges": [],
+      "supplemental_evidence_ranges": [
+        {"start": 22, "end": 45, "sha256": "89ac6c4cbdf48e6446247106052fc9e7409774f918298a6b56e2f9b8219cb179"},
+        {"start": 237, "end": 259, "sha256": "a2dd331e51be6ea5c7ea13d870aad637d1c5bf12456fe6750b0d432aacc09119"},
+        {"start": 1639, "end": 1725, "sha256": "d5166ffdffc6cc9b0bb61b480eb8a4b660f41d0939db92e9afaa43407abf1f04"}
+      ],
+      "source_observations": [
+        "goto_if emits opcode 0x06, a condition byte, and a four-byte destination; compare_var_to_value emits opcode 0x21 and two halfwords.",
+        "Supplementary compare/goto macros expand to command sequences and do not validate table record types, tag uniqueness, or conditional operand bounds."
+      ],
+      "dependency_links": [
+        {"repository": "pret/pokefirered", "path": "src/scrcmd.c", "direction": "outbound", "relation": "Conditional command handlers consume emitted opcode and operands."},
+        {"repository": "pret/pokefirered", "path": "include/constants/vars.h", "direction": "outbound", "relation": "Generic compare macro uses variable-range constants."},
+        {"repository": "huderlem/poryscript", "path": "emitter/branch.go", "direction": "inbound", "relation": "Poryscript emits command names and operands defined here."}
+      ],
+      "license_evidence": {"status": "UNRESOLVED", "unresolved": "No complete applicable license determination for this FireRed source and transitive build inputs was established."},
+      "unresolved_obligations": ["O-PARSER-SHAPE", "O-CONDITION-SENTINEL", "O-BOUNDS", "O-LICENSING", "O-ATTESTATION", "O-WHOLEFILE"],
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "include/script.h",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "ce10c87266a8019eeefaaf787f43b291e7a58624",
+      "sha256": "75e3554545f9d5819c8c1946b9388879aafe1c397a1c64c3435cdbdf8e769ef7",
+      "dossier_record_line_sha256": "7d0829375b4356d48652165c22ecd7262effdeb495ffbb15b7fbc119cf2a5c61",
+      "byte_length": 2589,
+      "line_count": 78,
+      "full_source_bytes_retrieved": true,
+      "whole_file_semantic_disposition": false,
+      "extent": "Complete immutable header bytes are bound; inspection covers script context, bytecode pointer, command table, and map-script entry points.",
+      "evidence_ranges": [
+        {"start": 11, "end": 35, "sha256": "fda87b27a4f99aee177cb42ec8c8a98266c280c87fdf21265c3705b596e6865e"}
+      ],
+      "supplemental_evidence_ranges": [
+        {"start": 1, "end": 10, "sha256": "93a9ec3dc085d0ec0f335fbd0ea1f52e82dcdad3fdcbb0f766e0096e5ec37689"},
+        {"start": 36, "end": 50, "sha256": "c590fac047e8a4d863c8abb43020a5a1acd2ebe1cd8ec66f753df2be41791c71"}
+      ],
+      "source_observations": [
+        "ScriptContext stores a bytecode pointer and command-table bounds; ScriptReadByte advances the pointer and the interface exposes map-script dispatch entry points.",
+        "This header declares the interpreter state but does not itself specify malformed map-table extent checks."
+      ],
+      "dependency_links": [
+        {"repository": "pret/pokefirered", "path": "include/global.h", "direction": "outbound", "relation": "Header imports common scalar and memory-read definitions."},
+        {"repository": "pret/pokefirered", "path": "src/script.c", "direction": "outbound", "relation": "Interpreter implements the declared context and map-script readers."},
+        {"repository": "pret/pokefirered", "path": "src/scrcmd.c", "direction": "outbound", "relation": "Command handlers accept the declared ScriptContext."}
+      ],
+      "license_evidence": {"status": "UNRESOLVED", "unresolved": "No complete applicable license determination for this FireRed source and transitive build inputs was established."},
+      "unresolved_obligations": ["O-BOUNDS", "O-LICENSING", "O-ATTESTATION", "O-WHOLEFILE"],
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "include/global.h",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "77155b09014aa854fcf87260e6ad2969e222da53",
+      "sha256": "044325b90e7c79146cc0cf73d31b6be3e4840059e2e778b63d9b5448fe538429",
+      "dossier_record_line_sha256": "f1f871d26da13f17fc541cb1f1df518a8acf6183072afb519ad1213cb6732f7f",
+      "byte_length": 25663,
+      "line_count": 834,
+      "full_source_bytes_retrieved": true,
+      "whole_file_semantic_disposition": false,
+      "extent": "Complete immutable common header bytes are bound; inspection covers include closure and bytewise pointer-read helpers.",
+      "evidence_ranges": [
+        {"start": 106, "end": 115, "sha256": "494f0a086887db800f5c48a8fee3be33f0888f18e88d89428f147b30094d16f4"}
+      ],
+      "supplemental_evidence_ranges": [
+        {"start": 1, "end": 14, "sha256": "fb4bb8f0559a04660397d05c975902f3f5c62bd29f1ddd0d7e53a1daced68579"}
+      ],
+      "source_observations": [
+        "The common header establishes the include chain used by ScriptContext and event-variable declarations; T2_READ_* helpers reconstruct multi-byte values bytewise.",
+        "Bytewise reads support unaligned pointer operands but do not prove pointer targets or script-table extents are valid."
+      ],
+      "dependency_links": [
+        {"repository": "pret/pokefirered", "path": "include/script.h", "direction": "inbound", "relation": "ScriptContext definitions use common types and macros."},
+        {"repository": "pret/pokefirered", "path": "include/constants/vars.h", "direction": "outbound", "relation": "Common header includes variable constants."},
+        {"repository": "pret/pokefirered", "path": "src/event_data.c", "direction": "outbound", "relation": "Event-variable consumers include this header."}
+      ],
+      "license_evidence": {"status": "UNRESOLVED", "unresolved": "No complete applicable license determination for this FireRed source and transitive build inputs was established."},
+      "unresolved_obligations": ["O-BOUNDS", "O-LICENSING", "O-ATTESTATION", "O-WHOLEFILE"],
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "include/constants/vars.h",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "5c7bbf8a3356606af13e744ac24de806c1b0869e",
+      "sha256": "be26624aac5cbc9ea4d364d5cc33500b4b6c7ecd47812a50b961d948f6914b12",
+      "dossier_record_line_sha256": "30b677db7f2f3262e165bd144343708d8c28397b6e465d213337e79c683c4f54",
+      "byte_length": 17306,
+      "line_count": 346,
+      "full_source_bytes_retrieved": true,
+      "whole_file_semantic_disposition": false,
+      "extent": "Complete immutable constants header bytes and existing closure range are bound; observations cover variable ranges relevant to table operands.",
+      "evidence_ranges": [
+        {"start": 4, "end": 10, "sha256": "69c743692c998fcd1057e978fbd20f5b7699095d775a08675afe706f2365a640"}
+      ],
+      "supplemental_evidence_ranges": [
+        {"start": 11, "end": 24, "sha256": "5644f5aae085fd46b77f716ca569608db50c7a940de0a122c15e93d07d2cbd71"},
+        {"start": 131, "end": 191, "sha256": "02acfce492f50ee73dd4e1342e0d356fb2c57ff7b18cb784ab2d7f7996b24cc1"},
+        {"start": 308, "end": 337, "sha256": "753f3f5e9ef7cfd8e067bbe907e864c1de6da9960f4da58e298b6cdc61253b0f"}
+      ],
+      "source_observations": [
+        "VARS_START, regular-variable ranges, map-scene variables, and SPECIAL_VARS_START/END provide the intended identifier domains for event commands and compare macros.",
+        "Declared ranges are an ABI convention; this header does not enforce that arbitrary bytecode operands stay within those ranges."
+      ],
+      "dependency_links": [
+        {"repository": "pret/pokefirered", "path": "src/event_data.c", "direction": "outbound", "relation": "Variable access indexes saved and special-variable storage using these bounds."},
+        {"repository": "pret/pokefirered", "path": "asm/macros/event.inc", "direction": "inbound", "relation": "Generic compare macro classifies variable identifiers using these constants."},
+        {"repository": "pret/pokefirered", "path": "include/global.h", "direction": "inbound", "relation": "Common header includes variable constants."}
+      ],
+      "license_evidence": {"status": "UNRESOLVED", "unresolved": "No complete applicable license determination for this FireRed source and transitive build inputs was established."},
+      "unresolved_obligations": ["O-PARSER-SHAPE", "O-BOUNDS", "O-LICENSING", "O-ATTESTATION", "O-WHOLEFILE"],
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "include/event_data.h",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "285b4cc83ca23f96ce0d5bee46ce2e902011d6b6",
+      "sha256": "cb46a58f3d80da7a6a19c6bc512e2b9c92dea4fb537e5b375cd9829583449c34",
+      "dossier_record_line_sha256": "b2f8e24a3c91fcb089b8ccbacca2530960989014b319da76b8a29bcf56f1b612",
+      "byte_length": 1675,
+      "line_count": 58,
+      "full_source_bytes_retrieved": true,
+      "whole_file_semantic_disposition": false,
+      "extent": "Complete immutable event-data interface bytes are bound; this record follows variable and flag API declarations.",
+      "evidence_ranges": [],
+      "supplemental_evidence_ranges": [
+        {"start": 1, "end": 58, "sha256": "cb46a58f3d80da7a6a19c6bc512e2b9c92dea4fb537e5b375cd9829583449c34"}
+      ],
+      "source_observations": [
+        "The header exposes VarGet/VarSet and FlagGet/FlagSet/FlagClear APIs called by script command handlers; it does not state upper-bound preconditions in the declarations."
+      ],
+      "dependency_links": [
+        {"repository": "pret/pokefirered", "path": "src/event_data.c", "direction": "outbound", "relation": "Implements the declared event-data accessors."},
+        {"repository": "pret/pokefirered", "path": "src/scrcmd.c", "direction": "outbound", "relation": "Command consumers call variable and flag accessors."},
+        {"repository": "pret/pokefirered", "path": "include/constants/vars.h", "direction": "outbound", "relation": "Variable constants define intended accessor domains."}
+      ],
+      "license_evidence": {"status": "UNRESOLVED", "unresolved": "No complete applicable license determination for this FireRed source and transitive build inputs was established."},
+      "unresolved_obligations": ["O-BOUNDS", "O-LICENSING", "O-ATTESTATION", "O-WHOLEFILE"],
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "src/event_data.c",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "da9391cf0ef74c1addf550def8616c81f16e89e3",
+      "sha256": "163fcef03561426fc185b499eef1088dc7a4334b612968a82df3a0fa6131d06f",
+      "dossier_record_line_sha256": "c515e68cdad2600e27e9df5bee912d3cf92e6f63b5abeb8ad93d24cd9dba10fe",
+      "byte_length": 8913,
+      "line_count": 336,
+      "full_source_bytes_retrieved": true,
+      "whole_file_semantic_disposition": false,
+      "extent": "Complete immutable implementation bytes and existing closure excerpts are bound; observations trace variable/flag indexing.",
+      "evidence_ranges": [
+        {"start": 186, "end": 214, "sha256": "53e373be9f0f0cc7480c4de62f23c52191ff2c6c0d95f22eca99e3271775a191"},
+        {"start": 235, "end": 241, "sha256": "647121e08d7c9f497140abb6a956706246e2cb617ed086768102f2a9732b649a"}
+      ],
+      "supplemental_evidence_ranges": [
+        {"start": 242, "end": 249, "sha256": "9bcf06beb5f675487b4a230d7d903a46ac3fdcf59febaae8e93d5778779feae5"},
+        {"start": 257, "end": 310, "sha256": "0debb86864a6a8e92d07c7a4dff011d64e85d64217ed10854f2093d87da6315a"}
+      ],
+      "source_observations": [
+        "GetVarPointer rejects values below VARS_START but indexes regular variables and gSpecialVars without an upper-bound check; malformed high operands can index outside the intended arrays.",
+        "GetFlagAddr returns null for flag zero but likewise lacks an upper-bound check for normal/special flag indices; VarGet returns the input unchanged when GetVarPointer returns null.",
+        "These are source-level bounds concerns, not a demonstrated exploit or a native malformed-ROM reproduction; actual reachable input constraints remain unresolved."
+      ],
+      "dependency_links": [
+        {"repository": "pret/pokefirered", "path": "include/event_data.h", "direction": "inbound", "relation": "Declares event-data accessor interfaces."},
+        {"repository": "pret/pokefirered", "path": "include/constants/vars.h", "direction": "outbound", "relation": "Defines variable and special-variable domains used for array indexing."},
+        {"repository": "pret/pokefirered", "path": "src/scrcmd.c", "direction": "inbound", "relation": "Script commands call variable and flag APIs."}
+      ],
+      "license_evidence": {"status": "UNRESOLVED", "unresolved": "No complete applicable license determination for this FireRed source and transitive build inputs was established."},
+      "unresolved_obligations": ["O-BOUNDS", "O-DEPENDENCIES", "O-LICENSING", "O-ATTESTATION", "O-WHOLEFILE"],
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "tools/preproc/asm_file.cpp",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "e649c2c3da79a2956993b9b1d9fbb67b1a900ad3",
+      "sha256": "5c1425e7399062b8908e21e0b15daa20a1950c6cb03f2d65c02c9de755031d3b",
+      "dossier_record_line_sha256": "a3f7ab439d6ee26cd6bdcc79f1bb9e63a5c33e2edc63c6b3598bd7a1d191ebc8",
+      "byte_length": 20838,
+      "line_count": 792,
+      "full_source_bytes_retrieved": true,
+      "whole_file_semantic_disposition": false,
+      "extent": "Complete immutable preprocessor implementation bytes and existing closure range are bound; inspection follows include, label, directive, line-output, and enum paths.",
+      "evidence_ranges": [
+        {"start": 163, "end": 185, "sha256": "7ff50459a63434e0a6cbfb46798435a25dc21796ff2dc00ce9ce991c04b9b13e"}
+      ],
+      "supplemental_evidence_ranges": [
+        {"start": 32, "end": 124, "sha256": "f789e572a9ae6e771c7f46136b95bf93edf73a818b206600d130dedb542fd6a9"},
+        {"start": 126, "end": 162, "sha256": "e5bd921fe2f5d31c342030bc86b113fc84fce8ee0426c37c4e1d109cf71b5a12"},
+        {"start": 186, "end": 186, "sha256": "412ca345ccf75bf9c0806bce695be8de808b79984251a7a54d202cf6101dd451"},
+        {"start": 195, "end": 241, "sha256": "3301f3105a4cfe9990c20c048cb56d38db85f3f9cc96c975960684589dbd4be7"},
+        {"start": 486, "end": 509, "sha256": "73a269b7514a921e9833abc4b7ce798ca9d7093382b0f45be9e5af341c03d977"},
+        {"start": 512, "end": 592, "sha256": "b34c069b1554dbe3495e3f07889e15e707500462960a9d9ade321c99739cf5d1"},
+        {"start": 594, "end": 635, "sha256": "61e5596f249219277a618d8127878d4407d42eebb54183905f53d49e7b4670a3"},
+        {"start": 667, "end": 792, "sha256": "cb6537e5db762f3bb3427f8fb40c01ab73faf2a69d27dc6116c47547e145e004"}
+      ],
+      "source_observations": [
+        "Preprocessor recursively expands .include files, recognizes strings/braille/enums, and emits ordinary assembly lines; :: labels are emitted as global labels.",
+        "The parser handles source directives and line locations, not map-script record validation, relocation correctness, or runtime table termination.",
+        "Direct helper dependencies include char_util, utf8, string_parser, io, and characters.h; this handoff binds their closure rows but does not complete their semantic/licensing review."
+      ],
+      "dependency_links": [
+        {"repository": "pret/pokefirered", "path": "tools/preproc/asm_file.h", "direction": "outbound", "relation": "Declares the AsmFile API and parser state."},
+        {"repository": "pret/pokefirered", "path": "tools/preproc/preproc.cpp", "direction": "inbound", "relation": "PreprocAsmFile drives AsmFile directive handling."},
+        {"repository": "pret/pokefirered", "path": "include/characters.h", "direction": "outbound", "relation": "String and character directive encodings reference target character constants."},
+        {"repository": "pret/pokefirered", "path": "tools/preproc/string_parser.cpp", "direction": "outbound", "relation": "String directives delegate parsing and encoding."}
+      ],
+      "license_evidence": {"status": "UNRESOLVED", "path": "tools/preproc/LICENSE", "unresolved": "A local MIT notice exists for the preprocessor tool, but broader FireRed source/build license applicability and transitive closure are not adjudicated."},
+      "unresolved_obligations": ["O-DEPENDENCIES", "O-INTEGRATION", "O-LICENSING", "O-ATTESTATION", "O-WHOLEFILE"],
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "tools/preproc/asm_file.h",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "33e6ce5c49c17e773e8001be56626f465b80bb68",
+      "sha256": "2232aa3f0745a7f860b8943249b043360d2d4ca61e6e50cb9fdaad9494096eda",
+      "dossier_record_line_sha256": "a7f7c05e8559d88f9e90db519c0099b4b5c1d684a9b213d8707bf9047506f8d5",
+      "byte_length": 2496,
+      "line_count": 80,
+      "full_source_bytes_retrieved": true,
+      "whole_file_semantic_disposition": false,
+      "extent": "Complete immutable interface bytes are bound; inspection covers directive enum, parser API, and internal state.",
+      "evidence_ranges": [],
+      "supplemental_evidence_ranges": [
+        {"start": 21, "end": 80, "sha256": "8d7a1014e272436ac22013c655dc1e01778cf315e23939c4ebbb21c42ed68798"}
+      ],
+      "source_observations": [
+        "AsmFile exposes include/string/braille/enum parsing and line output but has no map-script table type or record-validation API."
+      ],
+      "dependency_links": [
+        {"repository": "pret/pokefirered", "path": "tools/preproc/asm_file.cpp", "direction": "inbound", "relation": "Implementation defines the declared AsmFile methods."},
+        {"repository": "pret/pokefirered", "path": "tools/preproc/preproc.h", "direction": "outbound", "relation": "Interface uses preprocessor limits, diagnostics, and charmap declarations."}
+      ],
+      "license_evidence": {"status": "UNRESOLVED", "path": "tools/preproc/LICENSE", "unresolved": "The preprocessor's local MIT notice is identified but not adjudicated for all included/transitive material."},
+      "unresolved_obligations": ["O-DEPENDENCIES", "O-LICENSING", "O-ATTESTATION", "O-WHOLEFILE"],
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "tools/preproc/preproc.cpp",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "20c2de51b635a5d59f2b4e1ecd93d8fc2748ebe1",
+      "sha256": "b8e0f4c7e514667cf5582684a283ca3caefa727b098f85a0e32401e0260bbd6f",
+      "dossier_record_line_sha256": "76d1e9f2c929bb4233fe7cb64fe94dde4af21d87fcf130ee6670d66ff622f399",
+      "byte_length": 5319,
+      "line_count": 203,
+      "full_source_bytes_retrieved": true,
+      "whole_file_semantic_disposition": false,
+      "extent": "Complete immutable preprocessor driver bytes and existing closure range are bound; inspection follows include stack and source mode selection.",
+      "evidence_ranges": [
+        {"start": 96, "end": 108, "sha256": "fe9840658242ac5619ef8824c9c4746292a9eaa89413d3a43160a14d35c6a347"}
+      ],
+      "supplemental_evidence_ranges": [
+        {"start": 49, "end": 95, "sha256": "20428c08987526611486c55fc035d90231e1506556686eda4637cf1e79d98b5d"},
+        {"start": 109, "end": 114, "sha256": "5eda9c9f00f3620f4c7b7a510e84c282c5340168cd78c40423e1a7084ac511fa"},
+        {"start": 122, "end": 203, "sha256": "95cebab7721fcdb6004bda8f64c255e98e70741916c3f77f70c0f41e8090248e"}
+      ],
+      "source_observations": [
+        "The driver processes nested assembly includes with a stack, preserves source locations, and sends .s inputs through AsmFile; its CLI selects assembly or C handling by file extension.",
+        "Successful source preprocessing does not certify assembler, linker, or runtime ABI validity; helper implementations remain partially untraced."
+      ],
+      "dependency_links": [
+        {"repository": "pret/pokefirered", "path": "tools/preproc/asm_file.cpp", "direction": "outbound", "relation": "Assembly path delegates directive parsing to AsmFile."},
+        {"repository": "pret/pokefirered", "path": "tools/preproc/preproc.h", "direction": "outbound", "relation": "Driver uses shared preprocessor limits and charmap state."},
+        {"repository": "pret/pokefirered", "path": "tools/preproc/c_file.cpp", "direction": "outbound", "relation": "Driver includes the C-file implementation interface."},
+        {"repository": "pret/pokefirered", "path": "tools/preproc/charmap.cpp", "direction": "outbound", "relation": "Driver initializes the charmap used for encoding."}
+      ],
+      "license_evidence": {"status": "UNRESOLVED", "path": "tools/preproc/LICENSE", "unresolved": "The preprocessor's local MIT notice is identified but broader FireRed source/build license applicability and dependencies are not adjudicated."},
+      "unresolved_obligations": ["O-DEPENDENCIES", "O-INTEGRATION", "O-LICENSING", "O-ATTESTATION", "O-WHOLEFILE"],
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "tools/preproc/preproc.h",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "515f64e079ff4c60815f47c66f71c8f27319ce86",
+      "sha256": "eacaf681de72531e3a9231eebd5d7d5a054e3478caa3259c31901cd6b29f3de4",
+      "dossier_record_line_sha256": "d2b059f18d6bbcd03afd15adf8ae7ef12b95cd6402fc07c822b2532dd7269b20",
+      "byte_length": 1936,
+      "line_count": 54,
+      "full_source_bytes_retrieved": true,
+      "whole_file_semantic_disposition": false,
+      "extent": "Complete immutable preprocessor header bytes are bound; inspection covers shared diagnostics and parser limits.",
+      "evidence_ranges": [],
+      "supplemental_evidence_ranges": [
+        {"start": 21, "end": 54, "sha256": "f07eaac58288a0edc281a20269e371b52c250a747acbae81183268c1c70f90bb"}
+      ],
+      "source_observations": [
+        "The header defines FATAL_ERROR and fixed path/string/charmap sequence limits and declares the shared Charmap object."
+      ],
+      "dependency_links": [
+        {"repository": "pret/pokefirered", "path": "tools/preproc/preproc.cpp", "direction": "inbound", "relation": "Preprocessor driver uses the shared definitions."},
+        {"repository": "pret/pokefirered", "path": "tools/preproc/asm_file.h", "direction": "inbound", "relation": "AsmFile interface includes the preprocessor header."},
+        {"repository": "pret/pokefirered", "path": "tools/preproc/charmap.h", "direction": "outbound", "relation": "Header declares and uses the Charmap type."}
+      ],
+      "license_evidence": {"status": "UNRESOLVED", "path": "tools/preproc/LICENSE", "unresolved": "The preprocessor's local MIT notice is identified but broader FireRed source/build license applicability is not adjudicated."},
+      "unresolved_obligations": ["O-DEPENDENCIES", "O-LICENSING", "O-ATTESTATION", "O-WHOLEFILE"],
+      "verdict": "NEEDS_EVIDENCE"
+    }
+  ],
+  "negative_controls": [
+    {"id": "NC-SOURCE-IDENTITY", "test": "test_followup_rejects_source_dossier_and_dimension_mutations"},
+    {"id": "NC-DOSSIER-IDENTITY", "test": "test_followup_rejects_source_dossier_and_dimension_mutations"},
+    {"id": "NC-RANGE-HASH", "test": "test_followup_rejects_range_and_scope_mutations"},
+    {"id": "NC-DEPENDENCY-ENDPOINT", "test": "test_followup_rejects_range_and_scope_mutations"},
+    {"id": "NC-VERDICT", "test": "test_followup_rejects_verdict_license_and_attribution_mutations"},
+    {"id": "NC-LICENSE-CLAIM", "test": "test_followup_rejects_verdict_license_and_attribution_mutations"},
+    {"id": "NC-ATTRIBUTION", "test": "test_followup_rejects_verdict_license_and_attribution_mutations"}
+  ],
+  "objections": [
+    {
+      "id": "O-PARSER-SHAPE",
+      "status": "UNRESOLVED",
+      "observation": "The pinned emitter fixtures cover valid direct and conditional records, but do not establish rejection or policy for direct/table type mismatches or duplicate tags.",
+      "resolution": "Inspect parser acceptance paths with explicit malformed inputs and obtain independent semantic review; existing output tests do not resolve this."
+    },
+    {
+      "id": "O-CONDITION-SENTINEL",
+      "status": "UNRESOLVED",
+      "observation": "The conditional-table zero sentinel can collide with a zero first operand; the operand's accepted range and runtime effect remain unverified.",
+      "resolution": "Establish domain constraints and execute native FireRed reader tests for zero and overflow operands; prior synthetic object evidence is not runtime proof."
+    },
+    {
+      "id": "O-BOUNDS",
+      "status": "UNRESOLVED",
+      "observation": "FireRed variable/flag accessors and map-table readers expose missing explicit upper bounds in the inspected source paths.",
+      "resolution": "Determine reachability and memory-safety consequences with bounded native tests or exact consumer invariants; no malformed ROM behavior is claimed."
+    },
+    {
+      "id": "O-INTEGRATION",
+      "status": "UNRESOLVED",
+      "observation": "Poryscript's CLI emits assembly, while the FireRed source/preprocessor/build path is separately implemented; stock ROM equivalence is not demonstrated.",
+      "resolution": "Trace and execute the exact generated-to-ROM build integration without substituting synthetic bytes or claiming gameplay evidence."
+    },
+    {
+      "id": "O-WHOLEFILE",
+      "status": "UNRESOLVED",
+      "observation": "Full source bytes are hash-bound, but this tranche's semantic observations are ABI-focused and do not adjudicate every behavior in each complete file.",
+      "resolution": "A qualifying independent reviewer must complete whole-file semantics and record an attributable receipt; these files remain NEEDS_EVIDENCE."
+    },
+    {
+      "id": "O-DEPENDENCIES",
+      "status": "UNRESOLVED",
+      "observation": "Preprocessor helper and broader build/toolchain edges remain outside this 16-file tranche; selected links are not an exhaustive dependency closure.",
+      "resolution": "Review the remaining pinned helper/build dependencies and licensing scope before any per-file disposition."
+    },
+    {
+      "id": "O-LICENSING",
+      "status": "UNRESOLVED",
+      "observation": "Poryscript and the FireRed preprocessor have pinned license evidence, but applicable licensing across all FireRed source and transitive dependencies has not been reviewed.",
+      "resolution": "Complete source-specific license and dependency review; no upstream source is copied or modified here."
+    },
+    {
+      "id": "O-ATTESTATION",
+      "status": "UNRESOLVED",
+      "observation": "The handoff identifies Copilot but has no authenticated independent GitHub review attribution or separate human attestation.",
+      "resolution": "Do not upgrade any verdict or count approval until the protocol's independence and attribution requirements are met."
+    }
+  ],
+  "review_handoff": {
+    "status": "READY_FOR_INDEPENDENT_REVIEW_NOT_APPROVAL",
+    "pending_requirements": [
+      "authenticated_independent_reviewer",
+      "whole_file_semantic_and_transitive_dependency_review",
+      "applicable_source_license_review",
+      "native_malformed_operand_and_table_boundary_evidence",
+      "exact_head_pr_and_push_ci"
+    ]
+  },
+  "validation": {
+    "local_source_command": "python3 tools/copilot_poryscript_abi_review.py --closure-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/closure-review.json --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/poryscript-firered-abi-followup.json --poryscript-root /tmp/poryscript-firered-abi-tranche/poryscript --firered-root /tmp/poryscript-firered-abi-tranche/firered --source-files-only",
+    "local_source_status": "PASS_FILE_BYTES_AND_RANGES_NOT_SEMANTIC_APPROVAL",
+    "local_source_files_verified": 16,
+    "local_source_checkout_identity": "FILE_BLOBS_ONLY",
+    "targeted_test_command": "python3 -m unittest discover -s tests -p 'test_copilot_poryscript_abi_review.py' -v",
+    "targeted_tests_passed": 22,
+    "actual_cli_gnu_arm_witness": "NOT_RERUN; prior successful PR #36 witness 41035493919 remains historical evidence only",
+    "exact_head_ci": "PENDING_FOR_THIS_CHANGE"
+  },
+  "summary": {
+    "selected_source_files": 16,
+    "complete_pinned_file_bytes_retrieved": 16,
+    "whole_file_semantic_reviews": 0,
+    "new_copilot_reviewed_passed_files": 0,
+    "new_qualifying_copilot_receipts": 0,
+    "new_approvals": 0,
+    "phase1_gate": "FAIL_INCOMPLETE"
+  }
+}

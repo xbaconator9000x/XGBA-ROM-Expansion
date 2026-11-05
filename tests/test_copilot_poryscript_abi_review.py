@@ -42,6 +42,11 @@ class PoryscriptAbiReviewTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
+        cls.poryscript_firered_inspection = json.loads(
+            (DEFAULT_RECORD.parent / "poryscript-firered-abi-followup.json").read_text(
+                encoding="utf-8"
+            )
+        )
 
     def test_record_is_pinned_and_non_approving(self):
         sources = validate_record(self.record)
@@ -305,6 +310,91 @@ class PoryscriptAbiReviewTests(unittest.TestCase):
         changed = copy.deepcopy(self.map_header_inspection)
         changed["negative_controls"].pop()
         with self.assertRaisesRegex(ValueError, "negative-control set is incomplete"):
+            validate_file_inspection_record(changed, self.closure)
+
+    def test_poryscript_firered_handoff_is_pinned_and_non_approving(self):
+        result = validate_file_inspection_record(
+            self.poryscript_firered_inspection, self.closure
+        )
+        self.assertEqual(result["files_with_full_source_text_retrieved"], 16)
+        self.assertEqual(result["complete_source_files_read"], 0)
+        self.assertEqual(result["whole_file_semantic_reviews"], 0)
+        self.assertEqual(result["new_qualifying_copilot_receipts"], 0)
+        self.assertEqual(result["phase1_gate"], "FAIL_INCOMPLETE")
+        self.assertEqual(len(self.poryscript_firered_inspection["files"]), 16)
+        self.assertTrue(all(
+            item["full_source_bytes_retrieved"] is True and
+            item["whole_file_semantic_disposition"] is False and
+            item["verdict"] == "NEEDS_EVIDENCE" and
+            item["license_evidence"]["status"] == "UNRESOLVED"
+            for item in self.poryscript_firered_inspection["files"]
+        ))
+
+    def test_followup_rejects_source_dossier_and_dimension_mutations(self):
+        for index in range(len(self.poryscript_firered_inspection["files"])):
+            for field in ("git_blob_sha1", "sha256", "dossier_record_line_sha256"):
+                with self.subTest(index=index, field=field):
+                    changed = copy.deepcopy(self.poryscript_firered_inspection)
+                    changed["files"][index][field] = "0" * (
+                        40 if field == "git_blob_sha1" else 64
+                    )
+                    with self.assertRaisesRegex(
+                        ValueError, "source/dossier identity differs"
+                    ):
+                        validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.poryscript_firered_inspection)
+        changed["files"][0]["byte_length"] += 1
+        with self.assertRaisesRegex(ValueError, "pinned source-byte identity"):
+            validate_file_inspection_record(changed, self.closure)
+
+    def test_followup_rejects_range_and_scope_mutations(self):
+        changed = copy.deepcopy(self.poryscript_firered_inspection)
+        changed["files"][0]["supplemental_evidence_ranges"][0]["sha256"] = "0" * 64
+        with self.assertRaisesRegex(
+            ValueError, "supplemental source evidence differs"
+        ):
+            validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.poryscript_firered_inspection)
+        changed["files"][0]["dependency_links"][0]["path"] = "missing.c"
+        with self.assertRaisesRegex(ValueError, "dependency lacks a pinned endpoint"):
+            validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.poryscript_firered_inspection)
+        changed["summary"]["selected_source_files"] -= 1
+        with self.assertRaisesRegex(ValueError, "source-byte count is incomplete"):
+            validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.poryscript_firered_inspection)
+        changed["validation"]["targeted_tests_passed"] = 0
+        with self.assertRaisesRegex(ValueError, "validation provenance is incomplete"):
+            validate_file_inspection_record(changed, self.closure)
+
+    def test_followup_rejects_verdict_license_and_attribution_mutations(self):
+        changed = copy.deepcopy(self.poryscript_firered_inspection)
+        changed["files"][0]["verdict"] = "COPILOT_REVIEWED"
+        with self.assertRaisesRegex(ValueError, "must not claim whole-file disposition"):
+            validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.poryscript_firered_inspection)
+        changed["files"][0]["license_evidence"]["status"] = "CLEARED"
+        with self.assertRaisesRegex(ValueError, "unresolved license review"):
+            validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.poryscript_firered_inspection)
+        changed["license_sources"][0]["sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "license-source identity differs"):
+            validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.poryscript_firered_inspection)
+        changed["reviewer"]["authenticated_github_review_attribution"] = True
+        with self.assertRaisesRegex(ValueError, "missing authenticated attribution"):
+            validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.poryscript_firered_inspection)
+        changed["objections"][0]["status"] = "RESOLVED"
+        with self.assertRaisesRegex(ValueError, "objections must remain explicit"):
             validate_file_inspection_record(changed, self.closure)
 
     def test_probe_expected_object_mutations_are_sensitive(self):

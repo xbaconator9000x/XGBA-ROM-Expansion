@@ -10,6 +10,17 @@ on:
       - 'tests/test_copilot_poryscript_abi_review.py'
       - 'tools/copilot_poryscript_abi_review.py'
       - 'tools/copilot_poryscript_abi_review_probes.py'
+  push:
+    branches:
+      - 'copilot/independently-review-pinned-poryscript'
+    paths:
+      - '.github/workflows/copilot-poryscript-abi-review.yml'
+      - 'semantic-snapshots/current/candidate_review_dossiers.jsonl.gz'
+      - 'semantic-snapshots/current/semantic_review_queue.csv.gz'
+      - 'semantic-snapshots/independent-reviews/copilot-poryscript-abi/**'
+      - 'tests/test_copilot_poryscript_abi_review.py'
+      - 'tools/copilot_poryscript_abi_review.py'
+      - 'tools/copilot_poryscript_abi_review_probes.py'
   workflow_dispatch:
 
 permissions:
@@ -31,14 +42,20 @@ jobs:
         id: native-scope
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
           EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
-          if [[ "$EVENT_NAME" != "pull_request" ]]; then
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             echo "run_native_probe=true" >> "$GITHUB_OUTPUT"
-          elif git diff --name-only "$BASE_SHA" HEAD | grep -Eq '^(tools/copilot_poryscript_abi_review_probes.py|semantic-snapshots/independent-reviews/copilot-poryscript-abi/closure-review.json)$'; then
-            echo "run_native_probe=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$EVENT_NAME" == "pull_request" ]]; then
+            DIFF_BASE="$BASE_SHA"
           else
+            DIFF_BASE="$BEFORE_SHA"
+          fi
+          if [[ "$EVENT_NAME" != "workflow_dispatch" ]] && git diff --name-only "$DIFF_BASE" HEAD | grep -Eq '^(tools/copilot_poryscript_abi_review_probes.py|semantic-snapshots/independent-reviews/copilot-poryscript-abi/closure-review.json)$'; then
+            echo "run_native_probe=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$EVENT_NAME" != "workflow_dispatch" ]]; then
             echo "run_native_probe=false" >> "$GITHUB_OUTPUT"
           fi
       - uses: actions/checkout@v4
@@ -84,7 +101,10 @@ jobs:
             --closure-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/closure-review.json \
             --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/file-inspection-followup.json \
             --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/fire-red-script-dispatch-followup.json \
-            --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/map-header-review-followup.json
+            --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/map-header-review-followup.json \
+            --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/poryscript-firered-abi-followup.json \
+            --poryscript-root upstream-poryscript \
+            --firered-root upstream-firered
 
   actual-cli-abi-closure:
     needs: review-record
