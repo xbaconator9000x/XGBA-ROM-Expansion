@@ -1587,6 +1587,249 @@ def recorded_snapshot(manifest):
     }
 
 
+def closure_index_report(index, manifest, triage, package_documents, actual_hashes):
+    """Validate a deduplicated index against immutable blocker/evidence sources."""
+    findings = []
+    if not isinstance(index, dict):
+        index = {}
+        findings.append("closure index must be a JSON object")
+    if index.get("schema") != "copilot-integration-closure-index-v1":
+        findings.append("closure index schema is missing or unsupported")
+    if index.get("repository") != "xbaconator9000x/XGBA-ROM-Expansion":
+        findings.append("closure index repository identity does not match")
+    if not isinstance(manifest, dict) or not isinstance(triage, dict):
+        findings.append("manifest and original blocker triage must be JSON objects")
+        manifest = manifest if isinstance(manifest, dict) else {}
+        triage = triage if isinstance(triage, dict) else {}
+
+    source_hashes = index.get("source_hashes")
+    if not isinstance(source_hashes, dict) or not isinstance(actual_hashes, dict):
+        findings.append("closure index source hashes or observed hashes are missing")
+        source_hashes = source_hashes if isinstance(source_hashes, dict) else {}
+        actual_hashes = actual_hashes if isinstance(actual_hashes, dict) else {}
+    if set(source_hashes) != set(actual_hashes):
+        findings.append("closure index source hash set does not match checked source files")
+    for path, expected_hash in source_hashes.items():
+        if (
+            not isinstance(expected_hash, str)
+            or not re.fullmatch(r"[0-9a-f]{64}", expected_hash)
+            or actual_hashes.get(path) != expected_hash
+        ):
+            findings.append("source evidence hash mismatch: %s" % path)
+
+    original_rows = triage.get("blockers")
+    index_rows = index.get("rows")
+    if not isinstance(original_rows, list):
+        original_rows = []
+        findings.append("original blocker triage has no blocker list")
+    if not isinstance(index_rows, list):
+        index_rows = []
+        findings.append("closure index has no blocker rows")
+    original_by_id = {
+        row.get("id"): row
+        for row in original_rows
+        if isinstance(row, dict) and isinstance(row.get("id"), str)
+    }
+    indexed_ids = [
+        row[0] for row in index_rows
+        if isinstance(row, list) and row and isinstance(row[0], str)
+    ]
+    if len(indexed_ids) != len(set(indexed_ids)):
+        findings.append("closure index contains duplicate blocker IDs")
+    if set(indexed_ids) != set(original_by_id) or len(indexed_ids) != len(original_by_id):
+        findings.append("closure index blocker ID set does not exactly match original triage")
+
+    manifest_rows = {
+        row.get("number"): row
+        for row in manifest.get("pull_requests", [])
+        if isinstance(row, dict) and isinstance(row.get("number"), int)
+    }
+    package_sources = {
+        "stale_main_base":
+            "tests/fixtures/copilot-integration-readiness/stale_main_base_evidence_20261105.json",
+        "stale_dependency_base":
+            "development/copilot-integration/dependency-base-reconciliation-20261105.json",
+        "stale_workflow_evidence":
+            "tests/fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json",
+        "unverified_workflow_id":
+            "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json",
+    }
+    current_by_number = {}
+    current_rows = index.get("current_pr_observations")
+    if not isinstance(current_rows, list):
+        current_rows = []
+        findings.append("current public PR metadata observations are missing")
+    for item in current_rows:
+        if not isinstance(item, list) or len(item) != 4:
+            findings.append("current PR observation has invalid shape")
+            continue
+        number, head_sha, base_ref, base_sha = item
+        if not isinstance(number, int) or isinstance(number, bool):
+            findings.append("current PR observation has invalid PR number")
+            continue
+        if number in current_by_number:
+            findings.append("current PR observation duplicates PR #%s" % number)
+            continue
+        current_by_number[number] = item
+        if (
+            not isinstance(head_sha, str) or not SHA1.fullmatch(head_sha)
+            or not isinstance(base_sha, str) or not SHA1.fullmatch(base_sha)
+            or not isinstance(base_ref, str) or not base_ref
+        ):
+            findings.append("current PR #%s has malformed head/base metadata" % number)
+    expected_numbers = {
+        row.get("pr_number") for row in original_rows if isinstance(row, dict)
+    }
+    if not expected_numbers.issubset(current_by_number):
+        findings.append("current PR observations do not cover the original blocker PR set")
+
+    expanded_rows = []
+    for indexed in index_rows:
+        if not isinstance(indexed, list) or len(indexed) != 3:
+            findings.append("closure index row has invalid shape")
+            continue
+        blocker_id, number, category = indexed
+        if not isinstance(blocker_id, str):
+            findings.append("closure index row has invalid blocker ID")
+            continue
+        original = original_by_id.get(blocker_id)
+        if original is None:
+            findings.append("closure index references unknown blocker %s" % blocker_id)
+            continue
+        if number != original.get("pr_number") or category != original.get("category"):
+            findings.append("%s PR/category differs from original triage" % blocker_id)
+        if index.get("status") != "BLOCKED":
+            findings.append("%s must remain BLOCKED" % blocker_id)
+        pr_manifest = manifest_rows.get(number)
+        if not isinstance(pr_manifest, dict):
+            findings.append("%s has no manifest PR row" % blocker_id)
+            continue
+        manifest_head = (pr_manifest.get("head") or {}).get("sha")
+        manifest_base = (pr_manifest.get("base") or {}).get("sha")
+        manifest_base_ref = (pr_manifest.get("base") or {}).get("ref")
+        if (
+            manifest_head != original.get("manifest_head_sha")
+            or manifest_base != original.get("manifest_base_sha")
+            or manifest_base_ref != original.get("manifest_base_ref")
+        ):
+            findings.append("%s manifest identity differs from original triage" % blocker_id)
+        if not isinstance(manifest_head, str) or not SHA1.fullmatch(manifest_head):
+            findings.append("%s manifest head SHA is malformed" % blocker_id)
+        if not isinstance(manifest_base, str) or not SHA1.fullmatch(manifest_base):
+            findings.append("%s manifest base SHA is malformed" % blocker_id)
+
+        source_path = package_sources.get(category)
+        package_record = None
+        if source_path is None:
+            findings.append("%s has no recognized evidence package" % blocker_id)
+        else:
+            package = package_documents.get(source_path)
+            package_rows = package.get("rows", []) if isinstance(package, dict) else []
+            if category == "unverified_workflow_id":
+                package_record = next(
+                    (row for row in package_rows
+                     if isinstance(row, dict) and row.get("pr") == number),
+                    None,
+                )
+            else:
+                package_record = next(
+                    (row for row in package_rows
+                     if isinstance(row, dict) and row.get("blocker_id") == blocker_id),
+                    None,
+                )
+            if package_record is None:
+                findings.append("%s evidence package record is absent" % blocker_id)
+        current = current_by_number.get(number)
+        if current:
+            current_head, current_base_ref, current_base = current[1:]
+            expanded_rows.append({
+                "id": blocker_id,
+                "pr_number": number,
+                "category": category,
+                "status": "BLOCKED",
+                "manifest_identity": {
+                    "head_sha": manifest_head,
+                    "base_ref": manifest_base_ref,
+                    "base_sha": manifest_base,
+                },
+                "current_observation": {
+                    "head_sha": current_head,
+                    "base_ref": current_base_ref,
+                    "base_sha": current_base,
+                    "head_changed_since_manifest": current_head != manifest_head,
+                    "base_changed_since_manifest": current_base != manifest_base,
+                    "observed_at": index.get("observed_at"),
+                    "source_url": (
+                        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/%s"
+                        % number
+                    ),
+                },
+                "evidence_package": source_path,
+                "evidence_record_present": package_record is not None,
+                "evidence_record": package_record,
+                "closure_action": original.get("closure_action"),
+            })
+
+    fresh_runs = index.get("fresh_workflow_observations")
+    if not isinstance(fresh_runs, list):
+        fresh_runs = []
+        findings.append("fresh exact-head workflow observations are missing")
+    fresh_run_by_pr = {}
+    for run in fresh_runs:
+        if not isinstance(run, dict):
+            findings.append("fresh workflow observation has invalid shape")
+            continue
+        number = run.get("pr_number")
+        if not isinstance(number, int) or isinstance(number, bool):
+            findings.append("fresh workflow observation has invalid PR number")
+            continue
+        current = current_by_number.get(number)
+        run_id = run.get("run_id")
+        if number in fresh_run_by_pr:
+            findings.append("fresh workflow observation duplicates PR #%s" % number)
+        if (
+            current is None
+            or not isinstance(run_id, int) or isinstance(run_id, bool)
+            or run.get("attempt") != 1
+            or run.get("event") != "pull_request"
+            or run.get("status") != "completed"
+            or run.get("conclusion") != "action_required"
+            or run.get("head_sha") != current[1]
+            or run.get("base_sha") != current[3]
+            or run.get("job_count") != 0
+            or run.get("url")
+            != "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/%s" % run_id
+        ):
+            findings.append("fresh PR #%s run is not an exact-head/base zero-job authorization gate" % number)
+        fresh_run_by_pr[number] = run
+    if not {35, 36, 37}.issubset(fresh_run_by_pr):
+        findings.append("current authorization-gated runs for PRs #35, #36, and #37 are not all recorded")
+    expected_policy = {
+        "phase1_gate": "FAIL_INCOMPLETE",
+        "independent_approvals": 0,
+        "p0_approvals": 0,
+        "total_historical_approvals": 0,
+        "source_pins_changed": False,
+        "semantic_approval_from_ci": False,
+    }
+    if index.get("policy") != expected_policy:
+        findings.append("closure index policy does not preserve Phase 1 gate and approval totals")
+    for row in expanded_rows:
+        row["fresh_workflow_observation"] = fresh_run_by_pr.get(row["pr_number"])
+    return {
+        "status": "BLOCKED",
+        "blocker_count": len(expanded_rows),
+        "unique_blocker_ids": len(set(indexed_ids)),
+        "category_counts": dict(sorted(Counter(
+            row["category"] for row in expanded_rows
+        ).items())),
+        "phase1_gate": "FAIL_INCOMPLETE",
+        "independent_approvals": 0,
+        "findings": sorted(set(findings)),
+        "rows": expanded_rows,
+    }
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
@@ -1615,10 +1858,51 @@ def main(argv=None):
         type=Path,
         help="classify a dated, source-linked stacked-dependency observation without network access",
     )
+    parser.add_argument(
+        "--closure-index",
+        type=Path,
+        help="validate the deduplicated B001-B044 evidence index without network access",
+    )
     args = parser.parse_args(argv)
     try:
         manifest_bytes = args.manifest.read_bytes()
         manifest = json.loads(manifest_bytes.decode("utf-8"))
+        if args.closure_index:
+            if args.snapshot or args.offline or args.live_observations or args.triage_json or args.dependency_observations:
+                parser.error("--closure-index is a standalone offline mode")
+            source_paths = {
+                "development/copilot-integration/manifest.json":
+                    ROOT / "development/copilot-integration/manifest.json",
+                "development/copilot-integration/blocker-triage-20261104.json":
+                    ROOT / "development/copilot-integration/blocker-triage-20261104.json",
+                "development/copilot-integration/dependency-base-reconciliation-20261105.json":
+                    ROOT / "development/copilot-integration/dependency-base-reconciliation-20261105.json",
+                "tests/fixtures/copilot-integration-readiness/stale_main_base_evidence_20261105.json":
+                    ROOT / "tests/fixtures/copilot-integration-readiness/stale_main_base_evidence_20261105.json",
+                "tests/fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json":
+                    ROOT / "tests/fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json",
+                "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json":
+                    ROOT / "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json",
+            }
+            package_documents = {
+                path: json.loads(source.read_text(encoding="utf-8"))
+                for path, source in source_paths.items()
+                if path != "development/copilot-integration/manifest.json"
+                and path != "development/copilot-integration/blocker-triage-20261104.json"
+            }
+            triage = json.loads(source_paths[
+                "development/copilot-integration/blocker-triage-20261104.json"
+            ].read_text(encoding="utf-8"))
+            actual_hashes = {
+                path: hashlib.sha256(source.read_bytes()).hexdigest()
+                for path, source in source_paths.items()
+            }
+            index = json.loads(args.closure_index.read_text(encoding="utf-8"))
+            report = closure_index_report(
+                index, manifest, triage, package_documents, actual_hashes
+            )
+            print(json.dumps(report, indent=2, sort_keys=True))
+            return 1 if report["status"] == "BLOCKED" else 0
         if args.dependency_observations:
             if args.snapshot or args.offline or args.live_observations or args.triage_json:
                 parser.error("--dependency-observations is a standalone offline mode")

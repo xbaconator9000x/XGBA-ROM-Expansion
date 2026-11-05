@@ -15,6 +15,7 @@ from tools.copilot_check_integration_readiness import (
     classify_workflow_evidence,
     dependency_readiness_report,
     _format_workflow_blocker,
+    closure_index_report,
     main,
     missing_required_workflow_events,
     recorded_snapshot,
@@ -53,6 +54,10 @@ STALE_MAIN_RECONCILIATION = (
 DEPENDENCY_RECONCILIATION = (
     Path(__file__).parent.parent
     / "development/copilot-integration/dependency-base-reconciliation-20261105.json"
+)
+CLOSURE_INDEX = (
+    Path(__file__).parent.parent
+    / "development/copilot-integration/closure-index-20261105.json"
 )
 MANIFEST = (
     Path(__file__).parent.parent / "development/copilot-integration/manifest.json"
@@ -970,6 +975,142 @@ class IntegrationReadinessTests(unittest.TestCase):
         self.assertEqual(report["status"], "BLOCKED")
         self.assertEqual(report["blockers"][0]["category"], "other_readiness_blocker")
         self.assertIsNone(report["blockers"][0]["pr_number"])
+
+    def test_cross_category_closure_index_deduplicates_and_preserves_all_blockers(self):
+        index = json.loads(CLOSURE_INDEX.read_text(encoding="utf-8"))
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        triage = json.loads(BLOCKER_TRIAGE.read_text(encoding="utf-8"))
+        package_paths = set(index["source_hashes"]) - {
+            "development/copilot-integration/manifest.json",
+            "development/copilot-integration/blocker-triage-20261104.json",
+        }
+        documents = {
+            path: json.loads((MANIFEST.parents[2] / path).read_text(encoding="utf-8"))
+            for path in package_paths
+        }
+        hashes = {
+            path: hashlib.sha256((MANIFEST.parents[2] / path).read_bytes()).hexdigest()
+            for path in index["source_hashes"]
+        }
+        report = closure_index_report(index, manifest, triage, documents, hashes)
+
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertEqual(report["blocker_count"], 44)
+        self.assertEqual(report["unique_blocker_ids"], 44)
+        self.assertEqual(report["findings"], [])
+        self.assertEqual(report["category_counts"], {
+            "stale_dependency_base": 9,
+            "stale_main_base": 7,
+            "stale_workflow_evidence": 9,
+            "unverified_workflow_id": 19,
+        })
+        self.assertEqual(report["phase1_gate"], "FAIL_INCOMPLETE")
+        self.assertEqual(report["independent_approvals"], 0)
+        pr37 = next(
+            row for row in index["fresh_workflow_observations"]
+            if row["pr_number"] == 37
+        )
+        self.assertEqual(
+            pr37["conclusion"], "action_required"
+        )
+        self.assertEqual(pr37["job_count"], 0)
+        self.assertNotEqual(pr37["conclusion"], "success")
+
+    def test_cross_category_index_rejects_duplicate_and_missing_blocker_ids(self):
+        index = json.loads(CLOSURE_INDEX.read_text(encoding="utf-8"))
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        triage = json.loads(BLOCKER_TRIAGE.read_text(encoding="utf-8"))
+        package_paths = set(index["source_hashes"]) - {
+            "development/copilot-integration/manifest.json",
+            "development/copilot-integration/blocker-triage-20261104.json",
+        }
+        documents = {
+            path: json.loads((MANIFEST.parents[2] / path).read_text(encoding="utf-8"))
+            for path in package_paths
+        }
+        hashes = {
+            path: hashlib.sha256((MANIFEST.parents[2] / path).read_bytes()).hexdigest()
+            for path in index["source_hashes"]
+        }
+        for mutation in ("duplicate", "missing"):
+            altered = copy.deepcopy(index)
+            if mutation == "duplicate":
+                altered["rows"].append(copy.deepcopy(altered["rows"][0]))
+                expected = "duplicate blocker IDs"
+            else:
+                altered["rows"].pop()
+                expected = "blocker ID set does not exactly match"
+            report = closure_index_report(altered, manifest, triage, documents, hashes)
+            self.assertTrue(any(expected in finding for finding in report["findings"]))
+
+    def test_cross_category_index_rejects_changed_sources_head_and_fake_gate(self):
+        index = json.loads(CLOSURE_INDEX.read_text(encoding="utf-8"))
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        triage = json.loads(BLOCKER_TRIAGE.read_text(encoding="utf-8"))
+        package_paths = set(index["source_hashes"]) - {
+            "development/copilot-integration/manifest.json",
+            "development/copilot-integration/blocker-triage-20261104.json",
+        }
+        documents = {
+            path: json.loads((MANIFEST.parents[2] / path).read_text(encoding="utf-8"))
+            for path in package_paths
+        }
+        hashes = {
+            path: hashlib.sha256((MANIFEST.parents[2] / path).read_bytes()).hexdigest()
+            for path in index["source_hashes"]
+        }
+        mutations = (
+            ("source hash", lambda value: value["source_hashes"].update({
+                "development/copilot-integration/manifest.json": "0" * 64
+            }), "source evidence hash mismatch"),
+            ("wrong current head", lambda value: next(
+                row for row in value["current_pr_observations"] if row[0] == 37
+            ).__setitem__(1, "f" * 40),
+             "not an exact-head/base zero-job authorization gate"),
+            ("fabricated success", lambda value: value["fresh_workflow_observations"][-1].update(
+                conclusion="success"
+            ), "not an exact-head/base zero-job authorization gate"),
+            ("nonzero jobs", lambda value: value["fresh_workflow_observations"][-1].update(
+                job_count=1
+            ), "not an exact-head/base zero-job authorization gate"),
+            ("wrong attempt", lambda value: value["fresh_workflow_observations"][-1].update(
+                attempt=2
+            ), "not an exact-head/base zero-job authorization gate"),
+            ("wrong base", lambda value: value["fresh_workflow_observations"][-1].update(
+                base_sha="f" * 40
+            ), "not an exact-head/base zero-job authorization gate"),
+        )
+        for name, mutate, expected in mutations:
+            altered = copy.deepcopy(index)
+            with self.subTest(mutation=name):
+                mutate(altered)
+                report = closure_index_report(altered, manifest, triage, documents, hashes)
+                self.assertTrue(any(expected in finding for finding in report["findings"]))
+
+        altered_documents = copy.deepcopy(documents)
+        workflow_id_path = (
+            "tests/fixtures/copilot-integration-readiness/"
+            "workflow_id_reconciliation_20261104.json"
+        )
+        altered_documents[workflow_id_path]["rows"] = [
+            row for row in altered_documents[workflow_id_path]["rows"]
+            if row["pr"] != 3
+        ]
+        report = closure_index_report(index, manifest, triage, altered_documents, hashes)
+        self.assertTrue(any(
+            "B004 evidence package record is absent" in finding
+            for finding in report["findings"]
+        ))
+
+    def test_closure_index_cli_is_offline_and_stays_blocked(self):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            status = main(["--closure-index", str(CLOSURE_INDEX)])
+        self.assertEqual(status, 1)
+        report = json.loads(output.getvalue())
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertEqual(report["blocker_count"], 44)
+        self.assertEqual(report["findings"], [])
 
 
 if __name__ == "__main__":

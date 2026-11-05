@@ -7,6 +7,7 @@ on:
       - "development/copilot-integration/manifest.json"
       - "development/copilot-integration/blocker-triage-20261104.json"
       - "development/copilot-integration/dependency-base-reconciliation-20261105.json"
+      - "development/copilot-integration/closure-index-20261105.json"
       - "docs/integration/copilot-stack-readiness-20261030.md"
       - "docs/PHASE1_STATUS.md"
       - "semantic-snapshots/current/phase1_mapping_gate.json"
@@ -68,6 +69,7 @@ jobs:
             "37e2a5b7a007972a98986684701cd50626f46b5f0e3ec05e3c16ae3494b7df6f  tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json" \
             "5648c1772da65ae6a758e605a28aaffacf5036a5f5741fae845a50cc60e6b7b4  tests/fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json" \
             "62ce1ae030ca8739918f9dca5139f7b4b410e9351aa425d1f1d4db7823b27604  tests/fixtures/copilot-integration-readiness/stale_main_base_evidence_20261105.json" \
+            "2383cde597d5ced5d9d3c05280edbb99626b84102880b0f8c885847e12a29c6e  development/copilot-integration/closure-index-20261105.json" \
             "c10504f3a05c7875b8a71afd119de5ed1e1074a672a567723823bde0b5cd4486  development/copilot-integration/dependency-base-reconciliation-20261105.json" \
             | sha256sum --check
       - name: Validate Phase 1 independent-review queue without changing it
@@ -163,4 +165,36 @@ jobs:
               "stale_main_base": 7,
               "stale_workflow_evidence": 9,
           }
+          PY
+      - name: Validate deduplicated cross-category closure index
+        run: |
+          set +e
+          python3 tools/copilot_check_integration_readiness.py \
+            --closure-index development/copilot-integration/closure-index-20261105.json \
+            > "$RUNNER_TEMP/closure-index.json"
+          status=$?
+          set -e
+          if [ "$status" -ne 1 ]; then
+            cat "$RUNNER_TEMP/closure-index.json"
+            echo "Expected the unresolved 44-row closure index to remain blocked; got $status"
+            exit 1
+          fi
+          python3 - "$RUNNER_TEMP/closure-index.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          report = json.loads(Path(sys.argv[1]).read_text())
+          assert report["status"] == "BLOCKED"
+          assert report["blocker_count"] == 44
+          assert report["unique_blocker_ids"] == 44
+          assert report["findings"] == []
+          assert report["category_counts"] == {
+              "stale_dependency_base": 9,
+              "stale_main_base": 7,
+              "stale_workflow_evidence": 9,
+              "unverified_workflow_id": 19,
+          }
+          assert report["phase1_gate"] == "FAIL_INCOMPLETE"
+          assert report["independent_approvals"] == 0
           PY
