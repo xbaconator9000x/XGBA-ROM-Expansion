@@ -105,9 +105,20 @@ class HeadlessTimeoutDiagnosticTests(unittest.TestCase):
 
     def test_cancelled_package_install_is_not_a_qt_build_failure(self):
         changed = copy.deepcopy(self.payload)
-        changed["qt_build_diagnosis"]["latest_push_workflow"]["conclusion"] = "failure"
+        changed["qt_build_diagnosis"]["latest_pr_workflow"]["conclusion"] = "failure"
         with self.assertRaises(ValueError):
             validate_payload(changed, ROOT)
+
+    def test_native_qt_checks_keep_a_bounded_install_timeout(self):
+        workflow_path = (
+            ROOT / ".github/workflows/phase1-mgba-savedata-boundary-witness.yml"
+        )
+        workflow = workflow_path.read_text(encoding="utf-8")
+        self.assertIn("timeout-minutes: 45", workflow)
+        repair = self.payload["qt_build_diagnosis"]["ci_timeout_repair"]
+        self.assertTrue(repair["all_existing_checks_preserved"])
+        self.assertEqual(repair["previous_minutes"], 20)
+        self.assertEqual(repair["new_minutes"], 45)
 
 
 if __name__ == "__main__":

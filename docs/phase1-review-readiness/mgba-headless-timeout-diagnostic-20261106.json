@@ -109,13 +109,45 @@
     "frontend_executable_produced": false,
     "build_logs_retained": false,
     "new_qt_build_reproduced": false,
-    "latest_push_workflow": {
+    "previous_cancelled_push_workflow": {
       "run_id": 42062070815,
       "job_id": 127366220708,
       "head_sha": "03785a6c029188bccfe6c13907a61da0b3c7d544",
       "conclusion": "cancelled",
       "cancelled_at": "Install native Qt6 Core for SaveConverter witness; Actions log ended while downloading Qt/graphics dependencies, at libspa-0.2-modules",
       "meaning": "Job started at 16:12:20Z and was cancelled at 16:32:35Z, while the 20-minute job was still downloading dependencies. No Qt frontend compile/link step ran; do not treat this as a Qt frontend build failure."
+    },
+    "latest_push_workflow": {
+      "run_id": 42068329162,
+      "job_id": 127388846614,
+      "head_sha": "71592a77aa9da87bf09a06f056878ed18cb7b393",
+      "conclusion": "success",
+      "duration_seconds": 99,
+      "meaning": "The exact-head push job completed, including its Qt6 dependency installation and native Qt checks."
+    },
+    "latest_pr_workflow": {
+      "run_id": 42068342841,
+      "job_id": 127388783297,
+      "head_sha": "71592a77aa9da87bf09a06f056878ed18cb7b393",
+      "conclusion": "cancelled",
+      "cancelled_step": "Install native Qt6 Core for SaveConverter witness",
+      "step_started_at": "2026-11-05T16:49:25Z",
+      "step_cancelled_at": "2026-11-05T17:09:25Z",
+      "job_started_at": "2026-11-05T16:49:08Z",
+      "job_completed_at": "2026-11-05T17:09:28Z",
+      "observed": "The apt log was still downloading Qt dependencies when Actions reported 'The operation was canceled'; the job ended at its configured 20-minute timeout.",
+      "retry_api": {
+        "attempted": true,
+        "result": "rejected",
+        "http_status": 409,
+        "reason": "Workflow retry requires a completed run with a failure conclusion."
+      }
+    },
+    "ci_timeout_repair": {
+      "previous_minutes": 20,
+      "new_minutes": 45,
+      "all_existing_checks_preserved": true,
+      "diagnosis": "Slow package-mirror downloads exhausted the job timeout; the same-head push passed, so this is not evidence of a Qt compile failure."
     }
   },
   "execution_contract": {

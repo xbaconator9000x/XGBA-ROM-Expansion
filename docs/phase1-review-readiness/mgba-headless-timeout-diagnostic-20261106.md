@@ -39,13 +39,23 @@ The previous local Qt attempts reported two distinct failures: with
 `BUILD_GL=ON` after installing `libepoxy-dev`, linking reported unresolved
 `ShaderSelector` Qt meta-object/vtable symbols. The logs and build tree are no
 longer retained, so those local errors were not reproduced in this diagnostic.
-The exact-head push run `42062070815` / job `127366220708` was later cancelled
-during “Install native Qt6 Core for SaveConverter witness.” Its log shows the
-job running from `16:12:20Z` until `16:32:35Z`, still downloading Qt/graphics
-dependencies (`libspa-0.2-modules`) when cancellation occurred. The configured
-job limit is 20 minutes. The exact cause of the cancellation is not reported;
-the job did not reach a Qt frontend compile/link step, so this is not evidence
-that the Qt frontend failed in CI.
+On exact head `71592a77aa9da87bf09a06f056878ed18cb7b393`, push run
+`42068329162` / job `127388846614` succeeded in 99 seconds, including the Qt6
+install and native Qt checks. The corresponding PR run `42068342841` / job
+`127388783297` was cancelled during “Install native Qt6 Core for SaveConverter
+witness.” That step ran from `16:49:25Z` to `17:09:25Z`; the log shows slow
+Azure Ubuntu package downloads (including a retry of `libavcodec62`) and then
+“The operation was canceled.” The job ended at the configured 20-minute
+timeout. This indicates package-mirror delay exhausted the job budget, not a
+Qt compile error; the exact cancellation actor/reason is not exposed in the
+available run metadata.
+
+The permitted workflow retry API rejected the cancelled PR run with HTTP 409
+because it only retries a run with a failure conclusion. As a bounded repair,
+the existing job timeout is raised to 45 minutes. No dependencies, test
+commands, or native Qt checks were removed or weakened; the new timeout is
+asserted by the diagnostic test. The next exact-head PR and push runs are
+needed to verify the repair.
 
 ## Provenance and remaining evidence
 
