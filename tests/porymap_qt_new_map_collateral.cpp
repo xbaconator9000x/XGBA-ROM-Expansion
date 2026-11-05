@@ -155,7 +155,13 @@ static void coldReopen(const QString &root) {
     }
     const bool failedCommitAccepted = failedReplacement.commit();
     const auto failedCommitError = failedReplacement.error();
+    const QByteArray failedCommitErrorString = failedReplacement.errorString().toUtf8();
     const bool restoredPermissions = QFile::setPermissions(watchedDir, oldPermissions);
+    std::cerr << "PHASE1_QSAVEFILE_COMMIT_RESULT accepted=" << failedCommitAccepted
+              << " error=" << static_cast<int>(failedCommitError)
+              << " error_string=" << failedCommitErrorString.constData()
+              << " denied_errno=" << deniedErrno
+              << " permissions_restored=" << restoredPermissions << std::endl;
     need(!failedCommitAccepted, "script failed replacement commit unexpectedly succeeded");
     need(failedCommitError == QFileDevice::RenameError,
          "script failed replacement commit error was not RenameError");
