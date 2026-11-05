@@ -16,7 +16,9 @@ GOOD = (
     "PHASE1_GBA_CALLBACK_CASE failure_async_ms=1 failure_rtc=0 "
     "failure_dirty=0 failure_script_events=1 retry_async_ms=0 "
     "retry_script_events=1 retry_rtc=0 new_write_success_async_ms=2 "
-    "success_rtc=1 success_script_events=2\n"
+    "success_rtc=1 success_script_events=2 failure_info_logs=1 "
+    "failure_info_message=1 failure_info_level=8 success_info_logs=1 "
+    "persistence_ack=0\n"
     "PHASE1_GBA_CALLBACK_DONE\n"
 )
 
@@ -60,6 +62,26 @@ class TestGbaCallbackEvidence(unittest.TestCase):
     def test_success_notification_count(self):
         self.assert_mutation_rejected("success_script_events=2",
                                       "success_script_events=1")
+
+    def test_failed_sync_info_log_event(self):
+        self.assert_mutation_rejected("failure_info_logs=1",
+                                      "failure_info_logs=0")
+
+    def test_failed_sync_info_log_message(self):
+        self.assert_mutation_rejected("failure_info_message=1",
+                                      "failure_info_message=0")
+
+    def test_failed_sync_log_must_remain_info_level(self):
+        self.assert_mutation_rejected("failure_info_level=8",
+                                      "failure_info_level=2")
+
+    def test_successful_sync_log_control(self):
+        self.assert_mutation_rejected("success_info_logs=1",
+                                      "success_info_logs=0")
+
+    def test_failed_sync_cannot_claim_persistence_acknowledgment(self):
+        self.assert_mutation_rejected("persistence_ack=0",
+                                      "persistence_ack=1")
 
     def test_extra_case_rejected(self):
         changed = GOOD.replace(
@@ -139,7 +161,7 @@ class TestGbaCallbackEvidence(unittest.TestCase):
                          runner.FIXTURE_SHA256)
 
     def test_internal_evidence_mutations(self):
-        self.assertEqual(runner.reject_evidence_mutations(GOOD), 8)
+        self.assertEqual(runner.reject_evidence_mutations(GOOD), 13)
 
 
 if __name__ == "__main__":

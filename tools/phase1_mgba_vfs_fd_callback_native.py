@@ -59,6 +59,10 @@ FILES = {
         "f84b62515315c119ec4ff5b9fb6df4de4517c738",
         "52c9fc2d9490f3f158f20c8eddfed07440ec22e4f174043f96e3704599c87b99",
     ),
+    "src/core/log.c": (
+        "39d6db88cad3ca6f521a532c114b6488adb77279",
+        "7f320ca361e0d4d6c846e6bcc8833d82d884bb3defd9b6ca800c7af9f065b170",
+    ),
     "src/platform/qt/CoreController.cpp": (
         "183cea418a70963bd5332ef66bdff54a0dcccd46",
         "8ca7ca7b26fa030ef76322085a6f634b5e3ca4fd40a4e6549b6a12abace260b2",
@@ -88,6 +92,7 @@ DOSSIER_ROWS = {
     "include/mgba/core/interface.h": "093b18935d1a1968f5ce81caa23611a578cc8810a03bde39f3e3f55d0d6b2830",
     "src/core/scripting.c": "9975d4c10ec523f164e9e0292ae795ccb8522343d7b926c233bee159de08abc8",
     "src/script/stdlib.c": "db8b3609ef7ae747d57b1b3a163dd9af6fbbf9c22d661b2a5261e274cbae6ad1",
+    "src/core/log.c": "a446ca3d2c3895cae2b2e15f0a888f1e427df79162eabb3b75d37f66981f42bb",
     "src/platform/qt/CoreController.cpp": "1cbedd6e36f387b7c579bcea8c77bed82e9c3e8b18954974847c647dcf8b0f28",
     "src/platform/qt/Window.cpp": "21da719393e20ace0bb1a7080aa8fc1d674fb10072d27fbbe06c74454d4a2398",
     "src/platform/sdl/main.c": "9b9c93092a263d137e7392e87ff64707bbb555d61f5a7317add771537a391f2c",
@@ -114,7 +119,13 @@ DEINIT_SIGNATURE = "void GBASavedataDeinit(struct GBASavedata* savedata)"
 DEINIT_SHA256 = "830e75777a5a94797eb4a5cc0d6294952340887bc5d5457ca4ea3d228a94f7d2"
 SCRIPTING_MACRO_SHA256 = "3857ee6e17aaf6f8874466bdd6df62f3dbee68af3babd9e35d09fae5ddaffc5f"
 SCRIPT_CALLBACK_SHA256 = "86988bda927d9c4508caaea271a399d68e3052154e662cf57b0ee5c9671aeadb"
-FIXTURE_SHA256 = "4963287bf10a7e2a3cd5e52788bc3aa518d70319fafb8e580c1a9b935059b6d4"
+FIXTURE_SHA256 = "97316d7965f440239308548f8182068e407fdf6d6a8894d9e31dc759e9ed7b3b"
+LOGGER_FUNCTION_HASHES = {
+    "struct mLogger* mLogGetThreadLogger(void)": "3d970d27d308e3254cf4378e700a0a976312ef1338350788cd3da6c9dad78991",
+    "struct mLogger* mLogGetContext(void)": "741c7b1d0d604d083ec96cec49dfadf59826794d37ea8bb6c2412f3cad82b0bf",
+    "void mLogSetDefaultLogger(struct mLogger* logger)": "9b2a934daaf6a20a3f6815e83acab6be9e564b3323421522a4a403772d019597",
+    "void mLog(int category, enum mLogLevel level, const char* format, ...)": "7de1b3df9d9db21bb6a537dd3d7c7089f1728795eb06f1eecc2ed851d858b523",
+}
 FRONTEND_NO_CALLBACK = (
     "src/platform/qt/CoreController.cpp",
     "src/platform/qt/Window.cpp",
@@ -125,7 +136,10 @@ CASE_PATTERN = re.compile(
     r"^PHASE1_GBA_CALLBACK_CASE failure_async_ms=((?:0|[1-9][0-9]*)) failure_rtc=((?:0|[1-9][0-9]*)) "
     r"failure_dirty=((?:0|-?[1-9][0-9]*)) failure_script_events=((?:0|[1-9][0-9]*)) retry_async_ms=((?:0|[1-9][0-9]*)) "
     r"retry_script_events=((?:0|[1-9][0-9]*)) retry_rtc=((?:0|[1-9][0-9]*)) new_write_success_async_ms=((?:0|[1-9][0-9]*)) "
-    r"success_rtc=((?:0|[1-9][0-9]*)) success_script_events=((?:0|[1-9][0-9]*))$"
+    r"success_rtc=((?:0|[1-9][0-9]*)) success_script_events=((?:0|[1-9][0-9]*)) "
+    r"failure_info_logs=((?:0|[1-9][0-9]*)) failure_info_message=((?:0|[1-9][0-9]*)) "
+    r"failure_info_level=((?:0|[1-9][0-9]*)) success_info_logs=((?:0|[1-9][0-9]*)) "
+    r"persistence_ack=((?:0|[1-9][0-9]*))$"
 )
 
 
@@ -291,6 +305,16 @@ def verify_sources(source_root, checkout_identity):
     require(interface.count("void (*savedataUpdated)(void* context);") == 1,
             "core callback interface member changed")
 
+    logger = sources["src/core/log.c"]
+    logger_functions = {}
+    for signature, expected_hash in LOGGER_FUNCTION_HASHES.items():
+        body = extract_function(logger, signature)
+        require(hashlib.sha256(body.encode()).hexdigest() == expected_hash,
+                "pinned core logger function changed: " + signature)
+        logger_functions[signature] = body
+    require(logger.count("static struct mLogger* _defaultLogger = NULL;") == 1,
+            "pinned logger default context changed")
+
     no_registration = {
         path: "savedataUpdated" not in sources[path]
         for path in FRONTEND_NO_CALLBACK
@@ -298,11 +322,18 @@ def verify_sources(source_root, checkout_identity):
     require(all(no_registration.values()),
             "frontend callback scan changed: " + repr(no_registration))
     registration_block = registration + "\n.context = context,"
-    return sources, clean, frame, macro_source, callback_source, registration_block
+    return (
+        sources, clean, frame, macro_source, callback_source, registration_block,
+        logger_functions,
+    )
 
 
 def reject_source_mutations(sources, macro_source):
     mutations = (
+        (sources["src/gba/savedata.c"], CLEAN_SIGNATURE,
+         CLEAN_BODY_SHA256,
+         'mLOG(GBA_SAVE, INFO, "Savedata failed to sync!");',
+         'mLOG(GBA_SAVE, ERROR, "Savedata failed to sync!");'),
         (sources["src/gba/gba.c"], FRAME_ENDED_SIGNATURE,
          FRAME_ENDED_SHA256,
          "callbacks->savedataUpdated && wasDirty && !gba->memory.savedata.dirty",
@@ -340,7 +371,7 @@ def parse_output(output):
     match = CASE_PATTERN.fullmatch(case)
     require(match is not None, "native callback evidence missing or malformed")
     values = tuple(int(value) for value in match.groups())
-    expected = (1, 0, 0, 1, 0, 1, 0, 2, 1, 2)
+    expected = (1, 0, 0, 1, 0, 1, 0, 2, 1, 2, 1, 1, 8, 1, 0)
     require(values == expected,
             "native callback outcome does not match failed/success controls")
     return {
@@ -354,6 +385,11 @@ def parse_output(output):
         "sync_calls_after_new_write_then_success": values[7],
         "rtc_writes_after_success": values[8],
         "script_notifications_after_success": values[9],
+        "failed_sync_info_log_events": values[10],
+        "failed_sync_info_message_matches": values[11],
+        "failed_sync_info_level": values[12],
+        "successful_sync_info_log_events": values[13],
+        "persistence_acknowledgment": values[14],
     }
 
 
@@ -365,6 +401,11 @@ def reject_evidence_mutations(output):
         output.replace("retry_rtc=0", "retry_rtc=1", 1),
         output.replace("success_rtc=1", "success_rtc=0", 1),
         output.replace("success_script_events=2", "success_script_events=1", 1),
+        output.replace("failure_info_logs=1", "failure_info_logs=0", 1),
+        output.replace("failure_info_message=1", "failure_info_message=0", 1),
+        output.replace("failure_info_level=8", "failure_info_level=2", 1),
+        output.replace("success_info_logs=1", "success_info_logs=0", 1),
+        output.replace("persistence_ack=0", "persistence_ack=1", 1),
         output.replace("PHASE1_GBA_CALLBACK_DONE\n",
                        "PHASE1_GBA_CALLBACK_DONE\nPHASE1_GBA_CALLBACK_DONE\n"),
         output.replace("PHASE1_GBA_CALLBACK_DONE\n", ""),
@@ -387,7 +428,7 @@ def main():
     args = parser.parse_args()
     source_root = (args.checkout or args.source_dir).resolve()
     checkout_identity = bool(args.checkout)
-    sources, clean, frame, macro_source, callback_source, registration = (
+    sources, clean, frame, macro_source, callback_source, registration, logger_functions = (
         verify_sources(source_root, checkout_identity)
     )
     source_mutations_rejected = reject_source_mutations(
@@ -404,6 +445,11 @@ def main():
         "PHASE1_INSERT_SCRIPT_CALLBACK_REGISTRATION": registration,
         "PHASE1_INSERT_PINNED_GBASAVEDATACLEAN": clean,
         "PHASE1_INSERT_PINNED_GBAFRAMEENDED": frame,
+        "PHASE1_INSERT_PINNED_LOGGER_GLOBAL":
+            "static struct mLogger* _defaultLogger = NULL;",
+        "PHASE1_INSERT_PINNED_LOGGER_FUNCTIONS": "\n".join(
+            logger_functions.values()
+        ) + "\n",
     }
     expanded = fixture
     for marker, body in replacements.items():
@@ -416,7 +462,8 @@ def main():
         binary = directory / "gba-callback-native"
         source_path.write_text(expanded, encoding="utf-8")
         command = [
-            "gcc", "-std=c11", "-D_POSIX_C_SOURCE=200809L", "-DENABLE_VFS_FD",
+            "gcc", "-std=c11", "-D_POSIX_C_SOURCE=200809L", "-DDISABLE_THREADING",
+            "-DENABLE_VFS_FD",
             "-I", str(source_root / "include"), "-Wall", "-Wextra", "-Werror",
             "-Wno-unused-parameter",
             str(source_root / "src/util/vfs/vfs-fd.c"), str(source_path),

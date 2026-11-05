@@ -1,4 +1,5 @@
 #include <mgba-util/vfs.h>
+#include <mgba/core/log.h>
 #include <mgba/internal/defines.h>
 
 #include <errno.h>
@@ -6,7 +7,49 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#define mLOG(...)
+PHASE1_INSERT_PINNED_LOGGER_GLOBAL
+PHASE1_INSERT_PINNED_LOGGER_FUNCTIONS
+
+int _mLOG_CAT_GBA_SAVE = 1;
+static unsigned logCalls;
+static int loggedCategory;
+static enum mLogLevel loggedLevel;
+static char loggedMessage[128];
+static unsigned failureInfoLogs;
+static enum mLogLevel failureInfoLevel;
+static unsigned successInfoLogs;
+
+static void captureLog(struct mLogger* logger, int category,
+                       enum mLogLevel level, const char* format, va_list args) {
+	(void) logger;
+	++logCalls;
+	loggedCategory = category;
+	loggedLevel = level;
+	vsnprintf(loggedMessage, sizeof(loggedMessage), format, args);
+	if (level == mLOG_INFO &&
+	    strcmp(loggedMessage, "Savedata failed to sync!") == 0) {
+		++failureInfoLogs;
+		failureInfoLevel = level;
+	}
+	if (level == mLOG_INFO && strcmp(loggedMessage, "Savedata synced") == 0) {
+		++successInfoLogs;
+	}
+}
+
+static struct mLogger failureLogger = {.log = captureLog};
+
+bool mLogFilterTest(const struct mLogFilter* filter, int category,
+                    enum mLogLevel level) {
+	(void) filter;
+	(void) category;
+	(void) level;
+	return true;
+}
+
+const char* mLogCategoryName(int category) {
+	(void) category;
+	return "GBA";
+}
 
 typedef uint32_t mColor;
 
@@ -192,6 +235,7 @@ static void fail(const char* message) {
 }
 
 int main(void) {
+	mLogSetDefaultLogger(&failureLogger);
 	char directory[] = "/tmp/mgba-gba-callback-witness-XXXXXX";
 	if (!mkdtemp(directory)) {
 		fail("mkdtemp");
@@ -236,7 +280,10 @@ int main(void) {
 	GBAFrameEnded(&gba);
 	if (asyncCalls != 1 || gba.memory.savedata.dirty != 0 ||
 	    gba.memory.savedata.rtcWrites != 0 ||
-	    scriptContext.savedataUpdatedEvents != 1) {
+	    scriptContext.savedataUpdatedEvents != 1 || logCalls != 1 ||
+	    failureInfoLogs != 1 ||
+	    loggedCategory != _mLOG_CAT_GBA_SAVE || loggedLevel != mLOG_INFO ||
+	    strcmp(loggedMessage, "Savedata failed to sync!") != 0) {
 		fprintf(stderr, "failed sync callback semantics changed\n");
 		return 1;
 	}
@@ -264,7 +311,8 @@ int main(void) {
 	gba.video.frameCounter = 146;
 	GBAFrameEnded(&gba);
 	if (asyncCalls != 2 || scriptContext.savedataUpdatedEvents != 2 ||
-	    gba.memory.savedata.dirty != 0 || gba.memory.savedata.rtcWrites != 1) {
+	    gba.memory.savedata.dirty != 0 || gba.memory.savedata.rtcWrites != 1 ||
+	    logCalls != 2 || failureInfoLogs != 1 || successInfoLogs != 1) {
 		fprintf(stderr, "successful sync control changed callback behavior\n");
 		return 1;
 	}
@@ -277,7 +325,9 @@ int main(void) {
 	printf("PHASE1_GBA_CALLBACK_CASE failure_async_ms=1 failure_rtc=0 "
 	       "failure_dirty=0 failure_script_events=1 retry_async_ms=0 "
 	       "retry_script_events=1 retry_rtc=0 new_write_success_async_ms=2 "
-	       "success_rtc=1 success_script_events=2\n");
+	       "success_rtc=1 success_script_events=2 failure_info_logs=1 "
+	       "failure_info_message=1 failure_info_level=8 success_info_logs=1 "
+	       "persistence_ack=0\n");
 	puts("PHASE1_GBA_CALLBACK_DONE");
 	return 0;
 }
