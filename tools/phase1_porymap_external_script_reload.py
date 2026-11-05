@@ -338,7 +338,8 @@ static bool waitForInvalidation(QCoreApplication &app, Map &map, int previous) {
 
 int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);
-    QTemporaryDir temporary("porymap-external-script-reload-XXXXXX");
+    QTemporaryDir temporary(QDir(QDir::tempPath()).filePath(
+        "porymap-external-script-reload-XXXXXX"));
     if (!temporary.isValid())
         return 2;
     projectConfig.root = temporary.path();
@@ -384,7 +385,8 @@ int main(int argc, char **argv) {
         return 8;
 
     const QString helperPath = "/usr/bin/touch";
-    const QString markerPath = QDir(temporary.path()).filePath("launch-marker");
+    const QString markerPath = QFileInfo(
+        QDir(temporary.path()).filePath("launch-marker")).absoluteFilePath();
     if (!QFileInfo(helperPath).isExecutable())
         return 9;
     const QString command = QString("%1 %2").arg(helperPath, markerPath);
