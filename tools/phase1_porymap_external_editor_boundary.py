@@ -39,7 +39,7 @@ NEW_FILES = {
             "Goto Line Command",
             "%F",
             "%L",
-            "must</span> be given if",
+            "must&lt;/span&gt; be given if",
             "current map's scripts file is opened",
             'name="lineEdit_TextEditorOpenFolder"',
             "Open Project in Text Editor",
@@ -455,8 +455,14 @@ def main():
 
     rows = []
     sources = {}
+    pending_rows = []
     for path, (role, anchors) in ALL_FILES.items():
         row, sources[path] = pinned_file(root, path)
+        pending_rows.append((path, row, role, anchors))
+
+    verify_contracts(sources)
+    source_mutation_count = source_negatives(sources)
+    for path, row, role, anchors in pending_rows:
         row.update({
             "role": role,
             "coverage": "new_inventory" if path in NEW_FILES else "reused_prior_context",
@@ -471,8 +477,6 @@ def main():
         })
         rows.append(row)
 
-    verify_contracts(sources)
-    source_mutation_count = source_negatives(sources)
     license_row, license_text = pinned_file(root, "LICENSE.md")
     require("GNU LESSER GENERAL PUBLIC LICENSE" in license_text,
             "pinned Porymap license notice changed")
