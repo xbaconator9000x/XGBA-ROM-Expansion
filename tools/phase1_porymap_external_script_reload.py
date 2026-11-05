@@ -478,7 +478,10 @@ def build_and_run(sources):
            .replace("@PARSEUTIL_FUNCTIONS@", functions["parse"])
            .replace("@MAP_FUNCTIONS@", functions["map"])
            .replace("@EDITOR_FUNCTIONS@", functions["editor"]))
-    with tempfile.TemporaryDirectory(prefix="phase1-porymap-external-script-") as directory:
+    with tempfile.TemporaryDirectory(
+        prefix="phase1-porymap-external-script-",
+        dir=Path(__file__).resolve().parents[1],
+    ) as directory:
         temp = Path(directory)
         source_path = temp / "native.cpp"
         binary_path = temp / "native"

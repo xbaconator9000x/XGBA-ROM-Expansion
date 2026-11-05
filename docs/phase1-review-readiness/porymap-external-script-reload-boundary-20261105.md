@@ -25,7 +25,7 @@ The separate `Project` watcher and `MainWindow` warning/reload flow are included
 
 ## Native Qt observation
 
-The checker extracts unchanged pinned function bodies from `src/core/map.cpp`, `src/core/parseutil.cpp`, and `src/editor.cpp`, then compiles them against Qt6 Core with test-only model/config/logging stubs. The native test uses an actual `QFileSystemWatcher` on a temporary `.inc` file:
+The checker extracts unchanged pinned function bodies from `src/core/map.cpp`, `src/core/parseutil.cpp`, and `src/editor.cpp`, then compiles them against Qt6 Core with test-only model/config/logging stubs. Its temporary test binary is placed under the checkout root and removed after execution, so detached launch does not depend on `/tmp` being executable. The native test uses an actual `QFileSystemWatcher` on a temporary `.inc` file:
 
 1. It asks the original map method to load and cache an initial label and attach the watcher.
 2. The harness overwrites that file in place. Before processing the watcher event, the original map method still returns its cached label, while the original editor/parser path immediately resolves current disk content and its changed line.
