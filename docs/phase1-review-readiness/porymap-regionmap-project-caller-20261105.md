@@ -15,6 +15,8 @@ All sources are pinned to Porymap `huderlem/porymap@26b919d7ff4b54152de010abd5bf
 
 Reused caller/context files are hash-checked separately by the machine record: `src/ui/regionmapeditor.cpp`, `src/core/regionmap.cpp`, `src/core/regionmapeditcommands.cpp`, `include/core/regionmap.h`, `include/core/regionmapeditcommands.h`, and `src/project.cpp`. These are not counted as new inventory rows. Their use here is limited to verifying the item-signal connection, the edit slots, the shared entry-hash relationship, the original undo command, and the downstream Project writer call.
 
+The earlier RegionMap package's overlap scan excludes only this later packet's tool and dossier because they identify those files as reused context. This packet separately asserts that its four new complete-file identities are disjoint from all six files in the earlier RegionMap inventory.
+
 The pinned Porymap root `LICENSE.md` blob is `65c5ca88a67c30becee01c5a8816d964b03862f9`, SHA-256 `da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768`; it contains LGPL-3.0 text. This is not a redistribution determination. No SQLite or Qt translation files are included. FireRed `ce6406d8c2eaf46d543c8a2606de0c3cb1951982` and Poryscript `c32481161c767b25a3425fa9f1f8729927ff3d55` pins are unchanged and not exercised in this package.
 
 ## Caller and state path

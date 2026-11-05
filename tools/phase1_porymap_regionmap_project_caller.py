@@ -67,6 +67,14 @@ CONTEXT_FILES = {
         "Reused: Project::saveRegionMapSections consumer; not executed here",
     ),
 }
+PREVIOUS_REGIONMAP_FILES = {
+    "src/core/regionmap.cpp",
+    "include/core/regionmap.h",
+    "src/core/regionmapeditcommands.cpp",
+    "include/core/regionmapeditcommands.h",
+    "src/ui/regionmapeditor.cpp",
+    "include/ui/regionmapeditor.h",
+}
 LICENSE_BLOB = "65c5ca88a67c30becee01c5a8816d964b03862f9"
 LICENSE_SHA256 = "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768"
 PRIOR_DOSSIERS = {
@@ -140,6 +148,8 @@ def verify_no_prior_inventory_overlap(repository_root):
     new_tool = Path(__file__).resolve()
     new_dossier = (repository_root
                    / "docs/phase1-review-readiness/porymap-regionmap-project-caller-20261105.md").resolve()
+    require(not set(NEW_FILES).intersection(PREVIOUS_REGIONMAP_FILES),
+            "new complete-file inventory overlaps the prior RegionMap inventory")
     candidates = []
     for folder in (repository_root / "tools",
                    repository_root / "docs/phase1-review-readiness"):

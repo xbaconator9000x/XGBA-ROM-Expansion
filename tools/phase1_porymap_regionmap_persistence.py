@@ -122,12 +122,17 @@ def verify_no_prior_inventory_overlap(repository_root):
     new_tool = Path(__file__).resolve()
     new_dossier = (repository_root
                    / "docs/phase1-review-readiness/porymap-regionmap-persistence-boundary-20261105.md").resolve()
+    later_context_packet = {
+        (repository_root / "tools/phase1_porymap_regionmap_project_caller.py").resolve(),
+        (repository_root
+         / "docs/phase1-review-readiness/porymap-regionmap-project-caller-20261105.md").resolve(),
+    }
     files = []
     for folder in (repository_root / "tools",
                    repository_root / "docs/phase1-review-readiness"):
         files.extend(path for path in folder.rglob("*")
                      if path.is_file() and path.suffix in {".py", ".md"}
-                     and path.resolve() not in {new_tool, new_dossier})
+                     and path.resolve() not in {new_tool, new_dossier, *later_context_packet})
     for source_path in FILES:
         matches = [str(path) for path in files if source_path in path.read_text(errors="replace")]
         require(not matches, "selected source already appears in prior inventory: "
