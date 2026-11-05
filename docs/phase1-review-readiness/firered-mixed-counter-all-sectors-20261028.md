@@ -1,0 +1,13 @@
+# Phase 1 — native 14-sector mixed-generation payload assembly (2026-10-28)
+
+**New experiment pending exact-head CI. All gates FAIL_INCOMPLETE; independent approvals 0.**
+
+Independent PR #28 reviewer identified that earlier checksum-valid mixed-counter fixtures only distinguished sector ID0. Exact-head green predecessor `d337bab042ba4b2c1133e82ffc6e07c4ec63284f`, Actions #40645237477, established native last-sector counter/physical-slot selection but did **not** prove 14-sector payload assembly. This new experiment addresses that precise evidence gap without changing the green fixtures or asserting naturally torn writes.
+
+Immutable source: `pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982`, `src/save.c` blob `36b960f375c92711aa49b99bdfe9c6b3a99d6b1c`, `include/save.h` blob `87fb9b615b434b58823d15688056695acda9feab`; original agbcc `da598c1d918402c42c0c0d7128ba14567f3175e9`; mGBA `fd9dc5c2cbf234365068855851107e762fc6211b`. `sSaveSlotLayout` maps sector0 to SaveBlock2, 1–4 to SaveBlock1, 5–13 to PokemonStorage, with `0xF80` chunk offsets. The ELF-derived global pointers are read by the native mGBA probe.
+
+New synthetic `mixed_counter_all_sectors`: physical slot0 has counter0 and unique markers `0xA5,0x41..0x4D`. Physical slot1 has counters `[1]*13+[3]`, sector0 marker `0x5A`, sector1–12 markers `0x81..0x8C`, sector13 generation3 marker `0xED`. Markers in sectors1–13 are at data offset `0x100`, with folded checksum equal to each marker. The physical sector13 metadata counter is 3 and its marker differs from the earlier generation. A native source-built loader run must report status1, counter3, selected slot1, and **all 14** reconstructed markers in SaveBlock2/SaveBlock1/PokemonStorage EWRAM, without writing Flash. Each of 26 physical sector payload mutations and 14 native memory marker mutations must be rejected, in addition to existing controls.
+
+The expected result would demonstrate synthetic multi-generation payload assembly under the loader's per-sector checksum but non-unanimous counter rule. It would **not** establish naturally occurring mixed-generation writes, meaningful coherent game state, arbitrary malformed-save safety, cartridge power-loss durability, or complete-file semantic approval. If any EWRAM pointer or marker is missing, fail closed and inspect actual native evidence rather than relaxing the assertion.
+
+Reviewer questions: Does the observed assembly remain valid with rotated sector positions and genuinely game-written mixed counters? Can the loader return a successful status while assembling incompatible game-state generations? Does downstream SaveBlock1/storage validation detect such incoherence? No Phase 2 changes are permitted.

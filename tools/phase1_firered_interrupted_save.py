@@ -1,0 +1,176 @@
+#!/usr/bin/env python3
+"""Phase 1: actual third FireRed save interrupted in flight (not hardware power loss)."""
+import argparse
+import json
+import os
+import shutil
+import struct
+import subprocess
+from pathlib import Path
+from phase1_firered_game_controller import make_schedule
+from phase1_firered_repeat_save import TRACE_NAMES, run, verify_game_written_slot, sha
+
+def counter3_records(flash):
+    """Checksum-valid, uniquely identified counter-3 physical sectors."""
+    assert len(flash) == 131072
+    records = []
+    for physical in range(14, 28):
+        sector = flash[physical * 4096:(physical + 1) * 4096]
+        ident, chk, sig, ctr = struct.unpack_from("<HHII", sector, 0xFF4)
+        if ident >= 14 or sig != 0x08012025 or ctr != 3:
+            continue
+        total = sum(struct.unpack_from("<992I", sector)) & 0xFFFFFFFF
+        if chk == (((total >> 16) + total) & 0xFFFF):
+            records.append((physical, ident))
+    ids = [ident for _, ident in records]
+    assert len(ids) == len(set(ids)), ("duplicate counter3 IDs", ids)
+    return records
+
+
+def counter3_ids(flash):
+    return [ident for _, ident in counter3_records(flash)]
+
+
+def assert_interrupted_snapshot(flash, original, event, threshold):
+    """Fail-closed host .sav snapshot check; not hardware power-loss proof."""
+    assert isinstance(flash, (bytes, bytearray))
+    assert isinstance(original, (bytes, bytearray))
+    assert len(flash) == len(original) == 131072 and flash != original
+    assert type(event) is dict and type(threshold) is int and threshold in (1, 7, 13)
+    for field in ("counter", "valid_counter3_sectors",
+                  "try_save_entries", "try_save_returns"):
+        assert type(event.get(field)) is int, ("non-integer native evidence", field)
+    for field in ("no_host_writes", "no_graceful_close"):
+        assert event.get(field) is True, ("forged native boolean", field)
+    assert flash[:14 * 4096] == original[:14 * 4096], "Older counter2 slot modified"
+    verify_game_written_slot(flash, 0, 2)
+    records = counter3_records(flash)
+    ids = [ident for _, ident in records]
+    assert threshold <= len(ids) < 14
+    assert len(ids) == event["valid_counter3_sectors"], (
+        "Physical .sav disagrees with in-flight Flash", threshold, ids, event)
+    # Original pinned FireRed src/save.c: CopySaveSlotData identifies
+    # gLastWrittenSector by logical ID 0 (lines 449-452); the next full
+    # save increments it (145-149) and maps each logical ID to physical
+    # (lastWritten + id) % 14 (174-176). Derive from the complete
+    # previous game-written slot, never from the untrusted new records.
+    previous_zero = [physical for physical in range(14)
+                     if struct.unpack_from("<H", original,
+                                           physical * 4096 + 0xFF4)[0] == 0]
+    assert len(previous_zero) == 1, ("ambiguous prior sector zero", previous_zero)
+    next_start = (previous_zero[0] + 1) % 14
+    assert set(ids) == set(range(len(ids))), (
+        "counter3 logical IDs are not a completed prefix", ids)
+    for physical, ident in records:
+        expected_physical = 14 + ((next_start + ident) % 14)
+        assert physical == expected_physical, (
+            "counter3 sector violates pinned FireRed rotation",
+            physical, ident, expected_physical)
+    assert event["counter"] == 3 and event["try_save_entries"] >= 1
+    assert event["try_save_returns"] == 0
+    changed = [physical for physical in range(32)
+               if flash[physical * 4096:(physical + 1) * 4096]
+               != original[physical * 4096:(physical + 1) * 4096]]
+    expected = [physical for physical, _ in records]
+    assert changed == expected, ("unaccounted physical Flash changes", changed, expected)
+    return ids
+
+
+def assert_snapshot_rejected(flash, original, event, threshold, label):
+    try:
+        assert_interrupted_snapshot(flash,original,event,threshold)
+    except AssertionError:
+        return
+    raise AssertionError("Tampered interrupted-save evidence was accepted: "+label)
+
+def main(a):
+    root=Path(a.output)
+    previous=root/"second_game_save.sav"
+    proof=json.loads((root/"second_game_save.json").read_text())
+    assert proof["native"]["first_try_saving_data_return_value"]==1
+    assert proof["native"]["save_counter"]==2
+    original=previous.read_bytes()
+    verify_game_written_slot(original,0,2)
+    verify_game_written_slot(original,1,1)
+    schedule=root/"third_save_interrupt.keys"
+    schedule.write_text("".join(f"{f} {k:03x}\n" for f,k in make_schedule("pallet_save_dense_confirm")))
+    args=[a.probe,a.rom,str(previous),str(schedule),"3200",
+          a.status,a.counter,a.sb2]+[getattr(a,k) for k in TRACE_NAMES]
+    env=os.environ.copy()
+    env["XGBA_PHASE1_CUT_COUNTER3_AFTER"]="14"
+    negative=subprocess.run(args,env=env,capture_output=True,text=True,timeout=60)
+    assert negative.returncode!=0 and "invalid in-flight cut threshold" in negative.stderr, (
+        "Invalid cut did not fail closed",negative.returncode,negative.stderr[-300:])
+    records=[]
+    for threshold in (1,7,13):
+        sav=root/f"cut_counter3_{threshold}.sav"
+        shutil.copyfile(previous,sav)
+        env["XGBA_PHASE1_CUT_COUNTER3_AFTER"]=str(threshold)
+        cmd=args[:2]+[str(sav)]+args[3:]
+        proc=subprocess.run(cmd,env=env,capture_output=True,text=True,timeout=900)
+        assert proc.returncode==86,(threshold,proc.returncode,proc.stderr[-500:],proc.stdout[-500:])
+        lines=[json.loads(x) for x in proc.stdout.splitlines()
+               if x.startswith('{"mode":"interrupted_save"')]
+        assert len(lines)==1,(threshold,proc.stdout[-500:])
+        event=lines[0]
+        assert event["cut_threshold"]==threshold
+        interrupted=sav.read_bytes()
+        ids=assert_interrupted_snapshot(interrupted,original,event,threshold)
+        damaged=bytearray(interrupted)
+        damaged[14*4096+0x20]^=1
+        assert_snapshot_rejected(damaged,original,event,threshold,"sector payload/checksum")
+        altered_event=dict(event)
+        altered_event["valid_counter3_sectors"]+=1
+        assert_snapshot_rejected(interrupted,original,altered_event,threshold,"native sector count")
+        # Reject any extra changed physical sector, including unused tail space.
+        altered=bytearray(interrupted)
+        altered[28*4096+0x20]^=1
+        assert_snapshot_rejected(altered,original,event,threshold,"unaccounted tail sector")
+        active={physical for physical,_ in counter3_records(interrupted)}
+        unaccounted=next(physical for physical in range(14,28) if physical not in active)
+        altered=bytearray(interrupted)
+        altered[unaccounted*4096+0x20]^=1
+        assert_snapshot_rejected(altered,original,event,threshold,"unaccounted in-slot sector")
+        forged_event=dict(event)
+        forged_event["no_host_writes"]="true"
+        assert_snapshot_rejected(interrupted,original,forged_event,threshold,"forged truthy flag")
+        cold=root/f"cut_counter3_{threshold}_coldboot.sav"
+        shutil.copyfile(sav,cold)
+        result=run(a,f"cut_counter3_{threshold}_coldboot",cold,"cold_boot",2400)
+        n=result["native"]
+        assert n["save_counter"]==2,("No older-slot recovery",threshold,n)
+        assert (n["saveblock1_map_group"],n["saveblock1_map_num"],
+                n["saveblock1_layout_id"])==(3,0,78)
+        assert n["saveblock2_player_name_u32"]==0xFFBEBFCD
+        assert n["field_get_player_input_hits"]>0
+        assert n["try_saving_data_entry_hits"]==0 and n["flash_changed_bytes"]==0
+        assert not result["physical_save_changed"]
+        record={"threshold":threshold,"cut":event,"persisted_counter3_ids":ids,
+                "recovered_counter":n["save_counter"],"recovered_status":n["save_status"],
+                "field_input_hits":n["field_get_player_input_hits"],
+                "physical_save_sha256":sha(sav),"host_flash_writes":0,
+                "tamper_controls_passed":["sector payload/checksum","native sector count",
+                    "unaccounted tail sector","unaccounted in-slot sector","forged truthy flag"],
+                "physical_power_cut_proven":False,"phase1_gate":"FAIL_INCOMPLETE",
+                "independent_approval":False}
+        (root/f"cut_counter3_{threshold}.json").write_text(
+            json.dumps(record,indent=2,sort_keys=True)+"\n")
+        print(json.dumps({"threshold":threshold,"new_sectors":len(ids),
+                          "recovered_counter":n["save_counter"],
+                          "field_input_hits":n["field_get_player_input_hits"]}),flush=True)
+        records.append(record)
+    summary={"cases":records,"invalid_threshold_rejected":True,
+             "game_save_interrupted_before_return":True,
+             "physical_power_cut_proven":False,"independent_approval":False,
+             "phase1_gate":"FAIL_INCOMPLETE"}
+    (root/"inflight_interrupt_summary.json").write_text(
+        json.dumps(summary,indent=2,sort_keys=True)+"\n")
+    print(json.dumps(summary,sort_keys=True),flush=True)
+
+if __name__=="__main__":
+    p=argparse.ArgumentParser()
+    for k in ("rom","probe","status","counter","sb2","output"):
+        p.add_argument("--"+k,required=True)
+    for k in TRACE_NAMES:
+        p.add_argument("--"+k.replace("_","-"),required=True)
+    main(p.parse_args())
