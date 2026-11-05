@@ -1,0 +1,145 @@
+{
+  "schema": "phase1.mgba.headless-timeout-diagnostic.v1",
+  "repository": "mgba-emu/mgba",
+  "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "pinned_tree": "5863e657d270d0fe3ccaa4299f48d5689d74fa1f",
+  "machine_dossier": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "git_blob": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "compressed_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+  },
+  "status": "NEEDS_EVIDENCE",
+  "overall": "FAIL_INCOMPLETE",
+  "source_records": [
+    {
+      "path": "src/platform/headless-main.c",
+      "git_blob": "61110b1e84a25f702b5e7d158887d93b150e1b66",
+      "full_source_sha256": "51687802777b8e831622e28fbd278782084e4c0d65e1ba28b7c1dec4e5617c68",
+      "canonical_dossier_row_sha256": "7cd9f22ce4878d5f9cab92adbe4b26a011a3fd6fbce9f21f7e20668be5c16e4e",
+      "license": "MPL-2.0"
+    },
+    {
+      "path": "src/gba/core.c",
+      "git_blob": "6bfc518bb8899205c07d1d0fc091a287cb42f874",
+      "full_source_sha256": "47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596",
+      "canonical_dossier_row_sha256": "3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784",
+      "license": "MPL-2.0"
+    },
+    {
+      "path": "src/gba/gba.c",
+      "git_blob": "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e",
+      "full_source_sha256": "e84eaba17f6c96ac7b78431afaee79d7633dd50118f92e31e4432793f80c4c7b",
+      "canonical_dossier_row_sha256": "d1870b438fe6dd9bfa628a99d90189778e112588c14ae08f28fa379903595056",
+      "license": "MPL-2.0"
+    },
+    {
+      "path": "src/core/core.c",
+      "git_blob": "17edcde68b8d4f0885c6c6ddd17c4e6ca64701f8",
+      "full_source_sha256": "94b5dc1cec2d9b157ef2933681c644a6dfb43dcebe9f6b887d68b104ac640ea5",
+      "canonical_dossier_row_sha256": "6e453bae6a2dd590ac92ce6f86821a8e342dcc34f9f762836152bdad9b49e989",
+      "license": "MPL-2.0"
+    },
+    {
+      "path": "src/platform/qt/CoreController.cpp",
+      "git_blob": "183cea418a70963bd5332ef66bdff54a0dcccd46",
+      "full_source_sha256": "8ca7ca7b26fa030ef76322085a6f634b5e3ca4fd40a4e6549b6a12abace260b2",
+      "canonical_dossier_row_sha256": "1cbedd6e36f387b7c579bcea8c77bed82e9c3e8b18954974847c647dcf8b0f28",
+      "license": "MPL-2.0"
+    }
+  ],
+  "headless_source_diagnosis": {
+    "signal_handler": "SIGINT only",
+    "default_gba_exit_swi": 3,
+    "run_loop_condition": "_dispatchExiting remains false until a shutdown/SWI callback",
+    "timeout_signal_effect": "A TERM-based timeout does not invoke the installed SIGINT handler; the process can be terminated before unloadROM/deinit.",
+    "synthetic_rom_observation_from_prior_attempt": "Repeated GBA BIOS SWI 00 messages; intended shutdown/save path not reached.",
+    "headless_autoloads_file_save": false,
+    "gba_savedata_initial_vfile_is_null": true,
+    "implication": "Even a controlled headless shutdown does not establish a normal file-backed .sav save/reopen lifecycle on this caller path."
+  },
+  "prior_actual_headless_attempt": {
+    "pinned_headless_build_reported_success": true,
+    "process_launched": true,
+    "save_or_shutdown_reached": false,
+    "exact_command_retained": false,
+    "exact_exit_status": null,
+    "exact_runtime_seconds": null,
+    "stdout_or_stderr_artifact_retained": false,
+    "reproducible_binary_retained": false,
+    "reason_missing": "The earlier temporary checkout/build/logs were not retained in this sandbox; do not infer an exit code or duration from the word timeout."
+  },
+  "bounded_signal_controls": [
+    {
+      "class": "synthetic_host_timeout_control",
+      "command": "/usr/bin/time -f 'outer_elapsed_seconds=%e\\ntime_exit=%x' timeout --preserve-status -s TERM 0.40s python3 -u -c 'import signal,time; signal.signal(signal.SIGINT, lambda *_: print(\"SIGINT_HANDLER_RAN\", flush=True)); print(\"CONTROL_STARTED\", flush=True); time.sleep(30)'",
+      "elapsed_seconds": 0.4,
+      "shell_exit_status": 143,
+      "stdout_lines": [
+        "CONTROL_STARTED"
+      ],
+      "interpretation": "TERM terminates the controlled process; its SIGINT handler does not run. This demonstrates timeout signal semantics only.",
+      "mGBA_process": false
+    },
+    {
+      "class": "synthetic_host_signal_control",
+      "command": "/usr/bin/time -f 'outer_elapsed_seconds=%e\\ntime_exit=%x' timeout --preserve-status -s INT 0.40s python3 -u -c 'import signal,time; signal.signal(signal.SIGINT, lambda *_: print(\"SIGINT_HANDLER_RAN\", flush=True) or (_ for _ in ()).throw(SystemExit(0))); print(\"CONTROL_STARTED\", flush=True); time.sleep(30)'",
+      "elapsed_seconds": 0.4,
+      "shell_exit_status": 0,
+      "stdout_lines": [
+        "CONTROL_STARTED",
+        "SIGINT_HANDLER_RAN"
+      ],
+      "interpretation": "The matching SIGINT control invokes its installed handler.",
+      "mGBA_process": false
+    }
+  ],
+  "qt_build_diagnosis": {
+    "prior_build_attempts": [
+      {
+        "configuration": "BUILD_GL=OFF",
+        "result": "FAILED",
+        "observed": "ShaderSelector undeclared during compilation"
+      },
+      {
+        "configuration": "BUILD_GL=ON after installing libepoxy-dev",
+        "result": "FAILED",
+        "observed": "link failed with unresolved ShaderSelector Qt meta-object/vtable symbols"
+      }
+    ],
+    "frontend_executable_produced": false,
+    "build_logs_retained": false,
+    "new_qt_build_reproduced": false,
+    "latest_push_workflow": {
+      "run_id": 42062070815,
+      "job_id": 127366220708,
+      "head_sha": "03785a6c029188bccfe6c13907a61da0b3c7d544",
+      "conclusion": "cancelled",
+      "cancelled_at": "Install native Qt6 Core for SaveConverter witness; Actions log ended while downloading Qt/graphics dependencies, at libspa-0.2-modules",
+      "meaning": "Job started at 16:12:20Z and was cancelled at 16:32:35Z, while the 20-minute job was still downloading dependencies. No Qt frontend compile/link step ran; do not treat this as a Qt frontend build failure."
+    }
+  },
+  "execution_contract": {
+    "actual_headless_timeout_reproduced": false,
+    "synthetic_signal_controls_executed": true,
+    "actual_mgba_frontend_fault_injection": false,
+    "headless_save_lifecycle_observed": false,
+    "frontend_native_execution_observed": false,
+    "cold_process_sav_reopen_observed": false,
+    "logger_delivery_observed": false,
+    "missing_logger_control_repeated": false,
+    "dirty_to_clean_is_persistence_acknowledgment": false,
+    "durable_persistence_or_power_loss_evidence": false,
+    "stock_gameplay": false,
+    "physical_flash": false,
+    "independent_semantic_approval": false,
+    "gate_or_approval_state_changed": false
+  },
+  "unresolved": [
+    "Rebuild the exact pinned headless binary with a retained command, output, exit code, and elapsed time.",
+    "Use a ROM/BIOS path that reaches the configured shutdown SWI or send SIGINT and verify cleanup runs.",
+    "Use a caller that actually opens a file-backed .sav before testing reopen; headless autoload is absent.",
+    "Reproduce the Qt frontend build with retained configure/build logs and resolve the ShaderSelector compile/link blocker.",
+    "Inject real backend write/sync failure and observe frontend return, callback, and log behavior."
+  ],
+  "distribution_notice": "Source identities refer to pinned MPL-2.0 files already covered by the frontend feasibility verifier. Preserve MPL-2.0 and repository license notices in combined distributions; this report copies no upstream source."
+}
