@@ -25,6 +25,13 @@ ROOT_MAKE_FLAGS=["NODEP=1","SETUP_PREREQS=0"]
 MAP_EVENT_IDS_TARGET="include/constants/map_event_ids.h"
 MAP_EVENT_IDS_RULE="$(INCLUDECONSTS_OUTDIR)/map_event_ids.h: $(MAP_JSONS)"
 MAP_EVENT_IDS_RECIPE="$(MAPJSON) event_constants firered $^ $(INCLUDECONSTS_OUTDIR)/map_event_ids.h"
+MAP_GROUPS_TARGET="include/constants/map_groups.h"
+MAP_GROUPS_RULE="$(MAPS_OUTDIR)/connections.inc $(MAPS_OUTDIR)/groups.inc $(MAPS_OUTDIR)/events.inc $(MAPS_OUTDIR)/headers.inc $(INCLUDECONSTS_OUTDIR)/map_groups.h: $(MAPS_DIR)/map_groups.json"
+MAP_GROUPS_RECIPE="$(MAPJSON) groups firered $< $(MAPS_OUTDIR) $(INCLUDECONSTS_OUTDIR)"
+LAYOUTS_TARGET="include/constants/layouts.h"
+LAYOUTS_RULE="$(LAYOUTS_OUTDIR)/layouts.inc $(LAYOUTS_OUTDIR)/layouts_table.inc $(INCLUDECONSTS_OUTDIR)/layouts.h: $(LAYOUTS_DIR)/layouts.json"
+LAYOUTS_RECIPE="$(MAPJSON) layouts firered $< $(LAYOUTS_OUTDIR) $(INCLUDECONSTS_OUTDIR)"
+GENERATED_HEADER_TARGETS=[MAP_GROUPS_TARGET,LAYOUTS_TARGET,MAP_EVENT_IDS_TARGET]
 MAPJSON_BUILD_RULE="mapjson$(EXE): $(SRCS) $(HEADERS)"
 def check(x,msg):
  if not x: raise RuntimeError(msg)
@@ -53,6 +60,12 @@ def source_contract(fr,ps,pm,map_rules,mapjson_make,event_objects,event_source):
        "map event constants missing from original generated target")
  check(MAP_EVENT_IDS_RULE in map_rules and MAP_EVENT_IDS_RECIPE in map_rules,
        "original map event constants generation rule drift")
+ check("AUTO_GEN_TARGETS += $(INCLUDECONSTS_OUTDIR)/map_groups.h" in map_rules and
+       MAP_GROUPS_RULE in map_rules and MAP_GROUPS_RECIPE in map_rules,
+       "original map groups generation rule drift")
+ check("AUTO_GEN_TARGETS += $(INCLUDECONSTS_OUTDIR)/layouts.h" in map_rules and
+       LAYOUTS_RULE in map_rules and LAYOUTS_RECIPE in map_rules,
+       "original layouts generation rule drift")
  check(MAPJSON_BUILD_RULE in mapjson_make and "$(CXX) $(CXXFLAGS) $(SRCS) -o $@ $(LDFLAGS)" in mapjson_make,
        "original mapjson build rule drift")
  check("SRCS := json11.cpp mapjson.cpp" in mapjson_make and "HEADERS := mapjson.h" in mapjson_make,
@@ -61,6 +74,8 @@ def source_contract(fr,ps,pm,map_rules,mapjson_make,event_objects,event_source):
        "original event object generated-header dependency drift")
  check('#include "constants/event_objects.h"' in event_source,
        "original event script object-header dependency drift")
+ check('#include "constants/layouts.h"' in event_source,
+       "original event script layouts-header dependency drift")
  check(TARGET in ps and RULE in ps,"Poryscript documented recipe drift")
  check('return QString("mapscripts %1_MapScripts {}\\n").arg(mapName);' in pm and 'return ".pory";' in pm,"Porymap authoring drift")
 def main():
@@ -92,10 +107,17 @@ def main():
   (3,"AUTO_GEN_TARGETS += $(INCLUDECONSTS_OUTDIR)/map_event_ids.h","AUTO_GEN_TARGETS +="),
   (3,MAP_EVENT_IDS_RULE,MAP_EVENT_IDS_RULE.replace("$(MAP_JSONS)","")),
   (3,MAP_EVENT_IDS_RECIPE,MAP_EVENT_IDS_RECIPE.replace("event_constants","wrong_mode")),
+  (3,"AUTO_GEN_TARGETS += $(INCLUDECONSTS_OUTDIR)/map_groups.h","AUTO_GEN_TARGETS +="),
+  (3,MAP_GROUPS_RULE,MAP_GROUPS_RULE.replace("$(MAPS_DIR)/map_groups.json","")),
+  (3,MAP_GROUPS_RECIPE,MAP_GROUPS_RECIPE.replace("groups firered","wrong_mode firered")),
+  (3,"AUTO_GEN_TARGETS += $(INCLUDECONSTS_OUTDIR)/layouts.h","AUTO_GEN_TARGETS +="),
+  (3,LAYOUTS_RULE,LAYOUTS_RULE.replace("$(LAYOUTS_DIR)/layouts.json","")),
+  (3,LAYOUTS_RECIPE,LAYOUTS_RECIPE.replace("layouts firered","wrong_mode firered")),
   (4,MAPJSON_BUILD_RULE,"mapjson$(EXE):"),
   (4,"$(CXX) $(CXXFLAGS) $(SRCS) -o $@ $(LDFLAGS)","false"),
   (5,'#include "constants/map_event_ids.h"',""),
-  (6,'#include "constants/event_objects.h"',"")]
+  (6,'#include "constants/event_objects.h"',""),
+  (6,'#include "constants/layouts.h',"")]
  for i,(n,old,new) in enumerate(mutations):
   sources=[make,readme,project,map_rules,mapjson_make,event_objects,event]
   check(old in sources[n],"mutation anchor missing "+str(i))
@@ -118,33 +140,51 @@ def main():
  check(overlay.count(TARGET)==1 and overlay.count(RULE)==1,"overlay drift")
  (fr/"Makefile").write_text(overlay)
  (fr/"data/event_scripts.s").write_text(event+'\n\t.include "data/maps/XGBAProbe/scripts.inc"\n')
- map_ids=fr/MAP_EVENT_IDS_TARGET
- check(not map_ids.exists(),"generated map event header unexpectedly exists before generation")
  map_jsons=sorted((fr/"data/maps").glob("*/map.json"))
  check(map_jsons,"pinned map JSON inputs missing")
- map_ids_command=["make",*ROOT_MAKE_FLAGS,MAP_EVENT_IDS_TARGET]
- cmd(map_ids_command,cwd=fr)
- check(map_ids.is_file(),"original map event constants target produced no header")
- generated_map_ids=map_ids.read_bytes()
- check(generated_map_ids,"original map event constants output is empty")
- map_input_manifest="\n".join(
-  path.relative_to(fr).as_posix()+":"+hashlib.sha256(path.read_bytes()).hexdigest()
-  for path in map_jsons).encode()
- map_ids.unlink()
- cmd(map_ids_command,cwd=fr)
- check(map_ids.is_file() and map_ids.read_bytes()==generated_map_ids,
-       "absent map event header was not regenerated from pinned map JSON")
- map_ids_absent_regenerated=True
- old_header_stat=map_ids.stat()
- newest_input_ns=max(path.stat().st_mtime_ns for path in map_jsons)
- stale_time_ns=max(1,newest_input_ns-2_000_000_000)
- os.utime(map_ids,ns=(old_header_stat.st_atime_ns,stale_time_ns))
- check(map_ids.stat().st_mtime_ns < newest_input_ns,
-       "stale-header control did not make generated header older than its inputs")
- cmd(map_ids_command,cwd=fr)
- check(map_ids.stat().st_mtime_ns > stale_time_ns and map_ids.read_bytes()==generated_map_ids,
-       "stale map event header was not regenerated from pinned map JSON")
- map_ids_stale_regenerated=True
+ header_inputs={
+  MAP_GROUPS_TARGET:[fr/"data/maps/map_groups.json"],
+  LAYOUTS_TARGET:[fr/"data/layouts/layouts.json"],
+  MAP_EVENT_IDS_TARGET:map_jsons}
+ for target,inputs in header_inputs.items():
+  check(all(path.is_file() for path in inputs),"generated-header inputs missing "+target)
+ generated_command=["make",*ROOT_MAKE_FLAGS,"generated"]
+ for target in GENERATED_HEADER_TARGETS:
+  check(not (fr/target).exists(),"generated header unexpectedly exists before generation "+target)
+ cmd(generated_command,cwd=fr)
+ generated_headers={target:(fr/target).read_bytes() for target in GENERATED_HEADER_TARGETS}
+ check(all(generated_headers.values()),"original generated target produced an empty header")
+ for target in GENERATED_HEADER_TARGETS:
+  (fr/target).unlink()
+ cmd(generated_command,cwd=fr)
+ absent_headers_regenerated=all(
+  (fr/target).is_file() and (fr/target).read_bytes()==generated_headers[target]
+  for target in GENERATED_HEADER_TARGETS)
+ check(absent_headers_regenerated,"absent generated header was not regenerated by original target")
+ stale_times={}
+ for target,inputs in header_inputs.items():
+  header=fr/target
+  newest_input_ns=max(path.stat().st_mtime_ns for path in inputs)
+  stale_time_ns=max(1,newest_input_ns-2_000_000_000)
+  os.utime(header,ns=(header.stat().st_atime_ns,stale_time_ns))
+  check(header.stat().st_mtime_ns < newest_input_ns,
+        "stale-header control did not make generated header older than inputs "+target)
+  stale_times[target]=stale_time_ns
+ cmd(generated_command,cwd=fr)
+ stale_headers_regenerated=all(
+  (fr/target).stat().st_mtime_ns > stale_times[target] and
+  (fr/target).read_bytes()==generated_headers[target]
+  for target in GENERATED_HEADER_TARGETS)
+ check(stale_headers_regenerated,"stale generated header was not regenerated by original target")
+ header_provenance={}
+ for target,inputs in header_inputs.items():
+  input_manifest="\n".join(
+   path.relative_to(fr).as_posix()+":"+hashlib.sha256(path.read_bytes()).hexdigest()
+   for path in inputs).encode()
+  header_provenance[target]={
+   "sha256":hashlib.sha256(generated_headers[target]).hexdigest(),
+   "input_count":len(inputs),
+   "input_manifest_sha256":hashlib.sha256(input_manifest).hexdigest()}
  try:
   database=cmd(["make","-qp",*ROOT_MAKE_FLAGS],cwd=fr,ok=False)
   database_output=database.stdout+database.stderr
@@ -175,14 +215,19 @@ def main():
    "original_preproc_build_failure_rejected":injected_failure_rejected,
    "pinned_mapjson_tool_built":True,
    "map_event_ids_generated_by_original_root_rule":True,
+   "root_generated_target_executed":True,
+   "generated_headers_command":"make NODEP=1 SETUP_PREREQS=0 generated",
+   "generated_header_targets":GENERATED_HEADER_TARGETS,
+   "generated_header_provenance":header_provenance,
+   "absent_generated_headers_regenerated":absent_headers_regenerated,
+   "stale_generated_headers_regenerated":stale_headers_regenerated,
    "map_event_ids_target":MAP_EVENT_IDS_TARGET,
-   "map_event_ids_generation_command":"make NODEP=1 SETUP_PREREQS=0 "+MAP_EVENT_IDS_TARGET,
-   "map_event_ids_input_count":len(map_jsons),
-   "map_event_ids_input_manifest_sha256":hashlib.sha256(map_input_manifest).hexdigest(),
-   "map_event_ids_sha256":hashlib.sha256(generated_map_ids).hexdigest(),
+   "map_event_ids_input_count":header_provenance[MAP_EVENT_IDS_TARGET]["input_count"],
+   "map_event_ids_input_manifest_sha256":header_provenance[MAP_EVENT_IDS_TARGET]["input_manifest_sha256"],
+   "map_event_ids_sha256":header_provenance[MAP_EVENT_IDS_TARGET]["sha256"],
    "mapjson_tool_sha256":hashlib.sha256((fr/"tools/mapjson/mapjson").read_bytes()).hexdigest(),
-   "absent_map_event_header_regenerated":map_ids_absent_regenerated,
-   "stale_map_event_header_regenerated":map_ids_stale_regenerated,
+   "absent_map_event_header_regenerated":absent_headers_regenerated,
+   "stale_map_event_header_regenerated":stale_headers_regenerated,
    "generated_map_event_ids_consumed_by_original_object":True,
    "root_generated_target_discovered":True,"original_root_event_object_compiled":True,
    "original_event_source_preserved_with_one_test_include":True,
@@ -200,12 +245,34 @@ def main():
    check(d["original_preproc_build_failure_rejected"] is True,
          "original required-tool failure was not rejected")
    for k in ("pinned_mapjson_tool_built","map_event_ids_generated_by_original_root_rule",
-     "absent_map_event_header_regenerated","stale_map_event_header_regenerated",
+     "root_generated_target_executed","absent_generated_headers_regenerated",
+     "stale_generated_headers_regenerated","absent_map_event_header_regenerated",
+     "stale_map_event_header_regenerated",
      "generated_map_event_ids_consumed_by_original_object"):
     check(d[k] is True,"missing map-event generation witness "+k)
    check(d["map_event_ids_target"]==MAP_EVENT_IDS_TARGET,"map event target drift")
-   check(d["map_event_ids_generation_command"]=="make NODEP=1 SETUP_PREREQS=0 "+MAP_EVENT_IDS_TARGET,
-         "map event generation command drift")
+   check(d["generated_headers_command"]=="make NODEP=1 SETUP_PREREQS=0 generated",
+         "root generated target command drift")
+   check(d["generated_header_targets"]==GENERATED_HEADER_TARGETS,
+         "root generated-header target list drift")
+   check(set(d["generated_header_provenance"])==set(GENERATED_HEADER_TARGETS),
+         "generated-header provenance set drift")
+   check(d["generated_header_provenance"]==header_provenance,
+         "generated-header evidence differs from observed outputs")
+   for target,entry in d["generated_header_provenance"].items():
+    check(set(entry)=={"sha256","input_count","input_manifest_sha256"},
+          "generated-header provenance fields drift "+target)
+    check(entry["input_count"]>0,"generated-header inputs missing "+target)
+    if target!=MAP_EVENT_IDS_TARGET:
+     check(entry["input_count"]==1,"generated-header input count drift "+target)
+    for key in ("sha256","input_manifest_sha256"):
+     check(re.fullmatch(r"[0-9a-f]{64}",entry[key]) is not None,
+           "generated-header provenance missing "+target+"/"+key)
+   map_event_provenance=d["generated_header_provenance"][MAP_EVENT_IDS_TARGET]
+   check(d["map_event_ids_input_count"]==map_event_provenance["input_count"] and
+         d["map_event_ids_input_manifest_sha256"]==map_event_provenance["input_manifest_sha256"] and
+         d["map_event_ids_sha256"]==map_event_provenance["sha256"],
+         "map-event provenance aliases disagree")
    check(d["map_event_ids_input_count"]>0,"map event generation inputs missing")
    for k in ("map_event_ids_input_manifest_sha256","map_event_ids_sha256","mapjson_tool_sha256"):
     check(re.fullmatch(r"[0-9a-f]{64}",d[k]) is not None,"map event provenance missing "+k)
@@ -225,12 +292,24 @@ def main():
    {"recovery_byte_identical":False},{"full_rom_linked":True},{"mgba_runtime_executed":True},
    {"porymap_gui_executed":True},{"independent_approvals":1},{"phase1_gate":"PASS"},
    {"event_object_sha256":""},{"original_preproc_build_failure_rejected":False},
+   {"root_generated_target_executed":False},{"absent_generated_headers_regenerated":False},
+   {"stale_generated_headers_regenerated":False},{"generated_header_provenance":{}},
    {"pinned_mapjson_tool_built":False},{"map_event_ids_generated_by_original_root_rule":False},
    {"absent_map_event_header_regenerated":False},{"stale_map_event_header_regenerated":False},
    {"generated_map_event_ids_consumed_by_original_object":False},{"map_event_ids_input_count":0},
    {"map_event_ids_input_manifest_sha256":""},{"map_event_ids_sha256":""},
    {"mapjson_tool_sha256":""},{"map_event_ids_target":"wrong"},
-   {"map_event_ids_generation_command":"wrong"}]
+   {"generated_headers_command":"wrong"},{"generated_header_targets":[]}]
+  for target in GENERATED_HEADER_TARGETS:
+   for key,bad in (("sha256",""),("input_count",0),("input_manifest_sha256","")):
+    entry=dict(header_provenance[target]);entry[key]=bad
+    negatives.append({"generated_header_provenance":{
+     **header_provenance,target:entry}})
+   entry=dict(header_provenance[target])
+   digest=entry["sha256"]
+   entry["sha256"]=("0" if digest[0]!="0" else "1")+digest[1:]
+   negatives.append({"generated_header_provenance":{
+    **header_provenance,target:entry}})
   evidence["evidence_mutations_rejected"]=len(negatives)+1
   verify(evidence)
   for i,change in enumerate(negatives+[{"evidence_mutations_rejected":len(negatives)}]):

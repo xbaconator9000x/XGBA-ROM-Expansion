@@ -31,6 +31,7 @@
 #include <QStandardPaths>
 #include <iostream>
 #include <cstdlib>
+#include <unistd.h>
 
 static void need(bool b, const char *why) {
     if (!b) { std::cerr << "FAIL " << why << std::endl; std::exit(3); }
@@ -267,6 +268,7 @@ int main(int argc,char **argv) {
         const auto readOnlyDirectory=QFile::ReadOwner|QFile::ExeOwner|
                                      QFile::ReadGroup|QFile::ExeGroup|
                                      QFile::ReadOther|QFile::ExeOther;
+        need(geteuid()!=0,"permission_test_requires_unprivileged_process");
         need(QFile::setPermissions(permissionDir,readOnlyDirectory),
              "permission_denial_inject");
         QFile deniedProbe(permissionJson);
@@ -345,6 +347,7 @@ int main(int argc,char **argv) {
         out["post_replace_file_changed_signal"]=true;
         out["permission_denied_first_save_rejected"]=true;
         out["permission_failure_preserved_unpersisted_editor_map"]=true;
+        out["permission_test_unprivileged"]=geteuid()!=0;
         out["save_error_dialog_reported"]=true;
         out["failed_commit_rejected"]=true;
         out["failed_commit_old_bytes_preserved"]=true;

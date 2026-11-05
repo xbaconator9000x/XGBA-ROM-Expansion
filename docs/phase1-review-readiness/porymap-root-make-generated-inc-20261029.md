@@ -53,3 +53,18 @@ The harness first requires the generated header to be absent in the fresh checko
 The additional `mapjson` dependency is still part of the pinned FireRed checkout; no package or external dependency is added. Its bundled `json11` source carries its own MIT notice. Only text evidence is uploaded; the executable and FireRed project/assets remain in the disposable runner checkout.
 
 The repair code was pushed at `6fbbc092da451e6e316d0b44dda4e19fff331e3a`. Its exact-head push run [#41930282775](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41930282775) and PR run [#41930295902](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41930295902) both completed `action_required` with zero jobs. Thus the repair has **not** been executed by CI; the confirmed missing-header failure remains the only runtime result for this integration. Do not treat either zero-job run as verification. Phase 1 stays FAIL_INCOMPLETE with 0/14,834 independent approvals.
+
+## 2026-11-05 second generated-header dependency and expanded original target (CI pending)
+
+The repair advanced beyond the previous missing `map_event_ids.h` failure, but exact-head PR run [#41930529314](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41930529314), attempt 2, job `126977573777`, step 7, failed compiling the original object with:
+
+```text
+data/event_scripts.s:7:10: fatal error: constants/layouts.h: No such file or directory
+make: *** [Makefile:346: build/firered/data/event_scripts.o] Error 1
+```
+
+Pinned `data/event_scripts.s` also includes the generated `constants/layouts.h`. The unchanged `map_data_rules.mk` declares that header in `AUTO_GEN_TARGETS` and generates it from `data/layouts/layouts.json` through the pinned `mapjson layouts` rule. The same file declares `map_groups.h` from `data/maps/map_groups.json`. The earlier harness invoked only the map-event target, so it had not closed the full original generated-header set before compiling the event object.
+
+The harness now builds the pinned `preproc` and `mapjson` tools, then invokes the original root target `make NODEP=1 SETUP_PREREQS=0 generated` before the event-object build. The pinned root target covers all three original generated headers: `map_groups.h`, `layouts.h`, and `map_event_ids.h`. It requires all three to be initially absent, deletes them and requires byte-identical regeneration, then makes each older than its JSON input and requires the original target to regenerate it. The evidence records each generated-header SHA-256, its input count and path/content manifest SHA-256, plus the tool identity. Source checks and scoped source-mutation controls now include the groups and layouts target/rule/recipe and the event-script `layouts.h` include. The existing required-preproc compiler-failure negative remains active; no generated contents are hand-authored and no pinned source is modified.
+
+This is the harness repair and source-grounded diagnosis, not a successful runtime result. The failed run uploaded no root-Make evidence artifact. Exact-head push run [#41930521496](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41930521496) also failed at the same `layouts.h` prerequisite. Runtime verification of the expanded prerequisite chain requires new exact-head push and PR jobs. Phase 1 remains FAIL_INCOMPLETE with 0/14,834 independent approvals.
