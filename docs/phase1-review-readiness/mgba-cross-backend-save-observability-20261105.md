@@ -125,15 +125,23 @@ local `--source-dir` mode checks each fetched source file byte-for-byte but does
 not attest whole-tree identity; the existing workflow uses `--checkout`.
 
 The exact-head PR Actions run
-[#41983780464](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41983780464)
-at commit `a79091043fa8e3a71c668656e7a0166fef2c1a46` concluded
-`action_required`. GitHub reported zero jobs and the logs query reported zero
-total jobs, so no workflow step executed; this is a permission blocker, not a
-CI pass or failure. The focused suite and source-dir verifier passed locally.
+[#41983943123](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41983943123),
+attempt 2, completed successfully at
+`85538bd4d9bce9cc5bb63ae678860d79e1bd0e68`. Job `127166986788` completed
+successfully; all reported steps passed. Its logs show the focused suite ran
+**19 tests**, and checkout-mode verification printed
+`PHASE1_MGBA_CROSS_BACKEND reviewed_new_files=16 edges=15 injected_controls=6`.
+The verifier checked the exact pinned checkout, source blob/full-byte hashes,
+anchors and canonical dossier rows. The earlier run #41983780464 for the
+preceding code-bearing commit was `action_required` with zero jobs; it was a
+permission blocker, not a code failure, and was superseded by this successful
+exact-head run.
 
 The focused suite contains 19 positive/adversarial tests. Prior native
 observations remain host-specific controlled injections; this package does not
 run a real Qt/SDL/libretro/Python frontend, stock gameplay, a physical cartridge,
-or a power-loss/reboot experiment. A fresh-process read is not proof of durable
-storage. The authoritative Phase 1 gate remains `FAIL_INCOMPLETE`, with no new
-approval or semantic receipt.
+or a power-loss/reboot experiment. The four logger routes remain source-only
+conditional classifications, not observed frontend displays or persistence
+acknowledgments. A fresh-process read is not proof of durable storage. The
+authoritative Phase 1 gate remains `FAIL_INCOMPLETE`, with no new approval or
+semantic receipt.
