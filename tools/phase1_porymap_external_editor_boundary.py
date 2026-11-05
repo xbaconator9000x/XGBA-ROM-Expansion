@@ -60,7 +60,7 @@ REUSED_FILES = {
             "Editor::startDetachedProcess(command);",
             "bool Editor::startDetachedProcess(",
             "startDetachedProcess(command);",
-            "QDesktopServices::openUrl(QUrl::fromLocalFile(filepath));",
+            "QDesktopServices::openUrl(QUrl::fromLocalFile(path));",
         ),
     ),
     "include/config.h": (
