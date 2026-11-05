@@ -69,7 +69,7 @@ jobs:
             "37e2a5b7a007972a98986684701cd50626f46b5f0e3ec05e3c16ae3494b7df6f  tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json" \
             "5648c1772da65ae6a758e605a28aaffacf5036a5f5741fae845a50cc60e6b7b4  tests/fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json" \
             "62ce1ae030ca8739918f9dca5139f7b4b410e9351aa425d1f1d4db7823b27604  tests/fixtures/copilot-integration-readiness/stale_main_base_evidence_20261105.json" \
-            "2383cde597d5ced5d9d3c05280edbb99626b84102880b0f8c885847e12a29c6e  development/copilot-integration/closure-index-20261105.json" \
+            "78f7a0c2af374b5c5e167af4ad1212b7a399c17d232cd39b7a53bb2e4668b784  development/copilot-integration/closure-index-20261105.json" \
             "c10504f3a05c7875b8a71afd119de5ed1e1074a672a567723823bde0b5cd4486  development/copilot-integration/dependency-base-reconciliation-20261105.json" \
             | sha256sum --check
       - name: Validate Phase 1 independent-review queue without changing it

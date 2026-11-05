@@ -1597,6 +1597,11 @@ def closure_index_report(index, manifest, triage, package_documents, actual_hash
         findings.append("closure index schema is missing or unsupported")
     if index.get("repository") != "xbaconator9000x/XGBA-ROM-Expansion":
         findings.append("closure index repository identity does not match")
+    if index.get("base_provenance_limit") != (
+        "Actions run metadata does not expose run-time PR base SHA; "
+        "pr_metadata_base_sha is a separate current PR metadata observation, not run provenance."
+    ):
+        findings.append("closure index must distinguish current PR base from run-time base provenance")
     if not isinstance(manifest, dict) or not isinstance(triage, dict):
         findings.append("manifest and original blocker triage must be JSON objects")
         manifest = manifest if isinstance(manifest, dict) else {}
@@ -1795,13 +1800,23 @@ def closure_index_report(index, manifest, triage, package_documents, actual_hash
             or run.get("status") != "completed"
             or run.get("conclusion") != "action_required"
             or run.get("head_sha") != current[1]
-            or run.get("base_sha") != current[3]
+            or run.get("pr_metadata_base_sha") != current[3]
+            or run.get("reported_base_sha") is not None
+            or run.get("base_provenance") != "unavailable_actions_api"
             or run.get("job_count") != 0
             or run.get("url")
             != "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/%s" % run_id
         ):
-            findings.append("fresh PR #%s run is not an exact-head/base zero-job authorization gate" % number)
-        fresh_run_by_pr[number] = run
+            findings.append(
+                "fresh PR #%s run is not an exact-head zero-job gate or misstates unavailable run-time base provenance"
+                % number
+            )
+        fresh_run_by_pr[number] = {
+            **run,
+            "classification": "action_required_zero_job",
+            "head_matches_current_pr": current is not None and run.get("head_sha") == current[1],
+            "run_time_base_provenance": "unavailable",
+        }
     if not {35, 36, 37}.issubset(fresh_run_by_pr):
         findings.append("current authorization-gated runs for PRs #35, #36, and #37 are not all recorded")
     expected_policy = {
@@ -1825,6 +1840,7 @@ def closure_index_report(index, manifest, triage, package_documents, actual_hash
         ).items())),
         "phase1_gate": "FAIL_INCOMPLETE",
         "independent_approvals": 0,
+        "base_provenance_limit": index.get("base_provenance_limit"),
         "findings": sorted(set(findings)),
         "rows": expanded_rows,
     }

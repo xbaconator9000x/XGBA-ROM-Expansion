@@ -1013,6 +1013,8 @@ class IntegrationReadinessTests(unittest.TestCase):
         self.assertEqual(
             pr37["conclusion"], "action_required"
         )
+        self.assertEqual(pr37["base_provenance"], "unavailable_actions_api")
+        self.assertIsNone(pr37["reported_base_sha"])
         self.assertEqual(pr37["job_count"], 0)
         self.assertNotEqual(pr37["conclusion"], "success")
 
@@ -1066,19 +1068,22 @@ class IntegrationReadinessTests(unittest.TestCase):
             ("wrong current head", lambda value: next(
                 row for row in value["current_pr_observations"] if row[0] == 37
             ).__setitem__(1, "f" * 40),
-             "not an exact-head/base zero-job authorization gate"),
+             "not an exact-head zero-job gate"),
             ("fabricated success", lambda value: value["fresh_workflow_observations"][-1].update(
                 conclusion="success"
-            ), "not an exact-head/base zero-job authorization gate"),
+            ), "not an exact-head zero-job gate"),
             ("nonzero jobs", lambda value: value["fresh_workflow_observations"][-1].update(
                 job_count=1
-            ), "not an exact-head/base zero-job authorization gate"),
+            ), "not an exact-head zero-job gate"),
             ("wrong attempt", lambda value: value["fresh_workflow_observations"][-1].update(
                 attempt=2
-            ), "not an exact-head/base zero-job authorization gate"),
+            ), "not an exact-head zero-job gate"),
             ("wrong base", lambda value: value["fresh_workflow_observations"][-1].update(
-                base_sha="f" * 40
-            ), "not an exact-head/base zero-job authorization gate"),
+                pr_metadata_base_sha="f" * 40
+            ), "not an exact-head zero-job gate"),
+            ("fabricated run-time base", lambda value: value["fresh_workflow_observations"][-1].update(
+                reported_base_sha="de2a775184d69411016ff683a8075af72ef4a58d"
+            ), "misstates unavailable run-time base provenance"),
         )
         for name, mutate, expected in mutations:
             altered = copy.deepcopy(index)

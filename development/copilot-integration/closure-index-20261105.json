@@ -3,6 +3,7 @@
   "repository": "xbaconator9000x/XGBA-ROM-Expansion",
   "observed_at": "2026-11-05T04:45:00Z",
   "status": "BLOCKED",
+  "base_provenance_limit": "Actions run metadata does not expose run-time PR base SHA; pr_metadata_base_sha is a separate current PR metadata observation, not run provenance.",
   "source_hashes": {
     "development/copilot-integration/manifest.json": "99accfcada883f086468e8f62c55a252ee24076dba777575584aaf15e60e52cf",
     "development/copilot-integration/blocker-triage-20261104.json": "f87c618981d8006b30adc3178eeed68bc9ecb41801dded28ac0289cfbfc73659",
@@ -60,7 +61,9 @@
       "status": "completed",
       "conclusion": "action_required",
       "head_sha": "88fffdf44c5c452abf6119f0ac0e7278d1704afc",
-      "base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+      "pr_metadata_base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+      "reported_base_sha": null,
+      "base_provenance": "unavailable_actions_api",
       "job_count": 0,
       "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41963795822"
     },
@@ -73,7 +76,9 @@
       "status": "completed",
       "conclusion": "action_required",
       "head_sha": "3d16cc671a80c531e789d53d467ce4961d3f436c",
-      "base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+      "pr_metadata_base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+      "reported_base_sha": null,
+      "base_provenance": "unavailable_actions_api",
       "job_count": 0,
       "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41958394595"
     },
@@ -86,7 +91,9 @@
       "status": "completed",
       "conclusion": "action_required",
       "head_sha": "e976f34d26c7d9c9d239469b8077d838590aa35d",
-      "base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+      "pr_metadata_base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+      "reported_base_sha": null,
+      "base_provenance": "unavailable_actions_api",
       "job_count": 0,
       "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41951796883"
     }
