@@ -1,0 +1,325 @@
+{
+  "schema": "copilot-integration-workflow-id-correction-v1",
+  "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+  "observed_at": "2026-11-05T07:39:40Z",
+  "scope": "B004, B006, B007, B009, and B011 only; correct the workflow-ID evidence dimension without resolving blockers",
+  "source_hashes": {
+    "development/copilot-integration/manifest.json": "99accfcada883f086468e8f62c55a252ee24076dba777575584aaf15e60e52cf",
+    "development/copilot-integration/blocker-triage-20261104.json": "f87c618981d8006b30adc3178eeed68bc9ecb41801dded28ac0289cfbfc73659",
+    "development/copilot-integration/closure-index-20261105.json": "78f7a0c2af374b5c5e167af4ad1212b7a399c17d232cd39b7a53bb2e4668b784",
+    "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json": "37e2a5b7a007972a98986684701cd50626f46b5f0e3ec05e3c16ae3494b7df6f"
+  },
+  "base_provenance_limit": "The Actions run/job API responses do not expose run-time PR base SHA. Current PR metadata is recorded separately and is not substituted.",
+  "rows": [
+    {
+      "blocker_id": "B004",
+      "pr_number": 3,
+      "before": {
+        "category": "unverified_workflow_id",
+        "status": "BLOCKED",
+        "issue": "PR #3 required workflow ID is unverified in the manifest",
+        "manifest_head_sha": "ece1972aff3b333d8b5d33f6d1d043f10f779961",
+        "manifest_base_ref": "main",
+        "manifest_base_sha": "b0b13c1a277663b255b366878345540c2dcc90b1",
+        "observed_run_id": null
+      },
+      "workflow": {
+        "id": 396214707,
+        "name": "Phase 1 pinned mGBA timing and DMA source semantics",
+        "path": ".github/workflows/phase1-mgba-timing-dma-source.yml"
+      },
+      "current_pr": {
+        "head_sha": "ece1972aff3b333d8b5d33f6d1d043f10f779961",
+        "base_ref": "main",
+        "base_sha": "b0b13c1a277663b255b366878345540c2dcc90b1",
+        "state": "open",
+        "draft": true,
+        "merged": false,
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/3"
+      },
+      "run": {
+        "id": 40221153698,
+        "pull_request_number": 3,
+        "attempt": 1,
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success",
+        "tested_sha": "ece1972aff3b333d8b5d33f6d1d043f10f779961",
+        "reported_base_sha": null,
+        "base_provenance": "unavailable_actions_api",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40221153698"
+      },
+      "job": {
+        "id": 121252809771,
+        "name": "source-contracts",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40221153698/job/121252809771",
+        "step_count": 8,
+        "successful_step_count": 8,
+        "critical_steps": [
+          "Verify additive source semantics and negative controls",
+          "Reconcile both pinned registries against immutable 14,834-file queue"
+        ]
+      },
+      "after": {
+        "category": "workflow_id_and_exact_head_run_verified",
+        "status": "BLOCKED",
+        "workflow_id_verified": true,
+        "exact_head_pr_run_verified": true,
+        "run_time_base_provenance": "unavailable",
+        "required_action": "Keep the workflow-ID correction; reconcile PR #3's stale main base and obtain supported run-time base evidence before treating integration readiness as complete.",
+        "resolved": false
+      }
+    },
+    {
+      "blocker_id": "B006",
+      "pr_number": 4,
+      "before": {
+        "category": "unverified_workflow_id",
+        "status": "BLOCKED",
+        "issue": "PR #4 required workflow ID is unverified in the manifest",
+        "manifest_head_sha": "2f915111f9d9b3982647baab773dac59f800fa30",
+        "manifest_base_ref": "main",
+        "manifest_base_sha": "a18c7e01a9a6e0625a68426829057899df3a6da6",
+        "observed_run_id": null
+      },
+      "workflow": {
+        "id": 396267666,
+        "name": "Phase 1 pinned mGBA EEPROM and savestate source semantics",
+        "path": ".github/workflows/phase1-mgba-eeprom-savedata-source.yml"
+      },
+      "current_pr": {
+        "head_sha": "2f915111f9d9b3982647baab773dac59f800fa30",
+        "base_ref": "main",
+        "base_sha": "a18c7e01a9a6e0625a68426829057899df3a6da6",
+        "state": "open",
+        "draft": true,
+        "merged": false,
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/4"
+      },
+      "run": {
+        "id": 40221526970,
+        "pull_request_number": 4,
+        "attempt": 1,
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success",
+        "tested_sha": "2f915111f9d9b3982647baab773dac59f800fa30",
+        "reported_base_sha": null,
+        "base_provenance": "unavailable_actions_api",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40221526970"
+      },
+      "job": {
+        "id": 121253942962,
+        "name": "pinned-eeprom-source",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40221526970/job/121253942962",
+        "step_count": 7,
+        "successful_step_count": 7,
+        "critical_steps": [
+          "Verify exact EEPROM/savestate producer-consumer source"
+        ]
+      },
+      "after": {
+        "category": "workflow_id_and_exact_head_run_verified",
+        "status": "BLOCKED",
+        "workflow_id_verified": true,
+        "exact_head_pr_run_verified": true,
+        "run_time_base_provenance": "unavailable",
+        "required_action": "Keep the workflow-ID correction; reconcile PR #4's stale main base and obtain supported run-time base evidence before treating integration readiness as complete.",
+        "resolved": false
+      }
+    },
+    {
+      "blocker_id": "B007",
+      "pr_number": 5,
+      "before": {
+        "category": "unverified_workflow_id",
+        "status": "BLOCKED",
+        "issue": "PR #5 required workflow ID is unverified in the manifest",
+        "manifest_head_sha": "b30d76cb0ff57562dd939008e6d9da10df3fa0a4",
+        "manifest_base_ref": "phase1/mgba-timing-dma-semantic-review-20261026",
+        "manifest_base_sha": "ece1972aff3b333d8b5d33f6d1d043f10f779961",
+        "observed_run_id": null
+      },
+      "workflow": {
+        "id": 396311263,
+        "name": "Phase 1 cross-packet pinned semantic review reconciliation",
+        "path": ".github/workflows/phase1-mgba-crosspacket-source.yml"
+      },
+      "current_pr": {
+        "head_sha": "b30d76cb0ff57562dd939008e6d9da10df3fa0a4",
+        "base_ref": "phase1/mgba-timing-dma-semantic-review-20261026",
+        "base_sha": "ece1972aff3b333d8b5d33f6d1d043f10f779961",
+        "state": "open",
+        "draft": true,
+        "merged": false,
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/5"
+      },
+      "run": {
+        "id": 40244366644,
+        "pull_request_number": 5,
+        "attempt": 1,
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success",
+        "tested_sha": "b30d76cb0ff57562dd939008e6d9da10df3fa0a4",
+        "reported_base_sha": null,
+        "base_provenance": "unavailable_actions_api",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40244366644"
+      },
+      "job": {
+        "id": 121322704010,
+        "name": "crosspacket-source",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40244366644/job/121322704010",
+        "step_count": 7,
+        "successful_step_count": 7,
+        "critical_steps": [
+          "Recheck both source contract packets and fail-closed combined queue"
+        ]
+      },
+      "after": {
+        "category": "workflow_id_and_exact_head_run_verified",
+        "status": "BLOCKED",
+        "workflow_id_verified": true,
+        "exact_head_pr_run_verified": true,
+        "run_time_base_provenance": "unavailable",
+        "required_action": "Keep the workflow-ID correction; obtain run-time base evidence and independent semantic review before treating this stacked PR as integration-ready.",
+        "resolved": false
+      }
+    },
+    {
+      "blocker_id": "B009",
+      "pr_number": 6,
+      "before": {
+        "category": "unverified_workflow_id",
+        "status": "BLOCKED",
+        "issue": "PR #6 required workflow ID is unverified in the manifest",
+        "manifest_head_sha": "14536d8592ecb873ab1331086b9eea49916e6429",
+        "manifest_base_ref": "main",
+        "manifest_base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+        "observed_run_id": null
+      },
+      "workflow": {
+        "id": 396552287,
+        "name": "Phase 1 pinned FireRed map-layout authoring join",
+        "path": ".github/workflows/phase1-firered-map-layout-join.yml"
+      },
+      "current_pr": {
+        "head_sha": "14536d8592ecb873ab1331086b9eea49916e6429",
+        "base_ref": "main",
+        "base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+        "state": "open",
+        "draft": true,
+        "merged": false,
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/6"
+      },
+      "run": {
+        "id": 40255605435,
+        "pull_request_number": 6,
+        "attempt": 1,
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success",
+        "tested_sha": "14536d8592ecb873ab1331086b9eea49916e6429",
+        "reported_base_sha": null,
+        "base_provenance": "unavailable_actions_api",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40255605435"
+      },
+      "job": {
+        "id": 121356677529,
+        "name": "source-authoring-join",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40255605435/job/121356677529",
+        "step_count": 9,
+        "successful_step_count": 9,
+        "critical_steps": [
+          "Verify complete authored map-header to layout-table join"
+        ]
+      },
+      "after": {
+        "category": "workflow_id_and_exact_head_run_verified",
+        "status": "BLOCKED",
+        "workflow_id_verified": true,
+        "exact_head_pr_run_verified": true,
+        "run_time_base_provenance": "unavailable",
+        "required_action": "Keep the workflow-ID correction; reconcile PR #6's stale main base and obtain supported run-time base evidence before treating integration readiness as complete.",
+        "resolved": false
+      }
+    },
+    {
+      "blocker_id": "B011",
+      "pr_number": 7,
+      "before": {
+        "category": "unverified_workflow_id",
+        "status": "BLOCKED",
+        "issue": "PR #7 required workflow ID is unverified in the manifest",
+        "manifest_head_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+        "manifest_base_ref": "main",
+        "manifest_base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+        "observed_run_id": null
+      },
+      "workflow": {
+        "id": 396576283,
+        "name": "Phase 1 pinned FireRed layout writer census",
+        "path": ".github/workflows/phase1-firered-layout-writers.yml"
+      },
+      "current_pr": {
+        "head_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+        "base_ref": "main",
+        "base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+        "state": "open",
+        "draft": true,
+        "merged": false,
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/7"
+      },
+      "run": {
+        "id": 40465227907,
+        "pull_request_number": 7,
+        "attempt": 1,
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success",
+        "tested_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+        "reported_base_sha": null,
+        "base_provenance": "unavailable_actions_api",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40465227907"
+      },
+      "job": {
+        "id": 122058886027,
+        "name": "pinned-layout-writers",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40465227907/job/122058886027",
+        "step_count": 22,
+        "successful_step_count": 22,
+        "critical_steps": [
+          "Run pinned authored layout-writer census",
+          "Verify pinned Trainer Tower authored map topology and progress dispatch"
+        ]
+      },
+      "after": {
+        "category": "workflow_id_and_exact_head_run_verified",
+        "status": "BLOCKED",
+        "workflow_id_verified": true,
+        "exact_head_pr_run_verified": true,
+        "run_time_base_provenance": "unavailable",
+        "required_action": "Keep the workflow-ID correction; reconcile PR #7's stale main base and obtain supported run-time base evidence before treating integration readiness as complete.",
+        "resolved": false
+      }
+    }
+  ],
+  "policy": {
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "independent_approvals": 0,
+    "p0_approvals": 0,
+    "total_historical_approvals": 0,
+    "source_pins_changed": false,
+    "semantic_approval_from_ci": false
+  }
+}

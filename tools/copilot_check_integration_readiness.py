@@ -2086,6 +2086,260 @@ def blocker_action_closure_report(fixture, manifest, triage, workflow_receipts, 
     }
 
 
+def workflow_id_correction_report(fixture, manifest, triage, workflow_receipts, actual_hashes):
+    """Validate a bounded correction of historical missing-workflow-ID labels."""
+    findings = []
+    if not isinstance(fixture, dict):
+        fixture = {}
+        findings.append("workflow-ID correction evidence must be a JSON object")
+    if fixture.get("schema") != "copilot-integration-workflow-id-correction-v1":
+        findings.append("workflow-ID correction schema is missing or unsupported")
+    if fixture.get("repository") != "xbaconator9000x/XGBA-ROM-Expansion":
+        findings.append("workflow-ID correction repository identity does not match")
+    if fixture.get("base_provenance_limit") != (
+        "The Actions run/job API responses do not expose run-time PR base SHA. "
+        "Current PR metadata is recorded separately and is not substituted."
+    ):
+        findings.append("workflow-ID correction must preserve the run-time base provenance limit")
+    if not isinstance(manifest, dict) or not isinstance(triage, dict):
+        findings.append("manifest and immutable blocker triage are required")
+        manifest = manifest if isinstance(manifest, dict) else {}
+        triage = triage if isinstance(triage, dict) else {}
+    source_hashes = fixture.get("source_hashes")
+    if not isinstance(source_hashes, dict) or not isinstance(actual_hashes, dict):
+        findings.append("workflow-ID correction source hashes are missing")
+        source_hashes = source_hashes if isinstance(source_hashes, dict) else {}
+        actual_hashes = actual_hashes if isinstance(actual_hashes, dict) else {}
+    if set(source_hashes) != set(actual_hashes):
+        findings.append("workflow-ID correction source hash set does not match checked sources")
+    for path, digest in source_hashes.items():
+        if (
+            not isinstance(digest, str)
+            or not re.fullmatch(r"[0-9a-f]{64}", digest)
+            or actual_hashes.get(path) != digest
+        ):
+            findings.append("workflow-ID correction source hash mismatch: %s" % path)
+
+    selected = {"B004": 3, "B006": 4, "B007": 5, "B009": 6, "B011": 7}
+    original_rows = {
+        row.get("id"): row
+        for row in triage.get("blockers", [])
+        if isinstance(row, dict) and isinstance(row.get("id"), str)
+    }
+    manifest_rows = {
+        row.get("number"): row
+        for row in manifest.get("pull_requests", [])
+        if isinstance(row, dict) and isinstance(row.get("number"), int)
+    }
+    receipt_rows = {
+        row.get("pr"): row
+        for row in workflow_receipts.get("rows", [])
+        if isinstance(row, dict) and isinstance(row.get("pr"), int)
+    } if isinstance(workflow_receipts, dict) else {}
+    rows = fixture.get("rows")
+    if not isinstance(rows, list) or [row.get("blocker_id") for row in rows
+                                      if isinstance(row, dict)] != list(selected):
+        findings.append("workflow-ID correction scope must contain B004/B006/B007/B009/B011 exactly once in order")
+        rows = rows if isinstance(rows, list) else []
+    if len(rows) != len(selected):
+        findings.append("workflow-ID correction row count must be exactly five")
+
+    report_rows = []
+    for row in rows:
+        if not isinstance(row, dict):
+            findings.append("workflow-ID correction row is malformed")
+            continue
+        blocker_id = row.get("blocker_id")
+        number = selected.get(blocker_id)
+        original = original_rows.get(blocker_id)
+        if number is None or original is None:
+            findings.append("%s is outside the selected immutable blocker scope" % blocker_id)
+            continue
+        pr_manifest = manifest_rows.get(number)
+        receipt = receipt_rows.get(number)
+        if not isinstance(pr_manifest, dict) or not isinstance(receipt, dict):
+            findings.append("%s is missing its manifest or pinned workflow receipt" % blocker_id)
+            continue
+        workflow_ids = manifest.get("required_workflow_ids", {}).get(str(number))
+        workflow = row.get("workflow")
+        current_pr = row.get("current_pr")
+        run = row.get("run")
+        job = row.get("job")
+        before = row.get("before")
+        before = before if isinstance(before, dict) else {}
+        after = row.get("after")
+        manifest_head = (pr_manifest.get("head") or {}).get("sha")
+        manifest_base = (pr_manifest.get("base") or {}).get("sha")
+        manifest_base_ref = (pr_manifest.get("base") or {}).get("ref")
+        receipt_run = receipt.get("run", {})
+        receipt_jobs = receipt.get("jobs", {})
+        receipt_manifest = receipt.get("manifest", {})
+        receipt_live = receipt.get("live", {})
+        if (
+            row.get("pr_number") != number
+            or original.get("pr_number") != number
+            or original.get("category") != "unverified_workflow_id"
+            or not before
+            or original.get("issue") != before.get("issue")
+            or before.get("category") != "unverified_workflow_id"
+            or before.get("status") != "BLOCKED"
+            or before.get("observed_run_id") is not None
+            or before.get("manifest_head_sha") != manifest_head
+            or before.get("manifest_base_sha") != manifest_base
+            or before.get("manifest_base_ref") != manifest_base_ref
+        ):
+            findings.append("%s before-disposition differs from immutable blocker identity" % blocker_id)
+        workflow_id = workflow.get("id") if isinstance(workflow, dict) else None
+        if (
+            not isinstance(workflow_ids, list)
+            or len(workflow_ids) != 1
+            or workflow_ids[0] != workflow_id
+            or receipt.get("workflow_id") != workflow_id
+        ):
+            findings.append("%s workflow ID is not corroborated by manifest and pinned receipt" % blocker_id)
+        if (
+            not isinstance(workflow, dict)
+            or not isinstance(workflow.get("name"), str)
+            or not workflow.get("name")
+            or not isinstance(workflow.get("path"), str)
+            or not workflow.get("path").startswith(".github/workflows/")
+        ):
+            findings.append("%s workflow identity is incomplete" % blocker_id)
+        if not isinstance(current_pr, dict) or not isinstance(run, dict) or not isinstance(job, dict):
+            findings.append("%s current PR, run, or job evidence is missing" % blocker_id)
+            continue
+        if any((
+            receipt_manifest.get("head") != manifest_head,
+            receipt_manifest.get("base") != manifest_base,
+            receipt_manifest.get("base_ref") != manifest_base_ref,
+            receipt_live.get("head") != current_pr.get("head_sha"),
+            receipt_live.get("base") != current_pr.get("base_sha"),
+            receipt_live.get("base_ref") != current_pr.get("base_ref"),
+            current_pr.get("head_sha") != manifest_head,
+            current_pr.get("base_sha") != manifest_base,
+            current_pr.get("base_ref") != manifest_base_ref,
+            current_pr.get("state") != "open",
+            current_pr.get("draft") is not True,
+            current_pr.get("merged") is not False,
+            current_pr.get("url") != (
+                "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/%d" % number
+            ),
+        )):
+            findings.append("%s current PR metadata differs from manifest or pinned receipt" % blocker_id)
+        expected_run_url = (
+            "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/%s"
+            % receipt_run.get("id")
+        )
+        run_valid = (
+            run.get("id") == receipt_run.get("id")
+            and isinstance(run.get("id"), int)
+            and not isinstance(run.get("id"), bool)
+            and run.get("pull_request_number") == number
+            and run.get("attempt") == receipt_run.get("attempt")
+            and isinstance(run.get("attempt"), int)
+            and run.get("attempt") > 0
+            and run.get("event") == "pull_request"
+            and run.get("status") == "completed"
+            and run.get("conclusion") == "success"
+            and run.get("tested_sha") == manifest_head
+            and run.get("tested_sha") == receipt_run.get("head")
+            and run.get("reported_base_sha") is None
+            and run.get("base_provenance") == "unavailable_actions_api"
+            and run.get("url") == expected_run_url
+            and receipt_run.get("url") == expected_run_url
+        )
+        if not run_valid:
+            findings.append("%s run is not the recorded successful exact-head pull_request attempt" % blocker_id)
+        job_count = receipt_jobs.get("count")
+        step_count = receipt_jobs.get("steps")
+        if any((
+            not isinstance(job_count, int) or isinstance(job_count, bool) or job_count <= 0,
+            receipt_jobs.get("success") != job_count,
+            not isinstance(step_count, int) or isinstance(step_count, bool) or step_count <= 0,
+            receipt_jobs.get("successful_steps") != step_count,
+            not isinstance(receipt_jobs.get("job_ids"), list)
+            or len(receipt_jobs.get("job_ids", [])) != job_count
+            or job.get("id") not in receipt_jobs.get("job_ids", []),
+            job.get("status") != "completed"
+            or job.get("conclusion") != "success"
+            or job.get("step_count") != step_count
+            or job.get("successful_step_count") != step_count
+            or job.get("critical_steps") != receipt_jobs.get("critical_steps")
+            or not isinstance(job.get("critical_steps"), list)
+            or not job.get("critical_steps"),
+            job.get("url") != (
+                "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/"
+                "actions/runs/%s/job/%s" % (receipt_run.get("id"), job.get("id"))
+            ),
+        )):
+            findings.append("%s executed job/step coverage is absent, incomplete, or unsuccessful" % blocker_id)
+        expected_after = {
+            "category": "workflow_id_and_exact_head_run_verified",
+            "status": "BLOCKED",
+            "workflow_id_verified": True,
+            "exact_head_pr_run_verified": True,
+            "run_time_base_provenance": "unavailable",
+            "required_action": after.get("required_action") if isinstance(after, dict) else None,
+            "resolved": False,
+        }
+        if (
+            not isinstance(after, dict)
+            or after != expected_after
+            or not isinstance(after.get("required_action"), str)
+            or not after.get("required_action")
+        ):
+            findings.append("%s after-disposition clears or misstates unresolved obligations" % blocker_id)
+        before_fingerprint = hashlib.sha256(json.dumps(
+            before, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")).hexdigest()
+        evidence_fingerprint = hashlib.sha256(json.dumps(
+            {"current_pr": current_pr, "run": run, "job": job},
+            sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")).hexdigest()
+        after_fingerprint = hashlib.sha256(json.dumps(
+            after, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")).hexdigest()
+        report_rows.append({
+            "blocker_id": blocker_id,
+            "pr_number": number,
+            "before": before,
+            "workflow_id": workflow_id,
+            "current_pr_url": current_pr.get("url"),
+            "run_url": run.get("url"),
+            "job_url": job.get("url"),
+            "after": after,
+            "status": "BLOCKED",
+            "before_fingerprint_sha256": before_fingerprint,
+            "current_evidence_fingerprint_sha256": evidence_fingerprint,
+            "after_fingerprint_sha256": after_fingerprint,
+        })
+
+    expected_policy = {
+        "phase1_gate": "FAIL_INCOMPLETE",
+        "independent_approvals": 0,
+        "p0_approvals": 0,
+        "total_historical_approvals": 0,
+        "source_pins_changed": False,
+        "semantic_approval_from_ci": False,
+    }
+    if fixture.get("policy") != expected_policy:
+        findings.append("workflow-ID correction changes protected Phase 1 gate or approval totals")
+    return {
+        "schema": "xgba.phase1.workflow_id_correction_report.v1",
+        "status": "BLOCKED",
+        "evidence_validation": "BLOCKED" if findings else "VALID",
+        "observed_at": fixture.get("observed_at"),
+        "selected_blocker_count": len(report_rows),
+        "workflow_id_dimension_corrected_count": len(report_rows) if not findings else 0,
+        "selected_resolved_count": 0,
+        "selected_blocked_count": len(report_rows),
+        "phase1_gate": "FAIL_INCOMPLETE",
+        "independent_approvals": 0,
+        "findings": sorted(set(findings)),
+        "rows": report_rows,
+    }
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
@@ -2124,15 +2378,53 @@ def main(argv=None):
         type=Path,
         help="validate the bounded before/after workflow-action closure evidence offline",
     )
+    parser.add_argument(
+        "--workflow-id-correction",
+        type=Path,
+        help="validate selected workflow-ID evidence corrections without resolving blockers",
+    )
     args = parser.parse_args(argv)
     try:
         manifest_bytes = args.manifest.read_bytes()
         manifest = json.loads(manifest_bytes.decode("utf-8"))
+        if args.workflow_id_correction:
+            if (
+                args.snapshot or args.offline or args.live_observations
+                or args.triage_json or args.dependency_observations
+                or args.closure_index or args.action_closure
+            ):
+                parser.error("--workflow-id-correction is a standalone offline mode")
+            source_paths = {
+                "development/copilot-integration/manifest.json":
+                    ROOT / "development/copilot-integration/manifest.json",
+                "development/copilot-integration/blocker-triage-20261104.json":
+                    ROOT / "development/copilot-integration/blocker-triage-20261104.json",
+                "development/copilot-integration/closure-index-20261105.json":
+                    ROOT / "development/copilot-integration/closure-index-20261105.json",
+                "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json":
+                    ROOT / "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json",
+            }
+            triage = json.loads(source_paths[
+                "development/copilot-integration/blocker-triage-20261104.json"
+            ].read_text(encoding="utf-8"))
+            workflow_receipts = json.loads(source_paths[
+                "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json"
+            ].read_text(encoding="utf-8"))
+            actual_hashes = {
+                path: hashlib.sha256(source.read_bytes()).hexdigest()
+                for path, source in source_paths.items()
+            }
+            fixture = json.loads(args.workflow_id_correction.read_text(encoding="utf-8"))
+            report = workflow_id_correction_report(
+                fixture, manifest, triage, workflow_receipts, actual_hashes
+            )
+            print(json.dumps(report, indent=2, sort_keys=True))
+            return 1
         if args.action_closure:
             if (
                 args.snapshot or args.offline or args.live_observations
                 or args.triage_json or args.dependency_observations
-                or args.closure_index
+                or args.closure_index or args.workflow_id_correction
             ):
                 parser.error("--action-closure is a standalone offline mode")
             source_paths = {
@@ -2165,7 +2457,11 @@ def main(argv=None):
             print(json.dumps(report, indent=2, sort_keys=True))
             return 1 if report["status"] != "READY" else 0
         if args.closure_index:
-            if args.snapshot or args.offline or args.live_observations or args.triage_json or args.dependency_observations:
+            if (
+                args.snapshot or args.offline or args.live_observations
+                or args.triage_json or args.dependency_observations
+                or args.workflow_id_correction
+            ):
                 parser.error("--closure-index is a standalone offline mode")
             source_paths = {
                 "development/copilot-integration/manifest.json":
@@ -2201,7 +2497,10 @@ def main(argv=None):
             print(json.dumps(report, indent=2, sort_keys=True))
             return 1 if report["status"] == "BLOCKED" else 0
         if args.dependency_observations:
-            if args.snapshot or args.offline or args.live_observations or args.triage_json:
+            if (
+                args.snapshot or args.offline or args.live_observations
+                or args.triage_json or args.workflow_id_correction
+            ):
                 parser.error("--dependency-observations is a standalone offline mode")
             observation = json.loads(
                 args.dependency_observations.read_text(encoding="utf-8")

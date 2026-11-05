@@ -21,6 +21,7 @@ from tools.copilot_check_integration_readiness import (
     missing_required_workflow_events,
     recorded_snapshot,
     validate,
+    workflow_id_correction_report,
 )
 
 
@@ -63,6 +64,10 @@ CLOSURE_INDEX = (
 ACTION_CLOSURE = (
     Path(__file__).parent.parent
     / "development/copilot-integration/action-closure-20261105.json"
+)
+WORKFLOW_ID_CORRECTION = (
+    Path(__file__).parent.parent
+    / "development/copilot-integration/workflow-id-correction-20261105.json"
 )
 MANIFEST = (
     Path(__file__).parent.parent / "development/copilot-integration/manifest.json"
@@ -1223,6 +1228,117 @@ class IntegrationReadinessTests(unittest.TestCase):
         self.assertEqual(report["selected_blocked_count"], 2)
         self.assertEqual(report["validation_gate"]["pr_conclusion"], "action_required")
         self.assertEqual(report["validation_gate"]["pr_job_count"], 0)
+
+    def _workflow_id_correction_inputs(self):
+        fixture = json.loads(WORKFLOW_ID_CORRECTION.read_text(encoding="utf-8"))
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        triage = json.loads(BLOCKER_TRIAGE.read_text(encoding="utf-8"))
+        receipt_path = (
+            "tests/fixtures/copilot-integration-readiness/"
+            "workflow_id_reconciliation_20261104.json"
+        )
+        receipts = json.loads((MANIFEST.parents[2] / receipt_path).read_text(encoding="utf-8"))
+        paths = (
+            "development/copilot-integration/manifest.json",
+            "development/copilot-integration/blocker-triage-20261104.json",
+            "development/copilot-integration/closure-index-20261105.json",
+            receipt_path,
+        )
+        hashes = {
+            path: hashlib.sha256((MANIFEST.parents[2] / path).read_bytes()).hexdigest()
+            for path in paths
+        }
+        return fixture, manifest, triage, receipts, hashes
+
+    def test_selected_workflow_id_corrections_verify_provenance_but_stay_blocked(self):
+        fixture, manifest, triage, receipts, hashes = self._workflow_id_correction_inputs()
+        report = workflow_id_correction_report(
+            fixture, manifest, triage, receipts, hashes
+        )
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertEqual(report["evidence_validation"], "VALID")
+        self.assertEqual(report["findings"], [])
+        self.assertEqual(
+            [row["blocker_id"] for row in report["rows"]],
+            ["B004", "B006", "B007", "B009", "B011"],
+        )
+        self.assertEqual(report["workflow_id_dimension_corrected_count"], 5)
+        self.assertEqual(report["selected_resolved_count"], 0)
+        self.assertEqual(report["selected_blocked_count"], 5)
+        self.assertEqual(report["phase1_gate"], "FAIL_INCOMPLETE")
+        self.assertEqual(report["independent_approvals"], 0)
+        self.assertTrue(all(
+            row["before_fingerprint_sha256"]
+            and row["current_evidence_fingerprint_sha256"]
+            and row["after_fingerprint_sha256"]
+            and row["status"] == "BLOCKED"
+            and row["after"]["run_time_base_provenance"] == "unavailable"
+            and row["after"]["resolved"] is False
+            for row in report["rows"]
+        ))
+
+    def test_workflow_id_correction_rejects_malformed_or_fabricated_evidence(self):
+        fixture, manifest, triage, receipts, hashes = self._workflow_id_correction_inputs()
+        mutations = (
+            ("missing row", lambda value: value["rows"].pop(),
+             "scope must contain B004/B006/B007/B009/B011"),
+            ("duplicate row", lambda value: value["rows"].append(copy.deepcopy(value["rows"][0])),
+             "scope must contain B004/B006/B007/B009/B011"),
+            ("missing before disposition", lambda value: value["rows"][0].pop("before"),
+             "before-disposition differs from immutable blocker identity"),
+            ("invented workflow ID", lambda value: value["rows"][0]["workflow"].update(id=999),
+             "not corroborated by manifest and pinned receipt"),
+            ("wrong event", lambda value: value["rows"][0]["run"].update(event="push"),
+             "not the recorded successful exact-head pull_request attempt"),
+            ("wrong head", lambda value: value["rows"][0]["run"].update(tested_sha="f" * 40),
+             "not the recorded successful exact-head pull_request attempt"),
+            ("invented run ID", lambda value: value["rows"][0]["run"].update(id=999),
+             "not the recorded successful exact-head pull_request attempt"),
+            ("wrong PR association", lambda value: value["rows"][0]["run"].update(
+                pull_request_number=4
+            ), "not the recorded successful exact-head pull_request attempt"),
+            ("wrong attempt", lambda value: value["rows"][0]["run"].update(attempt=2),
+             "not the recorded successful exact-head pull_request attempt"),
+            ("wrong current base", lambda value: value["rows"][0]["current_pr"].update(
+                base_sha="b" * 40
+            ), "current PR metadata differs from manifest or pinned receipt"),
+            ("zero jobs", lambda value: value["rows"][0]["job"].update(id=None),
+             "job/step coverage is absent"),
+            ("incomplete steps", lambda value: value["rows"][0]["job"].update(
+                successful_step_count=0
+            ), "job/step coverage is absent"),
+            ("fabricated run-time base", lambda value: value["rows"][0]["run"].update(
+                reported_base_sha="b" * 40
+            ), "not the recorded successful exact-head pull_request attempt"),
+            ("false resolution", lambda value: value["rows"][0]["after"].update(
+                status="READY", resolved=True
+            ), "after-disposition clears or misstates"),
+            ("changed source hash", lambda value: value["source_hashes"].update({
+                "development/copilot-integration/manifest.json": "0" * 64
+            }), "source hash mismatch"),
+        )
+        for name, mutate, expected in mutations:
+            altered = copy.deepcopy(fixture)
+            with self.subTest(mutation=name):
+                mutate(altered)
+                report = workflow_id_correction_report(
+                    altered, manifest, triage, receipts, hashes
+                )
+                self.assertEqual(report["status"], "BLOCKED")
+                self.assertTrue(any(expected in finding for finding in report["findings"]))
+
+    def test_workflow_id_correction_cli_reports_valid_evidence_as_blocked(self):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            status = main([
+                "--workflow-id-correction",
+                str(WORKFLOW_ID_CORRECTION),
+            ])
+        self.assertEqual(status, 1)
+        report = json.loads(output.getvalue())
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertEqual(report["evidence_validation"], "VALID")
+        self.assertEqual(report["selected_blocked_count"], 5)
 
 
 if __name__ == "__main__":
