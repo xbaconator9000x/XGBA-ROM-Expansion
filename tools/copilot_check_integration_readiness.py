@@ -279,6 +279,76 @@ def classify_workflow_evidence(number, workflow_id, observed, runs, commit_detai
                 detail="completed run or one or more jobs did not succeed")
 
 
+def classify_main_base_ancestry(observation):
+    """Classify a recorded main base only when compare-API provenance is complete."""
+    if not isinstance(observation, dict):
+        return "unverified_ancestry", "main-base observation is missing"
+    expected_base = observation.get("expected_base_sha")
+    observed_base = observation.get("observed_base_sha")
+    main_sha = observation.get("current_main_sha")
+    if any(not isinstance(sha, str) or not SHA1.fullmatch(sha)
+           for sha in (expected_base, observed_base, main_sha)):
+        return "unverified_ancestry", "main-base SHA provenance is missing or malformed"
+    if observed_base != expected_base:
+        return "changed_base", "live PR base differs from the pinned manifest base"
+
+    compare = observation.get("compare")
+    if not isinstance(compare, dict):
+        return "unverified_ancestry", "GitHub compare ancestry evidence is unavailable"
+    if (
+        compare.get("base_sha") != observed_base
+        or compare.get("head_sha") != main_sha
+        or not isinstance(compare.get("merge_base_sha"), str)
+        or not SHA1.fullmatch(compare["merge_base_sha"])
+    ):
+        return (
+            "unverified_ancestry",
+            "compare evidence does not bind the recorded base to current main",
+        )
+    ahead = compare.get("ahead_by")
+    behind = compare.get("behind_by")
+    if (
+        not isinstance(ahead, int) or isinstance(ahead, bool) or ahead < 0
+        or not isinstance(behind, int) or isinstance(behind, bool) or behind < 0
+    ):
+        return "unverified_ancestry", "compare commit counts are missing or malformed"
+    if (
+        observed_base == main_sha
+        and compare.get("status") == "identical"
+        and ahead == 0
+        and behind == 0
+        and compare["merge_base_sha"] == observed_base
+    ):
+        return "current", "PR base equals current main"
+    if (
+        compare.get("status") == "ahead"
+        and ahead > 0
+        and behind == 0
+        and compare["merge_base_sha"] == observed_base
+    ):
+        return "stale_ancestor", "recorded PR base is an ancestor of current main"
+    return (
+        "diverged_or_inconsistent",
+        "compare evidence does not prove a current or ancestor base",
+    )
+
+
+def missing_required_workflow_events(required_events, observed_runs):
+    """Return configured event types with no observed run; unconfigured events are ignored."""
+    if (
+        not isinstance(required_events, list)
+        or any(not isinstance(event, str) or not event for event in required_events)
+        or not isinstance(observed_runs, list)
+    ):
+        return ["workflow event evidence is malformed"]
+    observed = {
+        run.get("event")
+        for run in observed_runs
+        if isinstance(run, dict) and isinstance(run.get("event"), str)
+    }
+    return sorted(set(required_events) - observed)
+
+
 def _format_workflow_blocker(evidence):
     status = evidence["status"]
     workflow_id = evidence["workflow_id"]
@@ -507,6 +577,16 @@ def validate(manifest, snapshot):
     if not isinstance(commit_details, dict):
         issues.append("snapshot commit_details must be an object")
         commit_details = {}
+    has_main_ancestry = "main_base_ancestry" in snapshot
+    main_ancestry = snapshot.get("main_base_ancestry")
+    if has_main_ancestry and not isinstance(main_ancestry, dict):
+        issues.append("snapshot main_base_ancestry must be an object")
+        main_ancestry = {}
+    has_workflow_events = "required_workflow_events" in snapshot
+    workflow_events = snapshot.get("required_workflow_events")
+    if has_workflow_events and not isinstance(workflow_events, dict):
+        issues.append("snapshot required_workflow_events must be an object")
+        workflow_events = {}
 
     for number, pr in sorted(expected_prs.items()):
         observed = live_prs.get(number)
@@ -579,6 +659,15 @@ def validate(manifest, snapshot):
                     "PR #%d is based on stale main SHA %s (current %s)"
                     % (number, observed.get("base_sha"), live_main.get("sha"))
                 )
+            if has_main_ancestry:
+                status, detail = classify_main_base_ancestry(
+                    main_ancestry.get(str(number))
+                )
+                if status not in ("current", "stale_ancestor"):
+                    issues.append(
+                        "PR #%d main-base ancestry status=%s: %s"
+                        % (number, status, detail)
+                    )
 
         workflow_ids = (
             raw_workflow_ids.get(str(number), [])
@@ -604,6 +693,24 @@ def validate(manifest, snapshot):
                 if evidence["status"] == "stale_head_base":
                     issue += "; green workflow lacks matching current head/base provenance"
                 issues.append(issue)
+            if has_workflow_events:
+                configured = workflow_events.get(str(number))
+                events = (
+                    configured.get(str(workflow_id))
+                    if isinstance(configured, dict)
+                    else None
+                )
+                scoped_runs = [
+                    run for run in runs
+                    if run.get("workflow_id") == workflow_id
+                    and _workflow_ref(run, number) is not None
+                ]
+                missing_events = missing_required_workflow_events(events, scoped_runs)
+                if missing_events:
+                    issues.append(
+                        "PR #%d workflow #%d missing required event evidence: %s"
+                        % (number, workflow_id, ", ".join(missing_events))
+                    )
 
     for number in live_prs.keys() - expected_prs.keys():
         issues.append("unexpected PR #%d is absent from the pinned manifest" % number)
@@ -835,6 +942,49 @@ def fetch_public_snapshot(manifest):
             branch_refs.add(pr["head"]["ref"])
         main_ref = manifest["main"]["ref"]
         main_sha = get_json("/repos/%s/%s/commits/%s" % (owner, repo, quote(main_ref, safe="")))
+        main_sha_value = main_sha["sha"]
+        main_base_ancestry = {}
+        comparisons = {}
+        for number, pr in snapshot_prs.items():
+            pinned = next(
+                item for item in manifest["pull_requests"]
+                if item["number"] == int(number)
+            )
+            if pinned.get("base", {}).get("ref") != main_ref:
+                continue
+            base_sha = pr["base_sha"]
+            if base_sha not in comparisons:
+                comparison = None
+                try:
+                    result = get_json(
+                        "/repos/%s/%s/compare/%s...%s"
+                        % (
+                            owner,
+                            repo,
+                            quote(base_sha, safe=""),
+                            quote(main_sha_value, safe=""),
+                        )
+                    )
+                    comparison = {
+                        "base_sha": (result.get("base_commit") or {}).get("sha"),
+                        "head_sha": (result.get("head_commit") or {}).get("sha"),
+                        "merge_base_sha": (
+                            result.get("merge_base_commit") or {}
+                        ).get("sha"),
+                        "status": result.get("status"),
+                        "ahead_by": result.get("ahead_by"),
+                        "behind_by": result.get("behind_by"),
+                    }
+                except (HTTPError, URLError, TimeoutError, KeyError, ValueError):
+                    pass
+                comparisons[base_sha] = comparison
+            comparison = comparisons[base_sha]
+            main_base_ancestry[number] = {
+                "expected_base_sha": pinned["base"]["sha"],
+                "observed_base_sha": pr["base_sha"],
+                "current_main_sha": main_sha_value,
+                "compare": comparison,
+            }
         required_ids = manifest.get("required_workflow_ids", {})
         current_heads = {
             int(pr["number"]): pr["head"]["sha"]
@@ -974,10 +1124,11 @@ def fetch_public_snapshot(manifest):
                     "parents": [parent.get("sha") for parent in parents],
                 }
         return {
-            "main": {"ref": main_ref, "sha": main_sha["sha"]},
+            "main": {"ref": main_ref, "sha": main_sha_value},
             "pull_requests": snapshot_prs,
             "workflow_runs": runs,
             "commit_details": commit_details,
+            "main_base_ancestry": main_base_ancestry,
         }
     except (HTTPError, URLError, TimeoutError, KeyError, ValueError) as exc:
         raise RuntimeError(

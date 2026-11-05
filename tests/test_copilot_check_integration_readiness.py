@@ -8,8 +8,10 @@ import unittest
 
 from tools.copilot_check_integration_readiness import (
     blocker_triage_report,
+    classify_main_base_ancestry,
     classify_workflow_evidence,
     _format_workflow_blocker,
+    missing_required_workflow_events,
     recorded_snapshot,
     validate,
 )
@@ -38,6 +40,10 @@ WORKFLOW_ID_RECONCILIATION = (
 STALE_WORKFLOW_RECONCILIATION = (
     Path(__file__).parent
     / "fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json"
+)
+STALE_MAIN_RECONCILIATION = (
+    Path(__file__).parent
+    / "fixtures/copilot-integration-readiness/stale_main_base_evidence_20261105.json"
 )
 MANIFEST = (
     Path(__file__).parent.parent / "development/copilot-integration/manifest.json"
@@ -693,6 +699,138 @@ class IntegrationReadinessTests(unittest.TestCase):
                 if run["conclusion"] == "success":
                     self.assertIsNone(result["reported_base_sha"])
                     self.assertIn("base", result["detail"].lower())
+
+    def test_seven_stale_main_rows_have_live_ancestry_and_exact_event_evidence(self):
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        reconciliation = json.loads(STALE_MAIN_RECONCILIATION.read_text(encoding="utf-8"))
+        expected = {2, 3, 4, 6, 7, 23, 25}
+        manifest_prs = {pr["number"]: pr for pr in manifest["pull_requests"]}
+        rows = {row["pr_number"]: row for row in reconciliation["rows"]}
+
+        self.assertEqual(set(rows), expected)
+        self.assertEqual(reconciliation["current_main"]["sha"],
+                         "3d8455edb1d26b462881c8a79096e5832fcf4457")
+        self.assertEqual(reconciliation["policy"]["phase1_gate"], "FAIL_INCOMPLETE")
+        self.assertEqual(reconciliation["policy"]["independent_approvals"], 0)
+        for number, row in rows.items():
+            pinned = manifest_prs[number]
+            with self.subTest(pr=number):
+                self.assertEqual(row["manifest"]["head_sha"], pinned["head"]["sha"])
+                self.assertEqual(row["manifest"]["base_sha"], pinned["base"]["sha"])
+                self.assertEqual(row["manifest"]["base_ref"], pinned["base"]["ref"])
+                self.assertEqual(row["workflow"]["id"],
+                                 manifest["required_workflow_ids"][str(number)][0])
+                self.assertRegex(row["workflow"]["blob_sha"], r"^[0-9a-f]{40}$")
+                self.assertEqual(row["main_compare"]["head_sha"],
+                                 reconciliation["current_main"]["sha"])
+                self.assertEqual(
+                    classify_main_base_ancestry({
+                        "expected_base_sha": row["manifest"]["base_sha"],
+                        "observed_base_sha": row["live_pr"]["base_sha"],
+                        "current_main_sha": reconciliation["current_main"]["sha"],
+                        "compare": row["main_compare"],
+                    })[0],
+                    "stale_ancestor",
+                )
+                self.assertEqual(row["classification"],
+                                 "stale_ancestor_and_changed_head" if number == 2
+                                 else "stale_ancestor")
+                self.assertEqual(
+                    missing_required_workflow_events(
+                        row["workflow"]["required_automatic_events"], row["runs"]
+                    ),
+                    [],
+                )
+                for run in row["runs"]:
+                    self.assertGreater(run["attempt"], 0)
+                    self.assertEqual(run["id"], int(run["url"].rsplit("/", 1)[1]))
+                    self.assertEqual(run["conclusion"], "success")
+                    self.assertEqual(len(run["jobs"]), 1)
+                    self.assertEqual(run["jobs"][0]["conclusion"], "success")
+                    self.assertIn(run["event"], row["workflow"]["configured_events"])
+                    self.assertGreater(run["jobs"][0]["steps_completed"], 0)
+                    self.assertTrue(run["jobs"][0]["url"].endswith(
+                        "/job/%d" % run["jobs"][0]["id"]
+                    ))
+                    if number != 2 or run["event"] == "pull_request":
+                        self.assertEqual(run["head_sha"], row["manifest"]["head_sha"])
+
+        self.assertNotEqual(rows[2]["manifest"]["head_sha"], rows[2]["live_pr"]["head_sha"])
+        self.assertEqual(rows[25]["workflow"]["required_automatic_events"], ["push"])
+        self.assertNotIn("pull_request", rows[25]["workflow"]["configured_events"])
+        self.assertEqual(
+            reconciliation["api_limitations"][0],
+            "Actions run metadata did not return run-time PR base SHA; successful PR runs do not establish exact base provenance.",
+        )
+
+    def test_main_ancestry_evidence_fails_closed_when_missing_or_mismatched(self):
+        fixture = json.loads(STALE_MAIN_RECONCILIATION.read_text(encoding="utf-8"))
+        row = fixture["rows"][1]
+        observation = {
+            "expected_base_sha": row["manifest"]["base_sha"],
+            "observed_base_sha": row["live_pr"]["base_sha"],
+            "current_main_sha": fixture["current_main"]["sha"],
+            "compare": row["main_compare"],
+        }
+        self.assertEqual(classify_main_base_ancestry(observation)[0], "stale_ancestor")
+
+        mutations = (
+            ("compare", None, "unverified_ancestry"),
+            ("expected_base_sha", "f" * 40, "changed_base"),
+        )
+        for field, value, expected_status in mutations:
+            altered = copy.deepcopy(observation)
+            altered[field] = value
+            self.assertEqual(classify_main_base_ancestry(altered)[0], expected_status)
+
+        altered = copy.deepcopy(observation)
+        altered["compare"]["head_sha"] = "e" * 40
+        self.assertEqual(classify_main_base_ancestry(altered)[0], "unverified_ancestry")
+        altered = copy.deepcopy(observation)
+        altered["compare"]["merge_base_sha"] = "not-a-sha"
+        self.assertEqual(classify_main_base_ancestry(altered)[0], "unverified_ancestry")
+        altered = copy.deepcopy(observation)
+        altered["compare"]["behind_by"] = 1
+        self.assertEqual(
+            classify_main_base_ancestry(altered)[0], "diverged_or_inconsistent"
+        )
+
+    def test_snapshot_with_missing_main_ancestry_fails_closed(self):
+        manifest = copy.deepcopy(self.manifest)
+        snapshot = copy.deepcopy(self.snapshot)
+        snapshot["main_base_ancestry"] = {
+            "77": {
+                "expected_base_sha": "b" * 40,
+                "observed_base_sha": "b" * 40,
+                "current_main_sha": "b" * 40,
+                "compare": None,
+            }
+        }
+        self.assertTrue(
+            any("PR #77 main-base ancestry status=unverified_ancestry" in issue
+                for issue in validate(manifest, snapshot))
+        )
+
+    def test_required_workflow_event_absence_is_distinct_from_unconfigured_event(self):
+        runs = [{"event": "pull_request"}]
+        self.assertEqual(missing_required_workflow_events(["pull_request"], runs), [])
+        self.assertEqual(
+            missing_required_workflow_events(["push", "pull_request"], runs), ["push"]
+        )
+        self.assertEqual(missing_required_workflow_events(["push"], []), ["push"])
+
+        snapshot = copy.deepcopy(self.snapshot)
+        snapshot["required_workflow_events"] = {
+            "77": {"42": ["push", "pull_request"]}
+        }
+        issues = validate(self.manifest, snapshot)
+        self.assertTrue(
+            any("PR #77 workflow #42 missing required event evidence: push" in issue
+                for issue in issues)
+        )
+
+        snapshot["required_workflow_events"]["77"]["42"] = ["pull_request"]
+        self.assertEqual(validate(self.manifest, snapshot), [])
 
     def test_triage_remains_serializable_for_malformed_manifest(self):
         report = blocker_triage_report(
