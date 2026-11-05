@@ -9,6 +9,7 @@ on:
       - 'tools/include_dependency_classifier.py'
       - 'tools/phase1_mapping_gate.py'
       - 'tools/phase1_copilot_receipts.py'
+      - 'tools/phase1_arm_receipt_status.py'
       - 'tools/phase1_mgba_arm_decode_emit_review_verify.py'
       - 'tools/phase1_mgba_gba_memory_alias_audit.py'
       - 'tools/phase1_third_packet_sources_260_299_verify.py'
@@ -18,6 +19,7 @@ on:
       - 'tests/phase1_mgba_arm_alignment_probe.c'
       - 'tests/phase1_mgba_memory_object_probe.c'
       - 'tests/test_phase1_copilot_receipts.py'
+      - 'tests/test_phase1_arm_receipt_status.py'
       - 'tests/test_phase1_mapping_gate.py'
       - 'docs/phase1-review-readiness/copilot-semantic-review-receipts.jsonl'
       - 'docs/phase1-review-readiness/analyst-*.md'
@@ -77,10 +79,11 @@ jobs:
         run: test "$(git rev-parse --is-shallow-repository)" = "false"
       - name: Verify Python syntax
         run: |
-          python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py tools/phase1_copilot_receipts.py tools/phase1_mapping_gate.py tools/phase1_mgba_arm_decode_emit_review_verify.py tools/phase1_mgba_gba_memory_alias_audit.py tools/phase1_third_packet_sources_260_299_verify.py tools/phase1_second_packet_special_sources_verify.py
+          python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py tools/phase1_copilot_receipts.py tools/phase1_arm_receipt_status.py tools/phase1_mapping_gate.py tools/phase1_mgba_arm_decode_emit_review_verify.py tools/phase1_mgba_gba_memory_alias_audit.py tools/phase1_third_packet_sources_260_299_verify.py tools/phase1_second_packet_special_sources_verify.py
           python3 tools/semantic_review_dossiers.py --self-test
           python3 tools/phase1_mapping_gate.py --self-test
           python3 -m unittest discover -s tests -p test_phase1_copilot_receipts.py -v
+          python3 -m unittest discover -s tests -p test_phase1_arm_receipt_status.py -v
           python3 -m unittest discover -s tests -p test_phase1_mapping_gate.py -v
           python3 -m unittest discover -s tests -p test_phase1_mgba_arm_decode_emit_review_verify.py -v
           python3 -m unittest discover -s tests -p test_phase1_mgba_gba_memory_alias_audit.py -v
@@ -215,6 +218,15 @@ jobs:
           python3 tools/phase1_mapping_gate.py --root audit-output --source-root upstream \
             --expected-head "$expected_head" --repository "$GITHUB_REPOSITORY" || rc=$?
           if [ "$rc" -ne 0 ] && [ "$rc" -ne 2 ]; then exit "$rc"; fi
+      - name: Emit non-approving ARM receipt eligibility status
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          expected_head="${{ github.event.pull_request.head.sha || github.sha }}"
+          python3 tools/phase1_arm_receipt_status.py \
+            --audit-root audit-output --source-root upstream \
+            --expected-head "$expected_head" --repository "$GITHUB_REPOSITORY" \
+            --pull-number 8 --output audit-output/arm_receipt_status.json
       - name: Preserve census, review queue and 500-file checkpoints
         if: always()
         uses: actions/upload-artifact@v4
