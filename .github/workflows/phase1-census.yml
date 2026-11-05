@@ -14,12 +14,15 @@ on:
       - 'tools/phase1_mgba_arm_ub_package.py'
       - 'tools/phase1_mgba_arm_decoder_abi_probe.py'
       - 'tools/phase1_mgba_gba_memory_alias_audit.py'
+      - 'tools/phase1_mgba_video_nv_followup.py'
       - 'tools/phase1_third_packet_sources_260_299_verify.py'
       - 'tools/phase1_second_packet_special_sources_verify.py'
       - 'tests/test_phase1_mgba_arm_decode_emit_review_verify.py'
       - 'tests/test_phase1_mgba_arm_ub_package.py'
       - 'tests/test_phase1_mgba_arm_decoder_abi_probe.py'
       - 'tests/test_phase1_mgba_gba_memory_alias_audit.py'
+      - 'tests/test_phase1_mgba_video_nv_followup.py'
+      - 'tests/phase1_mgba_arm_nv_probe.c'
       - 'tests/phase1_mgba_arm_alignment_probe.c'
       - 'tests/phase1_mgba_memory_object_probe.c'
       - 'tests/test_phase1_copilot_receipts.py'
@@ -83,7 +86,7 @@ jobs:
         run: test "$(git rev-parse --is-shallow-repository)" = "false"
       - name: Verify Python syntax
         run: |
-          python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py tools/phase1_copilot_receipts.py tools/phase1_arm_receipt_status.py tools/phase1_mapping_gate.py tools/phase1_mgba_arm_decode_emit_review_verify.py tools/phase1_mgba_arm_ub_package.py tools/phase1_mgba_arm_decoder_abi_probe.py tools/phase1_mgba_gba_memory_alias_audit.py tools/phase1_third_packet_sources_260_299_verify.py tools/phase1_second_packet_special_sources_verify.py
+          python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py tools/phase1_copilot_receipts.py tools/phase1_arm_receipt_status.py tools/phase1_mapping_gate.py tools/phase1_mgba_arm_decode_emit_review_verify.py tools/phase1_mgba_arm_ub_package.py tools/phase1_mgba_arm_decoder_abi_probe.py tools/phase1_mgba_gba_memory_alias_audit.py tools/phase1_mgba_video_nv_followup.py tools/phase1_third_packet_sources_260_299_verify.py tools/phase1_second_packet_special_sources_verify.py
           python3 tools/semantic_review_dossiers.py --self-test
           python3 tools/phase1_mapping_gate.py --self-test
           python3 -m unittest discover -s tests -p test_phase1_copilot_receipts.py -v
@@ -93,6 +96,7 @@ jobs:
           python3 -m unittest discover -s tests -p test_phase1_mgba_arm_ub_package.py -v
           python3 -m unittest discover -s tests -p test_phase1_mgba_arm_decoder_abi_probe.py -v
           python3 -m unittest discover -s tests -p test_phase1_mgba_gba_memory_alias_audit.py -v
+          python3 -m unittest discover -s tests -p test_phase1_mgba_video_nv_followup.py -v
       - name: Verify pinned FireRed partial source handoff indices 260–299
         run: python3 tools/phase1_third_packet_sources_260_299_verify.py
       - name: Clone pinned sources and scan
@@ -124,6 +128,12 @@ jobs:
           python3 tools/phase1_mgba_gba_memory_alias_audit.py \
             --source-root upstream/mgba \
             --generated-include /tmp/xgba-phase1-mgba-gcc-strict/include
+      - name: Verify pinned typed-video and ARM condition-F limitations
+        run: |
+          python3 tools/phase1_mgba_video_nv_followup.py \
+            --source-root upstream/mgba \
+            --generated-include /tmp/xgba-phase1-mgba-gcc-strict/include \
+            --output audit-output/video_nv_followup.json
       - name: Verify original pinned ARM endian macro alignment (host UBSan only)
         shell: bash
         run: |
