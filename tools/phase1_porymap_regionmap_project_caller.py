@@ -148,6 +148,7 @@ def verify_no_prior_inventory_overlap(repository_root):
     new_tool = Path(__file__).resolve()
     new_dossier = (repository_root
                    / "docs/phase1-review-readiness/porymap-regionmap-project-caller-20261105.md").resolve()
+    # Later packets cite these sources as context; they are not prior inventory records.
     later_context_packet = {
         (repository_root / "tools/phase1_porymap_regionmap_project_save.py").resolve(),
         (repository_root
