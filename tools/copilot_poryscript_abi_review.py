@@ -1213,6 +1213,268 @@ def verify_file_inspection_sources(record, closure_record, roots,
     return result
 
 
+PORYSCRIPT_LEXER_FILES = {
+    ("huderlem/poryscript", "lexer/lexer.go"): {
+        "git_blob_sha1": "34ef7b989e38a7f9f0f893809a55a72e995f1bb8",
+        "sha256": "5ac010250d2aaad04dfc9017712276dcbe4937375c5add185bd587cfbcc14b05",
+        "dossier_record_line_sha256":
+            "a28c8d74a78347ed83f0e309fa69c185e17959d178de217eb5565440b36106b7",
+        "byte_length": 14278,
+        "line_count": 492,
+    },
+    ("huderlem/poryscript", "lexer/lexer_test.go"): {
+        "git_blob_sha1": "07b8fd737425521a1859e8f9f92930117415742f",
+        "sha256": "6caca074d54b1762174d241b479bcb0905a0cfdc925ee5375ac316817bf1293e",
+        "dossier_record_line_sha256":
+            "9b393270b862199d05baaa770a260eed05c1d2f0adf0bba7030c9b24df5713cd",
+        "byte_length": 10678,
+        "line_count": 324,
+    },
+}
+PORYSCRIPT_LEXER_DEPENDENCIES = {
+    ("huderlem/poryscript", "lexer/lexer.go"): {
+        ("huderlem/poryscript", "parser/parser.go", "inbound",
+         "Parser obtains tokens from this lexer."),
+        ("huderlem/poryscript", "token/token.go", "outbound",
+         "Lexer constructs the token types and literals defined here."),
+        ("huderlem/poryscript", "lexer/lexer_test.go", "inbound",
+         "Pinned unit tests exercise this lexer implementation."),
+    },
+    ("huderlem/poryscript", "lexer/lexer_test.go"): {
+        ("huderlem/poryscript", "lexer/lexer.go", "outbound",
+         "The test package invokes New and NextToken."),
+        ("huderlem/poryscript", "token/token.go", "outbound",
+         "Assertions compare lexer output against these token definitions."),
+    },
+}
+
+
+def validate_poryscript_lexer_followup(record, closure_record):
+    require(record.get("schema") ==
+            "copilot-poryscript-abi-lexer-input-followup/v1",
+            "unsupported Poryscript lexer follow-up schema")
+    reviewer = record.get("reviewer", {})
+    require(reviewer.get("id") == "copilot-issue33-poryscript-lexer-input" and
+            reviewer.get("identity") ==
+            "@copilot (GitHub Copilot Coding Agent; issue #6677058831 Poryscript lexer-input follow-up)" and
+            reviewer.get("source_interpreter_identity") ==
+            "xbaconator9000x (author of the original PR #20 witness implementation)" and
+            reviewer.get("distinct_from_source_interpreter") is True and
+            reviewer.get("authenticated_github_review_attribution") is False and
+            reviewer.get("independent_human_attestation") is False and
+            reviewer.get("attribution_blocker"),
+            "Poryscript lexer reviewer attribution must remain explicit and non-approving")
+
+    require(record.get("pins") == {
+        "huderlem/poryscript": PINS["huderlem/poryscript"]},
+        "Poryscript lexer source pin differs")
+    basis = record.get("basis", {})
+    require(basis.get("prior_exact_head") ==
+            "fb5d2684a560d87e0648d37fb077ec6c6fe9d7f0" and
+            basis.get("prior_pr_workflow_run_id") == 42159796360 and
+            basis.get("prior_push_workflow_run_id") == 42159790053 and
+            basis.get("selection"),
+            "Poryscript lexer tranche baseline or disjoint selection is incomplete")
+
+    accounting = record.get("accounting", {})
+    require(accounting.get("phase1_gate") == "FAIL_INCOMPLETE" and
+            accounting.get("approved_p0") == 0 and
+            accounting.get("p0_total") == 338 and
+            accounting.get("approved_total") == 0 and
+            accounting.get("inventory_total") == 14834 and
+            accounting.get("whole_file_semantic_reviews") == 0 and
+            accounting.get("new_qualifying_copilot_receipts") == 0 and
+            accounting.get("phase2_started") is False and
+            accounting.get("shared_queue_register_gate_modified") is False,
+            "Poryscript lexer follow-up must remain Phase 1 and non-approving")
+
+    closure_files, _ = validate_closure_record(closure_record)
+    archives = record.get("original_machine_evidence", {})
+    require(archives == {
+        "path": EXPECTED_ARCHIVES["dossiers"]["path"],
+        "bytes": EXPECTED_ARCHIVES["dossiers"]["bytes"],
+        "sha256": EXPECTED_ARCHIVES["dossiers"]["sha256"],
+        "git_blob_sha1": EXPECTED_ARCHIVES["dossiers"]["git_blob_sha1"],
+    }, "Poryscript lexer dossier archive identity differs")
+
+    license_source = record.get("license_source", {})
+    license_key = (
+        license_source.get("repository"), license_source.get("path")
+    )
+    license_row = closure_files.get(license_key)
+    require(license_key == ("huderlem/poryscript", "LICENSE.md") and
+            license_row is not None and
+            license_source.get("commit") == PINS[license_key[0]] and
+            license_source.get("git_blob_sha1") == license_row["git_blob_sha1"] and
+            license_source.get("sha256") == license_row["sha256"] and
+            license_source.get("dossier_record_line_sha256") ==
+            license_row["dossier_record_line_sha256"] and
+            license_source.get("assessment"),
+            "Poryscript lexer license-source identity differs")
+
+    files = record.get("files", [])
+    require(len(files) == len(PORYSCRIPT_LEXER_FILES),
+            "Poryscript lexer source-file count differs")
+    seen = set()
+    objection_ids = {
+        "O-EMPTY-HEX", "O-OPERAND-RANGE", "O-PARSER-SEMANTICS",
+        "O-TEST-GAPS", "O-LICENSE", "O-DEPENDENCY-CLOSURE",
+        "O-ATTRIBUTION",
+    }
+    objections = record.get("objections", [])
+    require({item.get("id") for item in objections} == objection_ids and
+            all(item.get("status") == "UNRESOLVED" and
+                item.get("observation") and item.get("resolution")
+                for item in objections),
+            "Poryscript lexer objections must remain explicit and unresolved")
+    for item in files:
+        key = (item.get("repository"), item.get("path"))
+        expected = PORYSCRIPT_LEXER_FILES.get(key)
+        source_row = closure_files.get(key)
+        require(expected is not None and key not in seen and source_row is not None,
+                "unknown, duplicate, or unpinned Poryscript lexer source: " + str(key))
+        seen.add(key)
+        require(item.get("commit") == PINS[key[0]] and
+                all(item.get(field) == expected[field] ==
+                    source_row.get(field)
+                    for field in ("git_blob_sha1", "sha256",
+                                  "dossier_record_line_sha256")) and
+                (item.get("byte_length"), item.get("line_count")) ==
+                (expected["byte_length"], expected["line_count"]) and
+                item.get("full_source_bytes_retrieved") is True and
+                item.get("complete_source_inspection") is True and
+                item.get("source_extent") == "COMPLETE_PINNED_FILE_READ" and
+                item.get("whole_file_semantic_disposition") is False and
+                item.get("verdict") == "NEEDS_EVIDENCE" and
+                item.get("source_observations"),
+                "Poryscript lexer source identity or disposition is invalid: " +
+                str(key))
+        full_ranges = item.get("supplemental_evidence_ranges", [])
+        require(item.get("evidence_ranges") == [] and
+                full_ranges == [{
+                    "start": 1,
+                    "end": expected["line_count"],
+                    "sha256": expected["sha256"],
+                }], "Poryscript lexer full-file range differs: " + str(key))
+        license_evidence = item.get("license_evidence", {})
+        require(license_evidence.get("status") == "UNRESOLVED" and
+                license_evidence.get("path") == "LICENSE.md" and
+                license_evidence.get("unresolved"),
+                "Poryscript lexer license applicability must remain unresolved")
+        dependencies = item.get("dependency_links", [])
+        actual_dependencies = {
+            (dependency.get("repository"), dependency.get("path"),
+             dependency.get("direction"), dependency.get("relation"))
+            for dependency in dependencies
+        }
+        require(len(actual_dependencies) == len(dependencies) and
+                actual_dependencies == PORYSCRIPT_LEXER_DEPENDENCIES[key],
+                "Poryscript lexer dependency links differ: " + str(key))
+        for dependency in dependencies:
+            target = (dependency.get("repository"), dependency.get("path"))
+            require(target in closure_files and
+                    dependency.get("direction") in {"inbound", "outbound"} and
+                    dependency.get("relation"),
+                    "Poryscript lexer dependency lacks pinned endpoint: " +
+                    str(target))
+        require(item.get("unresolved_obligations") and
+                set(item["unresolved_obligations"]).issubset(objection_ids),
+                "Poryscript lexer source has unknown unresolved obligations")
+
+    controls = {
+        item.get("id"): item.get("test")
+        for item in record.get("negative_controls", [])
+    }
+    require(controls == {
+        "NC-SOURCE-IDENTITY":
+            "test_poryscript_lexer_handoff_rejects_identity_and_dossier_mutations",
+        "NC-FULL-FILE-RANGE":
+            "test_poryscript_lexer_handoff_rejects_source_range_mutations",
+        "NC-DEPENDENCY":
+            "test_poryscript_lexer_handoff_rejects_dependency_mutations",
+        "NC-LICENSE":
+            "test_poryscript_lexer_handoff_rejects_license_and_objection_mutations",
+        "NC-VERDICT":
+            "test_poryscript_lexer_handoff_rejects_verdict_attribution_and_gate_mutations",
+        "NC-SOURCE-ROOT":
+            "test_poryscript_lexer_source_verification_rejects_modified_file",
+    }, "Poryscript lexer negative-control set is incomplete")
+    require(record.get("review_handoff", {}).get("status") ==
+            "READY_FOR_INDEPENDENT_REVIEW_NOT_APPROVAL" and
+            record["review_handoff"].get("pending_requirements") == [
+                "authenticated_independent_reviewer",
+                "resolve_or_bound_empty_hex_and_operand_range_objections",
+                "complete parser/emitter/assembler/runtime dependency review",
+                "applicable_source_license_review",
+                "exact_head_pr_and_push_ci",
+            ], "Poryscript lexer handoff omits unresolved review requirements")
+    summary = record.get("summary", {})
+    require(summary == {
+        "selected_source_files": 2,
+        "complete_pinned_file_bytes_retrieved": 2,
+        "complete_source_files_read": 2,
+        "source_identity_records": 2,
+        "whole_file_semantic_reviews": 0,
+        "new_copilot_reviewed_passed_files": 0,
+        "new_qualifying_copilot_receipts": 0,
+        "new_approvals": 0,
+        "phase1_gate": "FAIL_INCOMPLETE",
+    }, "Poryscript lexer summary overstates review completion")
+    validation = record.get("validation", {})
+    require(validation.get("source_checkout") ==
+            "Raw files retrieved at exact pinned commit; Git blob SHA-1 and SHA-256 matched both original dossier rows." and
+            validation.get("pinned_lexer_tests") == "PASS" and
+            validation.get("pinned_lexer_test_command") == "go test ./lexer" and
+            validation.get("pinned_lexer_source_commit") ==
+            PINS["huderlem/poryscript"] and
+            validation.get("temporary_token_boundary_probe", "").startswith(
+                "PASS: exact pinned lexer tokenized ") and
+            validation.get("actual_cli_gnu_arm_witness") ==
+            "REUSED_PRIOR_EXACT_HEAD_EVIDENCE_NOT_RERUN" and
+            validation.get("exact_head_ci") == "PENDING_FOR_THIS_CHANGE",
+            "Poryscript lexer validation provenance is incomplete")
+    return {
+        "status": "PASS_LEXER_SOURCE_RECORD_NOT_SEMANTIC_APPROVAL",
+        "source_files_recorded": len(files),
+        "complete_source_files_read": len(files),
+        "whole_file_semantic_reviews": 0,
+        "new_qualifying_copilot_receipts": 0,
+        "approval_count_changed": False,
+        "phase1_gate": "FAIL_INCOMPLETE",
+    }
+
+
+def verify_poryscript_lexer_sources(record, closure_record, root,
+                                   source_files_only=False):
+    result = validate_poryscript_lexer_followup(record, closure_record)
+    if (root / ".git").exists():
+        revision = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "HEAD"],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+        require(revision == PINS["huderlem/poryscript"],
+                "Poryscript checkout HEAD differs from pinned lexer source")
+        checkout = "VERIFIED_PINNED_COMMIT"
+    else:
+        require(source_files_only,
+                "source checkout lacks .git metadata; pass --source-files-only "
+                "to verify lexer file bytes without claiming commit verification")
+        checkout = "FILE_BLOBS_ONLY"
+    for item in record["files"]:
+        entry = {
+            "repository": item["repository"],
+            "path": item["path"],
+            "git_blob_sha1": item["git_blob_sha1"],
+            "sha256": item["sha256"],
+            "evidence_ranges": item["supplemental_evidence_ranges"],
+        }
+        verify_source_entry(entry, root)
+    result["source_files_verified"] = len(record["files"])
+    result["checkout_identity"] = checkout
+    result["status"] = "PASS_PINNED_LEXER_FILE_BYTES_NOT_SEMANTIC_APPROVAL"
+    return result
+
+
 def verify_sources(record, roots, source_files_only=False):
     sources = validate_record(record)
     commit_status = {}
@@ -1252,6 +1514,7 @@ def main():
     parser.add_argument("--record", type=Path, default=DEFAULT_RECORD)
     parser.add_argument("--closure-record", type=Path)
     parser.add_argument("--file-inspection-record", type=Path, action="append")
+    parser.add_argument("--lexer-input-followup-record", type=Path)
     parser.add_argument("--poryscript-root", type=Path)
     parser.add_argument("--firered-root", type=Path)
     parser.add_argument("--agbcc-root", type=Path)
@@ -1269,11 +1532,11 @@ def main():
         roots["pret/agbcc"] = args.agbcc_root.resolve()
     if args.mgba_root:
         roots["mgba-emu/mgba"] = args.mgba_root.resolve()
-    if args.file_inspection_record:
+    if args.file_inspection_record or args.lexer_input_followup_record:
         require(args.closure_record is not None,
-                "--file-inspection-record requires --closure-record")
+                "follow-up source records require --closure-record")
         results = []
-        for inspection_path in args.file_inspection_record:
+        for inspection_path in args.file_inspection_record or []:
             inspection = json.loads(inspection_path.read_text(encoding="utf-8"))
             if inspection.get("schema") in {
                     "copilot-poryscript-abi-file-inspection/v4",
@@ -1283,6 +1546,16 @@ def main():
                 ))
             else:
                 results.append(validate_file_inspection_record(inspection, record))
+        if args.lexer_input_followup_record:
+            require("huderlem/poryscript" in roots,
+                    "--lexer-input-followup-record requires --poryscript-root")
+            inspection = json.loads(
+                args.lexer_input_followup_record.read_text(encoding="utf-8")
+            )
+            results.append(verify_poryscript_lexer_sources(
+                inspection, record, roots["huderlem/poryscript"],
+                args.source_files_only,
+            ))
         print(json.dumps(results, sort_keys=True))
         return
     if args.closure_record and roots:

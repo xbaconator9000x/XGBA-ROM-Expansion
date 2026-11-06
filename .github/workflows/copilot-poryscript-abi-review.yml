@@ -87,6 +87,7 @@ jobs:
           set -euo pipefail
           python3 -m py_compile tools/copilot_poryscript_abi_review.py tools/copilot_poryscript_abi_review_probes.py tests/test_copilot_poryscript_abi_review.py
           python3 -m unittest discover -s tests -p 'test_copilot_poryscript_abi_review.py' -v
+          (cd upstream-poryscript && go test ./lexer)
           python3 tools/copilot_poryscript_abi_review.py \
             --record semantic-snapshots/independent-reviews/copilot-poryscript-abi/review.json \
             --poryscript-root upstream-poryscript \
@@ -104,6 +105,7 @@ jobs:
             --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/map-header-review-followup.json \
             --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/poryscript-firered-abi-followup.json \
             --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/preprocessor-dependency-followup.json \
+            --lexer-input-followup-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/poryscript-lexer-input-followup.json \
             --poryscript-root upstream-poryscript \
             --firered-root upstream-firered
 

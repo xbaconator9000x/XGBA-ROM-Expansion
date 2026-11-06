@@ -15,9 +15,11 @@ from tools.copilot_poryscript_abi_review import (
     ROOT,
     validate_closure_record,
     validate_file_inspection_record,
+    validate_poryscript_lexer_followup,
     git_blob_sha1,
     validate_record,
     verify_file_inspection_sources,
+    verify_poryscript_lexer_sources,
     verify_source_entry,
 )
 from tools.copilot_poryscript_abi_review_probes import expected_rodata
@@ -57,6 +59,88 @@ class PoryscriptAbiReviewTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
+        cls.lexer_input_followup = json.loads(
+            (DEFAULT_RECORD.parent / "poryscript-lexer-input-followup.json").read_text(
+                encoding="utf-8"
+            )
+        )
+
+    def test_poryscript_lexer_handoff_is_complete_and_non_approving(self):
+        result = validate_poryscript_lexer_followup(
+            self.lexer_input_followup, self.closure
+        )
+        self.assertEqual(result["status"],
+                         "PASS_LEXER_SOURCE_RECORD_NOT_SEMANTIC_APPROVAL")
+        self.assertEqual(result["source_files_recorded"], 2)
+        self.assertEqual(result["whole_file_semantic_reviews"], 0)
+        self.assertEqual(self.lexer_input_followup["accounting"]["phase1_gate"],
+                         "FAIL_INCOMPLETE")
+
+    def test_poryscript_lexer_handoff_rejects_identity_and_dossier_mutations(self):
+        mutations = (
+            ("git_blob_sha1", "0" * 40),
+            ("sha256", "0" * 64),
+            ("dossier_record_line_sha256", "0" * 64),
+        )
+        for field, value in mutations:
+            with self.subTest(field=field):
+                changed = copy.deepcopy(self.lexer_input_followup)
+                changed["files"][0][field] = value
+                with self.assertRaises(ValueError):
+                    validate_poryscript_lexer_followup(changed, self.closure)
+
+    def test_poryscript_lexer_handoff_rejects_source_range_mutations(self):
+        for field, value in (("end", 491), ("sha256", "0" * 64)):
+            with self.subTest(field=field):
+                changed = copy.deepcopy(self.lexer_input_followup)
+                changed["files"][0]["supplemental_evidence_ranges"][0][field] = value
+                with self.assertRaisesRegex(ValueError, "full-file range"):
+                    validate_poryscript_lexer_followup(changed, self.closure)
+
+    def test_poryscript_lexer_handoff_rejects_dependency_mutations(self):
+        changed = copy.deepcopy(self.lexer_input_followup)
+        changed["files"][0]["dependency_links"][0]["path"] = "emitter/emitter.go"
+        with self.assertRaisesRegex(ValueError, "dependency links differ"):
+            validate_poryscript_lexer_followup(changed, self.closure)
+
+    def test_poryscript_lexer_handoff_rejects_license_and_objection_mutations(self):
+        changed = copy.deepcopy(self.lexer_input_followup)
+        changed["files"][0]["license_evidence"]["status"] = "APPROVED"
+        with self.assertRaisesRegex(ValueError, "license applicability"):
+            validate_poryscript_lexer_followup(changed, self.closure)
+
+        changed = copy.deepcopy(self.lexer_input_followup)
+        changed["objections"][0]["status"] = "RESOLVED"
+        with self.assertRaisesRegex(ValueError, "objections"):
+            validate_poryscript_lexer_followup(changed, self.closure)
+
+    def test_poryscript_lexer_handoff_rejects_verdict_attribution_and_gate_mutations(self):
+        changed = copy.deepcopy(self.lexer_input_followup)
+        changed["files"][0]["verdict"] = "APPROVED"
+        with self.assertRaisesRegex(ValueError, "disposition"):
+            validate_poryscript_lexer_followup(changed, self.closure)
+
+        changed = copy.deepcopy(self.lexer_input_followup)
+        changed["reviewer"]["authenticated_github_review_attribution"] = True
+        with self.assertRaisesRegex(ValueError, "attribution"):
+            validate_poryscript_lexer_followup(changed, self.closure)
+
+        changed = copy.deepcopy(self.lexer_input_followup)
+        changed["accounting"]["phase1_gate"] = "PASS"
+        with self.assertRaisesRegex(ValueError, "Phase 1 and non-approving"):
+            validate_poryscript_lexer_followup(changed, self.closure)
+
+    def test_poryscript_lexer_source_verification_rejects_modified_file(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            source = root / "lexer/lexer.go"
+            source.parent.mkdir(parents=True)
+            source.write_bytes(b"modified pinned source\n")
+            with self.assertRaisesRegex(ValueError, "Git blob mismatch"):
+                verify_poryscript_lexer_sources(
+                    self.lexer_input_followup, self.closure, root,
+                    source_files_only=True,
+                )
 
     def test_record_is_pinned_and_non_approving(self):
         sources = validate_record(self.record)
