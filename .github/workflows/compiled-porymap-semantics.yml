@@ -21,6 +21,9 @@ on:
       - 'tools/phase1_porymap_regionmap_project_save.py'
       - 'tests/phase1_porymap_regionmap_project_save.cpp'
       - 'docs/phase1-review-readiness/porymap-regionmap-project-save-failure-closure-20261106.md'
+      - 'tools/phase1_porymap_cross_map_undo.py'
+      - 'tests/phase1_porymap_cross_map_undo.cpp'
+      - 'docs/phase1-review-readiness/porymap-cross-map-undo-boundary-20261106.md'
       - 'tools/qt_metaobject_contracts.py'
       - '.github/workflows/compiled-porymap-semantics.yml'
   pull_request:
@@ -40,6 +43,9 @@ on:
       - 'tools/phase1_porymap_regionmap_project_save.py'
       - 'tests/phase1_porymap_regionmap_project_save.cpp'
       - 'docs/phase1-review-readiness/porymap-regionmap-project-save-failure-closure-20261106.md'
+      - 'tools/phase1_porymap_cross_map_undo.py'
+      - 'tests/phase1_porymap_cross_map_undo.cpp'
+      - 'docs/phase1-review-readiness/porymap-cross-map-undo-boundary-20261106.md'
       - '.github/workflows/compiled-porymap-semantics.yml'
 permissions:
   contents: read
@@ -108,6 +114,15 @@ jobs:
             --output porymap-compiler-evidence/porymap-regionmap-project-save.json \
             --archive porymap-compiler-evidence/porymap-regionmap-project-save.tar.gz \
             --log porymap-compiler-evidence/porymap-regionmap-project-save.log
+      - name: Exercise pinned cross-map connection undo and dirty-state boundary
+        run: |
+          python3 tools/phase1_porymap_cross_map_undo.py \
+            --porymap upstream/porymap \
+            --harness tests/phase1_porymap_cross_map_undo.cpp \
+            --dossier docs/phase1-review-readiness/porymap-cross-map-undo-boundary-20261106.md \
+            --output porymap-compiler-evidence/porymap-cross-map-undo.json \
+            --archive porymap-compiler-evidence/porymap-cross-map-undo.tar.gz \
+            --log porymap-compiler-evidence/porymap-cross-map-undo.log
       - name: Configure original qmake Qt application
         run: |
           set -o pipefail
