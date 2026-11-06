@@ -14,6 +14,7 @@ import tempfile
 from pathlib import Path
 
 caller = importlib.import_module("phase1_porymap_regionmap_project_caller")
+persistence = importlib.import_module("phase1_porymap_regionmap_persistence")
 PIN = caller.PIN
 
 
@@ -328,6 +329,8 @@ def main():
 
     repository_root = Path(__file__).resolve().parents[1]
     sources, rows = caller.verify_sources(args.porymap)
+    persisted_sources, _ = persistence.verify_sources(args.porymap)
+    sources["include/ui/regionmapeditor.h"] = persisted_sources["include/ui/regionmapeditor.h"]
     reused_paths = set(caller.CONTEXT_FILES)
     reused_rows = [row for row in rows if row["path"] in reused_paths]
     require(len(reused_rows) == len(reused_paths)
