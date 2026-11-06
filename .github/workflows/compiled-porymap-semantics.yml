@@ -18,6 +18,9 @@ on:
       - 'tools/phase1_porymap_regionmap_project_caller.py'
       - 'tests/phase1_porymap_regionmap_project_caller.cpp'
       - 'docs/phase1-review-readiness/porymap-regionmap-project-caller-20261105.md'
+      - 'tools/phase1_porymap_regionmap_project_save.py'
+      - 'tests/phase1_porymap_regionmap_project_save.cpp'
+      - 'docs/phase1-review-readiness/porymap-regionmap-project-save-failure-closure-20261106.md'
       - 'tools/qt_metaobject_contracts.py'
       - '.github/workflows/compiled-porymap-semantics.yml'
   pull_request:
@@ -34,6 +37,9 @@ on:
       - 'tools/phase1_porymap_regionmap_project_caller.py'
       - 'tests/phase1_porymap_regionmap_project_caller.cpp'
       - 'docs/phase1-review-readiness/porymap-regionmap-project-caller-20261105.md'
+      - 'tools/phase1_porymap_regionmap_project_save.py'
+      - 'tests/phase1_porymap_regionmap_project_save.cpp'
+      - 'docs/phase1-review-readiness/porymap-regionmap-project-save-failure-closure-20261106.md'
       - '.github/workflows/compiled-porymap-semantics.yml'
 permissions:
   contents: read
@@ -93,6 +99,15 @@ jobs:
             --output porymap-compiler-evidence/porymap-regionmap-project-caller.json \
             --archive porymap-compiler-evidence/porymap-regionmap-project-caller.tar.gz \
             --log porymap-compiler-evidence/porymap-regionmap-project-caller.log
+      - name: Exercise pinned RegionMap multi-map Project save failure boundary
+        run: |
+          python3 tools/phase1_porymap_regionmap_project_save.py \
+            --porymap upstream/porymap \
+            --harness tests/phase1_porymap_regionmap_project_save.cpp \
+            --dossier docs/phase1-review-readiness/porymap-regionmap-project-save-failure-closure-20261106.md \
+            --output porymap-compiler-evidence/porymap-regionmap-project-save.json \
+            --archive porymap-compiler-evidence/porymap-regionmap-project-save.tar.gz \
+            --log porymap-compiler-evidence/porymap-regionmap-project-save.log
       - name: Configure original qmake Qt application
         run: |
           set -o pipefail
