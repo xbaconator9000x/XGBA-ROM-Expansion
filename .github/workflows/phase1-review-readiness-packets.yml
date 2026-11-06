@@ -1,0 +1,56 @@
+name: Phase 1 pinned machine-to-review handoff (no approvals)
+on:
+  push:
+    branches: ["phase1/**"]
+    paths:
+      - "tools/phase1_review_packets.py"
+      - "tests/test_phase1_review_packets.py"
+      - ".github/workflows/phase1-review-readiness-packets.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: phase1-review-readiness-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  review-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test deterministic packet builder and negative controls
+        run: python3 -m unittest discover -s tests -p test_phase1_review_packets.py -v
+      - name: Reconcile all 2000 source-verified machine records
+        run: python3 tools/phase1_bulk_triage_integrity.py
+      - name: Build first 100 P0-first review packets without approval
+        run: |
+          set -euo pipefail
+          python3 tools/phase1_review_packets.py --max-packets 100 --output docs/phase1-review-readiness/packet-0000-0099.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('docs/phase1-review-readiness/packet-0000-0099.json').read_text())
+          assert d['verified_machine_triage_records']==2000 and d['review_packets']==100
+          assert d['prepared_whole_file_dispositions_added']==0 and d['independent_approvals_added']==0
+          assert d['phase1_gate']=='FAIL_INCOMPLETE' and d['upstream_integrity_sha256']
+          assert len({(x['identity']['repository'],x['identity']['path']) for x in d['packets']})==100
+          assert all(x['state']=='MACHINE_REVIEW_PACKET_NOT_WHOLE_FILE_SEMANTIC_DISPOSITION' and x['independently_approved'] is False for x in d['packets'])
+          print('REVIEW_PACKET_HANDOFF_PASS 100 distinct machine packets; 0 dispositions or approvals')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phase1-review-readiness-100
+          path: docs/phase1-review-readiness/packet-0000-0099.json
+          retention-days: 90
+      - name: Commit machine-only review handoff without force
+        if: github.event_name == 'push'
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/phase1-review-readiness/packet-0000-0099.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Checkpoint 100 pinned machine review-readiness packets (no approvals)'
+          git fetch origin "$GITHUB_REF_NAME"
+          git rebase "origin/$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"

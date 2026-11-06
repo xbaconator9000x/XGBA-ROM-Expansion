@@ -1,0 +1,815 @@
+{
+  "schema": "xgba.phase1.third_packet_firered_sevenisland_tanoby_228_235_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0200-0299.json",
+  "source_packet_blob_sha1": "c998c2ea8c887968e586b1792c5207ecb5286839",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0200-0299-20261030.json",
+  "new_partial_indices": [
+    228,
+    229,
+    230,
+    231,
+    232,
+    233,
+    234,
+    235
+  ],
+  "other_p0_partial_total": 219,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 248,
+  "other_p0_without_partial": 90,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Eight original pinned Seven Island/Tanoby source-only scripts; no whole-file semantic, compiled/runtime, natural gameplay, .sav, physical Flash, independent licensing or approval.",
+  "records": [
+    {
+      "packet_index": 228,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SevenIsland_PokemonCenter_1F/scripts.inc",
+        "git_blob_sha1": "784e767871548b9f9a1e1725918b1f72ff0536d7",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SevenIsland_PokemonCenter_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "7adbba7d360925eb86d23144269a32623494ffda6904418306690aeb0faf7234",
+      "whole_source_sha256_from_packet": "5b6a75f2c85b7da72305ffbf321a02e7f94d5eaf937a3aebe74ef864466dcd36",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SevenIsland_PokemonCenter_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_PokemonCenter_1F_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume"
+        },
+        {
+          "line": 6,
+          "text": "SevenIsland_PokemonCenter_1F_OnTransition::"
+        },
+        {
+          "line": 7,
+          "text": "\tsetrespawn HEAL_LOCATION_SEVEN_ISLAND"
+        },
+        {
+          "line": 10,
+          "text": "SevenIsland_PokemonCenter_1F_EventScript_Nurse::"
+        },
+        {
+          "line": 11,
+          "text": "\tlock"
+        },
+        {
+          "line": 13,
+          "text": "\tcall EventScript_PkmnCenterNurse"
+        },
+        {
+          "line": 14,
+          "text": "\trelease"
+        },
+        {
+          "line": 17,
+          "text": "SevenIsland_PokemonCenter_1F_EventScript_OldMan::"
+        },
+        {
+          "line": 18,
+          "text": "\tmsgbox SevenIsland_PokemonCenter_1F_Text_EventsDependingOnConnections, MSGBOX_NPC"
+        },
+        {
+          "line": 21,
+          "text": "SevenIsland_PokemonCenter_1F_EventScript_Sailor::"
+        },
+        {
+          "line": 22,
+          "text": "\tmsgbox SevenIsland_PokemonCenter_1F_Text_DidYouRideSeagallopHere, MSGBOX_NPC"
+        },
+        {
+          "line": 25,
+          "text": "SevenIsland_PokemonCenter_1F_EventScript_Beauty::"
+        },
+        {
+          "line": 26,
+          "text": "\tmsgbox SevenIsland_PokemonCenter_1F_Text_CheckOutTrainerTower, MSGBOX_NPC"
+        },
+        {
+          "line": 27,
+          "text": "\tend"
+        }
+      ],
+      "required_source_tokens": [
+        "SevenIsland_PokemonCenter_1F_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_PokemonCenter_1F_OnTransition",
+        "\tmap_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume",
+        "SevenIsland_PokemonCenter_1F_OnTransition::",
+        "\tsetrespawn HEAL_LOCATION_SEVEN_ISLAND",
+        "SevenIsland_PokemonCenter_1F_EventScript_Nurse::",
+        "\tlock"
+      ],
+      "source_observations": "Seven Island Center 1F transition sets the Seven Island heal respawn; CableClub resume is delegated. Nurse calls shared center nurse; Old Man, Sailor and Beauty display authored dialogue, including Trainer Tower mention. Source wiring does not prove a Trainer Tower gameplay execution or persistent save.",
+      "dependency_edges": [
+        "Seven Island heal-location respawn constant and save consumer",
+        "CableClub_OnResume shared handler and map lifecycle",
+        "EventScript_PkmnCenterNurse shared healing routine",
+        "Map object script bindings and dialogue text symbols",
+        "Trainer Tower dialogue is not Trainer Tower native execution"
+      ],
+      "unresolved": [
+        "Complete original map.json object/warp triggers and map table/linker closure not established",
+        "Shared called script/special handlers and native execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash the original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map-table, preprocessor/assembler/linker and native consumer",
+        "Reconcile original asset, derivative, toolchain and dependency licensing independently",
+        "Sign a distinct, evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 229,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SevenIsland_PokemonCenter_2F/scripts.inc",
+        "git_blob_sha1": "2dd361f26763fce4f41dbd403f4e9030d03da50c",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SevenIsland_PokemonCenter_2F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "eacc79e9858db46dd2ea294ec46c36100dc6272ee537c86f2e473cb518198805",
+      "whole_source_sha256_from_packet": "72948bed9a84d334da08124379dd836f5353affa7f31f1b16fa735adb57e9d73",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SevenIsland_PokemonCenter_2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CableClub_OnTransition"
+        },
+        {
+          "line": 8,
+          "text": "@ The below 3 are unused and leftover from RS"
+        },
+        {
+          "line": 9,
+          "text": "SevenIsland_PokemonCenter_2F_EventScript_Colosseum::"
+        },
+        {
+          "line": 10,
+          "text": "\tcall CableClub_EventScript_Colosseum"
+        },
+        {
+          "line": 13,
+          "text": "SevenIsland_PokemonCenter_2F_EventScript_TradeCenter::"
+        },
+        {
+          "line": 14,
+          "text": "\tcall CableClub_EventScript_TradeCenter"
+        },
+        {
+          "line": 17,
+          "text": "SevenIsland_PokemonCenter_2F_EventScript_RecordCorner::"
+        },
+        {
+          "line": 18,
+          "text": "\tcall CableClub_EventScript_RecordCorner"
+        }
+      ],
+      "required_source_tokens": [
+        "SevenIsland_PokemonCenter_2F_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame",
+        "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp",
+        "\tmap_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, CableClub_OnTransition",
+        "@ The below 3 are unused and leftover from RS",
+        "SevenIsland_PokemonCenter_2F_EventScript_Colosseum::"
+      ],
+      "source_observations": "Seven Island Center 2F delegates frame, warp, load and transition lifecycle to shared CableClub handlers; three event stubs are explicitly described as unused RS leftovers. Source references do not establish that these stubs are reachable or that link communication runs.",
+      "dependency_edges": [
+        "CableClub_OnFrame shared lifecycle",
+        "CableClub_OnWarp shared lifecycle",
+        "CableClub_OnLoad and CableClub_OnTransition handlers",
+        "Legacy Colosseum, Trade Center and Record Corner stubs",
+        "Original map object bindings and link communication reachability"
+      ],
+      "unresolved": [
+        "Complete original map.json object/warp triggers and map table/linker closure not established",
+        "Shared called script/special handlers and native execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash the original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map-table, preprocessor/assembler/linker and native consumer",
+        "Reconcile original asset, derivative, toolchain and dependency licensing independently",
+        "Sign a distinct, evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 230,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SevenIsland_SevaultCanyon_TanobyKey/scripts.inc",
+        "git_blob_sha1": "55777e307fba0a308d15e6a6deab9a075cbf34ee",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SevenIsland_SevaultCanyon_TanobyKey/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "b2b1b13f2baada2936b7e431aa95cbdcfcf387f3b360c2093ec5e2e554807452",
+      "whole_source_sha256_from_packet": "b049d0009685686732941369e62a9c04d345d5325035e463c28505804b600e1b",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": ".equ NUM_SWITCHES_PRESSED, VAR_TEMP_8"
+        },
+        {
+          "line": 3,
+          "text": "SevenIsland_SevaultCanyon_TanobyKey_MapScripts::"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_SevaultCanyon_TanobyKey_OnTransition"
+        },
+        {
+          "line": 8,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_SEVEN_ISLAND_SEVAULT_CANYON_TANOBY_KEY"
+        },
+        {
+          "line": 9,
+          "text": "\tcall_if_set FLAG_SYS_UNLOCKED_TANOBY_RUINS, SevenIsland_SevaultCanyon_TanobyKey_EventScript_MoveBouldersToSolvedPos"
+        },
+        {
+          "line": 10,
+          "text": "\tsetvar VAR_TEMP_1, 0"
+        },
+        {
+          "line": 17,
+          "text": "\tsetvar NUM_SWITCHES_PRESSED, 0"
+        },
+        {
+          "line": 20,
+          "text": "SevenIsland_SevaultCanyon_TanobyKey_EventScript_MoveBouldersToSolvedPos::"
+        },
+        {
+          "line": 30,
+          "text": "SevenIsland_SevaultCanyon_TanobyKey_EventScript_Switch1::"
+        },
+        {
+          "line": 35,
+          "text": "\tgoto_if_eq NUM_SWITCHES_PRESSED, 7, SevenIsland_SevaultCanyon_TanobyKey_EventScript_PuzzleSolved"
+        },
+        {
+          "line": 84,
+          "text": "SevenIsland_SevaultCanyon_TanobyKey_EventScript_Switch7::"
+        },
+        {
+          "line": 89,
+          "text": "\tgoto_if_eq NUM_SWITCHES_PRESSED, 7, SevenIsland_SevaultCanyon_TanobyKey_EventScript_PuzzleSolved"
+        },
+        {
+          "line": 93,
+          "text": "SevenIsland_SevaultCanyon_TanobyKey_EventScript_SwitchPressed::"
+        },
+        {
+          "line": 94,
+          "text": "\taddvar NUM_SWITCHES_PRESSED, 1"
+        },
+        {
+          "line": 100,
+          "text": "\tspecial ShakeScreen"
+        },
+        {
+          "line": 104,
+          "text": "SevenIsland_SevaultCanyon_TanobyKey_EventScript_PuzzleSolvedShakeScreen::"
+        },
+        {
+          "line": 121,
+          "text": "SevenIsland_SevaultCanyon_TanobyKey_EventScript_SwitchAlreadyPressed::"
+        },
+        {
+          "line": 125,
+          "text": "SevenIsland_SevaultCanyon_TanobyKey_EventScript_PuzzleSolved::"
+        },
+        {
+          "line": 126,
+          "text": "\tcall SevenIsland_SevaultCanyon_TanobyKey_EventScript_PuzzleSolvedShakeScreen"
+        },
+        {
+          "line": 128,
+          "text": "\tsetflag FLAG_SYS_UNLOCKED_TANOBY_RUINS"
+        },
+        {
+          "line": 129,
+          "text": "\treleaseall"
+        },
+        {
+          "line": 130,
+          "text": "\tend"
+        }
+      ],
+      "required_source_tokens": [
+        ".equ NUM_SWITCHES_PRESSED, VAR_TEMP_8",
+        "SevenIsland_SevaultCanyon_TanobyKey_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_SevaultCanyon_TanobyKey_OnTransition",
+        "\tsetworldmapflag FLAG_WORLD_MAP_SEVEN_ISLAND_SEVAULT_CANYON_TANOBY_KEY",
+        "\tcall_if_set FLAG_SYS_UNLOCKED_TANOBY_RUINS, SevenIsland_SevaultCanyon_TanobyKey_EventScript_MoveBouldersToSolvedPos",
+        "\tsetvar VAR_TEMP_1, 0",
+        "\tsetvar NUM_SWITCHES_PRESSED, 0"
+      ],
+      "source_observations": "Tanoby Key transition sets a world-map flag, optionally restores seven boulders when ruins already unlocked, and resets seven per-map temporary switch flags and count. Each distinct switch increments a counter and checks seven; solved path shakes screen and sets persistent ruins-unlock flag. Original source describes a puzzle, not a verified natural-play or save/restart witness.",
+      "dependency_edges": [
+        "Map transition script and FLAG_SYS_UNLOCKED_TANOBY_RUINS persistent flag",
+        "Seven boulder object IDs and map object coordinate consumers",
+        "Seven temporary switch variables and per-map reset lifecycle",
+        "ShakeScreen special, sound effects and world-map flag consumers",
+        "Tanoby Ruins downstream Unown encounter gating not yet closed"
+      ],
+      "unresolved": [
+        "Complete original map.json object/warp triggers and map table/linker closure not established",
+        "Shared called script/special handlers and native execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash the original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map-table, preprocessor/assembler/linker and native consumer",
+        "Reconcile original asset, derivative, toolchain and dependency licensing independently",
+        "Sign a distinct, evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 231,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SevenIsland_TanobyRuins_DilfordChamber/scripts.inc",
+        "git_blob_sha1": "aa0376bba63d97e49bc3b51ea38e07dfa0670caf",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SevenIsland_TanobyRuins_DilfordChamber/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "953a191099250b1a00cc7bfd9ea23f43aa9cc76804d3aa857e13bb26f45277bf",
+      "whole_source_sha256_from_packet": "9d58b4cab58df65f54f70bb5f2a367d0856f87325f58d51f84c9948bea431139",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SevenIsland_TanobyRuins_DilfordChamber_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_TanobyRuins_DilfordChamber_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 4,
+          "text": ""
+        },
+        {
+          "line": 5,
+          "text": "SevenIsland_TanobyRuins_DilfordChamber_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tcall EventScript_TryDarkenRuins"
+        },
+        {
+          "line": 7,
+          "text": "\tend"
+        }
+      ],
+      "required_source_tokens": [
+        "SevenIsland_TanobyRuins_DilfordChamber_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_TanobyRuins_DilfordChamber_OnTransition",
+        "\t.byte 0",
+        "SevenIsland_TanobyRuins_DilfordChamber_OnTransition::",
+        "\tcall EventScript_TryDarkenRuins",
+        "\tend"
+      ],
+      "source_observations": "Dilford Chamber transition delegates darkening to shared EventScript_TryDarkenRuins; no local Unown spawn, native darkness execution or ruins unlock evidence is present in this seven-line file.",
+      "dependency_edges": [
+        "EventScript_TryDarkenRuins shared event handler",
+        "Map transition lifecycle and map-table script pointer",
+        "Tanoby Key persistent unlock flag and ruins access",
+        "Unown encounter table and map-specific cave data",
+        "World-map discovery flags and persistent save consumers"
+      ],
+      "unresolved": [
+        "Complete original map.json object/warp triggers and map table/linker closure not established",
+        "Shared called script/special handlers and native execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash the original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map-table, preprocessor/assembler/linker and native consumer",
+        "Reconcile original asset, derivative, toolchain and dependency licensing independently",
+        "Sign a distinct, evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 232,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SevenIsland_TanobyRuins_LiptooChamber/scripts.inc",
+        "git_blob_sha1": "1a872bbff864f7af11b58c4cc2a18dd28e5e1350",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SevenIsland_TanobyRuins_LiptooChamber/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "a68f82ddc15923979f7057900887c10a1cfebecd55476e0b64a7320c6b5154bb",
+      "whole_source_sha256_from_packet": "999aaa378fbd5bbdd919fb51d6968e3b7a9d01670c47ba4e57c14d78547defa9",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SevenIsland_TanobyRuins_LiptooChamber_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_TanobyRuins_LiptooChamber_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 4,
+          "text": ""
+        },
+        {
+          "line": 5,
+          "text": "SevenIsland_TanobyRuins_LiptooChamber_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tcall EventScript_TryDarkenRuins"
+        },
+        {
+          "line": 7,
+          "text": "\tend"
+        }
+      ],
+      "required_source_tokens": [
+        "SevenIsland_TanobyRuins_LiptooChamber_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_TanobyRuins_LiptooChamber_OnTransition",
+        "\t.byte 0",
+        "SevenIsland_TanobyRuins_LiptooChamber_OnTransition::",
+        "\tcall EventScript_TryDarkenRuins",
+        "\tend"
+      ],
+      "source_observations": "Liptoo Chamber transition delegates darkening to shared EventScript_TryDarkenRuins; no local Unown spawn, native darkness execution or ruins unlock evidence is present in this seven-line file.",
+      "dependency_edges": [
+        "EventScript_TryDarkenRuins shared event handler",
+        "Map transition lifecycle and map-table script pointer",
+        "Tanoby Key persistent unlock flag and ruins access",
+        "Unown encounter table and map-specific cave data",
+        "World-map discovery flags and persistent save consumers"
+      ],
+      "unresolved": [
+        "Complete original map.json object/warp triggers and map table/linker closure not established",
+        "Shared called script/special handlers and native execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash the original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map-table, preprocessor/assembler/linker and native consumer",
+        "Reconcile original asset, derivative, toolchain and dependency licensing independently",
+        "Sign a distinct, evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 233,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SevenIsland_TanobyRuins_MoneanChamber/scripts.inc",
+        "git_blob_sha1": "635f4ab42d54492628149c71688d5f449191f985",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SevenIsland_TanobyRuins_MoneanChamber/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "44a4b3e2c081a2159ccb4903be1ef6db52ac6917a2fbaa97ba43e8e49cbfe583",
+      "whole_source_sha256_from_packet": "3f1255dd52c8d3cb6a7e470205c39b2b33e6a10823112086cf1a43d5f9fc30db",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SevenIsland_TanobyRuins_MoneanChamber_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_TanobyRuins_MoneanChamber_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 4,
+          "text": ""
+        },
+        {
+          "line": 5,
+          "text": "SevenIsland_TanobyRuins_MoneanChamber_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_SEVEN_ISLAND_TANOBY_RUINS_MONEAN_CHAMBER"
+        },
+        {
+          "line": 7,
+          "text": "\tcall EventScript_TryDarkenRuins"
+        },
+        {
+          "line": 8,
+          "text": "\tend"
+        }
+      ],
+      "required_source_tokens": [
+        "SevenIsland_TanobyRuins_MoneanChamber_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_TanobyRuins_MoneanChamber_OnTransition",
+        "\t.byte 0",
+        "SevenIsland_TanobyRuins_MoneanChamber_OnTransition::",
+        "\tsetworldmapflag FLAG_WORLD_MAP_SEVEN_ISLAND_TANOBY_RUINS_MONEAN_CHAMBER",
+        "\tcall EventScript_TryDarkenRuins",
+        "\tend"
+      ],
+      "source_observations": "Monean Chamber transition sets its world-map discovery flag before calling shared EventScript_TryDarkenRuins; local source does not prove the flag persists across native save/restart.",
+      "dependency_edges": [
+        "EventScript_TryDarkenRuins shared event handler",
+        "Map transition lifecycle and map-table script pointer",
+        "Tanoby Key persistent unlock flag and ruins access",
+        "Unown encounter table and map-specific cave data",
+        "World-map discovery flags and persistent save consumers"
+      ],
+      "unresolved": [
+        "Complete original map.json object/warp triggers and map table/linker closure not established",
+        "Shared called script/special handlers and native execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash the original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map-table, preprocessor/assembler/linker and native consumer",
+        "Reconcile original asset, derivative, toolchain and dependency licensing independently",
+        "Sign a distinct, evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 234,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SevenIsland_TanobyRuins_RixyChamber/scripts.inc",
+        "git_blob_sha1": "03f1551b84a49dd28b62b95d172bc09ae92ab170",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SevenIsland_TanobyRuins_RixyChamber/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "71920012882b7ae2bb2806d2b116f8315bff6c9d53b6b51ab540368f5814e6b9",
+      "whole_source_sha256_from_packet": "adf67c02957dbd2e2d35911cbe787f2dda058c9819672fe64723d5fb6d055c74",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SevenIsland_TanobyRuins_RixyChamber_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_TanobyRuins_RixyChamber_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 4,
+          "text": ""
+        },
+        {
+          "line": 5,
+          "text": "SevenIsland_TanobyRuins_RixyChamber_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tcall EventScript_TryDarkenRuins"
+        },
+        {
+          "line": 7,
+          "text": "\tend"
+        }
+      ],
+      "required_source_tokens": [
+        "SevenIsland_TanobyRuins_RixyChamber_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_TanobyRuins_RixyChamber_OnTransition",
+        "\t.byte 0",
+        "SevenIsland_TanobyRuins_RixyChamber_OnTransition::",
+        "\tcall EventScript_TryDarkenRuins",
+        "\tend"
+      ],
+      "source_observations": "Rixy Chamber transition delegates darkening to shared EventScript_TryDarkenRuins; no local Unown spawn, native darkness execution or ruins unlock evidence is present in this seven-line file.",
+      "dependency_edges": [
+        "EventScript_TryDarkenRuins shared event handler",
+        "Map transition lifecycle and map-table script pointer",
+        "Tanoby Key persistent unlock flag and ruins access",
+        "Unown encounter table and map-specific cave data",
+        "World-map discovery flags and persistent save consumers"
+      ],
+      "unresolved": [
+        "Complete original map.json object/warp triggers and map table/linker closure not established",
+        "Shared called script/special handlers and native execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash the original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map-table, preprocessor/assembler/linker and native consumer",
+        "Reconcile original asset, derivative, toolchain and dependency licensing independently",
+        "Sign a distinct, evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 235,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/SevenIsland_TanobyRuins_ScufibChamber/scripts.inc",
+        "git_blob_sha1": "381477f946c4c0f3771d79f02a30bc7c78d898e6",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/SevenIsland_TanobyRuins_ScufibChamber/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "71d28c8b116efcf6b666f477eead56709c1388b1e68d7016786ee755228fa3df",
+      "whole_source_sha256_from_packet": "aef500ae89b7928b804cbeb46cf57bcffd4f5a86da1a6ec8ceaecf6d587f5e69",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "SevenIsland_TanobyRuins_ScufibChamber_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_TanobyRuins_ScufibChamber_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 4,
+          "text": ""
+        },
+        {
+          "line": 5,
+          "text": "SevenIsland_TanobyRuins_ScufibChamber_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tcall EventScript_TryDarkenRuins"
+        },
+        {
+          "line": 7,
+          "text": "\tend"
+        }
+      ],
+      "required_source_tokens": [
+        "SevenIsland_TanobyRuins_ScufibChamber_MapScripts::",
+        "\tmap_script MAP_SCRIPT_ON_TRANSITION, SevenIsland_TanobyRuins_ScufibChamber_OnTransition",
+        "\t.byte 0",
+        "SevenIsland_TanobyRuins_ScufibChamber_OnTransition::",
+        "\tcall EventScript_TryDarkenRuins",
+        "\tend"
+      ],
+      "source_observations": "Scufib Chamber transition delegates darkening to shared EventScript_TryDarkenRuins; no local Unown spawn, native darkness execution or ruins unlock evidence is present in this seven-line file.",
+      "dependency_edges": [
+        "EventScript_TryDarkenRuins shared event handler",
+        "Map transition lifecycle and map-table script pointer",
+        "Tanoby Key persistent unlock flag and ruins access",
+        "Unown encounter table and map-specific cave data",
+        "World-map discovery flags and persistent save consumers"
+      ],
+      "unresolved": [
+        "Complete original map.json object/warp triggers and map table/linker closure not established",
+        "Shared called script/special handlers and native execution not reproduced",
+        "Original authored assets and derivative licensing not independently cleared",
+        "No stock natural gameplay, .sav restart, physical Flash or independent whole-file verdict"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line of the original pinned file and shared handler targets",
+        "Rehash the original machine dossier bytes and full pinned source SHA256",
+        "Trace map.json, event_scripts.s, map-table, preprocessor/assembler/linker and native consumer",
+        "Reconcile original asset, derivative, toolchain and dependency licensing independently",
+        "Sign a distinct, evidence-bound full-file semantic review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}

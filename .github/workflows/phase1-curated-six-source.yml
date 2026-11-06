@@ -1,0 +1,16 @@
+name: Phase 1 curated six pinned source analyst evidence
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  source-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify six exact pinned blobs and reject twelve mutations
+        run: python3 tools/phase1_curated_six_source_verify.py

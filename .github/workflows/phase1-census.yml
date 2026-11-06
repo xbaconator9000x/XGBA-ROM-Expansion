@@ -1,5 +1,6 @@
 name: Phase 1 pinned source census and review dossiers
 on:
+  workflow_call:
   workflow_dispatch:
   push:
     paths:
@@ -7,6 +8,33 @@ on:
       - 'tools/semantic_review_dossiers.py'
       - 'tools/include_dependency_classifier.py'
       - 'tools/phase1_mapping_gate.py'
+      - 'tools/phase1_copilot_receipts.py'
+      - 'tools/phase1_arm_receipt_status.py'
+      - 'tools/phase1_mgba_arm_decode_emit_review_verify.py'
+      - 'tools/phase1_mgba_arm_ub_package.py'
+      - 'tools/phase1_mgba_arm_decoder_abi_probe.py'
+      - 'tools/phase1_mgba_gba_memory_alias_audit.py'
+      - 'tools/phase1_mgba_video_nv_followup.py'
+      - 'tools/phase1_arm_six_file_eligibility.py'
+      - 'tools/phase1_third_packet_sources_260_299_verify.py'
+      - 'tools/phase1_second_packet_special_sources_verify.py'
+      - 'tests/test_phase1_mgba_arm_decode_emit_review_verify.py'
+      - 'tests/test_phase1_mgba_arm_ub_package.py'
+      - 'tests/test_phase1_mgba_arm_decoder_abi_probe.py'
+      - 'tests/test_phase1_mgba_gba_memory_alias_audit.py'
+      - 'tests/test_phase1_mgba_video_nv_followup.py'
+      - 'tests/test_phase1_arm_six_file_eligibility.py'
+      - 'tests/phase1_mgba_arm_nv_probe.c'
+      - 'tests/phase1_mgba_arm_alignment_probe.c'
+      - 'tests/phase1_mgba_memory_object_probe.c'
+      - 'tests/test_phase1_copilot_receipts.py'
+      - 'tests/test_phase1_arm_receipt_status.py'
+      - 'tests/test_phase1_mapping_gate.py'
+      - 'docs/phase1-review-readiness/copilot-semantic-review-receipts.jsonl'
+      - 'docs/phase1-review-readiness/analyst-*.md'
+      - 'docs/phase1-review-readiness/analyst-third-packet-source-handoff-260-299-20261104.json'
+      - 'docs/phase1-review-readiness/analyst-second-packet-mgba-special-sources-112-127-129-20261104.json'
+      - '.github/workflows/phase1-second-packet-handoff-index.yml'
       - 'tools/verify_source_contracts.py'
       - 'tools/verify_p0_additive_source_contracts.py'
       - 'tools/verify_curated_p0_semantic_registry.py'
@@ -45,19 +73,102 @@ on:
       - '.github/workflows/phase1-census.yml'
 permissions:
   contents: read
+  pull-requests: read
+  actions: read
 jobs:
   census:
     runs-on: ubuntu-latest
     timeout-minutes: 110
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Require complete Git history for append-only receipt ancestry
+        run: test "$(git rev-parse --is-shallow-repository)" = "false"
       - name: Verify Python syntax
         run: |
-          python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py
+          python3 -m py_compile tools/pinned_source_census.py tools/semantic_review_dossiers.py tools/phase1_copilot_receipts.py tools/phase1_arm_receipt_status.py tools/phase1_mapping_gate.py tools/phase1_mgba_arm_decode_emit_review_verify.py tools/phase1_mgba_arm_ub_package.py tools/phase1_mgba_arm_decoder_abi_probe.py tools/phase1_mgba_gba_memory_alias_audit.py tools/phase1_mgba_video_nv_followup.py tools/phase1_arm_six_file_eligibility.py tools/phase1_third_packet_sources_260_299_verify.py tools/phase1_second_packet_special_sources_verify.py
           python3 tools/semantic_review_dossiers.py --self-test
           python3 tools/phase1_mapping_gate.py --self-test
+          python3 -m unittest discover -s tests -p test_phase1_copilot_receipts.py -v
+          python3 -m unittest discover -s tests -p test_phase1_arm_receipt_status.py -v
+          python3 -m unittest discover -s tests -p test_phase1_mapping_gate.py -v
+          python3 -m unittest discover -s tests -p test_phase1_mgba_arm_decode_emit_review_verify.py -v
+          python3 -m unittest discover -s tests -p test_phase1_mgba_arm_ub_package.py -v
+          python3 -m unittest discover -s tests -p test_phase1_mgba_arm_decoder_abi_probe.py -v
+          python3 -m unittest discover -s tests -p test_phase1_mgba_gba_memory_alias_audit.py -v
+          python3 -m unittest discover -s tests -p test_phase1_mgba_video_nv_followup.py -v
+          python3 -m unittest discover -s tests -p test_phase1_arm_six_file_eligibility.py -v
+      - name: Verify pinned FireRed partial source handoff indices 260–299
+        run: python3 tools/phase1_third_packet_sources_260_299_verify.py
       - name: Clone pinned sources and scan
         run: python3 tools/pinned_source_census.py --checkout --root upstream --out audit-output
+      - name: Verify second-packet mGBA translation and SQLite source partials
+        run: python3 tools/phase1_second_packet_special_sources_verify.py --source-root upstream/mgba
+      - name: Verify pinned mGBA ARM arithmetic/UB evidence package
+        run: |
+          python3 tools/phase1_mgba_arm_ub_package.py \
+            --source-root upstream/mgba \
+            --output audit-output/arm_ub_objection_package.json
+      - name: Probe pinned ARM decoder record layout with Clang ARM target
+        run: |
+          python3 tools/phase1_mgba_arm_decoder_abi_probe.py \
+            --source-root upstream/mgba \
+            --output audit-output/arm_decoder_abi_probe.json
+      - name: Compile pinned mGBA GBA core with GCC and Clang strict aliasing
+        run: |
+          for cc in gcc clang; do
+            cmake -S upstream/mgba -B "/tmp/xgba-phase1-mgba-${cc}-strict" \
+              -DCMAKE_C_COMPILER="$cc" -DLIBMGBA_ONLY=ON -DBINARY_NAME=mgba \
+              -DM_CORE_GBA=ON -DM_CORE_GB=OFF -DENABLE_SCRIPTING=OFF \
+              -DBUILD_SHARED=OFF -DBUILD_STATIC=ON -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_C_FLAGS="-fstrict-aliasing" -DCMAKE_C_FLAGS_RELEASE="-O2 -DNDEBUG"
+            cmake --build "/tmp/xgba-phase1-mgba-${cc}-strict" --target mgba --parallel 2
+          done
+      - name: Verify pinned GBA memory callers and allocator alignment
+        run: |
+          python3 tools/phase1_mgba_gba_memory_alias_audit.py \
+            --source-root upstream/mgba \
+            --generated-include /tmp/xgba-phase1-mgba-gcc-strict/include
+      - name: Verify pinned typed-video and ARM condition-F limitations
+        run: |
+          python3 tools/phase1_mgba_video_nv_followup.py \
+            --source-root upstream/mgba \
+            --generated-include /tmp/xgba-phase1-mgba-gcc-strict/include \
+            --output audit-output/video_nv_followup.json
+      - name: Verify original pinned ARM endian macro alignment (host UBSan only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C upstream/mgba rev-parse HEAD)" = "fd9dc5c2cbf234365068855851107e762fc6211b"
+          test "$(git -C upstream/mgba hash-object include/mgba-util/common.h)" = "923e93086adfa09c9a55fcc2f0f6fa4d560e5888"
+          test "$(git -C upstream/mgba hash-object include/mgba/internal/arm/macros.h)" = "4832f054611044e63f1e2393fe4072f48004545a"
+          python3 - <<'PY'
+          from pathlib import Path
+          common = Path("upstream/mgba/include/mgba-util/common.h").read_text()
+          aliases = Path("upstream/mgba/include/mgba/internal/arm/macros.h").read_text()
+          probe = Path("tests/phase1_mgba_arm_alignment_probe.c").read_text()
+          checks = [(common, "#define LOAD_32LE(DEST, ADDR, ARR) DEST = *(uint32_t*) ((uintptr_t) (ARR) + (size_t) (ADDR))"), (common, "#define STORE_32LE(SRC, ADDR, ARR) *(uint32_t*) ((uintptr_t) (ARR) + (size_t) (ADDR)) = SRC"),
+                    (aliases, "#define LOAD_32 LOAD_32LE"), (aliases, "#define STORE_32 STORE_32LE")]
+          for src, line in checks:
+              assert src.splitlines().count(line) == 1, "missing/duplicate/mutated pinned macro"
+          for _, line in checks[:2]:
+              assert probe.splitlines().count(line) == 1, "host probe macro diverges from pinned original"
+          assert "Mozilla Public" in common and "Mozilla Public" in aliases
+          print("ARM_ALIGNMENT_SOURCE_PASS pinned=2 macros=2 aliases=2 approvals=0")
+          PY
+          for cc in gcc clang; do
+            command -v "$cc"
+            "$cc" -std=c11 -O2 -g -Wall -Wextra -fsanitize=alignment -fno-sanitize-recover=alignment tests/phase1_mgba_arm_alignment_probe.c -o "/tmp/xgba-arm-alignment-$cc"
+            "/tmp/xgba-arm-alignment-$cc" > /tmp/xgba-arm-aligned.log 2>&1
+            grep -qx 'aligned=44332211' /tmp/xgba-arm-aligned.log
+            if "/tmp/xgba-arm-alignment-$cc" x > /tmp/xgba-arm-store.log 2>&1; then echo "missing expected misaligned store failure"; exit 1; fi
+            grep -q 'runtime error: store to misaligned address' /tmp/xgba-arm-store.log
+            if "/tmp/xgba-arm-alignment-$cc" x y > /tmp/xgba-arm-load.log 2>&1; then echo "missing expected misaligned load failure"; exit 1; fi
+            grep -q 'runtime error: load of misaligned address' /tmp/xgba-arm-load.log
+            echo "ARM_ALIGNMENT_UBSAN_PASS compiler=$cc aligned=PASS load=EXPECTED_UB store=EXPECTED_UB"
+          done
       - name: Verify pinned Poryscript compiler parsing and emission tests
         working-directory: upstream/poryscript
         run: |
@@ -126,10 +237,30 @@ jobs:
       - name: Index every source-anchored function's calls, writes and control flow
         run: python3 tools/function_semantic_dossiers.py
       - name: Evaluate Phase 1 semantic gate (incomplete is expected until signed review)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           rc=0
-          python3 tools/phase1_mapping_gate.py --root audit-output || rc=$?
+          expected_head="${{ github.event.pull_request.head.sha || github.sha }}"
+          python3 tools/phase1_mapping_gate.py --root audit-output --source-root upstream \
+            --expected-head "$expected_head" --repository "$GITHUB_REPOSITORY" || rc=$?
           if [ "$rc" -ne 0 ] && [ "$rc" -ne 2 ]; then exit "$rc"; fi
+      - name: Emit non-approving ARM receipt eligibility status
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          expected_head="${{ github.event.pull_request.head.sha || github.sha }}"
+          python3 tools/phase1_arm_receipt_status.py \
+            --audit-root audit-output --source-root upstream \
+            --expected-head "$expected_head" --repository "$GITHUB_REPOSITORY" \
+            --pull-number 8 --output audit-output/arm_receipt_status.json
+      - name: Emit non-approving six-file ARM eligibility matrix
+        run: |
+          python3 tools/phase1_arm_six_file_eligibility.py \
+            --source-root upstream/mgba \
+            --snapshot-root semantic-snapshots/current \
+            --repository-root . \
+            --output audit-output/arm_six_file_eligibility.json
       - name: Preserve census, review queue and 500-file checkpoints
         if: always()
         uses: actions/upload-artifact@v4

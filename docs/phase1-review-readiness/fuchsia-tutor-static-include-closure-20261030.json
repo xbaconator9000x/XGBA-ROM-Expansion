@@ -1,0 +1,62 @@
+{
+  "schema": "xgba.phase1.fuchsia_substitute_static_include_closure.v1",
+  "date": "2026-10-30",
+  "source_revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+  "source_repository": "pret/pokefirered",
+  "scope": "PINNED_ORIGINAL_SOURCE_STATIC_INCLUDE_AND_LABEL_CLOSURE_ONLY",
+  "files": [
+    {
+      "path": "data/maps/FuchsiaCity/map.json",
+      "blob": "834806202ccdfe0d39f95634554aeca718ff3bb3",
+      "line": 241,
+      "anchor": "      \"script\": \"FuchsiaCity_EventScript_SubstituteTutor\","
+    },
+    {
+      "path": "data/maps/FuchsiaCity/scripts.inc",
+      "blob": "f50aa66bc974c9d5795560153fc630c5913457d8",
+      "line": 1,
+      "anchor": "FuchsiaCity_MapScripts::"
+    },
+    {
+      "path": "data/scripts/move_tutors.inc",
+      "blob": "e5b0f72b29a1fd4019b9cbc8f98fd3a1d345ef78",
+      "line": 209,
+      "anchor": "FuchsiaCity_EventScript_SubstituteTutor::"
+    },
+    {
+      "path": "data/event_scripts.s",
+      "blob": "88d75946a7300ccf952f4a36c283966c6aebf5c0",
+      "line": 285,
+      "anchor": "\t.include \"data/maps/FuchsiaCity/scripts.inc\""
+    }
+  ],
+  "additional_include": {
+    "path": "data/event_scripts.s",
+    "line": 1357,
+    "anchor": "\t.include \"data/scripts/move_tutors.inc\""
+  },
+  "tutor_flag_line": {
+    "path": "data/scripts/move_tutors.inc",
+    "line": 212,
+    "anchor": "\tgoto_if_set FLAG_TUTOR_SUBSTITUTE, EventScript_SubstituteTaught"
+  },
+  "source_findings": [
+    "FuchsiaCity map.json binds an NPC object script to FuchsiaCity_EventScript_SubstituteTutor.",
+    "The label is not defined in the FuchsiaCity local scripts.inc; it is defined in original data/scripts/move_tutors.inc.",
+    "Original data/event_scripts.s has literal .include directives for both local FuchsiaCity scripts and global move_tutors.inc, establishing a static assembler-input edge.",
+    "The tutor flag is checked in the pinned move_tutors.inc source; actual runtime, assembled bytes and link symbol resolution are not observed."
+  ],
+  "unresolved": [
+    "No original preprocessor/assembler/linker output or relocation/compiled script-table witness in this record",
+    "No stock gameplay execution, .sav persistence or physical Flash witness",
+    "Original authored script asset and derivative licensing requires independent review",
+    "No whole-file semantic coverage or distinct independent reviewer receipt"
+  ],
+  "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+  "whole_file_semantic_coverage": false,
+  "independent_reviewer": null,
+  "independent_verdict": "NEEDS_REVIEW",
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE"
+}

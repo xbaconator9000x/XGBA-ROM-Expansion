@@ -1,0 +1,483 @@
+{
+  "schema": "xgba.phase1.remaining_p0_partial_analyst_batch.v4",
+  "date": "2026-10-29",
+  "source_packet": "docs/phase1-review-readiness/packet-0000-0099.json",
+  "source_packet_blob_sha1": "a48c12900acc7e0211a8071119763e2b5de4b1a4",
+  "previous_partial_indices": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    16,
+    23,
+    24,
+    25,
+    27,
+    29,
+    33,
+    38,
+    39,
+    40,
+    43,
+    54,
+    55,
+    58,
+    60,
+    63
+  ],
+  "new_partial_indices": [
+    15,
+    19,
+    20,
+    26,
+    28,
+    30,
+    31,
+    64
+  ],
+  "partial_source_inspected": 8,
+  "curated_29_source_inspected": 29,
+  "remaining_p0_partial_total": 38,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "machine_dossier_sha256_note": "Packet SHA256 is UNVERIFIED; no independent machine dossier check.",
+  "records": [
+    {
+      "packet_index": 15,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/arm/debugger/debugger.h",
+        "git_blob_sha1": "f303ddf061588368ee1238fc29af52aabede2430",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/arm/debugger/debugger.h"
+      },
+      "machine_dossier_sha256_unverified": "32d7bd320967aff389200c2af2e04ca05c93d9a78458abf88427f07b8aba8019",
+      "line_anchors": [
+        {
+          "line": 19,
+          "text": "struct ARMDebugBreakpoint {"
+        },
+        {
+          "line": 27,
+          "text": "DECLARE_VECTOR(ARMDebugBreakpointList, struct ARMDebugBreakpoint);"
+        },
+        {
+          "line": 29,
+          "text": "struct ARMDebugger {"
+        },
+        {
+          "line": 48,
+          "text": "struct mDebuggerPlatform* ARMDebuggerPlatformCreate(void);"
+        }
+      ],
+      "responsibilities": "ARM debugger platform state owns breakpoint vectors, bloom filter, watchpoints, saved memory callbacks and software breakpoint entry points.",
+      "dependency_edges": [
+        "src/arm/debugger/debugger.c",
+        "src/arm/debugger/memory-debugger.c"
+      ],
+      "unresolved": [
+        "Software breakpoint opcode restoration and Thumb mode handling require native consumer verification.",
+        "Machine dossier SHA256 is copied from packet, not independently checked",
+        "Whole-file coverage, compiled/runtime dependency closure, license notices and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read all pinned source lines and inactive branches",
+        "Trace exact caller/consumer and compiler preprocessing",
+        "Verify machine dossier bytes/SHA256 and MPL 2.0 notices",
+        "Independent reviewer must sign exact blob, not endorse analyst automatically"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 19,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/arm/decoder-inlines.h",
+        "git_blob_sha1": "11d41d520f1c9661eb56352f1a0b7a651fd99577",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/arm/decoder-inlines.h"
+      },
+      "machine_dossier_sha256_unverified": "05d586e5055c29f4b983f57b1e4b16a1ed4f13c1ad3279c14abfaecb77e7f419",
+      "line_anchors": [
+        {
+          "line": 16,
+          "text": "#define LOAD_CYCLES    \\"
+        },
+        {
+          "line": 20,
+          "text": "#define STORE_CYCLES              \\"
+        },
+        {
+          "line": 25,
+          "text": "static inline bool ARMInstructionIsBranch(enum ARMMnemonic mnemonic) {"
+        },
+        {
+          "line": 29,
+          "text": "case ARM_MN_BX:"
+        }
+      ],
+      "responsibilities": "ARM decoder cycle-field macros and branch classification recognize B/BL/BX, with BLX explicitly marked TODO.",
+      "dependency_edges": [
+        "src/arm/decoder-arm.c",
+        "src/arm/decoder-thumb.c"
+      ],
+      "unresolved": [
+        "BLX classification and cycle accuracy need decoder and timing investigation.",
+        "Machine dossier SHA256 is copied from packet, not independently checked",
+        "Whole-file coverage, compiled/runtime dependency closure, license notices and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read all pinned source lines and inactive branches",
+        "Trace exact caller/consumer and compiler preprocessing",
+        "Verify machine dossier bytes/SHA256 and MPL 2.0 notices",
+        "Independent reviewer must sign exact blob, not endorse analyst automatically"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 20,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/arm/debugger/memory-debugger.h",
+        "git_blob_sha1": "1ec675992e79d37321c358ffd0ff1c691118993d",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/arm/debugger/memory-debugger.h"
+      },
+      "machine_dossier_sha256_unverified": "413ba90e50188b2356db3617be4022a75bbe3f22a5e1fbb1343035cf13cd6182",
+      "line_anchors": [
+        {
+          "line": 7,
+          "text": "#define MEMORY_DEBUGGER_H"
+        },
+        {
+          "line": 13,
+          "text": "struct ARMDebugger;"
+        },
+        {
+          "line": 15,
+          "text": "void ARMDebuggerInstallMemoryShim(struct ARMDebugger* debugger);"
+        },
+        {
+          "line": 16,
+          "text": "void ARMDebuggerRemoveMemoryShim(struct ARMDebugger* debugger);"
+        }
+      ],
+      "responsibilities": "ARM memory-debugger shim install/remove declarations define interception lifecycle but not callback restoration.",
+      "dependency_edges": [
+        "src/arm/debugger/memory-debugger.c",
+        "include/mgba/internal/arm/debugger/debugger.h"
+      ],
+      "unresolved": [
+        "No evidence of complete callback restoration, watchpoint correctness or Flash interaction.",
+        "Machine dossier SHA256 is copied from packet, not independently checked",
+        "Whole-file coverage, compiled/runtime dependency closure, license notices and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read all pinned source lines and inactive branches",
+        "Trace exact caller/consumer and compiler preprocessing",
+        "Verify machine dossier bytes/SHA256 and MPL 2.0 notices",
+        "Independent reviewer must sign exact blob, not endorse analyst automatically"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 26,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/arm/debugger/cli-debugger.h",
+        "git_blob_sha1": "70f9b188572137479cb3e9bf26ab12f40707e1f9",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/arm/debugger/cli-debugger.h"
+      },
+      "machine_dossier_sha256_unverified": "ebcf0db23dc12aa3f58016584e81ddea8adcc3701c1f52a51759fcd8909bbdcf",
+      "line_anchors": [
+        {
+          "line": 7,
+          "text": "#define ARM_CLI_DEBUGGER_H"
+        },
+        {
+          "line": 11,
+          "text": "CXX_GUARD_START"
+        },
+        {
+          "line": 13,
+          "text": "struct CLIDebuggerSystem;"
+        },
+        {
+          "line": 14,
+          "text": "void ARMCLIDebuggerCreate(struct CLIDebuggerSystem* debugger);"
+        }
+      ],
+      "responsibilities": "ARM CLI debugger factory declaration connects CLI debugging to ARM platform without implementing commands.",
+      "dependency_edges": [
+        "src/arm/debugger/cli-debugger.c",
+        "src/arm/debugger/debugger.c"
+      ],
+      "unresolved": [
+        "Command dispatch, ownership and native CLI behaviour not established.",
+        "Machine dossier SHA256 is copied from packet, not independently checked",
+        "Whole-file coverage, compiled/runtime dependency closure, license notices and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read all pinned source lines and inactive branches",
+        "Trace exact caller/consumer and compiler preprocessing",
+        "Verify machine dossier bytes/SHA256 and MPL 2.0 notices",
+        "Independent reviewer must sign exact blob, not endorse analyst automatically"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 28,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/arm/emitter-inlines.h",
+        "git_blob_sha1": "38bab70bddf08f6160461ab73a1649a2bdbd256f",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/arm/emitter-inlines.h"
+      },
+      "machine_dossier_sha256_unverified": "8f51aeccbdc79e89725255663e8467bdc9f7f2441637edb069b222efce8cd441",
+      "line_anchors": [
+        {
+          "line": 9,
+          "text": "#define DO_4(DIRECTIVE) \\"
+        },
+        {
+          "line": 15,
+          "text": "#define DO_8(DIRECTIVE) \\"
+        },
+        {
+          "line": 25,
+          "text": "#define DO_256(DIRECTIVE) \\"
+        },
+        {
+          "line": 28,
+          "text": "#define DO_INTERLACE(LEFT, RIGHT) \\"
+        }
+      ],
+      "responsibilities": "Preprocessor repetition and interlacing macros expand original ARM/Thumb opcode dispatch declarations.",
+      "dependency_edges": [
+        "include/mgba/internal/arm/emitter-arm.h",
+        "include/mgba/internal/arm/emitter-thumb.h"
+      ],
+      "unresolved": [
+        "No compiled 256-fold macro expansion or full dispatch table parity proof.",
+        "Machine dossier SHA256 is copied from packet, not independently checked",
+        "Whole-file coverage, compiled/runtime dependency closure, license notices and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read all pinned source lines and inactive branches",
+        "Trace exact caller/consumer and compiler preprocessing",
+        "Verify machine dossier bytes/SHA256 and MPL 2.0 notices",
+        "Independent reviewer must sign exact blob, not endorse analyst automatically"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 30,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/arm/isa-arm.h",
+        "git_blob_sha1": "fb347cd89f97482e0dbbf5fafed129f1679952df",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/arm/isa-arm.h"
+      },
+      "machine_dossier_sha256_unverified": "ff5d84cb5f4abb74c841d8050e3cea786be27d99c8acc50ea00f3e9fdff3b24e",
+      "line_anchors": [
+        {
+          "line": 13,
+          "text": "#define ARM_PREFETCH_CYCLES (1 + cpu->memory.activeSeqCycles32)"
+        },
+        {
+          "line": 15,
+          "text": "struct ARMCore;"
+        },
+        {
+          "line": 17,
+          "text": "typedef void (*ARMInstruction)(struct ARMCore*, uint32_t opcode);"
+        },
+        {
+          "line": 18,
+          "text": "extern const ARMInstruction _armTable[0x1000];"
+        }
+      ],
+      "responsibilities": "ARM interpreter ABI declares a 4096-entry dispatch table and active sequential memory prefetch cycle formula.",
+      "dependency_edges": [
+        "src/arm/arm.c",
+        "src/arm/isa-arm.c"
+      ],
+      "unresolved": [
+        "Table population, illegal opcodes and exact runtime timing not verified here.",
+        "Machine dossier SHA256 is copied from packet, not independently checked",
+        "Whole-file coverage, compiled/runtime dependency closure, license notices and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read all pinned source lines and inactive branches",
+        "Trace exact caller/consumer and compiler preprocessing",
+        "Verify machine dossier bytes/SHA256 and MPL 2.0 notices",
+        "Independent reviewer must sign exact blob, not endorse analyst automatically"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 31,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "include/mgba/internal/arm/isa-thumb.h",
+        "git_blob_sha1": "69839d47a0f67d6b9c10eb635da388d0cf88cfb9",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/include/mgba/internal/arm/isa-thumb.h"
+      },
+      "machine_dossier_sha256_unverified": "3c8da4a3778cfdf0a1a3897e28db762f1bcb031a217e5aa30b9ffbed8a9cc4c6",
+      "line_anchors": [
+        {
+          "line": 7,
+          "text": "#define ISA_THUMB_H"
+        },
+        {
+          "line": 13,
+          "text": "struct ARMCore;"
+        },
+        {
+          "line": 15,
+          "text": "typedef void (*ThumbInstruction)(struct ARMCore*, unsigned opcode);"
+        },
+        {
+          "line": 16,
+          "text": "extern const ThumbInstruction _thumbTable[0x400];"
+        }
+      ],
+      "responsibilities": "Thumb interpreter ABI declares a 1024-entry high-opcode dispatch table.",
+      "dependency_edges": [
+        "src/arm/arm.c",
+        "src/arm/isa-thumb.c"
+      ],
+      "unresolved": [
+        "No exhaustive 65536-opcode runtime equivalence or mode-switch proof.",
+        "Machine dossier SHA256 is copied from packet, not independently checked",
+        "Whole-file coverage, compiled/runtime dependency closure, license notices and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read all pinned source lines and inactive branches",
+        "Trace exact caller/consumer and compiler preprocessing",
+        "Verify machine dossier bytes/SHA256 and MPL 2.0 notices",
+        "Independent reviewer must sign exact blob, not endorse analyst automatically"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 64,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/arm/arm.c",
+        "git_blob_sha1": "0b92d7f55f1fb853d4b1b9c9163ee086126066e2",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/arm/arm.c"
+      },
+      "machine_dossier_sha256_unverified": "37c2acf57fc04d0327426d88d01b3353f46868be77fa73f3fa633fcc0a267934",
+      "line_anchors": [
+        {
+          "line": 12,
+          "text": "void ARMSetPrivilegeMode(struct ARMCore* cpu, enum PrivilegeMode mode) {"
+        },
+        {
+          "line": 47,
+          "text": "void ARMInit(struct ARMCore* cpu) {"
+        },
+        {
+          "line": 90,
+          "text": "void ARMReset(struct ARMCore* cpu) {"
+        },
+        {
+          "line": 124,
+          "text": "void ARMRaiseIRQ(struct ARMCore* cpu) {"
+        },
+        {
+          "line": 243,
+          "text": "void ARMRunLoop(struct ARMCore* cpu) {"
+        },
+        {
+          "line": 256,
+          "text": "void ARMRunFake(struct ARMCore* cpu, uint32_t opcode) {"
+        }
+      ],
+      "responsibilities": "Original ARM CPU core implements banked register switching, reset, IRQ/SWI/undefined entry, ARM/Thumb dispatch and event scheduling.",
+      "dependency_edges": [
+        "include/mgba/internal/arm/arm.h",
+        "src/gba/gba.c",
+        "src/arm/isa-arm.c",
+        "src/arm/isa-thumb.c"
+      ],
+      "unresolved": [
+        "Synthetic direct entry differs from stock gameplay; exception, IRQ and mapper/prefetch transitions not fully proven.",
+        "Machine dossier SHA256 is copied from packet, not independently checked",
+        "Whole-file coverage, compiled/runtime dependency closure, license notices and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read all pinned source lines and inactive branches",
+        "Trace exact caller/consumer and compiler preprocessing",
+        "Verify machine dossier bytes/SHA256 and MPL 2.0 notices",
+        "Independent reviewer must sign exact blob, not endorse analyst automatically"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    }
+  ]
+}

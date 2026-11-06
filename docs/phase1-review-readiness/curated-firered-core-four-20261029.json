@@ -1,0 +1,251 @@
+{
+  "schema": "xgba.phase1.curated_p0_analyst_batch.v2",
+  "date": "2026-10-29",
+  "phase": "Phase 1 only",
+  "origin": "analyst source evidence, not independent review",
+  "source_blobs_inspected": 4,
+  "prior_registry_only": 4,
+  "p0_independent_approved": 0,
+  "total_independent_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "records": [
+    {
+      "ordinal": 6,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "src/script.c",
+        "git_blob_sha1": "d0433bdda062b138e53d1a1d3184b4566ad7d9dc",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/script.c"
+      },
+      "source_anchors": [
+        "bool8 RunScriptCommand(struct ScriptContext *ctx)",
+        "cmdFunc = &ctx->cmdTable[cmdCode];",
+        "if (ctx->stackDepth + 1 >= (int)ARRAY_COUNT(ctx->stack))",
+        "ScriptPush(ctx, ctx->scriptPtr);",
+        "u32 ScriptReadWord(struct ScriptContext *ctx)"
+      ],
+      "line_anchors": [
+        {
+          "line": 82,
+          "text": "bool8 RunScriptCommand(struct ScriptContext *ctx)"
+        },
+        {
+          "line": 126,
+          "text": "cmdFunc = &ctx->cmdTable[cmdCode];"
+        },
+        {
+          "line": 144,
+          "text": "if (ctx->stackDepth + 1 >= (int)ARRAY_COUNT(ctx->stack))"
+        },
+        {
+          "line": 172,
+          "text": "ScriptPush(ctx, ctx->scriptPtr);"
+        },
+        {
+          "line": 188,
+          "text": "u32 ScriptReadWord(struct ScriptContext *ctx)"
+        }
+      ],
+      "responsibilities": "Native script bytecode/native dispatch; dispatch table bound checked after opcode byte fetch, script call stack push failure result ignored by ScriptCall, little-endian operand reads.",
+      "dependency_edges": [
+        "include/script.h ScriptContext",
+        "data/script_cmd_table.inc opcode mapping",
+        "src/scrcmd.c opcode functions",
+        "gNullScriptPtr HALT sentinel"
+      ],
+      "unresolved": [
+        "No compiled malformed opcode or stack overflow experiment",
+        "No whole-file or script-pointer lifetime proof"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "ordinal": 9,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "src/load_save.c",
+        "git_blob_sha1": "8b723dd044c6024b3671bb890b25b56a53f99ec5",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/load_save.c"
+      },
+      "source_anchors": [
+        "#define SAVEBLOCK_MOVE_RANGE    128",
+        "if (!IdentifyFlash())",
+        "InitFlashTimer();",
+        "offset = (Random()) & ((SAVEBLOCK_MOVE_RANGE - 1) & ~3);",
+        "QL_AddASLROffset(oldSave);",
+        "ApplyNewEncryptionKeyToAllEncryptedData(encryptionKey);"
+      ],
+      "line_anchors": [
+        {
+          "line": 15,
+          "text": "#define SAVEBLOCK_MOVE_RANGE    128"
+        },
+        {
+          "line": 48,
+          "text": "if (!IdentifyFlash())"
+        },
+        {
+          "line": 51,
+          "text": "InitFlashTimer();"
+        },
+        {
+          "line": 75,
+          "text": "offset = (Random()) & ((SAVEBLOCK_MOVE_RANGE - 1) & ~3);"
+        },
+        {
+          "line": 82,
+          "text": "QL_AddASLROffset(oldSave);"
+        },
+        {
+          "line": 127,
+          "text": "ApplyNewEncryptionKeyToAllEncryptedData(encryptionKey);"
+        }
+      ],
+      "responsibilities": "Original Flash probe initializes timer on identification success; save-block pointers move by aligned random 0..124-byte offset and quest log relocation is notified; heap-copy relocation rotates encryption key.",
+      "dependency_edges": [
+        "src/save.c sector transactions",
+        "src/agb_flash.c IdentifyFlash",
+        "src/quest_log.c QL_AddASLROffset",
+        "save block pointer declarations"
+      ],
+      "unresolved": [
+        "No original gameplay relocation trace",
+        "No complete encrypted-field or physical Flash review"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "ordinal": 10,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "include/config.h",
+        "git_blob_sha1": "db131b2717ab739e62e41c5054a798f045c0631d",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/include/config.h"
+      },
+      "source_anchors": [
+        "#if REVISION >= 0xA",
+        "#define NDEBUG",
+        "#if defined(FIRERED)",
+        "#if MODERN",
+        "#define BUGFIX",
+        "#define UBFIX"
+      ],
+      "line_anchors": [
+        {
+          "line": 13,
+          "text": "#if REVISION >= 0xA"
+        },
+        {
+          "line": 14,
+          "text": "#define NDEBUG"
+        },
+        {
+          "line": 44,
+          "text": "#if defined(FIRERED)"
+        },
+        {
+          "line": 67,
+          "text": "#if MODERN"
+        },
+        {
+          "line": 69,
+          "text": "#define BUGFIX"
+        },
+        {
+          "line": 72,
+          "text": "#define UBFIX"
+        }
+      ],
+      "responsibilities": "Compile-time revision controls NDEBUG; game/version and language choose ABI behavior; MODERN forces BUGFIX and UBFIX, which changes source-selected semantics rather than proving compatibility.",
+      "dependency_edges": [
+        "config.mk defaults",
+        "Makefile -DREVISION -DMODERN",
+        "src/fieldmap.c UBFIX guarded code"
+      ],
+      "unresolved": [
+        "No compiler preprocessor output for all revisions",
+        "No proof that modern fixes match retail behavior"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "ordinal": 14,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/script_cmd_table.inc",
+        "git_blob_sha1": "c5d112d9ea66d258d5a372dda89b9ad96ed2b1e1",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/script_cmd_table.inc"
+      },
+      "source_anchors": [
+        "gScriptCmdTable::",
+        ".4byte ScrCmd_call                           @ 0x04",
+        ".4byte ScrCmd_goto                           @ 0x05",
+        ".4byte ScrCmd_special                        @ 0x25",
+        ".4byte ScrCmd_setmetatile                    @ 0xa2",
+        "gScriptCmdTableEnd::"
+      ],
+      "line_anchors": [
+        {
+          "line": 3,
+          "text": "gScriptCmdTable::"
+        },
+        {
+          "line": 8,
+          "text": ".4byte ScrCmd_call                           @ 0x04"
+        },
+        {
+          "line": 9,
+          "text": ".4byte ScrCmd_goto                           @ 0x05"
+        },
+        {
+          "line": 41,
+          "text": ".4byte ScrCmd_special                        @ 0x25"
+        },
+        {
+          "line": 166,
+          "text": ".4byte ScrCmd_setmetatile                    @ 0xa2"
+        },
+        {
+          "line": 218,
+          "text": "gScriptCmdTableEnd::"
+        }
+      ],
+      "responsibilities": "Original assembler opcode table has contiguous 0x00..0xD4 ScrCmd dispatch entries plus one trailing nop sentinel; ABI depends on exact ordering and src/script.c table-end bounds.",
+      "dependency_edges": [
+        "src/script.c RunScriptCommand",
+        "src/scrcmd.c ScrCmd_ implementations",
+        "Poryscript emitter opcode mapping",
+        "GNU ARM assembler/linker"
+      ],
+      "unresolved": [
+        "No original agbcc ROM runtime dispatch for all opcodes",
+        "No independent full command semantics or script source-to-opcode proof"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    }
+  ]
+}

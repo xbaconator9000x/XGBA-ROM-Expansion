@@ -1,0 +1,16 @@
+name: Phase 1 remaining P0 FireRed Poryscript mGBA cross-boundary source dossiers
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  crossboundary-partial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify eight pinned cross-boundary source files and 112 negative controls
+        run: python3 tools/phase1_remaining_p0_eight_crossboundary_verify.py

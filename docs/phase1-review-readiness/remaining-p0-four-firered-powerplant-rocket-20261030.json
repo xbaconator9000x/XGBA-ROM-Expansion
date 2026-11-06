@@ -1,0 +1,601 @@
+{
+  "schema": "xgba.phase1.third_packet_firered_200_203_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0200-0299.json",
+  "source_packet_blob_sha1": "c998c2ea8c887968e586b1792c5207ecb5286839",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0200-0299-20261030.json",
+  "new_partial_indices": [
+    200,
+    201,
+    202,
+    203
+  ],
+  "other_p0_partial_total": 187,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 216,
+  "other_p0_without_partial": 122,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Four pinned authored FireRed source-only partials and four separate original map.json static object wiring checks. No compiled/stock gameplay, save, physical Flash, independent licensing or whole-file approval.",
+  "records": [
+    {
+      "packet_index": 200,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/PowerPlant/scripts.inc",
+        "git_blob_sha1": "ec48a37782877dbd07507bbe58964643c5444d06",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/PowerPlant/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "1d85c59fc873c14749ebf16c2cb3162d780f6b5cc6b3c71c92404a7d476387fe",
+      "whole_source_sha256_from_packet": "7558c5214a97c767aa1840d14fa15521e7f0993657ee19a3bb088b4202f6f192",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "PowerPlant_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, PowerPlant_OnResume"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, PowerPlant_OnTransition"
+        },
+        {
+          "line": 7,
+          "text": "\tcall_if_set FLAG_SYS_SPECIAL_WILD_BATTLE, PowerPlant_EventScript_TryRemoveStaticMon"
+        },
+        {
+          "line": 11,
+          "text": "\tspecialvar VAR_RESULT, GetBattleOutcome"
+        },
+        {
+          "line": 12,
+          "text": "\tgoto_if_ne VAR_RESULT, B_OUTCOME_CAUGHT, EventScript_Return"
+        },
+        {
+          "line": 17,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_POWER_PLANT"
+        },
+        {
+          "line": 18,
+          "text": "\tcall_if_unset FLAG_FOUGHT_ZAPDOS, PowerPlant_EventScript_ShowZapdos"
+        },
+        {
+          "line": 40,
+          "text": "\tsetwildbattle SPECIES_ZAPDOS, 50"
+        },
+        {
+          "line": 49,
+          "text": "\tsetflag FLAG_SYS_SPECIAL_WILD_BATTLE"
+        },
+        {
+          "line": 50,
+          "text": "\tspecial StartLegendaryBattle"
+        },
+        {
+          "line": 53,
+          "text": "\tspecialvar VAR_RESULT, GetBattleOutcome"
+        },
+        {
+          "line": 57,
+          "text": "\tsetflag FLAG_FOUGHT_ZAPDOS"
+        },
+        {
+          "line": 75,
+          "text": "\tsetwildbattle SPECIES_ELECTRODE, 34"
+        },
+        {
+          "line": 80,
+          "text": "\tsetflag FLAG_SYS_SPECIAL_WILD_BATTLE"
+        },
+        {
+          "line": 81,
+          "text": "\tdowildbattle"
+        },
+        {
+          "line": 92,
+          "text": "PowerPlant_EventScript_FoughtElectrode1::"
+        },
+        {
+          "line": 118,
+          "text": "PowerPlant_EventScript_FoughtElectrode2::"
+        }
+      ],
+      "required_source_tokens": [
+        "FLAG_SYS_SPECIAL_WILD_BATTLE",
+        "B_OUTCOME_CAUGHT",
+        "SPECIES_ZAPDOS",
+        "FLAG_FOUGHT_ZAPDOS",
+        "SPECIES_ELECTRODE",
+        "EventScript_RemoveStaticMon"
+      ],
+      "source_observations": "Power Plant on-resume catches-only object removal, transition visibility flags, Zapdos outcome branches, and two Electrode battle paths. This is authored source; outcome behavior and save persistence not executed.",
+      "dependency_edges": [
+        "GetBattleOutcome/StartLegendaryBattle native special dispatch",
+        "FLAG_SYS_SPECIAL_WILD_BATTLE resume and map-object state",
+        "FLAG_FOUGHT_ZAPDOS and Electrode flag save consumers",
+        "PowerPlant map.json object script references"
+      ],
+      "map_json_static_wiring": {
+        "path": "data/maps/PowerPlant/map.json",
+        "git_blob_sha1": "38950b3a4980822bd4ea5cb6105e8f7b59d87926",
+        "object_event_count": 8,
+        "required_event_scripts": [
+          "PowerPlant_EventScript_Zapdos",
+          "PowerPlant_EventScript_Electrode1",
+          "PowerPlant_EventScript_Electrode2"
+        ]
+      },
+      "unresolved": [
+        "Original event_scripts.s include and map.json references are static; generated map table, assembler/linker symbol and ROM execution not verified",
+        "Native script opcodes, trainer state, map tile redraw and save consumers require full dependency closure",
+        "Original FireRed authored asset/derivative licensing and external review unresolved",
+        "No natural stock gameplay, native .sav restart or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect full exact pinned scripts.inc including all branches",
+        "Rehash original compressed machine dossier and verify source SHA256",
+        "Resolve map.json/generated table, assembler/linker and native event consumer",
+        "Reconcile original asset and derivative licensing independently",
+        "Obtain genuinely distinct external reviewer full-file receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 201,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/RockTunnel_1F/scripts.inc",
+        "git_blob_sha1": "6ab2e450609e604eeac20d8f3851612ffb1b9a6e",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/RockTunnel_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "7a38433cb4d59ff77d48a1723ba620b77fd87ce59d8b1adb22a36f946980c147",
+      "whole_source_sha256_from_packet": "280e115dda1b2bd1bdefed4844fc725209425d4f6610a270c65186eb373bfbd2",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "RockTunnel_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, RockTunnel_1F_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "RockTunnel_1F_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_ROCK_TUNNEL_1F"
+        },
+        {
+          "line": 9,
+          "text": "RockTunnel_1F_EventScript_RouteSign::"
+        },
+        {
+          "line": 10,
+          "text": "\tmsgbox RockTunnel_1F_Text_RouteSign, MSGBOX_SIGN"
+        },
+        {
+          "line": 13,
+          "text": "RockTunnel_1F_EventScript_Lenny::"
+        },
+        {
+          "line": 14,
+          "text": "\ttrainerbattle_single TRAINER_HIKER_LENNY, RockTunnel_1F_Text_LennyIntro, RockTunnel_1F_Text_LennyDefeat"
+        },
+        {
+          "line": 18,
+          "text": "RockTunnel_1F_EventScript_Oliver::"
+        },
+        {
+          "line": 19,
+          "text": "\ttrainerbattle_single TRAINER_HIKER_OLIVER, RockTunnel_1F_Text_OliverIntro, RockTunnel_1F_Text_OliverDefeat"
+        },
+        {
+          "line": 23,
+          "text": "RockTunnel_1F_EventScript_Lucas::"
+        },
+        {
+          "line": 24,
+          "text": "\ttrainerbattle_single TRAINER_HIKER_LUCAS, RockTunnel_1F_Text_LucasIntro, RockTunnel_1F_Text_LucasDefeat"
+        },
+        {
+          "line": 28,
+          "text": "RockTunnel_1F_EventScript_Ashton::"
+        },
+        {
+          "line": 29,
+          "text": "\ttrainerbattle_single TRAINER_POKEMANIAC_ASHTON, RockTunnel_1F_Text_AshtonIntro, RockTunnel_1F_Text_AshtonDefeat"
+        },
+        {
+          "line": 33,
+          "text": "RockTunnel_1F_EventScript_Leah::"
+        },
+        {
+          "line": 34,
+          "text": "\ttrainerbattle_single TRAINER_PICNICKER_LEAH, RockTunnel_1F_Text_LeahIntro, RockTunnel_1F_Text_LeahDefeat"
+        },
+        {
+          "line": 38,
+          "text": "RockTunnel_1F_EventScript_Ariana::"
+        },
+        {
+          "line": 39,
+          "text": "\ttrainerbattle_single TRAINER_PICNICKER_ARIANA, RockTunnel_1F_Text_ArianaIntro, RockTunnel_1F_Text_ArianaDefeat"
+        },
+        {
+          "line": 43,
+          "text": "RockTunnel_1F_EventScript_Dana::"
+        },
+        {
+          "line": 44,
+          "text": "\ttrainerbattle_single TRAINER_PICNICKER_DANA, RockTunnel_1F_Text_DanaIntro, RockTunnel_1F_Text_DanaDefeat"
+        }
+      ],
+      "required_source_tokens": [
+        "FLAG_WORLD_MAP_ROCK_TUNNEL_1F",
+        "TRAINER_HIKER_LENNY",
+        "TRAINER_HIKER_OLIVER",
+        "TRAINER_POKEMANIAC_ASHTON",
+        "TRAINER_PICNICKER_DANA"
+      ],
+      "source_observations": "Rock Tunnel 1F transition world-map flag and seven trainerbattle_single event labels, with map.json object references; no compiled battle dispatch or gameplay witness.",
+      "dependency_edges": [
+        "MAP_SCRIPT_ON_TRANSITION world-map flag storage",
+        "trainerbattle_single macro and native trainer battle dispatcher",
+        "map.json trainer object scripts",
+        "trainer flags, questlog and save readers"
+      ],
+      "map_json_static_wiring": {
+        "path": "data/maps/RockTunnel_1F/map.json",
+        "git_blob_sha1": "02fa844fb6799bf2fb84afc1ecdad944918e64e3",
+        "object_event_count": 10,
+        "required_event_scripts": [
+          "RockTunnel_1F_EventScript_Dana",
+          "RockTunnel_1F_EventScript_Lenny",
+          "RockTunnel_1F_EventScript_Ashton"
+        ]
+      },
+      "unresolved": [
+        "Original event_scripts.s include and map.json references are static; generated map table, assembler/linker symbol and ROM execution not verified",
+        "Native script opcodes, trainer state, map tile redraw and save consumers require full dependency closure",
+        "Original FireRed authored asset/derivative licensing and external review unresolved",
+        "No natural stock gameplay, native .sav restart or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect full exact pinned scripts.inc including all branches",
+        "Rehash original compressed machine dossier and verify source SHA256",
+        "Resolve map.json/generated table, assembler/linker and native event consumer",
+        "Reconcile original asset and derivative licensing independently",
+        "Obtain genuinely distinct external reviewer full-file receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 202,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/RocketHideout_B1F/scripts.inc",
+        "git_blob_sha1": "6d9a2df9dd131e942c08ca1620e7ef4fa213a596",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/RocketHideout_B1F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "38e30b5df946ee1740a61e9d365c948c886806a1347c72171a547f1b20a822d1",
+      "whole_source_sha256_from_packet": "41538cfb6491283391b4cd1cd0725a7182cbe944f4b7099a192b392cd2720f8b",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "RocketHideout_B1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, RocketHideout_B1F_OnLoad"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, RocketHideout_B1F_OnTransition"
+        },
+        {
+          "line": 7,
+          "text": "\tcall_if_not_defeated TRAINER_TEAM_ROCKET_GRUNT_12 RocketHideout_B1F_EventScript_SetBarrier"
+        },
+        {
+          "line": 11,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_ROCKET_HIDEOUT_B1F"
+        },
+        {
+          "line": 14,
+          "text": "RocketHideout_B1F_EventScript_Grunt1::"
+        },
+        {
+          "line": 15,
+          "text": "\ttrainerbattle_single TRAINER_TEAM_ROCKET_GRUNT_8, RocketHideout_B1F_Text_Grunt1Intro, RocketHideout_B1F_Text_Grunt1Defeat"
+        },
+        {
+          "line": 34,
+          "text": "RocketHideout_B1F_EventScript_Grunt5::"
+        },
+        {
+          "line": 35,
+          "text": "\ttrainerbattle_single TRAINER_TEAM_ROCKET_GRUNT_12, RocketHideout_B1F_Text_Grunt5Intro, RocketHideout_B1F_Text_Grunt5Defeat, RocketHideout_B1F_EventScript_DefeatedGrunt5"
+        },
+        {
+          "line": 39,
+          "text": "RocketHideout_B1F_EventScript_DefeatedGrunt5::"
+        },
+        {
+          "line": 40,
+          "text": "\tcall RocketHideout_B1F_EventScript_RemoveBarrier"
+        },
+        {
+          "line": 42,
+          "text": "\tspecial DrawWholeMapView"
+        },
+        {
+          "line": 47,
+          "text": "RocketHideout_B1F_EventScript_SetBarrier::"
+        },
+        {
+          "line": 48,
+          "text": "\tsetmetatile 20, 19, METATILE_SilphCo_HideoutBarrier_TopLeft_Floor, 1"
+        },
+        {
+          "line": 56,
+          "text": "RocketHideout_B1F_EventScript_RemoveBarrier::"
+        },
+        {
+          "line": 57,
+          "text": "\tsetmetatile 20, 19, METATILE_SilphCo_HideoutFloor_ShadeFull, 0"
+        },
+        {
+          "line": 63,
+          "text": "\treturn"
+        }
+      ],
+      "required_source_tokens": [
+        "TRAINER_TEAM_ROCKET_GRUNT_12",
+        "RocketHideout_B1F_EventScript_SetBarrier",
+        "RocketHideout_B1F_EventScript_RemoveBarrier",
+        "setmetatile",
+        "DrawWholeMapView"
+      ],
+      "source_observations": "Rocket Hideout B1F on-load barrier uses grunt-12 defeated flag, six setmetatile operations, and defeated callback removes barrier then redraws map; native rendering/collision and persistence untested.",
+      "dependency_edges": [
+        "call_if_not_defeated TRAINER_TEAM_ROCKET_GRUNT_12",
+        "setmetatile map-grid collision/layer consumers",
+        "DrawWholeMapView redraw native special",
+        "map.json grunt event object routing"
+      ],
+      "map_json_static_wiring": {
+        "path": "data/maps/RocketHideout_B1F/map.json",
+        "git_blob_sha1": "86b9070542336505362e9d8aa82b0f4181b35377",
+        "object_event_count": 7,
+        "required_event_scripts": [
+          "RocketHideout_B1F_EventScript_Grunt5",
+          "RocketHideout_B1F_EventScript_Grunt1"
+        ]
+      },
+      "unresolved": [
+        "Original event_scripts.s include and map.json references are static; generated map table, assembler/linker symbol and ROM execution not verified",
+        "Native script opcodes, trainer state, map tile redraw and save consumers require full dependency closure",
+        "Original FireRed authored asset/derivative licensing and external review unresolved",
+        "No natural stock gameplay, native .sav restart or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect full exact pinned scripts.inc including all branches",
+        "Rehash original compressed machine dossier and verify source SHA256",
+        "Resolve map.json/generated table, assembler/linker and native event consumer",
+        "Reconcile original asset and derivative licensing independently",
+        "Obtain genuinely distinct external reviewer full-file receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 203,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/RocketHideout_B4F/scripts.inc",
+        "git_blob_sha1": "54cda4f4825029562ac09a0f318102590f6ce85b",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/RocketHideout_B4F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "7ec21be65d867391c58dd25de748edb456d2b67aa16b2298bad27f0b55d72345",
+      "whole_source_sha256_from_packet": "b9cf991e65b8699b113904604fae31d20e9b9b3459c606b2968b981ee9d282a2",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": ".equ NUM_DOOR_GRUNTS_DEFEATED, VAR_TEMP_1"
+        },
+        {
+          "line": 3,
+          "text": "RocketHideout_B4F_MapScripts::"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, RocketHideout_B4F_OnLoad"
+        },
+        {
+          "line": 7,
+          "text": "RocketHideout_B4F_OnLoad::"
+        },
+        {
+          "line": 8,
+          "text": "\tsetvar NUM_DOOR_GRUNTS_DEFEATED, 0"
+        },
+        {
+          "line": 9,
+          "text": "\tcall_if_defeated TRAINER_TEAM_ROCKET_GRUNT_16, RocketHideout_B4F_EventScript_CountGruntDefeated"
+        },
+        {
+          "line": 10,
+          "text": "\tcall_if_defeated TRAINER_TEAM_ROCKET_GRUNT_17, RocketHideout_B4F_EventScript_CountGruntDefeated"
+        },
+        {
+          "line": 11,
+          "text": "\tcall_if_ne NUM_DOOR_GRUNTS_DEFEATED, 2, RocketHideout_B4F_EventScript_SetBarrier"
+        },
+        {
+          "line": 18,
+          "text": "RocketHideout_B4F_EventScript_Giovanni::"
+        },
+        {
+          "line": 26,
+          "text": "\ttrainerbattle_no_intro TRAINER_BOSS_GIOVANNI, RocketHideout_B4F_Text_GiovanniDefeat"
+        },
+        {
+          "line": 31,
+          "text": "\taddobject LOCALID_SILPH_SCOPE"
+        },
+        {
+          "line": 32,
+          "text": "\tclearflag FLAG_HIDE_SILPH_SCOPE"
+        },
+        {
+          "line": 33,
+          "text": "\tsetflag FLAG_HIDE_CELADON_ROCKETS"
+        },
+        {
+          "line": 39,
+          "text": "RocketHideout_B4F_EventScript_SilphScope::"
+        },
+        {
+          "line": 43,
+          "text": "\tgiveitem ITEM_SILPH_SCOPE"
+        },
+        {
+          "line": 44,
+          "text": "\tgoto_if_eq VAR_RESULT, FALSE, EventScript_BagIsFull"
+        },
+        {
+          "line": 54,
+          "text": "RocketHideout_B4F_EventScript_DefeatedGrunt1::"
+        },
+        {
+          "line": 56,
+          "text": "\taddobject LOCALID_LIFT_KEY"
+        },
+        {
+          "line": 64,
+          "text": "\tsetflag FLAG_CAN_USE_ROCKET_HIDEOUT_LIFT"
+        },
+        {
+          "line": 65,
+          "text": "\tremoveobject LOCALID_LIFT_KEY"
+        },
+        {
+          "line": 66,
+          "text": "\tgiveitem ITEM_LIFT_KEY"
+        },
+        {
+          "line": 67,
+          "text": "\tgoto_if_eq VAR_RESULT, FALSE, EventScript_BagIsFull"
+        },
+        {
+          "line": 80,
+          "text": "\tcall_if_eq NUM_DOOR_GRUNTS_DEFEATED, 2, RocketHideout_B4F_EventScript_RemoveBarrier"
+        },
+        {
+          "line": 99,
+          "text": "RocketHideout_B4F_EventScript_DrawMapForBarrierRemoval::"
+        },
+        {
+          "line": 105,
+          "text": "RocketHideout_B4F_EventScript_SetBarrier::"
+        },
+        {
+          "line": 114,
+          "text": "RocketHideout_B4F_EventScript_RemoveBarrier::"
+        }
+      ],
+      "required_source_tokens": [
+        "NUM_DOOR_GRUNTS_DEFEATED",
+        "TRAINER_BOSS_GIOVANNI",
+        "ITEM_SILPH_SCOPE",
+        "FLAG_CAN_USE_ROCKET_HIDEOUT_LIFT",
+        "ITEM_LIFT_KEY",
+        "DrawWholeMapView"
+      ],
+      "source_observations": "Rocket Hideout B4F counts two defeated door grunts, updates metatile barrier, runs Giovanni/Silph Scope scene and lift-key pickup. Source orders lift-use flag before giveitem and bag-full branch; conditional semantics require native inventory/flag review, not a confirmed bug.",
+      "dependency_edges": [
+        "trainer defeat flags to temporary counter and barrier",
+        "setmetatile and DrawWholeMapView redraw/collision",
+        "Silph Scope object, giveitem and bag-full flow",
+        "lift-use flag writer before item acquisition, native lift reader and save persistence"
+      ],
+      "map_json_static_wiring": {
+        "path": "data/maps/RocketHideout_B4F/map.json",
+        "git_blob_sha1": "5c2631279e61f3049906dab71a92c51581d0a9f4",
+        "object_event_count": 9,
+        "required_event_scripts": [
+          "RocketHideout_B4F_EventScript_Giovanni",
+          "RocketHideout_B4F_EventScript_LiftKey",
+          "RocketHideout_B4F_EventScript_Grunt2",
+          "RocketHideout_B4F_EventScript_Grunt3"
+        ]
+      },
+      "unresolved": [
+        "Original event_scripts.s include and map.json references are static; generated map table, assembler/linker symbol and ROM execution not verified",
+        "Native script opcodes, trainer state, map tile redraw and save consumers require full dependency closure",
+        "Original FireRed authored asset/derivative licensing and external review unresolved",
+        "No natural stock gameplay, native .sav restart or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Independently inspect full exact pinned scripts.inc including all branches",
+        "Rehash original compressed machine dossier and verify source SHA256",
+        "Resolve map.json/generated table, assembler/linker and native event consumer",
+        "Reconcile original asset and derivative licensing independently",
+        "Obtain genuinely distinct external reviewer full-file receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}

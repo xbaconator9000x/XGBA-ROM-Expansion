@@ -1,0 +1,735 @@
+{
+  "schema": "xgba.phase1.third_packet_firered_routes_204_211_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0200-0299.json",
+  "source_packet_blob_sha1": "c998c2ea8c887968e586b1792c5207ecb5286839",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0200-0299-20261030.json",
+  "new_partial_indices": [
+    204,
+    205,
+    206,
+    207,
+    208,
+    209,
+    210,
+    211
+  ],
+  "other_p0_partial_total": 195,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 224,
+  "other_p0_without_partial": 114,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Eight disjoint original FireRed route scripts; original machine dossier bytes previously verified. Static source-only partial analyst notes, no whole-file, compiled, gameplay, .sav, physical Flash, independent licensing or approval.",
+  "records": [
+    {
+      "packet_index": 204,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/Route10_PokemonCenter_1F/scripts.inc",
+        "git_blob_sha1": "f721e04dba2e9e1591a9631f43f1a15112071d81",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/Route10_PokemonCenter_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "af253cecd2fcf6b8d151fdc620892d1ffeb08773f3e5e0ab5e34a57c8406befb",
+      "whole_source_sha256_from_packet": "53a34278cab6835a7056f5f2420a5e53f78095fe99760663bd1db4edcfa9e48b",
+      "line_anchors": [
+        {
+          "line": 3,
+          "text": "Route10_PokemonCenter_1F_MapScripts::"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, Route10_PokemonCenter_1F_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume"
+        },
+        {
+          "line": 8,
+          "text": "Route10_PokemonCenter_1F_OnTransition::"
+        },
+        {
+          "line": 36,
+          "text": "\tgoto_if_set FLAG_GOT_EVERSTONE_FROM_OAKS_AIDE, Route10_PokemonCenter_1F_EventScript_AlreadyGotEverstone"
+        },
+        {
+          "line": 38,
+          "text": "\tgoto_if_eq VAR_RESULT, NO, Aide_EventScript_DeclineCheckMons"
+        },
+        {
+          "line": 48,
+          "text": "\tsetflag FLAG_GOT_EVERSTONE_FROM_OAKS_AIDE"
+        },
+        {
+          "line": 53,
+          "text": "Route10_PokemonCenter_1F_EventScript_AlreadyGotEverstone::"
+        },
+        {
+          "line": 58,
+          "text": "Route10_PokemonCenter_1F_EventScript_GetAideRequestInfo::"
+        }
+      ],
+      "required_source_tokens": [
+        "Route10_PokemonCenter_1F_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, Route10_PokemonCenter_1F_OnTransition",
+        "map_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume",
+        "Route10_PokemonCenter_1F_OnTransition::",
+        "goto_if_set FLAG_GOT_EVERSTONE_FROM_OAKS_AIDE, Route10_PokemonCenter_1F_EventScript_AlreadyGotEverstone"
+      ],
+      "source_observations": "Route10 Center aide grants Everstone only after owned Pokédex count threshold, item-space check and claim flag. Original pinned authored source only; no compiled execution, save or physical Flash witness.",
+      "dependency_edges": [
+        "Aide_GetPokedexCount/VAR_0x8006",
+        "FLAG_GOT_EVERSTONE_FROM_OAKS_AIDE save reader",
+        "EventScript_PkmnCenterNurse",
+        "CableClub_OnResume"
+      ],
+      "unresolved": [
+        "Generated map table and original assembler/linker symbol closure not demonstrated",
+        "Native opcode/special execution and event/map object wiring not reproduced",
+        "Original FireRed authored asset and derivative licensing unresolved",
+        "No natural stock gameplay, native .sav persistence or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line and all inactive/error branches at the pinned source blob",
+        "Rehash the original compressed machine dossier and source SHA256",
+        "Trace map.json, event_scripts.s, generated map table, linker and native consumer",
+        "Independently reconcile original asset/derivative licensing",
+        "Sign a genuinely distinct full-file review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 205,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/Route10_PokemonCenter_2F/scripts.inc",
+        "git_blob_sha1": "73a04875a2573f573072a8c95d1f02a536ac4988",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/Route10_PokemonCenter_2F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "3de12e0877c63dde2ccdb8d3fe48adbbfa647ddba26ddd8cc68e37b2c9215791",
+      "whole_source_sha256_from_packet": "8fc1453c5b7d781c2c8fbc922a8a0df2327c7f5c380e7dfcc937b4924fdbfa34",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "Route10_PokemonCenter_2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CableClub_OnTransition"
+        },
+        {
+          "line": 9,
+          "text": "Route10_PokemonCenter_2F_EventScript_Colosseum::"
+        },
+        {
+          "line": 13,
+          "text": "Route10_PokemonCenter_2F_EventScript_TradeCenter::"
+        },
+        {
+          "line": 17,
+          "text": "Route10_PokemonCenter_2F_EventScript_RecordCorner::"
+        }
+      ],
+      "required_source_tokens": [
+        "Route10_PokemonCenter_2F_MapScripts::",
+        "map_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame",
+        "map_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp",
+        "map_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad",
+        "map_script MAP_SCRIPT_ON_TRANSITION, CableClub_OnTransition"
+      ],
+      "source_observations": "Route10 Center 2F registers four CableClub map lifecycle handlers; three RS-leftover NPC labels call shared CableClub scripts. Original pinned authored source only; no compiled execution, save or physical Flash witness.",
+      "dependency_edges": [
+        "CableClub_OnFrame",
+        "CableClub_OnWarp",
+        "CableClub_OnLoad",
+        "CableClub_EventScript_TradeCenter"
+      ],
+      "unresolved": [
+        "Generated map table and original assembler/linker symbol closure not demonstrated",
+        "Native opcode/special execution and event/map object wiring not reproduced",
+        "Original FireRed authored asset and derivative licensing unresolved",
+        "No natural stock gameplay, native .sav persistence or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line and all inactive/error branches at the pinned source blob",
+        "Rehash the original compressed machine dossier and source SHA256",
+        "Trace map.json, event_scripts.s, generated map table, linker and native consumer",
+        "Independently reconcile original asset/derivative licensing",
+        "Sign a genuinely distinct full-file review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 206,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/Route12/scripts.inc",
+        "git_blob_sha1": "7e17f2573261762b15fe685c0cf443b1509323e0",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/Route12/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "8584d4acb225e5fa6eb7c41eeaeeac5a6cff49f226885fee894754dd260a8135",
+      "whole_source_sha256_from_packet": "ea70631fa17e3042cf08b32c94fbc26fbb128936b61c00e61127b79af780368e",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "Route12_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, Route12_OnResume"
+        },
+        {
+          "line": 5,
+          "text": "Route12_OnResume::"
+        },
+        {
+          "line": 9,
+          "text": "Route12_EventScript_TryRemoveSnorlax::"
+        },
+        {
+          "line": 28,
+          "text": "\tsetflag FLAG_SYS_SPECIAL_WILD_BATTLE"
+        },
+        {
+          "line": 29,
+          "text": "\tsetflag FLAG_WOKE_UP_ROUTE_12_SNORLAX"
+        },
+        {
+          "line": 48,
+          "text": "Route12_EventScript_SnorlaxNoPokeFlute::"
+        },
+        {
+          "line": 53,
+          "text": "Route12_EventScript_RouteSign::"
+        },
+        {
+          "line": 57,
+          "text": "Route12_EventScript_FishingSign::"
+        }
+      ],
+      "required_source_tokens": [
+        "Route12_MapScripts::",
+        "map_script MAP_SCRIPT_ON_RESUME, Route12_OnResume",
+        "Route12_OnResume::",
+        "Route12_EventScript_TryRemoveSnorlax::",
+        "setflag FLAG_SYS_SPECIAL_WILD_BATTLE"
+      ],
+      "source_observations": "Route12 Snorlax requires Poké Flute; pre-battle hide and special-wild flags bracket battle, with explicit outcome branches. Original pinned authored source only; no compiled execution, save or physical Flash witness.",
+      "dependency_edges": [
+        "EventScript_AwakenSnorlax",
+        "FLAG_SYS_SPECIAL_WILD_BATTLE resume removal",
+        "GetBattleOutcome",
+        "Route12 map.json Snorlax object"
+      ],
+      "unresolved": [
+        "Generated map table and original assembler/linker symbol closure not demonstrated",
+        "Native opcode/special execution and event/map object wiring not reproduced",
+        "Original FireRed authored asset and derivative licensing unresolved",
+        "No natural stock gameplay, native .sav persistence or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line and all inactive/error branches at the pinned source blob",
+        "Rehash the original compressed machine dossier and source SHA256",
+        "Trace map.json, event_scripts.s, generated map table, linker and native consumer",
+        "Independently reconcile original asset/derivative licensing",
+        "Sign a genuinely distinct full-file review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 207,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/Route16/scripts.inc",
+        "git_blob_sha1": "27ad5ce6fba4b3f5addf538241c8cc7b94f33e7e",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/Route16/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "9a924c6f8e586d2e108d23fe3ec74bf53722fc19f07a7a5e1e7f0bd16271a8b7",
+      "whole_source_sha256_from_packet": "680c86b2457428a348f8dd7ff006d13681c510cd5098c04b44f8f09a755a17a5",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "Route16_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, Route16_OnResume"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, Route16_OnTransition"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, Route16_OnWarp"
+        },
+        {
+          "line": 35,
+          "text": "\tgoto_if_questlog EventScript_ReleaseEnd"
+        },
+        {
+          "line": 36,
+          "text": "\tspecial QuestLog_CutRecording"
+        },
+        {
+          "line": 65,
+          "text": "Route16_EventScript_SnorlaxNoPokeFlute::"
+        },
+        {
+          "line": 70,
+          "text": "Route16_EventScript_CyclingRoadSign::"
+        },
+        {
+          "line": 74,
+          "text": "Route16_EventScript_RouteSign::"
+        }
+      ],
+      "required_source_tokens": [
+        "Route16_MapScripts::",
+        "map_script MAP_SCRIPT_ON_RESUME, Route16_OnResume",
+        "map_script MAP_SCRIPT_ON_TRANSITION, Route16_OnTransition",
+        "map_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, Route16_OnWarp",
+        "goto_if_questlog EventScript_ReleaseEnd"
+      ],
+      "source_observations": "Route16 combines Snorlax encounter with Cycling Road transition and warp state; forced-bike path depends on scene variable. Original pinned authored source only; no compiled execution, save or physical Flash witness.",
+      "dependency_edges": [
+        "VAR_MAP_SCENE_ROUTE16",
+        "ForcePlayerOntoBike",
+        "FLAG_HIDE_ROUTE_16_SNORLAX",
+        "GetBattleOutcome"
+      ],
+      "unresolved": [
+        "Generated map table and original assembler/linker symbol closure not demonstrated",
+        "Native opcode/special execution and event/map object wiring not reproduced",
+        "Original FireRed authored asset and derivative licensing unresolved",
+        "No natural stock gameplay, native .sav persistence or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line and all inactive/error branches at the pinned source blob",
+        "Rehash the original compressed machine dossier and source SHA256",
+        "Trace map.json, event_scripts.s, generated map table, linker and native consumer",
+        "Independently reconcile original asset/derivative licensing",
+        "Sign a genuinely distinct full-file review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 208,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/Route16_NorthEntrance_1F/scripts.inc",
+        "git_blob_sha1": "0619d1c5f88d6cf2687abb48c242c9835847fcbb",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/Route16_NorthEntrance_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "ca109e609f6ceeefb0a0cb97443b7d7a9d7587d3f3c0f2f0e93120316d7bbb52",
+      "whole_source_sha256_from_packet": "9d14d9f59f84b49f56ff1975e037f7d77a31613e6c3f05abea4a44742b889838",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "Route16_NorthEntrance_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, Route16_NorthEntrance_1F_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "Route16_NorthEntrance_1F_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tclearflag FLAG_SYS_ON_CYCLING_ROAD"
+        },
+        {
+          "line": 42,
+          "text": "Route16_NorthEntrance_1F_EventScript_NeedBikeTriggerBottom::"
+        },
+        {
+          "line": 44,
+          "text": "\tsetvar VAR_0x8008, 4"
+        },
+        {
+          "line": 101,
+          "text": "Route16_NorthEntrance_1F_Movement_WalkUp4::"
+        },
+        {
+          "line": 108,
+          "text": "Route16_NorthEntrance_1F_Movement_WalkRight::"
+        },
+        {
+          "line": 112,
+          "text": "Route16_NorthEntrance_1F_EventScript_OldMan::"
+        }
+      ],
+      "required_source_tokens": [
+        "Route16_NorthEntrance_1F_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, Route16_NorthEntrance_1F_OnTransition",
+        "Route16_NorthEntrance_1F_OnTransition::",
+        "clearflag FLAG_SYS_ON_CYCLING_ROAD",
+        "Route16_NorthEntrance_1F_EventScript_NeedBikeTriggerBottom::"
+      ],
+      "source_observations": "Route16 north entrance uses five coordinate-trigger variants to move a pedestrian away when no bicycle; transition clears cycling flag. Original pinned authored source only; no compiled execution, save or physical Flash witness.",
+      "dependency_edges": [
+        "FLAG_GOT_BICYCLE",
+        "VAR_TEMP_1 trigger disable",
+        "VAR_0x8008 entry selector",
+        "applymovement collision/warp consumer"
+      ],
+      "unresolved": [
+        "Generated map table and original assembler/linker symbol closure not demonstrated",
+        "Native opcode/special execution and event/map object wiring not reproduced",
+        "Original FireRed authored asset and derivative licensing unresolved",
+        "No natural stock gameplay, native .sav persistence or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line and all inactive/error branches at the pinned source blob",
+        "Rehash the original compressed machine dossier and source SHA256",
+        "Trace map.json, event_scripts.s, generated map table, linker and native consumer",
+        "Independently reconcile original asset/derivative licensing",
+        "Sign a genuinely distinct full-file review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 209,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/Route18/scripts.inc",
+        "git_blob_sha1": "4f5e9019f886db1a4930b13e73a43a0bc4e83586",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/Route18/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "15fb7bdce822527d18189869c0b38d4840a50300fe0647f7c77969a545e4380d",
+      "whole_source_sha256_from_packet": "6424a79cd71dcdc8a46436cd375fd7b3a202f5fb1ddaea2dad7cc6ea2ce662dc",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "Route18_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, Route18_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, Route18_OnWarp"
+        },
+        {
+          "line": 6,
+          "text": "Route18_OnTransition::"
+        },
+        {
+          "line": 14,
+          "text": "Route18_OnWarp::"
+        },
+        {
+          "line": 15,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_ROUTE16, 1, Route18_OnWarpCyclingRoad"
+        },
+        {
+          "line": 19,
+          "text": "\tspecial ForcePlayerOntoBike"
+        },
+        {
+          "line": 22,
+          "text": "Route18_EventScript_RouteSign::"
+        },
+        {
+          "line": 26,
+          "text": "Route18_EventScript_CyclingRoadSign::"
+        }
+      ],
+      "required_source_tokens": [
+        "Route18_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, Route18_OnTransition",
+        "map_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, Route18_OnWarp",
+        "Route18_OnTransition::",
+        "Route18_OnWarp::"
+      ],
+      "source_observations": "Route18 transition and warp share Route16 cycling-road scene selector, set cycling flag and force bicycle. Original pinned authored source only; no compiled execution, save or physical Flash witness.",
+      "dependency_edges": [
+        "VAR_MAP_SCENE_ROUTE16 cross-map scene",
+        "ForcePlayerOntoBike",
+        "FLAG_SYS_ON_CYCLING_ROAD",
+        "Route18 map table/warp consumer"
+      ],
+      "unresolved": [
+        "Generated map table and original assembler/linker symbol closure not demonstrated",
+        "Native opcode/special execution and event/map object wiring not reproduced",
+        "Original FireRed authored asset and derivative licensing unresolved",
+        "No natural stock gameplay, native .sav persistence or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line and all inactive/error branches at the pinned source blob",
+        "Rehash the original compressed machine dossier and source SHA256",
+        "Trace map.json, event_scripts.s, generated map table, linker and native consumer",
+        "Independently reconcile original asset/derivative licensing",
+        "Sign a genuinely distinct full-file review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 210,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/Route18_EastEntrance_1F/scripts.inc",
+        "git_blob_sha1": "083027b91ba1316de02af94cc70df7778bc8ff3b",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/Route18_EastEntrance_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "ed2bf6b8c0e7b12980a93e7735919fbf582e8b7e43ba36b5124eca67efb40cb1",
+      "whole_source_sha256_from_packet": "394ca4937b7913ca5ac794c12a10696a7b5541a3ea992163b2bcf95ff675af92",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "Route18_EastEntrance_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, Route18_EastEntrance_1F_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "Route18_EastEntrance_1F_OnTransition::"
+        },
+        {
+          "line": 6,
+          "text": "\tclearflag FLAG_SYS_ON_CYCLING_ROAD"
+        },
+        {
+          "line": 42,
+          "text": "Route18_EastEntrance_1F_EventScript_NeedBikeTriggerBottom::"
+        },
+        {
+          "line": 44,
+          "text": "\tsetvar VAR_0x8008, 4"
+        },
+        {
+          "line": 95,
+          "text": "Route18_EastEntrance_1F_Movement_WalkUp3::"
+        },
+        {
+          "line": 101,
+          "text": "Route18_EastEntrance_1F_Movement_WalkUp4::"
+        },
+        {
+          "line": 108,
+          "text": "Route18_EastEntrance_1F_Movement_WalkRight::"
+        }
+      ],
+      "required_source_tokens": [
+        "Route18_EastEntrance_1F_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, Route18_EastEntrance_1F_OnTransition",
+        "Route18_EastEntrance_1F_OnTransition::",
+        "clearflag FLAG_SYS_ON_CYCLING_ROAD",
+        "Route18_EastEntrance_1F_EventScript_NeedBikeTriggerBottom::"
+      ],
+      "source_observations": "Route18 east entrance uses five coordinate-trigger variants and four offset-dependent movement paths to block pedestrians. Original pinned authored source only; no compiled execution, save or physical Flash witness.",
+      "dependency_edges": [
+        "FLAG_GOT_BICYCLE",
+        "VAR_TEMP_1 trigger disable",
+        "VAR_0x8008 entry selector",
+        "applymovement collision/warp consumer"
+      ],
+      "unresolved": [
+        "Generated map table and original assembler/linker symbol closure not demonstrated",
+        "Native opcode/special execution and event/map object wiring not reproduced",
+        "Original FireRed authored asset and derivative licensing unresolved",
+        "No natural stock gameplay, native .sav persistence or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line and all inactive/error branches at the pinned source blob",
+        "Rehash the original compressed machine dossier and source SHA256",
+        "Trace map.json, event_scripts.s, generated map table, linker and native consumer",
+        "Independently reconcile original asset/derivative licensing",
+        "Sign a genuinely distinct full-file review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 211,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/Route20/scripts.inc",
+        "git_blob_sha1": "7809a867934e207ba42475f68fd3ce36a7a2f121",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/Route20/scripts.inc"
+      },
+      "machine_dossier_sha256_reconciled_via_original_byte_receipt": "73a0e2f13ef24884ec5a4acd522912a214e820f0457aeca55f7ffc179223d6cf",
+      "whole_source_sha256_from_packet": "ccc9f8829f2a2544904331aa8c69fbeef9c89cc0349b20baa66f0340ccff7c55",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "Route20_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, Route20_OnTransition"
+        },
+        {
+          "line": 5,
+          "text": "Route20_OnTransition::"
+        },
+        {
+          "line": 10,
+          "text": "Route20_EventScript_ResetSeafoamBouldersForB3F::"
+        },
+        {
+          "line": 17,
+          "text": "\tsetflag FLAG_HIDE_SEAFOAM_B3F_BOULDER_1"
+        },
+        {
+          "line": 18,
+          "text": "\tsetflag FLAG_HIDE_SEAFOAM_B3F_BOULDER_2"
+        },
+        {
+          "line": 26,
+          "text": "\tsetflag FLAG_HIDE_SEAFOAM_B4F_BOULDER_1"
+        },
+        {
+          "line": 27,
+          "text": "\tsetflag FLAG_HIDE_SEAFOAM_B4F_BOULDER_2"
+        },
+        {
+          "line": 30,
+          "text": "Route20_EventScript_SeafoamIslandsSign::"
+        }
+      ],
+      "required_source_tokens": [
+        "Route20_MapScripts::",
+        "map_script MAP_SCRIPT_ON_TRANSITION, Route20_OnTransition",
+        "Route20_OnTransition::",
+        "Route20_EventScript_ResetSeafoamBouldersForB3F::",
+        "setflag FLAG_HIDE_SEAFOAM_B3F_BOULDER_1"
+      ],
+      "source_observations": "Route20 transition conditionally resets Seafoam boulder visibility across floors unless current-stop flags are set. Original pinned authored source only; no compiled execution, save or physical Flash witness.",
+      "dependency_edges": [
+        "FLAG_STOPPED_SEAFOAM_B3F_CURRENT",
+        "FLAG_STOPPED_SEAFOAM_B4F_CURRENT",
+        "Seafoam boulder object flags and save",
+        "Route20 map transition consumer"
+      ],
+      "unresolved": [
+        "Generated map table and original assembler/linker symbol closure not demonstrated",
+        "Native opcode/special execution and event/map object wiring not reproduced",
+        "Original FireRed authored asset and derivative licensing unresolved",
+        "No natural stock gameplay, native .sav persistence or physical Flash evidence"
+      ],
+      "reviewer_questions": [
+        "Independently inspect every line and all inactive/error branches at the pinned source blob",
+        "Rehash the original compressed machine dossier and source SHA256",
+        "Trace map.json, event_scripts.s, generated map table, linker and native consumer",
+        "Independently reconcile original asset/derivative licensing",
+        "Sign a genuinely distinct full-file review receipt before APPROVED"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}

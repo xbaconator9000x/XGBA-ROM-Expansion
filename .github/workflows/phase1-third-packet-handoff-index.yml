@@ -1,0 +1,22 @@
+name: Phase 1 third packet disjoint P0 partial handoff reconciliation
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  third-packet-index:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify exact head checkout
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify four disjoint third-packet partials and 40 negatives
+        run: python3 tools/phase1_third_packet_handoff_index_verify.py

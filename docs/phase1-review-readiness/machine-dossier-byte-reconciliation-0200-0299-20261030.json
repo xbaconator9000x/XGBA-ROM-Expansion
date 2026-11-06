@@ -1,0 +1,20 @@
+{
+  "schema": "xgba.phase1.third_packet_machine_dossier_byte_reconciliation.v1",
+  "date": "2026-10-30",
+  "original_snapshot_git_blobs": {
+    "candidate_review_dossiers.jsonl.gz": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "semantic_review_queue.csv.gz": "52fe1a9b8498dd4fa3ea0e6e0236ae1cdeda7268",
+    "phase1_mapping_gate.json": "dab5789433dc55cf325a917a220d060088bf1d29"
+  },
+  "packet": "docs/phase1-review-readiness/packet-0200-0299.json",
+  "packet_git_blob_sha1": "c998c2ea8c887968e586b1792c5207ecb5286839",
+  "machine_dossier_byte_checks": 100,
+  "original_machine_inventory_rehashed": 14834,
+  "packet_indices": "200..299",
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "whole_file_semantic_approved": 0,
+  "phase1_gate": "FAIL_INCOMPLETE",
+  "scope": "Supplemental exact-original compressed machine dossier SHA256 and source content SHA256 reconciliation for 100 new P0 machine packet records only, distinct from already-green first 200. Not source inspection, full-file semantic coverage, compiled/runtime execution, license clearance or independent approval.",
+  "validation_status": "REQUIRES_EXACT_HEAD_ACTIONS_SUCCESS"
+}

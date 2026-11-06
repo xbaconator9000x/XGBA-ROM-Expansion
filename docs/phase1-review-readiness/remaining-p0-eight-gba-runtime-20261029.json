@@ -1,0 +1,513 @@
+{
+  "schema": "xgba.phase1.remaining_p0_partial_analyst_batch.v8",
+  "date": "2026-10-29",
+  "source_packet": "docs/phase1-review-readiness/packet-0000-0099.json",
+  "source_packet_blob_sha1": "a48c12900acc7e0211a8071119763e2b5de4b1a4",
+  "previous_partial_indices": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    33,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    45,
+    46,
+    47,
+    51,
+    52,
+    53,
+    54,
+    55,
+    58,
+    59,
+    60,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72
+  ],
+  "new_partial_indices": [
+    82,
+    83,
+    92,
+    93,
+    94,
+    95,
+    97,
+    98
+  ],
+  "partial_source_inspected": 8,
+  "curated_29_source_inspected": 29,
+  "remaining_p0_partial_total": 70,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "machine_dossier_sha256_note": "Copied from pinned packet, not independently verified against machine dossier bytes.",
+  "records": [
+    {
+      "packet_index": 82,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/audio.c",
+        "git_blob_sha1": "278e8783239146ec41d9348582f3d47d4cb13b96",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/audio.c"
+      },
+      "machine_dossier_sha256_unverified": "e86f444dc7e8d07229bdfc7b5747d0396d701069e961f07a04c1c89d3ca0474f",
+      "line_anchors": [
+        {
+          "line": 28,
+          "text": "void GBAAudioInit(struct GBAAudio* audio, size_t samples) {"
+        },
+        {
+          "line": 49,
+          "text": "void GBAAudioReset(struct GBAAudio* audio) {"
+        },
+        {
+          "line": 105,
+          "text": "void GBAAudioScheduleFifoDma(struct GBAAudio* audio, int number, struct GBADMA* info) {"
+        },
+        {
+          "line": 196,
+          "text": "void GBAAudioWriteSOUNDCNT_HI(struct GBAAudio* audio, uint16_t value) {"
+        }
+      ],
+      "responsibilities": "Original mGBA GBA audio initialization, reset, FIFO DMA scheduling and sound-register sampling are connected through timing and DMA, not a FireRed-specific audio patch.",
+      "dependency_edges": [
+        "include/mgba/internal/gba/audio.h",
+        "src/gba/dma.c",
+        "src/gba/io.c"
+      ],
+      "unresolved": [
+        "Trace FIFO refill timing and DMA activation with compiled unchanged mGBA before claiming observed playback.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, file-level licensing and genuinely distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Independently read entire exact pinned file, including inactive and error paths",
+        "Trace actual callers, callees, compiler flags and runtime dependencies",
+        "Verify original machine dossier SHA256, licensing and per-file notices",
+        "Only a genuinely distinct reviewer may submit a source-hash-bound verdict"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 83,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/bios.c",
+        "git_blob_sha1": "edb21e2d4b02d90907f1a9b3f8f08e1bafdd3a5b",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/bios.c"
+      },
+      "machine_dossier_sha256_unverified": "20c55b2abae2c393c1a94e7af93b19f24ab9db4dffa4304473307f990e7198b6",
+      "line_anchors": [
+        {
+          "line": 35,
+          "text": "static void _RegisterRamReset(struct GBA* gba) {"
+        },
+        {
+          "line": 163,
+          "text": "static void _BgAffineSet(struct GBA* gba) {"
+        },
+        {
+          "line": 210,
+          "text": "static void _ObjAffineSet(struct GBA* gba) {"
+        },
+        {
+          "line": 259,
+          "text": "static void _Div(struct GBA* gba, int32_t num, int32_t denom) {"
+        }
+      ],
+      "responsibilities": "Original mGBA BIOS software fallback implements RAM reset, affine transforms and division using ARM registers and memory access callbacks.",
+      "dependency_edges": [
+        "include/mgba/internal/gba/bios.h",
+        "src/gba/gba.c",
+        "src/gba/memory.c"
+      ],
+      "unresolved": [
+        "Distinguish emulated HLE BIOS calls from actual external BIOS execution and examine invalid operand and memory cases.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, file-level licensing and genuinely distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Independently read entire exact pinned file, including inactive and error paths",
+        "Trace actual callers, callees, compiler flags and runtime dependencies",
+        "Verify original machine dossier SHA256, licensing and per-file notices",
+        "Only a genuinely distinct reviewer may submit a source-hash-bound verdict"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 92,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/core.c",
+        "git_blob_sha1": "6bfc518bb8899205c07d1d0fc091a287cb42f874",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/core.c"
+      },
+      "machine_dossier_sha256_unverified": "3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784",
+      "line_anchors": [
+        {
+          "line": 60,
+          "text": "static const struct mCoreMemoryBlock _GBAMemoryBlocks[] = {"
+        },
+        {
+          "line": 104,
+          "text": "static const struct mCoreMemoryBlock _GBAMemoryBlocksFlash512[] = {"
+        },
+        {
+          "line": 119,
+          "text": "static const struct mCoreMemoryBlock _GBAMemoryBlocksFlash1M[] = {"
+        },
+        {
+          "line": 198,
+          "text": "struct GBACore {"
+        }
+      ],
+      "responsibilities": "Original mGBA core describes memory regions including 512K and 1M Flash variants and owns the GBACore interface for emulator integration.",
+      "dependency_edges": [
+        "include/mgba/core/core.h",
+        "src/gba/gba.c",
+        "src/gba/savedata.c"
+      ],
+      "unresolved": [
+        "Trace memory block selection against detected savedata type and core lifecycle; descriptor geometry is not physical Flash validation.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, file-level licensing and genuinely distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Independently read entire exact pinned file, including inactive and error paths",
+        "Trace actual callers, callees, compiler flags and runtime dependencies",
+        "Verify original machine dossier SHA256, licensing and per-file notices",
+        "Only a genuinely distinct reviewer may submit a source-hash-bound verdict"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 93,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/dma.c",
+        "git_blob_sha1": "da2a800ba48cb32d6e10e42c3b3527ef406bad22",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/dma.c"
+      },
+      "machine_dossier_sha256_unverified": "2840c84bd7cb1f3c78c6947820a42d45042134e12ba005d27ed55b65822522fa",
+      "line_anchors": [
+        {
+          "line": 35,
+          "text": "void GBADMAInit(struct GBA* gba) {"
+        },
+        {
+          "line": 63,
+          "text": "uint32_t GBADMAWriteSAD(struct GBA* gba, int dma, uint32_t address) {"
+        },
+        {
+          "line": 96,
+          "text": "uint16_t GBADMAWriteCNT_HI(struct GBA* gba, int dma, uint16_t control) {"
+        },
+        {
+          "line": 199,
+          "text": "void _dmaEvent(struct mTiming* timing, void* context, uint32_t cyclesLate) {"
+        }
+      ],
+      "responsibilities": "Original GBA DMA source/destination address validation, reload/control and timing-event scheduling connect memory transfers to HBlank/VBlank and audio triggers.",
+      "dependency_edges": [
+        "include/mgba/internal/gba/dma.h",
+        "src/gba/io.c",
+        "src/gba/audio.c"
+      ],
+      "unresolved": [
+        "Compile and run bounded DMA transfer, invalid address, channel timing and IRQ cases in unchanged mGBA.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, file-level licensing and genuinely distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Independently read entire exact pinned file, including inactive and error paths",
+        "Trace actual callers, callees, compiler flags and runtime dependencies",
+        "Verify original machine dossier SHA256, licensing and per-file notices",
+        "Only a genuinely distinct reviewer may submit a source-hash-bound verdict"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 94,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/gba.c",
+        "git_blob_sha1": "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/gba.c"
+      },
+      "machine_dossier_sha256_unverified": "d1870b438fe6dd9bfa628a99d90189778e112588c14ae08f28fa379903595056",
+      "line_anchors": [
+        {
+          "line": 66,
+          "text": "void GBACreate(struct GBA* gba) {"
+        },
+        {
+          "line": 72,
+          "text": "static void GBAInit(void* cpu, struct mCPUComponent* component) {"
+        },
+        {
+          "line": 140,
+          "text": "void GBAUnloadROM(struct GBA* gba) {"
+        },
+        {
+          "line": 171,
+          "text": "GBASavedataUnmask(&gba->memory.savedata);"
+        }
+      ],
+      "responsibilities": "Original mGBA GBA component initialization and ROM unload connect ARM CPU, savedata, audio and IO lifetime, including unmask/deinitialization.",
+      "dependency_edges": [
+        "src/gba/core.c",
+        "src/gba/savedata.c",
+        "src/gba/io.c"
+      ],
+      "unresolved": [
+        "Trace fresh-core reset versus hot ROM unload, Flash backing-store flush and interrupt prerequisites; no physical power-loss inference.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, file-level licensing and genuinely distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Independently read entire exact pinned file, including inactive and error paths",
+        "Trace actual callers, callees, compiler flags and runtime dependencies",
+        "Verify original machine dossier SHA256, licensing and per-file notices",
+        "Only a genuinely distinct reviewer may submit a source-hash-bound verdict"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 95,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/io.c",
+        "git_blob_sha1": "658036e4c56d808e39d0a0fddd410148a7c8dd16",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/io.c"
+      },
+      "machine_dossier_sha256_unverified": "60aabe660b89290b26a8e0072603c598927698779e5c09df117ac2917733d7ca",
+      "line_anchors": [
+        {
+          "line": 147,
+          "text": "static const int _isValidRegister[GBA_REG(INTERNAL_MAX)] = {"
+        },
+        {
+          "line": 192,
+          "text": "static const int _isRSpecialRegister[GBA_REG(INTERNAL_MAX)] = {"
+        },
+        {
+          "line": 237,
+          "text": "static const int _isWSpecialRegister[GBA_REG(INTERNAL_MAX)] = {"
+        },
+        {
+          "line": 282,
+          "text": "void GBAIOInit(struct GBA* gba) {"
+        }
+      ],
+      "responsibilities": "Original mGBA IO validity and special-register tables control register read/write dispatch; sound, DMA and timer side effects require actual consumer tracing.",
+      "dependency_edges": [
+        "include/mgba/internal/gba/io.h",
+        "src/gba/dma.c",
+        "src/gba/audio.c"
+      ],
+      "unresolved": [
+        "Trace register masks, read-only handling, DMA write dispatch and reset sequencing beyond the inspected table declarations.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, file-level licensing and genuinely distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Independently read entire exact pinned file, including inactive and error paths",
+        "Trace actual callers, callees, compiler flags and runtime dependencies",
+        "Verify original machine dossier SHA256, licensing and per-file notices",
+        "Only a genuinely distinct reviewer may submit a source-hash-bound verdict"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 97,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/overrides.c",
+        "git_blob_sha1": "566968162b29c90167199ef43f3d7a99248798e8",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/overrides.c"
+      },
+      "machine_dossier_sha256_unverified": "2647e8bc34e83ba827e6973ce870d08b9d941ebf3f51a664dbf484b98a45ce6f",
+      "line_anchors": [
+        {
+          "line": 14,
+          "text": "static const struct GBACartridgeOverride _overrides[] = {"
+        },
+        {
+          "line": 208,
+          "text": "bool GBAOverrideFindConfig(const struct Configuration* config, struct GBACartridgeOverride* override) {"
+        },
+        {
+          "line": 263,
+          "text": "bool GBAOverrideFind(const struct Configuration* config, struct GBACartridgeOverride* override) {"
+        },
+        {
+          "line": 290,
+          "text": "void GBAOverrideSave(struct Configuration* config, const struct GBACartridgeOverride* override) {"
+        }
+      ],
+      "responsibilities": "Original mGBA cartridge override table and configuration lookup/save influence savedata and peripheral identification by ROM/game metadata.",
+      "dependency_edges": [
+        "include/mgba/internal/gba/overrides.h",
+        "src/gba/core.c",
+        "src/gba/cart/gpio.c"
+      ],
+      "unresolved": [
+        "Determine precedence of hardcoded versus user overrides and compare actual FireRed Flash1M identification with unchanged runtime.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, file-level licensing and genuinely distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Independently read entire exact pinned file, including inactive and error paths",
+        "Trace actual callers, callees, compiler flags and runtime dependencies",
+        "Verify original machine dossier SHA256, licensing and per-file notices",
+        "Only a genuinely distinct reviewer may submit a source-hash-bound verdict"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 98,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/savedata.c",
+        "git_blob_sha1": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/savedata.c"
+      },
+      "machine_dossier_sha256_unverified": "99a6b3e97c52d67712e10204e08ced8819c7330e899b9f767aa280fc330c42e0",
+      "line_anchors": [
+        {
+          "line": 28,
+          "text": "#define FLASH_ERASE_CYCLES 30000"
+        },
+        {
+          "line": 46,
+          "text": "void GBASavedataInit(struct GBASavedata* savedata, struct VFile* vf) {"
+        },
+        {
+          "line": 137,
+          "text": "bool GBASavedataClone(struct GBASavedata* savedata, struct VFile* out) {"
+        },
+        {
+          "line": 194,
+          "text": "bool GBASavedataLoad(struct GBASavedata* savedata, struct VFile* in) {"
+        }
+      ],
+      "responsibilities": "Original mGBA savedata implementation declares emulated Flash erase/program timing and exposes clone/load/type operations through VFile and backing-store lifecycle.",
+      "dependency_edges": [
+        "include/mgba/internal/gba/savedata.h",
+        "src/gba/memory.c",
+        "src/gba/core.c"
+      ],
+      "unresolved": [
+        "Inspect complete Flash command state machine, clone/load error paths and interrupted persistent restart; emulator Flash is not physical hardware.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, file-level licensing and genuinely distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Independently read entire exact pinned file, including inactive and error paths",
+        "Trace actual callers, callees, compiler flags and runtime dependencies",
+        "Verify original machine dossier SHA256, licensing and per-file notices",
+        "Only a genuinely distinct reviewer may submit a source-hash-bound verdict"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    }
+  ]
+}

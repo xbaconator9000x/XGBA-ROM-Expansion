@@ -1,0 +1,364 @@
+{
+  "schema": "xgba.phase1.second_packet_special_sources_handoff.v1",
+  "date": "2026-11-04",
+  "packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+  "packet_git_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+  "source_pin": {
+    "repository": "mgba-emu/mgba",
+    "revision": "fd9dc5c2cbf234365068855851107e762fc6211b"
+  },
+  "indices": [112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 129],
+  "prior_coverage": {
+    "index": "docs/phase1-review-readiness/second-packet-partial-handoff-index-20261030.json",
+    "covered_second_packet_indices": 83,
+    "scope": "Existing index covers 100–111, 128, and 130–199. The 17 listed indices are disjoint and were not previously source-partial records."
+  },
+  "original_machine_dossier": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "git_blob_sha1": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609",
+    "reconciled_rows": 17,
+    "source_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0000-0199-20261030.json"
+  },
+  "scope": "These packet identities map to mGBA Qt translation XML and the bundled SQLite amalgamation, not FireRed. This is source-grounded analyst partial evidence only; no translation-language judgment, complete SQLite semantic review, native Qt/QM runtime proof, or independent approval is claimed.",
+  "whole_file_semantic_dispositions_added": 0,
+  "independent_approvals_added": 0,
+  "phase1_gate": "FAIL_INCOMPLETE",
+  "licensing": {
+    "repository_license": "MPL-2.0",
+    "sqlite_amalgamation_notice": "SQLite copyright disclaimer/public-domain blessing appears in the source amalgamation.",
+    "status": "PENDING_INDEPENDENT_CONTRIBUTOR_ATTRIBUTION_AND_COMBINED_DISTRIBUTION_REVIEW",
+    "limitations": [
+      "The repository LICENSE identity does not establish individual translator contribution provenance.",
+      "The SQLite source notice is recorded separately from mGBA's MPL-2.0; this is not a combined-work legal determination."
+    ]
+  },
+  "dependency_sources": [
+    {
+      "path": "LICENSE",
+      "git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+      "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+      "anchors": [{"line": 1, "contains": "Mozilla Public License Version 2.0"}]
+    },
+    {
+      "path": "CMakeLists.txt",
+      "git_blob_sha1": "834e9fd9ceb94a972941fb7b12494270702601e8",
+      "sha256": "6dd68feaebc479a02606b14be889e7c966949aa6aa5a4c52f601861c5d369a31",
+      "anchors": [
+        {"line": 59, "contains": "set(USE_SQLITE3 ON CACHE BOOL"},
+        {"line": 646, "contains": "if(WANT_SQLITE3 AND NOT USE_SQLITE3)"},
+        {"line": 647, "contains": "src/third-party/sqlite3/sqlite3.c"},
+        {"line": 764, "contains": "src/feature/sqlite3/no-intro.c"}
+      ]
+    },
+    {
+      "path": "src/platform/qt/CMakeLists.txt",
+      "git_blob_sha1": "fc0c46c19dfb91ed1bfc5c681c7fe0885540db79",
+      "sha256": "9bf8a6adaf3863648bca2997d427ea096f4de28e96fb93926d7066d5e60f4d8a",
+      "anchors": [
+        {"line": 398, "contains": "find_package(${QT}LinguistTools)"},
+        {"line": 402, "contains": "file(GLOB TS_FILES"},
+        {"line": 409, "contains": "template.ts"},
+        {"line": 413, "contains": "qt_add_translation"},
+        {"line": 415, "contains": "qt5_add_translation"},
+        {"line": 434, "contains": "/translations/"}
+      ]
+    },
+    {
+      "path": "src/platform/qt/main.cpp",
+      "git_blob_sha1": "d0ea3cb178dd2eb70d8ebbd7308a469d3eded1a2",
+      "sha256": "a4244173f58fcd1c8f7b72356bacf0b2a70055adcdc4b8fed08e850d415a89fd",
+      "anchors": [
+        {"line": 121, "contains": "QTranslator qtTranslator"},
+        {"line": 131, "contains": "QTranslator qtStaticTranslator"},
+        {"line": 136, "contains": "QTranslator langTranslator"},
+        {"line": 137, "contains": "langTranslator.load(locale, binaryName"}
+      ]
+    },
+    {
+      "path": "src/feature/sqlite3/no-intro.h",
+      "git_blob_sha1": "ba3bc128f9b503245646d66bc9c1198f1c7cf003",
+      "sha256": "976ba64af399cd79ff0971e0288b509d41adbfe6743d2a144c1cf1cc54db5a8b",
+      "anchors": [
+        {"line": 26, "contains": "NoIntroDBLoad"},
+        {"line": 29, "contains": "NoIntroDBLookupGameByCRC"},
+        {"line": 31, "contains": "NoIntroDBLookupGameBySHA1"}
+      ]
+    },
+    {
+      "path": "src/feature/sqlite3/no-intro.c",
+      "git_blob_sha1": "8b0474c8c96fed98c97dddf36bf8c34c22df2923",
+      "sha256": "ae935793035e8d879da1f0fb1249c75805b5a25d0ea380275d468572cb8b9314",
+      "anchors": [
+        {"line": 12, "contains": "#include <sqlite3.h>"},
+        {"line": 21, "contains": "NoIntroDBLoad"},
+        {"line": 24, "contains": "sqlite3_open_v2"},
+        {"line": 357, "contains": "NoIntroDBLookupGameByMD5"}
+      ]
+    },
+    {
+      "path": "src/platform/qt/GBAApp.cpp",
+      "git_blob_sha1": "755a0f94a2af4ff57dd2e8008e16a45c2ee80ee5",
+      "sha256": "715ba0cfc15443524f4023a9d1fb54431676e0ce77e228faeb7ea2feb024a7bd",
+      "anchors": [
+        {"line": 28, "contains": "feature/sqlite3/no-intro.h"},
+        {"line": 251, "contains": "NoIntroDB* db"},
+        {"line": 252, "contains": "NoIntroDBLoad"},
+        {"line": 447, "contains": "GameDBParser::parseNoIntroDB"}
+      ]
+    },
+    {
+      "path": "src/third-party/sqlite3/sqlite3.h",
+      "git_blob_sha1": "76c567d050a0e148af0fb8c619731057f86e83f9",
+      "sha256": "4340a24cda7bc436d62459c3c5237f67b9ab716ddca872faf8052d0ce0d97119",
+      "anchors": [{"line": 12, "contains": "This header file defines the interface that the SQLite library"}]
+    }
+  ],
+  "dependency_edges": [
+    {
+      "group": "qt_translation_pipeline",
+      "edges": [
+        "Each non-template TS catalog is a candidate for the conditional Qt LinguistTools glob and QM generation.",
+        "The generated translation resource uses /translations/ and is loaded by the Qt frontend's QTranslator path.",
+        "The template catalog is explicitly removed from TS_FILES in both update and normal translation-generation branches."
+      ],
+      "evidence_class": "PINNED_BUILD_AND_LOADER_SOURCE_ONLY",
+      "not_verified": ["Qt LinguistTools availability", "generated QM/QRC bytes", "locale fallback behavior", "native UI translation correctness"]
+    },
+    {
+      "group": "sqlite_no_intro_pipeline",
+      "edges": [
+        "Root CMake selects the bundled sqlite3.c fallback only when SQLite is wanted but no system SQLite was found.",
+        "When SQLite is enabled, CMake adds no-intro.c and SQLite include/library dependencies.",
+        "no-intro.c consumes SQLite APIs; its header declares the database load and ROM lookup functions.",
+        "The Qt GBAApp source opens the No-Intro database and delegates database parsing."
+      ],
+      "evidence_class": "PINNED_BUILD_AND_CALLER_SOURCE_ONLY",
+      "not_verified": ["Which provider a configured build selects", "compiled SQLite ABI/options", "database compatibility, runtime lookup, or filesystem durability"]
+    }
+  ],
+  "records": [
+    {
+      "packet_index": 112,
+      "path": "src/platform/qt/ts/mgba-hu.ts",
+      "git_blob_sha1": "48a8387116584d89a1f7fe792c40c7058a8ddd2c",
+      "source_sha256": "d35eb172a57f6c63543c9ab3d03263f289274796439b568166681e3bc78fb570",
+      "machine_dossier_sha256": "70455d75898b7982a2685422aa37d268b36d47ae2eabc27e95461c029a1768e0",
+      "source_lines": 7099,
+      "license_status": "MPL-2.0_REPOSITORY_SCOPE_TRANSLATOR_PROVENANCE_PENDING",
+      "line_anchors": [1, 2, 3, 5, 7],
+      "catalog": {"language": "hu", "source_language": "en_US", "contexts": 71, "messages": 1274, "unfinished": 1083, "empty": 938, "numerus": 2, "active_placeholder_mismatches": 0}
+    },
+    {
+      "packet_index": 113,
+      "path": "src/platform/qt/ts/mgba-it.ts",
+      "git_blob_sha1": "a3ab34965ad52f8307311e0b38df66196854ba47",
+      "source_sha256": "012b8a3014c848da4b4f9a16cbd130c5e9b257397756f9ac962043a0d0caeeb9",
+      "machine_dossier_sha256": "5cf7d5194e073769fc542242eab0651a2b16667bd2cb412292d923f9e99f93bf",
+      "source_lines": 7104,
+      "license_status": "MPL-2.0_REPOSITORY_SCOPE_TRANSLATOR_PROVENANCE_PENDING",
+      "line_anchors": [1, 2, 3, 5, 7],
+      "catalog": {"language": "it", "source_language": "en_US", "contexts": 71, "messages": 1274, "unfinished": 17, "empty": 15, "numerus": 2, "active_placeholder_mismatches": 0}
+    },
+    {
+      "packet_index": 114,
+      "path": "src/platform/qt/ts/mgba-ja.ts",
+      "git_blob_sha1": "d9c924cccaf866866ec283f60ddfcb8b4bddd537",
+      "source_sha256": "5151d23c9475c9e58cdf4ef1995c819558c6d1c86ebb855a1bb07c47f4c2aa5d",
+      "machine_dossier_sha256": "dd4e8f5f27b25e00a009fd4ac9066d2e091685ed59a42e91f04040df293046d2",
+      "source_lines": 7100,
+      "license_status": "MPL-2.0_REPOSITORY_SCOPE_TRANSLATOR_PROVENANCE_PENDING",
+      "line_anchors": [1, 2, 3, 5, 7],
+      "catalog": {"language": "ja_JP", "source_language": "en_US", "contexts": 71, "messages": 1274, "unfinished": 282, "empty": 243, "numerus": 2, "active_placeholder_mismatches": 0}
+    },
+    {
+      "packet_index": 115,
+      "path": "src/platform/qt/ts/mgba-ko.ts",
+      "git_blob_sha1": "baa59609992c5f08e9fb36393651cdef0ca70eb2",
+      "source_sha256": "affd250b86393e6c1bf8550425a1f50a20218169f87c51336ad91adacd61797a",
+      "machine_dossier_sha256": "ed72120be70731274ecabafb48144056332bb9416c421b0e4ce5b535c225626e",
+      "source_lines": 7102,
+      "license_status": "MPL-2.0_REPOSITORY_SCOPE_TRANSLATOR_PROVENANCE_PENDING",
+      "line_anchors": [1, 2, 3, 5, 7],
+      "catalog": {"language": "ko", "source_language": "en_US", "contexts": 71, "messages": 1274, "unfinished": 23, "empty": 21, "numerus": 2, "active_placeholder_mismatches": 0}
+    },
+    {
+      "packet_index": 116,
+      "path": "src/platform/qt/ts/mgba-ms.ts",
+      "git_blob_sha1": "58200cdafbbc38ddd084855fd0afb5323016a24d",
+      "source_sha256": "a4b4dc7dc649a4a70223c1064beeed39a9b3ea2c2c4fd6c6b6c1f024cd1d5b1c",
+      "machine_dossier_sha256": "d0cc62dfeb275d782a53812ef6077c065324f923d4827a0c0dbb47b756a98877",
+      "source_lines": 7094,
+      "license_status": "MPL-2.0_REPOSITORY_SCOPE_TRANSLATOR_PROVENANCE_PENDING",
+      "line_anchors": [1, 2, 3, 5, 7],
+      "catalog": {"language": "ms", "source_language": "en_US", "contexts": 71, "messages": 1274, "unfinished": 729, "empty": 637, "numerus": 2, "active_placeholder_mismatches": 1}
+    },
+    {
+      "packet_index": 117,
+      "path": "src/platform/qt/ts/mgba-nb_NO.ts",
+      "git_blob_sha1": "f304991484bdef760b2dfb4d23f195f3c71bea88",
+      "source_sha256": "96f21c701c1fe975545f5ae6ef45d3aee685514b2f429763113088c1cd3a2d42",
+      "machine_dossier_sha256": "4006693ecc656409c554cc2e8d64405cf9ebee0fad7e4ea4e9f74864ca2bd605",
+      "source_lines": 7102,
+      "license_status": "MPL-2.0_REPOSITORY_SCOPE_TRANSLATOR_PROVENANCE_PENDING",
+      "line_anchors": [1, 2, 3, 5, 7],
+      "catalog": {"language": "nb_NO", "source_language": "en_US", "contexts": 71, "messages": 1274, "unfinished": 109, "empty": 108, "numerus": 2, "active_placeholder_mismatches": 2}
+    },
+    {
+      "packet_index": 118,
+      "path": "src/platform/qt/ts/mgba-pl.ts",
+      "git_blob_sha1": "b44e45b47df04df3883454e392e1a41af5bc5937",
+      "source_sha256": "7f09ec2e51c3bbf740d25ed6c2c1e862171999c8c9fdfeee88274cb3d746ed64",
+      "machine_dossier_sha256": "74283ae1fb2e4364909070b537906110ea9ff15691e7d567ad4341cd73ac9eee",
+      "source_lines": 7104,
+      "license_status": "MPL-2.0_REPOSITORY_SCOPE_TRANSLATOR_PROVENANCE_PENDING",
+      "line_anchors": [1, 2, 3, 5, 7],
+      "catalog": {"language": "pl", "source_language": "en_US", "contexts": 71, "messages": 1274, "unfinished": 101, "empty": 85, "numerus": 2, "active_placeholder_mismatches": 0}
+    },
+    {
+      "packet_index": 119,
+      "path": "src/platform/qt/ts/mgba-pt_BR.ts",
+      "git_blob_sha1": "aaf38236d8d0fa6df046d026781f69287d1628e0",
+      "source_sha256": "1d5bc26ed3fa2baf2d1f505ff12879d05d109df642d6895fec0a3268e007c85a",
+      "machine_dossier_sha256": "67e5f202ca1883cebd5684f22e2ee5dc934416372ff5f6472c3ef02eb690ec34",
+      "source_lines": 7104,
+      "license_status": "MPL-2.0_REPOSITORY_SCOPE_TRANSLATOR_PROVENANCE_PENDING",
+      "line_anchors": [1, 2, 3, 5, 7],
+      "catalog": {"language": "pt_BR", "source_language": "en", "contexts": 71, "messages": 1274, "unfinished": 13, "empty": 12, "numerus": 2, "active_placeholder_mismatches": 0}
+    },
+    {
+      "packet_index": 120,
+      "path": "src/platform/qt/ts/mgba-pt_PT.ts",
+      "git_blob_sha1": "5094b9a284dceb352aea934b27f4ccb106e5fe65",
+      "source_sha256": "ce63a9ef293fd111d9f412398aef454ab98038a1000ddc1921f29f5366789b6f",
+      "machine_dossier_sha256": "81f25ca770cb028fae2fe80740f12ed421756831841350ea6cd23a8e48b2eac6",
+      "source_lines": 7104,
+      "license_status": "MPL-2.0_REPOSITORY_SCOPE_TRANSLATOR_PROVENANCE_PENDING",
+      "line_anchors": [1, 2, 3, 5, 7],
+      "catalog": {"language": "pt_PT", "source_language": "en_US", "contexts": 71, "messages": 1274, "unfinished": 13, "empty": 12, "numerus": 2, "active_placeholder_mismatches": 0}
+    },
+    {
+      "packet_index": 121,
+      "path": "src/platform/qt/ts/mgba-ru.ts",
+      "git_blob_sha1": "805a351b4e667f5af0d0ab997ce3c26285942813",
+      "source_sha256": "94b63798caee4da14c32b242d49e4a7bef888bed345114d63691ccf89390a33c",
+      "machine_dossier_sha256": "4883c18470ebac59dc6de9db5eae7b31f558c37e4c3b7929dc327ff080e974cd",
+      "source_lines": 7104,
+      "license_status": "MPL-2.0_REPOSITORY_SCOPE_TRANSLATOR_PROVENANCE_PENDING",
+      "line_anchors": [1, 2, 3, 5, 7],
+      "catalog": {"language": "ru_RU", "source_language": "en_US", "contexts": 71, "messages": 1274, "unfinished": 189, "empty": 139, "numerus": 2, "active_placeholder_mismatches": 1}
+    },
+    {
+      "packet_index": 122,
+      "path": "src/platform/qt/ts/mgba-sv.ts",
+      "git_blob_sha1": "30ed1c6fb2f417e2f6e48629db985b9fc220444b",
+      "source_sha256": "57679a8c34494700b1b04b1e043e1bc79ea87cf9985a39401b7969aaae803b68",
+      "machine_dossier_sha256": "076534a4cd409fc24b253424130e8b8751d01ab79d57689b55ddc011dfc5d087",
+      "source_lines": 7104,
+      "license_status": "MPL-2.0_REPOSITORY_SCOPE_TRANSLATOR_PROVENANCE_PENDING",
+      "line_anchors": [1, 2, 3, 5, 7],
+      "catalog": {"language": "sv", "source_language": "en_US", "contexts": 71, "messages": 1274, "unfinished": 122, "empty": 120, "numerus": 2, "active_placeholder_mismatches": 0}
+    },
+    {
+      "packet_index": 123,
+      "path": "src/platform/qt/ts/mgba-ta.ts",
+      "git_blob_sha1": "eb84adfe415c7009a0c4113a26a99843811a2d49",
+      "source_sha256": "8b07c792de90d32fde45085da90b3febc0b20eeb3b710564356701ea609835c7",
+      "machine_dossier_sha256": "d6ce59ebe3ca55dbc323125c603c134dff6c00b4144f9e2906d00feacbd86d4e",
+      "source_lines": 7104,
+      "license_status": "MPL-2.0_REPOSITORY_SCOPE_TRANSLATOR_PROVENANCE_PENDING",
+      "line_anchors": [1, 2, 3, 5, 7],
+      "catalog": {"language": "ta", "source_language": "en_US", "contexts": 71, "messages": 1274, "unfinished": 16, "empty": 14, "numerus": 2, "active_placeholder_mismatches": 17}
+    },
+    {
+      "packet_index": 124,
+      "path": "src/platform/qt/ts/mgba-template.ts",
+      "git_blob_sha1": "2993f68459721e2470bfd95af6b8f186ca8f49e5",
+      "source_sha256": "bf20dce5dcc323344ae43a9a7cd4a9edd7a604ee3880de2d2600e8787bcce83b",
+      "machine_dossier_sha256": "18e1dd385abe456bb7b68f04af1f1936b5c630e9f125562fe734374c169274fb",
+      "source_lines": 7092,
+      "license_status": "MPL-2.0_REPOSITORY_SCOPE_TRANSLATOR_PROVENANCE_PENDING",
+      "line_anchors": [1, 2, 3, 5, 7],
+      "catalog": {"language": null, "source_language": "en_US", "contexts": 71, "messages": 1274, "unfinished": 1274, "empty": 1274, "numerus": 2, "active_placeholder_mismatches": 0}
+    },
+    {
+      "packet_index": 125,
+      "path": "src/platform/qt/ts/mgba-tr.ts",
+      "git_blob_sha1": "b15fa556690292c44ace8f584fb78a781a2d097b",
+      "source_sha256": "0251669ae58a250535f156090d58c06f19c9d152b2f31112798683ee8357bbf3",
+      "machine_dossier_sha256": "f99b3c56e0fb7182b5e1e20266912c0876c2d67ea49a2cc6cc15739c2ff46f48",
+      "source_lines": 7102,
+      "license_status": "MPL-2.0_REPOSITORY_SCOPE_TRANSLATOR_PROVENANCE_PENDING",
+      "line_anchors": [1, 2, 3, 5, 7],
+      "catalog": {"language": "tr_TR", "source_language": "en_US", "contexts": 71, "messages": 1274, "unfinished": 13, "empty": 148, "numerus": 2, "active_placeholder_mismatches": 17}
+    },
+    {
+      "packet_index": 126,
+      "path": "src/platform/qt/ts/mgba-zh_CN.ts",
+      "git_blob_sha1": "785c715d95d6e99ca1adb28578bd22a3ce7e141c",
+      "source_sha256": "49231ac3e0b90edef53667f8514e867aa27e4e333200b1ca3154d29caadb7907",
+      "machine_dossier_sha256": "b2aee4287e965c9f6bc89e47963fd5d422855a82f386eceb17e3e3e2c8a6d42b",
+      "source_lines": 7102,
+      "license_status": "MPL-2.0_REPOSITORY_SCOPE_TRANSLATOR_PROVENANCE_PENDING",
+      "line_anchors": [1, 2, 3, 5, 7],
+      "catalog": {"language": "zh_CN", "source_language": "en_US", "contexts": 71, "messages": 1274, "unfinished": 13, "empty": 18, "numerus": 2, "active_placeholder_mismatches": 3}
+    },
+    {
+      "packet_index": 127,
+      "path": "src/platform/qt/ts/mgba-zh_Hant.ts",
+      "git_blob_sha1": "6fbd572cfa9ec8359a0e5b5dcbcd48a0a933365f",
+      "source_sha256": "e1ab6dafefaf4d3e8b46ea09bcb08882206027884b6851ac88339e72be4bf996",
+      "machine_dossier_sha256": "d434871fab2652ce0075d76a18b39dc7f6221ea473f71de67c4e1aeb7207a411",
+      "source_lines": 7102,
+      "license_status": "MPL-2.0_REPOSITORY_SCOPE_TRANSLATOR_PROVENANCE_PENDING",
+      "line_anchors": [1, 2, 3, 5, 7],
+      "catalog": {"language": "zh_Hant", "source_language": "en_US", "contexts": 71, "messages": 1274, "unfinished": 88, "empty": 74, "numerus": 2, "active_placeholder_mismatches": 0}
+    },
+    {
+      "packet_index": 129,
+      "path": "src/third-party/sqlite3/sqlite3.c",
+      "git_blob_sha1": "912ac26944c6b9e3cc1856be34f9344b02b1693a",
+      "source_sha256": "ff57e8d0a1572b35c17cab9a7dea34616bc12b6fb8b29acf5cb00b6ecf025149",
+      "machine_dossier_sha256": "73ccc01c19488b0433473e399dea3ea941aaad2baeba2e78cb8a69e2945c2bc2",
+      "source_lines": 265908,
+      "file_bytes": 9386637,
+      "license_status": "SQLITE_PUBLIC_DOMAIN_NOTICE_PRESENT_COMBINED_DISTRIBUTION_REVIEW_PENDING",
+      "line_anchors": [1, 20, 35, 168, 320, 470, 472, 265905, 265906],
+      "source_observations": [
+        "The full amalgamation identifies SQLite version 3.51.1 and upstream Fossil source check-in 281fc0e9afc38674b9b0991943b9e9d1e64c.",
+        "The source contains its own copyright disclaimer/public-domain blessing and embeds sqlite3.h; it is a single translation unit containing many SQLite modules.",
+        "This checkout defines SQLITE_OMIT_LOAD_EXTENSION and SQLITE_ENABLE_LOCKING_STYLE near the amalgamation prefix."
+      ],
+      "unresolved": [
+        "Confirm configured system-versus-bundled provider, compile options, toolchain ABI, and downstream packaging in each supported build.",
+        "Review SQLite's complete implementation and security/update provenance independently; the full byte stream was pinned and structurally scanned, not semantically dispositioned.",
+        "Assess bundled SQLite and MPL-covered mGBA code in each combined distribution; this handoff is not legal advice or a combined-license clearance."
+      ]
+    }
+  ],
+  "shared_translation_observations": [
+    "All 16 complete XML catalogs parse as Qt TS 2.1, with 71 contexts, 1,274 message records, and two numerus messages per file.",
+    "Unfinished/empty translation counts and lexical placeholder-count deltas are recorded per catalog as triage only; they do not establish translation errors or language quality.",
+    "The pinned Qt CMake source conditionally builds translations only when LinguistTools is found; it removes mgba-template.ts from both translation-generation branches. The QTranslator source path is static source evidence only."
+  ],
+  "shared_unresolved": [
+    "Independently review each full catalog's wording, context, plural forms, placeholders, rich text, and contributor provenance.",
+    "Verify the Qt toolchain actually emits each QM/QRC and test locale selection/fallback in the native frontend.",
+    "Resolve all generated-source and build-configuration variants before making runtime or redistribution claims."
+  ],
+  "review_disposition": {
+    "status": "ANALYST_PARTIAL_NEEDS_EVIDENCE",
+    "whole_file_semantic_coverage": false,
+    "independent_reviewer": null,
+    "independent_verdict": "NEEDS_REVIEW",
+    "approval_added": false
+  },
+  "record_defaults": {
+    "applies_to_every_record": true,
+    "analyst_status": "ANALYST_PARTIAL_NEEDS_EVIDENCE",
+    "whole_file_semantic_coverage": false,
+    "independent_reviewer": null,
+    "independent_verdict": "NEEDS_REVIEW",
+    "approval_added": false
+  }
+}
