@@ -103,7 +103,7 @@ class ARMSixFileEligibilityTests(unittest.TestCase):
     def test_wrapped_mpl_notice_is_recognized(self):
         self.assertTrue(
             eligibility._has_mpl_2_notice(
-                b"Mozilla Public\nLicense, v. 2.0."
+                b"Mozilla Public *\n * License, v. 2.0."
             )
         )
         self.assertFalse(eligibility._has_mpl_2_notice(b"Mozilla Public License"))

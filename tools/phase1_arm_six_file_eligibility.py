@@ -115,7 +115,7 @@ def _git_blob(data: bytes) -> str:
 
 
 def _has_mpl_2_notice(data: bytes) -> bool:
-    normalized = b" ".join(data.split())
+    normalized = b" ".join(data.replace(b"*", b" ").split())
     return b"Mozilla Public License" in normalized and b"2.0." in normalized
 
 
