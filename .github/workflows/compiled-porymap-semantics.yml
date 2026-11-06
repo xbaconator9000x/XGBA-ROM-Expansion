@@ -24,6 +24,9 @@ on:
       - 'tools/phase1_porymap_cross_map_undo.py'
       - 'tests/phase1_porymap_cross_map_undo.cpp'
       - 'docs/phase1-review-readiness/porymap-cross-map-undo-boundary-20261106.md'
+      - 'tools/phase1_porymap_editor_map_switch.py'
+      - 'tests/phase1_porymap_editor_map_switch.cpp'
+      - 'docs/phase1-review-readiness/porymap-editor-map-switch-20261106.md'
       - 'tools/qt_metaobject_contracts.py'
       - '.github/workflows/compiled-porymap-semantics.yml'
   pull_request:
@@ -46,6 +49,9 @@ on:
       - 'tools/phase1_porymap_cross_map_undo.py'
       - 'tests/phase1_porymap_cross_map_undo.cpp'
       - 'docs/phase1-review-readiness/porymap-cross-map-undo-boundary-20261106.md'
+      - 'tools/phase1_porymap_editor_map_switch.py'
+      - 'tests/phase1_porymap_editor_map_switch.cpp'
+      - 'docs/phase1-review-readiness/porymap-editor-map-switch-20261106.md'
       - '.github/workflows/compiled-porymap-semantics.yml'
 permissions:
   contents: read
@@ -123,6 +129,15 @@ jobs:
             --output porymap-compiler-evidence/porymap-cross-map-undo.json \
             --archive porymap-compiler-evidence/porymap-cross-map-undo.tar.gz \
             --log porymap-compiler-evidence/porymap-cross-map-undo.log
+      - name: Exercise pinned editor map-switch undo-group boundary
+        run: |
+          python3 tools/phase1_porymap_editor_map_switch.py \
+            --porymap upstream/porymap \
+            --harness tests/phase1_porymap_editor_map_switch.cpp \
+            --dossier docs/phase1-review-readiness/porymap-editor-map-switch-20261106.md \
+            --output porymap-compiler-evidence/porymap-editor-map-switch.json \
+            --archive porymap-compiler-evidence/porymap-editor-map-switch.tar.gz \
+            --log porymap-compiler-evidence/porymap-editor-map-switch.log
       - name: Configure original qmake Qt application
         run: |
           set -o pipefail

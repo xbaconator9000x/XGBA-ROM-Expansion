@@ -347,12 +347,18 @@ def verify_prior_inventory_overlap(repository_root):
     tool = Path(__file__).resolve()
     dossier = (repository_root
                / "docs/phase1-review-readiness/porymap-cross-map-undo-boundary-20261106.md").resolve()
+    downstream_packet_files = {
+        (repository_root / "tools/phase1_porymap_editor_map_switch.py").resolve(),
+        (repository_root
+         / "docs/phase1-review-readiness/porymap-editor-map-switch-20261106.md").resolve(),
+    }
     candidates = []
     for folder in (repository_root / "tools",
                    repository_root / "docs/phase1-review-readiness"):
         candidates.extend(path for path in folder.rglob("*")
                           if path.is_file() and path.suffix in {".py", ".md"}
-                          and path.resolve() not in {tool, dossier})
+                          and path.resolve() not in {tool, dossier}
+                          and path.resolve() not in downstream_packet_files)
     for path in NEW_FILES:
         matches = [str(candidate) for candidate in candidates
                    if path in candidate.read_text(errors="replace")]
