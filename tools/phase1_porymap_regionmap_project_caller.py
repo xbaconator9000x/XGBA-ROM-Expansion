@@ -148,6 +148,11 @@ def verify_no_prior_inventory_overlap(repository_root):
     new_tool = Path(__file__).resolve()
     new_dossier = (repository_root
                    / "docs/phase1-review-readiness/porymap-regionmap-project-caller-20261105.md").resolve()
+    later_context_packet = {
+        (repository_root / "tools/phase1_porymap_regionmap_project_save.py").resolve(),
+        (repository_root
+         / "docs/phase1-review-readiness/porymap-regionmap-project-save-failure-closure-20261106.md").resolve(),
+    }
     require(not set(NEW_FILES).intersection(PREVIOUS_REGIONMAP_FILES),
             "new complete-file inventory overlaps the prior RegionMap inventory")
     candidates = []
@@ -155,7 +160,7 @@ def verify_no_prior_inventory_overlap(repository_root):
                    repository_root / "docs/phase1-review-readiness"):
         candidates.extend(path for path in folder.rglob("*")
                           if path.is_file() and path.suffix in {".py", ".md"}
-                          and path.resolve() not in {new_tool, new_dossier})
+                          and path.resolve() not in {new_tool, new_dossier, *later_context_packet})
     for path in NEW_FILES:
         matches = [str(candidate) for candidate in candidates
                    if path in candidate.read_text(errors="replace")]
