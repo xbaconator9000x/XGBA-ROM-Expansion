@@ -3,6 +3,7 @@
 import argparse
 import gzip
 import hashlib
+import importlib.util
 import json
 import subprocess
 from pathlib import Path, PurePosixPath
@@ -1213,6 +1214,273 @@ def verify_file_inspection_sources(record, closure_record, roots,
     return result
 
 
+def validate_poryscript_parser_emitter_followup(record, closure_record):
+    require(record.get("schema") ==
+            "copilot-poryscript-abi-parser-emitter-input-followup/v1",
+            "unsupported Poryscript parser/emitter follow-up schema")
+    reviewer = record.get("reviewer", {})
+    require(reviewer.get("id") ==
+            "copilot-issue33-poryscript-parser-emitter-input" and
+            reviewer.get("identity") and
+            reviewer.get("source_interpreter_identity") and
+            reviewer.get("distinct_from_source_interpreter") is True and
+            reviewer.get("authenticated_github_review_attribution") is False and
+            reviewer.get("independent_human_attestation") is False and
+            reviewer.get("attribution_blocker"),
+            "Poryscript parser/emitter attribution must remain explicit")
+    require(record.get("pins") == {
+        "huderlem/poryscript": PINS["huderlem/poryscript"],
+        "pret/pokefirered": PINS["pret/pokefirered"],
+    }, "Poryscript parser/emitter source pins differ")
+    basis = record.get("basis", {})
+    require(basis.get("prior_exact_head") ==
+            "ea9e20357d2b687f9a6692ec888fd45778772861" and
+            basis.get("selection") and basis.get("prior_native_witness"),
+            "Poryscript parser/emitter disjoint selection is incomplete")
+
+    accounting = record.get("accounting", {})
+    require(accounting.get("phase1_gate") == "FAIL_INCOMPLETE" and
+            accounting.get("approved_p0") == 0 and
+            accounting.get("p0_total") == 338 and
+            accounting.get("approved_total") == 0 and
+            accounting.get("inventory_total") == 14834 and
+            accounting.get("whole_file_semantic_reviews") == 0 and
+            accounting.get("new_qualifying_copilot_receipts") == 0 and
+            accounting.get("phase2_started") is False and
+            accounting.get("shared_queue_register_gate_modified") is False,
+            "Poryscript parser/emitter follow-up must remain non-approving")
+
+    closure_files, _ = validate_closure_record(closure_record)
+    require(record.get("original_machine_evidence") ==
+            EXPECTED_ARCHIVES["dossiers"],
+            "Poryscript parser/emitter dossier archive identity differs")
+    license_source = record.get("license_source", {})
+    license_key = (
+        license_source.get("repository"), license_source.get("path")
+    )
+    license_row = closure_files.get(license_key)
+    require(license_key == ("huderlem/poryscript", "LICENSE.md") and
+            license_row is not None and
+            license_source.get("commit") == PINS[license_key[0]] and
+            license_source.get("git_blob_sha1") == license_row["git_blob_sha1"] and
+            license_source.get("sha256") == license_row["sha256"] and
+            license_source.get("dossier_record_line_sha256") ==
+            license_row["dossier_record_line_sha256"] and
+            license_source.get("assessment"),
+            "Poryscript parser/emitter license identity differs")
+
+    files = record.get("files", [])
+    require(len(files) == 1, "Poryscript parser/emitter file count differs")
+    item = files[0]
+    key = (item.get("repository"), item.get("path"))
+    expected_key = ("huderlem/poryscript", "parser/parser_test.go")
+    expected = PORYSCRIPT_PARSER_EMITTER_FILE
+    source_row = closure_files.get(expected_key)
+    require(key == expected_key and source_row is not None and
+            item.get("commit") == PINS[expected_key[0]] and
+            all(item.get(field) == expected[field] ==
+                source_row.get(field)
+                for field in ("git_blob_sha1", "sha256",
+                              "dossier_record_line_sha256")) and
+            (item.get("byte_length"), item.get("line_count")) ==
+            (expected["byte_length"], expected["line_count"]) and
+            item.get("full_source_bytes_retrieved") is True and
+            item.get("complete_source_inspection") is True and
+            item.get("source_extent") == "COMPLETE_PINNED_FILE_READ" and
+            item.get("whole_file_semantic_disposition") is False and
+            item.get("verdict") == "NEEDS_EVIDENCE" and
+            item.get("source_observations"),
+            "Poryscript parser test source identity or disposition is invalid")
+    require(item.get("evidence_ranges") == [] and
+            item.get("supplemental_evidence_ranges") == [{
+                "start": 1,
+                "end": expected["line_count"],
+                "sha256": expected["sha256"],
+            }], "Poryscript parser test full-file range differs")
+    license_evidence = item.get("license_evidence", {})
+    require(license_evidence.get("status") == "UNRESOLVED" and
+            license_evidence.get("path") == "LICENSE.md" and
+            license_evidence.get("unresolved"),
+            "Poryscript parser test license applicability must remain unresolved")
+    dependencies = item.get("dependency_links", [])
+    actual_dependencies = {
+        (dependency.get("repository"), dependency.get("path"),
+         dependency.get("direction"), dependency.get("relation"))
+        for dependency in dependencies
+    }
+    require(len(actual_dependencies) == len(dependencies) and
+            actual_dependencies == PORYSCRIPT_PARSER_EMITTER_DEPENDENCIES,
+            "Poryscript parser test dependency links differ")
+    for dependency in dependencies:
+        target = (dependency.get("repository"), dependency.get("path"))
+        require(target in closure_files and
+                dependency.get("direction") in {"inbound", "outbound"} and
+                dependency.get("relation"),
+                "Poryscript parser test dependency lacks pinned endpoint")
+    require(item.get("unresolved_obligations") and
+            set(item["unresolved_obligations"]) == {
+                "O-NUMERIC-ASSEMBLY", "O-EMPTY-HEX", "O-RUNTIME-SENTINEL",
+                "O-GENERATED-INCLUDE", "O-LICENSE", "O-DEPENDENCY-CLOSURE",
+                "O-ATTRIBUTION",
+            }, "Poryscript parser test unresolved obligations differ")
+
+    probe = record.get("actual_cli_probe", {})
+    require(probe.get("script") ==
+            "tools/copilot_poryscript_parser_emitter_probe.py" and
+            probe.get("poryscript_commit") == PINS["huderlem/poryscript"] and
+            probe.get("command") ==
+            "python3 tools/copilot_poryscript_parser_emitter_probe.py --poryscript-root upstream-poryscript" and
+            probe.get("status") ==
+            "PASS_PINNED_PORYSCRIPT_CLI_PARSER_EMITTER_PROBE" and
+            probe.get("numeric_cases") ==
+            PORYSCRIPT_PARSER_EMITTER_NUMERIC_CASES and
+            probe.get("empty_table") ==
+            PORYSCRIPT_PARSER_EMITTER_EMPTY_TABLE and
+            probe.get("negative_controls") ==
+            PORYSCRIPT_PARSER_EMITTER_NEGATIVES and
+            probe.get("execution_scope") ==
+            "Pinned Poryscript CLI output from small synthetic map-script fixtures; no assembler, ROM, interpreter, emulator, or gameplay.",
+            "Poryscript parser/emitter CLI probe record differs")
+    require(record.get("existing_evidence_reused") and
+            all(item.get("scope") for item in
+                record["existing_evidence_reused"]),
+            "Poryscript parser/emitter prior evidence references are missing")
+
+    objection_ids = {
+        "O-NUMERIC-ASSEMBLY", "O-EMPTY-HEX", "O-RUNTIME-SENTINEL",
+        "O-GENERATED-INCLUDE", "O-LICENSE", "O-DEPENDENCY-CLOSURE",
+        "O-ATTRIBUTION",
+    }
+    objections = record.get("objections", [])
+    require({objection.get("id") for objection in objections} == objection_ids and
+            all(objection.get("status") == "UNRESOLVED" and
+                objection.get("observation") and objection.get("resolution")
+                for objection in objections),
+            "Poryscript parser/emitter objections must remain unresolved")
+    expected_controls = {
+        "NC-IDENTITY":
+            "test_parser_emitter_handoff_rejects_source_identity_mutation",
+        "NC-DEPENDENCY":
+            "test_parser_emitter_handoff_rejects_dependency_mutation",
+        "NC-VERDICT":
+            "test_parser_emitter_handoff_rejects_verdict_and_gate_mutations",
+        "NC-PARSER-MALFORMED":
+            "actual_cli_probe_rejects_empty_condition_and_missing_comma",
+        "NC-SENTINEL":
+            "actual_cli_probe_rejects_mutated_away_empty_table_sentinel",
+        "NC-PINNED-SOURCE":
+            "parser_emitter_probe_rejects_source_blob_mutation",
+    }
+    controls = {
+        control.get("id"): control.get("test")
+        for control in record.get("negative_controls", [])
+    }
+    require(controls == expected_controls,
+            "Poryscript parser/emitter negative controls differ")
+    handoff = record.get("review_handoff", {})
+    require(handoff.get("status") ==
+            "READY_FOR_INDEPENDENT_REVIEW_NOT_APPROVAL" and
+            handoff.get("pending_requirements") and
+            record.get("summary") == {
+                "selected_source_files": 1,
+                "complete_pinned_file_bytes_retrieved": 1,
+                "complete_source_files_read": 1,
+                "source_identity_records": 1,
+                "whole_file_semantic_reviews": 0,
+                "new_copilot_reviewed_passed_files": 0,
+                "new_qualifying_copilot_receipts": 0,
+                "new_approvals": 0,
+                "phase1_gate": "FAIL_INCOMPLETE",
+            }, "Poryscript parser/emitter summary overstates review completion")
+    validation = record.get("validation", {})
+    require(validation.get("source_checkout") and
+            validation.get("pinned_poryscript_tests") == "PASS" and
+            validation.get("pinned_poryscript_test_command") ==
+            "go test ./parser ./lexer ./emitter" and
+            validation.get("actual_cli_probe") == probe.get("status") and
+            validation.get("actual_cli_probe_command") == probe.get("command") and
+            validation.get("actual_cli_gnu_arm_witness") ==
+            "REUSED_HISTORICAL_EVIDENCE_NOT_RERUN" and
+            validation.get("exact_head_ci") == "PENDING_FOR_THIS_CHANGE",
+            "Poryscript parser/emitter validation provenance is incomplete")
+    return {
+        "status": "PASS_PARSER_EMITTER_RECORD_NOT_SEMANTIC_APPROVAL",
+        "source_files_recorded": 1,
+        "complete_source_files_read": 1,
+        "whole_file_semantic_reviews": 0,
+        "new_qualifying_copilot_receipts": 0,
+        "approval_count_changed": False,
+        "phase1_gate": "FAIL_INCOMPLETE",
+    }
+
+
+def verify_poryscript_parser_emitter_sources(record, closure_record, root,
+                                             source_files_only=False):
+    result = validate_poryscript_parser_emitter_followup(
+        record, closure_record
+    )
+    expected = PORYSCRIPT_PARSER_EMITTER_FILE
+    source_path = "parser/parser_test.go"
+    if (root / ".git").exists():
+        revision = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "HEAD"],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+        require(revision == PINS["huderlem/poryscript"],
+                "Poryscript parser/emitter checkout revision differs")
+        for path, blob in {
+                source_path: expected["git_blob_sha1"],
+                "parser/parser.go":
+                    "3957939076696de0a3e701c223c53afffe8d1b0e",
+                "emitter/emitter.go":
+                    "d35843ef29929ead47351646d7a33dd5c692b850",
+                "lexer/lexer.go":
+                    "34ef7b989e38a7f9f0f893809a55a72e995f1bb8",
+        }.items():
+            require((root / path).is_file(),
+                    "Poryscript parser/emitter source file missing: " + path)
+            actual = subprocess.run(
+                ["git", "-C", str(root), "hash-object", path],
+                check=True, capture_output=True, text=True,
+            ).stdout.strip()
+            require(actual == blob,
+                    "Poryscript parser/emitter source blob differs: " + path)
+    else:
+        require(source_files_only,
+                "Poryscript parser/emitter checkout lacks .git metadata")
+        for path, blob in {
+                source_path: expected["git_blob_sha1"],
+                "parser/parser.go":
+                    "3957939076696de0a3e701c223c53afffe8d1b0e",
+                "emitter/emitter.go":
+                    "d35843ef29929ead47351646d7a33dd5c692b850",
+                "lexer/lexer.go":
+                    "34ef7b989e38a7f9f0f893809a55a72e995f1bb8",
+        }.items():
+            source = root / path
+            require(source.is_file(),
+                    "Poryscript parser/emitter source file missing: " + path)
+            require(git_blob_sha1(source.read_bytes()) == blob,
+                    "Poryscript parser/emitter source blob differs: " + path)
+    probe_path = Path(__file__).with_name(
+        "copilot_poryscript_parser_emitter_probe.py"
+    )
+    spec = importlib.util.spec_from_file_location(
+        "copilot_poryscript_parser_emitter_probe", probe_path
+    )
+    probe_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(probe_module)
+    actual_probe = probe_module.run_probe(root, source_files_only)
+    for field in ("status", "poryscript_commit", "numeric_cases",
+                  "empty_table", "negative_controls", "execution_scope"):
+        require(actual_probe.get(field) == record["actual_cli_probe"].get(field),
+                "pinned Poryscript CLI probe differs: " + field)
+    result["source_files_verified"] = 1
+    result["cli_probe_status"] = actual_probe["status"]
+    result["status"] = "PASS_PINNED_CLI_AND_SOURCE_NOT_SEMANTIC_APPROVAL"
+    return result
+
+
 PORYSCRIPT_LEXER_FILES = {
     ("huderlem/poryscript", "lexer/lexer.go"): {
         "git_blob_sha1": "34ef7b989e38a7f9f0f893809a55a72e995f1bb8",
@@ -1246,6 +1514,71 @@ PORYSCRIPT_LEXER_DEPENDENCIES = {
         ("huderlem/poryscript", "token/token.go", "outbound",
          "Assertions compare lexer output against these token definitions."),
     },
+}
+
+
+PORYSCRIPT_PARSER_EMITTER_FILE = {
+    "git_blob_sha1": "fdab86ecadc1ed1c01b2dcd639d70fc62ef2c980",
+    "sha256": "dbfbb2a6c42f708200627350d5898559332e95440f117dd6205e6964c4548c10",
+    "dossier_record_line_sha256":
+        "af9cf34fbbb3679c16b7a3f11bac503ce98b5f1da7e4d72d4a656a3d0b512796",
+    "byte_length": 96495,
+    "line_count": 2737,
+}
+PORYSCRIPT_PARSER_EMITTER_DEPENDENCIES = {
+    ("huderlem/poryscript", "parser/parser.go", "outbound",
+     "Parser tests instantiate the parser and inspect its map-script AST results."),
+    ("huderlem/poryscript", "lexer/lexer.go", "outbound",
+     "Parser tests feed source text through the pinned lexer."),
+    ("huderlem/poryscript", "ast/ast.go", "outbound",
+     "Assertions inspect the parser's map-script and entry AST types."),
+    ("huderlem/poryscript", "parser/parse_error.go", "outbound",
+     "Parser error tests assert structured ParseError values and rendered messages."),
+}
+PORYSCRIPT_PARSER_EMITTER_NUMERIC_CASES = {
+    "0": {
+        "accepted": True,
+        "emitted_anchor": "map_script_2 VAR_TEST, 0, Probe_Target",
+        "emitted_assembly_sha256":
+            "83da0db6101380b1d86618b96d6612b7b01d1de0b1b74d49ae1e8388982860f3",
+    },
+    "0x": {
+        "accepted": True,
+        "emitted_anchor": "map_script_2 VAR_TEST, 0x, Probe_Target",
+        "emitted_assembly_sha256":
+            "28e07237b1a200c05dd896955fe9930098e4b9b62feaa01be7da80c598a6b791",
+    },
+    "0x10000": {
+        "accepted": True,
+        "emitted_anchor": "map_script_2 VAR_TEST, 0x10000, Probe_Target",
+        "emitted_assembly_sha256":
+            "ac3967aa7670b991f2a90a22cd3560ce193861bf173565b7961f605f814a50e9",
+    },
+    "-1": {
+        "accepted": True,
+        "emitted_anchor": "map_script_2 VAR_TEST, -1, Probe_Target",
+        "emitted_assembly_sha256":
+            "843e2b9c500b1a8f7c549f76a835baf96d1490015bc7ce7cb741c43e2c0954cc",
+    },
+    "65536": {
+        "accepted": True,
+        "emitted_anchor": "map_script_2 VAR_TEST, 65536, Probe_Target",
+        "emitted_assembly_sha256":
+            "5147efcd61147601ee0624d146313d83f3292b997f5da8ff9fcf6e3e87df5c3b",
+    },
+}
+PORYSCRIPT_PARSER_EMITTER_EMPTY_TABLE = {
+    "accepted": True,
+    "conditional_records": 0,
+    "separate_zero_sentinel_emitted": True,
+    "emitted_assembly_sha256":
+        "6bff0887e08ee1402fda4aefee5aa384a1b2110a710a183a39da14c8a8e050f8",
+}
+PORYSCRIPT_PARSER_EMITTER_NEGATIVES = {
+    "empty-condition": "REJECTED_AS_EXPECTED",
+    "missing-comma": "REJECTED_AS_EXPECTED",
+    "mutated_away_empty_table_sentinel":
+        "PASS_REJECTED_BY_SENTINEL_ASSERTION",
 }
 
 
@@ -1515,6 +1848,7 @@ def main():
     parser.add_argument("--closure-record", type=Path)
     parser.add_argument("--file-inspection-record", type=Path, action="append")
     parser.add_argument("--lexer-input-followup-record", type=Path)
+    parser.add_argument("--parser-emitter-followup-record", type=Path)
     parser.add_argument("--poryscript-root", type=Path)
     parser.add_argument("--firered-root", type=Path)
     parser.add_argument("--agbcc-root", type=Path)
@@ -1532,7 +1866,8 @@ def main():
         roots["pret/agbcc"] = args.agbcc_root.resolve()
     if args.mgba_root:
         roots["mgba-emu/mgba"] = args.mgba_root.resolve()
-    if args.file_inspection_record or args.lexer_input_followup_record:
+    if (args.file_inspection_record or args.lexer_input_followup_record or
+            args.parser_emitter_followup_record):
         require(args.closure_record is not None,
                 "follow-up source records require --closure-record")
         results = []
@@ -1553,6 +1888,16 @@ def main():
                 args.lexer_input_followup_record.read_text(encoding="utf-8")
             )
             results.append(verify_poryscript_lexer_sources(
+                inspection, record, roots["huderlem/poryscript"],
+                args.source_files_only,
+            ))
+        if args.parser_emitter_followup_record:
+            require("huderlem/poryscript" in roots,
+                    "--parser-emitter-followup-record requires --poryscript-root")
+            inspection = json.loads(
+                args.parser_emitter_followup_record.read_text(encoding="utf-8")
+            )
+            results.append(verify_poryscript_parser_emitter_sources(
                 inspection, record, roots["huderlem/poryscript"],
                 args.source_files_only,
             ))

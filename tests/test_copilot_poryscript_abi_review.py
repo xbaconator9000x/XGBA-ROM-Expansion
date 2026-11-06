@@ -16,6 +16,7 @@ from tools.copilot_poryscript_abi_review import (
     validate_closure_record,
     validate_file_inspection_record,
     validate_poryscript_lexer_followup,
+    validate_poryscript_parser_emitter_followup,
     git_blob_sha1,
     validate_record,
     verify_file_inspection_sources,
@@ -61,6 +62,11 @@ class PoryscriptAbiReviewTests(unittest.TestCase):
         )
         cls.lexer_input_followup = json.loads(
             (DEFAULT_RECORD.parent / "poryscript-lexer-input-followup.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        cls.parser_emitter_followup = json.loads(
+            (DEFAULT_RECORD.parent / "parser-emitter-input-followup.json").read_text(
                 encoding="utf-8"
             )
         )
@@ -141,6 +147,67 @@ class PoryscriptAbiReviewTests(unittest.TestCase):
                     self.lexer_input_followup, self.closure, root,
                     source_files_only=True,
                 )
+
+    def test_parser_emitter_handoff_is_complete_and_non_approving(self):
+        result = validate_poryscript_parser_emitter_followup(
+            self.parser_emitter_followup, self.closure
+        )
+        self.assertEqual(
+            result["status"],
+            "PASS_PARSER_EMITTER_RECORD_NOT_SEMANTIC_APPROVAL",
+        )
+        self.assertEqual(result["source_files_recorded"], 1)
+        self.assertEqual(result["whole_file_semantic_reviews"], 0)
+        self.assertEqual(self.parser_emitter_followup["accounting"]["phase1_gate"],
+                         "FAIL_INCOMPLETE")
+        self.assertEqual(
+            set(self.parser_emitter_followup["actual_cli_probe"]["numeric_cases"]),
+            {"0", "0x", "0x10000", "-1", "65536"},
+        )
+
+    def test_parser_emitter_handoff_rejects_source_identity_mutation(self):
+        changed = copy.deepcopy(self.parser_emitter_followup)
+        changed["files"][0]["git_blob_sha1"] = "0" * 40
+        with self.assertRaisesRegex(ValueError, "source identity"):
+            validate_poryscript_parser_emitter_followup(changed, self.closure)
+
+    def test_parser_emitter_handoff_rejects_dependency_mutation(self):
+        changed = copy.deepcopy(self.parser_emitter_followup)
+        changed["files"][0]["dependency_links"][0]["path"] = "emitter/emitter.go"
+        with self.assertRaisesRegex(ValueError, "dependency links differ"):
+            validate_poryscript_parser_emitter_followup(changed, self.closure)
+
+    def test_parser_emitter_handoff_rejects_verdict_and_gate_mutations(self):
+        changed = copy.deepcopy(self.parser_emitter_followup)
+        changed["files"][0]["verdict"] = "APPROVED"
+        with self.assertRaisesRegex(ValueError, "source identity or disposition"):
+            validate_poryscript_parser_emitter_followup(changed, self.closure)
+
+        changed = copy.deepcopy(self.parser_emitter_followup)
+        changed["accounting"]["phase1_gate"] = "PASS"
+        with self.assertRaisesRegex(ValueError, "remain non-approving"):
+            validate_poryscript_parser_emitter_followup(changed, self.closure)
+
+    def test_parser_emitter_handoff_rejects_probe_mutation(self):
+        changed = copy.deepcopy(self.parser_emitter_followup)
+        changed["actual_cli_probe"]["numeric_cases"]["0x"]["emitted_assembly_sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "CLI probe record differs"):
+            validate_poryscript_parser_emitter_followup(changed, self.closure)
+
+    def test_parser_emitter_probe_rejects_source_blob_mutation(self):
+        from tools.copilot_poryscript_parser_emitter_probe import (
+            SOURCE_BLOBS,
+            verify_sources,
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            for path in SOURCE_BLOBS:
+                source = root / path
+                source.parent.mkdir(parents=True, exist_ok=True)
+                source.write_text("mutated pinned source\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "source blob mismatch"):
+                verify_sources(root, source_files_only=True)
 
     def test_record_is_pinned_and_non_approving(self):
         sources = validate_record(self.record)
