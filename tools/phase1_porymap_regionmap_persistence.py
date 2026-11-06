@@ -126,6 +126,9 @@ def verify_no_prior_inventory_overlap(repository_root):
         (repository_root / "tools/phase1_porymap_regionmap_project_caller.py").resolve(),
         (repository_root
          / "docs/phase1-review-readiness/porymap-regionmap-project-caller-20261105.md").resolve(),
+        (repository_root / "tools/phase1_porymap_regionmap_project_save.py").resolve(),
+        (repository_root
+         / "docs/phase1-review-readiness/porymap-regionmap-project-save-failure-closure-20261106.md").resolve(),
     }
     files = []
     for folder in (repository_root / "tools",
