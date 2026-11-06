@@ -634,7 +634,10 @@ class PinnedFireRedPreprocessorTests(unittest.TestCase):
             result = verify_file_inspection_sources(
                 self.preprocessor_inspection,
                 self.closure,
-                {"pret/pokefirered": root},
+                {
+                    "pret/pokefirered": root,
+                    "huderlem/poryscript": root / "unused-pinned-root",
+                },
                 source_files_only=True,
             )
             self.assertEqual(result["source_files_verified"], 14)
@@ -644,7 +647,10 @@ class PinnedFireRedPreprocessorTests(unittest.TestCase):
                 verify_file_inspection_sources(
                     self.preprocessor_inspection,
                     self.closure,
-                    {"pret/pokefirered": root},
+                    {
+                        "pret/pokefirered": root,
+                        "huderlem/poryscript": root / "unused-pinned-root",
+                    },
                     source_files_only=True,
                 )
 

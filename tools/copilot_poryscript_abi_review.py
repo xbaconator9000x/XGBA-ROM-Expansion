@@ -1177,8 +1177,8 @@ def verify_file_inspection_sources(record, closure_record, roots,
         return result
 
     repositories = {item["repository"] for item in record["files"]}
-    require(set(roots) == repositories,
-            "follow-up source verification requires exactly its pinned repositories")
+    require(repositories.issubset(roots) and set(roots).issubset(PINS),
+            "follow-up source verification requires its pinned repositories")
     checkout_commits = {}
     for repository, root in roots.items():
         if (root / ".git").exists():
