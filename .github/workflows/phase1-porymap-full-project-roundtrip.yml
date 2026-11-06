@@ -13,6 +13,9 @@ on:
       - 'tools/phase1_porymap_vendor_license_closure.py'
       - 'docs/phase1-review-readiness/porymap-vendored-dependency-license-closure-20261106.md'
       - 'imports/XGBA_Phase1_v1.5_Complete_Workpack.zip'
+      - 'tests/phase1_porymap_qgifimage_native_faults.cpp'
+      - 'tools/phase1_porymap_qgifimage_native_faults.py'
+      - 'docs/phase1-review-readiness/porymap-qgifimage-native-fault-witness-20261106.md'
   pull_request:
     paths:
       - '.github/workflows/phase1-porymap-full-project-roundtrip.yml'
@@ -24,6 +27,9 @@ on:
       - 'docs/phase1-review-readiness/porymap-full-qt-project-roundtrip-20261028.md'
       - 'docs/phase1-review-readiness/porymap-vendored-dependency-license-closure-20261106.md'
       - 'imports/XGBA_Phase1_v1.5_Complete_Workpack.zip'
+      - 'tests/phase1_porymap_qgifimage_native_faults.cpp'
+      - 'tools/phase1_porymap_qgifimage_native_faults.py'
+      - 'docs/phase1-review-readiness/porymap-qgifimage-native-fault-witness-20261106.md'
   workflow_dispatch:
 permissions:
   contents: read
@@ -61,6 +67,16 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-base-dev-tools qmake6 libqt6svg6-dev libgl1-mesa-dev pkg-config g++ gdb strace
+      - name: Compile unchanged QtGifImage and GIFLIB; inject bounded device faults
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_porymap_qgifimage_native_faults.py
+          python3 tools/phase1_porymap_qgifimage_native_faults.py \
+            --porymap upstream-porymap \
+            --workpack imports/XGBA_Phase1_v1.5_Complete_Workpack.zip \
+            --harness tests/phase1_porymap_qgifimage_native_faults.cpp \
+            --build-dir "$RUNNER_TEMP/phase1-qgifimage-native" \
+            --output phase1-evidence/qgifimage-native-faults.json
       - name: Install source-pinned, logging-only private QFile observation in test binary
         run: |
           set -euo pipefail
