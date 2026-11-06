@@ -43,7 +43,6 @@ jobs:
       - name: Determine whether the pinned CLI fixture changed
         id: native-scope
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
           BEFORE_SHA: ${{ github.event.before }}
           EVENT_NAME: ${{ github.event_name }}
         run: |
@@ -51,7 +50,7 @@ jobs:
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             echo "run_native_probe=true" >> "$GITHUB_OUTPUT"
           elif [[ "$EVENT_NAME" == "pull_request" ]]; then
-            DIFF_BASE="$BASE_SHA"
+            DIFF_BASE="$(git rev-parse HEAD^)"
           else
             DIFF_BASE="$BEFORE_SHA"
           fi
