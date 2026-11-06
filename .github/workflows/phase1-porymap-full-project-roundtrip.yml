@@ -10,6 +10,20 @@ on:
       - 'tools/phase1_porymap_gui_syscall_attribution.py'
       - 'tools/phase1_porymap_private_qfile_probe.py'
       - 'docs/phase1-review-readiness/porymap-full-qt-project-roundtrip-20261028.md'
+      - 'tools/phase1_porymap_vendor_license_closure.py'
+      - 'docs/phase1-review-readiness/porymap-vendored-dependency-license-closure-20261106.md'
+      - 'imports/XGBA_Phase1_v1.5_Complete_Workpack.zip'
+  pull_request:
+    paths:
+      - '.github/workflows/phase1-porymap-full-project-roundtrip.yml'
+      - 'tests/porymap_qt_project_roundtrip.cpp'
+      - 'tests/porymap_qt_editor_gui_save.cpp'
+      - 'tools/phase1_porymap_gui_syscall_attribution.py'
+      - 'tools/phase1_porymap_private_qfile_probe.py'
+      - 'tools/phase1_porymap_vendor_license_closure.py'
+      - 'docs/phase1-review-readiness/porymap-full-qt-project-roundtrip-20261028.md'
+      - 'docs/phase1-review-readiness/porymap-vendored-dependency-license-closure-20261106.md'
+      - 'imports/XGBA_Phase1_v1.5_Complete_Workpack.zip'
   workflow_dispatch:
 permissions:
   contents: read
@@ -35,6 +49,14 @@ jobs:
           git -C upstream-porymap hash-object src/core/map.cpp | grep -Fx 47b279919bd4afcc76b88f9eeecd459b3452989f
           git -C upstream-porymap hash-object src/lib/orderedjson.cpp | grep -Fx 4d3a460c652541371a01132116e508db8c4c872c
           python3 tools/phase1_porymap_qt_writer_failure.py --porymap upstream-porymap --output phase1-porymap-source.json
+      - name: Verify pinned QtGifImage and FEX source/build/license closure
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_porymap_vendor_license_closure.py
+          python3 tools/phase1_porymap_vendor_license_closure.py \
+           --porymap upstream-porymap \
+           --workpack imports/XGBA_Phase1_v1.5_Complete_Workpack.zip \
+           --output phase1-evidence/vendor-license-closure.json
       - name: Install pinned Porymap Qt build prerequisites
         run: |
           sudo apt-get update -qq
