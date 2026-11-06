@@ -551,6 +551,90 @@ FILE_INSPECTION_SCHEMAS = {
             ("pret/pokefirered", "tools/preproc/preproc.h"): (1936, 54),
         },
     },
+    "copilot-poryscript-abi-file-inspection/v5": {
+        "reviewer_id": "copilot-issue33-preproc-closure",
+        "reviewer_identity": (
+            "@copilot (GitHub Copilot Coding Agent; issue #6676248488 "
+            "FireRed preprocessor dependency follow-up)"
+        ),
+        "expected_files": {
+            ("pret/pokefirered", "asm/macros.inc"),
+            ("pret/pokefirered", "include/characters.h"),
+            ("pret/pokefirered", "tools/preproc/Makefile"),
+            ("pret/pokefirered", "tools/preproc/c_file.cpp"),
+            ("pret/pokefirered", "tools/preproc/c_file.h"),
+            ("pret/pokefirered", "tools/preproc/char_util.h"),
+            ("pret/pokefirered", "tools/preproc/charmap.cpp"),
+            ("pret/pokefirered", "tools/preproc/charmap.h"),
+            ("pret/pokefirered", "tools/preproc/io.cpp"),
+            ("pret/pokefirered", "tools/preproc/io.h"),
+            ("pret/pokefirered", "tools/preproc/string_parser.cpp"),
+            ("pret/pokefirered", "tools/preproc/string_parser.h"),
+            ("pret/pokefirered", "tools/preproc/utf8.cpp"),
+            ("pret/pokefirered", "tools/preproc/utf8.h"),
+        },
+        "prior_head": "3d16cc671a80c531e789d53d467ce4961d3f436c",
+        "source_dimensions": {
+            ("pret/pokefirered", "asm/macros.inc"): (3596, 169),
+            ("pret/pokefirered", "include/characters.h"): (12798, 349),
+            ("pret/pokefirered", "tools/preproc/Makefile"): (467, 26),
+            ("pret/pokefirered", "tools/preproc/c_file.cpp"): (9997, 419),
+            ("pret/pokefirered", "tools/preproc/c_file.h"): (2032, 59),
+            ("pret/pokefirered", "tools/preproc/char_util.h"): (2224, 71),
+            ("pret/pokefirered", "tools/preproc/charmap.cpp"): (9442, 408),
+            ("pret/pokefirered", "tools/preproc/charmap.h"): (1926, 64),
+            ("pret/pokefirered", "tools/preproc/io.cpp"): (1352, 51),
+            ("pret/pokefirered", "tools/preproc/io.h"): (143, 8),
+            ("pret/pokefirered", "tools/preproc/string_parser.cpp"): (9159, 355),
+            ("pret/pokefirered", "tools/preproc/string_parser.h"): (1846, 55),
+            ("pret/pokefirered", "tools/preproc/utf8.cpp"): (3500, 92),
+            ("pret/pokefirered", "tools/preproc/utf8.h"): (1288, 34),
+        },
+        "supplemental_ranges": {
+            ("pret/pokefirered", "asm/macros.inc"): {
+                (1, 169): "f350fb894c63be2dce0d67d217411571d13a93c3ab633958014e45dd2db0a31d",
+            },
+            ("pret/pokefirered", "include/characters.h"): {
+                (1, 349): "6787db76f83c4f8426c5adbfa7aa061c46585db9522f1fef00ad888616199b98",
+            },
+            ("pret/pokefirered", "tools/preproc/Makefile"): {
+                (1, 26): "8dd899f6dc23b17b584fe59dae16d916f5d00e247fb7197fbd5699fa3ac8a0ba",
+            },
+            ("pret/pokefirered", "tools/preproc/c_file.cpp"): {
+                (1, 419): "4bc2a6784a04ba87514b75af49e8dd6acdcecd5b80c28c0b79543d74e9545985",
+            },
+            ("pret/pokefirered", "tools/preproc/c_file.h"): {
+                (1, 59): "d30ee6a92258ff092e5e51f84b848dc9a539b7d014e00abe88397053d44b6cad",
+            },
+            ("pret/pokefirered", "tools/preproc/char_util.h"): {
+                (1, 71): "f71849a0c787a3413cd1dbaab59070d35e37700422f13d02d9acc78b06ed91ff",
+            },
+            ("pret/pokefirered", "tools/preproc/charmap.cpp"): {
+                (1, 408): "3e426f022990dc25c473e6a044fb827acdaab6ed5af660b7dff7f205e93d9b28",
+            },
+            ("pret/pokefirered", "tools/preproc/charmap.h"): {
+                (1, 64): "976aeeef3e1999e5162e3c0f2ab507d8d55e0904a7bd303d077c15222ae09e97",
+            },
+            ("pret/pokefirered", "tools/preproc/io.cpp"): {
+                (1, 51): "5bd5e2064e774ec3c3f42049a74282f59171178e2c4dab11340c7074feb5d27d",
+            },
+            ("pret/pokefirered", "tools/preproc/io.h"): {
+                (1, 8): "bd96fa61912381e799899f92f4bde6a15262a9562d6f60faf6aa3b4fbdaae8f1",
+            },
+            ("pret/pokefirered", "tools/preproc/string_parser.cpp"): {
+                (1, 355): "962525f41d143be967f1562ecc560cff8c59ffacd7c232dd8972773523376587",
+            },
+            ("pret/pokefirered", "tools/preproc/string_parser.h"): {
+                (1, 55): "9a537b13bf7e39f165b1fe85a42b67a00f4d1d56e32e03bced1ac94a84b56a50",
+            },
+            ("pret/pokefirered", "tools/preproc/utf8.cpp"): {
+                (1, 92): "a33f47c3c49edcaf3fdee38330c0ce694375d00fd23f81273d31f411607bde5a",
+            },
+            ("pret/pokefirered", "tools/preproc/utf8.h"): {
+                (1, 34): "f96af5fd634b54f7578903272b8c7a67630d214ffcae569b24f9b60574707ee0",
+            },
+        },
+    },
 }
 
 
@@ -607,26 +691,43 @@ def validate_file_inspection_record(record, closure_record):
                 basis.get("push_run_status") == "NO_PUSH_TRIGGERED_RUN" and
                 basis.get("prior_run_note"),
                 "map-header tranche baseline CI provenance is incomplete")
-    else:
+    elif record["schema"] == "copilot-poryscript-abi-file-inspection/v4":
         require(basis.get("prior_pr_run_id") == 41944574482 and
                 basis.get("prior_pr_run_status") == "action_required" and
                 basis.get("prior_pr_run_jobs") == 0 and
                 basis.get("prior_push_run_status") == "NO_PUSH_TRIGGERED_RUN" and
                 basis.get("prior_run_note"),
                 "Poryscript–FireRed tranche baseline CI provenance is incomplete")
+    else:
+        require(basis.get("prior_pr_workflow_run_id") == 41958394595 and
+                basis.get("prior_pr_workflow_attempt") == 2 and
+                basis.get("prior_pr_conclusion") == "success" and
+                basis.get("prior_push_workflow_run_id") == 41958389068 and
+                basis.get("prior_push_workflow_attempt") == 2 and
+                basis.get("prior_exact_head") == schema_config["prior_head"] and
+                basis.get("protocol_document_status") ==
+                "EXPECTED_FILE_ABSENT_FROM_BRANCH_AND_MAIN" and
+                basis.get("prior_run_note"),
+                "preprocessor follow-up baseline or governing-protocol blocker is incomplete")
 
     closure_files, closure_ranges = validate_closure_record(closure_record)
-    if record["schema"] == "copilot-poryscript-abi-file-inspection/v4":
+    if record["schema"] in {
+            "copilot-poryscript-abi-file-inspection/v4",
+            "copilot-poryscript-abi-file-inspection/v5"}:
+        expected_license_sources = (
+            {("huderlem/poryscript", "LICENSE.md"),
+             ("pret/pokefirered", "tools/preproc/LICENSE")}
+            if record["schema"] == "copilot-poryscript-abi-file-inspection/v4"
+            else {("pret/pokefirered", "tools/preproc/LICENSE")}
+        )
         license_sources = {}
         for license_source in record.get("license_sources", []):
             license_key = (
                 license_source.get("repository"), license_source.get("path")
             )
             closure_license = closure_files.get(license_key)
-            require(license_key in {
-                ("huderlem/poryscript", "LICENSE.md"),
-                ("pret/pokefirered", "tools/preproc/LICENSE"),
-            } and closure_license is not None and
+            require(license_key in expected_license_sources and
+                    closure_license is not None and
                     license_source.get("commit") == PINS[license_key[0]] and
                     license_source.get("git_blob_sha1") ==
                     closure_license["git_blob_sha1"] and
@@ -638,12 +739,39 @@ def validate_file_inspection_record(record, closure_record):
             require(license_key not in license_sources,
                     "duplicate follow-up license-source identity")
             license_sources[license_key] = license_source
-        require(set(license_sources) == {
-            ("huderlem/poryscript", "LICENSE.md"),
-            ("pret/pokefirered", "tools/preproc/LICENSE"),
-        }, "follow-up must retain both pinned license-source identities")
+        require(set(license_sources) == expected_license_sources,
+                "follow-up pinned license-source identities differ")
     else:
         license_sources = {}
+    if record["schema"] == "copilot-poryscript-abi-file-inspection/v5":
+        basis = record["basis"]
+        missing_license = {
+            "repository": "pret/pokefirered",
+            "path": "LICENSE",
+            "commit": PINS["pret/pokefirered"],
+            "status": "NOT_FOUND_AT_PIN",
+            "assessment": (
+                "The pinned repository contents API resolved no root LICENSE; "
+                "observed tool-local license files do not establish licensing "
+                "for asm/macros.inc or include/characters.h."
+            ),
+        }
+        queue = basis.get("applied_queue", {})
+        queue_path = ROOT / "docs/PHASE1_INDEPENDENT_SEMANTIC_REVIEW_QUEUE.md"
+        queue_data = queue_path.read_bytes()
+        require(record.get("license_search") == missing_license and
+                basis.get("protocol_document_path") ==
+                "docs/PHASE1_SYSTEM_BATCH_REVIEW_PROTOCOL_2026-10-27.md" and
+                not (ROOT / basis["protocol_document_path"]).exists() and
+                queue == {
+                    "path": "docs/PHASE1_INDEPENDENT_SEMANTIC_REVIEW_QUEUE.md",
+                    "git_blob_sha1": git_blob_sha1(queue_data),
+                    "sha256": hashlib.sha256(queue_data).hexdigest(),
+                } and queue.get("git_blob_sha1") ==
+                "aa72c114de2694b92e3f1ef37c9fac7d18fd293b" and
+                queue.get("sha256") ==
+                "91e29885742be869d5eb382d2bff3190afc0e62ddf2777a9a6e1038d05bb8efb",
+                "preprocessor license or governing-protocol provenance changed")
     files = record.get("files", [])
     require(len(files) == len(expected_files),
             "file-inspection receipt has an unexpected scoped file count")
@@ -680,8 +808,12 @@ def validate_file_inspection_record(record, closure_record):
                     license_evidence.get("unresolved"),
                     "map-header handoff must retain unresolved license review: " +
                     str(key))
-        elif record["schema"] == "copilot-poryscript-abi-file-inspection/v4":
+        elif record["schema"] in {
+                "copilot-poryscript-abi-file-inspection/v4",
+                "copilot-poryscript-abi-file-inspection/v5"}:
             require(item.get("full_source_bytes_retrieved") is True and
+                    (record["schema"] != "copilot-poryscript-abi-file-inspection/v5" or
+                     item.get("complete_source_inspection") is True) and
                     (item.get("byte_length"), item.get("line_count")) ==
                     schema_config["source_dimensions"][key],
                     "follow-up lacks complete pinned source-byte identity: " +
@@ -690,14 +822,29 @@ def validate_file_inspection_record(record, closure_record):
             require(license_evidence.get("status") == "UNRESOLVED" and
                     license_evidence.get("unresolved"),
                     "follow-up must retain unresolved license review: " + str(key))
-            if license_evidence.get("path"):
+            if (record["schema"] == "copilot-poryscript-abi-file-inspection/v4" and
+                    license_evidence.get("path")):
                 license_key = (key[0], license_evidence["path"])
                 require(license_key in license_sources,
                         "follow-up license reference lacks a pinned source: " +
                         str(license_key))
-            elif key[0] == "huderlem/poryscript":
+            elif (record["schema"] == "copilot-poryscript-abi-file-inspection/v4" and
+                  key[0] == "huderlem/poryscript"):
                 require(False,
                         "Poryscript file lacks its pinned license-source reference")
+            elif record["schema"] == "copilot-poryscript-abi-file-inspection/v5":
+                license_path = license_evidence.get("path")
+                if key[1].startswith("tools/preproc/"):
+                    require(license_evidence.get("status") == "UNRESOLVED" and
+                            license_path == "tools/preproc/LICENSE" and
+                            ("pret/pokefirered", license_path) in license_sources and
+                            license_evidence.get("unresolved"),
+                            "preprocessor source lacks its unresolved license reference")
+                else:
+                    require(license_evidence.get("status") == "UNRESOLVED" and
+                            license_path is None and
+                            license_evidence.get("unresolved"),
+                            "FireRed project source must retain its missing-license blocker")
 
         cited_ranges = {}
         for citation in item.get("evidence_ranges", []):
@@ -713,8 +860,9 @@ def validate_file_inspection_record(record, closure_record):
             if range_key[0] == key
         }
         require(cited_ranges == expected_ranges and
-                (cited_ranges or record["schema"] ==
-                 "copilot-poryscript-abi-file-inspection/v4"),
+                (cited_ranges or record["schema"] in {
+                    "copilot-poryscript-abi-file-inspection/v4",
+                    "copilot-poryscript-abi-file-inspection/v5"}),
                 "file-inspection must cite every existing bounded range: " +
                 str(key))
         if record["schema"] == "copilot-poryscript-abi-file-inspection/v3":
@@ -741,6 +889,15 @@ def validate_file_inspection_record(record, closure_record):
             require(supplemental == expected_supplemental,
                     "Poryscript–FireRed supplemental source evidence differs: " +
                     str(key))
+        elif record["schema"] == "copilot-poryscript-abi-file-inspection/v5":
+            expected_supplemental = schema_config["supplemental_ranges"].get(key, {})
+            supplemental = {
+                (citation.get("start"), citation.get("end")):
+                    citation.get("sha256")
+                for citation in item.get("supplemental_evidence_ranges", [])
+            }
+            require(supplemental == expected_supplemental,
+                    "preprocessor whole-file evidence differs: " + str(key))
 
         dependencies = item.get("dependency_links", [])
         require(dependencies, "file-inspection dependencies are required: " + str(key))
@@ -853,10 +1010,75 @@ def validate_file_inspection_record(record, closure_record):
                     "NOT_RERUN;") and
                 validation.get("exact_head_ci") == "PENDING_FOR_THIS_CHANGE",
                 "Poryscript–FireRed validation provenance is incomplete")
+    elif record["schema"] == "copilot-poryscript-abi-file-inspection/v5":
+        required_controls = {
+            "NC-SOURCE-IDENTITY":
+                "test_preprocessor_handoff_rejects_source_and_dossier_mutations",
+            "NC-WHOLE-FILE-HASH":
+                "test_preprocessor_handoff_rejects_full_file_range_mutation",
+            "NC-DEPENDENCY-ENDPOINT":
+                "test_preprocessor_handoff_rejects_dependency_mutation",
+            "NC-LICENSE-BLOCKER":
+                "test_preprocessor_handoff_rejects_license_and_objection_mutations",
+            "NC-VERDICT":
+                "test_preprocessor_handoff_rejects_verdict_attribution_and_scope_mutations",
+            "NC-UNKNOWN-CHARACTER":
+                "Pinned native preprocessor rejects an unmapped UTF-8 character.",
+            "NC-INVALID-UTF8":
+                "Pinned native preprocessor rejects a truncated UTF-8 sequence.",
+            "NC-CHARMAP-LIMIT":
+                "Pinned native preprocessor rejects a 17-byte charmap sequence.",
+        }
+        controls = {
+            item.get("id"): item.get("description", item.get("test"))
+            for item in record.get("negative_controls", [])
+        }
+        require(controls == required_controls,
+                "preprocessor negative-control set is incomplete")
+        require(record.get("review_handoff", {}).get("status") ==
+                "READY_FOR_INDEPENDENT_REVIEW_NOT_APPROVAL" and
+                record["review_handoff"].get("pending_requirements") ==
+                ["authenticated_independent_reviewer",
+                 "missing_governing_batch_protocol",
+                 "complete_transitive_caller_and_license_closure",
+                 "bounded_malformed_input_and_integer-overflow_analysis",
+                 "script-ABI relevance determination",
+                 "exact_head_pr_and_push_ci"],
+                "preprocessor handoff omits independent-review blockers")
+        objection_ids = {
+            item.get("id") for item in record.get("objections", [])
+        }
+        require(objection_ids == {
+            "O-DECODER-BOUNDARY", "O-CFILE-IDENTIFIER-BOUNDARY",
+            "O-CFILE-SIGNED-SHIFT", "O-CHARMAP-BACKSLASH",
+            "O-TRANSITIVE-CLOSURE", "O-LICENSING", "O-PROTOCOL",
+            "O-ABI-RELEVANCE", "O-ATTRIBUTION",
+        } and all(item.get("status") == "UNRESOLVED" and
+                  item.get("observation") and item.get("resolution")
+                  for item in record.get("objections", [])),
+                "preprocessor source objections must remain explicit")
+        require(summary.get("selected_source_files") == expected_source_count and
+                summary.get("complete_pinned_file_bytes_retrieved") ==
+                expected_source_count and
+                summary.get("complete_source_files_read") ==
+                expected_source_count,
+                "preprocessor source-byte and whole-file inspection counts differ")
+        validation = record.get("validation", {})
+        require(validation.get("host_preprocessor_build") ==
+                "PASS_EXACT_PINNED_MAKEFILE_AND_SOURCE" and
+                validation.get("negative_controls_passed") == 3 and
+                validation.get("pinned_host_source_commit") ==
+                PINS["pret/pokefirered"] and
+                validation.get("actual_cli_gnu_arm_witness") ==
+                "REUSED_PRIOR_EXACT_HEAD_EVIDENCE_NOT_RERUN" and
+                validation.get("exact_head_ci") == "PENDING_FOR_THIS_CHANGE",
+                "preprocessor host validation provenance is incomplete")
 
     retrieved_count = (
         summary.get("complete_pinned_file_bytes_retrieved")
-        if record["schema"] == "copilot-poryscript-abi-file-inspection/v4"
+        if record["schema"] in {
+            "copilot-poryscript-abi-file-inspection/v4",
+            "copilot-poryscript-abi-file-inspection/v5"}
         else summary.get("files_with_full_source_text_retrieved",
                          summary.get("files_with_complete_source_text_retrieved"))
     )
@@ -874,7 +1096,9 @@ def validate_file_inspection_record(record, closure_record):
         "files_with_full_source_text_retrieved": expected_source_count,
         "complete_source_files_read": (
             expected_source_count
-            if record["schema"] == "copilot-poryscript-abi-file-inspection/v3"
+            if record["schema"] in {
+                "copilot-poryscript-abi-file-inspection/v3",
+                "copilot-poryscript-abi-file-inspection/v5"}
             else 0
         ),
         "whole_file_semantic_reviews": 0,
@@ -947,7 +1171,9 @@ def verify_source_entry(source, root):
 def verify_file_inspection_sources(record, closure_record, roots,
                                   source_files_only=False):
     result = validate_file_inspection_record(record, closure_record)
-    if record.get("schema") != "copilot-poryscript-abi-file-inspection/v4":
+    if record.get("schema") not in {
+            "copilot-poryscript-abi-file-inspection/v4",
+            "copilot-poryscript-abi-file-inspection/v5"}:
         return result
 
     repositories = {item["repository"] for item in record["files"]}
@@ -1049,8 +1275,9 @@ def main():
         results = []
         for inspection_path in args.file_inspection_record:
             inspection = json.loads(inspection_path.read_text(encoding="utf-8"))
-            if inspection.get("schema") == \
-                    "copilot-poryscript-abi-file-inspection/v4":
+            if inspection.get("schema") in {
+                    "copilot-poryscript-abi-file-inspection/v4",
+                    "copilot-poryscript-abi-file-inspection/v5"}:
                 results.append(verify_file_inspection_sources(
                     inspection, record, roots, args.source_files_only
                 ))

@@ -103,6 +103,7 @@ jobs:
             --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/fire-red-script-dispatch-followup.json \
             --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/map-header-review-followup.json \
             --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/poryscript-firered-abi-followup.json \
+            --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/preprocessor-dependency-followup.json \
             --poryscript-root upstream-poryscript \
             --firered-root upstream-firered
 

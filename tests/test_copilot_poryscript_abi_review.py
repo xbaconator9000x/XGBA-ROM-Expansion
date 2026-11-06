@@ -2,17 +2,22 @@
 import copy
 import hashlib
 import json
+import os
+import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 
 from tools.copilot_poryscript_abi_review import (
     DEFAULT_RECORD,
+    FILE_INSPECTION_SCHEMAS,
     ROOT,
     validate_closure_record,
     validate_file_inspection_record,
     git_blob_sha1,
     validate_record,
+    verify_file_inspection_sources,
     verify_source_entry,
 )
 from tools.copilot_poryscript_abi_review_probes import expected_rodata
@@ -44,6 +49,11 @@ class PoryscriptAbiReviewTests(unittest.TestCase):
         )
         cls.poryscript_firered_inspection = json.loads(
             (DEFAULT_RECORD.parent / "poryscript-firered-abi-followup.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        cls.preprocessor_inspection = json.loads(
+            (DEFAULT_RECORD.parent / "preprocessor-dependency-followup.json").read_text(
                 encoding="utf-8"
             )
         )
@@ -397,6 +407,127 @@ class PoryscriptAbiReviewTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "objections must remain explicit"):
             validate_file_inspection_record(changed, self.closure)
 
+    def test_preprocessor_handoff_is_disjoint_and_non_approving(self):
+        result = validate_file_inspection_record(
+            self.preprocessor_inspection, self.closure
+        )
+        expected = {
+            "asm/macros.inc",
+            "include/characters.h",
+            "tools/preproc/Makefile",
+            "tools/preproc/c_file.cpp",
+            "tools/preproc/c_file.h",
+            "tools/preproc/char_util.h",
+            "tools/preproc/charmap.cpp",
+            "tools/preproc/charmap.h",
+            "tools/preproc/io.cpp",
+            "tools/preproc/io.h",
+            "tools/preproc/string_parser.cpp",
+            "tools/preproc/string_parser.h",
+            "tools/preproc/utf8.cpp",
+            "tools/preproc/utf8.h",
+        }
+        self.assertEqual(
+            {item["path"] for item in self.preprocessor_inspection["files"]},
+            expected,
+        )
+        prior_files = set().union(*(
+            config["expected_files"]
+            for schema, config in FILE_INSPECTION_SCHEMAS.items()
+            if schema != self.preprocessor_inspection["schema"]
+        ))
+        self.assertTrue(all(
+            ("pret/pokefirered", path) not in prior_files for path in expected
+        ))
+        self.assertEqual(result["complete_source_files_read"], 14)
+        self.assertEqual(result["whole_file_semantic_reviews"], 0)
+        self.assertEqual(result["new_qualifying_copilot_receipts"], 0)
+        self.assertEqual(result["phase1_gate"], "FAIL_INCOMPLETE")
+        self.assertTrue(all(
+            item["verdict"] == "NEEDS_EVIDENCE" and
+            item["whole_file_semantic_disposition"] is False
+            for item in self.preprocessor_inspection["files"]
+        ))
+
+    def test_preprocessor_handoff_rejects_source_and_dossier_mutations(self):
+        for index in range(len(self.preprocessor_inspection["files"])):
+            for field in ("git_blob_sha1", "sha256", "dossier_record_line_sha256"):
+                with self.subTest(index=index, field=field):
+                    changed = copy.deepcopy(self.preprocessor_inspection)
+                    changed["files"][index][field] = "0" * (
+                        40 if field == "git_blob_sha1" else 64
+                    )
+                    with self.assertRaisesRegex(
+                        ValueError, "source/dossier identity differs"
+                    ):
+                        validate_file_inspection_record(changed, self.closure)
+
+            changed = copy.deepcopy(self.preprocessor_inspection)
+            changed["files"][index]["byte_length"] += 1
+            with self.subTest(index=index, field="byte_length"):
+                with self.assertRaisesRegex(
+                    ValueError, "complete pinned source-byte identity"
+                ):
+                    validate_file_inspection_record(changed, self.closure)
+
+    def test_preprocessor_handoff_rejects_full_file_range_mutation(self):
+        changed = copy.deepcopy(self.preprocessor_inspection)
+        changed["files"][0]["supplemental_evidence_ranges"][0]["sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "whole-file evidence differs"):
+            validate_file_inspection_record(changed, self.closure)
+
+    def test_preprocessor_handoff_rejects_dependency_mutation(self):
+        changed = copy.deepcopy(self.preprocessor_inspection)
+        changed["files"][0]["dependency_links"][0]["path"] = "missing.inc"
+        with self.assertRaisesRegex(ValueError, "dependency lacks a pinned endpoint"):
+            validate_file_inspection_record(changed, self.closure)
+
+    def test_preprocessor_handoff_rejects_license_and_objection_mutations(self):
+        changed = copy.deepcopy(self.preprocessor_inspection)
+        changed["license_sources"][0]["sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "license-source identity differs"):
+            validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.preprocessor_inspection)
+        changed["objections"][0]["status"] = "RESOLVED"
+        with self.assertRaisesRegex(ValueError, "source objections must remain explicit"):
+            validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.preprocessor_inspection)
+        changed["license_search"]["status"] = "FOUND"
+        with self.assertRaisesRegex(
+            ValueError, "license or governing-protocol provenance changed"
+        ):
+            validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.preprocessor_inspection)
+        changed["basis"]["protocol_document_status"] = "AVAILABLE"
+        with self.assertRaisesRegex(
+            ValueError, "baseline or governing-protocol blocker"
+        ):
+            validate_file_inspection_record(changed, self.closure)
+
+    def test_preprocessor_handoff_rejects_verdict_attribution_and_scope_mutations(self):
+        changed = copy.deepcopy(self.preprocessor_inspection)
+        changed["files"][0]["verdict"] = "COPILOT_REVIEWED"
+        with self.assertRaisesRegex(ValueError, "must not claim whole-file disposition"):
+            validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.preprocessor_inspection)
+        changed["reviewer"]["authenticated_github_review_attribution"] = True
+        with self.assertRaisesRegex(ValueError, "missing authenticated attribution"):
+            validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.preprocessor_inspection)
+        changed["accounting"]["approved_total"] = 1
+        with self.assertRaisesRegex(ValueError, "non-approving"):
+            validate_file_inspection_record(changed, self.closure)
+
+        changed = copy.deepcopy(self.preprocessor_inspection)
+        changed["review_handoff"]["pending_requirements"].pop()
+        with self.assertRaisesRegex(ValueError, "handoff omits independent-review blockers"):
+            validate_file_inspection_record(changed, self.closure)
+
     def test_probe_expected_object_mutations_are_sensitive(self):
         raw, _, relocations = expected_rodata()
         zero_changed, _, _ = expected_rodata(zero_operand=1)
@@ -406,6 +537,116 @@ class PoryscriptAbiReviewTests(unittest.TestCase):
         self.assertEqual(zero_changed[41:43], b"\x01\0")
         self.assertEqual(overflow_changed[67:69], b"\x01\0")
         self.assertEqual(relocations, (1, 6, 11, 16, 21, 26, 35, 45, 53, 63, 71))
+
+
+class PinnedFireRedPreprocessorTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.preprocessor_inspection = json.loads(
+            (DEFAULT_RECORD.parent / "preprocessor-dependency-followup.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        cls.closure = json.loads(
+            (DEFAULT_RECORD.parent / "closure-review.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        source_root = Path(os.environ.get(
+            "XGBA_PINNED_FIRERED_ROOT", ROOT / "upstream-firered"
+        ))
+        source_dir = source_root / "tools/preproc"
+        if not (source_dir / "Makefile").is_file():
+            raise unittest.SkipTest("pinned FireRed checkout is unavailable")
+        cls.temp_dir = tempfile.TemporaryDirectory()
+        temp_root = Path(cls.temp_dir.name)
+        cls.preproc_dir = temp_root / "tools/preproc"
+        cls.preproc_dir.parent.mkdir(parents=True)
+        shutil.copytree(
+            source_dir,
+            cls.preproc_dir,
+            ignore=shutil.ignore_patterns("preproc", "preproc.exe"),
+        )
+        include_dir = temp_root / "include"
+        include_dir.mkdir()
+        shutil.copyfile(
+            source_root / "include/characters.h",
+            include_dir / "characters.h",
+        )
+        subprocess.run(
+            ["make", "-C", str(cls.preproc_dir), "-j2"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+    @classmethod
+    def tearDownClass(cls):
+        if hasattr(cls, "temp_dir"):
+            cls.temp_dir.cleanup()
+
+    def run_preproc(self, source, charmap=b"'A' = BB\n"):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source_path = root / "input.s"
+            charmap_path = root / "charmap.txt"
+            source_path.write_bytes(source)
+            charmap_path.write_bytes(charmap)
+            return subprocess.run(
+                [str(self.preproc_dir / "preproc"), str(source_path),
+                 str(charmap_path)],
+                capture_output=True,
+                text=False,
+            )
+
+    def test_pinned_preprocessor_emits_mapped_string_byte(self):
+        result = self.run_preproc(b'.string "A"\n')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(b"\t.byte 0xBB\n", result.stdout)
+
+    def test_pinned_preprocessor_rejects_unknown_character(self):
+        result = self.run_preproc(b'.string "Z"\n')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(b"unknown character U+5A", result.stderr)
+
+    def test_pinned_preprocessor_rejects_truncated_utf8(self):
+        result = self.run_preproc(b'.string "\xc3"\n')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(b"invalid encoding in UTF-8 string", result.stderr)
+
+    def test_pinned_preprocessor_rejects_oversized_charmap_sequence(self):
+        charmap = b"'A' = " + b"A" * 34 + b"\n"
+        result = self.run_preproc(b'.string "A"\n', charmap)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(b"byte sequence too long (max is 16 bytes)", result.stderr)
+
+    def test_pinned_source_mutation_is_rejected(self):
+        source_root = Path(os.environ.get(
+            "XGBA_PINNED_FIRERED_ROOT", ROOT / "upstream-firered"
+        ))
+        source = self.preprocessor_inspection["files"][0]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for item in self.preprocessor_inspection["files"]:
+                path = root / item["path"]
+                path.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source_root / item["path"], path)
+            result = verify_file_inspection_sources(
+                self.preprocessor_inspection,
+                self.closure,
+                {"pret/pokefirered": root},
+                source_files_only=True,
+            )
+            self.assertEqual(result["source_files_verified"], 14)
+            changed_path = root / source["path"]
+            changed_path.write_bytes(changed_path.read_bytes() + b"\n")
+            with self.assertRaisesRegex(ValueError, "Git blob mismatch"):
+                verify_file_inspection_sources(
+                    self.preprocessor_inspection,
+                    self.closure,
+                    {"pret/pokefirered": root},
+                    source_files_only=True,
+                )
 
 
 if __name__ == "__main__":
