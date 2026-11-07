@@ -602,6 +602,56 @@ static void test_restore_write_case(const char* directory, const char* label,
 	}
 }
 
+static void test_restore_truncated_input(const char* directory) {
+	char path[PATH_MAX];
+	snprintf(path, sizeof(path), "%s/restore-truncated.sav", directory);
+	struct GBA gba;
+	int fd;
+	uint8_t* data;
+	struct VFile* vf = init_savedata(&gba, path, 0x11, 0x22, &fd, &data);
+	UNUSED(fd);
+	memset(data, 0xB6, 4096);
+
+	uint8_t truncated[32];
+	for (size_t i = 0; i < sizeof(truncated); ++i) {
+		truncated[i] = (uint8_t) (i * 7 + 3);
+	}
+	struct mCore core = { .board = &gba };
+	bool truncatedReturn = _GBACoreSavedataRestore(
+		&core, truncated, sizeof(truncated), true);
+	bool prefixMatch = memcmp(data, truncated, sizeof(truncated)) == 0;
+	bool suffixUnchanged = true;
+	for (size_t i = sizeof(truncated); i < 4096; ++i) {
+		if (data[i] != 0xB6) {
+			suffixUnchanged = false;
+			break;
+		}
+	}
+
+	uint8_t complete[4096];
+	for (size_t i = 0; i < sizeof(complete); ++i) {
+		complete[i] = (uint8_t) (i * 11 + 5);
+	}
+	bool recoveryReturn = _GBACoreSavedataRestore(
+		&core, complete, sizeof(complete), true);
+	bool recoveryMatch = memcmp(data, complete, sizeof(complete)) == 0;
+	if (truncatedReturn || !prefixMatch || !suffixUnchanged ||
+	    !recoveryReturn || !recoveryMatch) {
+		fprintf(stderr, "truncated savedata restore behavior changed\n");
+		exit(1);
+	}
+	GBASavedataDeinit(&gba.memory.savedata);
+	if (!vf->close(vf) || unlink(path) < 0) {
+		fail("cleanup truncated restore savedata");
+	}
+	printf("PHASE1_TEARDOWN_CASE restore_truncated_input caller_return=%u "
+	       "input_size=%zu requested=4096 prefix_match=%u "
+	       "suffix_unchanged=%u recovery_return=%u recovery_match=%u\n",
+	       (unsigned) truncatedReturn, sizeof(truncated),
+	       (unsigned) prefixMatch, (unsigned) suffixUnchanged,
+	       (unsigned) recoveryReturn, (unsigned) recoveryMatch);
+}
+
 int main(void) {
 	char directory[] = "/tmp/mgba-vfs-teardown-XXXXXX";
 	if (!mkdtemp(directory)) {
@@ -619,6 +669,7 @@ int main(void) {
 	                        true, 1);
 	test_restore_write_case(directory, "negative_write",
 	                        SAVEDATA_WRITE_FAULT_NEGATIVE, false, 0);
+	test_restore_truncated_input(directory);
 	if (rmdir(directory) < 0) {
 		fail("remove temporary directory");
 	}

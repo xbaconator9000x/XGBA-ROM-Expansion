@@ -1,6 +1,8 @@
 """Fail-closed teardown evidence controls; not a native execution."""
 import hashlib
 import importlib.util
+import json
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -18,13 +20,17 @@ GOOD = "\n".join(runner.EXPECTED_LINES) + "\nPHASE1_TEARDOWN_DONE\n"
 class TestVfsFdTeardownEvidence(unittest.TestCase):
     def test_positive_matrix(self):
         result = runner.parse_output(GOOD)
-        self.assertEqual(len(result["cases"]), 9)
+        self.assertEqual(len(result["cases"]), 10)
         self.assertTrue(result["close_failure_return_ignored_by_gba_unload"])
         self.assertFalse(result["unmap_error_return_channel"])
         self.assertFalse(result["savedata_updated_reference_in_unload"])
         self.assertTrue(result["restore_short_write_reported_success"])
         self.assertTrue(result["restore_negative_write_reported_failure"])
         self.assertFalse(result["restore_short_write_retried"])
+        self.assertTrue(result["truncated_restore_returned_failure"])
+        self.assertTrue(result["truncated_restore_partial_prefix_observed"])
+        self.assertTrue(result["truncated_restore_suffix_preserved"])
+        self.assertTrue(result["truncated_restore_full_retry_succeeded"])
 
     def assert_mutation_rejected(self, before, after):
         changed = GOOD.replace(before, after, 1)
@@ -80,6 +86,31 @@ class TestVfsFdTeardownEvidence(unittest.TestCase):
             "restore_full_write caller_return=1 write_calls=2 first_write=2048 requested=2048 file_size=2048 content_match=1",
             "restore_full_write caller_return=1 write_calls=2 first_write=2048 requested=2048 file_size=2048 content_match=0")
 
+    def test_truncated_restore_failure_and_recovery(self):
+        self.assert_mutation_rejected(
+            "restore_truncated_input caller_return=0",
+            "restore_truncated_input caller_return=1")
+        self.assert_mutation_rejected(
+            "prefix_match=1 suffix_unchanged=1",
+            "prefix_match=0 suffix_unchanged=1")
+        self.assert_mutation_rejected(
+            "recovery_return=1 recovery_match=1",
+            "recovery_return=0 recovery_match=1")
+
+    def test_truncated_restore_receipt_identities(self):
+        receipt_path = ROOT / runner.TRUNCATED_RECEIPT
+        sources = {path: "" for path in runner.FILES}
+        digest = runner.verify_truncated_restore_receipt(receipt_path, sources)
+        self.assertEqual(len(digest), 64)
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+        receipt["source_records"][0]["full_source_sha256"] = "0" * 64
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8") as temp:
+            json.dump(receipt, temp)
+            temp.flush()
+            with self.assertRaises(ValueError):
+                runner.verify_truncated_restore_receipt(
+                    Path(temp.name), sources)
+
     def test_missing_terminal_rejected(self):
         with self.assertRaises(ValueError):
             runner.parse_output(GOOD.removesuffix("PHASE1_TEARDOWN_DONE\n"))
@@ -133,7 +164,7 @@ class TestVfsFdTeardownEvidence(unittest.TestCase):
                          runner.FIXTURE_SHA256)
 
     def test_internal_evidence_mutations(self):
-        self.assertEqual(runner.reject_evidence_mutations(GOOD), 15)
+        self.assertEqual(runner.reject_evidence_mutations(GOOD), 18)
 
 
 if __name__ == "__main__":

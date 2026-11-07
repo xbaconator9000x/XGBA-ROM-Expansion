@@ -120,7 +120,11 @@ BODY_HASHES = {
     "gba_core_deinit": "f118627b62bee1476c5351def9c9d5378e31091277913b6a71615ffcb789a04f",
     "savedata_restore": "8f3654b0b9164674275a28137a89decf55047436aa8df09225ccfcb326a6ea0b",
 }
-FIXTURE_SHA256 = "0b60bdb3178cfa60ef5f696b1a3a866b5adb490c41aa432fb16f00377d3b9bc8"
+FIXTURE_SHA256 = "bebe1245171a95f1e8433a59f1a8f94ab3fae67b15dd8bc72fbf6a6f08516734"
+TRUNCATED_RECEIPT = (
+    "docs/phase1-review-readiness/"
+    "mgba-savedata-truncated-restore-20261107.json"
+)
 EXPECTED_LINES = (
     "PHASE1_TEARDOWN_CASE success sync_calls=1 sync_errors=0 unmap_calls=1 unmap_errors=0 close_calls=1 close_errors=0 state_cleared=1 orphan_map_read=0 retry_close=0 fresh_process_byte=161 trace=SUC",
     "PHASE1_TEARDOWN_CASE sync_failure sync_calls=1 sync_errors=1 unmap_calls=1 unmap_errors=0 close_calls=1 close_errors=0 state_cleared=1 orphan_map_read=0 retry_close=0 fresh_process_byte=162 trace=SUC",
@@ -131,6 +135,7 @@ EXPECTED_LINES = (
     "PHASE1_TEARDOWN_CASE restore_full_write caller_return=1 write_calls=2 first_write=2048 requested=2048 file_size=2048 content_match=1",
     "PHASE1_TEARDOWN_CASE restore_short_write caller_return=1 write_calls=1 first_write=1 requested=2048 file_size=1 prefix_match=1 retry=0",
     "PHASE1_TEARDOWN_CASE restore_negative_write caller_return=0 write_calls=1 first_write=-1 requested=2048 file_size=0 content_match=1",
+    "PHASE1_TEARDOWN_CASE restore_truncated_input caller_return=0 input_size=32 requested=4096 prefix_match=1 suffix_unchanged=1 recovery_return=1 recovery_match=1",
 )
 
 
@@ -325,6 +330,9 @@ def reject_source_mutations(sources):
          "return;"),
         ("src/gba/core.c", "success = GBASavedataLoad(&gba->memory.savedata, vf);",
          "success = true;"),
+        ("src/gba/savedata.c",
+         "return in->read(in, savedata->data, size) == size;",
+         "return true;"),
         ("src/gba/gba.c", "gba->memory.savedata.realVf->close(gba->memory.savedata.realVf);",
          "return;"),
     )
@@ -338,6 +346,75 @@ def reject_source_mutations(sources):
             rejected += 1
     require(rejected == len(cases), "a pinned source mutation escaped")
     return rejected
+
+
+def verify_truncated_restore_receipt(path, sources):
+    receipt = json.loads(path.read_text(encoding="utf-8"))
+    require(receipt.get("schema") ==
+            "phase1.mgba.savedata-truncated-restore.v1",
+            "truncated restore receipt schema changed")
+    require(receipt.get("pinned_revision") == PIN and
+            receipt.get("pinned_tree") == "5863e657d270d0fe3ccaa4299f48d5689d74fa1f",
+            "truncated restore receipt source pin changed")
+    require(receipt.get("machine_dossier") == {
+        "path": DOSSIER,
+        "git_blob": DOSSIER_BLOB,
+        "compressed_sha256": DOSSIER_SHA256,
+    }, "truncated restore dossier identity changed")
+    require(receipt.get("status") == "NEEDS_EVIDENCE" and
+            receipt.get("overall") == "FAIL_INCOMPLETE" and
+            receipt.get("independent_approvals") == 0,
+            "truncated restore receipt is not explicitly non-approving")
+    records = receipt.get("source_records")
+    require(isinstance(records, list) and records,
+            "truncated restore receipt has no per-file records")
+    required = {
+        "src/gba/core.c",
+        "src/gba/savedata.c",
+        "src/util/vfs/vfs-fd.c",
+        "src/util/vfs/vfs-mem.c",
+        "include/mgba-util/vfs.h",
+        "include/mgba/internal/gba/savedata.h",
+    }
+    require({record.get("path") for record in records} == required,
+            "truncated restore source closure changed")
+    for record in records:
+        source = record["path"]
+        require(record.get("git_blob") == FILES[source][0] and
+                record.get("full_source_sha256") == FILES[source][1] and
+                record.get("canonical_dossier_row_sha256") ==
+                DOSSIER_ROWS[source],
+                "truncated restore per-file identity changed: " + source)
+        require(record.get("license") == "MPL-2.0" and
+                record.get("objection_notes"),
+                "truncated restore licensing or substantive objection missing: " +
+                source)
+        require(source in sources,
+                "truncated restore source was not verified: " + source)
+    require(receipt.get("case") == {
+        "name": "restore_truncated_input",
+        "destination_size": 4096,
+        "supplied_snapshot_size": 32,
+        "caller_return": False,
+        "partial_prefix_visible": True,
+        "untouched_suffix_preserved": True,
+        "full_snapshot_retry_return": True,
+        "full_snapshot_retry_matches": True,
+    }, "truncated restore observed case changed")
+    require(receipt.get("execution") == {
+        "evidence_class":
+        "COMPILED_EXTRACTED_PINNED_FUNCTIONS_WITH_POSIX_MAPPED_SAVE",
+        "full_mgba_core_translation_unit_compiled": False,
+        "full_headless_process_observed": False,
+        "frontend_runtime_observed": False,
+        "host_syscall_fault_injection": False,
+        "fixture_injected_short_snapshot": True,
+        "physical_flash_tested": False,
+        "power_loss_durability_tested": False,
+        "sav_interoperability_tested": False,
+        "stock_gameplay_tested": False,
+    }, "truncated restore execution labels changed")
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def parse_output(output):
@@ -358,6 +435,10 @@ def parse_output(output):
         "restore_short_write_reported_success": True,
         "restore_negative_write_reported_failure": True,
         "restore_short_write_retried": False,
+        "truncated_restore_returned_failure": True,
+        "truncated_restore_partial_prefix_observed": True,
+        "truncated_restore_suffix_preserved": True,
+        "truncated_restore_full_retry_succeeded": True,
     }
 
 
@@ -380,6 +461,12 @@ def reject_evidence_mutations(output):
         output.replace("restore_full_write caller_return=1 write_calls=2 first_write=2048 requested=2048 file_size=2048 content_match=1",
                        "restore_full_write caller_return=1 write_calls=2 first_write=2048 requested=2048 file_size=2048 content_match=0",
                        1),
+        output.replace("restore_truncated_input caller_return=0",
+                       "restore_truncated_input caller_return=1", 1),
+        output.replace("prefix_match=1 suffix_unchanged=1",
+                       "prefix_match=0 suffix_unchanged=1", 1),
+        output.replace("recovery_return=1 recovery_match=1",
+                       "recovery_return=0 recovery_match=1", 1),
     )
     for changed in cases:
         try:
@@ -401,6 +488,9 @@ def main():
     tree_identity_verified = bool(args.checkout)
     sources, bodies = verify_sources(source_root, tree_identity_verified)
     source_mutations_rejected = reject_source_mutations(sources)
+    truncated_receipt_path = Path(__file__).resolve().parents[1] / TRUNCATED_RECEIPT
+    truncated_receipt_sha256 = verify_truncated_restore_receipt(
+        truncated_receipt_path, sources)
 
     fixture = args.harness.read_text(encoding="utf-8")
     fixture_digest = hashlib.sha256(fixture.encode()).hexdigest()
@@ -492,6 +582,7 @@ def main():
         "artifact_sha256": artifact_digest,
         "source_mutations_rejected": source_mutations_rejected,
         "evidence_mutations_rejected": evidence_mutations_rejected,
+        "truncated_restore_receipt_sha256": truncated_receipt_sha256,
         "observations": observations,
         "raw_output": output.splitlines(),
         "physical_flash_tested": False,
