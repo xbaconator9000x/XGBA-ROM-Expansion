@@ -377,6 +377,9 @@ def reject_evidence_mutations(output):
         output.replace("restore_short_write caller_return=1", "restore_short_write caller_return=0", 1),
         output.replace("write_calls=1 first_write=1", "write_calls=2 first_write=1", 1),
         output.replace("restore_negative_write caller_return=0", "restore_negative_write caller_return=1", 1),
+        output.replace("restore_full_write caller_return=1 write_calls=2 first_write=2048 requested=2048 file_size=2048 content_match=1",
+                       "restore_full_write caller_return=1 write_calls=2 first_write=2048 requested=2048 file_size=2048 content_match=0",
+                       1),
     )
     for changed in cases:
         try:

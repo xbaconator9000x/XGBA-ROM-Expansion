@@ -157,6 +157,8 @@ source files and headers carry MPL-2.0 notices. Only source-derived bodies are
 extracted to a temporary build file; no mGBA source file is copied into this
 repository. The runner verifies the caller body as well as the existing
 savedata and VFile source identities.
+The current verifier rejects seven source mutations and fifteen malformed or
+contradictory output mutations, including a false complete-write control.
 
 | Case | Observed pinned caller result | Host-file observation |
 |---|---|---|

@@ -75,6 +75,11 @@ class TestVfsFdTeardownEvidence(unittest.TestCase):
             "restore_negative_write caller_return=0",
             "restore_negative_write caller_return=1")
 
+    def test_full_write_positive_control(self):
+        self.assert_mutation_rejected(
+            "restore_full_write caller_return=1 write_calls=2 first_write=2048 requested=2048 file_size=2048 content_match=1",
+            "restore_full_write caller_return=1 write_calls=2 first_write=2048 requested=2048 file_size=2048 content_match=0")
+
     def test_missing_terminal_rejected(self):
         with self.assertRaises(ValueError):
             runner.parse_output(GOOD.removesuffix("PHASE1_TEARDOWN_DONE\n"))
@@ -128,7 +133,7 @@ class TestVfsFdTeardownEvidence(unittest.TestCase):
                          runner.FIXTURE_SHA256)
 
     def test_internal_evidence_mutations(self):
-        self.assertEqual(runner.reject_evidence_mutations(GOOD), 14)
+        self.assertEqual(runner.reject_evidence_mutations(GOOD), 15)
 
 
 if __name__ == "__main__":
