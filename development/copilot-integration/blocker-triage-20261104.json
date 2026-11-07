@@ -1,0 +1,862 @@
+{
+  "basis": "recorded_manifest_snapshot_only",
+  "blocker_count": 44,
+  "blockers": [
+    {
+      "category": "stale_main_base",
+      "closure_action": "Refresh or explicitly reconcile this PR against the current main SHA, review the resulting diff, then collect evidence for the refreshed head/base.",
+      "id": "B001",
+      "issue": "PR #2 is based on stale main SHA b0b13c1a277663b255b366878345540c2dcc90b1 (current de2a775184d69411016ff683a8075af72ef4a58d)",
+      "manifest_base_ref": "main",
+      "manifest_base_sha": "b0b13c1a277663b255b366878345540c2dcc90b1",
+      "manifest_head_sha": "69726db2857624c0e49955b79961a4e7e9730636",
+      "observed_run_id": null,
+      "pr_number": 2,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/2"
+      ]
+    },
+    {
+      "category": "stale_workflow_evidence",
+      "closure_action": "Obtain a new authorized run for the current PR head/base and verify the run attempt and every job; stale green evidence is not reusable.",
+      "id": "B002",
+      "issue": "PR #2 required evidence absent: workflow #396211566 status=stale_head_base, run 40216488315, URL=unavailable, job_URLs=unavailable, tested_head=69726db2857624c0e49955b79961a4e7e9730636, tested_base=b0b13c1a277663b255b366878345540c2dcc90b1, executed_sha=b14bfc164aa623648342405c04ed7fcf475005eb, reported_head=unknown, reported_base=unknown; run does not bind the executed commit to current PR head/base; Required action: obtain evidence on the current head/base; stale evidence is not reusable.; green workflow lacks matching current head/base provenance",
+      "manifest_base_ref": "main",
+      "manifest_base_sha": "b0b13c1a277663b255b366878345540c2dcc90b1",
+      "manifest_head_sha": "69726db2857624c0e49955b79961a4e7e9730636",
+      "observed_run_id": 40216488315,
+      "pr_number": 2,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/2",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40216488315"
+      ]
+    },
+    {
+      "category": "stale_main_base",
+      "closure_action": "Refresh or explicitly reconcile this PR against the current main SHA, review the resulting diff, then collect evidence for the refreshed head/base.",
+      "id": "B003",
+      "issue": "PR #3 is based on stale main SHA b0b13c1a277663b255b366878345540c2dcc90b1 (current de2a775184d69411016ff683a8075af72ef4a58d)",
+      "manifest_base_ref": "main",
+      "manifest_base_sha": "b0b13c1a277663b255b366878345540c2dcc90b1",
+      "manifest_head_sha": "ece1972aff3b333d8b5d33f6d1d043f10f779961",
+      "observed_run_id": null,
+      "pr_number": 3,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/3"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B004",
+      "issue": "PR #3 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "main",
+      "manifest_base_sha": "b0b13c1a277663b255b366878345540c2dcc90b1",
+      "manifest_head_sha": "ece1972aff3b333d8b5d33f6d1d043f10f779961",
+      "observed_run_id": null,
+      "pr_number": 3,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/3"
+      ]
+    },
+    {
+      "category": "stale_main_base",
+      "closure_action": "Refresh or explicitly reconcile this PR against the current main SHA, review the resulting diff, then collect evidence for the refreshed head/base.",
+      "id": "B005",
+      "issue": "PR #4 is based on stale main SHA a18c7e01a9a6e0625a68426829057899df3a6da6 (current de2a775184d69411016ff683a8075af72ef4a58d)",
+      "manifest_base_ref": "main",
+      "manifest_base_sha": "a18c7e01a9a6e0625a68426829057899df3a6da6",
+      "manifest_head_sha": "2f915111f9d9b3982647baab773dac59f800fa30",
+      "observed_run_id": null,
+      "pr_number": 4,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/4"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B006",
+      "issue": "PR #4 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "main",
+      "manifest_base_sha": "a18c7e01a9a6e0625a68426829057899df3a6da6",
+      "manifest_head_sha": "2f915111f9d9b3982647baab773dac59f800fa30",
+      "observed_run_id": null,
+      "pr_number": 4,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/4"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B007",
+      "issue": "PR #5 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "phase1/mgba-timing-dma-semantic-review-20261026",
+      "manifest_base_sha": "ece1972aff3b333d8b5d33f6d1d043f10f779961",
+      "manifest_head_sha": "b30d76cb0ff57562dd939008e6d9da10df3fa0a4",
+      "observed_run_id": null,
+      "pr_number": 5,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/5"
+      ]
+    },
+    {
+      "category": "stale_main_base",
+      "closure_action": "Refresh or explicitly reconcile this PR against the current main SHA, review the resulting diff, then collect evidence for the refreshed head/base.",
+      "id": "B008",
+      "issue": "PR #6 is based on stale main SHA f848fb21d3056e3f5653154cd48a699a52c8d5a5 (current de2a775184d69411016ff683a8075af72ef4a58d)",
+      "manifest_base_ref": "main",
+      "manifest_base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+      "manifest_head_sha": "14536d8592ecb873ab1331086b9eea49916e6429",
+      "observed_run_id": null,
+      "pr_number": 6,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/6"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B009",
+      "issue": "PR #6 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "main",
+      "manifest_base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+      "manifest_head_sha": "14536d8592ecb873ab1331086b9eea49916e6429",
+      "observed_run_id": null,
+      "pr_number": 6,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/6"
+      ]
+    },
+    {
+      "category": "stale_main_base",
+      "closure_action": "Refresh or explicitly reconcile this PR against the current main SHA, review the resulting diff, then collect evidence for the refreshed head/base.",
+      "id": "B010",
+      "issue": "PR #7 is based on stale main SHA f848fb21d3056e3f5653154cd48a699a52c8d5a5 (current de2a775184d69411016ff683a8075af72ef4a58d)",
+      "manifest_base_ref": "main",
+      "manifest_base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+      "manifest_head_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+      "observed_run_id": null,
+      "pr_number": 7,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/7"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B011",
+      "issue": "PR #7 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "main",
+      "manifest_base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+      "manifest_head_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+      "observed_run_id": null,
+      "pr_number": 7,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/7"
+      ]
+    },
+    {
+      "category": "stale_dependency_base",
+      "closure_action": "Reconcile the child PR base to its declared parent's exact current head; compare the resulting tree before refreshing downstream children.",
+      "id": "B012",
+      "issue": "PR #8 base SHA 8eb234e3508d55621ecc03531823036d336fa4d1 does not match dependency PR #7 head 03608155216b4f283fd92b7c5d795dd066698244",
+      "manifest_base_ref": "phase1/firered-layout-writers-20261026",
+      "manifest_base_sha": "8eb234e3508d55621ecc03531823036d336fa4d1",
+      "manifest_head_sha": "a03acca40614db990756aa88730688dcf084ee31",
+      "observed_run_id": null,
+      "pr_number": 8,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/8"
+      ]
+    },
+    {
+      "category": "stale_workflow_evidence",
+      "closure_action": "Obtain a new authorized run for the current PR head/base and verify the run attempt and every job; stale green evidence is not reusable.",
+      "id": "B013",
+      "issue": "PR #8 required evidence absent: workflow #397824487 status=stale_head_base, run 40449595853, URL=unavailable, job_URLs=unavailable, tested_head=a03acca40614db990756aa88730688dcf084ee31, tested_base=8eb234e3508d55621ecc03531823036d336fa4d1, executed_sha=3f8fab19de2248aeee846cc344769ff069031398, reported_head=unknown, reported_base=unknown; run does not bind the executed commit to current PR head/base; Required action: obtain evidence on the current head/base; stale evidence is not reusable.; green workflow lacks matching current head/base provenance",
+      "manifest_base_ref": "phase1/firered-layout-writers-20261026",
+      "manifest_base_sha": "8eb234e3508d55621ecc03531823036d336fa4d1",
+      "manifest_head_sha": "a03acca40614db990756aa88730688dcf084ee31",
+      "observed_run_id": 40449595853,
+      "pr_number": 8,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/8",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40449595853"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B014",
+      "issue": "PR #10 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "phase1/firered-layout-writers-20261026",
+      "manifest_base_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+      "manifest_head_sha": "4c138b6922eb2368d264ff85d3fbb0df3d70b4c9",
+      "observed_run_id": null,
+      "pr_number": 10,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/10"
+      ]
+    },
+    {
+      "category": "stale_dependency_base",
+      "closure_action": "Reconcile the child PR base to its declared parent's exact current head; compare the resulting tree before refreshing downstream children.",
+      "id": "B015",
+      "issue": "PR #11 base SHA b76a2b686d4acf4302b9dacfad28494660d9b5f9 does not match dependency PR #8 head a03acca40614db990756aa88730688dcf084ee31",
+      "manifest_base_ref": "phase1/review-readiness-handoff-20261027",
+      "manifest_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "manifest_head_sha": "a59756ee192659ac60988195bf7e5f1a4fea29f6",
+      "observed_run_id": null,
+      "pr_number": 11,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/11"
+      ]
+    },
+    {
+      "category": "stale_workflow_evidence",
+      "closure_action": "Obtain a new authorized run for the current PR head/base and verify the run attempt and every job; stale green evidence is not reusable.",
+      "id": "B016",
+      "issue": "PR #11 required evidence absent: workflow #397970898 status=stale_head_base, run 40468447957, URL=unavailable, job_URLs=unavailable, tested_head=a59756ee192659ac60988195bf7e5f1a4fea29f6, tested_base=b76a2b686d4acf4302b9dacfad28494660d9b5f9, executed_sha=26402b704480cbeb3fe9fe467a1d4b2c75ac54c3, reported_head=unknown, reported_base=unknown; run does not bind the executed commit to current PR head/base; Required action: obtain evidence on the current head/base; stale evidence is not reusable.; green workflow lacks matching current head/base provenance",
+      "manifest_base_ref": "phase1/review-readiness-handoff-20261027",
+      "manifest_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "manifest_head_sha": "a59756ee192659ac60988195bf7e5f1a4fea29f6",
+      "observed_run_id": 40468447957,
+      "pr_number": 11,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/11",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40468447957"
+      ]
+    },
+    {
+      "category": "stale_dependency_base",
+      "closure_action": "Reconcile the child PR base to its declared parent's exact current head; compare the resulting tree before refreshing downstream children.",
+      "id": "B017",
+      "issue": "PR #12 base SHA b76a2b686d4acf4302b9dacfad28494660d9b5f9 does not match dependency PR #8 head a03acca40614db990756aa88730688dcf084ee31",
+      "manifest_base_ref": "phase1/review-readiness-handoff-20261027",
+      "manifest_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "manifest_head_sha": "9ed9d2630a098525e7703853de0b804c56658da9",
+      "observed_run_id": null,
+      "pr_number": 12,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/12"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B018",
+      "issue": "PR #12 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "phase1/review-readiness-handoff-20261027",
+      "manifest_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "manifest_head_sha": "9ed9d2630a098525e7703853de0b804c56658da9",
+      "observed_run_id": null,
+      "pr_number": 12,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/12"
+      ]
+    },
+    {
+      "category": "stale_workflow_evidence",
+      "closure_action": "Obtain a new authorized run for the current PR head/base and verify the run attempt and every job; stale green evidence is not reusable.",
+      "id": "B019",
+      "issue": "PR #13 required evidence absent: workflow #398059096 status=stale_head_base, run 40480788248, URL=unavailable, job_URLs=unavailable, tested_head=9bf2b6f31c7e0ebf00e1ebaf6aee6f0930c90444, tested_base=9ed9d2630a098525e7703853de0b804c56658da9, executed_sha=9bf2b6f31c7e0ebf00e1ebaf6aee6f0930c90444, reported_head=unknown, reported_base=unknown; run does not report PR head/base provenance; Required action: obtain evidence on the current head/base; stale evidence is not reusable.; green workflow lacks matching current head/base provenance",
+      "manifest_base_ref": "phase1/mgba-savedata-review-handoff-20261027",
+      "manifest_base_sha": "9ed9d2630a098525e7703853de0b804c56658da9",
+      "manifest_head_sha": "9bf2b6f31c7e0ebf00e1ebaf6aee6f0930c90444",
+      "observed_run_id": 40480788248,
+      "pr_number": 13,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/13",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40480788248"
+      ]
+    },
+    {
+      "category": "stale_dependency_base",
+      "closure_action": "Reconcile the child PR base to its declared parent's exact current head; compare the resulting tree before refreshing downstream children.",
+      "id": "B020",
+      "issue": "PR #14 base SHA b76a2b686d4acf4302b9dacfad28494660d9b5f9 does not match dependency PR #8 head a03acca40614db990756aa88730688dcf084ee31",
+      "manifest_base_ref": "phase1/review-readiness-handoff-20261027",
+      "manifest_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "manifest_head_sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03",
+      "observed_run_id": null,
+      "pr_number": 14,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/14"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B021",
+      "issue": "PR #14 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "phase1/review-readiness-handoff-20261027",
+      "manifest_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "manifest_head_sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03",
+      "observed_run_id": null,
+      "pr_number": 14,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/14"
+      ]
+    },
+    {
+      "category": "stale_dependency_base",
+      "closure_action": "Reconcile the child PR base to its declared parent's exact current head; compare the resulting tree before refreshing downstream children.",
+      "id": "B022",
+      "issue": "PR #15 base SHA b76a2b686d4acf4302b9dacfad28494660d9b5f9 does not match dependency PR #8 head a03acca40614db990756aa88730688dcf084ee31",
+      "manifest_base_ref": "phase1/review-readiness-handoff-20261027",
+      "manifest_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "manifest_head_sha": "7c283d21b48ef3b2276a225465b59ff492364a12",
+      "observed_run_id": null,
+      "pr_number": 15,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/15"
+      ]
+    },
+    {
+      "category": "stale_workflow_evidence",
+      "closure_action": "Obtain a new authorized run for the current PR head/base and verify the run attempt and every job; stale green evidence is not reusable.",
+      "id": "B023",
+      "issue": "PR #15 required evidence absent: workflow #398142984 status=stale_head_base, run 40492941829, URL=unavailable, job_URLs=unavailable, tested_head=7c283d21b48ef3b2276a225465b59ff492364a12, tested_base=b76a2b686d4acf4302b9dacfad28494660d9b5f9, executed_sha=7c283d21b48ef3b2276a225465b59ff492364a12, reported_head=unknown, reported_base=unknown; run does not report PR head/base provenance; Required action: obtain evidence on the current head/base; stale evidence is not reusable.; green workflow lacks matching current head/base provenance",
+      "manifest_base_ref": "phase1/review-readiness-handoff-20261027",
+      "manifest_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "manifest_head_sha": "7c283d21b48ef3b2276a225465b59ff492364a12",
+      "observed_run_id": 40492941829,
+      "pr_number": 15,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/15",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40492941829"
+      ]
+    },
+    {
+      "category": "stale_dependency_base",
+      "closure_action": "Reconcile the child PR base to its declared parent's exact current head; compare the resulting tree before refreshing downstream children.",
+      "id": "B024",
+      "issue": "PR #16 base SHA b76a2b686d4acf4302b9dacfad28494660d9b5f9 does not match dependency PR #8 head a03acca40614db990756aa88730688dcf084ee31",
+      "manifest_base_ref": "phase1/review-readiness-handoff-20261027",
+      "manifest_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "manifest_head_sha": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d",
+      "observed_run_id": null,
+      "pr_number": 16,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/16"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B025",
+      "issue": "PR #16 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "phase1/review-readiness-handoff-20261027",
+      "manifest_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "manifest_head_sha": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d",
+      "observed_run_id": null,
+      "pr_number": 16,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/16"
+      ]
+    },
+    {
+      "category": "stale_dependency_base",
+      "closure_action": "Reconcile the child PR base to its declared parent's exact current head; compare the resulting tree before refreshing downstream children.",
+      "id": "B026",
+      "issue": "PR #17 base SHA b76a2b686d4acf4302b9dacfad28494660d9b5f9 does not match dependency PR #8 head a03acca40614db990756aa88730688dcf084ee31",
+      "manifest_base_ref": "phase1/review-readiness-handoff-20261027",
+      "manifest_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "manifest_head_sha": "302465862501f542250d719444b3a9831406f6ac",
+      "observed_run_id": null,
+      "pr_number": 17,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/17"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B027",
+      "issue": "PR #17 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "phase1/review-readiness-handoff-20261027",
+      "manifest_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "manifest_head_sha": "302465862501f542250d719444b3a9831406f6ac",
+      "observed_run_id": null,
+      "pr_number": 17,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/17"
+      ]
+    },
+    {
+      "category": "stale_dependency_base",
+      "closure_action": "Reconcile the child PR base to its declared parent's exact current head; compare the resulting tree before refreshing downstream children.",
+      "id": "B028",
+      "issue": "PR #18 base SHA b76a2b686d4acf4302b9dacfad28494660d9b5f9 does not match dependency PR #8 head a03acca40614db990756aa88730688dcf084ee31",
+      "manifest_base_ref": "phase1/review-readiness-handoff-20261027",
+      "manifest_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "manifest_head_sha": "61a49f48e372272ff2ffcc720e21366bd91507bd",
+      "observed_run_id": null,
+      "pr_number": 18,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/18"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B029",
+      "issue": "PR #18 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "phase1/review-readiness-handoff-20261027",
+      "manifest_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "manifest_head_sha": "61a49f48e372272ff2ffcc720e21366bd91507bd",
+      "observed_run_id": null,
+      "pr_number": 18,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/18"
+      ]
+    },
+    {
+      "category": "stale_workflow_evidence",
+      "closure_action": "Obtain a new authorized run for the current PR head/base and verify the run attempt and every job; stale green evidence is not reusable.",
+      "id": "B030",
+      "issue": "PR #19 required evidence absent: workflow #398232973 status=stale_head_base, run 40505350595, URL=unavailable, job_URLs=unavailable, tested_head=8ba12ff806248875856cd965f1265fbfec37334f, tested_base=a59756ee192659ac60988195bf7e5f1a4fea29f6, executed_sha=8ba12ff806248875856cd965f1265fbfec37334f, reported_head=unknown, reported_base=unknown; run does not report PR head/base provenance; Required action: obtain evidence on the current head/base; stale evidence is not reusable.; green workflow lacks matching current head/base provenance",
+      "manifest_base_ref": "phase1/binary-aware-triage-issue9-20261027",
+      "manifest_base_sha": "a59756ee192659ac60988195bf7e5f1a4fea29f6",
+      "manifest_head_sha": "8ba12ff806248875856cd965f1265fbfec37334f",
+      "observed_run_id": 40505350595,
+      "pr_number": 19,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/19",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40505350595"
+      ]
+    },
+    {
+      "category": "stale_workflow_evidence",
+      "closure_action": "Obtain a new authorized run for the current PR head/base and verify the run attempt and every job; stale green evidence is not reusable.",
+      "id": "B031",
+      "issue": "PR #20 required evidence absent: workflow #398234226 status=stale_head_base, run 40506170513, URL=unavailable, job_URLs=unavailable, tested_head=afb5fc1714235f1349f51b256ba20ac4c78e2019, tested_base=dd6fb2c8e6ec15818ccb841760b540a04dc8212d, executed_sha=587132181ef728b635968dd091b1cf171e78f753, reported_head=unknown, reported_base=unknown; run does not bind the executed commit to current PR head/base; Required action: obtain evidence on the current head/base; stale evidence is not reusable.; green workflow lacks matching current head/base provenance",
+      "manifest_base_ref": "phase1/poryscript-compiled-map-table-20261027",
+      "manifest_base_sha": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d",
+      "manifest_head_sha": "afb5fc1714235f1349f51b256ba20ac4c78e2019",
+      "observed_run_id": 40506170513,
+      "pr_number": 20,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/20",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40506170513"
+      ]
+    },
+    {
+      "category": "stale_dependency_base",
+      "closure_action": "Reconcile the child PR base to its declared parent's exact current head; compare the resulting tree before refreshing downstream children.",
+      "id": "B032",
+      "issue": "PR #21 base SHA b76a2b686d4acf4302b9dacfad28494660d9b5f9 does not match dependency PR #8 head a03acca40614db990756aa88730688dcf084ee31",
+      "manifest_base_ref": "phase1/review-readiness-handoff-20261027",
+      "manifest_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "manifest_head_sha": "a324b99b486d56d57eab94049a2a25ad091a862b",
+      "observed_run_id": null,
+      "pr_number": 21,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/21"
+      ]
+    },
+    {
+      "category": "stale_workflow_evidence",
+      "closure_action": "Obtain a new authorized run for the current PR head/base and verify the run attempt and every job; stale green evidence is not reusable.",
+      "id": "B033",
+      "issue": "PR #21 required evidence absent: workflow #398273014 status=stale_head_base, run 40510922233, URL=unavailable, job_URLs=unavailable, tested_head=a324b99b486d56d57eab94049a2a25ad091a862b, tested_base=b76a2b686d4acf4302b9dacfad28494660d9b5f9, executed_sha=a324b99b486d56d57eab94049a2a25ad091a862b, reported_head=unknown, reported_base=unknown; run does not report PR head/base provenance; Required action: obtain evidence on the current head/base; stale evidence is not reusable.; green workflow lacks matching current head/base provenance",
+      "manifest_base_ref": "phase1/review-readiness-handoff-20261027",
+      "manifest_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "manifest_head_sha": "a324b99b486d56d57eab94049a2a25ad091a862b",
+      "observed_run_id": 40510922233,
+      "pr_number": 21,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/21",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40510922233"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B034",
+      "issue": "PR #22 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "phase1/firered-mgba-flash-identification-contract-20261027",
+      "manifest_base_sha": "61a49f48e372272ff2ffcc720e21366bd91507bd",
+      "manifest_head_sha": "7149f0f07339706ce5c29c3ca5a40e5cfcd85256",
+      "observed_run_id": null,
+      "pr_number": 22,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/22"
+      ]
+    },
+    {
+      "category": "stale_main_base",
+      "closure_action": "Refresh or explicitly reconcile this PR against the current main SHA, review the resulting diff, then collect evidence for the refreshed head/base.",
+      "id": "B035",
+      "issue": "PR #23 is based on stale main SHA 52796a8619b08d86f2f9fed024f8cbf95a0f5822 (current de2a775184d69411016ff683a8075af72ef4a58d)",
+      "manifest_base_ref": "main",
+      "manifest_base_sha": "52796a8619b08d86f2f9fed024f8cbf95a0f5822",
+      "manifest_head_sha": "23a004216e64c5ffd2ca62e3ad94e98c623c467a",
+      "observed_run_id": null,
+      "pr_number": 23,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/23"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B036",
+      "issue": "PR #23 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "main",
+      "manifest_base_sha": "52796a8619b08d86f2f9fed024f8cbf95a0f5822",
+      "manifest_head_sha": "23a004216e64c5ffd2ca62e3ad94e98c623c467a",
+      "observed_run_id": null,
+      "pr_number": 23,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/23"
+      ]
+    },
+    {
+      "category": "stale_workflow_evidence",
+      "closure_action": "Obtain a new authorized run for the current PR head/base and verify the run attempt and every job; stale green evidence is not reusable.",
+      "id": "B037",
+      "issue": "PR #24 required evidence absent: workflow #398361788 status=stale_head_base, run 40525408728, URL=unavailable, job_URLs=unavailable, tested_head=b6f0cee6a4b5ec25c2eb39eaf4340b65e8da10d8, tested_base=7149f0f07339706ce5c29c3ca5a40e5cfcd85256, executed_sha=b6f0cee6a4b5ec25c2eb39eaf4340b65e8da10d8, reported_head=unknown, reported_base=unknown; run does not report PR head/base provenance; Required action: obtain evidence on the current head/base; stale evidence is not reusable.; green workflow lacks matching current head/base provenance",
+      "manifest_base_ref": "phase1/firered-mgba-flash-bank-sector-20261027",
+      "manifest_base_sha": "7149f0f07339706ce5c29c3ca5a40e5cfcd85256",
+      "manifest_head_sha": "b6f0cee6a4b5ec25c2eb39eaf4340b65e8da10d8",
+      "observed_run_id": 40525408728,
+      "pr_number": 24,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/24",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40525408728"
+      ]
+    },
+    {
+      "category": "stale_main_base",
+      "closure_action": "Refresh or explicitly reconcile this PR against the current main SHA, review the resulting diff, then collect evidence for the refreshed head/base.",
+      "id": "B038",
+      "issue": "PR #25 is based on stale main SHA 52796a8619b08d86f2f9fed024f8cbf95a0f5822 (current de2a775184d69411016ff683a8075af72ef4a58d)",
+      "manifest_base_ref": "main",
+      "manifest_base_sha": "52796a8619b08d86f2f9fed024f8cbf95a0f5822",
+      "manifest_head_sha": "5105d3517de94967b755850eaf183913b76758cc",
+      "observed_run_id": null,
+      "pr_number": 25,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/25"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B039",
+      "issue": "PR #25 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "main",
+      "manifest_base_sha": "52796a8619b08d86f2f9fed024f8cbf95a0f5822",
+      "manifest_head_sha": "5105d3517de94967b755850eaf183913b76758cc",
+      "observed_run_id": null,
+      "pr_number": 25,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/25"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B040",
+      "issue": "PR #26 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "phase1/firered-mgba-real-rom-boot-save-20261028",
+      "manifest_base_sha": "b6f0cee6a4b5ec25c2eb39eaf4340b65e8da10d8",
+      "manifest_head_sha": "1dfe0906687fbca6d0e356e7332f8940eef76981",
+      "observed_run_id": null,
+      "pr_number": 26,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/26"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B041",
+      "issue": "PR #27 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "phase1/porymap-qt-writer-failure-boundary-20261027",
+      "manifest_base_sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03",
+      "manifest_head_sha": "dde48dd6c94d2c666c090d2c6a26ba0800ffa03f",
+      "observed_run_id": null,
+      "pr_number": 27,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/27"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B042",
+      "issue": "PR #28 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "phase1/firered-mgba-save-loader-steptrace-20261028",
+      "manifest_base_sha": "1dfe0906687fbca6d0e356e7332f8940eef76981",
+      "manifest_head_sha": "42c7e2c9590ed2659f1b88415e65d067694b2253",
+      "observed_run_id": null,
+      "pr_number": 28,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/28"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B043",
+      "issue": "PR #35 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "main",
+      "manifest_base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+      "manifest_head_sha": "d9a46bbdf50cf67a6b52322a68f56caace2aef7e",
+      "observed_run_id": null,
+      "pr_number": 35,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/35"
+      ]
+    },
+    {
+      "category": "unverified_workflow_id",
+      "closure_action": "Identify and pin the required workflow ID from the workflow definition and observed run; then query its complete exact-scope run/job evidence.",
+      "id": "B044",
+      "issue": "PR #36 required workflow ID is unverified in the manifest",
+      "manifest_base_ref": "main",
+      "manifest_base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+      "manifest_head_sha": "ce87e9d76d03599970596f3ebe159492f921f56c",
+      "observed_run_id": null,
+      "pr_number": 36,
+      "source_refs": [
+        "development/copilot-integration/manifest.json",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/36"
+      ]
+    }
+  ],
+  "category_counts": {
+    "stale_dependency_base": 9,
+    "stale_main_base": 7,
+    "stale_workflow_evidence": 9,
+    "unverified_workflow_id": 19
+  },
+  "live_observations": {
+    "current_main_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+    "limitations": [
+      "Actions reads exposed PR numbers, run head SHAs, attempts, and jobs, but not run-time PR base SHA; successful exact-head runs are not promoted to exact-base evidence.",
+      "PR #27 workflow #399979453 is an observed current-head workflow, not a workflow ID pinned as required for PR #27 in the manifest.",
+      "PR #35/#36 exact-head CI validates their review packets only; neither CI nor owner review is an independent semantic approval.",
+      "No Actions run was retried and no PR, branch, gate, queue, or source pin was mutated."
+    ],
+    "observed_at": "2026-11-04",
+    "pull_requests": [
+      {
+        "base_ref": "main",
+        "base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+        "draft": true,
+        "head_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+        "number": 7,
+        "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/7",
+        "state": "open"
+      },
+      {
+        "base_ref": "phase1/firered-layout-writers-20261026",
+        "base_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+        "dependency_observation": "Current PR metadata base SHA equals current PR #7 head SHA.",
+        "draft": true,
+        "head_sha": "995e00904384191170075e8a57d18161ef1a2ec2",
+        "number": 8,
+        "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/8",
+        "state": "open"
+      },
+      {
+        "base_ref": "phase1/mgba-savedata-review-handoff-20261027",
+        "base_sha": "9ed9d2630a098525e7703853de0b804c56658da9",
+        "draft": true,
+        "head_sha": "0bf5a496df18ef9e3c6cf39ef361ffbe93931c6a",
+        "number": 13,
+        "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/13",
+        "state": "open"
+      },
+      {
+        "base_ref": "phase1/porymap-qt-writer-failure-boundary-20261027",
+        "base_sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03",
+        "draft": true,
+        "head_sha": "2cb51ea83a3ef4c3186d19d2f9a80e88fa5d2f36",
+        "number": 27,
+        "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/27",
+        "state": "open"
+      },
+      {
+        "base_ref": "main",
+        "base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+        "draft": true,
+        "head_sha": "9a31fb1dfa0a08f95a06a3c2bf8cd431aafccd29",
+        "number": 35,
+        "overlap": "Savedata review work overlaps PRs #12/#13.",
+        "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/35",
+        "state": "open"
+      },
+      {
+        "base_ref": "main",
+        "base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+        "draft": true,
+        "head_sha": "fc54588319aea2a798f2455fb594c367209f8b85",
+        "number": 36,
+        "overlap": "Poryscript ABI review work overlaps PRs #16/#20.",
+        "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/36",
+        "state": "open"
+      },
+      {
+        "base_ref": "main",
+        "base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+        "draft": true,
+        "head_sha": "9233dfe2800f4deeed729fade251047a35a793ed",
+        "number": 37,
+        "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/37",
+        "state": "open"
+      }
+    ],
+    "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+    "source": "Read-only GitHub pull-request, workflow-run, and workflow-job APIs",
+    "workflow_runs": [
+      {
+        "base_provenance": "not returned by the Actions run read",
+        "conclusion": "success",
+        "event": "pull_request",
+        "head_sha": "0bf5a496df18ef9e3c6cf39ef361ffbe93931c6a",
+        "job_urls": [
+          "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41853164293/job/126701990749"
+        ],
+        "jobs": {
+          "completed_success": 1,
+          "total": 1
+        },
+        "pr_number": 13,
+        "run_attempt": 2,
+        "run_id": 41853164293,
+        "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41853164293",
+        "workflow_id": 398059096
+      },
+      {
+        "classification": "authorization gate; no job executed; not green",
+        "conclusion": "action_required",
+        "event": "pull_request",
+        "head_sha": "2cb51ea83a3ef4c3186d19d2f9a80e88fa5d2f36",
+        "job_urls": [],
+        "jobs": {
+          "completed_success": 0,
+          "total": 0
+        },
+        "pr_number": 27,
+        "run_attempt": 1,
+        "run_id": 41871074286,
+        "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41871074286",
+        "workflow_id": 399979453
+      },
+      {
+        "base_provenance": "not returned by the Actions run read",
+        "conclusion": "success",
+        "event": "pull_request",
+        "head_sha": "9a31fb1dfa0a08f95a06a3c2bf8cd431aafccd29",
+        "job_urls": [
+          "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41037997890/job/124019365309"
+        ],
+        "jobs": {
+          "completed_success": 1,
+          "total": 1
+        },
+        "pr_number": 35,
+        "run_attempt": 2,
+        "run_id": 41037997890,
+        "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41037997890",
+        "workflow_id": 401590285
+      },
+      {
+        "base_provenance": "not returned by the Actions run read",
+        "conclusion": "success",
+        "event": "pull_request",
+        "head_sha": "fc54588319aea2a798f2455fb594c367209f8b85",
+        "job_urls": [
+          "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41850174614/job/126702487227",
+          "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41850174614/job/126702487573"
+        ],
+        "jobs": {
+          "completed_success": 2,
+          "total": 2
+        },
+        "pr_number": 36,
+        "run_attempt": 2,
+        "run_id": 41850174614,
+        "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41850174614",
+        "workflow_id": 401588179
+      },
+      {
+        "classification": "authorization gate; no job executed; not green",
+        "conclusion": "action_required",
+        "event": "pull_request",
+        "head_sha": "9233dfe2800f4deeed729fade251047a35a793ed",
+        "job_urls": [],
+        "jobs": {
+          "completed_success": 0,
+          "total": 0
+        },
+        "pr_number": 37,
+        "run_attempt": 1,
+        "run_id": 41871673473,
+        "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41871673473",
+        "workflow_id": 401606059
+      }
+    ]
+  },
+  "live_state_note": "The blocker list is reproduced from the pinned offline manifest. Supplemental live observations are separate and do not clear blockers.",
+  "manifest_sha256": "7413cf43416489ac1254bedba94575420c5fd285d7e6ccaa2fde0474f4b59fb6",
+  "policy": {
+    "ci_is_semantic_approval": false,
+    "independent_approvals": 0,
+    "phase": 1,
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "semantic_review": "not evaluated by this integration checker"
+  },
+  "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+  "schema_version": 1,
+  "status": "BLOCKED"
+}

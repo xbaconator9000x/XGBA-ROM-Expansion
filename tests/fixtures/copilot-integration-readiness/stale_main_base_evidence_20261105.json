@@ -1,0 +1,371 @@
+{
+  "schema": "xgba.phase1.stale_main_base_evidence.v1",
+  "observed_at": "2026-11-05",
+  "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+  "current_main": {
+    "ref": "main",
+    "sha": "3d8455edb1d26b462881c8a79096e5832fcf4457",
+    "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/commit/3d8455edb1d26b462881c8a79096e5832fcf4457"
+  },
+  "policy": {
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "independent_approvals": 0,
+    "main_manifest_and_source_pins_changed": false,
+    "workflow_success_is_semantic_approval": false
+  },
+  "run_observation_scope": "Selected relevant completed runs only; this is not a complete all-history Actions census.",
+  "api_limitations": [
+    "Actions run metadata did not return run-time PR base SHA; successful PR runs do not establish exact base provenance.",
+    "The successful historical runs are evidence of their listed jobs only, not independent semantic approvals.",
+    "PR #2 live head differs from its manifest head; its older successful runs are stale for the current PR head."
+  ],
+  "rows": [
+    {
+      "blocker_id": "B001",
+      "pr_number": 2,
+      "manifest": {
+        "head_sha": "69726db2857624c0e49955b79961a4e7e9730636",
+        "base_ref": "main",
+        "base_sha": "b0b13c1a277663b255b366878345540c2dcc90b1"
+      },
+      "live_pr": {
+        "head_sha": "ca30a88e50252b95648cc71bdd9cb5db65dd0f83",
+        "base_ref": "main",
+        "base_sha": "b0b13c1a277663b255b366878345540c2dcc90b1",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/2"
+      },
+      "main_compare": {
+        "base_sha": "b0b13c1a277663b255b366878345540c2dcc90b1",
+        "head_sha": "3d8455edb1d26b462881c8a79096e5832fcf4457",
+        "merge_base_sha": "b0b13c1a277663b255b366878345540c2dcc90b1",
+        "status": "ahead",
+        "ahead_by": 61,
+        "behind_by": 0,
+        "url": "https://api.github.com/repos/xbaconator9000x/XGBA-ROM-Expansion/compare/b0b13c1a277663b255b366878345540c2dcc90b1...3d8455edb1d26b462881c8a79096e5832fcf4457"
+      },
+      "workflow": {
+        "id": 396211566,
+        "path": ".github/workflows/phase1-review-attestation-gate.yml",
+        "blob_sha": "3951dd59d9a26600e1ef7f0e8d360d713a72de9b",
+        "configured_events": ["pull_request", "push"],
+        "required_automatic_events": ["pull_request", "push"],
+        "source_pins": []
+      },
+      "runs": [
+        {
+          "id": 40216443332,
+          "attempt": 1,
+          "event": "push",
+          "head_sha": "e895e0e161ea806460a09aac0e7d05deb0e060bc",
+          "conclusion": "success",
+          "jobs": [{"id": 121238489933, "name": "fail-closed-attestation", "conclusion": "success", "steps_completed": 6, "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40216443332/job/121238489933"}],
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40216443332"
+        },
+        {
+          "id": 40216686843,
+          "attempt": 1,
+          "event": "pull_request",
+          "head_sha": "69726db2857624c0e49955b79961a4e7e9730636",
+          "conclusion": "success",
+          "jobs": [{"id": 121239234394, "name": "fail-closed-attestation", "conclusion": "success", "steps_completed": 6, "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40216686843/job/121239234394"}],
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40216686843"
+        }
+      ],
+      "classification": "stale_ancestor_and_changed_head"
+    },
+    {
+      "blocker_id": "B003",
+      "pr_number": 3,
+      "manifest": {
+        "head_sha": "ece1972aff3b333d8b5d33f6d1d043f10f779961",
+        "base_ref": "main",
+        "base_sha": "b0b13c1a277663b255b366878345540c2dcc90b1"
+      },
+      "live_pr": {
+        "head_sha": "ece1972aff3b333d8b5d33f6d1d043f10f779961",
+        "base_ref": "main",
+        "base_sha": "b0b13c1a277663b255b366878345540c2dcc90b1",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/3"
+      },
+      "main_compare": {
+        "base_sha": "b0b13c1a277663b255b366878345540c2dcc90b1",
+        "head_sha": "3d8455edb1d26b462881c8a79096e5832fcf4457",
+        "merge_base_sha": "b0b13c1a277663b255b366878345540c2dcc90b1",
+        "status": "ahead",
+        "ahead_by": 61,
+        "behind_by": 0,
+        "url": "https://api.github.com/repos/xbaconator9000x/XGBA-ROM-Expansion/compare/b0b13c1a277663b255b366878345540c2dcc90b1...3d8455edb1d26b462881c8a79096e5832fcf4457"
+      },
+      "workflow": {
+        "id": 396214707,
+        "path": ".github/workflows/phase1-mgba-timing-dma-source.yml",
+        "blob_sha": "19484d4279d4e7a02cb5ccf54c26c248b2e80671",
+        "configured_events": ["pull_request", "push"],
+        "required_automatic_events": ["pull_request", "push"],
+        "source_pins": ["mgba-emu/mgba@fd9dc5c2cbf234365068855851107e762fc6211b"]
+      },
+      "runs": [
+        {
+          "id": 40221149398,
+          "attempt": 1,
+          "event": "push",
+          "head_sha": "ece1972aff3b333d8b5d33f6d1d043f10f779961",
+          "conclusion": "success",
+          "jobs": [{"id": 121252796281, "name": "source-contracts", "conclusion": "success", "steps_completed": 8, "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40221149398/job/121252796281"}],
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40221149398"
+        },
+        {
+          "id": 40221153698,
+          "attempt": 1,
+          "event": "pull_request",
+          "head_sha": "ece1972aff3b333d8b5d33f6d1d043f10f779961",
+          "conclusion": "success",
+          "jobs": [{"id": 121252809771, "name": "source-contracts", "conclusion": "success", "steps_completed": 8, "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40221153698/job/121252809771"}],
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40221153698"
+        }
+      ],
+      "classification": "stale_ancestor"
+    },
+    {
+      "blocker_id": "B005",
+      "pr_number": 4,
+      "manifest": {
+        "head_sha": "2f915111f9d9b3982647baab773dac59f800fa30",
+        "base_ref": "main",
+        "base_sha": "a18c7e01a9a6e0625a68426829057899df3a6da6"
+      },
+      "live_pr": {
+        "head_sha": "2f915111f9d9b3982647baab773dac59f800fa30",
+        "base_ref": "main",
+        "base_sha": "a18c7e01a9a6e0625a68426829057899df3a6da6",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/4"
+      },
+      "main_compare": {
+        "base_sha": "a18c7e01a9a6e0625a68426829057899df3a6da6",
+        "head_sha": "3d8455edb1d26b462881c8a79096e5832fcf4457",
+        "merge_base_sha": "a18c7e01a9a6e0625a68426829057899df3a6da6",
+        "status": "ahead",
+        "ahead_by": 59,
+        "behind_by": 0,
+        "url": "https://api.github.com/repos/xbaconator9000x/XGBA-ROM-Expansion/compare/a18c7e01a9a6e0625a68426829057899df3a6...3d8455edb1d26b462881c8a79096e5832fcf4457"
+      },
+      "workflow": {
+        "id": 396267666,
+        "path": ".github/workflows/phase1-mgba-eeprom-savedata-source.yml",
+        "blob_sha": "1acb00084b3734ceac701929595d2f3e5479c49d",
+        "configured_events": ["pull_request", "push"],
+        "required_automatic_events": ["pull_request", "push"],
+        "source_pins": ["mgba-emu/mgba@fd9dc5c2cbf234365068855851107e762fc6211b"]
+      },
+      "runs": [
+        {
+          "id": 40221523361,
+          "attempt": 1,
+          "event": "push",
+          "head_sha": "2f915111f9d9b3982647baab773dac59f800fa30",
+          "conclusion": "success",
+          "jobs": [{"id": 121253931736, "name": "pinned-eeprom-source", "conclusion": "success", "steps_completed": 7, "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40221523361/job/121253931736"}],
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40221523361"
+        },
+        {
+          "id": 40221526970,
+          "attempt": 1,
+          "event": "pull_request",
+          "head_sha": "2f915111f9d9b3982647baab773dac59f800fa30",
+          "conclusion": "success",
+          "jobs": [{"id": 121253942962, "name": "pinned-eeprom-source", "conclusion": "success", "steps_completed": 7, "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40221526970/job/121253942962"}],
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40221526970"
+        }
+      ],
+      "classification": "stale_ancestor"
+    },
+    {
+      "blocker_id": "B008",
+      "pr_number": 6,
+      "manifest": {
+        "head_sha": "14536d8592ecb873ab1331086b9eea49916e6429",
+        "base_ref": "main",
+        "base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5"
+      },
+      "live_pr": {
+        "head_sha": "14536d8592ecb873ab1331086b9eea49916e6429",
+        "base_ref": "main",
+        "base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/6"
+      },
+      "main_compare": {
+        "base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+        "head_sha": "3d8455edb1d26b462881c8a79096e5832fcf4457",
+        "merge_base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+        "status": "ahead",
+        "ahead_by": 14,
+        "behind_by": 0,
+        "url": "https://api.github.com/repos/xbaconator9000x/XGBA-ROM-Expansion/compare/f848fb21d3056e3f5653154cd48a699a52c8d5a5...3d8455edb1d26b462881c8a79096e5832fcf4457"
+      },
+      "workflow": {
+        "id": 396552287,
+        "path": ".github/workflows/phase1-firered-map-layout-join.yml",
+        "blob_sha": "ab954e7f01c37f04c9b8e4b1c50154f36635591d",
+        "configured_events": ["pull_request", "workflow_dispatch"],
+        "required_automatic_events": ["pull_request"],
+        "source_pins": ["pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982"]
+      },
+      "runs": [
+        {
+          "id": 40255605435,
+          "attempt": 1,
+          "event": "pull_request",
+          "head_sha": "14536d8592ecb873ab1331086b9eea49916e6429",
+          "conclusion": "success",
+          "jobs": [{"id": 121356677529, "name": "source-authoring-join", "conclusion": "success", "steps_completed": 9, "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40255605435/job/121356677529"}],
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40255605435"
+        }
+      ],
+      "classification": "stale_ancestor"
+    },
+    {
+      "blocker_id": "B010",
+      "pr_number": 7,
+      "manifest": {
+        "head_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+        "base_ref": "main",
+        "base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5"
+      },
+      "live_pr": {
+        "head_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+        "base_ref": "main",
+        "base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/7"
+      },
+      "main_compare": {
+        "base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+        "head_sha": "3d8455edb1d26b462881c8a79096e5832fcf4457",
+        "merge_base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+        "status": "ahead",
+        "ahead_by": 14,
+        "behind_by": 0,
+        "url": "https://api.github.com/repos/xbaconator9000x/XGBA-ROM-Expansion/compare/f848fb21d3056e3f5653154cd48a699a52c8d5a5...3d8455edb1d26b462881c8a79096e5832fcf4457"
+      },
+      "workflow": {
+        "id": 396576283,
+        "path": ".github/workflows/phase1-firered-layout-writers.yml",
+        "blob_sha": "d84fe6d5af810aa5df6e1f3b3744e8cf74110608",
+        "configured_events": ["pull_request", "workflow_dispatch"],
+        "required_automatic_events": ["pull_request"],
+        "source_pins": [
+          "pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+          "mgba-emu/mgba@fd9dc5c2cbf234365068855851107e762fc6211b"
+        ]
+      },
+      "runs": [
+        {
+          "id": 40465227907,
+          "attempt": 1,
+          "event": "pull_request",
+          "head_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+          "conclusion": "success",
+          "jobs": [{"id": 122058886027, "name": "pinned-layout-writers", "conclusion": "success", "steps_completed": 22, "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40465227907/job/122058886027"}],
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40465227907"
+        }
+      ],
+      "classification": "stale_ancestor"
+    },
+    {
+      "blocker_id": "B035",
+      "pr_number": 23,
+      "manifest": {
+        "head_sha": "23a004216e64c5ffd2ca62e3ad94e98c623c467a",
+        "base_ref": "main",
+        "base_sha": "52796a8619b08d86f2f9fed024f8cbf95a0f5822"
+      },
+      "live_pr": {
+        "head_sha": "23a004216e64c5ffd2ca62e3ad94e98c623c467a",
+        "base_ref": "main",
+        "base_sha": "52796a8619b08d86f2f9fed024f8cbf95a0f5822",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/23"
+      },
+      "main_compare": {
+        "base_sha": "52796a8619b08d86f2f9fed024f8cbf95a0f5822",
+        "head_sha": "3d8455edb1d26b462881c8a79096e5832fcf4457",
+        "merge_base_sha": "52796a8619b08d86f2f9fed024f8cbf95a0f5822",
+        "status": "ahead",
+        "ahead_by": 13,
+        "behind_by": 0,
+        "url": "https://api.github.com/repos/xbaconator9000x/XGBA-ROM-Expansion/compare/52796a8619b08d86f2f9fed024f8cbf95a0f5822...3d8455edb1d26b462881c8a79096e5832fcf4457"
+      },
+      "workflow": {
+        "id": 398341034,
+        "path": ".github/workflows/phase1-firered-gf-rom-header-abi.yml",
+        "blob_sha": "72aab9a3e32a13d95d683ea0a71889ccec42c856",
+        "configured_events": ["push", "pull_request", "workflow_dispatch"],
+        "required_automatic_events": ["push", "pull_request"],
+        "source_pins": ["pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982"]
+      },
+      "runs": [
+        {
+          "id": 40520507428,
+          "attempt": 1,
+          "event": "push",
+          "head_sha": "23a004216e64c5ffd2ca62e3ad94e98c623c467a",
+          "conclusion": "success",
+          "jobs": [{"id": 122245994385, "name": "verify-pinned-gf-rom-header", "conclusion": "success", "steps_completed": 9, "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40520507428/job/122245994385"}],
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40520507428"
+        },
+        {
+          "id": 40520535789,
+          "attempt": 1,
+          "event": "pull_request",
+          "head_sha": "23a004216e64c5ffd2ca62e3ad94e98c623c467a",
+          "conclusion": "success",
+          "jobs": [{"id": 122246096945, "name": "verify-pinned-gf-rom-header", "conclusion": "success", "steps_completed": 9, "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40520535789/job/122246096945"}],
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40520535789"
+        }
+      ],
+      "classification": "stale_ancestor"
+    },
+    {
+      "blocker_id": "B038",
+      "pr_number": 25,
+      "manifest": {
+        "head_sha": "5105d3517de94967b755850eaf183913b76758cc",
+        "base_ref": "main",
+        "base_sha": "52796a8619b08d86f2f9fed024f8cbf95a0f5822"
+      },
+      "live_pr": {
+        "head_sha": "5105d3517de94967b755850eaf183913b76758cc",
+        "base_ref": "main",
+        "base_sha": "52796a8619b08d86f2f9fed024f8cbf95a0f5822",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/25"
+      },
+      "main_compare": {
+        "base_sha": "52796a8619b08d86f2f9fed024f8cbf95a0f5822",
+        "head_sha": "3d8455edb1d26b462881c8a79096e5832fcf4457",
+        "merge_base_sha": "52796a8619b08d86f2f9fed024f8cbf95a0f5822",
+        "status": "ahead",
+        "ahead_by": 13,
+        "behind_by": 0,
+        "url": "https://api.github.com/repos/xbaconator9000x/XGBA-ROM-Expansion/compare/52796a8619b08d86f2f9fed024f8cbf95a0f5822...3d8455edb1d26b462881c8a79096e5832fcf4457"
+      },
+      "workflow": {
+        "id": 398408983,
+        "path": ".github/workflows/phase1-independent-save-loader-evidence.yml",
+        "blob_sha": "cd8420022de2630c9047e79bb1776cc13135c482",
+        "configured_events": ["push", "workflow_dispatch"],
+        "required_automatic_events": ["push"],
+        "source_pins": ["pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982"]
+      },
+      "runs": [
+        {
+          "id": 40530840996,
+          "attempt": 1,
+          "event": "push",
+          "head_sha": "5105d3517de94967b755850eaf183913b76758cc",
+          "conclusion": "success",
+          "jobs": [{"id": 122282859216, "name": "pinned-source-and-observation-guard", "conclusion": "success", "steps_completed": 8, "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40530840996/job/122282859216"}],
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40530840996"
+        }
+      ],
+      "classification": "stale_ancestor"
+    }
+  ]
+}

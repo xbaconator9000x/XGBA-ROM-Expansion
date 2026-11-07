@@ -1,0 +1,173 @@
+{
+  "observed_at": "2026-11-04",
+  "source": "Read-only public GitHub pull-request, workflow-run, and workflow-job APIs",
+  "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+  "scope": "The 19 manifest rows that had no required_workflow_ids entry.",
+  "base_provenance_limit": "Actions run/job responses expose run head SHA and PR number but not the run-time PR base SHA. Current PR metadata is recorded separately and is not substituted for run-time base provenance.",
+  "rows": [
+    {
+      "pr": 3,
+      "manifest": {"head": "ece1972aff3b333d8b5d33f6d1d043f10f779961", "base_ref": "main", "base": "b0b13c1a277663b255b366878345540c2dcc90b1"},
+      "live": {"head": "ece1972aff3b333d8b5d33f6d1d043f10f779961", "base_ref": "main", "base": "b0b13c1a277663b255b366878345540c2dcc90b1"},
+      "workflow_id": 396214707,
+      "run": {"id": 40221153698, "attempt": 1, "event": "pull_request", "head": "ece1972aff3b333d8b5d33f6d1d043f10f779961", "status": "completed", "conclusion": "success", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40221153698"},
+      "jobs": {"count": 1, "success": 1, "steps": 8, "successful_steps": 8, "job_ids": [121252809771], "critical_steps": ["Verify additive source semantics and negative controls", "Reconcile both pinned registries against immutable 14,834-file queue"]}
+    },
+    {
+      "pr": 4,
+      "manifest": {"head": "2f915111f9d9b3982647baab773dac59f800fa30", "base_ref": "main", "base": "a18c7e01a9a6e0625a68426829057899df3a6da6"},
+      "live": {"head": "2f915111f9d9b3982647baab773dac59f800fa30", "base_ref": "main", "base": "a18c7e01a9a6e0625a68426829057899df3a6da6"},
+      "workflow_id": 396267666,
+      "run": {"id": 40221526970, "attempt": 1, "event": "pull_request", "head": "2f915111f9d9b3982647baab773dac59f800fa30", "status": "completed", "conclusion": "success", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40221526970"},
+      "jobs": {"count": 1, "success": 1, "steps": 7, "successful_steps": 7, "job_ids": [121253942962], "critical_steps": ["Verify exact EEPROM/savestate producer-consumer source"]}
+    },
+    {
+      "pr": 5,
+      "manifest": {"head": "b30d76cb0ff57562dd939008e6d9da10df3fa0a4", "base_ref": "phase1/mgba-timing-dma-semantic-review-20261026", "base": "ece1972aff3b333d8b5d33f6d1d043f10f779961"},
+      "live": {"head": "b30d76cb0ff57562dd939008e6d9da10df3fa0a4", "base_ref": "phase1/mgba-timing-dma-semantic-review-20261026", "base": "ece1972aff3b333d8b5d33f6d1d043f10f779961"},
+      "workflow_id": 396311263,
+      "run": {"id": 40244366644, "attempt": 1, "event": "pull_request", "head": "b30d76cb0ff57562dd939008e6d9da10df3fa0a4", "status": "completed", "conclusion": "success", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40244366644"},
+      "jobs": {"count": 1, "success": 1, "steps": 7, "successful_steps": 7, "job_ids": [121322704010], "critical_steps": ["Recheck both source contract packets and fail-closed combined queue"]}
+    },
+    {
+      "pr": 6,
+      "manifest": {"head": "14536d8592ecb873ab1331086b9eea49916e6429", "base_ref": "main", "base": "f848fb21d3056e3f5653154cd48a699a52c8d5a5"},
+      "live": {"head": "14536d8592ecb873ab1331086b9eea49916e6429", "base_ref": "main", "base": "f848fb21d3056e3f5653154cd48a699a52c8d5a5"},
+      "workflow_id": 396552287,
+      "run": {"id": 40255605435, "attempt": 1, "event": "pull_request", "head": "14536d8592ecb873ab1331086b9eea49916e6429", "status": "completed", "conclusion": "success", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40255605435"},
+      "jobs": {"count": 1, "success": 1, "steps": 9, "successful_steps": 9, "job_ids": [121356677529], "critical_steps": ["Verify complete authored map-header to layout-table join"]}
+    },
+    {
+      "pr": 7,
+      "manifest": {"head": "03608155216b4f283fd92b7c5d795dd066698244", "base_ref": "main", "base": "f848fb21d3056e3f5653154cd48a699a52c8d5a5"},
+      "live": {"head": "03608155216b4f283fd92b7c5d795dd066698244", "base_ref": "main", "base": "f848fb21d3056e3f5653154cd48a699a52c8d5a5"},
+      "workflow_id": 396576283,
+      "run": {"id": 40465227907, "attempt": 1, "event": "pull_request", "head": "03608155216b4f283fd92b7c5d795dd066698244", "status": "completed", "conclusion": "success", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40465227907"},
+      "jobs": {"count": 1, "success": 1, "steps": 22, "successful_steps": 22, "job_ids": [122058886027], "critical_steps": ["Run pinned authored layout-writer census", "Verify pinned Trainer Tower authored map topology and progress dispatch"]}
+    },
+    {
+      "pr": 10,
+      "manifest": {"head": "4c138b6922eb2368d264ff85d3fbb0df3d70b4c9", "base_ref": "phase1/firered-layout-writers-20261026", "base": "03608155216b4f283fd92b7c5d795dd066698244"},
+      "live": {"head": "4c138b6922eb2368d264ff85d3fbb0df3d70b4c9", "base_ref": "phase1/firered-layout-writers-20261026", "base": "03608155216b4f283fd92b7c5d795dd066698244"},
+      "workflow_id": 397967693,
+      "run": {"id": 40818837438, "attempt": 1, "event": "pull_request", "head": "4c138b6922eb2368d264ff85d3fbb0df3d70b4c9", "status": "completed", "conclusion": "success", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40818837438"},
+      "jobs": {"count": 3, "success": 3, "steps": 24, "successful_steps": 24, "job_ids": [123266246447, 123266246765, 123266246776], "critical_steps": ["Verify exact blobs, source anchors, negative controls and synthetic cases", "Build actual pinned FireRed ELF using original agbcc", "Execute pinned C two-sector failure and recovery plus tampered traces"]}
+    },
+    {
+      "pr": 12,
+      "manifest": {"head": "9ed9d2630a098525e7703853de0b804c56658da9", "base_ref": "phase1/review-readiness-handoff-20261027", "base": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"},
+      "live": {"head": "9ed9d2630a098525e7703853de0b804c56658da9", "base_ref": "phase1/review-readiness-handoff-20261027", "base": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"},
+      "workflow_id": 398019265,
+      "run": {"id": 40475197646, "attempt": 1, "event": "pull_request", "head": "9ed9d2630a098525e7703853de0b804c56658da9", "status": "completed", "conclusion": "success", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40475197646"},
+      "jobs": {"count": 1, "success": 1, "steps": 7, "successful_steps": 7, "job_ids": [122091600198], "critical_steps": ["Verify whole-file identity, functions, consumers and negative controls"]}
+    },
+    {
+      "pr": 14,
+      "manifest": {"head": "618861ff17a4b9cfbb180f5531cf58d8414cbd03", "base_ref": "phase1/review-readiness-handoff-20261027", "base": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"},
+      "live": {"head": "618861ff17a4b9cfbb180f5531cf58d8414cbd03", "base_ref": "phase1/review-readiness-handoff-20261027", "base": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"},
+      "workflow_id": 398126932,
+      "run": {"id": 40490889813, "attempt": 1, "event": "pull_request", "head": "618861ff17a4b9cfbb180f5531cf58d8414cbd03", "status": "completed", "conclusion": "success", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40490889813"},
+      "jobs": {"count": 1, "success": 1, "steps": 10, "successful_steps": 10, "job_ids": [122144238540], "critical_steps": ["Compile and execute pinned Qt serializer success and failure controls"]}
+    },
+    {
+      "pr": 16,
+      "manifest": {"head": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d", "base_ref": "phase1/review-readiness-handoff-20261027", "base": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"},
+      "live": {"head": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d", "base_ref": "phase1/review-readiness-handoff-20261027", "base": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"},
+      "workflow_id": 398174497,
+      "run": {"id": 40497606189, "attempt": 1, "event": "pull_request", "head": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d", "status": "completed", "conclusion": "success", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40497606189"},
+      "jobs": {"count": 1, "success": 1, "steps": 12, "successful_steps": 12, "job_ids": [122166909960], "critical_steps": ["Verify synthetic negative controls and pinned ARM source-to-relocation witness"]}
+    },
+    {
+      "pr": 17,
+      "manifest": {"head": "302465862501f542250d719444b3a9831406f6ac", "base_ref": "phase1/review-readiness-handoff-20261027", "base": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"},
+      "live": {"head": "302465862501f542250d719444b3a9831406f6ac", "base_ref": "phase1/review-readiness-handoff-20261027", "base": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"},
+      "workflow_id": 398199191,
+      "run": {"id": 40500706821, "attempt": 1, "event": "pull_request", "head": "302465862501f542250d719444b3a9831406f6ac", "status": "completed", "conclusion": "success", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40500706821"},
+      "jobs": {"count": 1, "success": 1, "steps": 8, "successful_steps": 8, "job_ids": [122177378145], "critical_steps": ["Verify pinned Git blobs, complete-file inventories, and negative controls"]}
+    },
+    {
+      "pr": 18,
+      "manifest": {"head": "61a49f48e372272ff2ffcc720e21366bd91507bd", "base_ref": "phase1/review-readiness-handoff-20261027", "base": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"},
+      "live": {"head": "61a49f48e372272ff2ffcc720e21366bd91507bd", "base_ref": "phase1/review-readiness-handoff-20261027", "base": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"},
+      "workflow_id": 398228822,
+      "run": {"id": 40510965719, "attempt": 1, "event": "pull_request", "head": "61a49f48e372272ff2ffcc720e21366bd91507bd", "status": "completed", "conclusion": "success", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40510965719"},
+      "jobs": {"count": 1, "success": 1, "steps": 11, "successful_steps": 11, "job_ids": [122212449057], "critical_steps": ["Compile actual FireRed/mGBA Flash identification cross-boundary"]}
+    },
+    {
+      "pr": 22,
+      "manifest": {"head": "7149f0f07339706ce5c29c3ca5a40e5cfcd85256", "base_ref": "phase1/firered-mgba-flash-identification-contract-20261027", "base": "61a49f48e372272ff2ffcc720e21366bd91507bd"},
+      "live": {"head": "7149f0f07339706ce5c29c3ca5a40e5cfcd85256", "base_ref": "phase1/firered-mgba-flash-identification-contract-20261027", "base": "61a49f48e372272ff2ffcc720e21366bd91507bd"},
+      "workflow_id": 398296975,
+      "run": {"id": 40514608498, "attempt": 1, "event": "pull_request", "head": "7149f0f07339706ce5c29c3ca5a40e5cfcd85256", "status": "completed", "conclusion": "success", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40514608498"},
+      "jobs": {"count": 1, "success": 1, "steps": 9, "successful_steps": 9, "job_ids": [122225149464], "critical_steps": ["Compile five exact pinned source functions and run 32-sector negative/positive matrix"]}
+    },
+    {
+      "pr": 23,
+      "manifest": {"head": "23a004216e64c5ffd2ca62e3ad94e98c623c467a", "base_ref": "main", "base": "52796a8619b08d86f2f9fed024f8cbf95a0f5822"},
+      "live": {"head": "23a004216e64c5ffd2ca62e3ad94e98c623c467a", "base_ref": "main", "base": "52796a8619b08d86f2f9fed024f8cbf95a0f5822"},
+      "workflow_id": 398341034,
+      "run": {"id": 40520535789, "attempt": 1, "event": "pull_request", "head": "23a004216e64c5ffd2ca62e3ad94e98c623c467a", "status": "completed", "conclusion": "success", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40520535789"},
+      "jobs": {"count": 1, "success": 1, "steps": 9, "successful_steps": 9, "job_ids": [122246096945], "critical_steps": ["Exact Git blobs, whole-file structural ABI and 10 negative controls"]}
+    },
+    {
+      "pr": 25,
+      "manifest": {"head": "5105d3517de94967b755850eaf183913b76758cc", "base_ref": "main", "base": "52796a8619b08d86f2f9fed024f8cbf95a0f5822"},
+      "live": {"head": "5105d3517de94967b755850eaf183913b76758cc", "base_ref": "main", "base": "52796a8619b08d86f2f9fed024f8cbf95a0f5822"},
+      "workflow_id": 398408983,
+      "run": {"id": 40530840996, "attempt": 1, "event": "push", "head": "5105d3517de94967b755850eaf183913b76758cc", "status": "completed", "conclusion": "success", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40530840996"},
+      "jobs": {"count": 1, "success": 1, "steps": 8, "successful_steps": 8, "job_ids": [122282859216], "critical_steps": ["Verify independent source anchors and nine real-CI observations", "Run ten fail-closed evidence negative controls"]},
+      "coverage_note": "No pull_request-event run at this head was established in the branch query; the push success is not PR-event coverage."
+    },
+    {
+      "pr": 26,
+      "manifest": {"head": "1dfe0906687fbca6d0e356e7332f8940eef76981", "base_ref": "phase1/firered-mgba-real-rom-boot-save-20261028", "base": "b6f0cee6a4b5ec25c2eb39eaf4340b65e8da10d8"},
+      "live": {"head": "1dfe0906687fbca6d0e356e7332f8940eef76981", "base_ref": "phase1/firered-mgba-real-rom-boot-save-20261028", "base": "b6f0cee6a4b5ec25c2eb39eaf4340b65e8da10d8"},
+      "workflow_id": 398361788,
+      "run": {"id": 40562863462, "attempt": 1, "event": "push", "head": "1dfe0906687fbca6d0e356e7332f8940eef76981", "status": "completed", "conclusion": "success", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40562863462"},
+      "jobs": {"count": 1, "success": 1, "steps": 11, "successful_steps": 11, "job_ids": [122396269634], "critical_steps": ["Build actual pinned FireRed ELF using original agbcc", "Boot source-built ROM under actual pinned emulator", "Run valid malformed and older-slot save probes"]},
+      "coverage_note": "Push success observed; pull_request-event coverage for this workflow/head was not established."
+    },
+    {
+      "pr": 27,
+      "manifest": {"head": "dde48dd6c94d2c666c090d2c6a26ba0800ffa03f", "base_ref": "phase1/porymap-qt-writer-failure-boundary-20261027", "base": "618861ff17a4b9cfbb180f5531cf58d8414cbd03"},
+      "live": {"head": "2cb51ea83a3ef4c3186d19d2f9a80e88fa5d2f36", "base_ref": "phase1/porymap-qt-writer-failure-boundary-20261027", "base": "618861ff17a4b9cfbb180f5531cf58d8414cbd03"},
+      "workflow_id": 399979453,
+      "run": {"id": 41871074286, "attempt": 1, "event": "pull_request", "head": "2cb51ea83a3ef4c3186d19d2f9a80e88fa5d2f36", "status": "completed", "conclusion": "action_required", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41871074286"},
+      "jobs": {"count": 0, "success": 0, "steps": 0, "successful_steps": 0, "job_ids": [], "critical_steps": []},
+      "coverage_note": "The same head has multiple PR workflows action_required with zero jobs. This selected ID is the run named for the PR's five-writer native Qt test; it is not green."
+    },
+    {
+      "pr": 28,
+      "manifest": {"head": "42c7e2c9590ed2659f1b88415e65d067694b2253", "base_ref": "phase1/firered-mgba-save-loader-steptrace-20261028", "base": "1dfe0906687fbca6d0e356e7332f8940eef76981"},
+      "live": {"head": "9375fd2de565d7e03623f7713c81d61b0a26bef1", "base_ref": "phase1/firered-mgba-save-loader-steptrace-20261028", "base": "1dfe0906687fbca6d0e356e7332f8940eef76981"},
+      "workflow_id": 398361788,
+      "run": {"id": 41892151360, "attempt": 1, "event": "push", "head": "9375fd2de565d7e03623f7713c81d61b0a26bef1", "status": "completed", "conclusion": "action_required", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41892151360"},
+      "jobs": {"count": 0, "success": 0, "steps": 0, "successful_steps": 0, "job_ids": [], "critical_steps": []},
+      "coverage_note": "This was the only returned run for the live head in the corrected PR-branch query; it is a push authorization gate, not executed PR CI."
+    },
+    {
+      "pr": 35,
+      "manifest": {"head": "d9a46bbdf50cf67a6b52322a68f56caace2aef7e", "base_ref": "main", "base": "de2a775184d69411016ff683a8075af72ef4a58d"},
+      "live": {"head": "9a31fb1dfa0a08f95a06a3c2bf8cd431aafccd29", "base_ref": "main", "base": "de2a775184d69411016ff683a8075af72ef4a58d"},
+      "workflow_id": 401590285,
+      "run": {"id": 41037997890, "attempt": 2, "event": "pull_request", "head": "9a31fb1dfa0a08f95a06a3c2bf8cd431aafccd29", "status": "completed", "conclusion": "success", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41037997890"},
+      "jobs": {"count": 1, "success": 1, "steps": 14, "successful_steps": 14, "job_ids": [124019365309], "critical_steps": ["Build and execute existing pinned native boundary harness", "Verify savedata review against this PR native run"]}
+    },
+    {
+      "pr": 36,
+      "manifest": {"head": "ce87e9d76d03599970596f3ebe159492f921f56c", "base_ref": "main", "base": "de2a775184d69411016ff683a8075af72ef4a58d"},
+      "live": {"head": "18de5e859392906e1da4aed800daf15e497d63c5", "base_ref": "main", "base": "de2a775184d69411016ff683a8075af72ef4a58d"},
+      "workflow_id": 401588179,
+      "run": {"id": 41891419634, "attempt": 1, "event": "pull_request", "head": "18de5e859392906e1da4aed800daf15e497d63c5", "status": "completed", "conclusion": "action_required", "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41891419634"},
+      "jobs": {"count": 0, "success": 0, "steps": 0, "successful_steps": 0, "job_ids": [], "critical_steps": []},
+      "coverage_note": "Earlier success 41035493919 tested stale head 2c2805ead909df69a491cea84feb7dd562758e9b; current head has zero-job action_required, not a pass."
+    }
+  ],
+  "limitations": [
+    "Only the selected PR-specific workflow ID is pinned per manifest row; incidental workflows triggered by changed files are not treated as required without an explicit repository requirement.",
+    "The run/job APIs did not provide run-time base SHAs. Exact-head and job/step results do not establish exact-base provenance.",
+    "Historical manifest head/base pins are preserved, including stale head differences for PRs #27, #28, #35, and #36.",
+    "Push-only runs for PRs #25 and #26 are not PR-event coverage; authorization-gated runs for PRs #27, #28, and #36 executed zero jobs and are not green.",
+    "CI results are source/build evidence only, not independent semantic approval. No queue, approval register, gate, branch, or upstream source pin was changed."
+  ]
+}

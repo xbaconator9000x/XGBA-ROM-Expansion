@@ -1,0 +1,202 @@
+{
+  "schema": "copilot-integration-b021-porymap-workflow-reconciliation-v1",
+  "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+  "observed_at": "2026-11-07T02:37:05Z",
+  "scope": "One verifiable evidence dimension for B021; not a PR base refresh, whole-file approval, or blocker resolution.",
+  "source_registry": {
+    "repository": "huderlem/porymap",
+    "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+    "queue_path": "semantic-snapshots/current/semantic_review_queue.csv.gz",
+    "queue_sha256": "c50498b751ecbe38d7a5939e06fa85cf4e62d529a943983710d4c5b9095d2eff",
+    "dossiers_path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "dossiers_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609",
+    "manifest_path": "development/copilot-integration/manifest.json",
+    "manifest_sha256": "99accfcada883f086468e8f62c55a252ee24076dba777575584aaf15e60e52cf",
+    "triage_path": "development/copilot-integration/blocker-triage-20261104.json",
+    "triage_sha256": "f87c618981d8006b30adc3178eeed68bc9ecb41801dded28ac0289cfbfc73659"
+  },
+  "source_files": [
+    {
+      "path": "include/lib/orderedjson.h",
+      "git_blob_sha1": "cb5139d37d955f2469ebd2eaaf089668b82884fe",
+      "source_sha256": "06af4ab35f09263aa213673dbdca5640b840fddfb22f7e8fc35dc41ad91fdaa2",
+      "dossier_sha256": "100dc0dba8d6682f8eb1d6b5df2cf8a3ce1543d63c1640d61aca9322034aae56",
+      "priority": "P1",
+      "role": "OrderedJsonDoc::dump(QFile*) return type and stream output"
+    },
+    {
+      "path": "src/core/map.cpp",
+      "git_blob_sha1": "47b279919bd4afcc76b88f9eeecd459b3452989f",
+      "source_sha256": "c2406bb2dd5950ee226a4e7fc8e1d198c70915cb638fd706a814b87de22ab332",
+      "dossier_sha256": "1e47909570dfa7f97b30f806a34a501f78cc52b25f669c18cecdaf351da07c63",
+      "priority": "P0",
+      "role": "Map dirty-state transition reached by saveMap"
+    },
+    {
+      "path": "src/editor.cpp",
+      "git_blob_sha1": "34112f6355b13d9381de7188624c36e5efeba151",
+      "source_sha256": "a505ba77243efdcaa2da8cce448e97ce80aa355145fb567290cb6d549bead270",
+      "dossier_sha256": "bdee490bd8de75bfc2306ca7264737becb5196580ce0b3241a00292ed1119d24",
+      "priority": "P0",
+      "role": "Save Current/Save All result propagation"
+    },
+    {
+      "path": "src/lib/orderedjson.cpp",
+      "git_blob_sha1": "4d3a460c652541371a01132116e508db8c4c872c",
+      "source_sha256": "a6acaf57872aa3bfc2fc98b02b743e550bead19cc85cf298c642c50a5f3f75ae",
+      "dossier_sha256": "ce04fbf6b06f98a91b74cf82c962fb0eca90ffe26396cae32480e8ac00015793",
+      "priority": "P2",
+      "role": "Pinned JSON text serialization invoked through Qt QTextStream"
+    },
+    {
+      "path": "src/mainwindow.cpp",
+      "git_blob_sha1": "08ce1a7a599ef825967717b69626984cdc6d772b",
+      "source_sha256": "b1b7d6738bfa9a3c574ddfcdd774187783fa81cfc86889e1aa4b80cad93525d1",
+      "dossier_sha256": "fd88d9c7b68d181efc93e9f746306ad8e167dd3a0eeb16410dd6d6cfd412d1f8",
+      "priority": "P0",
+      "role": "GUI save result and conditional error notification"
+    },
+    {
+      "path": "src/project.cpp",
+      "git_blob_sha1": "d43b0949303433111d4478ad76117c2b3445dd13",
+      "source_sha256": "225b20f5305ae428eda2e7fda28dcc405cdeae041ce8e1176b3a7d7bd548d93b",
+      "dossier_sha256": "b6b90abf56f02452537a9b096fa191ead9ee7360dd19d72c6f5486834bed02d7",
+      "priority": "P0",
+      "role": "JSON writers, new-map companion-file writers, and saveGlobalData"
+    }
+  ],
+  "source_trace": {
+    "existing_packet": {
+      "pr_number": 14,
+      "head_sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03",
+      "document_path": "docs/PHASE1_P0_PORYMAP_QT_WRITER_FAILURE_2026-10-27.md",
+      "document_git_blob_sha1": "441ed685ad645a2076d5bc8b3d36d3edb6d9d8d7",
+      "checker_path": "tools/phase1_porymap_qt_writer_failure.py",
+      "checker_git_blob_sha1": "f24e3659675ffbff016b1f87e63d892b9162876d",
+      "test_path": "tests/porymap_qt_writer_device.cpp",
+      "test_git_blob_sha1": "92e3dca9f25b6780512c9cd85a519e5b2b6dcf93",
+      "workflow_path": ".github/workflows/phase1-porymap-qt-writer-failure.yml",
+      "workflow_git_blob_sha1": "397b19f7feb8ce8c5d42d35edae28768136fe7dd"
+    },
+    "caller_and_build_analysis": {
+      "source_objection": "Project saveMap/saveMapGroups use OrderedJsonDoc::dump(QFile*) and do not propagate stream/close errors; saveMap can set the map clean and report success after an unchecked dump.",
+      "caller_chain": [
+        "Project::saveMap / Project::saveMapGroups",
+        "OrderedJsonDoc::dump(QFile*)",
+        "Editor::save / Editor::saveCurrent",
+        "MainWindow::save and its conditional failure notification",
+        "Map::setClean"
+      ],
+      "additional_sites": "The existing source trace locates six JSON writer sites and two text helpers, including unchecked new-map companion-file calls.",
+      "host_test": "The existing C++ witness compiled the pinned OrderedJsonDoc with Qt6Core, checked QTemporaryFile JSON output, and exercised /dev/full write failure.",
+      "host_test_limit": "The witness did not execute Project::saveMap, the full GUI save transaction, project reload, or actual data-loss behavior.",
+      "whole_file_analysis": "NOT_COMPLETE: the existing checker traces named functions and source call paths; it is not whole-file semantic review.",
+      "independent_whole_file_approvals": 0
+    },
+    "licensing": {
+      "pinned_notice_path": "LICENSE.md",
+      "git_blob_sha1": "65c5ca88a67c30becee01c5a8816d964b03862f9",
+      "source_sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768",
+      "dossier_sha256": "a620cf8ec560f8bf6f54e9d96403ec1cb204f3ddad7fef812ce7893059396986",
+      "notice": "GNU Lesser General Public License, version 3",
+      "distribution_clearance": "NEEDS_EVIDENCE",
+      "legal_determination": false
+    }
+  },
+  "live_pr_observations": {
+    "pr14": {
+      "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/14",
+      "head_sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03",
+      "base_ref": "phase1/review-readiness-handoff-20261027",
+      "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"
+    },
+    "dependency_pr8": {
+      "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/8",
+      "head_sha": "dddd2fd27371eb8f45b36c0403ba8ed38f5b732a",
+      "base_ref": "phase1/firered-layout-writers-20261026",
+      "base_sha": "03608155216b4f283fd92b7c5d795dd066698244"
+    }
+  },
+  "workflow_observation": {
+    "workflow_id": 398126932,
+    "workflow_name": "Phase 1 pinned Porymap Qt writer failure boundary",
+    "workflow_path": ".github/workflows/phase1-porymap-qt-writer-failure.yml",
+    "configured_events": [
+      "push",
+      "pull_request",
+      "workflow_dispatch"
+    ],
+    "required_runs": [
+      {
+        "run_id": 40490882094,
+        "attempt": 1,
+        "event": "push",
+        "head_sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03",
+        "conclusion": "success",
+        "job_id": 122144214009,
+        "job_name": "pinned-qt-writer",
+        "job_count": 1,
+        "job_conclusion": "success",
+        "step_count": 10,
+        "successful_step_count": 10,
+        "critical_steps": [
+          "Checkout immutable Porymap source",
+          "Verify source syntax and exact pinned provenance",
+          "Compile and execute pinned Qt serializer success and failure controls",
+          "Archive provenance and negative evidence"
+        ],
+        "base_provenance": "not_applicable_to_push_event",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40490882094"
+      },
+      {
+        "run_id": 40490889813,
+        "attempt": 1,
+        "event": "pull_request",
+        "head_sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03",
+        "conclusion": "success",
+        "job_id": 122144238540,
+        "job_name": "pinned-qt-writer",
+        "job_count": 1,
+        "job_conclusion": "success",
+        "step_count": 10,
+        "successful_step_count": 10,
+        "critical_steps": [
+          "Checkout immutable Porymap source",
+          "Verify source syntax and exact pinned provenance",
+          "Compile and execute pinned Qt serializer success and failure controls",
+          "Archive provenance and negative evidence"
+        ],
+        "base_provenance": "unavailable_actions_api",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40490889813"
+      }
+    ]
+  },
+  "blocker_deltas": [
+    {
+      "blocker_id": "B021",
+      "before": "BLOCKED: required workflow ID unverified in the original manifest",
+      "evidence_delta": "Workflow 398126932 and successful exact-head push and pull_request attempts are confirmed by public Actions metadata.",
+      "after": "BLOCKED",
+      "remaining_reason": "Actions does not return the pull_request run-time base SHA; current PR metadata cannot substitute for run provenance.",
+      "resolved": false,
+      "original_triage_row_sha256": "d2d408927600e16e469b280a94049c00faacd4ea25fc0d4c3e641f71836e3c07"
+    },
+    {
+      "blocker_id": "B020",
+      "before": "BLOCKED: PR #14 base does not match dependency PR #8 head",
+      "evidence_delta": "Fresh public PR metadata still shows PR #14 base b76a2b686d4acf4302b9dacfad28494660d9b5f9 versus PR #8 head dddd2fd27371eb8f45b36c0403ba8ed38f5b732a.",
+      "after": "BLOCKED",
+      "resolved": false,
+      "original_triage_row_sha256": "c1f134ac0a8120314b5ce5a262afce94e47c70d2d0513aedd5cff6a150cbbf50"
+    }
+  ],
+  "phase1": {
+    "gate": "FAIL_INCOMPLETE",
+    "p0_candidates": 338,
+    "p0_approved": 0,
+    "total_dispositions": 14834,
+    "approved_dispositions": 0,
+    "source_pins_changed": false,
+    "semantic_approval_from_ci_or_source_scans": false
+  }
+}

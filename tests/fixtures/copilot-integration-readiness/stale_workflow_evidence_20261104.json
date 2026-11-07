@@ -1,0 +1,471 @@
+{
+  "observed_at": "2026-11-04",
+  "source": "Read-only public GitHub pull-request, workflow-definition, workflow-run, and workflow-job APIs; one public compare API response for PR #8",
+  "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+  "scope": "The nine stale_workflow_evidence rows B002, B013, B016, B019, B023, B030, B031, B033, and B037 in blocker-triage-20261104.json.",
+  "source_sha256": {
+    "development/copilot-integration/manifest.json": "99accfcada883f086468e8f62c55a252ee24076dba777575584aaf15e60e52cf",
+    "development/copilot-integration/blocker-triage-20261104.json": "f87c618981d8006b30adc3178eeed68bc9ecb41801dded28ac0289cfbfc73659",
+    "docs/PHASE1_STATUS.md": "248b931af27d7fa38c18d636b8e7a0f09e6b6bb698117ab55e7fbd0d0e491e49",
+    "docs/PHASE1_INDEPENDENT_SEMANTIC_REVIEW_QUEUE.md": "91e29885742be869d5eb382d2bff3190afc0e62ddf2777a9a6e1038d05bb8efb"
+  },
+  "base_provenance_limit": "Actions run/job responses returned PR association, event, head SHA, attempt, and jobs, but not the run-time PR base SHA. Live PR base metadata is recorded separately and is not substituted for run-time provenance.",
+  "policy": {
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "independent_approvals": 0,
+    "ci_is_semantic_approval": false,
+    "historical_manifest_observations_preserved": true
+  },
+  "rows": [
+    {
+      "pr_number": 2,
+      "blocker_id": "B002",
+      "manifest": {
+        "head_ref": "phase1/verified-review-attestation-gate-20261026",
+        "head_sha": "69726db2857624c0e49955b79961a4e7e9730636",
+        "base_ref": "main",
+        "base_sha": "b0b13c1a277663b255b366878345540c2dcc90b1",
+        "required_workflow_id": 396211566,
+        "recorded_run_id": 40216488315,
+        "recorded_run_head_sha": "b14bfc164aa623648342405c04ed7fcf475005eb"
+      },
+      "live_pr": {
+        "head_sha": "ca30a88e50252b95648cc71bdd9cb5db65dd0f83",
+        "base_ref": "main",
+        "base_sha": "b0b13c1a277663b255b366878345540c2dcc90b1",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/2"
+      },
+      "workflow": {
+        "path": ".github/workflows/phase1-review-attestation-gate.yml",
+        "blob_sha": "3951dd59d9a26600e1ef7f0e8d360d713a72de9b",
+        "required_events": ["pull_request", "push"]
+      },
+      "observed_runs": [
+        {
+          "id": 40216686843,
+          "attempt": 1,
+          "event": "pull_request",
+          "head_sha": "69726db2857624c0e49955b79961a4e7e9730636",
+          "conclusion": "success",
+          "jobs": {
+            "count": 1,
+            "successful": 1,
+            "ids": [121239234394],
+            "urls": ["https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40216686843/job/121239234394"],
+            "critical_steps": [
+              "Check source syntax and synthetic signed-review negative controls",
+              "Validate pinned reviewer trust registry and prohibit owner self-review"
+            ]
+          },
+          "base_provenance": "not returned",
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40216686843"
+        }
+      ],
+      "classification": "stale_head_base",
+      "reason": "The successful PR run tested the manifest-pinned head, not the live PR head; its run-time base SHA was not returned.",
+      "closure_action": "Obtain and verify a required workflow run for the live head and intended base; retain the manifest's historical run record."
+    },
+    {
+      "pr_number": 8,
+      "blocker_id": "B013",
+      "manifest": {
+        "head_ref": "phase1/review-readiness-handoff-20261027",
+        "head_sha": "a03acca40614db990756aa88730688dcf084ee31",
+        "base_ref": "phase1/firered-layout-writers-20261026",
+        "base_sha": "8eb234e3508d55621ecc03531823036d336fa4d1",
+        "required_workflow_id": 397824487,
+        "recorded_run_id": 40449595853,
+        "recorded_run_head_sha": "3f8fab19de2248aeee846cc344769ff069031398"
+      },
+      "live_pr": {
+        "head_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "base_ref": "phase1/firered-layout-writers-20261026",
+        "base_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/8"
+      },
+      "workflow": {
+        "path": ".github/workflows/phase1-review-readiness-packets.yml",
+        "blob_sha": "53774b95479595767475df53ac01ef25ec82641d",
+        "required_events": ["push"]
+      },
+      "observed_runs": [
+        {
+          "id": 40449595853,
+          "attempt": 1,
+          "event": "push",
+          "head_sha": "3f8fab19de2248aeee846cc344769ff069031398",
+          "conclusion": "success",
+          "jobs": {
+            "count": 1,
+            "successful": 1,
+            "ids": [122008940528],
+            "urls": ["https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40449595853/job/122008940528"],
+            "critical_steps": [
+              "Test deterministic packet builder and negative controls",
+              "Reconcile all 2000 source-verified machine records",
+              "Build first 100 P0-first review packets without approval"
+            ]
+          },
+          "base_provenance": "not applicable to push event; run head is stale",
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40449595853"
+        }
+      ],
+      "live_compare": {
+        "status": "diverged",
+        "ahead_by": 126,
+        "behind_by": 49,
+        "merge_base_sha": "6321f8ea1254a9dbf2cc442cadcdbb14e2a6ea39",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/compare/03608155216b4f283fd92b7c5d795dd066698244...c3988a51fda1ba8310856ed720740acb85e9ea05"
+      },
+      "classification": "stale_head_base",
+      "reason": "The push-only required workflow's observed run predates the live head; the live PR base is 49 commits ahead of the head.",
+      "closure_action": "Reconcile the stale dependency branch, then obtain a successful push run on the resulting live head; do not infer a pass from the older run."
+    },
+    {
+      "pr_number": 11,
+      "blocker_id": "B016",
+      "manifest": {
+        "head_ref": "phase1/binary-aware-triage-issue9-20261027",
+        "head_sha": "a59756ee192659ac60988195bf7e5f1a4fea29f6",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+        "required_workflow_id": 397970898,
+        "recorded_run_id": 40468447957,
+        "recorded_run_head_sha": "26402b704480cbeb3fe9fe467a1d4b2c75ac54c3"
+      },
+      "live_pr": {
+        "head_sha": "2021d98987c7c895288f9b70ad756ab9608f4ea0",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/11"
+      },
+      "workflow": {
+        "path": ".github/workflows/phase1-binary-aware-triage-v2.yml",
+        "blob_sha": "83ca22b0e465dbeb2f06d5bcf86dab2adb119ddb",
+        "required_events": ["pull_request", "push"]
+      },
+      "observed_runs": [
+        {
+          "id": 41211562929,
+          "attempt": 1,
+          "event": "pull_request",
+          "head_sha": "2021d98987c7c895288f9b70ad756ab9608f4ea0",
+          "conclusion": "success",
+          "jobs": {
+            "count": 1,
+            "successful": 1,
+            "ids": [124567476690],
+            "urls": ["https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41211562929/job/124567476690"],
+            "critical_steps": [
+              "Confirm exact event head checkout",
+              "Syntax and typed binary negative controls",
+              "Preserve historical v1 2000-record integrity without reinterpretation"
+            ]
+          },
+          "base_provenance": "not returned",
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41211562929"
+        }
+      ],
+      "classification": "stale_head_base",
+      "reason": "The successful PR run tests the live head, but the Actions API did not return a run-time base SHA; PR #8's current head also differs from this PR's live base.",
+      "closure_action": "Keep the separate stale-dependency-base blocker and obtain exact run-time head/base provenance before clearing this workflow blocker."
+    },
+    {
+      "pr_number": 13,
+      "blocker_id": "B019",
+      "manifest": {
+        "head_ref": "phase1/mgba-savedata-boundary-witness-20261027",
+        "head_sha": "9bf2b6f31c7e0ebf00e1ebaf6aee6f0930c90444",
+        "base_ref": "phase1/mgba-savedata-review-handoff-20261027",
+        "base_sha": "9ed9d2630a098525e7703853de0b804c56658da9",
+        "required_workflow_id": 398059096,
+        "recorded_run_id": 40480788248,
+        "recorded_run_head_sha": "9bf2b6f31c7e0ebf00e1ebaf6aee6f0930c90444"
+      },
+      "live_pr": {
+        "head_sha": "d4a753a8909f364ed133eda4b4253a06a985b9ab",
+        "base_ref": "phase1/mgba-savedata-review-handoff-20261027",
+        "base_sha": "9ed9d2630a098525e7703853de0b804c56658da9",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/13"
+      },
+      "workflow": {
+        "path": ".github/workflows/phase1-mgba-savedata-boundary-witness.yml",
+        "blob_sha": "4fef11745dac70d7312e3ce34e6dd4eee0434b3e",
+        "required_events": ["pull_request"]
+      },
+      "observed_runs": [
+        {
+          "id": 41882603072,
+          "attempt": 1,
+          "event": "pull_request",
+          "head_sha": "d4a753a8909f364ed133eda4b4253a06a985b9ab",
+          "conclusion": "action_required",
+          "jobs": {
+            "count": 0,
+            "successful": 0,
+            "ids": [],
+            "urls": [],
+            "critical_steps": []
+          },
+          "base_provenance": "not returned",
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41882603072"
+        }
+      ],
+      "classification": "action_required_zero_job",
+      "reason": "The current-head PR run is authorization-gated and executed zero jobs; it is neither success nor failure.",
+      "closure_action": "A maintainer with write access must authorize the run in GitHub Actions, after which all jobs and attempt provenance must be rechecked."
+    },
+    {
+      "pr_number": 15,
+      "blocker_id": "B023",
+      "manifest": {
+        "head_ref": "phase1/firered-load-save-relocation-review-20261027",
+        "head_sha": "7c283d21b48ef3b2276a225465b59ff492364a12",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+        "required_workflow_id": 398142984,
+        "recorded_run_id": 40492941829,
+        "recorded_run_head_sha": "7c283d21b48ef3b2276a225465b59ff492364a12"
+      },
+      "live_pr": {
+        "head_sha": "7c283d21b48ef3b2276a225465b59ff492364a12",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/15"
+      },
+      "workflow": {
+        "path": ".github/workflows/phase1_firered_load_save_review.yml",
+        "blob_sha": "324b4ffd1720bae9740ed263ee746fce61516d28",
+        "required_events": ["pull_request"]
+      },
+      "observed_runs": [
+        {
+          "id": 40492941829,
+          "attempt": 1,
+          "event": "pull_request",
+          "head_sha": "7c283d21b48ef3b2276a225465b59ff492364a12",
+          "conclusion": "success",
+          "jobs": {
+            "count": 1,
+            "successful": 1,
+            "ids": [122151128239],
+            "urls": ["https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40492941829/job/122151128239"],
+            "critical_steps": ["Verify whole file, dependencies and negative controls"]
+          },
+          "base_provenance": "not returned",
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40492941829"
+        }
+      ],
+      "classification": "stale_head_base",
+      "reason": "The PR run and all job steps succeeded at the live head, but the run-time base SHA was not returned; the current base also differs from dependency PR #8's live head.",
+      "closure_action": "Preserve this successful head-only evidence and the separate stale-dependency-base blocker; obtain verifiable exact-base provenance."
+    },
+    {
+      "pr_number": 19,
+      "blocker_id": "B030",
+      "manifest": {
+        "head_ref": "phase1/binary-container-validation-20261027",
+        "head_sha": "8ba12ff806248875856cd965f1265fbfec37334f",
+        "base_ref": "phase1/binary-aware-triage-issue9-20261027",
+        "base_sha": "a59756ee192659ac60988195bf7e5f1a4fea29f6",
+        "required_workflow_id": 398232973,
+        "recorded_run_id": 40505350595,
+        "recorded_run_head_sha": "8ba12ff806248875856cd965f1265fbfec37334f"
+      },
+      "live_pr": {
+        "head_sha": "8ba12ff806248875856cd965f1265fbfec37334f",
+        "base_ref": "phase1/binary-aware-triage-issue9-20261027",
+        "base_sha": "a59756ee192659ac60988195bf7e5f1a4fea29f6",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/19"
+      },
+      "workflow": {
+        "path": ".github/workflows/phase1-png-container-integrity.yml",
+        "blob_sha": "dfdb14019f6c4779673896791593b26309eb687c",
+        "required_events": ["push"]
+      },
+      "observed_runs": [
+        {
+          "id": 40505350595,
+          "attempt": 1,
+          "event": "push",
+          "head_sha": "8ba12ff806248875856cd965f1265fbfec37334f",
+          "conclusion": "success",
+          "jobs": {
+            "count": 1,
+            "successful": 1,
+            "ids": [122193131066],
+            "urls": ["https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40505350595/job/122193131066"],
+            "critical_steps": [
+              "Syntax and binary-aware regression controls",
+              "Historical v1 and typed v2 2000-record integrity"
+            ]
+          },
+          "base_provenance": "not applicable to push event; no run-time PR base SHA returned",
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40505350595"
+        }
+      ],
+      "classification": "stale_head_base",
+      "reason": "The workflow's configured push event succeeded on the live head, but its API response does not establish a run-time PR base SHA; current PR #11 head also differs from this live base.",
+      "closure_action": "Keep the separate stale-dependency-base blocker and obtain exact base provenance for the required push run before clearing this workflow blocker."
+    },
+    {
+      "pr_number": 20,
+      "blocker_id": "B031",
+      "manifest": {
+        "head_ref": "phase1/poryscript-real-cli-arm-map-table-20261027",
+        "head_sha": "afb5fc1714235f1349f51b256ba20ac4c78e2019",
+        "base_ref": "phase1/poryscript-compiled-map-table-20261027",
+        "base_sha": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d",
+        "required_workflow_id": 398234226,
+        "recorded_run_id": 40506170513,
+        "recorded_run_head_sha": "587132181ef728b635968dd091b1cf171e78f753"
+      },
+      "live_pr": {
+        "head_sha": "afb5fc1714235f1349f51b256ba20ac4c78e2019",
+        "base_ref": "phase1/poryscript-compiled-map-table-20261027",
+        "base_sha": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/20"
+      },
+      "workflow": {
+        "path": ".github/workflows/phase1-poryscript-real-cli-arm-table.yml",
+        "blob_sha": "acc10e1ca4e40f2469635396a8ed6648fb2a3b79",
+        "required_events": ["pull_request", "push"]
+      },
+      "observed_runs": [
+        {
+          "id": 40795259266,
+          "attempt": 1,
+          "event": "pull_request",
+          "head_sha": "afb5fc1714235f1349f51b256ba20ac4c78e2019",
+          "conclusion": "success",
+          "jobs": {
+            "count": 5,
+            "successful": 5,
+            "ids": [123190073969, 123190074298, 123190074356, 123190074386, 123190074759],
+            "urls": [
+              "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40795259266/job/123190073969",
+              "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40795259266/job/123190074298",
+              "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40795259266/job/123190074356",
+              "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40795259266/job/123190074386",
+              "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40795259266/job/123190074759"
+            ],
+            "critical_steps": [
+              "Execute actual pinned CLI and compile original emitted map table",
+              "Verify actual original-agbcc linked reader functions and seven tamper controls"
+            ]
+          },
+          "base_provenance": "not returned",
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40795259266"
+        }
+      ],
+      "classification": "stale_head_base",
+      "reason": "Run #40795259266 supersedes the older recorded success and has five successful jobs on the live head, but the Actions API did not return its run-time base SHA.",
+      "closure_action": "Preserve the exact-head five-job success and obtain verifiable base provenance; do not relabel the old run or clear this blocker."
+    },
+    {
+      "pr_number": 21,
+      "blocker_id": "B033",
+      "manifest": {
+        "head_ref": "phase1/firered-root-build-rom-geometry-20261027",
+        "head_sha": "a324b99b486d56d57eab94049a2a25ad091a862b",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+        "required_workflow_id": 398273014,
+        "recorded_run_id": 40510922233,
+        "recorded_run_head_sha": "a324b99b486d56d57eab94049a2a25ad091a862b"
+      },
+      "live_pr": {
+        "head_sha": "a324b99b486d56d57eab94049a2a25ad091a862b",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/21"
+      },
+      "workflow": {
+        "path": ".github/workflows/phase1-firered-root-build-contract.yml",
+        "blob_sha": "a5d4deafac6c936d80f58c56ea152f012ff0d340",
+        "required_events": ["pull_request", "push"]
+      },
+      "observed_runs": [
+        {
+          "id": 40510922233,
+          "attempt": 1,
+          "event": "pull_request",
+          "head_sha": "a324b99b486d56d57eab94049a2a25ad091a862b",
+          "conclusion": "success",
+          "jobs": {
+            "count": 1,
+            "successful": 1,
+            "ids": [122212296917],
+            "urls": ["https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40510922233/job/122212296917"],
+            "critical_steps": [
+              "Verify exact upstream blobs and negative controls",
+              "Verify gate remains fail closed"
+            ]
+          },
+          "base_provenance": "not returned",
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40510922233"
+        }
+      ],
+      "classification": "stale_head_base",
+      "reason": "The exact-head PR run and job succeeded, but the run-time base SHA was not returned; the current base also differs from dependency PR #8's live head.",
+      "closure_action": "Keep the separate stale-dependency-base blocker and obtain exact base provenance before clearing this workflow blocker."
+    },
+    {
+      "pr_number": 24,
+      "blocker_id": "B037",
+      "manifest": {
+        "head_ref": "phase1/firered-mgba-real-rom-boot-save-20261028",
+        "head_sha": "b6f0cee6a4b5ec25c2eb39eaf4340b65e8da10d8",
+        "base_ref": "phase1/firered-mgba-flash-bank-sector-20261027",
+        "base_sha": "7149f0f07339706ce5c29c3ca5a40e5cfcd85256",
+        "required_workflow_id": 398361788,
+        "recorded_run_id": 40525408728,
+        "recorded_run_head_sha": "b6f0cee6a4b5ec25c2eb39eaf4340b65e8da10d8"
+      },
+      "live_pr": {
+        "head_sha": "b6f0cee6a4b5ec25c2eb39eaf4340b65e8da10d8",
+        "base_ref": "phase1/firered-mgba-flash-bank-sector-20261027",
+        "base_sha": "7149f0f07339706ce5c29c3ca5a40e5cfcd85256",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/24"
+      },
+      "workflow": {
+        "path": ".github/workflows/phase1-real-firered-mgba-rom-save.yml",
+        "blob_sha": "ec8c37b12182febe9d23e608f0b123e9219a197e",
+        "required_events": ["push"]
+      },
+      "observed_runs": [
+        {
+          "id": 40525408728,
+          "attempt": 1,
+          "event": "push",
+          "head_sha": "b6f0cee6a4b5ec25c2eb39eaf4340b65e8da10d8",
+          "conclusion": "success",
+          "jobs": {
+            "count": 1,
+            "successful": 1,
+            "ids": [122263516059],
+            "urls": ["https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40525408728/job/122263516059"],
+            "critical_steps": [
+              "Build real FireRed cartridge using pinned original agbcc",
+              "Build actual pinned mGBA emulator core and headless perf frontend",
+              "Boot source-built ROM under actual pinned emulator",
+              "Run valid malformed and older-slot save probes"
+            ]
+          },
+          "base_provenance": "not applicable to push event; no run-time PR base SHA returned",
+          "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40525408728"
+        }
+      ],
+      "classification": "stale_head_base",
+      "reason": "The workflow's configured push event succeeded on the live head, but the Actions API did not return a run-time PR base SHA.",
+      "closure_action": "Preserve the exact-head source/build evidence and obtain run-time base provenance before clearing this workflow blocker."
+    }
+  ],
+  "limitations": [
+    "Current PR head/base metadata is an independently read snapshot; it is not the run-time base SHA and cannot be substituted for it.",
+    "Workflow event types are taken from the workflow files at the current PR head. A successful push run for a push-only workflow is recorded as its actual configured event, not misreported as missing PR-event coverage.",
+    "PR #8's compare API response establishes a diverged base/head relation; no other merge-base comparison is asserted in this fixture.",
+    "No Actions run was retried. The #13 authorization-gated run executed zero jobs and is not a pass or code failure.",
+    "Source/build workflow success is not semantic approval. No manifest historical receipt, queue, approval register, gate, branch, or upstream source pin was changed."
+  ]
+}

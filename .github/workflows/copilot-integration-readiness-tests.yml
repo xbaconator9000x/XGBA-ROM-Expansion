@@ -1,0 +1,357 @@
+name: Copilot integration readiness checker tests
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/copilot-integration-readiness-tests.yml"
+      - "development/copilot-integration/manifest.json"
+      - "development/copilot-integration/blocker-triage-20261104.json"
+      - "development/copilot-integration/dependency-base-reconciliation-20261105.json"
+      - "development/copilot-integration/closure-index-20261105.json"
+      - "development/copilot-integration/action-closure-20261105.json"
+      - "development/copilot-integration/workflow-id-correction-20261105.json"
+      - "development/copilot-integration/package-linkage-20261105.json"
+      - "development/copilot-integration/mapjson-build-dependency-objection-20261107.json"
+      - "development/copilot-integration/porymap-b021-workflow-id-reconciliation-20261107.json"
+      - "docs/integration/copilot-stack-readiness-20261030.md"
+      - "docs/PHASE1_STATUS.md"
+      - "semantic-snapshots/current/phase1_mapping_gate.json"
+      - "semantic-snapshots/current/semantic_review_queue.csv.gz"
+      - "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz"
+      - "semantic-snapshots/curated/p0_semantic_review_candidates_2026-10-26.json"
+      - "semantic-snapshots/independent-reviews/curated-p0-intake-20261029.json"
+      - "semantic-snapshots/independent-reviews/queue.json"
+      - "tests/fixtures/copilot-integration-readiness/valid_merge_sha.json"
+      - "tests/fixtures/copilot-integration-readiness/workflow_classifications.json"
+      - "tests/fixtures/copilot-integration-readiness/base_sha_reconciliation.json"
+      - "tests/fixtures/copilot-integration-readiness/live_observations_20261104.json"
+      - "tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json"
+      - "tests/fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json"
+      - "tests/fixtures/copilot-integration-readiness/stale_main_base_evidence_20261105.json"
+      - "tests/test_copilot_check_integration_readiness.py"
+      - "tests/test_phase1_mapjson_build_dependency_objection.py"
+      - "tests/test_porymap_b021_workflow_reconciliation.py"
+      - "tests/test_phase1_ci_context.py"
+      - "tests/test_phase1_continuous.py"
+      - "tests/test_phase1_independent_queue.py"
+      - "tests/test_xgba_rom_compatibility_preflight.py"
+      - "tools/copilot_check_integration_readiness.py"
+      - "tools/phase1_mapjson_build_dependency_objection.py"
+      - "tools/porymap_b021_workflow_reconciliation.py"
+      - "tools/phase1_continuous.py"
+      - "tools/phase1_independent_queue_validate.py"
+      - "tools/verify_phase1_ci_context.py"
+      - "tools/xgba_rom_compatibility_preflight.py"
+
+permissions:
+  contents: read
+
+jobs:
+  checker-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Require exact PR-head checkout and valid event scope
+        run: python3 tools/verify_phase1_ci_context.py
+      - name: Compile supported Python validators and regression tests
+        run: |
+          python3 -m py_compile \
+            tools/copilot_check_integration_readiness.py \
+            tools/phase1_mapjson_build_dependency_objection.py \
+            tools/porymap_b021_workflow_reconciliation.py \
+            tools/phase1_continuous.py \
+            tools/phase1_independent_queue_validate.py \
+            tools/verify_phase1_ci_context.py \
+            tools/xgba_rom_compatibility_preflight.py \
+            tests/test_copilot_check_integration_readiness.py \
+            tests/test_phase1_mapjson_build_dependency_objection.py \
+            tests/test_porymap_b021_workflow_reconciliation.py \
+            tests/test_phase1_ci_context.py \
+            tests/test_phase1_continuous.py \
+            tests/test_phase1_independent_queue.py \
+            tests/test_xgba_rom_compatibility_preflight.py
+      - name: Verify pinned offline fixture
+        run: |
+          printf '%s\n' \
+            "1e0f095cd56738ae31f7418dc79cc63fef5a8e41cb23423aef40c5954155443e  tests/fixtures/copilot-integration-readiness/valid_merge_sha.json" \
+            "70dcb3b13e5a81d32c7cf21997342d129931a02d6b6b20a3d2b50d8c83004bc1  tests/fixtures/copilot-integration-readiness/workflow_classifications.json" \
+            "b6155a4eb45ac73c85cf9f542e6556f3e82ee70474078b6f97761f5831e0bc56  tests/fixtures/copilot-integration-readiness/base_sha_reconciliation.json" \
+            "a07df2ed1afe824ff184def096afb3e499bdc99fcfe98f74dc13b7c84610bacf  tests/fixtures/copilot-integration-readiness/live_observations_20261104.json" \
+            "37e2a5b7a007972a98986684701cd50626f46b5f0e3ec05e3c16ae3494b7df6f  tests/fixtures/copilot-integration-readiness/workflow_id_reconciliation_20261104.json" \
+            "5648c1772da65ae6a758e605a28aaffacf5036a5f5741fae845a50cc60e6b7b4  tests/fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json" \
+            "62ce1ae030ca8739918f9dca5139f7b4b410e9351aa425d1f1d4db7823b27604  tests/fixtures/copilot-integration-readiness/stale_main_base_evidence_20261105.json" \
+            "78f7a0c2af374b5c5e167af4ad1212b7a399c17d232cd39b7a53bb2e4668b784  development/copilot-integration/closure-index-20261105.json" \
+            "ac41f0b98410a66285798dcd35ecf6693dbd000f190d44b57111da95bea67e88  development/copilot-integration/action-closure-20261105.json" \
+            "63d2846a81ef55dadb1a1386e41abe768cfbc58b05fdbaab7d3d085f744b2ecb  development/copilot-integration/workflow-id-correction-20261105.json" \
+            "977f95611874bcbf8f705a0a059ed34bc45a320e0a995e1334a1614fcbda8b95  development/copilot-integration/package-linkage-20261105.json" \
+            "a0be460ad610d5cfef5a921c07925eba56cc499526a51d218a66adf2d3257db0  development/copilot-integration/mapjson-build-dependency-objection-20261107.json" \
+            "abced2977ac47c7abd47a9e147c742d63259785750090a733b14bd8886d1285a  development/copilot-integration/porymap-b021-workflow-id-reconciliation-20261107.json" \
+            "c10504f3a05c7875b8a71afd119de5ed1e1074a672a567723823bde0b5cd4486  development/copilot-integration/dependency-base-reconciliation-20261105.json" \
+            "c50498b751ecbe38d7a5939e06fa85cf4e62d529a943983710d4c5b9095d2eff  semantic-snapshots/current/semantic_review_queue.csv.gz" \
+            "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609  semantic-snapshots/current/candidate_review_dossiers.jsonl.gz" \
+            | sha256sum --check
+      - name: Validate source-pinned mapjson objection without approval promotion
+        run: |
+          python3 tools/phase1_mapjson_build_dependency_objection.py \
+            > "$RUNNER_TEMP/mapjson-objection.json"
+          python3 - "$RUNNER_TEMP/mapjson-objection.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          report = json.loads(Path(sys.argv[1]).read_text())
+          assert report["evidence_validation"] == "VALID_NOT_APPROVED"
+          assert report["disposition"] == "NEEDS_EVIDENCE"
+          assert report["related_blocker_status"] == "BLOCKED"
+          assert report["phase1_gate"] == "FAIL_INCOMPLETE"
+          assert report["approved_dispositions"] == 0
+          assert report["findings"] == []
+          PY
+      - name: Validate B021 workflow provenance without resolving its blocker
+        run: |
+          python3 tools/porymap_b021_workflow_reconciliation.py \
+            > "$RUNNER_TEMP/porymap-b021.json"
+          python3 - "$RUNNER_TEMP/porymap-b021.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          report = json.loads(Path(sys.argv[1]).read_text())
+          assert report["evidence_validation"] == "VALID_NOT_APPROVED"
+          assert report["selected_blockers"] == ["B021", "B020"]
+          assert report["selected_blocker_statuses"] == {
+              "B021": "BLOCKED", "B020": "BLOCKED"
+          }
+          assert report["workflow_id_dimension_verified_count"] == 1
+          assert report["selected_resolved_count"] == 0
+          assert report["phase1_gate"] == "FAIL_INCOMPLETE"
+          assert report["approved_dispositions"] == 0
+          assert report["findings"] == []
+          PY
+      - name: Validate Phase 1 independent-review queue without changing it
+        run: python3 tools/phase1_independent_queue_validate.py
+      - name: Run existing isolated Phase 1 Python regression suites
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Verify offline behavior remains blocked
+        run: |
+          set +e
+          python3 tools/copilot_check_integration_readiness.py --offline > "$RUNNER_TEMP/copilot-readiness.txt" 2>&1
+          status=$?
+          set -e
+          if [ "$status" -ne 1 ]; then
+            cat "$RUNNER_TEMP/copilot-readiness.txt"
+            echo "Expected the incomplete recorded snapshot to exit 1; got $status"
+            exit 1
+          fi
+          grep -Fq "BLOCKED (" "$RUNNER_TEMP/copilot-readiness.txt"
+          grep -Fq "PR #11 base SHA b76a2b686d4acf4302b9dacfad28494660d9b5f9 does not match dependency PR #8 head" "$RUNNER_TEMP/copilot-readiness.txt"
+          if grep -Fq "manifest base SHA is not a full" "$RUNNER_TEMP/copilot-readiness.txt"; then
+            cat "$RUNNER_TEMP/copilot-readiness.txt"
+            echo "Reconciled base rows must not remain malformed"
+            exit 1
+          fi
+      - name: Classify nine dependency blockers from pinned observations
+        run: |
+          set +e
+          python3 tools/copilot_check_integration_readiness.py \
+            --dependency-observations development/copilot-integration/dependency-base-reconciliation-20261105.json \
+            > "$RUNNER_TEMP/dependency-readiness.json"
+          status=$?
+          set -e
+          if [ "$status" -ne 1 ]; then
+            cat "$RUNNER_TEMP/dependency-readiness.json"
+            echo "Expected unresolved dependency evidence to remain blocked; got $status"
+            exit 1
+          fi
+          python3 - "$RUNNER_TEMP/dependency-readiness.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          report = json.loads(Path(sys.argv[1]).read_text())
+          assert report["status"] == "BLOCKED"
+          assert report["blocked_count"] == 9
+          assert report["first_concrete_blocker"]["pr_number"] == 8
+          assert report["phase1_gate"] == "FAIL_INCOMPLETE"
+          assert report["independent_approvals"] == 0
+          assert all(row["status"] == "BLOCKED" for row in report["rows"])
+          PY
+      - name: Preserve Phase 1 gate and approval totals
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(Path("development/copilot-integration/manifest.json").read_text())
+          policy = manifest["policy"]
+          assert policy["phase1_gate"] == "FAIL_INCOMPLETE"
+          assert policy["independent_approvals"] == 0
+          assert policy["preserve_source_pins"] is True
+          assert policy["ci_is_semantic_approval"] is False
+          status = Path("docs/PHASE1_STATUS.md").read_text()
+          assert "**Decision: FAIL_INCOMPLETE." in status
+          assert "Independent whole-file semantic dispositions approved: 0/14,834." in status
+          PY
+      - name: Reproduce source-linked blocker triage without clearing blockers
+        run: |
+          set +e
+          python3 tools/copilot_check_integration_readiness.py \
+            --offline \
+            --live-observations tests/fixtures/copilot-integration-readiness/live_observations_20261104.json \
+            --triage-json \
+            > "$RUNNER_TEMP/blocker-triage.json"
+          status=$?
+          set -e
+          if [ "$status" -ne 1 ]; then
+            cat "$RUNNER_TEMP/blocker-triage.json"
+            echo "Expected recorded blocker report to remain blocked; got $status"
+            exit 1
+          fi
+          python3 - "$RUNNER_TEMP/blocker-triage.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          report = json.loads(Path(sys.argv[1]).read_text())
+          assert report["status"] == "BLOCKED"
+          assert report["blocker_count"] == 44
+          assert report["category_counts"] == {
+              "incomplete_workflow_evidence": 19,
+              "stale_dependency_base": 9,
+              "stale_main_base": 7,
+              "stale_workflow_evidence": 9,
+          }
+          PY
+      - name: Validate deduplicated cross-category closure index
+        run: |
+          set +e
+          python3 tools/copilot_check_integration_readiness.py \
+            --closure-index development/copilot-integration/closure-index-20261105.json \
+            > "$RUNNER_TEMP/closure-index.json"
+          status=$?
+          set -e
+          if [ "$status" -ne 1 ]; then
+            cat "$RUNNER_TEMP/closure-index.json"
+            echo "Expected the unresolved 44-row closure index to remain blocked; got $status"
+            exit 1
+          fi
+          python3 - "$RUNNER_TEMP/closure-index.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          report = json.loads(Path(sys.argv[1]).read_text())
+          assert report["status"] == "BLOCKED"
+          assert report["blocker_count"] == 44
+          assert report["unique_blocker_ids"] == 44
+          assert report["findings"] == []
+          assert report["category_counts"] == {
+              "stale_dependency_base": 9,
+              "stale_main_base": 7,
+              "stale_workflow_evidence": 9,
+              "unverified_workflow_id": 19,
+          }
+          assert report["phase1_gate"] == "FAIL_INCOMPLETE"
+          assert report["independent_approvals"] == 0
+          PY
+      - name: Validate cross-category package identity links without resolving blockers
+        run: |
+          set +e
+          python3 tools/copilot_check_integration_readiness.py \
+           --package-linkage development/copilot-integration/package-linkage-20261105.json \
+           > "$RUNNER_TEMP/package-linkage.json"
+          status=$?
+          set -e
+          if [ "$status" -ne 1 ]; then
+           cat "$RUNNER_TEMP/package-linkage.json"
+           echo "Expected the selected nine blockers to remain blocked; got $status"
+           exit 1
+          fi
+          python3 - "$RUNNER_TEMP/package-linkage.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          report = json.loads(Path(sys.argv[1]).read_text())
+          assert report["status"] == "BLOCKED"
+          assert report["evidence_validation"] == "VALID"
+          assert report["row_count"] == 9
+          assert report["selected_blocked_count"] == 9
+          assert report["selected_resolved_count"] == 0
+          assert [row["blocker_id"] for row in report["rows"]] == [
+             "B012", "B013", "B014", "B015", "B016",
+             "B017", "B018", "B019", "B020"
+          ]
+          assert all(row["status"] == "BLOCKED" for row in report["rows"])
+          assert report["phase1_gate"] == "FAIL_INCOMPLETE"
+          assert report["independent_approvals"] == 0
+          PY
+      - name: Validate selected workflow-ID evidence corrections without resolving blockers
+        run: |
+          set +e
+          python3 tools/copilot_check_integration_readiness.py \
+            --workflow-id-correction development/copilot-integration/workflow-id-correction-20261105.json \
+            > "$RUNNER_TEMP/workflow-id-correction.json"
+          status=$?
+          set -e
+          if [ "$status" -ne 1 ]; then
+            cat "$RUNNER_TEMP/workflow-id-correction.json"
+            echo "Expected the selected workflow-ID records to remain blocked; got $status"
+            exit 1
+          fi
+          python3 - "$RUNNER_TEMP/workflow-id-correction.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          report = json.loads(Path(sys.argv[1]).read_text())
+          assert report["status"] == "BLOCKED"
+          assert report["evidence_validation"] == "VALID"
+          assert report["selected_blocker_count"] == 5
+          assert report["workflow_id_dimension_corrected_count"] == 5
+          assert report["selected_resolved_count"] == 0
+          assert report["selected_blocked_count"] == 5
+          assert [row["blocker_id"] for row in report["rows"]] == [
+              "B004", "B006", "B007", "B009", "B011"
+          ]
+          assert all(row["status"] == "BLOCKED" for row in report["rows"])
+          assert report["phase1_gate"] == "FAIL_INCOMPLETE"
+          assert report["independent_approvals"] == 0
+          PY
+      - name: Validate blocker action closure without promoting status
+        run: |
+          set +e
+          python3 tools/copilot_check_integration_readiness.py \
+            --action-closure development/copilot-integration/action-closure-20261105.json \
+            > "$RUNNER_TEMP/action-closure.json"
+          status=$?
+          set -e
+          if [ "$status" -ne 1 ]; then
+            cat "$RUNNER_TEMP/action-closure.json"
+            echo "Expected authorization-gated action closure to remain unverified; got $status"
+            exit 1
+          fi
+          python3 - "$RUNNER_TEMP/action-closure.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          report = json.loads(Path(sys.argv[1]).read_text())
+          assert report["status"] == "UNVERIFIED"
+          assert report["findings"] == []
+          assert report["selected_blocker_count"] == 2
+          assert report["selected_resolved_count"] == 0
+          assert report["selected_blocked_count"] == 2
+          assert [row["blocker_id"] for row in report["rows"]] == ["B043", "B044"]
+          assert all(row["current_evidence_fingerprint_sha256"] for row in report["rows"])
+          assert report["validation_gate"]["pr_conclusion"] == "action_required"
+          assert report["validation_gate"]["pr_job_count"] == 0
+          assert report["validation_gate"]["push_event_coverage"] == "not_configured"
+          assert report["remaining_blockers"]["original_blocker_count"] == 44
+          assert report["phase1_gate"] == "FAIL_INCOMPLETE"
+          assert report["independent_approvals"] == 0
+          PY

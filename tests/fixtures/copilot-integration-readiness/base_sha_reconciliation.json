@@ -1,0 +1,95 @@
+{
+  "observed_at": "2026-11-04",
+  "source": "Unauthenticated public GitHub PR, branch, and compare API reads",
+  "parent_pr": {
+    "number": 8,
+    "head_ref": "phase1/review-readiness-handoff-20261027",
+    "head_sha": "995e00904384191170075e8a57d18161ef1a2ec2",
+    "base_ref": "phase1/firered-layout-writers-20261026",
+    "base_sha": "03608155216b4f283fd92b7c5d795dd066698244"
+  },
+  "shared_child_base_ref": "phase1/review-readiness-handoff-20261027",
+  "reported_pr_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+  "observed_base_ref_tip_sha": "995e00904384191170075e8a57d18161ef1a2ec2",
+  "shared_merge_base_sha": "18dee74bf3042326645eb13ae7df3c551325b5a8",
+  "original_malformed_manifest_sha": "18dee74bf3042326645eb850f6f1a4fea29f6",
+  "classification": {
+    "malformed_value": "The original manifest literal is not a full Git SHA and is preserved verbatim on each reconciled base record.",
+    "stale_dependency": "The children depend on PR #8, but the live parent head/ref tip is not their common merge base; the stack is stale and remains blocked.",
+    "api_discrepancy": "PR metadata reports base SHA b76a2b686d4acf4302b9dacfad28494660d9b5f9 while the current base-ref tip is 995e00904384191170075e8a57d18161ef1a2ec2. Both observations are preserved; the discrepancy is not resolved by assumption."
+  },
+  "pull_requests": [
+    {
+      "number": 11,
+      "manifest_head_sha": "a59756ee192659ac60988195bf7e5f1a4fea29f6",
+      "head_sha": "2021d98987c7c895288f9b70ad756ab9608f4ea0",
+      "base_ref": "phase1/review-readiness-handoff-20261027",
+      "pr_reported_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "merge_base_sha": "18dee74bf3042326645eb13ae7df3c551325b5a8",
+      "compare_url": "https://api.github.com/repos/xbaconator9000x/XGBA-ROM-Expansion/compare/995e00904384191170075e8a57d18161ef1a2ec2...2021d98987c7c895288f9b70ad756ab9608f4ea0?per_page=1"
+    },
+    {
+      "number": 12,
+      "manifest_head_sha": "9ed9d2630a098525e7703853de0b804c56658da9",
+      "head_sha": "9ed9d2630a098525e7703853de0b804c56658da9",
+      "base_ref": "phase1/review-readiness-handoff-20261027",
+      "pr_reported_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "merge_base_sha": "18dee74bf3042326645eb13ae7df3c551325b5a8",
+      "compare_url": "https://api.github.com/repos/xbaconator9000x/XGBA-ROM-Expansion/compare/995e00904384191170075e8a57d18161ef1a2ec2...9ed9d2630a098525e7703853de0b804c56658da9?per_page=1"
+    },
+    {
+      "number": 14,
+      "manifest_head_sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03",
+      "head_sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03",
+      "base_ref": "phase1/review-readiness-handoff-20261027",
+      "pr_reported_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "merge_base_sha": "18dee74bf3042326645eb13ae7df3c551325b5a8",
+      "compare_url": "https://api.github.com/repos/xbaconator9000x/XGBA-ROM-Expansion/compare/995e00904384191170075e8a57d18161ef1a2ec2...618861ff17a4b9cfbb180f5531cf58d8414cbd03?per_page=1"
+    },
+    {
+      "number": 15,
+      "manifest_head_sha": "7c283d21b48ef3b2276a225465b59ff492364a12",
+      "head_sha": "7c283d21b48ef3b2276a225465b59ff492364a12",
+      "base_ref": "phase1/review-readiness-handoff-20261027",
+      "pr_reported_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "merge_base_sha": "18dee74bf3042326645eb13ae7df3c551325b5a8",
+      "compare_url": "https://api.github.com/repos/xbaconator9000x/XGBA-ROM-Expansion/compare/995e00904384191170075e8a57d18161ef1a2ec2...7c283d21b48ef3b2276a225465b59ff492364a12?per_page=1"
+    },
+    {
+      "number": 16,
+      "manifest_head_sha": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d",
+      "head_sha": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d",
+      "base_ref": "phase1/review-readiness-handoff-20261027",
+      "pr_reported_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "merge_base_sha": "18dee74bf3042326645eb13ae7df3c551325b5a8",
+      "compare_url": "https://api.github.com/repos/xbaconator9000x/XGBA-ROM-Expansion/compare/995e00904384191170075e8a57d18161ef1a2ec2...dd6fb2c8e6ec15818ccb841760b540a04dc8212d?per_page=1"
+    },
+    {
+      "number": 17,
+      "manifest_head_sha": "302465862501f542250d719444b3a9831406f6ac",
+      "head_sha": "302465862501f542250d719444b3a9831406f6ac",
+      "base_ref": "phase1/review-readiness-handoff-20261027",
+      "pr_reported_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "merge_base_sha": "18dee74bf3042326645eb13ae7df3c551325b5a8",
+      "compare_url": "https://api.github.com/repos/xbaconator9000x/XGBA-ROM-Expansion/compare/995e00904384191170075e8a57d18161ef1a2ec2...302465862501f542250d719444b3a9831406f6ac?per_page=1"
+    },
+    {
+      "number": 18,
+      "manifest_head_sha": "61a49f48e372272ff2ffcc720e21366bd91507bd",
+      "head_sha": "61a49f48e372272ff2ffcc720e21366bd91507bd",
+      "base_ref": "phase1/review-readiness-handoff-20261027",
+      "pr_reported_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "merge_base_sha": "18dee74bf3042326645eb13ae7df3c551325b5a8",
+      "compare_url": "https://api.github.com/repos/xbaconator9000x/XGBA-ROM-Expansion/compare/995e00904384191170075e8a57d18161ef1a2ec2...61a49f48e372272ff2ffcc720e21366bd91507bd?per_page=1"
+    },
+    {
+      "number": 21,
+      "manifest_head_sha": "a324b99b486d56d57eab94049a2a25ad091a862b",
+      "head_sha": "a324b99b486d56d57eab94049a2a25ad091a862b",
+      "base_ref": "phase1/review-readiness-handoff-20261027",
+      "pr_reported_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+      "merge_base_sha": "18dee74bf3042326645eb13ae7df3c551325b5a8",
+      "compare_url": "https://api.github.com/repos/xbaconator9000x/XGBA-ROM-Expansion/compare/995e00904384191170075e8a57d18161ef1a2ec2...a324b99b486d56d57eab94049a2a25ad091a862b?per_page=1"
+    }
+  ]
+}
