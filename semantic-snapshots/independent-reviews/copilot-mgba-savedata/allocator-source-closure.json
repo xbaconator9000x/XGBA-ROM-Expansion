@@ -1,0 +1,189 @@
+{
+  "schema": "xgba.copilot.mgba_savedata_allocator_source_closure.v1",
+  "review": {
+    "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+    "pull_request": 35,
+    "request_comment_id": 6700566308,
+    "expected_parent_head": "1112c64043d36ccc41d099ce4c8188779a53129a",
+    "reviewer": "GitHub Copilot Coding Agent (@copilot), supplemental source-closure pass",
+    "prior_interpreter": "xbaconator9000x, savedata source and native-test workpapers",
+    "identity_limit": "Source-grounded evidence only; not a distinct reviewer, independent approval, semantic signoff, or Phase 1 gate authorization.",
+    "approval_eligible": false,
+    "new_scope": "Resolve only the exact allocator implementation and allocation-result sink questions from the existing anonymous-memory-implementation objection; leave runtime failure and platform questions open.",
+    "protocol_status": "docs/PHASE1_SYSTEM_BATCH_REVIEW_PROTOCOL_2026-10-27.md is absent from the current checkout; its contents were not inferred."
+  },
+  "source_pin": {
+    "repository": "mgba-emu/mgba",
+    "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+    "cross_tranche_matrix": "semantic-snapshots/independent-reviews/copilot-mgba-savedata/cross-tranche-objection-matrix.json",
+    "cross_tranche_matrix_sha256": "f7ce0e81169b6b4a3724e7d0d8385ad6bd80b3f2c50e3a5243402fafecd0d084",
+    "dossier_path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "dossier_git_blob_sha1": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "dossier_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609",
+    "retrieval": "Files were fetched individually from raw.githubusercontent.com at the immutable revision and compared to Git blob, source byte SHA-256, canonical dossier-row SHA-256, line count, and MPL-2.0 notice."
+  },
+  "source_files": [
+    {
+      "path": "src/util/memory.c",
+      "git_blob_sha1": "89646d3bcb5a23e6c75ee5ea8ee8dfd7b940027b",
+      "source_sha256": "920e7bc5d3ddf4bc69c864d526c9bd141ece547894e9430f5bde3c7fe0acc1e5",
+      "dossier_row_sha256": "f022333144a428531384d50b32cff338bb88f52c8912efb2f1cf5b07eed4875c",
+      "byte_length": 430,
+      "line_count": 15,
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "src/util/CMakeLists.txt",
+      "git_blob_sha1": "6dd6ae2a4fe8b49183dba78154a25f3abe818a5b",
+      "source_sha256": "fa3010a024e0735f5467c1b358cf8fa42ff9283d39f82cbb680ae0ec4a697369",
+      "dossier_row_sha256": "2f01013ea6ae8f060b7038888ff8b727ec846f6db5dcaa7976f0634e13317a9d",
+      "byte_length": 1113,
+      "line_count": 68,
+      "license_notice": "NO_PER_FILE_NOTICE"
+    },
+    {
+      "path": "include/mgba-util/memory.h",
+      "git_blob_sha1": "325f748f6fddc33a5539739ebc6eff6f3bb42bad",
+      "source_sha256": "509b56f31b2a279d954a16799501a1585cf7aa55f917a180432283b0205c198c",
+      "dossier_row_sha256": "cf858e1e109d1346cab0d7b30bcd119c207cfb84e9b45a3e73321c1e3576315e",
+      "byte_length": 443,
+      "line_count": 18,
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "src/util/vfs/vfs-mem.c",
+      "git_blob_sha1": "048194e2dd2d0b3b395a852d2092c694663c88a2",
+      "source_sha256": "6b5951a0cd634d398a69ce57766298bd32d5e6410ee0aa4e8b8894c6aaa5829b",
+      "dossier_row_sha256": "3c95e0a322b5aff0655ec59a1c1f5d34a740a21676da0bf5cce444d2434248ce",
+      "byte_length": 7681,
+      "line_count": 331,
+      "license_notice": "MPL-2.0"
+    },
+    {
+      "path": "src/gba/core.c",
+      "git_blob_sha1": "6bfc518bb8899205c07d1d0fc091a287cb42f874",
+      "source_sha256": "47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596",
+      "dossier_row_sha256": "3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784",
+      "byte_length": 65488,
+      "line_count": 1848,
+      "license_notice": "MPL-2.0"
+    }
+  ],
+  "objection_receipt": {
+    "parent_matrix_objection_id": "anonymous-memory-implementation",
+    "supplemental_objection_id": "default-os-memory-implementation-null-propagation",
+    "disposition": "RESOLVED_SOURCE_ONLY",
+    "original_matrix_objection_remains_open": true,
+    "claim_scope": "Default OS-source implementation and mGBA VFileMemChunk allocation-result flow only.",
+    "source_lines": [
+      "src/util/memory.c:8-14",
+      "src/util/CMakeLists.txt:56-59",
+      "include/mgba-util/memory.h:13-14",
+      "src/util/vfs/vfs-mem.c:90-119",
+      "src/util/vfs/vfs-mem.c:121-136",
+      "src/util/vfs/vfs-mem.c:253-262"
+    ],
+    "caller_lines": [
+      "src/gba/core.c:1493-1506"
+    ],
+    "finding": "With no OS_SRC override, CMake selects src/util/memory.c. anonymousMemoryMap returns calloc(1, size), so success yields zeroed storage and allocation failure yields NULL; mappedMemoryFree ignores size and calls free. The VFileMemChunk path assigns that pointer but returns a VFile even if the buffer allocation failed; if input memory is non-NULL it then memcpy's without checking the destination. _vfmExpand likewise replaces mem with the allocator result and, when oldBuf exists, copies before freeing oldBuf without a NULL check. The GBA savedataRestore caller checks only whether VFileMemChunk returned a VFile, not whether its internal storage allocation succeeded.",
+    "caller_result_contract": "The caller receives the wrapper-level VFile pointer and cannot observe anonymousMemoryMap's NULL through a separate status result. This is a source-visible missing allocation-result propagation contract, not an observed crash.",
+    "limitations": [
+      "The CMake OS_SRC override selects other platform sources; those implementations and downstream build selections are not covered by this receipt.",
+      "No allocation-failure injection was executed; actual failure behavior, signal/crash outcome, recovery, and user-visible result remain NEEDS_EVIDENCE.",
+      "No size-bound or toPow2 overflow behavior is resolved.",
+      "No native game/save, cold-restart, physical Flash, or durability claim is made."
+    ],
+    "test_evidence": {
+      "native_test_source_sha256": "233206a92473469d5ebcd74cdcdedaf6e49395cb67b0cbe19cb2d3a0e2fead18",
+      "native_runtime_log_sha256": "334addf291ce91cd7f2419b7dc8b4780b63825959ce28c8f13af3aa5c7e23000",
+      "source_test_scope": "The existing exact-head native synthetic-cartridge run includes nine savedata assertions but no allocation-failure injection. Its result does not test the allocator call path described here."
+    }
+  },
+  "dependency_closure": [
+    {
+      "from": "include/mgba-util/memory.h",
+      "to": ["src/util/memory.c"],
+      "contract": "Declares a pointer-returning map and void free wrapper; no explicit allocation status channel."
+    },
+    {
+      "from": "src/util/CMakeLists.txt",
+      "to": ["src/util/memory.c"],
+      "contract": "Includes memory.c in OS_FILES only when OS_SRC is not defined; a target override changes the implementation."
+    },
+    {
+      "from": "src/util/vfs/vfs-mem.c",
+      "to": ["include/mgba-util/memory.h", "src/util/memory.c"],
+      "contract": "VFileMemChunk and expanding writes consume allocator pointers without consistently checking failure before copying."
+    },
+    {
+      "from": "src/gba/core.c",
+      "to": ["src/util/vfs/vfs-mem.c"],
+      "contract": "SavedataRestore checks VFileMemChunk wrapper creation, but cannot distinguish wrapper allocation success from backing-buffer allocation failure."
+    }
+  ],
+  "unresolved_obligations": [
+    {
+      "id": "runtime-allocation-failure-injection",
+      "disposition": "NEEDS_EVIDENCE",
+      "reason": "No native/test-injected allocation failure has exercised the source-visible NULL path or caller outcome."
+    },
+    {
+      "id": "platform-os-src-implementations",
+      "disposition": "NEEDS_EVIDENCE",
+      "reason": "The generic CMake branch is pinned, but OS_SRC platform replacements and actual downstream configuration are not reviewed."
+    },
+    {
+      "id": "memory-size-and-to-pow2-bounds",
+      "disposition": "NEEDS_EVIDENCE",
+      "reason": "This supplemental receipt does not establish size-domain limits or overflow behavior."
+    },
+    {
+      "id": "combined-license-and-dependency-closure",
+      "disposition": "NEEDS_EVIDENCE",
+      "reason": "MPL-2.0 notices are verified for these source files; transitive dependency closure and combined distribution licensing remain open."
+    }
+  ],
+  "license_boundary": {
+    "source_notices": "Four C/header files have explicit MPL-2.0 notices; src/util/CMakeLists.txt has no per-file license notice.",
+    "transitive_dependency_closure_complete": false,
+    "combined_distribution_legal_conclusion": false,
+    "disposition": "NEEDS_EVIDENCE"
+  },
+  "ci_provenance": {
+    "exact_parent_run_id": 41997398570,
+    "event": "pull_request",
+    "head_sha": "1112c64043d36ccc41d099ce4c8188779a53129a",
+    "run_attempt": 2,
+    "job_id": 127160335121,
+    "job_conclusion": "success",
+    "receipt_verifier_step": 15,
+    "native_assertions": 43,
+    "savedata_assertions": 9,
+    "hazard_observations": 4,
+    "limitations": "Run targeted the exact parent only; it verified the then-current 15-receipt package and native synthetic-cartridge evidence, not this new allocator receipt or allocation failure injection.",
+    "push_event_run_count": 0
+  },
+  "phase1_state": {
+    "decision": "FAIL_INCOMPLETE",
+    "p0_approved_before": 0,
+    "p0_approved_after": 0,
+    "approved_before": 0,
+    "approved_after": 0,
+    "phase2_started": false,
+    "shared_gate_or_register_edited": false,
+    "semantic_approval": false
+  },
+  "negative_control_inventory": [
+    "source-revision-mismatch",
+    "source-blob-mismatch",
+    "source-byte-sha256-mismatch",
+    "dossier-row-mismatch",
+    "line-citation-out-of-range",
+    "license-notice-missing",
+    "false-allocation-failure-test-claim",
+    "platform-override-overclaim",
+    "drop-runtime-obligation",
+    "phase1-approval-promotion"
+  ]
+}
