@@ -12,6 +12,7 @@ on:
       - "development/copilot-integration/workflow-id-correction-20261105.json"
       - "development/copilot-integration/package-linkage-20261105.json"
       - "development/copilot-integration/mapjson-build-dependency-objection-20261107.json"
+      - "development/copilot-integration/porymap-b021-workflow-id-reconciliation-20261107.json"
       - "docs/integration/copilot-stack-readiness-20261030.md"
       - "docs/PHASE1_STATUS.md"
       - "semantic-snapshots/current/phase1_mapping_gate.json"
@@ -29,12 +30,14 @@ on:
       - "tests/fixtures/copilot-integration-readiness/stale_main_base_evidence_20261105.json"
       - "tests/test_copilot_check_integration_readiness.py"
       - "tests/test_phase1_mapjson_build_dependency_objection.py"
+      - "tests/test_porymap_b021_workflow_reconciliation.py"
       - "tests/test_phase1_ci_context.py"
       - "tests/test_phase1_continuous.py"
       - "tests/test_phase1_independent_queue.py"
       - "tests/test_xgba_rom_compatibility_preflight.py"
       - "tools/copilot_check_integration_readiness.py"
       - "tools/phase1_mapjson_build_dependency_objection.py"
+      - "tools/porymap_b021_workflow_reconciliation.py"
       - "tools/phase1_continuous.py"
       - "tools/phase1_independent_queue_validate.py"
       - "tools/verify_phase1_ci_context.py"
@@ -59,12 +62,14 @@ jobs:
           python3 -m py_compile \
             tools/copilot_check_integration_readiness.py \
             tools/phase1_mapjson_build_dependency_objection.py \
+            tools/porymap_b021_workflow_reconciliation.py \
             tools/phase1_continuous.py \
             tools/phase1_independent_queue_validate.py \
             tools/verify_phase1_ci_context.py \
             tools/xgba_rom_compatibility_preflight.py \
             tests/test_copilot_check_integration_readiness.py \
             tests/test_phase1_mapjson_build_dependency_objection.py \
+            tests/test_porymap_b021_workflow_reconciliation.py \
             tests/test_phase1_ci_context.py \
             tests/test_phase1_continuous.py \
             tests/test_phase1_independent_queue.py \
@@ -84,6 +89,7 @@ jobs:
             "63d2846a81ef55dadb1a1386e41abe768cfbc58b05fdbaab7d3d085f744b2ecb  development/copilot-integration/workflow-id-correction-20261105.json" \
             "977f95611874bcbf8f705a0a059ed34bc45a320e0a995e1334a1614fcbda8b95  development/copilot-integration/package-linkage-20261105.json" \
             "a0be460ad610d5cfef5a921c07925eba56cc499526a51d218a66adf2d3257db0  development/copilot-integration/mapjson-build-dependency-objection-20261107.json" \
+            "abced2977ac47c7abd47a9e147c742d63259785750090a733b14bd8886d1285a  development/copilot-integration/porymap-b021-workflow-id-reconciliation-20261107.json" \
             "c10504f3a05c7875b8a71afd119de5ed1e1074a672a567723823bde0b5cd4486  development/copilot-integration/dependency-base-reconciliation-20261105.json" \
             "c50498b751ecbe38d7a5939e06fa85cf4e62d529a943983710d4c5b9095d2eff  semantic-snapshots/current/semantic_review_queue.csv.gz" \
             "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609  semantic-snapshots/current/candidate_review_dossiers.jsonl.gz" \
@@ -101,6 +107,27 @@ jobs:
           assert report["evidence_validation"] == "VALID_NOT_APPROVED"
           assert report["disposition"] == "NEEDS_EVIDENCE"
           assert report["related_blocker_status"] == "BLOCKED"
+          assert report["phase1_gate"] == "FAIL_INCOMPLETE"
+          assert report["approved_dispositions"] == 0
+          assert report["findings"] == []
+          PY
+      - name: Validate B021 workflow provenance without resolving its blocker
+        run: |
+          python3 tools/porymap_b021_workflow_reconciliation.py \
+            > "$RUNNER_TEMP/porymap-b021.json"
+          python3 - "$RUNNER_TEMP/porymap-b021.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          report = json.loads(Path(sys.argv[1]).read_text())
+          assert report["evidence_validation"] == "VALID_NOT_APPROVED"
+          assert report["selected_blockers"] == ["B021", "B020"]
+          assert report["selected_blocker_statuses"] == {
+              "B021": "BLOCKED", "B020": "BLOCKED"
+          }
+          assert report["workflow_id_dimension_verified_count"] == 1
+          assert report["selected_resolved_count"] == 0
           assert report["phase1_gate"] == "FAIL_INCOMPLETE"
           assert report["approved_dispositions"] == 0
           assert report["findings"] == []
