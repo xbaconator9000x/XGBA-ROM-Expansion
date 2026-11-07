@@ -15,7 +15,7 @@ RECORD = Path(
     "semantic-snapshots/independent-reviews/copilot-mgba-savedata/"
     "vfile-memchunk-unmap.json"
 )
-RECORD_SHA256 = "ef26ce0fda5c1213d2e4fc27bae467a6556612e134b4c6b0bcd988a0d62b64d7"
+RECORD_SHA256 = "f869fe7649f3d50e1e27552383f0541e71d8977ed3ef75ac7b66d1952518d62d"
 MATRIX = Path(
     "semantic-snapshots/independent-reviews/copilot-mgba-savedata/"
     "cross-tranche-objection-matrix.json"

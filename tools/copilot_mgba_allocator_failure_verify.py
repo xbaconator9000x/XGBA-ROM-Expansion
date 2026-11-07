@@ -16,7 +16,7 @@ RECORD = Path(
     "semantic-snapshots/independent-reviews/copilot-mgba-savedata/"
     "allocation-failure-probe.json"
 )
-RECORD_SHA256 = "e88a2a3b6ebd5c403ba4f9ba43193cc228cf2e10b7a5d3796c3a6c679f240369"
+RECORD_SHA256 = "21818b1a55a43ae27a9e0543c0570b3df27d9e614653c48ab4552688816f8d5e"
 PIN = "fd9dc5c2cbf234365068855851107e762fc6211b"
 DOSSIER = Path("semantic-snapshots/current/candidate_review_dossiers.jsonl.gz")
 DOSSIER_SHA256 = "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
