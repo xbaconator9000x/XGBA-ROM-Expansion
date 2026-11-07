@@ -1,0 +1,191 @@
+name: Copilot Poryscript ABI review validation
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/copilot-poryscript-abi-review.yml'
+      - 'semantic-snapshots/current/candidate_review_dossiers.jsonl.gz'
+      - 'semantic-snapshots/current/semantic_review_queue.csv.gz'
+      - 'semantic-snapshots/independent-reviews/copilot-poryscript-abi/**'
+      - 'tests/test_copilot_poryscript_abi_review.py'
+      - 'tools/copilot_poryscript_abi_review.py'
+      - 'tools/copilot_poryscript_abi_review_probes.py'
+      - 'tools/copilot_poryscript_parser_emitter_probe.py'
+  push:
+    branches:
+      - 'copilot/independently-review-pinned-poryscript'
+    paths:
+      - '.github/workflows/copilot-poryscript-abi-review.yml'
+      - 'semantic-snapshots/current/candidate_review_dossiers.jsonl.gz'
+      - 'semantic-snapshots/current/semantic_review_queue.csv.gz'
+      - 'semantic-snapshots/independent-reviews/copilot-poryscript-abi/**'
+      - 'tests/test_copilot_poryscript_abi_review.py'
+      - 'tools/copilot_poryscript_abi_review.py'
+      - 'tools/copilot_poryscript_abi_review_probes.py'
+      - 'tools/copilot_poryscript_parser_emitter_probe.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  review-record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      run_native_probe: ${{ steps.native-scope.outputs.run_native_probe }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Determine whether the pinned CLI fixture changed
+        id: native-scope
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            echo "run_native_probe=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$EVENT_NAME" == "pull_request" ]]; then
+            DIFF_BASE="$(git rev-parse HEAD^)"
+          else
+            DIFF_BASE="$BEFORE_SHA"
+          fi
+          if [[ "$EVENT_NAME" != "workflow_dispatch" ]] && git diff --name-only "$DIFF_BASE" HEAD | grep -Eq '^(tools/copilot_poryscript_abi_review_probes.py|semantic-snapshots/independent-reviews/copilot-poryscript-abi/closure-review.json)$'; then
+            echo "run_native_probe=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$EVENT_NAME" != "workflow_dispatch" ]]; then
+            echo "run_native_probe=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/poryscript
+          ref: c32481161c767b25a3425fa9f1f8729927ff3d55
+          path: upstream-poryscript
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/agbcc
+          ref: da598c1d918402c42c0c0d7128ba14567f3175e9
+          path: upstream-agbcc
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: mgba-emu/mgba
+          ref: fd9dc5c2cbf234365068855851107e762fc6211b
+          path: upstream-mgba
+          persist-credentials: false
+      - name: Test fail-closed review evidence and verify all pinned source blobs
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/copilot_poryscript_abi_review.py tools/copilot_poryscript_abi_review_probes.py tools/copilot_poryscript_parser_emitter_probe.py tests/test_copilot_poryscript_abi_review.py
+          python3 -m unittest discover -s tests -p 'test_copilot_poryscript_abi_review.py' -v
+          (cd upstream-poryscript && go test ./parser ./lexer ./emitter)
+          python3 tools/copilot_poryscript_abi_review.py \
+            --record semantic-snapshots/independent-reviews/copilot-poryscript-abi/review.json \
+            --poryscript-root upstream-poryscript \
+            --firered-root upstream-firered
+          python3 tools/copilot_poryscript_abi_review.py \
+            --closure-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/closure-review.json \
+            --poryscript-root upstream-poryscript \
+            --firered-root upstream-firered \
+            --agbcc-root upstream-agbcc \
+            --mgba-root upstream-mgba
+          python3 tools/copilot_poryscript_abi_review.py \
+            --closure-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/closure-review.json \
+            --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/file-inspection-followup.json \
+            --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/fire-red-script-dispatch-followup.json \
+            --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/map-header-review-followup.json \
+            --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/poryscript-firered-abi-followup.json \
+            --file-inspection-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/preprocessor-dependency-followup.json \
+            --lexer-input-followup-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/poryscript-lexer-input-followup.json \
+            --parser-emitter-followup-record semantic-snapshots/independent-reviews/copilot-poryscript-abi/parser-emitter-input-followup.json \
+            --poryscript-root upstream-poryscript \
+            --firered-root upstream-firered
+
+  actual-cli-abi-closure:
+    needs: review-record
+    if: needs.review-record.outputs.run_native_probe == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Reuse the exact historical PR #20 witness implementation
+        uses: actions/checkout@v4
+        with:
+          repository: xbaconator9000x/XGBA-ROM-Expansion
+          ref: 587132181ef728b635968dd091b1cf171e78f753
+          path: pinned-witness
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/poryscript
+          ref: c32481161c767b25a3425fa9f1f8729927ff3d55
+          path: upstream-poryscript
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - name: Install GNU ARM assembler and linker
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi build-essential
+          go version
+          arm-none-eabi-as --version | head -1
+          arm-none-eabi-ld --version | head -1
+      - name: Verify harness provenance and run the focused pinned CLI object probe
+        run: |
+          set -euo pipefail
+          harness_commit=587132181ef728b635968dd091b1cf171e78f753
+          harness_blob=4a137032662f0c711fcf1aee7a0fdd6ddfa001cb
+          test "$(git -C pinned-witness rev-parse HEAD)" = "$harness_commit"
+          test "$(git -C pinned-witness hash-object tools/verify_poryscript_actual_cli_arm_table.py)" = "$harness_blob"
+          mkdir -p phase1-evidence
+          {
+            printf 'harness_commit=%s\n' "$harness_commit"
+            printf 'harness_git_blob=%s\n' "$harness_blob"
+            printf 'poryscript_commit=c32481161c767b25a3425fa9f1f8729927ff3d55\n'
+            printf 'firered_commit=ce6406d8c2eaf46d543c8a2606de0c3cb1951982\n'
+          } > phase1-evidence/witness-provenance.txt
+          python3 -m py_compile tools/copilot_poryscript_abi_review_probes.py pinned-witness/tools/verify_poryscript_actual_cli_arm_table.py
+          python3 tools/copilot_poryscript_abi_review_probes.py \
+            --poryscript-root upstream-poryscript \
+            --firered-root upstream-firered \
+            --witness-root pinned-witness \
+            --output phase1-evidence/poryscript-real-cli-gnu-arm-table.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          actual = json.loads(Path("phase1-evidence/poryscript-real-cli-gnu-arm-table.json").read_text())
+          expected = json.loads(Path("semantic-snapshots/independent-reviews/copilot-poryscript-abi/closure-review.json").read_text())["local_actual_cli_probe"]
+          assert actual["status"] == expected["status"]
+          assert actual["poryscript_commit"] == "c32481161c767b25a3425fa9f1f8729927ff3d55"
+          assert actual["firered_commit"] == "ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
+          assert actual["relocation_offsets"] == expected["relocation_offsets"]
+          assert actual["negative_controls"] == expected["negative_controls"]
+          for field in ("fixture_sha256", "emitted_assembly_sha256", "unlinked_rodata_sha256", "linked_rodata_sha256"):
+              assert actual[field] == expected[field], f"{field} differs from pinned probe receipt"
+          assert actual["phase1_gate"] == "FAIL_INCOMPLETE" and actual["approval_count_changed"] is False
+          PY
+      - name: Archive focused CLI and GNU ARM object-probe output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: copilot-poryscript-abi-closure-cli-gnu-arm
+          path: phase1-evidence/
+          if-no-files-found: warn
+          retention-days: 60

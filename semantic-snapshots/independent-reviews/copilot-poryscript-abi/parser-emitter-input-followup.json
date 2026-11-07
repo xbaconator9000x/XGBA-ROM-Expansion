@@ -1,0 +1,276 @@
+{
+  "schema": "copilot-poryscript-abi-parser-emitter-input-followup/v1",
+  "recorded_at": "2026-11-06",
+  "scope": "Phase 1 only. A disjoint parser-test and actual-CLI boundary tranche. It tests numeric conditional operands, malformed table entries, and the emitted empty-table sentinel. It does not repeat the prior GNU ARM witness or claim ROM/runtime closure.",
+  "basis": {
+    "prior_exact_head": "ea9e20357d2b687f9a6692ec888fd45778772861",
+    "selection": "parser/parser_test.go is present only as a hash-verified inventory row and is absent from earlier file-inspection handoffs. Existing parser, emitter, lexer, and FireRed ABI records are referenced as dependencies, not counted as new source reviews.",
+    "prior_native_witness": "The existing PR #20 CLI/preprocessor/GNU ARM witness and its seven negative controls remain historical evidence; this tranche does not rerun or substitute for it."
+  },
+  "reviewer": {
+    "id": "copilot-issue33-poryscript-parser-emitter-input",
+    "identity": "@copilot (GitHub Copilot Coding Agent; parser/emitter input follow-up)",
+    "source_interpreter_identity": "xbaconator9000x (author of the original PR #20 witness implementation)",
+    "distinct_from_source_interpreter": true,
+    "authenticated_github_review_attribution": false,
+    "independent_human_attestation": false,
+    "attribution_blocker": "The available GitHub tools cannot submit an authenticated independent pull-request review. Identity distinction and automated checks are not qualifying independent attribution."
+  },
+  "accounting": {
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "approved_p0": 0,
+    "p0_total": 338,
+    "approved_total": 0,
+    "inventory_total": 14834,
+    "whole_file_semantic_reviews": 0,
+    "new_qualifying_copilot_receipts": 0,
+    "phase2_started": false,
+    "shared_queue_register_gate_modified": false
+  },
+  "pins": {
+    "huderlem/poryscript": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+    "pret/pokefirered": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
+  },
+  "original_machine_evidence": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "bytes": 949448,
+    "sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609",
+    "git_blob_sha1": "3b982876c7d810a827af8c80c7e5d9231fdaa327"
+  },
+  "license_source": {
+    "repository": "huderlem/poryscript",
+    "path": "LICENSE.md",
+    "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+    "git_blob_sha1": "bc574ff56a7df993996053c7b2afec43e80bdd64",
+    "sha256": "de6e3c2adfef309c6e3089a9943adb61d2087e9c6df8d77f5b8c2963535f9c8e",
+    "dossier_record_line_sha256": "a2b7fabf0cdc52ad897ab8d911f5cf789cff98ab7f1975ec0fc0bc983ac864c0",
+    "assessment": "Pinned license source identity only; applicability is not adjudicated."
+  },
+  "files": [
+    {
+      "repository": "huderlem/poryscript",
+      "path": "parser/parser_test.go",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "git_blob_sha1": "fdab86ecadc1ed1c01b2dcd639d70fc62ef2c980",
+      "sha256": "dbfbb2a6c42f708200627350d5898559332e95440f117dd6205e6964c4548c10",
+      "dossier_record_line_sha256": "af9cf34fbbb3679c16b7a3f11bac503ce98b5f1da7e4d72d4a656a3d0b512796",
+      "byte_length": 96495,
+      "line_count": 2737,
+      "full_source_bytes_retrieved": true,
+      "complete_source_inspection": true,
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE",
+      "source_extent": "COMPLETE_PINNED_FILE_READ",
+      "source_observations": [
+        "TestMapScriptStatements (lines 924-979) covers direct and table map-script AST forms, authored label references, and nested scripted entries; it does not test numeric operand bounds or downstream table termination.",
+        "TestErrors (lines 2186-2293) covers malformed map-script declarations and table-entry syntax, including empty condition/comparison and missing comma/colon cases.",
+        "The pinned parser tests do not exercise emitted assembly, FireRed macro expansion, GNU ARM relocation, runtime table scanning, or malformed-table memory safety.",
+        "Other tests in this file cover parser errors, constants, control flow, movement, mart, text, and formatting; this is test code, not production ABI behavior."
+      ],
+      "evidence_ranges": [],
+      "supplemental_evidence_ranges": [
+        {
+          "start": 1,
+          "end": 2737,
+          "sha256": "dbfbb2a6c42f708200627350d5898559332e95440f117dd6205e6964c4548c10"
+        }
+      ],
+      "dependency_links": [
+        {
+          "repository": "huderlem/poryscript",
+          "path": "parser/parser.go",
+          "direction": "outbound",
+          "relation": "Parser tests instantiate the parser and inspect its map-script AST results."
+        },
+        {
+          "repository": "huderlem/poryscript",
+          "path": "lexer/lexer.go",
+          "direction": "outbound",
+          "relation": "Parser tests feed source text through the pinned lexer."
+        },
+        {
+          "repository": "huderlem/poryscript",
+          "path": "ast/ast.go",
+          "direction": "outbound",
+          "relation": "Assertions inspect the parser's map-script and entry AST types."
+        },
+        {
+          "repository": "huderlem/poryscript",
+          "path": "parser/parse_error.go",
+          "direction": "outbound",
+          "relation": "Parser error tests assert structured ParseError values and rendered messages."
+        }
+      ],
+      "license_evidence": {
+        "status": "UNRESOLVED",
+        "path": "LICENSE.md",
+        "unresolved": "Pinned license identity is recorded, but applicability and dependency-license review are not adjudicated."
+      },
+      "unresolved_obligations": [
+        "O-NUMERIC-ASSEMBLY",
+        "O-EMPTY-HEX",
+        "O-RUNTIME-SENTINEL",
+        "O-GENERATED-INCLUDE",
+        "O-LICENSE",
+        "O-DEPENDENCY-CLOSURE",
+        "O-ATTRIBUTION"
+      ]
+    }
+  ],
+  "actual_cli_probe": {
+    "script": "tools/copilot_poryscript_parser_emitter_probe.py",
+    "poryscript_commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+    "command": "python3 tools/copilot_poryscript_parser_emitter_probe.py --poryscript-root upstream-poryscript",
+    "status": "PASS_PINNED_PORYSCRIPT_CLI_PARSER_EMITTER_PROBE",
+    "numeric_cases": {
+      "0": {
+        "accepted": true,
+        "emitted_anchor": "map_script_2 VAR_TEST, 0, Probe_Target",
+        "emitted_assembly_sha256": "83da0db6101380b1d86618b96d6612b7b01d1de0b1b74d49ae1e8388982860f3"
+      },
+      "0x": {
+        "accepted": true,
+        "emitted_anchor": "map_script_2 VAR_TEST, 0x, Probe_Target",
+        "emitted_assembly_sha256": "28e07237b1a200c05dd896955fe9930098e4b9b62feaa01be7da80c598a6b791"
+      },
+      "0x10000": {
+        "accepted": true,
+        "emitted_anchor": "map_script_2 VAR_TEST, 0x10000, Probe_Target",
+        "emitted_assembly_sha256": "ac3967aa7670b991f2a90a22cd3560ce193861bf173565b7961f605f814a50e9"
+      },
+      "-1": {
+        "accepted": true,
+        "emitted_anchor": "map_script_2 VAR_TEST, -1, Probe_Target",
+        "emitted_assembly_sha256": "843e2b9c500b1a8f7c549f76a835baf96d1490015bc7ce7cb741c43e2c0954cc"
+      },
+      "65536": {
+        "accepted": true,
+        "emitted_anchor": "map_script_2 VAR_TEST, 65536, Probe_Target",
+        "emitted_assembly_sha256": "5147efcd61147601ee0624d146313d83f3292b997f5da8ff9fcf6e3e87df5c3b"
+      }
+    },
+    "empty_table": {
+      "accepted": true,
+      "conditional_records": 0,
+      "separate_zero_sentinel_emitted": true,
+      "emitted_assembly_sha256": "6bff0887e08ee1402fda4aefee5aa384a1b2110a710a183a39da14c8a8e050f8"
+    },
+    "negative_controls": {
+      "empty-condition": "REJECTED_AS_EXPECTED",
+      "missing-comma": "REJECTED_AS_EXPECTED",
+      "mutated_away_empty_table_sentinel": "PASS_REJECTED_BY_SENTINEL_ASSERTION"
+    },
+    "execution_scope": "Pinned Poryscript CLI output from small synthetic map-script fixtures; no assembler, ROM, interpreter, emulator, or gameplay."
+  },
+  "existing_evidence_reused": [
+    {
+      "record": "semantic-snapshots/independent-reviews/copilot-poryscript-abi/review.json",
+      "scope": "Existing seven-control Poryscript CLI, FireRed preprocessing/macro and GNU ARM object/link witness; historical evidence only."
+    },
+    {
+      "record": "semantic-snapshots/independent-reviews/copilot-poryscript-abi/poryscript-firered-abi-followup.json",
+      "scope": "Previously recorded Poryscript parser/emitter and FireRed ABI source identities; not recounted as newly selected files."
+    }
+  ],
+  "objections": [
+    {
+      "id": "O-NUMERIC-ASSEMBLY",
+      "observation": "The actual pinned CLI accepts and preserves all five tested literals, including empty hexadecimal and out-of-16-bit values.",
+      "resolution": "Pinned CLI output and assembly-text hashes are reproduced; assembler interpretation, truncation, or rejection of these spellings remains untested.",
+      "status": "UNRESOLVED"
+    },
+    {
+      "id": "O-EMPTY-HEX",
+      "observation": "The parser/emitter CLI accepts 0x as a conditional operand and writes it into map_script_2 output.",
+      "resolution": "Behavior is verified at the CLI output boundary only; downstream preprocessor/assembler consequences are not established.",
+      "status": "UNRESOLVED"
+    },
+    {
+      "id": "O-RUNTIME-SENTINEL",
+      "observation": "The CLI emits a separate .2byte 0 sentinel for an empty conditional table.",
+      "resolution": "A source-output mutation that removes the directive is caught; native FireRed reader termination and bounds behavior are not re-executed.",
+      "status": "UNRESOLVED"
+    },
+    {
+      "id": "O-GENERATED-INCLUDE",
+      "observation": "This tranche exercises actual generated assembly but does not include that output through a complete FireRed generated-include/ROM build path.",
+      "resolution": "Prior source and object evidence is linked as context; full generated-include/build integration remains open.",
+      "status": "UNRESOLVED"
+    },
+    {
+      "id": "O-LICENSE",
+      "observation": "The pinned Poryscript license source identity is available.",
+      "resolution": "License applicability and dependency-license closure are not adjudicated.",
+      "status": "UNRESOLVED"
+    },
+    {
+      "id": "O-DEPENDENCY-CLOSURE",
+      "observation": "The selected parser test links to existing parser, lexer, AST, error, and emitter evidence.",
+      "resolution": "Complete producer-to-assembler-to-runtime dependency closure is not established by this tranche.",
+      "status": "UNRESOLVED"
+    },
+    {
+      "id": "O-ATTRIBUTION",
+      "observation": "The Copilot identity is distinct from the original evidence author.",
+      "resolution": "Authenticated independent GitHub review attribution and separate human attestation remain unavailable; no approval is counted.",
+      "status": "UNRESOLVED"
+    }
+  ],
+  "negative_controls": [
+    {
+      "id": "NC-IDENTITY",
+      "test": "test_parser_emitter_handoff_rejects_source_identity_mutation"
+    },
+    {
+      "id": "NC-DEPENDENCY",
+      "test": "test_parser_emitter_handoff_rejects_dependency_mutation"
+    },
+    {
+      "id": "NC-VERDICT",
+      "test": "test_parser_emitter_handoff_rejects_verdict_and_gate_mutations"
+    },
+    {
+      "id": "NC-PARSER-MALFORMED",
+      "test": "actual_cli_probe_rejects_empty_condition_and_missing_comma"
+    },
+    {
+      "id": "NC-SENTINEL",
+      "test": "actual_cli_probe_rejects_mutated_away_empty_table_sentinel"
+    },
+    {
+      "id": "NC-PINNED-SOURCE",
+      "test": "parser_emitter_probe_rejects_source_blob_mutation"
+    }
+  ],
+  "review_handoff": {
+    "status": "READY_FOR_INDEPENDENT_REVIEW_NOT_APPROVAL",
+    "pending_requirements": [
+      "authenticated_independent_reviewer",
+      "resolve_numeric_and_empty_hex behavior at assembler boundary",
+      "reproduce empty-table sentinel and malformed operands through FireRed native readers",
+      "complete generated-include and ROM build integration",
+      "applicable source license review",
+      "exact_head_pr_and_push_ci"
+    ]
+  },
+  "summary": {
+    "selected_source_files": 1,
+    "complete_pinned_file_bytes_retrieved": 1,
+    "complete_source_files_read": 1,
+    "source_identity_records": 1,
+    "whole_file_semantic_reviews": 0,
+    "new_copilot_reviewed_passed_files": 0,
+    "new_qualifying_copilot_receipts": 0,
+    "new_approvals": 0,
+    "phase1_gate": "FAIL_INCOMPLETE"
+  },
+  "validation": {
+    "source_checkout": "Pinned archive bytes verified against Git blob, SHA-256, and the original dossier row; relevant source read in full.",
+    "pinned_poryscript_tests": "PASS",
+    "pinned_poryscript_test_command": "go test ./parser ./lexer ./emitter",
+    "actual_cli_probe": "PASS_PINNED_PORYSCRIPT_CLI_PARSER_EMITTER_PROBE",
+    "actual_cli_probe_command": "python3 tools/copilot_poryscript_parser_emitter_probe.py --poryscript-root upstream-poryscript",
+    "actual_cli_gnu_arm_witness": "REUSED_HISTORICAL_EVIDENCE_NOT_RERUN",
+    "exact_head_ci": "PENDING_FOR_THIS_CHANGE"
+  }
+}
