@@ -10,12 +10,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 static int (*real_msync)(void*, size_t, int);
 static int (*real_open)(const char*, int, ...);
 static int (*real_open64)(const char*, int, ...);
+static int (*real_fstat)(int, struct stat*);
+static int (*real_close)(int);
+static int fstatTargetFd = -1;
+static bool fstatFailureInjected;
 
 static bool _pathForAddress(const void* address, char* path, size_t pathSize) {
 	FILE* maps = fopen("/proc/self/maps", "r");
@@ -58,6 +63,36 @@ static void _recordSync(const char* marker, const char* operation, bool injected
 		(void) write(fd, line, (size_t) length);
 	}
 	close(fd);
+}
+
+static void _recordFstat(const char* operation, bool injected, int result,
+                         int error) {
+	const char* marker = getenv("XGBA_FSTAT_MARKER");
+	if (!marker) {
+		return;
+	}
+	int fd = open(marker, O_WRONLY | O_CREAT | O_APPEND, 0600);
+	if (fd < 0) {
+		return;
+	}
+	char line[128];
+	int length = snprintf(line, sizeof(line),
+	                      "operation=%s injected=%d result=%d errno=%s\n",
+	                      operation, injected, result,
+	                      error == EIO ? "EIO" : "none");
+	if (length > 0 && (size_t) length < sizeof(line)) {
+		(void) write(fd, line, (size_t) length);
+	}
+	close(fd);
+}
+
+static int _trackFstatTarget(const char* path, int fd) {
+	const char* target = getenv("XGBA_FSTAT_TARGET");
+	if (fd >= 0 && target && path && strcmp(path, target) == 0) {
+		fstatTargetFd = fd;
+		fstatFailureInjected = false;
+	}
+	return fd;
 }
 
 static int _openForTarget(const char* path, int flags, mode_t mode,
@@ -105,7 +140,8 @@ int open(const char* path, int flags, ...) {
 	va_start(args, flags);
 	mode_t mode = _openMode(flags, args);
 	va_end(args);
-	return _openForTarget(path, flags, mode, &real_open);
+	return _trackFstatTarget(
+		path, _openForTarget(path, flags, mode, &real_open));
 }
 
 int open64(const char* path, int flags, ...) {
@@ -134,7 +170,51 @@ int open64(const char* path, int flags, ...) {
 		errno = EIO;
 		return -1;
 	}
-	return real_open64(path, flags, mode);
+	return _trackFstatTarget(path, real_open64(path, flags, mode));
+}
+
+int fstat(int fd, struct stat* statbuf) {
+	if (!real_fstat) {
+		real_fstat = dlsym(RTLD_NEXT, "fstat");
+		if (!real_fstat) {
+			errno = ENOSYS;
+			return -1;
+		}
+	}
+	if (fd == fstatTargetFd) {
+		const char* inject = getenv("XGBA_FSTAT_INJECT");
+		if (inject && strcmp(inject, "1") == 0 &&
+		    !fstatFailureInjected) {
+			fstatFailureInjected = true;
+			_recordFstat("fstat", true, -1, EIO);
+			errno = EIO;
+			return -1;
+		}
+		int result = real_fstat(fd, statbuf);
+		_recordFstat("fstat", false, result, result < 0 ? errno : 0);
+		fstatTargetFd = -1;
+		return result;
+	}
+	return real_fstat(fd, statbuf);
+}
+
+int close(int fd) {
+	if (!real_close) {
+		real_close = dlsym(RTLD_NEXT, "close");
+		if (!real_close) {
+			errno = ENOSYS;
+			return -1;
+		}
+	}
+	bool targetClose = fd == fstatTargetFd && fstatFailureInjected;
+	if (targetClose) {
+		fstatTargetFd = -1;
+	}
+	int result = real_close(fd);
+	if (targetClose) {
+		_recordFstat("close", false, result, result < 0 ? errno : 0);
+	}
+	return result;
 }
 
 static void _waitForRelease(void) {

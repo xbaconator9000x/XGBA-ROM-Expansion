@@ -128,9 +128,12 @@ SOURCES = {
         "2535bd0fb76740745ae038d5523ead28658f1035",
         "0073a68b6688f1baa26acaf609af52e9f29308605e449e7c3182c9f4d768da44",
         "bb351807533d3de29f1f87c2c3a644a70c67430f556e83e219b1e25292589942",
-        "reuse_existing_vfs_review",
-        "Native POSIX mapped-file callback and teardown use msync(MS_ASYNC) and msync(MS_SYNC); injected EIO tests these host boundaries.",
-        {151: "static void _vfdUnmap(", 153: "msync(memory, size, MS_SYNC);",
+        "bounded_new_runtime_path_review",
+        "Native POSIX VFile open validation reaches VFileFromFD fstat; callback and teardown use distinct msync boundaries.",
+        {66: "struct VFile* VFileFromFD(int fd) {",
+         72: "if (fstat(fd, &stat) < 0 || (stat.st_mode & S_IFDIR)) {",
+         73: "close(fd);",
+         151: "static void _vfdUnmap(", 153: "msync(memory, size, MS_SYNC);",
          154: "munmap(memory, size);", 246: "static bool _vfdSync(",
          258: "return msync(buffer, size, MS_ASYNC) == 0;"},
     ),
@@ -150,6 +153,9 @@ DEPENDENCY_EDGES = [
     ["core/core.c", "mCoreLoadSaveFile -> VFileOpen(path, O_CREAT | O_RDWR)"],
     ["util/vfs.c", "VFileOpen -> VFileOpenFD"],
     ["util/vfs/vfs-fd.c", "VFileOpenFD -> POSIX open"],
+    ["util/vfs/vfs-fd.c", "VFileOpenFD -> VFileFromFD(fd) -> fstat"],
+    ["util/vfs/vfs-fd.c", "VFileFromFD fstat failure -> close(fd) -> NULL"],
+    ["core/core.c", "mCoreLoadSaveFile returns false for NULL VFile"],
     ["headless-main.c", "mScriptContextAttachCore"],
     ["core/scripting.c", "mCoreLoadSaveFile"],
     ["core/core.c", "GBALoadSave"],
@@ -168,7 +174,7 @@ DEPENDENCY_EDGES = [
 
 def expected_matrix():
     return {
-        "schema": "phase1.mgba.headless-runtime-sync.v2",
+        "schema": "phase1.mgba.headless-runtime-sync.v3",
         "repository": "mgba-emu/mgba",
         "pinned_revision": PIN,
         "pinned_tree": TREE,
@@ -210,6 +216,20 @@ def expected_matrix():
             "persistence_claim": False,
             "status": "REQUIRED_IN_EXISTING_CI",
         },
+        "fstat_failure_contract": {
+            "caller": "A later headless Lua script calls mCore.loadSaveFile(path, false) on an existing .sav.",
+            "pinned_call_path": "Lua BOOL binding -> mCoreLoadSaveFile -> VFileOpen -> VFileOpenFD -> POSIX open -> VFileFromFD -> fstat.",
+            "pinned_failure_behavior": "VFileFromFD closes the opened fd and returns NULL when fstat fails; mCoreLoadSaveFile returns false.",
+            "host_fault": "The LD_PRELOAD interposer opens the exact target save, then injects -1/EIO only for fstat on that returned descriptor.",
+            "expected_api_result": False,
+            "expected_script_observation": "loadSaveFile=false",
+            "expected_headless_process_exit_status": 0,
+            "expected_fstat_marker": "operation=fstat injected=1 result=-1 errno=EIO",
+            "expected_close_marker": "operation=close injected=0 result=0 errno=none",
+            "recovery_control": "A later separate headless process reopens the unchanged save without injection.",
+            "persistence_claim": False,
+            "status": "REQUIRED_IN_EXISTING_CI",
+        },
         "path_contract": {
             "caller": "Original pinned mgba-headless main; --script calls the pinned mCore script adapter's loadSaveFile and write8 methods.",
             "save_open": "Script-mediated mCoreLoadSaveFile(path, temporary=false), not headless autoload.",
@@ -219,6 +239,7 @@ def expected_matrix():
             "backend_sync_distinction": "The savedata callback uses msync(MS_ASYNC); teardown unmap separately calls msync(MS_SYNC). Each injected case targets only one operation and records both results.",
             "shutdown": "Harness sends SIGINT only after the sync event; headless exits 0 through its normal signal cleanup path.",
             "reopen_failure": "A second script-mediated loadSaveFile call encounters a path-specific injected POSIX open EIO; the Lua caller records false, then a later fresh process performs an ordinary reopen control.",
+            "fstat_failure": "A script-mediated loadSaveFile call opens the target, then VFileFromFD descriptor validation is faulted; the caller records false and a fresh process performs an ordinary recovery reopen.",
         },
         "local_execution": {
             "pinned_headless_binary_built": True,
@@ -279,7 +300,8 @@ def expected_matrix():
             "The headless process exit code is 0 after callback sync failure; the INFO logger is the observed failure channel, not a propagated process error. Teardown separately issues an MS_SYNC unmap flush.",
             "The distinct final MS_SYNC teardown error is injected in the compiled headless process; pinned void _vfdUnmap ignores the msync result and emits no teardown-specific mGBA log. A fresh process observes the same-host OS-visible byte, not evidence that the failed flush persisted data.",
             "The distinct save-reopen failure case injects EIO at the host open boundary for an existing .sav, observes the original script API's false result, and checks a later ordinary reopen; that same-host read is not durable-storage evidence.",
-            "Only the newly added VFile dispatcher receives bounded runtime-path review for the reopen case; other dependency identities are reused or dependency-only and are not counted as new whole-file reviews.",
+            "The distinct VFileFromFD case injects EIO after host open at descriptor fstat validation; its later ordinary reopen is a same-host recovery control, not durable-storage evidence.",
+            "The VFileFromFD runtime-path review is bounded to its fstat rejection/close branch; it is not a whole-file approval.",
         ],
         "distribution_notice": (
             "All upstream source records are MPL-2.0. Preserve upstream notices and the repository license when redistributing combined artifacts; this package includes provenance and test harness code, not copied upstream implementation."
@@ -309,6 +331,17 @@ def validate_matrix(payload):
     require(reopen["persistence_claim"] is False
             and reopen["status"] == "REQUIRED_IN_EXISTING_CI",
             "a same-host reopen control is not a persistence receipt")
+    fstat = payload["fstat_failure_contract"]
+    require(fstat["expected_api_result"] is False
+            and fstat["expected_script_observation"] == "loadSaveFile=false"
+            and fstat["expected_headless_process_exit_status"] == 0
+            and fstat["expected_fstat_marker"] ==
+            "operation=fstat injected=1 result=-1 errno=EIO"
+            and fstat["expected_close_marker"] ==
+            "operation=close injected=0 result=0 errno=none"
+            and fstat["persistence_claim"] is False
+            and fstat["status"] == "REQUIRED_IN_EXISTING_CI",
+            "post-open fstat failure contract changed or was overstated")
     return True
 
 
@@ -401,7 +434,8 @@ def _wait_and_interrupt(process, event_path, log_path, release_path=None, event_
 
 
 def _run(headless, script, rom, directory, name, sync_path=None, inject_operation=None,
-         harness=None, event_operation=None, open_target=None):
+         harness=None, event_operation=None, open_target=None, fstat_target=None,
+         inject_fstat=False):
     log_path = directory / (name + ".log")
     marker = directory / (name + ".marker")
     release = directory / (name + ".release")
@@ -410,7 +444,7 @@ def _run(headless, script, rom, directory, name, sync_path=None, inject_operatio
     if env.get("LD_LIBRARY_PATH"):
         library_path += os.pathsep + env["LD_LIBRARY_PATH"]
     env["LD_LIBRARY_PATH"] = library_path
-    if sync_path is not None or open_target is not None:
+    if sync_path is not None or open_target is not None or fstat_target is not None:
         env["LD_PRELOAD"] = str(harness.resolve())
     else:
         env.pop("LD_PRELOAD", None)
@@ -430,6 +464,14 @@ def _run(headless, script, rom, directory, name, sync_path=None, inject_operatio
     else:
         env.pop("XGBA_OPEN_TARGET", None)
         env.pop("XGBA_OPEN_MARKER", None)
+    if fstat_target is not None:
+        env["XGBA_FSTAT_TARGET"] = str(fstat_target.resolve())
+        env["XGBA_FSTAT_MARKER"] = str(directory / (name + ".fstat-marker"))
+        env["XGBA_FSTAT_INJECT"] = "1" if inject_fstat else "0"
+    else:
+        env.pop("XGBA_FSTAT_TARGET", None)
+        env.pop("XGBA_FSTAT_MARKER", None)
+        env.pop("XGBA_FSTAT_INJECT", None)
     with log_path.open("wb") as output:
         process = subprocess.Popen(
             [str(headless), "-l", "8", "-S", "3", "--script", str(script), str(rom)],
@@ -521,6 +563,58 @@ def execute_runtime(headless, harness, root=None):
         )
         save_after_open_failure = hashlib.sha256(positive_save.read_bytes()).hexdigest()
 
+        fstat_success_script = directory / "reopen-fstat-success.lua"
+        fstat_success_marker_path = directory / "reopen-fstat-success.marker"
+        fstat_success_script.write_text(
+            "local loaded = emu:loadSaveFile(" + _lua_string(positive_save) + ", false)\n"
+            "local f = assert(io.open(" + _lua_string(fstat_success_marker_path)
+            + ", \"w\"))\n"
+            "f:write(\"loadSaveFile=\" .. tostring(loaded) .. \"\\n\")\n"
+            "f:close()\n"
+            "assert(loaded == true)\n"
+            "print(\"SAVE_REOPEN_FSTAT_SUCCESS\")\n",
+            encoding="utf-8",
+        )
+        fstat_success_exit, _, fstat_success_log, _ = _run(
+            headless, fstat_success_script, rom, directory,
+            "reopen-fstat-success", harness=interposer,
+            fstat_target=positive_save,
+        )
+        fstat_success_path = directory / "reopen-fstat-success.fstat-marker"
+        fstat_success_marker = (
+            fstat_success_path.read_text(encoding="utf-8")
+            if fstat_success_path.exists() else ""
+        )
+        fstat_success_script_marker = fstat_success_marker_path.read_text(
+            encoding="utf-8")
+
+        fstat_failure_script = directory / "reopen-fstat-failure.lua"
+        fstat_failure_script_marker_path = directory / "reopen-fstat-failure.marker"
+        fstat_failure_script.write_text(
+            "local loaded = emu:loadSaveFile(" + _lua_string(positive_save) + ", false)\n"
+            "local f = assert(io.open(" + _lua_string(fstat_failure_script_marker_path)
+            + ", \"w\"))\n"
+            "f:write(\"loadSaveFile=\" .. tostring(loaded) .. \"\\n\")\n"
+            "f:close()\n"
+            "assert(loaded == false)\n"
+            "print(\"SAVE_REOPEN_FSTAT_FAILURE_CAUGHT\")\n",
+            encoding="utf-8",
+        )
+        save_before_fstat_failure = hashlib.sha256(positive_save.read_bytes()).hexdigest()
+        fstat_failure_exit, _, fstat_failure_log, _ = _run(
+            headless, fstat_failure_script, rom, directory,
+            "reopen-fstat-failure", harness=interposer,
+            fstat_target=positive_save, inject_fstat=True,
+        )
+        fstat_failure_path = directory / "reopen-fstat-failure.fstat-marker"
+        fstat_failure_marker = (
+            fstat_failure_path.read_text(encoding="utf-8")
+            if fstat_failure_path.exists() else ""
+        )
+        fstat_failure_script_marker = fstat_failure_script_marker_path.read_text(
+            encoding="utf-8")
+        save_after_fstat_failure = hashlib.sha256(positive_save.read_bytes()).hexdigest()
+
         reopen_marker = directory / "reopen.marker"
         reopen_script = directory / "reopen.lua"
         reopen_script.write_text(
@@ -575,7 +669,8 @@ def execute_runtime(headless, harness, root=None):
         recovered = recovery_marker.read_text(encoding="utf-8").strip() if recovery_marker.exists() else ""
 
         require(pos_exit == 0 and fail_exit == 0 and teardown_exit == 0
-                and open_failure_exit == 0 and reopen_exit == 0
+                and open_failure_exit == 0 and fstat_success_exit == 0
+                and fstat_failure_exit == 0 and reopen_exit == 0
                 and teardown_reopen_exit == 0 and recovery_exit == 0,
                 "headless process exit status changed")
         pos_async = [line for line in pos_marker.splitlines() if line.startswith("operation=async ")]
@@ -634,6 +729,24 @@ def execute_runtime(headless, harness, root=None):
             "fresh process did not reopen the unchanged save after the injected open failure: "
             + repr(recovered) + " / " + repr(recovery_log),
         )
+        require(fstat_success_marker ==
+            "operation=fstat injected=0 result=0 errno=none\n"
+            and fstat_success_script_marker.strip() == "loadSaveFile=true"
+            and "SAVE_REOPEN_FSTAT_SUCCESS" in fstat_success_log,
+            "successful post-open fstat control was not observed: "
+            + repr(fstat_success_marker) + " / " + repr(fstat_success_script_marker))
+        require(fstat_failure_marker ==
+            "operation=fstat injected=1 result=-1 errno=EIO\n"
+            "operation=close injected=0 result=0 errno=none\n",
+            "post-open fstat EIO or descriptor cleanup was not observed exactly once: "
+            + repr(fstat_failure_marker))
+        require(fstat_failure_script_marker.strip() == "loadSaveFile=false"
+            and "SAVE_REOPEN_FSTAT_FAILURE_CAUGHT" in fstat_failure_log
+            and "Failed to load script" not in fstat_failure_log,
+            "original script caller did not handle post-open fstat failure: "
+            + repr(fstat_failure_script_marker) + " / " + repr(fstat_failure_log))
+        require(save_before_fstat_failure == save_after_fstat_failure,
+            "post-open fstat failure modified the pre-existing save file")
         return {
             "pinned_headless_binary_sha256": hashlib.sha256(headless.read_bytes()).hexdigest(),
             "native_interposer_sha256": hashlib.sha256(interposer.read_bytes()).hexdigest(),
@@ -679,6 +792,20 @@ def execute_runtime(headless, harness, root=None):
                 "separate_process_recovery_reopen": recovered,
                 "recovery_exit_status": recovery_exit,
                 "same_os_page_cache_durability_claim": False,
+            },
+            "fstat_failure": {
+                "success_control_marker": fstat_success_marker.strip(),
+                "success_control_script_result": fstat_success_script_marker.strip(),
+                "injected_marker": fstat_failure_marker.strip().splitlines(),
+                "script_result_marker": fstat_failure_script_marker.strip(),
+                "headless_exit_status": fstat_failure_exit,
+                "script_load_error_logged": "Failed to load script" in fstat_failure_log,
+                "save_sha256_before": save_before_fstat_failure,
+                "save_sha256_after": save_after_fstat_failure,
+                "save_unchanged": save_before_fstat_failure == save_after_fstat_failure,
+                "separate_process_recovery_reopen": recovered,
+                "recovery_exit_status": recovery_exit,
+                "durability_claim": False,
             },
             "cold_reopen": {
                 "exit_status": reopen_exit,

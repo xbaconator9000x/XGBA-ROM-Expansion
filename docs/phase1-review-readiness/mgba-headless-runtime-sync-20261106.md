@@ -88,6 +88,37 @@ power-loss durability, or independent media. The machine record marks this
 case `REQUIRED_IN_EXISTING_CI`; the Actions output, rather than the static
 contract, is the execution evidence.
 
+## Distinct post-open descriptor-validation failure
+
+The additional `fstat` case is later than, and distinct from, the existing
+`open(...)=EIO` case. The pinned `VFileOpenFD` first opens the target path and
+passes the descriptor to `VFileFromFD`. `VFileFromFD` calls `fstat`; on failure
+it closes that descriptor and returns `NULL`. The script-facing
+`mCoreLoadSaveFile` then returns false. The host interposer tracks the descriptor
+opened for the exact target `.sav`, injects `fstat(...)= -1/EIO` once, and
+records both the failure and the subsequent successful close. A positive
+control records successful `fstat` and `loadSaveFile=true`; the failure case
+records `loadSaveFile=false`, process exit 0, and unchanged pre-existing save
+hash. The existing separate-process control then reopens the save without
+injection.
+
+The source is the same pinned `src/util/vfs/vfs-fd.c` listed in the machine
+matrix: blob `2535bd0fb76740745ae038d5523ead28658f1035`, full-source SHA-256
+`0073a68b6688f1baa26acaf609af52e9f29308605e449e7c3182c9f4d768da44`, and
+canonical dossier-row SHA-256
+`bb351807533d3de29f1f87c2c3a644a70c67430f556e83e219b1e25292589942`. Its MPL-2.0
+notice and the pinned dossier archive identity are verified by the existing
+runtime source checker. The expanded call graph is in the machine-readable
+matrix; this bounded review covers the `VFileFromFD` fstat rejection and close
+branch, not the whole translation unit.
+
+The failure is injected at the host syscall boundary in the compiled pinned
+headless process; it is not a naturally observed filesystem failure. Successful
+same-host recovery proves only that the unchanged save can be reopened in that
+test environment. It does not establish durable persistence, `.sav`
+interoperability, GUI frontend behavior, stock gameplay, or physical Flash
+behavior. Status remains `NEEDS_EVIDENCE` / `FAIL_INCOMPLETE`.
+
 ## Limits
 
 - The default headless path does not autoload a `.sav`; the test's script calls

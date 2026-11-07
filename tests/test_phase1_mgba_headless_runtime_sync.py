@@ -36,6 +36,7 @@ class HeadlessRuntimeSyncTests(unittest.TestCase):
             "src/script/engines/lua.c",
             "src/gba/memory.c",
             "src/util/vfs.c",
+            "src/util/vfs/vfs-fd.c",
         })
 
     def test_cannot_invent_gui_frontend_or_physical_persistence(self):
@@ -51,6 +52,29 @@ class HeadlessRuntimeSyncTests(unittest.TestCase):
             with self.subTest(key=key):
                 changed = copy.deepcopy(self.matrix)
                 changed[section][key] = True
+                with self.assertRaises(ValueError):
+                    validate_matrix(changed)
+
+    def test_post_open_fstat_failure_contract_is_distinct_and_non_approving(self):
+        case = self.matrix["fstat_failure_contract"]
+        self.assertIn("VFileFromFD -> fstat", case["pinned_call_path"])
+        self.assertEqual(case["expected_fstat_marker"],
+                             "operation=fstat injected=1 result=-1 errno=EIO")
+        self.assertEqual(case["expected_close_marker"],
+                             "operation=close injected=0 result=0 errno=none")
+        self.assertEqual(case["expected_script_observation"], "loadSaveFile=false")
+        self.assertFalse(case["persistence_claim"])
+        self.assertEqual(case["status"], "REQUIRED_IN_EXISTING_CI")
+
+        for key, value in (
+                ("expected_fstat_marker", "operation=open injected=1 result=-1"),
+                ("expected_close_marker", "operation=close injected=0 result=-1"),
+                ("expected_script_observation", "loadSaveFile=true"),
+                ("persistence_claim", True),
+                ("status", "PASSED"),
+        ):
+                changed = copy.deepcopy(self.matrix)
+                changed["fstat_failure_contract"][key] = value
                 with self.assertRaises(ValueError):
                     validate_matrix(changed)
 
