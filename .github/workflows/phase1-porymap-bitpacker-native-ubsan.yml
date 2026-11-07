@@ -1,0 +1,46 @@
+name: Phase 1 original Porymap BitPacker native Qt UBSan boundary
+on:
+  push:
+    branches:
+      - phase1/porymap-full-qt-project-roundtrip-20261028
+    paths:
+      - 'tests/phase1_porymap_bitpacker_native.cpp'
+      - 'tools/phase1_porymap_bitpacker_native.py'
+      - 'docs/phase1-review-readiness/porymap-bitpacker-native-ubsan-20261029.md'
+      - '.github/workflows/phase1-porymap-bitpacker-native-ubsan.yml'
+  pull_request:
+    paths:
+      - 'tests/phase1_porymap_bitpacker_native.cpp'
+      - 'tools/phase1_porymap_bitpacker_native.py'
+      - 'docs/phase1-review-readiness/porymap-bitpacker-native-ubsan-20261029.md'
+      - '.github/workflows/phase1-porymap-bitpacker-native-ubsan.yml'
+permissions:
+  contents: read
+jobs:
+  native-bitpacker-ubsan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/porymap
+          ref: 26b919d7ff4b54152de010abd5bf344af2ebe116
+          path: upstream-porymap
+          persist-credentials: false
+      - name: Install native Qt6
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y qt6-base-dev pkg-config g++
+      - name: Compile and run unchanged pinned BitPacker with UBSan
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_porymap_bitpacker_native.py
+          python3 tools/phase1_porymap_bitpacker_native.py --porymap upstream-porymap --output phase1-evidence/bitpacker-native-ubsan.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase1-porymap-bitpacker-native-ubsan
+          path: phase1-evidence/
+          if-no-files-found: warn
+          retention-days: 90

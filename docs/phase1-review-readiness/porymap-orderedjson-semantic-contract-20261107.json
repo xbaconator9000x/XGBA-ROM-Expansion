@@ -1,0 +1,149 @@
+{
+  "stage": 2,
+  "status": "NON_APPROVING_EVIDENCE_PACKAGE",
+  "expected_head_reconciled": "f0e22636e0eca350ac4fb1bc3f358edf81eec0da",
+  "porymap_pin": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+  "new_complete_source_scope": [
+    {
+      "path": "include/lib/orderedjson.h",
+      "git_blob_sha1": "cb5139d37d955f2469ebd2eaaf089668b82884fe",
+      "full_source_sha256": "06af4ab35f09263aa213673dbdca5640b840fddfb22f7e8fc35dc41ad91fdaa2",
+      "candidate_dossier_row_sha256": "100dc0dba8d6682f8eb1d6b5df2cf8a3ce1543d63c1640d61aca9322034aae56",
+      "disposition": "NEEDS_EVIDENCE",
+      "coverage": "Complete pinned bytes identity-checked; API and JsonDoc behavior examined; not an independent receipt."
+    },
+    {
+      "path": "src/lib/orderedjson.cpp",
+      "git_blob_sha1": "4d3a460c652541371a01132116e508db8c4c872c",
+      "full_source_sha256": "a6acaf57872aa3bfc2fc98b02b743e550bead19cc85cf298c642c50a5f3f75ae",
+      "candidate_dossier_row_sha256": "ce04fbf6b06f98a91b74cf82c962fb0eca90ffe26396cae32480e8ac00015793",
+      "disposition": "NEEDS_EVIDENCE",
+      "coverage": "Complete pinned bytes identity-checked; parser, conversion, lookup, and serialization behavior examined; not an independent receipt."
+    },
+    {
+      "path": "include/lib/orderedmap.h",
+      "git_blob_sha1": "33fcfc50609722b10ae45eaa847be540c7c72d13",
+      "full_source_sha256": "0f3e331b6be95f8f07047f88a649ce1275ffe16c04b5c21bd300e965c8ac2f18",
+      "candidate_dossier_row_sha256": "1c67b737d5d7b4b1c7d2b250066b0dacb5b98950ef15693c6cc8b613a1a99a1e",
+      "disposition": "NEEDS_EVIDENCE",
+      "coverage": "Complete pinned bytes identity-checked; ordering and replacement operations used by this test were inspected; the full generic container contract remains unreviewed."
+    }
+  ],
+  "candidate_dossier_provenance": {
+    "classification": "automated candidate triage, not a semantic dossier or reviewer receipt",
+    "workpack_zip_sha256": "5de8d2880a520aa4a80bf0a5b968ba6d19bb0a6a388260a08bd3906b2b4a5cb4",
+    "embedded_candidate_dossier_gzip_sha256": "fe7785c38c7cbd80256ff591dabf1308f06f51f6324b44a743b8b087defd27ac",
+    "row_hash_definition": "SHA-256 of the exact decompressed JSONL row bytes without its line terminator; the same digest is the row evidence_sha256."
+  },
+  "reused_context_not_counted_as_new_review": [
+    {
+      "path": "porymap.pro",
+      "git_blob_sha1": "53d8055ecfe5d88afb6f183b82d4a3472727ad4f",
+      "full_source_sha256": "cff608e64a2d610ea029d199c2be3b50b7941437b62c80fa3eaffdba70de2996",
+      "candidate_dossier_row_sha256": "93059d533a8cc5a5cc0fbe774b64bd8bf83ff107344a870cace53d6d96cf35e2",
+      "edge": "Builds the original OrderedJson implementation and declares its header."
+    },
+    {
+      "path": "src/core/parseutil.cpp",
+      "git_blob_sha1": "a1c3e69daed3f04d7ed64e1a34bd95db56137ae2",
+      "full_source_sha256": "7c9e4028c74555c7b27b7fb6e3d255f406d8303277989887f69ddf8a44ece441",
+      "candidate_dossier_row_sha256": "8a86894dbbd710bfecfd5af86c87dc3392b9878756636608010b39569d5aed33",
+      "edge": "ParseUtil::tryParseOrderedJsonFile parses input then assigns object_items() without checking the root type."
+    },
+    {
+      "path": "src/project.cpp",
+      "git_blob_sha1": "d43b0949303433111d4478ad76117c2b3445dd13",
+      "full_source_sha256": "225b20f5305ae428eda2e7fda28dcc405cdeae041ce8e1176b3a7d7bd548d93b",
+      "candidate_dossier_row_sha256": "b6b90abf56f02452537a9b096fa191ead9ee7360dd19d72c6f5486834bed02d7",
+      "edge": "Previously reviewed Project serializer/writer context; not repeated as new semantic coverage."
+    },
+    {
+      "path": "src/ui/prefab.cpp",
+      "git_blob_sha1": "0baebee4f5bcaf5baa6b2bdac3d5791e140c558f",
+      "full_source_sha256": "f377fd58124377eb38d805e72be937bd71ed5c54b751063650b9825973653581",
+      "candidate_dossier_row_sha256": "60b944205115267daf86e0c2b95fff25bf325c0487b2f85b419177743187c33a",
+      "edge": "Serializes prefab data through OrderedJsonDoc; parser uses Qt JSON APIs separately."
+    },
+    {
+      "path": "src/ui/regionmapeditor.cpp",
+      "git_blob_sha1": "a96de606cc18469b558b1acfc7c787432b8dcfb4",
+      "full_source_sha256": "43f433c1754cd25d4691491567e7be9ff48e47e89c485eb917a5b26e2e1eb4e2",
+      "candidate_dossier_row_sha256": "36d435c647bbf00a5028ca29d80acf9356d9bd5dba8aac5771cd7be8c4a7a6b5",
+      "edge": "Consumes Json::parse results in region-map editing; full GUI behavior is not executed."
+    },
+    {
+      "path": "LICENSE.md",
+      "git_blob_sha1": "65c5ca88a67c30becee01c5a8816d964b03862f9",
+      "full_source_sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768",
+      "candidate_dossier_row_sha256": "a620cf8ec560f8bf6f54e9d96403ec1cb204f3ddad7fef812ce7893059396986",
+      "edge": "Root Porymap LGPL notice; not a legal or distribution-compliance conclusion."
+    }
+  ],
+  "findings": [
+    {
+      "id": "ORDEREDJSON-STATIC-LOOKUP-ITERATOR",
+      "source_anchor": "src/lib/orderedjson.cpp:278-280",
+      "source_observation": "JsonObject::operator[] stores m_value.find(key) in a function-static iterator. Later Json objects reuse the iterator bound to the first object's map.",
+      "native_control": "A Qt6 executable built with unchanged pinned orderedjson.cpp reads the first object's value when looking up the same key on a second live object.",
+      "impact_boundary": "Concrete cross-object lookup contamination; broader GUI/data-loss behavior is not exercised."
+    },
+    {
+      "id": "ORDEREDJSON-ROOT-TYPE",
+      "source_anchor": "src/core/parseutil.cpp:739-748",
+      "source_observation": "tryParseOrderedJsonFile assigns OrderedJson::parse(...).object_items() and checks only the error string. Valid array/scalar roots have no parse error and expose an empty object_items() view, so this caller reports success with an empty object.",
+      "native_control": "The original parser is tested with a valid array root; ParseUtil itself is source-inspected, not executed."
+    },
+    {
+      "id": "ORDEREDJSON-QJSON-FRACTIONAL-CONVERSION",
+      "source_anchor": "src/lib/orderedjson.cpp:287-292",
+      "source_observation": "Json::fromQJsonValue converts every QJsonValue::Double through toInt(); fractional 1.75 becomes the Qt default integer 0.",
+      "native_control": "The original implementation and Qt6 QJsonValue are compiled and exercised with 1.75."
+    },
+    {
+      "id": "ORDEREDJSON-PARSE-AND-DUPLICATE-CONTRACT",
+      "source_anchor": "src/lib/orderedjson.cpp:JsonParser and Json::parse",
+      "source_observation": "Truncated and trailing input fail with an error; COMMENTS mode recognizes comments before a sentinel; duplicate object keys overwrite the value while OrderedMap retains first insertion order.",
+      "native_control": "Compiled original implementation with positive and malformed inputs; the sentinel keeps the parser from reaching its comments-mode EOF assertion."
+    },
+    {
+      "id": "ORDEREDJSON-COMMENTS-EOF-ASSERTION",
+      "source_anchor": "src/lib/orderedjson.cpp:395-442",
+      "source_observation": "consume_garbage calls consume_comment again after the top-level value reaches EOF. consume_comment reads str[i] before checking i == str.size(), so a complete commented document triggers a Qt QString bounds assertion in the tested Qt6 build.",
+      "native_control": "A bounded child process with core dumps disabled executes the original implementation and requires Qt's QString assertion; the parent test continues and records the result."
+    }
+  ],
+  "evidence_labels": {
+    "source": "Original pinned source bytes and direct call paths are identity checked.",
+    "compiled_native": "The separate harness compiles unchanged pinned orderedjson.cpp against Qt6Core; it does not run the full Porymap GUI.",
+    "synthetic": "No synthetic data is presented as stock-project or gameplay evidence.",
+    "gui_gameplay_physical_flash": "Not tested."
+  },
+  "license_boundaries": [
+    "The vendored poryjson/json11 notice in the OrderedJson source/header is Dropbox MIT.",
+    "orderedmap.h has a separate Tessil MIT notice.",
+    "Porymap LICENSE.md is a separate LGPL notice; redistribution obligations and combined-work compliance are not decided here."
+  ],
+  "negative_controls": {
+    "source_mutations": [
+      "Changing the function-static lookup iterator",
+      "Changing the trailing-input predicate",
+      "Removing the actual ParseUtil object_items() caller",
+      "Removing the OrderedJson build source from porymap.pro",
+      "Truncating or altering the pinned candidate workpack/archive",
+      "Changing pinned blob/full-byte/dossier hashes or candidate status",
+      "Changing the candidate dossier row hash",
+      "Omitting a required dependency file"
+    ],
+    "native_transcript_mutations": [
+      "Trailing-input result",
+      "Comments-before-trailing-sentinel result",
+      "Duplicate-key result",
+      "Root-array result",
+      "Cross-object lookup result"
+    ]
+  },
+  "test_command": "python3 tools/phase1_porymap_orderedjson_contract.py --porymap upstream-porymap --harness tests/phase1_porymap_orderedjson_contract.cpp --output phase1-evidence/porymap-orderedjson-contract.json",
+  "exact_head_ci": "PENDING",
+  "independent_approvals": 0,
+  "phase1_gate": "FAIL_INCOMPLETE"
+}

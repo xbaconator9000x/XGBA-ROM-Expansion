@@ -1,0 +1,45 @@
+name: Phase 1 pinned Porymap new-map collateral save boundary
+on:
+  push:
+    branches:
+      - phase1/porymap-full-qt-project-roundtrip-20261028
+    paths:
+      - '.github/workflows/phase1-porymap-new-map-collateral.yml'
+      - 'tools/phase1_porymap_new_map_collateral.py'
+      - 'docs/phase1-review-readiness/porymap-new-map-collateral-20261029.md'
+  pull_request:
+    paths:
+      - '.github/workflows/phase1-porymap-new-map-collateral.yml'
+      - 'tools/phase1_porymap_new_map_collateral.py'
+      - 'docs/phase1-review-readiness/porymap-new-map-collateral-20261029.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-new-map-source-closure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clone pinned Porymap and validate source identities
+        run: |
+          set -euo pipefail
+          git clone --quiet --filter=blob:none https://github.com/huderlem/porymap.git upstream-porymap
+          git -C upstream-porymap checkout --quiet --detach 26b919d7ff4b54152de010abd5bf344af2ebe116
+          test "$(git -C upstream-porymap rev-parse HEAD)" = 26b919d7ff4b54152de010abd5bf344af2ebe116
+          git -C upstream-porymap hash-object src/project.cpp | grep -Fx d43b0949303433111d4478ad76117c2b3445dd13
+          git -C upstream-porymap hash-object include/project.h | grep -Fx 50d3307cf618f4cd5e9603bdbe3e0ea8d9b5e354
+      - name: Verify new-map collateral writer order and fail-closed source controls
+        run: |
+          set -euo pipefail
+          mkdir -p phase1-evidence
+          python3 -m py_compile tools/phase1_porymap_new_map_collateral.py
+          python3 tools/phase1_porymap_new_map_collateral.py             --porymap upstream-porymap             --output phase1-evidence/porymap-new-map-collateral.json
+      - name: Archive text-only partial semantic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-porymap-new-map-collateral-text
+          path: phase1-evidence/*.json
+          if-no-files-found: warn
+          retention-days: 30

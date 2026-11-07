@@ -1,0 +1,42 @@
+name: Phase 1 pinned Porymap new-map retry and persisted flag
+on:
+  push:
+    branches:
+      - phase1/porymap-full-qt-project-roundtrip-20261028
+    paths:
+      - 'tools/phase1_porymap_new_map_retry_source.py'
+      - 'docs/phase1-review-readiness/porymap-new-map-retry-20261029.md'
+      - '.github/workflows/phase1-porymap-new-map-retry-source.yml'
+  pull_request:
+    paths:
+      - 'tools/phase1_porymap_new_map_retry_source.py'
+      - 'docs/phase1-review-readiness/porymap-new-map-retry-20261029.md'
+      - '.github/workflows/phase1-porymap-new-map-retry-source.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-source-retry-closure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout immutable Porymap
+        uses: actions/checkout@v4
+        with:
+          repository: huderlem/porymap
+          ref: 26b919d7ff4b54152de010abd5bf344af2ebe116
+          path: upstream-porymap
+          persist-credentials: false
+      - name: Verify source closure and fifteen negative controls
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_porymap_new_map_retry_source.py
+          python3 tools/phase1_porymap_new_map_retry_source.py --porymap upstream-porymap --output phase1-evidence/porymap-new-map-retry-source.json
+      - name: Preserve evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-porymap-new-map-retry-source
+          path: phase1-evidence/
+          if-no-files-found: warn

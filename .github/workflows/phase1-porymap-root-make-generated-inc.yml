@@ -1,0 +1,80 @@
+name: Phase 1 original FireRed root Makefile Poryscript integration
+on:
+  push:
+    branches:
+      - phase1/porymap-full-qt-project-roundtrip-20261028
+    paths:
+      - '.github/workflows/phase1-porymap-root-make-generated-inc.yml'
+      - 'tools/phase1_porymap_root_make_integration.py'
+      - 'docs/phase1-review-readiness/porymap-root-make-generated-inc-20261029.md'
+  pull_request:
+    paths:
+      - '.github/workflows/phase1-porymap-root-make-generated-inc.yml'
+      - 'tools/phase1_porymap_root_make_integration.py'
+      - 'docs/phase1-review-readiness/porymap-root-make-generated-inc-20261029.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-root-make-event-object:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: pinned-firered
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/poryscript
+          ref: c32481161c767b25a3425fa9f1f8729927ff3d55
+          path: pinned-poryscript
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/porymap
+          ref: 26b919d7ff4b54152de010abd5bf344af2ebe116
+          path: pinned-porymap
+          persist-credentials: false
+      - name: Install existing GNU ARM assembler
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi build-essential libpng-dev pkg-config
+      - name: Execute original root Makefile generated target and data/event_scripts.o
+        run: |
+          set -euo pipefail
+          git -C pinned-firered hash-object map_data_rules.mk | grep -Fx b32b85a91d9460642345ca983c37d165e820741f
+          git -C pinned-firered hash-object include/constants/event_objects.h | grep -Fx 9d8c514f9e2d634d40d215bf657f33041c55c28e
+          git -C pinned-firered hash-object tools/mapjson/Makefile | grep -Fx 100e809c6c27e6c04d3b6f2406ff288922d80c13
+          git -C pinned-firered hash-object tools/mapjson/mapjson.cpp | grep -Fx 8d8ec4e4e6e1c011b06f00819abe40bad10d19d5
+          git -C pinned-firered hash-object tools/mapjson/mapjson.h | grep -Fx 6e961a28ec0e2c6a017e7dda2e9d81f07e3e3ceb
+          git -C pinned-firered hash-object tools/mapjson/json11.cpp | grep -Fx fcacdbeb39c3110e4564f57a8f26b7bb34678a7e
+          git -C pinned-firered hash-object tools/mapjson/json11.h | grep -Fx c04c4362f9784006c7a45ad04729fab1c77dd1d9
+          git -C pinned-firered hash-object json_data_rules.mk | grep -Fx eec18467a57cce082a4307b3d667c4c4448b1b3a
+          git -C pinned-firered hash-object tools/jsonproc/Makefile | grep -Fx 653d585679acd560b5965aa42c8f22b4e493aae1
+          git -C pinned-firered hash-object tools/jsonproc/jsonproc.cpp | grep -Fx 68b1c73ba454c9c19c6f307a129e51457c45f030
+          git -C pinned-firered hash-object tools/jsonproc/jsonproc.h | grep -Fx 575fb3756c0351234a5d4f40badf67033c04ed20
+          git -C pinned-firered hash-object tools/jsonproc/inja.hpp | grep -Fx 5b469745fb30a1c92d46929b7c819ec38effc0cf
+          git -C pinned-firered hash-object tools/jsonproc/nlohmann/json.hpp | grep -Fx 33a91164c7979ed8475e51fd107f900af4172306
+          mkdir -p phase1-evidence
+          python3 -m py_compile tools/phase1_porymap_root_make_integration.py
+          python3 tools/phase1_porymap_root_make_integration.py \
+            --firered pinned-firered \
+            --poryscript pinned-poryscript \
+            --porymap pinned-porymap \
+            --output phase1-evidence/root-make-generated-inc.json
+          python3 -m json.tool phase1-evidence/root-make-generated-inc.json >/dev/null
+      - name: Archive text-only source and object identities
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-root-make-generated-inc-text
+          path: phase1-evidence/*.json
+          if-no-files-found: warn
+          retention-days: 30

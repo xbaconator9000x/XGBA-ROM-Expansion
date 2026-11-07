@@ -1,0 +1,179 @@
+{
+  "schema": "phase1-porymap-advancemap-import-handoff-v1",
+  "status": "NON_APPROVING_NEEDS_EVIDENCE",
+  "phase1_gate": "FAIL_INCOMPLETE",
+  "independent_approvals_added": 0,
+  "source_pin": {
+    "repository": "huderlem/porymap",
+    "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116"
+  },
+  "candidate_inventory": {
+    "workpack_sha256": "5de8d2880a520aa4a80bf0a5b968ba6d19bb0a6a388260a08bd3906b2b4a5cb4",
+    "member": "evidence/candidate_review_dossiers.jsonl.gz",
+    "archive_sha256": "fe7785c38c7cbd80256ff591dabf1308f06f51f6324b44a743b8b087defd27ac",
+    "semantic_receipt": false,
+    "original_semantic_dossier_available": false,
+    "review_receipt_available": false
+  },
+  "scope": {
+    "name": "AdvanceMap 1.92 legacy import",
+    "focal_files": [
+      {
+        "path": "src/core/advancemapparser.cpp",
+        "git_blob_sha1": "04348e96abd21579f202ed67d7f927ab626738aa",
+        "full_source_sha256": "be8c875a173fc04848ed9b221bc248521a316cc0796e209607f45578c4bd3413",
+        "candidate_row_sha256": "9adc90a245ed763594113879443b257095e0c3002d481c19da9bfc94c6b27e31",
+        "whole_file_scope": "Three parser entry points: legacy binary .map dimensions, border and metatile decoding; .bvd RSE/FRLG identification, length/count checks, tile words, versioned attributes and optional triple-layer padding; four-byte-stride palette decoding; errors and allocated result ownership.",
+        "disposition": "NEEDS_EVIDENCE"
+      },
+      {
+        "path": "include/core/advancemapparser.h",
+        "git_blob_sha1": "c3cb76cb7c0e6e58d01743f6c06774fa0a635411",
+        "full_source_sha256": "9f9d45a8bc67ac56d90e90b6d64eeeaba70644039c52781c4a2683cd72da3e45",
+        "candidate_row_sha256": "626532a3ee3d3a94da2769eff5d40bf45034673b2d7e45db33434f335d9d952a",
+        "whole_file_scope": "All three declarations, parameter and pointer contracts, and result ownership expectations.",
+        "disposition": "NEEDS_EVIDENCE"
+      }
+    ],
+    "dependency_context_only": [
+      {
+        "path": "src/mainwindow.cpp",
+        "git_blob_sha1": "08ce1a7a599ef825967717b69626984cdc6d772b",
+        "full_source_sha256": "b1b7d6738bfa9a3c574ddfcdd774187783fa81cfc86889e1aa4b80cad93525d1",
+        "candidate_row_sha256": "fd88d9c7b68d181efc93e9f746306ad8e167dd3a0eeb16410dd6d6cfd412d1f8",
+        "edge": "MainWindow invokes parseLayout and decides how an imported Layout is retained or deleted."
+      },
+      {
+        "path": "src/ui/tileseteditor.cpp",
+        "git_blob_sha1": "723a2afdeb89c1752e9811a07715462c2279c645",
+        "full_source_sha256": "a85e7827754d3f08cec5ebe90aa7a737958524ac379d563adfd269d1b7557ced",
+        "candidate_row_sha256": "940f1b1723b84449dbc3f20648e057643c96d9be19a08e9fa210746193a35ee7",
+        "edge": "Tileset editor consumes returned Metatile pointers and chooses primary or secondary limits."
+      },
+      {
+        "path": "src/core/paletteutil.cpp",
+        "git_blob_sha1": "76a3d0c4551972f0349913ed5c7e90510f5cde38",
+        "full_source_sha256": "7102959c495e9bb6429cb1efef607392762d2f3d167fcc1d1016cfaa8067ca7c",
+        "candidate_row_sha256": "f57b9288a100a782a5804eb9291030da5b9da5f7249dff98d9466c4f74394366",
+        "edge": "Palette loader delegates non-JASC palettes to parsePalette; PaletteUtil's wider behavior is not reviewed here."
+      },
+      {
+        "path": "include/core/paletteutil.h",
+        "git_blob_sha1": "34e9ae3ff80c86a51f09d575968de3c6e4577073",
+        "full_source_sha256": "a00910820306f5b4d718b8353abcccc3ded192ec23add08823c1c4b0c85bb545",
+        "candidate_row_sha256": "54171feeb462e142b45e1621ff71b06abff55c299f5952395e804e2ccd506fcc",
+        "edge": "Declares the palette file-loader boundary."
+      },
+      {
+        "path": "include/project.h",
+        "git_blob_sha1": "50d3307cf618f4cd5e9603bdbe3e0ea8d9b5e354",
+        "full_source_sha256": "7cc2225207fe2ddbbc463b91f24997f651141d84f7a79f3d8897daf6071c9b51",
+        "candidate_row_sha256": "0a5103fa34ee62748f39cbcbd0d50c3bb9ccabc824cf9813ca53bd5118cc69eb",
+        "edge": "Ordered tileset labels, allowed primary/secondary label sets, defaults and metatile count limits."
+      },
+      {
+        "path": "src/project.cpp",
+        "git_blob_sha1": "d43b0949303433111d4478ad76117c2b3445dd13",
+        "full_source_sha256": "225b20f5305ae428eda2e7fda28dcc405cdeae041ce8e1176b3a7d7bd548d93b",
+        "candidate_row_sha256": "b6b90abf56f02452537a9b096fa191ead9ee7360dd19d72c6f5486834bed02d7",
+        "edge": "Configured/fallback tileset label definitions; earlier Project writer/save coverage is context, not repeated."
+      },
+      {
+        "path": "include/config.h",
+        "git_blob_sha1": "539c5f3d416d22d847020cd324726b33725e5437",
+        "full_source_sha256": "2a7a2621675e70b007fbc71f004a3cb0c44914f0a9c366ab974570ca8e2053ad",
+        "candidate_row_sha256": "0a3502a018360a2eb9fadb4890fd861c5de750e181daa56eca2083dd6ad50bde",
+        "edge": "BaseGameVersion and projectConfig triple-layer mode."
+      },
+      {
+        "path": "src/config.cpp",
+        "git_blob_sha1": "9264f99bb18e0a725ef023f514c00df529d1d28d",
+        "full_source_sha256": "fe8b6e3e4780ae8a63321d157d6fea43f438af3ab7a7fc697a9f9a2b43d4419d",
+        "candidate_row_sha256": "0107235fca6f03579e911aa555b30492c7dfa39a854fbcbced2989476dce2953",
+        "edge": "Configuration selects version-dependent attribute size and triples-layer behavior."
+      },
+      {
+        "path": "include/core/metatile.h",
+        "git_blob_sha1": "eba4afedbdd0ae682dca472d941a966df31285d3",
+        "full_source_sha256": "aff69ca0f21364eb5ec13d990903f24fd2b5f296a41f9dbd2a3a44247a7c104f",
+        "candidate_row_sha256": "b8c09969c5c86fe467551ec4542bdd7d0939bde3b78324304ad852995e2259c7",
+        "edge": "Metatile tile and attribute destination API."
+      },
+      {
+        "path": "src/core/metatile.cpp",
+        "git_blob_sha1": "00fff2ba4bd1f3d85c7be3356fa6bf0bb0d8fc70",
+        "full_source_sha256": "998902fda64648a3ae7ad5b96305b658ac1adbde0cb5218cfc67fcf27960f9c7",
+        "candidate_row_sha256": "fc7bd3aeabcda751a0529abaa51c2f381e75a5c3edc61727973cf4178dd2bbaf",
+        "edge": "RSE/FRLG attribute widths and bit-field conversion. This implementation is stubbed, not executed, in the native parser harness."
+      },
+      {
+        "path": "include/core/maplayout.h",
+        "git_blob_sha1": "3095574b79604307ee31cc3fa0d111bd2cef242a",
+        "full_source_sha256": "0e92db0736800b5669fba82b972bec7d00fcfc1f8f36bfcb11f7d7ed38f390ea",
+        "candidate_row_sha256": "e518511da45c05420a73bdca128fae807e881e74e319722436779cf3c2c02945",
+        "edge": "Imported dimensions, labels, Blockdata and downstream layout save/model API."
+      },
+      {
+        "path": "include/core/blockdata.h",
+        "git_blob_sha1": "a1e45b63783fa2aecceee6fadbb33f1e1935b6b8",
+        "full_source_sha256": "e3b1898ffff20b15cc33114c6c423d405c75de0213c5342dfced11db729041db",
+        "candidate_row_sha256": "a48dd6ea66e58e3b0378d31307aeb44a45656b183940673ae69b16635260b769",
+        "edge": "Block data sequence representation."
+      },
+      {
+        "path": "include/core/tile.h",
+        "git_blob_sha1": "11fd6a99cfff18dc0d06185b3342a7b107acebb9",
+        "full_source_sha256": "90c4fb23620e7dd42b6ed108ace7d1bb392e287d837fa7a87740a1f37ecb3af7",
+        "candidate_row_sha256": "8d597f012d434892d49f3ed7ddddafa60507ebce15aae123b6c7119c4d7d24c9",
+        "edge": "Tile representation created from .bvd words."
+      },
+      {
+        "path": "porymap.pro",
+        "git_blob_sha1": "53d8055ecfe5d88afb6f183b82d4a3472727ad4f",
+        "full_source_sha256": "cff608e64a2d610ea029d199c2be3b50b7941437b62c80fa3eaffdba70de2996",
+        "candidate_row_sha256": "93059d533a8cc5a5cc0fbe774b64bd8bf83ff107344a870cace53d6d96cf35e2",
+        "edge": "Builds original parser into the Qt Core/GUI application."
+      },
+      {
+        "path": "LICENSE.md",
+        "git_blob_sha1": "65c5ca88a67c30becee01c5a8816d964b03862f9",
+        "full_source_sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768",
+        "candidate_row_sha256": "a620cf8ec560f8bf6f54e9d96403ec1cb204f3ddad7fef812ce7893059396986",
+        "edge": "Pinned root notice context; no legal or redistribution-compliance conclusion."
+      }
+    ],
+    "unresolved": [
+      "No original independent semantic dossier or attributable review receipt is present for either focal file.",
+      "The native harness substitutes Project/Layout/Tile/Metatile/logging types; real object ownership, Metatile attribute packing, and GUI caller decisions remain untested.",
+      "The parseLayout dimension product has signed-overflow undefined behavior for a crafted 65536-by-65536 header; the bounded UBSan witness records this, but no upstream source is changed.",
+      "Zero dimensions, non-null error-pointer preconditions, giant dimensions, and all malformed file forms require independent semantic review.",
+      "No actual AdvanceMap-produced corpus, complete GUI import, downstream ROM build, gameplay, or hardware behavior is exercised.",
+      "Pinned licensing text and notice identity do not establish distribution compliance."
+    ]
+  },
+  "native_witness": {
+    "source": "unchanged pinned src/core/advancemapparser.cpp compiled with Qt6Core and Qt6Gui and test-only model/logging stubs",
+    "positive_and_negative_controls": [
+      "layout field decode, little-endian metatile values, valid tileset indices, and cross-kind fallback",
+      "short and odd .map rejection",
+      "RSE and FRLG .bvd version decoding, tile order, attribute widths, and triple-layer padding",
+      "unsupported .bvd signature rejection",
+      "palette RGB channels, four-byte stride, and malformed length rejection",
+      "UBSan reports signed overflow for a 65536x65536 .map dimension product"
+    ],
+    "not_tested": [
+      "real Project and Metatile implementations",
+      "MainWindow/TilesetEditor GUI execution and pointer ownership transitions",
+      "real AdvanceMap exports or FireRed ROM compatibility",
+      "distribution/legal compliance"
+    ],
+    "evidence_mutations": "The verifier rejects stale source blobs/SHA-256, altered candidate rows/archive, missing caller anchors, changed native output, missing UBSan diagnostic, fabricated dossier/approval, or gate promotion."
+  },
+  "review_handoff": {
+    "reviewer": "Copilot Coding Agent",
+    "independent_receipt": null,
+    "per_file_records": "tools/phase1_porymap_advancemap_import.py output includes all source identity rows, their context/focal roles, and NEEDS_EVIDENCE disposition.",
+    "status": "NEEDS_EVIDENCE",
+    "approval_claimed": false
+  }
+}

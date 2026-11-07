@@ -1,0 +1,55 @@
+{
+  "stage": 1,
+  "status": "BLOCKED",
+  "assignment": "FEX archive ownership/error semantics",
+  "expected_head_reconciled": "977c45803a2f89eb08edf1e02b806f37e783a820",
+  "porymap_pin": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+  "finding": "The assigned src/lib/fex subsystem is a C-source parser, not an archive implementation. Its README says it parses C code; pinned porymap.pro builds lexer.cpp and parser.cpp. No archive API or archive ownership path is established by this scope.",
+  "source_evidence": [
+    {
+      "path": "src/lib/fex/README",
+      "git_blob_sha1": "564d1ae10729dd5ea2b32e23cf714ceb0468dcf1",
+      "source_sha256": null,
+      "note": "The same pinned README blob is also at include/lib/fex/README; it describes a modified library for parsing C code."
+    },
+    {
+      "path": "porymap.pro",
+      "git_blob_sha1": "53d8055ecfe5d88afb6f183b82d4a3472727ad4f",
+      "source_sha256": "cff608e64a2d610ea029d199c2be3b50b7941437b62c80fa3eaffdba70de2996",
+      "note": "Builds src/lib/fex/lexer.cpp and src/lib/fex/parser.cpp; it does not identify an archive module."
+    },
+    {
+      "path": "src/lib/fex/lexer.cpp",
+      "git_blob_sha1": "e65915706b5144259b11faa0de151b2e806f2dab",
+      "source_sha256": "d6808adf00d113b5ac70cec46f74c80330531364ec0d102c757bd6eb2ad16696",
+      "note": "LexFile opens a text path with QFile, reads all bytes to tokenize C source, then closes the file."
+    },
+    {
+      "path": "src/lib/fex/parser.cpp",
+      "git_blob_sha1": "ce4a9bbbfff95fc04a6e7ff5a424de215ac0de56",
+      "source_sha256": "07b85d8564c188b4ac3018f46f65184092a1df4df2366f2f6489030eaf1f7a04",
+      "note": "Parser consumes lexer tokens for C declarations and expressions; it contains no archive reader."
+    },
+    {
+      "path": "src/core/parseutil.cpp",
+      "git_blob_sha1": "a1c3e69daed3f04d7ed64e1a34bd95db56137ae2",
+      "source_sha256": "7c9e4028c74555c7b27b7fb6e3d255f406d8303277989887f69ddf8a44ece441",
+      "note": "Pinned Porymap integration includes the FEX lexer/parser and calls them to read C defines; archive ownership is not implied."
+    }
+  ],
+  "candidate_dossier_provenance": {
+    "classification": "automated candidate triage only; not an original semantic dossier or receipt",
+    "workpack_zip_sha256": "5de8d2880a520aa4a80bf0a5b968ba6d19bb0a6a388260a08bd3906b2b4a5cb4",
+    "embedded_candidate_dossier_gzip_sha256": "fe7785c38c7cbd80256ff591dabf1308f06f51f6324b44a743b8b087defd27ac",
+    "row_sha256_src_lib_fex_readme": "0dae2452ffb40a83cbf5b18e9e05bab0b7e6663b4703db4bf449018dfbb83ee1",
+    "row_sha256_porymap_pro": "93059d533a8cc5a5cc0fbe774b64bd8bf83ff107344a870cace53d6d96cf35e2"
+  },
+  "limits": [
+    "This is a scope blocker, not semantic review or approval of FEX parser files.",
+    "No archive error, allocation, short-read, seek, or close behavior was tested.",
+    "No complete repository-wide assertion that no archive implementation exists is made.",
+    "A corrected assignment identifying an actual pinned archive subsystem is required before that review can proceed."
+  ],
+  "independent_approvals": 0,
+  "phase1_gate": "FAIL_INCOMPLETE"
+}
