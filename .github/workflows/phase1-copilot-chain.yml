@@ -86,7 +86,7 @@ jobs:
               result=api("issues/27/comments",{"body":message})
           except urllib.error.HTTPError as exc:
               if exc.code==403:
-                  print("BLOCKED: dispatch PAT cannot create issue comments (HTTP 403). Verify repository-scoped Issues: Read and write permission, token expiration, and organization policy. No Copilot assignment posted.")
+                  detail=exc.read().decode("utf-8","replace")[:1200]\n                  print("BLOCKED: GitHub refused comment creation HTTP 403; response:",detail,"No assignment posted.")
                   raise SystemExit(0)
               raise
           print("DISPATCHED PACKAGE",number,"comment",result.get("id"),"HEAD",head)
