@@ -11,6 +11,7 @@ on:
       - 'tests/phase1_porymap_orderedjson_contract.cpp'
       - 'docs/phase1-review-readiness/porymap-orderedjson-semantic-contract-20261107.json'
       - 'docs/phase1-review-readiness/porymap-fex-archive-assignment-blocked-20261107.json'
+      - 'docs/phase1-review-readiness/porymap-qt-translation-sqlite-scope-blocked-20261107.json'
       - '.github/workflows/phase1-porymap-orderedjson-native-enospc.yml'
   pull_request:
     paths:
@@ -21,6 +22,7 @@ on:
       - 'tests/phase1_porymap_orderedjson_contract.cpp'
       - 'docs/phase1-review-readiness/porymap-orderedjson-semantic-contract-20261107.json'
       - 'docs/phase1-review-readiness/porymap-fex-archive-assignment-blocked-20261107.json'
+      - 'docs/phase1-review-readiness/porymap-qt-translation-sqlite-scope-blocked-20261107.json'
       - '.github/workflows/phase1-porymap-orderedjson-native-enospc.yml'
   workflow_dispatch:
 permissions:

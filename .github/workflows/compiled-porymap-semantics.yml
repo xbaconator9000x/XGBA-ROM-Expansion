@@ -27,6 +27,7 @@ on:
       - 'tools/phase1_porymap_editor_map_switch.py'
       - 'tests/phase1_porymap_editor_map_switch.cpp'
       - 'docs/phase1-review-readiness/porymap-editor-map-switch-20261106.md'
+      - 'docs/phase1-review-readiness/porymap-qt-translation-sqlite-scope-blocked-20261107.json'
       - 'tools/qt_metaobject_contracts.py'
       - '.github/workflows/compiled-porymap-semantics.yml'
   pull_request:
@@ -52,6 +53,7 @@ on:
       - 'tools/phase1_porymap_editor_map_switch.py'
       - 'tests/phase1_porymap_editor_map_switch.cpp'
       - 'docs/phase1-review-readiness/porymap-editor-map-switch-20261106.md'
+      - 'docs/phase1-review-readiness/porymap-qt-translation-sqlite-scope-blocked-20261107.json'
       - '.github/workflows/compiled-porymap-semantics.yml'
 permissions:
   contents: read
