@@ -1,0 +1,41 @@
+{
+  "schema": "phase1.mgba.observer-receipt-eligibility.v1",
+  "repository": "mgba-emu/mgba",
+  "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "source_matrix": "docs/phase1-review-readiness/mgba-cross-backend-save-observability-20261105.json",
+  "platform_matrix": "docs/phase1-review-readiness/mgba-platform-save-observer-closure-20261105.json",
+  "observer_handoff": "docs/phase1-review-readiness/mgba-fault-to-observer-handoff-20261105.json",
+  "source_record_contract": {
+    "matrix_field": "reviewed_new_files",
+    "expected_distinct_records": 16,
+    "required_source_disposition": "reviewed_source_only",
+    "coverage": "complete_file_bytes_hash_and_anchored_source_review"
+  },
+  "attribution_contract": {
+    "reviewer": "Copilot",
+    "scope": "per_file_source_only",
+    "independent": false,
+    "required_for_receipt_eligibility": true,
+    "user_override_status": "COPILOT_REVIEWED/PASSED",
+    "github_independent_review_id": null
+  },
+  "ci_contract": {
+    "workflow_id": 398059096,
+    "branch": "phase1/mgba-savedata-boundary-witness-20261027",
+    "required_events": [
+      "pull_request",
+      "push"
+    ],
+    "required_conclusion": "success",
+    "same_exact_head": true,
+    "evidence_input": "normalized GitHub Actions API metadata; field validation does not authenticate the evidence source"
+  },
+  "non_approval_contract": {
+    "independent_approval": false,
+    "historical_gate_mutated": false,
+    "dirty_to_clean_means_durable_save": false,
+    "frontend_delivery_observed": false,
+    "native_frontend_observed": false,
+    "physical_flash_or_power_loss_evidence": false
+  }
+}

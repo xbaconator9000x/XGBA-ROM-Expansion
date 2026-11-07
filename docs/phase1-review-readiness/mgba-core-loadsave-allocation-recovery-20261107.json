@@ -1,0 +1,171 @@
+{
+  "schema": "phase1.mgba.core-loadsave-allocation-recovery.v1",
+  "repository": "mgba-emu/mgba",
+  "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "pinned_tree": "5863e657d270d0fe3ccaa4299f48d5689d74fa1f",
+  "status": "NEEDS_EVIDENCE",
+  "overall": "FAIL_INCOMPLETE",
+  "independent_approvals": 0,
+  "evidence_class": "COMPILED_EXTRACTED_PINNED_CORE_CALLER_AND_ORIGINAL_POSIX_VFILE_WITH_HOST_ALLOCATOR_INJECTION",
+  "machine_dossier": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "git_blob": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "compressed_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+  },
+  "source_records": [
+    {
+      "path": "src/core/core.c",
+      "git_blob": "17edcde68b8d4f0885c6c6ddd17c4e6ca64701f8",
+      "full_source_sha256": "94b5dc1cec2d9b157ef2933681c644a6dfb43dcebe9f6b887d68b104ac640ea5",
+      "canonical_dossier_row_sha256": "6e453bae6a2dd590ac92ce6f86821a8e342dcc34f9f762836152bdad9b49e989",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_EXTRACTED_CALLER_BODY",
+      "function_body_sha256": "623abab0e9024f839ebd661ae941e1bc386280db728beff527394d3d46328efe"
+    },
+    {
+      "path": "include/mgba/core/core.h",
+      "git_blob": "64ddf851ef00ab09416a9c1c9b5a88798fcd6fc8",
+      "full_source_sha256": "e77d0b72af5b76d9b66292968359122a15ab5c4c624d684af7ad339fa700e7a9",
+      "canonical_dossier_row_sha256": "0fb39db4601aad348aa35a4adbb7a4a41b05a26128957595547a95bc72208a87",
+      "license": "MPL-2.0",
+      "execution_scope": "TRACED_INTERFACE_NARROW_FIXTURE"
+    },
+    {
+      "path": "src/core/scripting.c",
+      "git_blob": "7ccb51e897685ce24b37dabc76beb27427331b4f",
+      "full_source_sha256": "8bb8d2ca9a744b51a96d5258b7a1cec49b724f92ae843a1504b22d4ae9d138b1",
+      "canonical_dossier_row_sha256": "9975d4c10ec523f164e9e0292ae795ccb8522343d7b926c233bee159de08abc8",
+      "license": "MPL-2.0",
+      "execution_scope": "TRACED_SCRIPT_ENTRY_NOT_COMPILED"
+    },
+    {
+      "path": "src/util/vfs.c",
+      "git_blob": "3158c52659a83333cb23aeb0dd7ea4bba35908fc",
+      "full_source_sha256": "7b94fe172db57a97fef22047e79378bba3c8848b0808bca014d3a6554c1adc06",
+      "canonical_dossier_row_sha256": "47d41523b021d9d124e30aae47163dd32773f50223bcde11b82d4b27508107a2",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_ORIGINAL_TRANSLATION_UNIT"
+    },
+    {
+      "path": "src/util/vfs/vfs-fd.c",
+      "git_blob": "2535bd0fb76740745ae038d5523ead28658f1035",
+      "full_source_sha256": "0073a68b6688f1baa26acaf609af52e9f29308605e449e7c3182c9f4d768da44",
+      "canonical_dossier_row_sha256": "bb351807533d3de29f1f87c2c3a644a70c67430f556e83e219b1e25292589942",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_ORIGINAL_TRANSLATION_UNIT"
+    },
+    {
+      "path": "include/mgba-util/vfs.h",
+      "git_blob": "6c9bd299153af4c3c9cd5487f2425a2481331ee5",
+      "full_source_sha256": "4c829529f21c424196b4d1efe25ce11227312437cf1aa5028cae94a741bf6656",
+      "canonical_dossier_row_sha256": "5d4c30179d703f5b013badf083d6c99c736186091873d65edcb3f0943c2763dd",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_INTERFACE"
+    },
+    {
+      "path": "include/mgba-util/string.h",
+      "git_blob": "bc29e28d71bbb4cbb51261a9ded26399c019fb2e",
+      "full_source_sha256": "80434f7f78cf6fa0bb60a7d3fcc4fe2ee09acf8ac14295a8c9e5c9a6a8715a9d",
+      "canonical_dossier_row_sha256": "6c046cb5d36c75862236163fb73973c308d6f61d1c93470e5ce69fc1940ccc77",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_INTERFACE"
+    },
+    {
+      "path": "include/mgba-util/common.h",
+      "git_blob": "923e93086adfa09c9a55fcc2f0f6fa4d560e5888",
+      "full_source_sha256": "ec13354a050e4a7432232214b9991dd74000980ab2b8949389af0871cc1b799f",
+      "canonical_dossier_row_sha256": "b0a970a0105d3d1b109325bda5fedc99cff7a182cb010f24f826944faa0616ec",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_INTERFACE"
+    },
+    {
+      "path": "include/mgba-util/vector.h",
+      "git_blob": "c837379e2102ca6535db2b292233bd4983c3532c",
+      "full_source_sha256": "ae8d9ed36475bda93ab3d2ff581163cedd289b2275c5254b76ba9e4285696375",
+      "canonical_dossier_row_sha256": "6a1179a47870dc93b443eff57599611d1b8d43d87560de25863a9e5805d83eb7",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_INTERFACE"
+    },
+    {
+      "path": "include/mgba-util/dllexports.h",
+      "git_blob": "a44480df6ec26821b8616650b2575ba794848eca",
+      "full_source_sha256": "96871f8861195f4ff9fedd861ff07ed5b0a10a0e7642d6a780a8221cafd163d4",
+      "canonical_dossier_row_sha256": "5a0c3158c1515885d4f326ea52cc891074b5e0cd54e40460eab89d55a1746070",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_INTERFACE"
+    }
+  ],
+  "call_graph": [
+    "mCore.loadSaveFile script binding -> mCoreLoadSaveFile",
+    "mCoreLoadSaveFile -> VFileOpen(path, O_CREAT | O_RDWR)",
+    "VFileOpen -> VFileOpenFD for ENABLE_VFS_FD",
+    "VFileOpenFD -> POSIX open -> VFileFromFD",
+    "VFileFromFD -> fstat -> malloc(sizeof(struct VFileFD))",
+    "allocation failure -> VFileFromFD returns NULL without closing fd",
+    "mCoreLoadSaveFile sees NULL -> returns false before save callback"
+  ],
+  "observations": {
+    "normal_caller": {
+      "caller_return": true,
+      "open_attempts": 1,
+      "successful_opens": 1,
+      "allocation_attempts": 1,
+      "allocation_failures": 0,
+      "save_callbacks": 1,
+      "close_calls": 1,
+      "target_fd_open": false
+    },
+    "allocation_failure": {
+      "caller_return": false,
+      "open_attempts": 1,
+      "successful_opens": 1,
+      "allocation_attempts": 1,
+      "allocation_failures": 1,
+      "save_callbacks": 0,
+      "close_calls": 0,
+      "leaked_fd_open": true
+    },
+    "retry_after_allocation_failure": {
+      "failure_return": false,
+      "retry_return": true,
+      "open_attempts": 2,
+      "successful_opens": 2,
+      "allocation_attempts": 2,
+      "allocation_failures": 1,
+      "save_callbacks": 1,
+      "close_calls": 1,
+      "leaked_first_fd_open": true,
+      "retry_fd_closed": true
+    },
+    "open_failure_control": {
+      "caller_return": false,
+      "open_attempts": 1,
+      "successful_opens": 0,
+      "allocation_attempts": 0,
+      "allocation_failures": 0,
+      "save_callbacks": 0,
+      "errno": "ENOENT"
+    }
+  },
+  "objection_notes": [
+    "The malloc failure is injected by a host linker wrapper, not observed as a naturally occurring OS allocation failure.",
+    "The exact pinned mCoreLoadSaveFile body and original VFile dispatcher/backend are compiled, but the complete mGBA core and frontend are not.",
+    "The caller body is compiled against a narrow test mCore fixture; include/mgba/core/core.h is source-verified but not compiled into this harness.",
+    "The save callback is a controlled fixture. The injected-failure assertion verifies the original caller returns before invoking it; the retry callback only closes the returned VFile.",
+    "The leaked descriptor is observed with fcntl in the same process, then explicitly closed by harness cleanup; this is not durable-storage, .sav interoperability, gameplay, or physical Flash evidence."
+  ],
+  "source_mutations_rejected": 3,
+  "output_mutations_rejected": 6,
+  "host_allocator_fault_injection": true,
+  "natural_os_allocation_failure_observed": false,
+  "compiled_original_caller_body": true,
+  "compiled_original_dispatcher": true,
+  "compiled_original_fd_backend": true,
+  "caller_core_struct_is_narrow_fixture": true,
+  "real_gba_savedata_callback_executed": false,
+  "native_mgba_frontend_executed": false,
+  "durable_persistence_tested": false,
+  "sav_interoperability_tested": false,
+  "stock_gameplay_tested": false,
+  "physical_flash_tested": false
+}

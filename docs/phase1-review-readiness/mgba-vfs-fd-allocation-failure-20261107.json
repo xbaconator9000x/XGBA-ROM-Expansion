@@ -1,0 +1,104 @@
+{
+  "schema": "phase1.mgba.vfs-fd-allocation-failure.v1",
+  "repository": "mgba-emu/mgba",
+  "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "pinned_tree": "5863e657d270d0fe3ccaa4299f48d5689d74fa1f",
+  "status": "NEEDS_EVIDENCE",
+  "overall": "FAIL_INCOMPLETE",
+  "independent_approvals": 0,
+  "evidence_class": "COMPILED_PINNED_POSIX_VFILE_WITH_HOST_ALLOCATOR_INJECTION",
+  "source_record": {
+    "path": "src/util/vfs/vfs-fd.c",
+    "git_blob": "2535bd0fb76740745ae038d5523ead28658f1035",
+    "full_source_sha256": "0073a68b6688f1baa26acaf609af52e9f29308605e449e7c3182c9f4d768da44",
+    "canonical_dossier_row_sha256": "bb351807533d3de29f1f87c2c3a644a70c67430f556e83e219b1e25292589942",
+    "license": "MPL-2.0",
+    "body_sha256": {
+      "struct VFile* VFileOpenFD(const char* path, int flags)": "1e166c42b6f3ae8a3c1f8b9886e5a00dd1282645dfd37c720c83b1ac1f31ff3e",
+      "struct VFile* VFileFromFD(int fd)": "13cb910fdbbafbe0712bc985e9f1be0b03f01cd5a61c31173879e491ca3fef63"
+    },
+    "review_scope": "Bounded VFileOpenFD-to-VFileFromFD descriptor ownership on allocation failure; not whole-file review."
+  },
+  "callsite_record": {
+    "path": "src/util/vfs.c",
+    "git_blob": "3158c52659a83333cb23aeb0dd7ea4bba35908fc",
+    "full_source_sha256": "7b94fe172db57a97fef22047e79378bba3c8848b0808bca014d3a6554c1adc06",
+    "canonical_dossier_row_sha256": "47d41523b021d9d124e30aae47163dd32773f50223bcde11b82d4b27508107a2",
+    "body_sha256": "e41233c9f3694959554a63cb8ef2a2fdb456f245a11b26e79a533ff1e1c7a137",
+    "license": "MPL-2.0",
+    "review_scope": "Pinned VFileOpen POSIX dispatcher callsite; not whole-file review."
+  },
+  "dependency_records": [
+    {
+      "path": "include/mgba-util/vfs.h",
+      "git_blob": "6c9bd299153af4c3c9cd5487f2425a2481331ee5",
+      "full_source_sha256": "4c829529f21c424196b4d1efe25ce11227312437cf1aa5028cae94a741bf6656",
+      "canonical_dossier_row_sha256": "5d4c30179d703f5b013badf083d6c99c736186091873d65edcb3f0943c2763dd",
+      "license": "MPL-2.0",
+      "review_scope": "Pinned VFile callback/API declarations used by the compiled source closure; not whole-file review."
+    },
+    {
+      "path": "include/mgba-util/string.h",
+      "git_blob": "bc29e28d71bbb4cbb51261a9ded26399c019fb2e",
+      "full_source_sha256": "80434f7f78cf6fa0bb60a7d3fcc4fe2ee09acf8ac14295a8c9e5c9a6a8715a9d",
+      "canonical_dossier_row_sha256": "6c046cb5d36c75862236163fb73973c308d6f61d1c93470e5ce69fc1940ccc77",
+      "license": "MPL-2.0",
+      "review_scope": "Pinned string declarations included by the original VFile dispatcher; not whole-file review."
+    }
+  ],
+  "machine_dossier": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "git_blob": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "compressed_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+  },
+  "call_graph": [
+    "caller invokes VFileOpen(path, flags)",
+    "VFileOpen selects VFileOpenFD for ENABLE_VFS_FD",
+    "VFileOpenFD calls host open(path, flags, 0666)",
+    "VFileOpenFD passes returned descriptor to VFileFromFD",
+    "VFileFromFD validates descriptor with fstat",
+    "VFileFromFD attempts malloc(sizeof(struct VFileFD))",
+    "on allocation failure VFileFromFD returns NULL without closing fd"
+  ],
+  "observations": {
+    "normal_open_and_close": {
+      "caller_return": true,
+      "open_calls": 1,
+      "allocation_attempts": 1,
+      "allocation_failures": 0,
+      "close_calls": 1,
+      "fd_open_after_close": false
+    },
+    "injected_allocation_failure": {
+      "caller_return": false,
+      "open_calls": 1,
+      "allocation_attempts": 1,
+      "allocation_failures": 1,
+      "close_calls": 0,
+      "fd_open_after_return": true
+    },
+    "open_failure_control": {
+      "caller_return": false,
+      "open_calls": 1,
+      "allocation_attempts": 0,
+      "allocation_failures": 0,
+      "errno": "ENOENT"
+    }
+  },
+  "source_mutations_rejected": 3,
+  "output_mutations_rejected": 5,
+  "objection_notes": [
+    "Allocation failure is deterministically injected by linker-wrapped host malloc; it is not a naturally observed memory-pressure event.",
+    "The pinned VFileOpen dispatcher and POSIX vfs-fd.c translation unit are compiled; the complete mGBA core and frontend are not part of this harness.",
+    "The descriptor-open observation is process-local on the test host and does not establish save corruption or user-visible behavior.",
+    "The witness covers Linux/POSIX mapped-file compilation only; other platform VFile backends are not inferred."
+  ],
+  "compiled_original_translation_unit": true,
+  "native_mgba_frontend_executed": false,
+  "host_allocator_fault_injection": true,
+  "naturally_observed_allocation_failure": false,
+  "stock_gameplay_tested": false,
+  "sav_interoperability_tested": false,
+  "durable_persistence_tested": false,
+  "physical_flash_tested": false
+}

@@ -1,0 +1,222 @@
+{
+  "schema": "phase1.mgba.frontend-runtime-feasibility.v1",
+  "repository": "mgba-emu/mgba",
+  "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "pinned_tree": "5863e657d270d0fe3ccaa4299f48d5689d74fa1f",
+  "machine_dossier": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "git_blob": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "compressed_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+  },
+  "status": "NEEDS_EVIDENCE",
+  "overall": "FAIL_INCOMPLETE",
+  "source_records": [
+    {
+      "path": "src/platform/headless-main.c",
+      "git_blob": "61110b1e84a25f702b5e7d158887d93b150e1b66",
+      "full_source_sha256": "51687802777b8e831622e28fbd278782084e4c0d65e1ba28b7c1dec4e5617c68",
+      "canonical_dossier_row_sha256": "7cd9f22ce4878d5f9cab92adbe4b26a011a3fd6fbce9f21f7e20668be5c16e4e",
+      "license": "MPL-2.0",
+      "review_scope": "reviewed_for_runtime_feasibility",
+      "finding": "Headless shutdown calls unloadROM and deinit; no save autoload call is present.",
+      "anchors": [
+        {"line": 232, "contains": "core->unloadROM(core);"},
+        {"line": 250, "contains": "core->deinit(core);"}
+      ]
+    },
+    {
+      "path": "src/gba/core.c",
+      "git_blob": "6bfc518bb8899205c07d1d0fc091a287cb42f874",
+      "full_source_sha256": "47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596",
+      "canonical_dossier_row_sha256": "3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784",
+      "license": "MPL-2.0",
+      "review_scope": "reviewed_for_runtime_feasibility",
+      "finding": "Core loadSave delegates to GBALoadSave; temporary save returns a placeholder true.",
+      "anchors": [
+        {"line": 656, "contains": "return GBALoadSave(core->board, vf);"},
+        {"line": 661, "contains": "GBASavedataMask(&gba->memory.savedata, vf, false);"}
+      ]
+    },
+    {
+      "path": "src/gba/gba.c",
+      "git_blob": "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e",
+      "full_source_sha256": "e84eaba17f6c96ac7b78431afaee79d7633dd50118f92e31e4432793f80c4c7b",
+      "canonical_dossier_row_sha256": "d1870b438fe6dd9bfa628a99d90189778e112588c14ae08f28fa379903595056",
+      "license": "MPL-2.0",
+      "review_scope": "reviewed_for_runtime_feasibility",
+      "finding": "Savedata initializes without a VFile; teardown and dirty-clear callback are distinct paths.",
+      "anchors": [
+        {"line": 87, "contains": "GBASavedataInit(&gba->memory.savedata, NULL);"},
+        {"line": 172, "contains": "GBASavedataDeinit(&gba->memory.savedata);"},
+        {"line": 174, "contains": "gba->memory.savedata.realVf->close(gba->memory.savedata.realVf);"},
+        {"line": 969, "contains": "GBASavedataClean(&gba->memory.savedata, gba->video.frameCounter);"},
+        {"line": 1005, "contains": "if (callbacks->savedataUpdated && wasDirty && !gba->memory.savedata.dirty) {"}
+      ]
+    },
+    {
+      "path": "src/gba/savedata.c",
+      "git_blob": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "full_source_sha256": "9887e36795ae51e39eecad09565d27d3feabe316d3e595b17f288e3205e13161",
+      "canonical_dossier_row_sha256": "99a6b3e97c52d67712e10204e08ced8819c7330e899b9f767aa280fc330c42e0",
+      "license": "MPL-2.0",
+      "review_scope": "reused_identity_only",
+      "finding": "Previously source-reviewed; exact identity reused, not reassigned as a new review.",
+      "anchors": []
+    },
+    {
+      "path": "src/core/core.c",
+      "git_blob": "17edcde68b8d4f0885c6c6ddd17c4e6ca64701f8",
+      "full_source_sha256": "94b5dc1cec2d9b157ef2933681c644a6dfb43dcebe9f6b887d68b104ac640ea5",
+      "canonical_dossier_row_sha256": "6e453bae6a2dd590ac92ce6f86821a8e342dcc34f9f762836152bdad9b49e989",
+      "license": "MPL-2.0",
+      "review_scope": "reviewed_for_runtime_feasibility",
+      "finding": "File-based save helpers and autoload entry point inspected; headless caller not found.",
+      "anchors": [
+        {"line": 245, "contains": "struct VFile* vf = VFileOpen(path, O_CREAT | O_RDWR);"},
+        {"line": 257, "contains": "bool mCoreAutoloadSave(struct mCore* core) {"}
+      ]
+    },
+    {
+      "path": "src/core/log.c",
+      "git_blob": "39d6db88cad3ca6f521a532c114b6488adb77279",
+      "full_source_sha256": "7f320ca361e0d4d6c846e6bcc8833d82d884bb3defd9b6ca800c7af9f065b170",
+      "canonical_dossier_row_sha256": "a446ca3d2c3895cae2b2e15f0a888f1e427df79162eabb3b75d37f66981f42bb",
+      "license": "MPL-2.0",
+      "review_scope": "reused_identity_only",
+      "finding": "Previously source-reviewed logger dispatch dependency; no new runtime claim.",
+      "anchors": []
+    },
+    {
+      "path": "src/util/vfs/vfs-fd.c",
+      "git_blob": "2535bd0fb76740745ae038d5523ead28658f1035",
+      "full_source_sha256": "0073a68b6688f1baa26acaf609af52e9f29308605e449e7c3182c9f4d768da44",
+      "canonical_dossier_row_sha256": "bb351807533d3de29f1f87c2c3a644a70c67430f556e83e219b1e25292589942",
+      "license": "MPL-2.0",
+      "review_scope": "reused_identity_only",
+      "finding": "Previously source-reviewed POSIX VFile dependency; no new fault injection.",
+      "anchors": []
+    },
+    {
+      "path": "src/core/directories.c",
+      "git_blob": "2337f5d47c8db428c62da13afa2743afa6d83f1e",
+      "full_source_sha256": "a878d5eada8bf7443061d571f6cdd998d1f19934381278cca415275dc245d0f4",
+      "canonical_dossier_row_sha256": "d589bb948b805041abe73209873e21525b69ef9fc92e6e3a501cacc4e83658dd",
+      "license": "MPL-2.0",
+      "review_scope": "reused_identity_only",
+      "finding": "Directory/open-suffix dependency identity only; not a new whole-file review.",
+      "anchors": []
+    },
+    {
+      "path": "src/platform/qt/CoreController.cpp",
+      "git_blob": "183cea418a70963bd5332ef66bdff54a0dcccd46",
+      "full_source_sha256": "8ca7ca7b26fa030ef76322085a6f634b5e3ca4fd40a4e6549b6a12abace260b2",
+      "canonical_dossier_row_sha256": "1cbedd6e36f387b7c579bcea8c77bed82e9c3e8b18954974847c647dcf8b0f28",
+      "license": "MPL-2.0",
+      "review_scope": "reviewed_for_runtime_feasibility",
+      "finding": "Qt save-open/load and core deinit paths inspected; frontend did not build.",
+      "anchors": [
+        {"line": 235, "contains": "m_threadContext.core->deinit(m_threadContext.core);"},
+        {"line": 1289, "contains": "VFile* save = mDirectorySetOpenSuffix("},
+        {"line": 1291, "contains": "if (!m_threadContext.core->loadSave(m_threadContext.core, save)) {"}
+      ]
+    },
+    {
+      "path": "src/platform/qt/LogController.cpp",
+      "git_blob": "526cdb9a4054698a0047379613c63fa64efad47d",
+      "full_source_sha256": "cb9e77b62ae0752495badb6942f3aec846b2fc0b1db6c33be96a8235d4d16299",
+      "canonical_dossier_row_sha256": "96796da1768502b3567e311199957f5890452d635f1d4e0bc6d0ff27391ea100",
+      "license": "MPL-2.0",
+      "review_scope": "reviewed_for_runtime_feasibility",
+      "finding": "Qt filter and conditional stdout/file sinks inspected; no frontend delivery observed.",
+      "anchors": [
+        {"line": 106, "contains": "if (!mLogFilterTest(&m_filter, category, static_cast<mLogLevel>(level))) {"},
+        {"line": 109, "contains": "if (m_logToStdout || m_logToFile) {"},
+        {"line": 125, "contains": "emit logPosted(level, category, string);"}
+      ]
+    }
+  ],
+  "source_observations": [
+    {
+      "path": "headless_savedata_lifecycle",
+      "status": "SOURCE_ONLY",
+      "finding": "headless-main.c calls unloadROM and deinit, but does not call mCoreAutoloadSave or mCoreLoadSaveFile; GBA initialization starts savedata with a NULL VFile",
+      "fault_injection_observed": false,
+      "cold_process_sav_reopen_observed": false
+    },
+    {
+      "path": "qt_save_and_log_consumers",
+      "status": "SOURCE_ONLY",
+      "finding": "Qt opens a configured save suffix and closes it when loadSave fails; its INFO log route depends on filtering and configured stdout/file sinks",
+      "fault_injection_observed": false,
+      "frontend_ui_or_log_delivery_observed": false,
+      "cold_process_sav_reopen_observed": false
+    },
+    {
+      "path": "savedata_callback_and_teardown",
+      "status": "SOURCE_ONLY",
+      "finding": "savedataUpdated follows dirty-to-clean transition; it is not a persistence acknowledgment, and teardown return values are not surfaced as a save-success result",
+      "fault_injection_observed": false,
+      "durable_persistence_observed": false
+    }
+  ],
+  "runtime_attempts": {
+    "headless": {
+      "build": "SUCCEEDED",
+      "execution": "TIMED_OUT_BEFORE_SAVE_LIFECYCLE",
+      "observation": "Synthetic BIOS/ROM repeatedly logged GBA BIOS SWI 00; the intended save and shutdown path was not reached.",
+      "native_frontend_process_launched": true,
+      "save_failure_or_shutdown_observed": false,
+      "fault_injection": false,
+      "save_file_reopen": false
+    },
+    "qt": {
+      "build": "FAILED",
+      "attempts": [
+        {
+          "configuration": "BUILD_GL=OFF",
+          "failure": "ShaderSelector undeclared during compilation"
+        },
+        {
+          "configuration": "BUILD_GL=ON",
+          "failure": "link failed with unresolved ShaderSelector Qt meta-object/vtable symbols"
+        }
+      ],
+      "frontend_executable_produced": false,
+      "native_frontend_execution": false,
+      "fault_injection": false,
+      "save_file_reopen": false
+    },
+    "sdl": {
+      "build": "NOT_ATTEMPTED",
+      "execution": "NOT_ATTEMPTED",
+      "native_frontend_execution": false,
+      "fault_injection": false,
+      "save_file_reopen": false
+    }
+  },
+  "execution_contract": {
+    "pinned_source_and_dossier_verified": true,
+    "headless_executable_compiled": true,
+    "headless_process_launched": true,
+    "headless_save_lifecycle_observed": false,
+    "qt_frontend_compiled": false,
+    "qt_frontend_executed": false,
+    "sdl_frontend_executed": false,
+    "actual_frontend_fault_injection": false,
+    "frontend_save_failure_or_log_delivery_observed": false,
+    "cold_process_sav_reopen_observed": false,
+    "dirty_to_clean_is_persistence_acknowledgment": false,
+    "durable_persistence_or_power_loss_evidence": false,
+    "stock_gameplay": false,
+    "physical_flash": false,
+    "independent_semantic_approval": false,
+    "gate_or_approval_state_changed": false
+  },
+  "unresolved": [
+    "Build and run a pinned frontend on a supported Qt or SDL environment.",
+    "Inject a real frontend save I/O/sync failure and observe its UI, logs, callbacks, and return status.",
+    "Exercise shutdown/unmap/close behavior and cold-process reopen of an actual .sav.",
+    "Distinguish successful host writes from durable storage and physical Flash behavior."
+  ],
+  "distribution_notice": "Pinned mGBA source files carry MPL-2.0 notices. Preserve those notices and the repository license in combined distributions; this report contains provenance and findings, not copied upstream source."
+}
