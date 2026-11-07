@@ -346,7 +346,10 @@ def main():
     )
     require(compile_result.returncode == 0, "native compile failed: " + compile_result.stderr[-4000:])
     run = subprocess.run([str(executable.resolve())], text=True, capture_output=True)
-    require(run.returncode == 0, "native harness failed: " + run.stderr[-2000:])
+    require(
+        run.returncode == 0,
+        "native harness failed: stdout=" + run.stdout[-2000:] + " stderr=" + run.stderr[-2000:],
+    )
     check_native_output(run.stdout)
     transcript_negatives = 0
     for changed in (

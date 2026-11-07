@@ -12,24 +12,34 @@ static void check(bool ok, const char *message) {
     }
 }
 
+static void stage(const char *name) {
+    std::fprintf(stderr, "PHASE1_ORDEREDJSON_STAGE %s\n", name);
+    std::fflush(stderr);
+}
+
 int main() {
+    stage("truncated");
     QString error;
     OrderedJson malformed = OrderedJson::parse(QString("{\"key\":"), &error);
     check(malformed.is_null() && !error.isEmpty(), "truncated_input_error");
 
+    stage("trailing");
     error.clear();
     OrderedJson trailing = OrderedJson::parse(QString("{\"key\":1} trailing"), &error);
     check(trailing.is_null() && !error.isEmpty(), "trailing_input_error");
 
+    stage("standard-comments");
     error.clear();
     OrderedJson standardComment = OrderedJson::parse(QString("{/* comment */\"key\":1}"), &error);
     check(standardComment.is_null() && !error.isEmpty(), "standard_comment_rejected");
 
+    stage("comments-mode");
     error.clear();
     OrderedJson comment = OrderedJson::parse(
         QString("{/* comment */\"key\":1}"), &error, poryjson::JsonParse::COMMENTS);
     check(comment.is_object() && error.isEmpty(), "comments_mode_accepts_comment");
 
+    stage("duplicate-keys");
     error.clear();
     OrderedJson duplicate = OrderedJson::parse(
         QString("{\"first\":1,\"second\":2,\"first\":3}"), &error);
@@ -46,15 +56,18 @@ int main() {
     check(serialized.indexOf("\"first\"") < serialized.indexOf("\"second\""),
           "dump_insertion_order");
 
+    stage("array-root");
     error.clear();
     OrderedJson arrayRoot = OrderedJson::parse(QString("[]"), &error);
     check(arrayRoot.is_array() && error.isEmpty() && arrayRoot.object_items().empty(),
           "valid_non_object_root_is_not_a_parse_error");
 
+    stage("qjson-conversion");
     OrderedJson fractional = OrderedJson::fromQJsonValue(QJsonValue(1.75));
     check(fractional.is_number() && fractional.int_value() == 1,
           "qjson_double_conversion_truncates_to_integer");
 
+    stage("cross-object-lookup");
     OrderedJson::object firstObject;
     firstObject["same"] = "first";
     OrderedJson first(firstObject);
