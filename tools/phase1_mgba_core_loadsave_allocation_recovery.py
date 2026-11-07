@@ -4,6 +4,7 @@ import argparse
 import gzip
 import hashlib
 import json
+import re
 import subprocess
 import tempfile
 from pathlib import Path
@@ -97,6 +98,9 @@ RECEIPT = (
     "mgba-core-loadsave-allocation-recovery-20261107.json"
 )
 TERMINAL = "PHASE1_CALLER_DONE\n"
+MPL_NOTICE = re.compile(
+    rb"Mozilla Public\s+\*\s+License,\s+v\.\s+2\.0\."
+)
 EXPECTED_LINES = (
     "PHASE1_CALLER_CASE normal caller_return=1 open_attempts=1 "
     "successful_opens=1 allocation_attempts=1 allocation_failures=0 "
@@ -192,7 +196,7 @@ def verify_sources(checkout):
             ["git", "-C", str(checkout), "hash-object", str(file_path)],
             text=True,
         ).strip() == blob, "pinned source Git blob changed: " + path)
-        require(b"Mozilla Public License" in raw,
+        require(MPL_NOTICE.search(raw) is not None,
                 "missing MPL-2.0 source notice: " + path)
         sources[path] = raw.decode("utf-8")
 

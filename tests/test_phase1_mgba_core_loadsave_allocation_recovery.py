@@ -29,6 +29,14 @@ PINNED_CALLER = """bool mCoreLoadSaveFile(struct mCore* core, const char* path, 
 
 
 class TestCoreLoadSaveAllocationRecovery(unittest.TestCase):
+    def test_wrapped_mpl2_notice_is_recognized(self):
+        self.assertIsNotNone(
+            runner.MPL_NOTICE.search(b"Mozilla Public\n * License, v. 2.0.")
+        )
+        self.assertIsNone(
+            runner.MPL_NOTICE.search(b"Mozilla Public License, v. 1.1.")
+        )
+
     def test_positive_caller_matrix(self):
         result = runner.parse_output(GOOD)
         self.assertTrue(result["normal_caller"]["target_fd_open"] is False)
