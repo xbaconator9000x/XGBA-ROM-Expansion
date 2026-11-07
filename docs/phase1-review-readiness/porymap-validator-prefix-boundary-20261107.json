@@ -109,6 +109,27 @@
       "edge": "UppercaseValidator caller for color hex input."
     },
     {
+      "path": "src/config.cpp",
+      "git_blob_sha1": "9264f99bb18e0a725ef023f514c00df529d1d28d",
+      "full_source_sha256": "fe8b6e3e4780ae8a63321d157d6fea43f438af3ab7a7fc697a9f9a2b43d4419d",
+      "candidate_row_sha256": "0107235fca6f03579e911aa555b30492c7dfa39a854fbcbced2989476dce2953",
+      "edge": "Config validates define and symbol project identifiers."
+    },
+    {
+      "path": "src/core/tileset.cpp",
+      "git_blob_sha1": "0aa1f7d6726e3c8670f0758724284c792f7d9272",
+      "full_source_sha256": "ec94552b325e26362046b5288a6c448d62ff4407c8bfa9cb5ed392407adc4b99",
+      "candidate_row_sha256": "6fb6cc663f859d2783badd95b7606b497e2c7da2d322fcc1e4e04b367f9ba7e2",
+      "edge": "Tileset validates nonempty metatile labels."
+    },
+    {
+      "path": "src/project.cpp",
+      "git_blob_sha1": "d43b0949303433111d4478ad76117c2b3445dd13",
+      "full_source_sha256": "225b20f5305ae428eda2e7fda28dcc405cdeae041ce8e1176b3a7d7bd548d93b",
+      "candidate_row_sha256": "b6b90abf56f02452537a9b096fa191ead9ee7360dd19d72c6f5486834bed02d7",
+      "edge": "Project validates new identifiers and map-section names; contextual reuse only."
+    },
+    {
       "path": "porymap.pro",
       "git_blob_sha1": "53d8055ecfe5d88afb6f183b82d4a3472727ad4f",
       "full_source_sha256": "cff608e64a2d610ea029d199c2be3b50b7941437b62c80fa3eaffdba70de2996",
@@ -128,8 +149,11 @@
       "scope": "all .cpp/.cc/.cxx/.h/.hpp files under pinned src/ and include/",
       "matches": [
         "include/core/validator.h",
+        "src/config.cpp",
+        "src/core/tileset.cpp",
         "src/core/validator.cpp",
         "src/editor.cpp",
+        "src/project.cpp",
         "src/ui/colorinputwidget.cpp",
         "src/ui/maplistmodels.cpp",
         "src/ui/newdefinedialog.cpp",

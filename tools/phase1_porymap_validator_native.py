@@ -107,6 +107,27 @@ FILES = {
         "role": "Caller context only: ColorInputWidget attaches the inline UppercaseValidator.",
         "coverage": "context-only",
     },
+    "src/config.cpp": {
+        "blob": "9264f99bb18e0a725ef023f514c00df529d1d28d",
+        "sha256": "fe8b6e3e4780ae8a63321d157d6fea43f438af3ab7a7fc697a9f9a2b43d4419d",
+        "row": "0107235fca6f03579e911aa555b30492c7dfa39a854fbcbced2989476dce2953",
+        "role": "Caller context only: Config validates define and symbol project identifiers with IdentifierValidator.",
+        "coverage": "context-only",
+    },
+    "src/core/tileset.cpp": {
+        "blob": "0aa1f7d6726e3c8670f0758724284c792f7d9272",
+        "sha256": "ec94552b325e26362046b5288a6c448d62ff4407c8bfa9cb5ed392407adc4b99",
+        "row": "6fb6cc663f859d2783badd95b7606b497e2c7da2d322fcc1e4e04b367f9ba7e2",
+        "role": "Caller context only: Tileset validates nonempty metatile labels with IdentifierValidator.",
+        "coverage": "context-only",
+    },
+    "src/project.cpp": {
+        "blob": "d43b0949303433111d4478ad76117c2b3445dd13",
+        "sha256": "225b20f5305ae428eda2e7fda28dcc405cdeae041ce8e1176b3a7d7bd548d93b",
+        "row": "b6b90abf56f02452537a9b096fa191ead9ee7360dd19d72c6f5486834bed02d7",
+        "role": "Caller context only: Project validates new identifiers and map-section names; not a new whole-file Project review.",
+        "coverage": "context-only",
+    },
     "porymap.pro": {
         "blob": "53d8055ecfe5d88afb6f183b82d4a3472727ad4f",
         "sha256": "cff608e64a2d610ea029d199c2be3b50b7941437b62c80fa3eaffdba70de2996",
@@ -169,6 +190,16 @@ ANCHORS = {
     "src/ui/colorinputwidget.cpp": (
         b"static const UppercaseValidator uppercaseValidator;",
         b"ui->lineEdit_Hex->setValidator(&uppercaseValidator);",
+    ),
+    "src/config.cpp": (
+        b"IdentifierValidator validator;\n            if (!validator.isValid(text))",
+    ),
+    "src/core/tileset.cpp": (
+        b"if (!label.isEmpty()) {\n        IdentifierValidator validator;",
+    ),
+    "src/project.cpp": (
+        b"static const IdentifierValidator validator;",
+        b"IdentifierValidator validator(projectConfig.getIdentifier(ProjectIdentifier::define_map_section_prefix));",
     ),
     "porymap.pro": (
         b"src/core/validator.cpp",
