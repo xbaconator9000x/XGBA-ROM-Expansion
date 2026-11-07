@@ -28,12 +28,19 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           python3 - <<'PY'
-          import json, os, urllib.request
+          import json, os, urllib.request, urllib.error, time
           repo=os.environ["REPO"]
           token=os.environ.get("GH_TOKEN","")
           def get(path):
               req=urllib.request.Request("https://api.github.com/repos/"+repo+"/"+path,headers={"Accept":"application/vnd.github+json","User-Agent":"xgba-phase1-dispatch"})
-              with urllib.request.urlopen(req,timeout=15) as response:return json.load(response)
+              for attempt in range(4):
+                  try:
+                      with urllib.request.urlopen(req,timeout=30) as response:return json.load(response)
+                  except (urllib.error.HTTPError,urllib.error.URLError,TimeoutError) as exc:
+                      if isinstance(exc,urllib.error.HTTPError) and exc.code not in (429,500,502,503,504):raise
+                      if attempt==3:
+                          print("STOP: transient GitHub API failure after retries:",str(exc));raise SystemExit(0)
+                      time.sleep(2*(attempt+1))
           pr=get("pulls/27")
           comments=get("issues/27/comments?per_page=100")
           marker="XGBA_CHAIN_DISPATCH_STAGE_"
