@@ -1,0 +1,6 @@
+SCOPE original pinned memory.c and vfs-mem.c; synthetic malloc/calloc/free link wrappers; mCore caller not executed
+PASS positive constructor allocates bounded wrapper and backing, preserving input
+PASS positive constructor close returns true and releases backing plus wrapper
+PASS wrapper malloc failure returns null before backing allocation
+PASS failed constructor creates no VFile to close and releases no allocation
+SUMMARY assertions=4 failures=0 max_wrapper_allocation=256 max_backing_allocation=8

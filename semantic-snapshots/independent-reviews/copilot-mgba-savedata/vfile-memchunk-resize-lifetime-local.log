@@ -1,0 +1,8 @@
+SCOPE unchanged pinned memory.c and vfs-mem.c; owned VFileMemChunk growth, shrink/regrow within capacity, and close; GBA caller not executed
+PASS constructor owns a copied four-byte buffer
+PASS growth replaces backing, preserves old bytes, and exposes a zero-filled byte
+PASS write places a marker in spare owned capacity
+PASS shrink clamps the cursor to the new logical end
+PASS regrowth within retained capacity makes the truncated marker visible again
+PASS owned chunk closes successfully and the caller seed remains unchanged
+SUMMARY assertions=6 failures=0

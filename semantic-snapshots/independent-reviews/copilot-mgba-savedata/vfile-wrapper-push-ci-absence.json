@@ -1,0 +1,84 @@
+{
+  "schema": "xgba.copilot.mgba_savedata_absent_push_ci.v1",
+  "status": "ABSENT_PUSH_CI",
+  "scope": {
+    "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+    "pull_request": 35,
+    "branch": "copilot/review-pinned-mgba-savedata",
+    "head": "21620b3cc005ccd5137a74cb69ce4d1c9b7f6067",
+    "observed_at_utc": "2026-11-07T05:44:21Z"
+  },
+  "cause": {
+    "classification": "ABSENT_BY_WORKFLOW_CONFIGURATION",
+    "workflow_path": ".github/workflows/copilot-mgba-savedata-review.yml",
+    "workflow_sha256": "6d39c53a45f41d26a1e706e267363c258a2d2bfa76974633dbfe15bb3d7fc470",
+    "configured_events": [
+      "pull_request",
+      "workflow_dispatch"
+    ],
+    "push_trigger_configured": false,
+    "pull_request_path_filters_present": true,
+    "interpretation": "The workflow has no top-level push event. Its paths filter applies to pull_request only; no push run is skipped or suppressed by that filter."
+  },
+  "actions_observations": {
+    "workflow_id": 401590285,
+    "workflow_state": "active",
+    "push_event_query": {
+      "branch": "copilot/review-pinned-mgba-savedata",
+      "run_count": 0
+    },
+    "workflow_dispatch_query": {
+      "branch": "copilot/review-pinned-mgba-savedata",
+      "run_count": 0
+    },
+    "dispatch_capability": {
+      "configured": true,
+      "triggered_for_this_receipt": false,
+      "reason": "The available GitHub Actions integration exposes run listing, resource reads and logs, but no workflow-dispatch operation. A browser attempt was blocked by a TLS certificate error.",
+      "coverage_note": "A workflow_dispatch run would be a manual event, not push-event coverage."
+    },
+    "exact_head_pull_request_run": {
+      "run_id": 42335665791,
+      "event": "pull_request",
+      "head_sha": "21620b3cc005ccd5137a74cb69ce4d1c9b7f6067",
+      "conclusion": "success",
+      "job_id": 128291907557,
+      "job_name": "pinned-savedata-review",
+      "job_conclusion": "success",
+      "workflow_steps_passed": 22,
+      "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42335665791"
+    }
+  },
+  "bounded_alternative_verification": {
+    "classification": "EXACT_HEAD_PULL_REQUEST_CI_NOT_PUSH_CI",
+    "witness_record": "semantic-snapshots/independent-reviews/copilot-mgba-savedata/vfile-wrapper-allocation-failure.json",
+    "witness_record_sha256": "40bf0bc12a0808eabf988895dda8cb4f1b8f7d238460b3a39dd2e5e2ac2497e2",
+    "test_source": "tests/mgba_vfile_wrapper_alloc_failure.c",
+    "test_source_sha256": "fc322adeedd2e326df0b6b3fff661991e00c382983dc78a7d23bdc08b3c07797",
+    "build_source": "tests/CMakeLists.txt",
+    "build_source_sha256": "5f090446b82dc1a669084447396618748656cdca2a13a787ff9df05925f3f60e",
+    "local_runtime_log": "semantic-snapshots/independent-reviews/copilot-mgba-savedata/vfile-wrapper-allocation-local.log",
+    "local_runtime_log_sha256": "253e97bbe2b703696284382a2ceb8377c9cc0d805dc0d3cd6bb16817cb764c5c",
+    "pinned_source_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+    "pinned_source_identity_count": 8,
+    "native_assertions": {
+      "passed": 4,
+      "failed": 0
+    },
+    "evidence_verifier": {
+      "workflow_step": "Verify VFile wrapper-allocation evidence and mutation controls",
+      "result": "PASS",
+      "negative_controls_rejected": 16
+    },
+    "limits": [
+      "This successful Actions run is pull_request-event evidence, not push-event evidence.",
+      "The native test uses unchanged pinned memory.c and vfs-mem.c with synthetic linker allocation wrappers.",
+      "The GBA restore caller, full emulator, gameplay, physical Flash and durable persistence were not exercised."
+    ]
+  },
+  "phase1_state": {
+    "decision": "FAIL_INCOMPLETE",
+    "approved_dispositions": 0,
+    "shared_gate_or_register_edited": false
+  }
+}

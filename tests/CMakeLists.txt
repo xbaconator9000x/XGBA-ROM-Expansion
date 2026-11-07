@@ -22,6 +22,74 @@ set(PINNED_MGBA_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../upstream/mgba")
 if(NOT EXISTS "${PINNED_MGBA_ROOT}/src/gba/cart/matrix.c")
     message(FATAL_ERROR "Clone pinned mGBA into upstream/mgba before configuring")
 endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+  add_executable(xgba_mgba_rewind_restore_map_failure
+    mgba_rewind_restore_map_failure.c
+    "${PINNED_MGBA_ROOT}/src/core/rewind.c"
+    "${PINNED_MGBA_ROOT}/src/util/patch-fast.c"
+    "${PINNED_MGBA_ROOT}/src/util/memory.c"
+    "${PINNED_MGBA_ROOT}/src/util/vfs/vfs-mem.c")
+  target_include_directories(xgba_mgba_rewind_restore_map_failure PRIVATE
+    "${PINNED_MGBA_ROOT}/include")
+  target_compile_definitions(xgba_mgba_rewind_restore_map_failure PRIVATE
+    DISABLE_THREADING)
+  target_compile_options(xgba_mgba_rewind_restore_map_failure PRIVATE
+    -ffunction-sections -fdata-sections)
+  target_link_options(xgba_mgba_rewind_restore_map_failure PRIVATE
+    "LINKER:--gc-sections")
+  add_test(NAME xgba_mgba_rewind_restore_map_failure
+    COMMAND xgba_mgba_rewind_restore_map_failure)
+
+  add_executable(xgba_mgba_vfile_memchunk_unmap
+    mgba_vfile_memchunk_unmap.c
+    "${PINNED_MGBA_ROOT}/src/util/memory.c"
+    "${PINNED_MGBA_ROOT}/src/util/vfs/vfs-mem.c")
+  target_include_directories(xgba_mgba_vfile_memchunk_unmap PRIVATE
+    "${PINNED_MGBA_ROOT}/include")
+  add_test(NAME xgba_mgba_vfile_memchunk_unmap
+    COMMAND xgba_mgba_vfile_memchunk_unmap)
+
+  add_executable(xgba_mgba_vfile_memchunk_resize_lifetime
+    mgba_vfile_memchunk_resize_lifetime.c
+    "${PINNED_MGBA_ROOT}/src/util/memory.c"
+    "${PINNED_MGBA_ROOT}/src/util/vfs/vfs-mem.c")
+  target_include_directories(xgba_mgba_vfile_memchunk_resize_lifetime PRIVATE
+    "${PINNED_MGBA_ROOT}/include")
+  add_test(NAME xgba_mgba_vfile_memchunk_resize_lifetime
+    COMMAND xgba_mgba_vfile_memchunk_resize_lifetime)
+
+  add_executable(xgba_mgba_vfile_borrowed_seek_boundary
+    mgba_vfile_borrowed_seek_boundary.c
+    "${PINNED_MGBA_ROOT}/src/util/memory.c"
+    "${PINNED_MGBA_ROOT}/src/util/vfs/vfs-mem.c")
+  target_include_directories(xgba_mgba_vfile_borrowed_seek_boundary PRIVATE
+    "${PINNED_MGBA_ROOT}/include")
+  add_test(NAME xgba_mgba_vfile_borrowed_seek_boundary
+    COMMAND xgba_mgba_vfile_borrowed_seek_boundary)
+
+  add_executable(xgba_mgba_vfile_borrowed_short_write
+    mgba_vfile_borrowed_short_write.c
+    "${PINNED_MGBA_ROOT}/src/util/memory.c"
+    "${PINNED_MGBA_ROOT}/src/util/vfs/vfs-mem.c")
+  target_include_directories(xgba_mgba_vfile_borrowed_short_write PRIVATE
+    "${PINNED_MGBA_ROOT}/include")
+  add_test(NAME xgba_mgba_vfile_borrowed_short_write
+    COMMAND xgba_mgba_vfile_borrowed_short_write)
+
+  add_executable(xgba_mgba_vfile_wrapper_alloc_failure
+    mgba_vfile_wrapper_alloc_failure.c
+    "${PINNED_MGBA_ROOT}/src/util/memory.c"
+    "${PINNED_MGBA_ROOT}/src/util/vfs/vfs-mem.c")
+  target_include_directories(xgba_mgba_vfile_wrapper_alloc_failure PRIVATE
+    "${PINNED_MGBA_ROOT}/include")
+  target_compile_options(xgba_mgba_vfile_wrapper_alloc_failure PRIVATE
+    -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-free)
+  target_link_options(xgba_mgba_vfile_wrapper_alloc_failure PRIVATE
+    "LINKER:--wrap=malloc" "LINKER:--wrap=calloc" "LINKER:--wrap=free")
+  add_test(NAME xgba_mgba_vfile_wrapper_alloc_failure
+    COMMAND xgba_mgba_vfile_wrapper_alloc_failure)
+endif()
 add_subdirectory("${PINNED_MGBA_ROOT}" "${CMAKE_BINARY_DIR}/pinned-mgba")
 add_executable(xgba_mgba_bank_boundary "${CMAKE_CURRENT_SOURCE_DIR}/mgba_bank_boundary.c")
 target_link_libraries(xgba_mgba_bank_boundary PRIVATE mgba)
@@ -37,3 +105,17 @@ target_compile_definitions(xgba_mgba_bank_boundary PRIVATE ${_mgba_compile_defs}
 target_include_directories(xgba_mgba_bank_boundary PRIVATE
   "${PINNED_MGBA_ROOT}/include" "${CMAKE_BINARY_DIR}/pinned-mgba/include")
 add_test(NAME xgba_mgba_bank_boundary COMMAND xgba_mgba_bank_boundary)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+  add_executable(xgba_mgba_allocator_failure
+    mgba_allocator_failure.c
+    "${PINNED_MGBA_ROOT}/src/util/memory.c"
+    "${PINNED_MGBA_ROOT}/src/util/vfs/vfs-mem.c")
+  target_include_directories(xgba_mgba_allocator_failure PRIVATE
+    "${PINNED_MGBA_ROOT}/include")
+  target_compile_options(xgba_mgba_allocator_failure PRIVATE
+    -fno-builtin-calloc -fno-builtin-memcpy)
+  target_link_options(xgba_mgba_allocator_failure PRIVATE
+    "LINKER:--wrap=calloc" "LINKER:--wrap=memcpy")
+  add_test(NAME xgba_mgba_allocator_failure COMMAND xgba_mgba_allocator_failure)
+endif()

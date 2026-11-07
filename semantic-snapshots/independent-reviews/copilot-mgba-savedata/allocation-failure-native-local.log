@@ -1,0 +1,10 @@
+SCOPE original pinned memory.c and vfs-mem.c compiled unchanged; calloc/memcpy linker wrappers active
+PASS positive allocation copies five bytes into rounded eight-byte backing
+PASS positive allocation teardown returns true
+PASS backing allocation failure returns wrapper with null mapping
+PASS null-backed wrapper teardown returns true
+PASS failed initialization copy is intercepted and wrapper remains non-null
+PASS failed initialization teardown returns true
+PASS failed expansion is masked by successful write count with null mapping
+PASS failed expansion teardown returns true
+SUMMARY assertions=8 failures=0 max_backing_allocation=8

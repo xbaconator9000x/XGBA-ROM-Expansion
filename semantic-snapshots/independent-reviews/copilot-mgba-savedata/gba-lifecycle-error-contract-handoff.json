@@ -1,0 +1,384 @@
+{
+  "schema": "xgba.copilot.mgba_gba_savedata_lifecycle_error_contract_handoff.v1",
+  "reviewer": {
+    "identity": "GitHub Copilot Coding Agent (@copilot), reviewer-side PR #35 follow-up",
+    "source_packet_interpreter": "xbaconator9000x, PR #13 pinned GBA callback workpaper and fixture",
+    "identity_limit": "Attributable source/evidence handoff only; not a distinct human review or approval.",
+    "approval_eligible": false
+  },
+  "request_attribution": {
+    "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+    "pull_request": 35,
+    "comment_id": 6647254744,
+    "comment_author": "xbaconator9000x",
+    "comment_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/35#issuecomment-6647254744"
+  },
+  "scope": {
+    "repository": "mgba-emu/mgba",
+    "source_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+    "purpose": "Resolve bounded caller/API, dirty-state, RTC, and serialization-contract objections in six previously unselected Phase 1 source records; do not repeat the 20-file inventory or fd/stdio handoff.",
+    "subset": [
+      "src/gba/core.c",
+      "include/mgba/core/core.h",
+      "include/mgba/gba/core.h",
+      "include/mgba/internal/gba/gba.h",
+      "include/mgba/internal/gba/savedata.h",
+      "include/mgba/internal/defines.h"
+    ],
+    "excluded_prior_subsets": {
+      "teardown_records": [
+        "include/mgba-util/vfs.h",
+        "src/util/vfs/vfs-fd.c",
+        "src/util/vfs/vfs-file.c",
+        "src/gba/savedata.c",
+        "src/gba/gba.c"
+      ],
+      "fd_stdio_handoff": [
+        "include/mgba-util/vfs.h",
+        "src/util/vfs/vfs-fd.c",
+        "src/util/vfs/vfs-file.c",
+        "src/gba/savedata.c",
+        "src/gba/gba.c"
+      ]
+    },
+    "overall_file_verdict": "NEEDS_EVIDENCE",
+    "semantic_approval": false
+  },
+  "machine_dossier": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "git_blob_sha1": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+  },
+  "selected_files": [
+    {
+      "path": "src/gba/core.c",
+      "git_blob_sha1": "6bfc518bb8899205c07d1d0fc091a287cb42f874",
+      "source_sha256": "47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596",
+      "dossier_row_sha256": "3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784",
+      "verdict": "NEEDS_EVIDENCE",
+      "independent_approval": false,
+      "source_anchors": [
+        "src/gba/core.c:309-330",
+        "src/gba/core.c:1469-1506",
+        "src/gba/core.c:1641-1729"
+      ],
+      "source_scope": "Complete translation unit hash-pinned; inspect GBA core teardown, savedata clone/restore result sinks, and method wiring."
+    },
+    {
+      "path": "include/mgba/core/core.h",
+      "git_blob_sha1": "64ddf851ef00ab09416a9c1c9b5a88798fcd6fc8",
+      "source_sha256": "e77d0b72af5b76d9b66292968359122a15ab5c4c624d684af7ad339fa700e7a9",
+      "dossier_row_sha256": "0fb39db4601aad348aa35a4adbb7a4a41b05a26128957595547a95bc72208a87",
+      "verdict": "NEEDS_EVIDENCE",
+      "independent_approval": false,
+      "source_anchors": [
+        "include/mgba/core/core.h:56-57",
+        "include/mgba/core/core.h:161-164"
+      ],
+      "source_scope": "Complete public core interface hash-pinned; inspect deinit, savedataClone, and savedataRestore function-pointer contracts."
+    },
+    {
+      "path": "include/mgba/gba/core.h",
+      "git_blob_sha1": "5cb0e468c100730a65199e9daeda78c2a885227d",
+      "source_sha256": "9e9eb686f85856a6c9b659f0c99d4eb5f5c831120970d616f8554a448f558c8d",
+      "dossier_row_sha256": "08637ccef3dea51935b64aeea0a34d40008862ebc3eed75f7385df0394ebbd22",
+      "verdict": "NEEDS_EVIDENCE",
+      "independent_approval": false,
+      "source_anchors": [
+        "include/mgba/gba/core.h:13-17"
+      ],
+      "source_scope": "Complete GBA factory header hash-pinned; inspect the public creation boundary only."
+    },
+    {
+      "path": "include/mgba/internal/gba/gba.h",
+      "git_blob_sha1": "65e994dc63a304cc9fb207536f09bb2c8a6cf3e5",
+      "source_sha256": "b50fc8ae1467f9ac1c6be3ba8452e22027571ff5c886695edb9be529d7962d4e",
+      "dossier_row_sha256": "d6e61894ce31db089d3fd04e64e0938d1e689fb6c7498a8056fced405bf2bba0",
+      "verdict": "NEEDS_EVIDENCE",
+      "independent_approval": false,
+      "source_anchors": [
+        "include/mgba/internal/gba/gba.h:65-105",
+        "include/mgba/internal/gba/gba.h:145-146"
+      ],
+      "source_scope": "Complete internal GBA declaration hash-pinned; inspect embedded memory/callback state and void destroy contract."
+    },
+    {
+      "path": "include/mgba/internal/gba/savedata.h",
+      "git_blob_sha1": "6227be25e8c9d2c1cc14c06ded34389b96138577",
+      "source_sha256": "30481cada83cc0e3a88b55298f3081cc660e18e55ca7f5a57356e6f2a75224dc",
+      "dossier_row_sha256": "eaee2c8bdb65c51e4f40daeb80af916f57ed430c48c88286562363f687ca6de9",
+      "verdict": "NEEDS_EVIDENCE",
+      "independent_approval": false,
+      "source_anchors": [
+        "include/mgba/internal/gba/savedata.h:64-104",
+        "include/mgba/internal/gba/savedata.h:90-94",
+        "include/mgba/internal/gba/savedata.h:118-125"
+      ],
+      "source_scope": "Complete savedata declarations hash-pinned; inspect dirty/VFile state, RTC buffer, serialization, clone, and restore signatures."
+    },
+    {
+      "path": "include/mgba/internal/defines.h",
+      "git_blob_sha1": "67b8ec8fd2f51ee2c0c6231443af752158397b03",
+      "source_sha256": "167896b30ed7f1cd3f9e5cbc99ee994a48a094b3e95989ab2f9e1ebf8cf4b46b",
+      "dossier_row_sha256": "05a6cd7248412bb03041f85841bf51db1f6a52e4b27bea5ac19c15ffa36a7bc2",
+      "verdict": "NEEDS_EVIDENCE",
+      "independent_approval": false,
+      "source_anchors": [
+        "include/mgba/internal/defines.h:9-28"
+      ],
+      "source_scope": "Complete internal helper header hash-pinned; inspect exact dirty-state expiry predicate executed by the PR13 fixture."
+    }
+  ],
+  "objection_resolutions": [
+    {
+      "id": "core-savedata-result-sinks",
+      "source_files": [
+        "src/gba/core.c",
+        "include/mgba/core/core.h"
+      ],
+      "source_lines": [
+        "src/gba/core.c:309-330",
+        "src/gba/core.c:1469-1506",
+        "include/mgba/core/core.h:56-57",
+        "include/mgba/core/core.h:161-164"
+      ],
+      "resolution": "Source contracts show deinit is void; savedataClone returns zero both for no data and several failures, allocates without an explicit null check before VFileFromMemory, and closes its temporary VFile without consuming that close result; savedataRestore returns the load result only on writeback, while the mask path returns its initialized true value. This bounds what these core methods can report, without inferring downstream caller behavior.",
+      "negative_test_evidence": {
+        "fixture_path": "tests/phase1_mgba_vfs_fd_callback_native.c",
+        "fixture_sha256": "4963287bf10a7e2a3cd5e52788bc3aa518d70319fafb8e580c1a9b935059b6d4",
+        "result": "NOT_EXERCISED",
+        "reason": "The runner does not compile src/gba/core.c or call the mCore savedataClone/savedataRestore methods."
+      },
+      "remaining": "Trace and test actual mCore consumers, allocation/constructor and close/error behavior; distinguish no-save from failure at the consumer boundary."
+    },
+    {
+      "id": "destroy-and-caller-closure",
+      "source_files": [
+        "src/gba/core.c",
+        "include/mgba/gba/core.h",
+        "include/mgba/internal/gba/gba.h"
+      ],
+      "source_lines": [
+        "src/gba/core.c:309-330",
+        "src/gba/core.c:1641-1649",
+        "include/mgba/gba/core.h:13-17",
+        "include/mgba/internal/gba/gba.h:145-146"
+      ],
+      "resolution": "The GBA factory returns an mCore pointer; its registered deinit has a void contract and calls ARMDeinit then GBADestroy before freeing the board. The GBA declaration likewise exposes void GBADestroy. This identifies the source-level error-reporting boundary, not whether all teardown effects have completed durably.",
+      "negative_test_evidence": {
+        "fixture_path": "tests/phase1_mgba_vfs_fd_callback_native.c",
+        "fixture_sha256": "4963287bf10a7e2a3cd5e52788bc3aa518d70319fafb8e580c1a9b935059b6d4",
+        "result": "NOT_EXERCISED",
+        "reason": "The host fixture executes extracted cleanup/frame functions and a real POSIX VFileFD; it does not initialize or deinitialize the full mCore/GBA."
+      },
+      "remaining": "Complete the external embedder/frontend caller graph and destruction tests before assessing shutdown-save success."
+    },
+    {
+      "id": "rtc-and-serialization-contract",
+      "source_files": [
+        "include/mgba/internal/gba/savedata.h"
+      ],
+      "source_lines": [
+        "include/mgba/internal/gba/savedata.h:64-94",
+        "include/mgba/internal/gba/savedata.h:118-125"
+      ],
+      "resolution": "The pinned declarations place dirty state, active and real VFiles, writeback masking, and an RTC time/control/latch buffer in savedata state, and declare RTC read/write plus save-state serialize/deserialize methods. Declarations alone do not specify implementation effects or durable RTC handling.",
+      "negative_test_evidence": {
+        "fixture_path": "tests/phase1_mgba_vfs_fd_callback_native.c",
+        "fixture_sha256": "4963287bf10a7e2a3cd5e52788bc3aa518d70319fafb8e580c1a9b935059b6d4",
+        "result": "NOT_EXERCISED",
+        "reason": "The fixture replaces GBASavedataRTCWrite with a counter stub and does not compile the serializer or exercise RTC data, save-state round trips, restart, or persistence."
+      },
+      "remaining": "Trace RTC and serialization implementations and their consumers; add native round-trip/restart evidence before resolving state-persistence semantics."
+    },
+    {
+      "id": "dirty-transition-is-not-sync-result",
+      "source_files": [
+        "include/mgba/internal/defines.h",
+        "include/mgba/internal/gba/savedata.h"
+      ],
+      "source_lines": [
+        "include/mgba/internal/defines.h:17-28",
+        "include/mgba/internal/gba/savedata.h:84-85",
+        "include/mgba/internal/gba/savedata.h:118-121"
+      ],
+      "resolution": "The helper clears dirty state and returns true only after a strict greater-than-15-frame age; it exposes no VFile result. The PR13 host fixture executes this pinned helper with the original GBASavedataClean and GBAFrameEnded bodies, injects Linux msync(MS_ASYNC) failure, and observes cleared dirty state, no RTC-write call, and a savedataUpdated callback. The callback is therefore not a source-level proof of sync success.",
+      "negative_test_evidence": {
+        "fixture_path": "tests/phase1_mgba_vfs_fd_callback_native.c",
+        "fixture_sha256": "4963287bf10a7e2a3cd5e52788bc3aa518d70319fafb8e580c1a9b935059b6d4",
+        "result": "EXECUTED_NATIVE_HOST_ONLY",
+        "reason": "This is a Linux host source-extracted fixture with injected msync failure, not a full mGBA runtime, cold restart, user-facing frontend, or physical Flash test."
+      },
+      "remaining": "Determine whether caller notification and dirty-state consumption are acceptable across actual runtime and VFile configurations; test persistence/retry semantics beyond the host fixture."
+    },
+    {
+      "id": "transitive-dependency-and-license-closure",
+      "source_files": [
+        "src/gba/core.c",
+        "include/mgba/core/core.h",
+        "include/mgba/gba/core.h",
+        "include/mgba/internal/gba/gba.h",
+        "include/mgba/internal/gba/savedata.h",
+        "include/mgba/internal/defines.h"
+      ],
+      "source_lines": [
+        "src/gba/core.c:1-20",
+        "include/mgba/core/core.h:1-20",
+        "include/mgba/gba/core.h:1-20",
+        "include/mgba/internal/gba/gba.h:1-20",
+        "include/mgba/internal/gba/savedata.h:1-20",
+        "include/mgba/internal/defines.h:1-20"
+      ],
+      "resolution": "All six complete files carry the MPL-2.0 notice in their leading lines and their Git blobs, full-file byte hashes, and dossier rows are bound below. The GBA and core headers include or embed additional internal/public types; this six-file subset is not a complete transitive compile/runtime dependency closure and implies no combined-distribution licensing conclusion.",
+      "negative_test_evidence": {
+        "fixture_path": "tests/phase1_mgba_vfs_fd_callback_native.c",
+        "fixture_sha256": "4963287bf10a7e2a3cd5e52788bc3aa518d70319fafb8e580c1a9b935059b6d4",
+        "result": "PARTIAL_SOURCE_IDENTITY_ONLY",
+        "reason": "The PR13 runner hash-checks its own 15-file callback closure, which is not the same as the six selected files or complete savedata dependency graph."
+      },
+      "remaining": "Complete the implementation and caller dependency/license inventory, and obtain required reviewer/receipt validation."
+    }
+  ],
+  "pr13_evidence_provenance": {
+    "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+    "branch": "phase1/mgba-savedata-boundary-witness-20261027",
+    "head_reviewed": "d4a753a8909f364ed133eda4b4253a06a985b9ab",
+    "workpaper": {
+      "path": "docs/phase1-review-readiness/mgba-gba-savedata-callback-failure-20261102.md",
+      "sha256": "e27d8a3069db06230192db21d8ce3365b3ddcdf75611d69068cfe50a3deb3ac8"
+    },
+    "runner": {
+      "path": "tools/phase1_mgba_vfs_fd_callback_native.py",
+      "sha256": "cc67ed3f5fd9b3a6a9e7f30076b38422dc19a43b3530a6576b97b4f1ed13bb53"
+    },
+    "fixture": {
+      "path": "tests/phase1_mgba_vfs_fd_callback_native.c",
+      "sha256": "4963287bf10a7e2a3cd5e52788bc3aa518d70319fafb8e580c1a9b935059b6d4"
+    },
+    "fixture_test_scope": {
+      "original_sources_executed": [
+        "src/util/vfs/vfs-fd.c",
+        "src/gba/savedata.c:GBASavedataClean",
+        "src/gba/gba.c:GBAFrameEnded",
+        "include/mgba/internal/defines.h:mSavedataClean",
+        "src/core/scripting.c:callback macro and registration"
+      ],
+      "test_doubles": [
+        "GBASavedataRTCWrite increments a fixture counter rather than executing the RTC implementation.",
+        "Inactive GBA subsystems and the script event sink are narrow host fixture substitutes."
+      ],
+      "not_tested": [
+        "src/gba/core.c savedataClone/savedataRestore or full mCore teardown",
+        "GBASavedataSerialize/Deserialize and RTC data round trip",
+        "cold restart, real frontend behavior, stock gameplay, power-loss durability, or physical Flash"
+      ]
+    },
+    "reproduction": {
+      "execution_class": "Local agent Linux native reproduction using individually fetched and hash-checked immutable source files; not GitHub Actions and not a full mGBA checkout.",
+      "local_run_log": {
+        "path": "semantic-snapshots/independent-reviews/copilot-mgba-savedata/gba-lifecycle-native-local-run.log",
+        "sha256": "95d5ad944151504b3b80293c9b064ab6a7ec3d60a2aa7244581f76905efbd939"
+      },
+      "command": "python3 /tmp/mgba-lifecycle-review/pr13/tools/phase1_mgba_vfs_fd_callback_native.py --source-dir /tmp/mgba-lifecycle-review --harness /tmp/mgba-lifecycle-review/pr13/tests/phase1_mgba_vfs_fd_callback_native.c",
+      "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1)",
+      "compiled_artifact_sha256": "59b757bb3a6622e839e5832239637104d6c354fd7b69dbbcfb3da2eb17c67572",
+      "runner_reported_source_tree_identity_verified": false,
+      "source_mutations_rejected": 3,
+      "evidence_mutations_rejected": 8,
+      "observed_output": [
+        "PHASE1_GBA_CALLBACK_CASE failure_async_ms=1 failure_rtc=0 failure_dirty=0 failure_script_events=1 retry_async_ms=0 retry_script_events=1 retry_rtc=0 new_write_success_async_ms=2 success_rtc=1 success_script_events=2",
+        "PHASE1_GBA_CALLBACK_DONE"
+      ],
+      "observations": {
+        "failed_sync_calls": 1,
+        "failed_sync_dirty_after_clean": 0,
+        "failed_sync_rtc_writes": 0,
+        "rtc_writes_after_clean_next_frame": 0,
+        "rtc_writes_after_success": 1,
+        "script_notifications_after_clean_next_frame": 1,
+        "script_notifications_after_failed_sync": 1,
+        "script_notifications_after_success": 2,
+        "sync_calls_after_new_write_then_success": 2,
+        "sync_retries_without_new_write": 0
+      },
+      "observations_canonical_sha256": "bb2010e085ba10656b9d66594b6fed9f700bb444e8609f915fd82c7b801bbae4"
+    },
+    "github_actions": {
+      "pr13_current_head_run": {
+        "run_id": 41882603072,
+        "event": "pull_request",
+        "head_sha": "d4a753a8909f364ed133eda4b4253a06a985b9ab",
+        "conclusion": "action_required",
+        "job_count": 0
+      },
+      "pr13_prior_baseline_run": {
+        "run_id": 41485392440,
+        "head_sha": "6abd6cb778771dfcf3079e404cc8334f16765c0d",
+        "conclusion": "success",
+        "job_id": 125414254600,
+        "limitation": "Predates callback witness integration; not evidence that the callback fixture ran in Actions."
+      },
+      "pr13_push_event_runs_for_reviewed_branch": 0
+    }
+  },
+  "pr35_actions_observation_at_review_head": {
+    "review_head": "fba327c6661b7cfb94c35618056882c374e5a711",
+    "run_id": 41944711116,
+    "event": "pull_request",
+    "conclusion": "action_required",
+    "job_count": 0,
+    "push_event_runs_for_reviewed_branch": 0
+  },
+  "review_verifier": {
+    "path": "tools/copilot_mgba_gba_lifecycle_handoff_verify.py",
+    "purpose": "Fail-closed, source/dossier/evidence identity verifier; does not execute or approve mGBA behavior.",
+    "negative_controls": [
+      "request-attribution",
+      "source-revision",
+      "remove-selected-source",
+      "add-out-of-scope-source",
+      "mutate-git-blob",
+      "mutate-source-digest",
+      "mutate-dossier-row",
+      "promote-file-verdict",
+      "claim-independent-approval",
+      "mutate-source-anchor",
+      "remove-objection",
+      "change-fixture-identity",
+      "mutate-native-observation",
+      "claim-actions-pass",
+      "claim-push-coverage",
+      "erase-license-gap",
+      "promote-phase1-gate",
+      "drop-unresolved-obligations",
+      "mutate-source-bytes"
+    ],
+    "negative_control_count": 19
+  },
+  "licensing_and_dependency": {
+    "notice": "MPL-2.0",
+    "notice_checked_in_leading_bytes": true,
+    "whole_file_hashes_and_dossier_rows_pinned": true,
+    "complete_transitive_dependency_closure": false,
+    "combined_distribution_conclusion": false
+  },
+  "phase1_state": {
+    "decision": "FAIL_INCOMPLETE",
+    "p0_approved_before": 0,
+    "p0_approved_after": 0,
+    "approved_before": 0,
+    "approved_after": 0,
+    "phase2_started": false,
+    "shared_gate_or_register_edited": false
+  },
+  "unresolved_obligations": [
+    "All six dispositions remain NEEDS_EVIDENCE; this handoff is not an approval or receipt.",
+    "Trace actual mCore savedataClone/savedataRestore and void deinit consumers, including callers that may conflate no save with failure.",
+    "Trace full GBA destroy/unload, savedata VFile and RTC implementation dependency closure; the selected headers are not the complete closure.",
+    "Execute RTC and serialized savedata/state round trips with real pinned implementation bodies, then test cold restart and persistence separately.",
+    "Determine whether dirty-state clearing, skipped retry, RTC-write suppression, and savedataUpdated notification after injected sync failure match runtime/frontend requirements.",
+    "The reproduced callback result is Linux host evidence only; it is not mGBA gameplay, physical Flash, power-loss durability, or a full translation-unit test.",
+    "PR13 current-head and PR35 current-head workflow runs are action_required with zero jobs; no push-event coverage was found. Do not treat older successful runs or the local reproduction as exact-head CI.",
+    "Complete dependency/license review, attributable maintainer validation, and required receipts before considering any disposition promotion."
+  ]
+}

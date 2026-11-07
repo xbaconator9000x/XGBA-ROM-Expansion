@@ -1,0 +1,204 @@
+{
+  "schema": "xgba.copilot.mgba_savedata_review.v1",
+  "review_date": "2026-10-30",
+  "scope": "Phase 1 mGBA savedata source semantics only",
+  "source_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "review_verifier_sha256": "bd6d29af0e144cd77b990e7ff2fb3434b4b0060f1eca03112b103e9b0b467564",
+  "review_identity": {
+    "reviewer": "GitHub Copilot Coding Agent (@copilot), task-specific source review",
+    "prior_interpretation": "xbaconator9000x analyst packets in PR #12 (head 9ed9d2630a098525e7703853de0b804c56658da9) and PR #13 (head 9bf2b6f31c7e0ebf00e1ebaf6aee6f0930c90444); neither packet is treated as approval",
+    "prior_evidence": "PR #13 mock-VFile run #40480788248 at 9bf2b6f31c7e0ebf00e1ebaf6aee6f0930c90444; native Matrix/peripheral baseline #40205086061 at d2c31ac826209752a249f9694e50d5ed5cc3ef97, original fixture SHA-256 6d7f590a2f4d53ec154184f16dd35748febdb70e979f5a8eb65f6b544e57dde1",
+    "independent_maintainer_approval": false
+  },
+  "phase1_gate": "FAIL_INCOMPLETE",
+  "approval_accounting": {
+    "approved_before": 0,
+    "approved_after": 0,
+    "inventory_total": 14834,
+    "phase1_completion_claimed": false
+  },
+  "protected_state_snapshot": {
+    "commit": "d9a46bbdf50cf67a6b52322a68f56caace2aef7e",
+    "sha256": {
+      "docs/PHASE1_STATUS.md": "248b931af27d7fa38c18d636b8e7a0f09e6b6bb698117ab55e7fbd0d0e491e49",
+      "docs/PHASE1_INDEPENDENT_SEMANTIC_REVIEW_QUEUE.md": "91e29885742be869d5eb382d2bff3190afc0e62ddf2777a9a6e1038d05bb8efb",
+      "semantic-snapshots/independent-reviews/queue.json": "37bd0e2b0de315d6f8f1bc34d3f6c3951d4246e81892882afc7f4ab179ae5c7a",
+      "semantic-snapshots/current/phase1_mapping_gate.json": "7df6ceb6641ccb24cdc114f0ed6af10bc0ecbf3b42db484b26be41907e96d953"
+    }
+  },
+  "source_blobs": {
+    "include/mgba-util/vfs.h": {
+      "git_blob_sha1": "6c9bd299153af4c3c9cd5487f2425a2481331ee5",
+      "sha256": "4c829529f21c424196b4d1efe25ce11227312437cf1aa5028cae94a741bf6656"
+    },
+    "include/mgba/internal/gba/memory.h": {
+      "git_blob_sha1": "0aad912613e726560d06bbdbf6061986e69e5842",
+      "sha256": "fca671fc3bc5ab06641f6259ebf092688e1ba1ddd8eb80e4fba9a43cda44fb41"
+    },
+    "include/mgba/internal/gba/savedata.h": {
+      "git_blob_sha1": "6227be25e8c9d2c1cc14c06ded34389b96138577",
+      "sha256": "30481cada83cc0e3a88b55298f3081cc660e18e55ca7f5a57356e6f2a75224dc"
+    },
+    "src/gba/core.c": {
+      "git_blob_sha1": "6bfc518bb8899205c07d1d0fc091a287cb42f874",
+      "sha256": "47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596"
+    },
+    "src/gba/dma.c": {
+      "git_blob_sha1": "da2a800ba48cb32d6e10e42c3b3527ef406bad22",
+      "sha256": "cd4c795f69ec16373e475b4c902e863e4a6db61cd2b9f1c4d851496d3202b9d1"
+    },
+    "src/gba/gba.c": {
+      "git_blob_sha1": "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e",
+      "sha256": "e84eaba17f6c96ac7b78431afaee79d7633dd50118f92e31e4432793f80c4c7b"
+    },
+    "src/gba/memory.c": {
+      "git_blob_sha1": "aa01fdcc7d6ae5ecdf8753efc63b3a60a1e8d3dc",
+      "sha256": "501dbbca7d5d7cbaa86240de2d6a4e2e1186b50f74dde11bcf2f323c4af8c437"
+    },
+    "src/gba/overrides.c": {
+      "git_blob_sha1": "566968162b29c90167199ef43f3d7a99248798e8",
+      "sha256": "c349de92c7a8a3326abfabdbda03c1d151f546e0e5736d4982fa30eda1976a65"
+    },
+    "src/gba/savedata.c": {
+      "git_blob_sha1": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "sha256": "9887e36795ae51e39eecad09565d27d3feabe316d3e595b17f288e3205e13161"
+    },
+    "src/gba/serialize.c": {
+      "git_blob_sha1": "a307a51e751f412c64a7378323c56758304ebe85",
+      "sha256": "23947295749e6eeb27ab13d2a6d4c18bf88b587bcf3109e6d3e6bab5a5658dc3"
+    },
+    "src/gba/sharkport.c": {
+      "git_blob_sha1": "f6b908f3aee7e69625253f5b96da93afc9bd333e",
+      "sha256": "e65a76347acdd6c054ce67ff1da6e7d26e69275fc694c8f32e19a1452052b364"
+    },
+    "src/util/memory.c": {
+      "git_blob_sha1": "89646d3bcb5a23e6c75ee5ea8ee8dfd7b940027b",
+      "sha256": "920e7bc5d3ddf4bc69c864d526c9bd141ece547894e9430f5bde3c7fe0acc1e5"
+    },
+    "src/util/vfs.c": {
+      "git_blob_sha1": "3158c52659a83333cb23aeb0dd7ea4bba35908fc",
+      "sha256": "7b94fe172db57a97fef22047e79378bba3c8848b0808bca014d3a6554c1adc06"
+    },
+    "src/util/vfs/vfs-fd.c": {
+      "git_blob_sha1": "2535bd0fb76740745ae038d5523ead28658f1035",
+      "sha256": "0073a68b6688f1baa26acaf609af52e9f29308605e449e7c3182c9f4d768da44"
+    },
+    "src/util/vfs/vfs-file.c": {
+      "git_blob_sha1": "4a63e53f842b31b24d6188e6525ddcf121a0c7da",
+      "sha256": "77737a3fa897db96e31f1f5e56faa0c06afa0cc86c7697642b28026308ba0921"
+    },
+    "src/util/vfs/vfs-mem.c": {
+      "git_blob_sha1": "048194e2dd2d0b3b395a852d2092c694663c88a2",
+      "sha256": "6b5951a0cd634d398a69ce57766298bd32d5e6410ee0aa4e8b8894c6aaa5829b"
+    }
+  },
+  "file_dispositions": [
+    {"path": "src/gba/savedata.c", "git_blob_sha1": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb", "verdict": "NEEDS_EVIDENCE", "independent_approval": false, "reason": "The Linux pinned native run confirms initialization and promotion distinctions, but signed-error, RTC, mapping-failure, cross-platform and durable-persistence obligations remain open."},
+    {"path": "include/mgba/internal/gba/savedata.h", "git_blob_sha1": "6227be25e8c9d2c1cc14c06ded34389b96138577", "verdict": "NEEDS_EVIDENCE", "independent_approval": false, "reason": "State/API contract is pinned; exact compiled layout variants and all lifecycle callers remain outside this run."},
+    {"path": "include/mgba-util/vfs.h", "git_blob_sha1": "6c9bd299153af4c3c9cd5487f2425a2481331ee5", "verdict": "NEEDS_EVIDENCE", "independent_approval": false, "reason": "Signed read/write/size and unchecked map/truncate contracts are source-confirmed; backend-wide failure behavior is not fully exercised."},
+    {"path": "include/mgba/internal/gba/memory.h", "git_blob_sha1": "0aad912613e726560d06bbdbf6061986e69e5842", "verdict": "NEEDS_EVIDENCE", "independent_approval": false, "reason": "Pinned save-size constants were checked; wider memory ABI review is not part of this lane."},
+    {"path": "src/gba/memory.c", "git_blob_sha1": "aa01fdcc7d6ae5ecdf8753efc63b3a60a1e8d3dc", "verdict": "NEEDS_EVIDENCE", "independent_approval": false, "reason": "Save bus auto-detection and direct initializer callers are traced; complete memory-bus semantic review remains out of scope."},
+    {"path": "src/gba/serialize.c", "git_blob_sha1": "a307a51e751f412c64a7378323c56758304ebe85", "verdict": "NEEDS_EVIDENCE", "independent_approval": false, "reason": "Savedata state serialization/deserialization calls are traced, but save-byte identity and restore interleavings were not exercised here."},
+    {"path": "src/gba/gba.c", "git_blob_sha1": "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e", "verdict": "NEEDS_EVIDENCE", "independent_approval": false, "reason": "VFile ownership, replacement and clean caller paths are traced; replacement failure and long-lived persistence behavior remain untested."},
+    {"path": "src/gba/core.c", "git_blob_sha1": "6bfc518bb8899205c07d1d0fc091a287cb42f874", "verdict": "NEEDS_EVIDENCE", "independent_approval": false, "reason": "Clone/restore callers expose the ignored-output-write result; broader caller contracts and allocation-failure cases remain open."},
+    {"path": "src/gba/overrides.c", "git_blob_sha1": "566968162b29c90167199ef43f3d7a99248798e8", "verdict": "NEEDS_EVIDENCE", "independent_approval": false, "reason": "Forced save-type and RTC-load reachability is traced; game-specific override behavior is not exhaustively reviewed."},
+    {"path": "src/gba/dma.c", "git_blob_sha1": "da2a800ba48cb32d6e10e42c3b3527ef406bad22", "verdict": "NEEDS_EVIDENCE", "independent_approval": false, "reason": "EEPROM DMA read/write entry points are traced; serial bit timing and all transfer lengths are not certified."},
+    {"path": "src/gba/sharkport.c", "git_blob_sha1": "f6b908f3aee7e69625253f5b96da93afc9bd333e", "verdict": "NEEDS_EVIDENCE", "independent_approval": false, "reason": "Flash growth and import/export consumers are located; all import size/checksum paths are not reviewed."},
+    {"path": "src/util/vfs.c", "git_blob_sha1": "3158c52659a83333cb23aeb0dd7ea4bba35908fc", "verdict": "NEEDS_EVIDENCE", "independent_approval": false, "reason": "Linux backend selection is pinned; platform-specific backend selection remains untested."},
+    {"path": "src/util/vfs/vfs-fd.c", "git_blob_sha1": "2535bd0fb76740745ae038d5523ead28658f1035", "verdict": "NEEDS_EVIDENCE", "independent_approval": false, "reason": "POSIX FD map/growth/persistence bytes were exercised; Windows and non-mmap branches and injected operation failures remain open."},
+    {"path": "src/util/vfs/vfs-mem.c", "git_blob_sha1": "048194e2dd2d0b3b395a852d2092c694663c88a2", "verdict": "NEEDS_EVIDENCE", "independent_approval": false, "reason": "Zero-initializing expansion, no-expand memory VFile and read-only writer semantics were source-traced; only the read-only writer was exercised natively."},
+    {"path": "src/util/vfs/vfs-file.c", "git_blob_sha1": "4a63e53f842b31b24d6188e6525ddcf121a0c7da", "verdict": "NEEDS_EVIDENCE", "independent_approval": false, "reason": "stdio growth writes zero chunks and mapping copies are source-traced; backend was not enabled in the test build."},
+    {"path": "src/util/memory.c", "git_blob_sha1": "89646d3bcb5a23e6c75ee5ea8ee8dfd7b940027b", "verdict": "NEEDS_EVIDENCE", "independent_approval": false, "reason": "Anonymous allocations are confirmed calloc-zeroed; cross-platform allocator and allocation-failure behavior remain open."}
+  ],
+  "objections_and_resolution": [
+    {
+      "id": "flash-direct-growth",
+      "source": "src/gba/savedata.c",
+      "git_blob_sha1": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "lines": [275, 294],
+      "objection": "PR #13's mock's zero-extension cannot by itself establish the real VFile result; the direct Flash1M growth path does not explicitly fill a pre-existing 64-KiB file's second bank.",
+      "independent_resolution": "Confirmed on the pinned Linux VFileFD backend: ftruncate grows the file before MAP_SHARED mapping; bytes in the added bank read as 0x00 both through savedata->data and a separate file descriptor. This is a backend-specific native observation, not a universal platform claim.",
+      "evidence": ["src/util/vfs/vfs-fd.c:232-244", "tests/mgba_bank_boundary.c:native_savedata_flash_direct_growth_zero_fills_new_bank"],
+      "status": "CONFIRMED_FOR_TESTED_BACKEND"
+    },
+    {
+      "id": "eeprom-direct-init-growth",
+      "source": "src/gba/savedata.c",
+      "git_blob_sha1": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "lines": [299, 325],
+      "objection": "A direct 8-KiB EEPROM initialization fills only bytes below the 512-byte threshold; PR #13's result must be checked against a real backend.",
+      "independent_resolution": "Confirmed on pinned Linux VFileFD for both a pre-existing 512-byte save and an empty file. Existing 512-byte contents persist and the added upper range is 0x00; an empty file gets 0xFF only in its first 512 bytes. The paired empty 512-byte save control initializes its entire range to 0xFF.",
+      "evidence": ["src/gba/savedata.c:310-323", "tests/mgba_bank_boundary.c:native_savedata_eeprom_direct_growth_zero_fills_upper_range", "tests/mgba_bank_boundary.c:native_savedata_eeprom_8k_empty_erases_only_first_512_bytes", "tests/mgba_bank_boundary.c:native_savedata_eeprom_512_empty_file_erases_entire_save"],
+      "status": "CONFIRMED_FOR_TESTED_BACKEND"
+    },
+    {
+      "id": "promotion-paths",
+      "source": "src/gba/savedata.c",
+      "git_blob_sha1": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "lines": [485, 505, 759, 777],
+      "objection": "The statement that promotion routines fill new storage is incomplete: both routines return early without a VFile, before filling any new bytes.",
+      "independent_resolution": "Pinned native Linux file-backed Flash and EEPROM promotion writes 0xFF into the new range. Native anonymous Flash promotion leaves the new bank zero; anonymous EEPROM promotion leaves untouched upper bytes zero (the first explicitly written byte becomes 0x80).",
+      "evidence": ["tests/mgba_bank_boundary.c:native_savedata_flash_bank_promotion_erases_new_bank", "tests/mgba_bank_boundary.c:native_savedata_flash_anonymous_promotion_leaves_new_bank_zero", "tests/mgba_bank_boundary.c:native_savedata_eeprom_promotion_erases_upper_range", "tests/mgba_bank_boundary.c:native_savedata_eeprom_anonymous_promotion_leaves_unwritten_bytes_zero"],
+      "status": "FILE_PROMOTION_CONFIRMED; ANONYMOUS_PROMOTION_ASSUMPTION_REJECTED"
+    },
+    {
+      "id": "signed-vfile-io",
+      "source": "src/gba/savedata.c",
+      "git_blob_sha1": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "lines": [137, 167, 194, 225],
+      "objection": "The VFile interface returns signed ssize_t, but clone/load copy paths pass read counts to size_t write arguments and do not consistently propagate output errors.",
+      "independent_resolution": "Native VFileFromConstMemory refuses writes with -1. GBASavedataClone nevertheless reports success after copying from a valid native FD VFile, confirming ignored destination-write failures. The separate negative-source-read conversion and load-path behavior remain source-only and need fault injection.",
+      "evidence": ["include/mgba-util/vfs.h:43-50", "src/util/vfs/vfs-mem.c:266-271", "tests/mgba_bank_boundary.c:native_savedata_clone_reports_success_after_readonly_output_error"],
+      "status": "PARTIALLY_CONFIRMED; ERROR-INJECTION_EVIDENCE_NEEDED"
+    },
+    {
+      "id": "rtc-and-map-failures",
+      "source": "src/gba/savedata.c",
+      "git_blob_sha1": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "lines": [279, 294, 310, 323, 644, 666],
+      "objection": "Negative VFile sizes and failed truncate/map operations are not checked before pointer arithmetic or memset; RTCRead converts a signed read result to size_t before checking its length.",
+      "independent_resolution": "Source confirms the unchecked conversions and operations; VFileFD can return -1 from size/fstat and NULL from map. The native run did not inject those failures or execute RTCRead failure paths.",
+      "evidence": ["include/mgba-util/vfs.h:42-50", "src/util/vfs/vfs-fd.c:135-148", "src/util/vfs/vfs-fd.c:232-244", "src/gba/overrides.c:334-348"],
+      "status": "NEEDS_RUNTIME_ERROR-PATH_EVIDENCE"
+    },
+    {
+      "id": "persistence-and-rtc-trailer",
+      "source": "src/gba/savedata.c",
+      "git_blob_sha1": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "lines": [586, 638],
+      "objection": "A passing mapped-memory observation does not establish durable save persistence, RTC trailer correctness, or recovery after short writes/remap failures.",
+      "independent_resolution": "The native run checked visible on-disk bytes for tested extension/promotion paths only. Clean/sync and RTC unmap/write/remap ordering was traced but not power-failure or fault-injection tested.",
+      "evidence": ["src/gba/savedata.c:586-638", "src/util/vfs/vfs-fd.c:246-280"],
+      "status": "NEEDS_DURABILITY_AND_RTC_EVIDENCE"
+    }
+  ],
+  "native_run": {
+    "source_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+    "command": "bash tests/run_pinned_mgba_boundary.sh",
+    "run_kind": "PINNED_NATIVE_MGBA_STATIC_LIBRARY_WITH_POSIX_VFILEFD_AND_SYNTHETIC_ROM",
+    "test_source_sha256": "233206a92473469d5ebcd74cdcdedaf6e49395cb67b0cbe19cb2d3a0e2fead18",
+    "runtime_log_sha256": "334addf291ce91cd7f2419b7dc8b4780b63825959ce28c8f13af3aa5c7e23000",
+    "configure_log_sha256": "e67a13c738bdbfd8e8b39875e3625a852f81f9ec4da04d7fb83924d7cfab5612",
+    "build_log_sha256": "4f40f5d3e6bd02dfd9ab189490915f1ba0685e19c06da84c00b86e90159725ea",
+    "revision_evidence_sha256": "6283a270bf7e86ff1a6a4b01a69041c350a2f35f451239400bfaaddf3296c78a",
+    "assertions_passed": 43,
+    "savedata_assertions_passed": 9,
+    "native_matrix_gap_observations": 4,
+    "native_semantic_approval": false,
+    "phase1_mapping_complete": false
+  },
+  "negative_controls": {
+    "source_mutations_rejected": 3,
+    "native_savedata_control": "EEPROM512 empty-file full 0xFF initialization, contrasted with 8-KiB EEPROM's partial fill",
+    "native_error_path": "read-only VFileFromConstMemory write returns -1 while GBASavedataClone reports success"
+  },
+  "validation_command": "python3 tools/copilot_mgba_savedata_review.py --checkout upstream/mgba --record semantic-snapshots/independent-reviews/copilot-mgba-savedata/review.json --native-log semantic-snapshots/independent-reviews/copilot-mgba-savedata/native-run.log --test-source tests/mgba_bank_boundary.c",
+  "unresolved_obligations": [
+    "Inject negative VFile read, short/failed write, negative size, failed truncate, NULL map, failed unmap and failed sync; verify cleanup and no invalid pointer use.",
+    "Exercise GBASavedataLoad's copy/extension path and RTCRead's negative/short read path under sanitizers.",
+    "Verify Windows, stdio VFile, 3DS and PSP2 backend semantics; this executable ran Linux POSIX VFileFD only.",
+    "Trace RTC trailer seek/unmap/write/remap and Flash bank pointer restoration under remap/write failure.",
+    "Test crash/power-loss durability, host save tooling/editor interoperability and user-visible game saves.",
+    "Review all 800 source lines and cross-file obligations with a maintainer before proposing any independently approved file disposition; no approval is requested here."
+  ]
+}

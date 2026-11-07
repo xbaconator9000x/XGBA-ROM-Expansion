@@ -1,0 +1,193 @@
+{
+  "schema": "xgba.copilot.mgba_savedata_vfile_borrowed_short_write.v1",
+  "review": {
+    "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+    "pull_request": 35,
+    "request_comment_id": 6704045884,
+    "expected_parent_head": "d4e26e193ab93b48e95379352521316adeadb272",
+    "reviewer": "GitHub Copilot Coding Agent (@copilot), bounded VFile backend evidence pass",
+    "identity_limit": "Non-approving source/runtime evidence; not an independent semantic approval or Phase 1 gate decision.",
+    "approval_eligible": false
+  },
+  "source_pin": {
+    "repository": "mgba-emu/mgba",
+    "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+    "dossier_path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "dossier_git_blob_sha1": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "dossier_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+  },
+  "distinct_path": {
+    "id": "borrowed-vfile-boundary-short-write-no-expand",
+    "prior_paths_not_repeated": [
+      "VFileMemChunk anonymous backing calloc failure",
+      "VFileMemChunk wrapper malloc failure",
+      "savedata Flash/EEPROM growth and fd/stdio teardown witnesses"
+    ],
+    "parent_matrix": {
+      "path": "semantic-snapshots/independent-reviews/copilot-mgba-savedata/cross-tranche-objection-matrix.json",
+      "sha256": "f7ce0e81169b6b4a3724e7d0d8385ad6bd80b3f2c50e3a5243402fafecd0d084",
+      "related_existing_objection": "memory-ownership-and-persistence",
+      "parent_disposition_remains": "RESOLVED_SOURCE_ONLY",
+      "remaining_matrix_gap": "Allocation failure, large-size overflow, zero-size and short-write caller recovery."
+    },
+    "source_contract": "VFileFromMemory wraps caller-owned fixed-size memory, installs _vfmWrite and _vfmClose, and does not expand. _vfmWrite clamps the transfer at bufferSize and returns the actual short count; _vfmClose frees only the wrapper. _GBACoreSavedataClone uses this backend for an output buffer, but that caller is source-traced only here.",
+    "caller_trace": {
+      "source": "src/gba/core.c:1469-1490",
+      "claim": "The caller allocates the output buffer, wraps it with VFileFromMemory, calls GBASavedataClone, and closes the VFile. The test does not compile or execute this GBA caller and does not establish how the caller handles partial writes."
+    },
+    "resolution_scope": "Bounded native characterization of the original borrowed-memory VFile backend's full, partial, and zero-byte write counts, fixed logical size, guard bytes, and borrowed-buffer ownership after close."
+  },
+  "source_files": [
+    {
+      "path": "src/util/vfs/vfs-mem.c",
+      "git_blob_sha1": "048194e2dd2d0b3b395a852d2092c694663c88a2",
+      "source_sha256": "6b5951a0cd634d398a69ce57766298bd32d5e6410ee0aa4e8b8894c6aaa5829b",
+      "dossier_row_sha256": "3c95e0a322b5aff0655ec59a1c1f5d34a740a21676da0bf5cce444d2434248ce",
+      "license_notice": "MPL-2.0",
+      "verdict": "NEEDS_EVIDENCE",
+      "compiled_unchanged": true,
+      "executed_functions": ["VFileFromMemory", "_vfmWrite", "_vfmClose"],
+      "source_lines": ["src/util/vfs/vfs-mem.c:34-59", "src/util/vfs/vfs-mem.c:139-144", "src/util/vfs/vfs-mem.c:237-262"]
+    },
+    {
+      "path": "src/util/memory.c",
+      "git_blob_sha1": "89646d3bcb5a23e6c75ee5ea8ee8dfd7b940027b",
+      "source_sha256": "920e7bc5d3ddf4bc69c864d526c9bd141ece547894e9430f5bde3c7fe0acc1e5",
+      "dossier_row_sha256": "f022333144a428531384d50b32cff338bb88f52c8912efb2f1cf5b07eed4875c",
+      "license_notice": "MPL-2.0",
+      "verdict": "NEEDS_EVIDENCE",
+      "compiled_unchanged": true,
+      "executed_functions": [],
+      "source_lines": ["src/util/memory.c:8-14"]
+    },
+    {
+      "path": "include/mgba-util/vfs.h",
+      "git_blob_sha1": "6c9bd299153af4c3c9cd5487f2425a2481331ee5",
+      "source_sha256": "4c829529f21c424196b4d1efe25ce11227312437cf1aa5028cae94a741bf6656",
+      "dossier_row_sha256": "5d4c30179d703f5b013badf083d6c99c736186091873d65edcb3f0943c2763dd",
+      "license_notice": "MPL-2.0",
+      "verdict": "NEEDS_EVIDENCE",
+      "compiled_unchanged": true,
+      "executed_functions": [],
+      "source_lines": ["include/mgba-util/vfs.h:35-50", "include/mgba-util/vfs.h:83-85"]
+    },
+    {
+      "path": "include/mgba-util/memory.h",
+      "git_blob_sha1": "325f748f6fddc33a5539739ebc6eff6f3bb42bad",
+      "source_sha256": "509b56f31b2a279d954a16799501a1585cf7aa55f917a180432283b0205c198c",
+      "dossier_row_sha256": "cf858e1e109d1346cab0d7b30bcd119c207cfb84e9b45a3e73321c1e3576315e",
+      "license_notice": "MPL-2.0",
+      "verdict": "NEEDS_EVIDENCE",
+      "compiled_unchanged": true,
+      "executed_functions": [],
+      "source_lines": ["include/mgba-util/memory.h:13-14"]
+    },
+    {
+      "path": "include/mgba-util/math.h",
+      "git_blob_sha1": "f7b3269c9d51967765379b951ba6f43d24c61865",
+      "source_sha256": "04f5ee1686f4b30744d4e62caef4cf16f2f4b80682b88a87e7e18cf117fd421e",
+      "dossier_row_sha256": "87d819c03b064e4665a27b5563f4a7261cfcdad051913229884d4f72cfd813f9",
+      "license_notice": "MPL-2.0",
+      "verdict": "NEEDS_EVIDENCE",
+      "compiled_unchanged": true,
+      "executed_functions": [],
+      "source_lines": ["include/mgba-util/math.h:95-101"]
+    },
+    {
+      "path": "include/mgba-util/common.h",
+      "git_blob_sha1": "923e93086adfa09c9a55fcc2f0f6fa4d560e5888",
+      "source_sha256": "ec13354a050e4a7432232214b9991dd74000980ab2b8949389af0871cc1b799f",
+      "dossier_row_sha256": "b0a970a0105d3d1b109325bda5fedc99cff7a182cb010f24f826944faa0616ec",
+      "license_notice": "MPL-2.0",
+      "verdict": "NEEDS_EVIDENCE",
+      "compiled_unchanged": true,
+      "executed_functions": [],
+      "source_lines": ["include/mgba-util/common.h:1-7", "include/mgba-util/common.h:86-86"]
+    },
+    {
+      "path": "include/mgba-util/dllexports.h",
+      "git_blob_sha1": "a44480df6ec26821b8616650b2575ba794848eca",
+      "source_sha256": "96871f8861195f4ff9fedd861ff07ed5b0a10a0e7642d6a780a8221cafd163d4",
+      "dossier_row_sha256": "5a0c3158c1515885d4f326ea52cc891074b5e0cd54e40460eab89d55a1746070",
+      "license_notice": "MPL-2.0",
+      "verdict": "NEEDS_EVIDENCE",
+      "compiled_unchanged": true,
+      "executed_functions": [],
+      "source_lines": ["include/mgba-util/dllexports.h:1-7"]
+    },
+    {
+      "path": "src/gba/core.c",
+      "git_blob_sha1": "6bfc518bb8899205c07d1d0fc091a287cb42f874",
+      "source_sha256": "47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596",
+      "dossier_row_sha256": "3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784",
+      "license_notice": "MPL-2.0",
+      "verdict": "NEEDS_EVIDENCE",
+      "compiled_unchanged": false,
+      "executed_functions": [],
+      "source_lines": ["src/gba/core.c:1469-1490"]
+    }
+  ],
+  "test_evidence": {
+    "source_path": "tests/mgba_vfile_borrowed_short_write.c",
+    "source_sha256": "aa5aa9ffe7eaf0b1175cb3ce36d3f09be958798be2a7195f2915ffad99357fba",
+    "build_path": "tests/CMakeLists.txt",
+    "build_sha256": "ea343d0ee93edc08a572972c68bfb62c164ebdcb0dc331d09240cb842ad3e505",
+    "local_log_path": "semantic-snapshots/independent-reviews/copilot-mgba-savedata/vfile-borrowed-short-write-local.log",
+    "local_log_sha256": "30ce1799da7b0c434a0eeee2407a63c8333b4a4beae625d13b04fc03cb7fcbb1",
+    "local_compile_command": "cc -std=c11 -I/tmp/mgba-borrowed/include tests/mgba_vfile_borrowed_short_write.c /tmp/mgba-borrowed/src/util/memory.c /tmp/mgba-borrowed/src/util/vfs/vfs-mem.c -o /tmp/mgba-borrowed/borrowed-short-write",
+    "execution_kind": "PINNED_ORIGINAL_VFILE_MEMORY_SOURCES_NATIVE_HOST_TEST",
+    "result": "PASS_BOUNDED_BORROWED_VFILE_SHORT_WRITE_CHARACTERIZATION",
+    "assertions": [
+      "constructor borrows bounded four-byte storage",
+      "in-bounds write completes and updates borrowed bytes",
+      "boundary-crossing write reports a one-byte short write without touching guards",
+      "write at borrowed-buffer end reports zero and does not grow",
+      "close returns true and leaves caller-owned storage intact"
+    ],
+    "limits": {
+      "tested_storage_bytes": 4,
+      "guard_bytes_checked": 2,
+      "gba_core_caller_compiled_or_executed": false,
+      "full_mgba_runtime_executed": false,
+      "gameplay_or_real_save_executed": false,
+      "physical_flash_or_durability_tested": false,
+      "failure_injection_used": false
+    }
+  },
+  "licensing": {
+    "selected_source_notice": "MPL-2.0 verified for all eight pinned original files.",
+    "transitive_dependency_closure_complete": false,
+    "combined_distribution_legal_conclusion": false,
+    "disposition": "NEEDS_EVIDENCE"
+  },
+  "parent_matrix_effect": {
+    "matrix_changed": false,
+    "memory_ownership_disposition_changed": false,
+    "memory_ownership_disposition": "RESOLVED_SOURCE_ONLY",
+    "short_write_caller_recovery": "NEEDS_EVIDENCE"
+  },
+  "phase1_state": {
+    "decision": "FAIL_INCOMPLETE",
+    "approved_before": 0,
+    "approved_after": 0,
+    "shared_gate_or_register_edited": false,
+    "semantic_approval": false
+  },
+  "negative_control_inventory": [
+    "pinned-revision-mismatch",
+    "source-blob-mismatch",
+    "source-byte-sha256-mismatch",
+    "dossier-row-mismatch",
+    "source-closure-incomplete",
+    "test-source-hash-mismatch",
+    "build-source-hash-mismatch",
+    "native-log-assertion-mismatch",
+    "false-gba-caller-execution-claim",
+    "false-full-emulator-claim",
+    "false-borrowed-buffer-ownership-claim",
+    "unbounded-test-size",
+    "license-boundary-overclaim",
+    "phase1-approval-promotion",
+    "source-mutation"
+  ]
+}

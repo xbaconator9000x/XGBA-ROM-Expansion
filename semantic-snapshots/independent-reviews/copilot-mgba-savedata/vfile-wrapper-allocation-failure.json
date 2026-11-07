@@ -1,0 +1,255 @@
+{
+  "schema": "xgba.copilot.mgba_savedata_vfile_wrapper_alloc_failure.v1",
+  "review": {
+    "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+    "pull_request": 35,
+    "request_comment_id": 6701750871,
+    "expected_parent_head": "aedca8d3f82ea920fadac3574169d6772662e2ba",
+    "reviewer": "GitHub Copilot Coding Agent (@copilot), bounded VFile wrapper-allocation evidence pass",
+    "identity_limit": "Task-scoped evidence handoff; not independent semantic approval, external approval, or Phase 1 gate authorization.",
+    "approval_eligible": false
+  },
+  "overlap_check": {
+    "pr13_head": "032fb33971d9b7f4416e00fcb8a2c4f52bec39c0",
+    "pr13_changed_files_reviewed": true,
+    "pr13_allocation_failure_overlap": "The retrieved PR #13 changes include VFile teardown, stdio, callback, Qt and observer witnesses, but no malloc-failure injection for VFileMemChunk's wrapper allocation.",
+    "pr37_head": "ad648943bca6794665c7ccc4c77bb2b740c6ddd2",
+    "pr37_changed_files_reviewed": true,
+    "pr37_allocation_failure_overlap": "PR #37 changes integration-readiness manifests/checkers and unrelated build-provenance cases; no savedata VFile allocation-failure witness."
+  },
+  "source_pin": {
+    "repository": "mgba-emu/mgba",
+    "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+    "dossier_path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "dossier_git_blob_sha1": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "dossier_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609",
+    "retrieval": "Original pinned bytes were individually fetched and checked against the Git blob, full-byte SHA-256, canonical dossier-row SHA-256, and per-file MPL-2.0 notice."
+  },
+  "matrix_binding": {
+    "path": "semantic-snapshots/independent-reviews/copilot-mgba-savedata/cross-tranche-objection-matrix.json",
+    "sha256": "f7ce0e81169b6b4a3724e7d0d8385ad6bd80b3f2c50e3a5243402fafecd0d084",
+    "objection_id": "memory-allocation-and-size-bounds",
+    "source_path": "src/util/vfs/vfs-mem.c",
+    "disposition_before": "NEEDS_EVIDENCE",
+    "disposition_after": "NEEDS_EVIDENCE",
+    "scope": "This supplemental receipt tests only the outer VFileMemChunk wrapper malloc branch; it does not promote or rewrite the existing matrix objection."
+  },
+  "source_files": [
+    {
+      "path": "src/util/vfs/vfs-mem.c",
+      "git_blob_sha1": "048194e2dd2d0b3b395a852d2092c694663c88a2",
+      "source_sha256": "6b5951a0cd634d398a69ce57766298bd32d5e6410ee0aa4e8b8894c6aaa5829b",
+      "dossier_row_sha256": "3c95e0a322b5aff0655ec59a1c1f5d34a740a21676da0bf5cce444d2434248ce",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": true,
+      "review_scope": "Allocation and close contract lines only; not a whole-file semantic review.",
+      "verdict": "NEEDS_EVIDENCE",
+      "source_lines": ["src/util/vfs/vfs-mem.c:90-119", "src/util/vfs/vfs-mem.c:121-136", "src/util/vfs/vfs-mem.c:139-152"]
+    },
+    {
+      "path": "src/util/memory.c",
+      "git_blob_sha1": "89646d3bcb5a23e6c75ee5ea8ee8dfd7b940027b",
+      "source_sha256": "920e7bc5d3ddf4bc69c864d526c9bd141ece547894e9430f5bde3c7fe0acc1e5",
+      "dossier_row_sha256": "f022333144a428531384d50b32cff338bb88f52c8912efb2f1cf5b07eed4875c",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": true,
+      "review_scope": "Allocator declaration/implementation lines only; not a whole-file semantic review.",
+      "verdict": "NEEDS_EVIDENCE",
+      "source_lines": ["src/util/memory.c:8-14"]
+    },
+    {
+      "path": "include/mgba-util/vfs.h",
+      "git_blob_sha1": "6c9bd299153af4c3c9cd5487f2425a2481331ee5",
+      "source_sha256": "4c829529f21c424196b4d1efe25ce11227312437cf1aa5028cae94a741bf6656",
+      "dossier_row_sha256": "5d4c30179d703f5b013badf083d6c99c736186091873d65edcb3f0943c2763dd",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": false,
+      "review_scope": "VFile constructor declaration and method contracts only; not a whole-file semantic review.",
+      "verdict": "NEEDS_EVIDENCE",
+      "source_lines": ["include/mgba-util/vfs.h:35-45", "include/mgba-util/vfs.h:83-85"]
+    },
+    {
+      "path": "include/mgba-util/memory.h",
+      "git_blob_sha1": "325f748f6fddc33a5539739ebc6eff6f3bb42bad",
+      "source_sha256": "509b56f31b2a279d954a16799501a1585cf7aa55f917a180432283b0205c198c",
+      "dossier_row_sha256": "cf858e1e109d1346cab0d7b30bcd119c207cfb84e9b45a3e73321c1e3576315e",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": false,
+      "review_scope": "Allocator interface signatures only; not a whole-file semantic review.",
+      "verdict": "NEEDS_EVIDENCE",
+      "source_lines": ["include/mgba-util/memory.h:13-14"]
+    },
+    {
+      "path": "include/mgba-util/math.h",
+      "git_blob_sha1": "f7b3269c9d51967765379b951ba6f43d24c61865",
+      "source_sha256": "04f5ee1686f4b30744d4e62caef4cf16f2f4b80682b88a87e7e18cf117fd421e",
+      "dossier_row_sha256": "87d819c03b064e4665a27b5563f4a7261cfcdad051913229884d4f72cfd813f9",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": false,
+      "review_scope": "Capacity-rounding helper lines only; not a whole-file semantic review.",
+      "verdict": "NEEDS_EVIDENCE",
+      "source_lines": ["include/mgba-util/math.h:95-101"]
+    },
+    {
+      "path": "include/mgba-util/common.h",
+      "git_blob_sha1": "923e93086adfa09c9a55fcc2f0f6fa4d560e5888",
+      "source_sha256": "ec13354a050e4a7432232214b9991dd74000980ab2b8949389af0871cc1b799f",
+      "dossier_row_sha256": "b0a970a0105d3d1b109325bda5fedc99cff7a182cb010f24f826944faa0616ec",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": false,
+      "review_scope": "Included standard declarations and export header only; not a whole-file semantic review.",
+      "verdict": "NEEDS_EVIDENCE",
+      "source_lines": ["include/mgba-util/common.h:1-7", "include/mgba-util/common.h:86-86"]
+    },
+    {
+      "path": "include/mgba-util/dllexports.h",
+      "git_blob_sha1": "a44480df6ec26821b8616650b2575ba794848eca",
+      "source_sha256": "96871f8861195f4ff9fedd861ff07ed5b0a10a0e7642d6a780a8221cafd163d4",
+      "dossier_row_sha256": "5a0c3158c1515885d4f326ea52cc891074b5e0cd54e40460eab89d55a1746070",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": false,
+      "review_scope": "Transitive export header notice/definition only; not a whole-file semantic review.",
+      "verdict": "NEEDS_EVIDENCE",
+      "source_lines": ["include/mgba-util/dllexports.h:1-7"]
+    },
+    {
+      "path": "src/gba/core.c",
+      "git_blob_sha1": "6bfc518bb8899205c07d1d0fc091a287cb42f874",
+      "source_sha256": "47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596",
+      "dossier_row_sha256": "3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": false,
+      "review_scope": "Savedata restore caller null-result branch only; not a whole-file semantic review.",
+      "verdict": "NEEDS_EVIDENCE",
+      "source_lines": ["src/gba/core.c:1493-1506"]
+    }
+  ],
+  "fault_path": {
+    "id": "vfilememchunk-wrapper-malloc-failure",
+    "parent_matrix_objection_id": "memory-allocation-and-size-bounds",
+    "parent_matrix_disposition_remains": "NEEDS_EVIDENCE",
+    "distinction_from_prior_probe": "The prior witness injects anonymous backing calloc failure after VFileMemChunk has allocated its wrapper. This witness fails the earlier wrapper malloc itself; the pinned function returns NULL before calling anonymousMemoryMap or creating a VFile.",
+    "source_contract": "VFileMemChunk malloc failure returns NULL immediately. _GBACoreSavedataRestore checks the VFile result and returns false before dereferencing the core board or calling GBASavedataLoad/GBASavedataMask. This source caller path is not executed by the test.",
+    "ownership_and_teardown": "On successful construction, VFileMemChunk owns the backing allocation and wrapper; close frees both. On wrapper-malloc failure neither object exists, so there is no VFile close/unmap call to perform. The test verifies constructor-level cleanup only, not GBA caller or savedata teardown.",
+    "logging": "No logging path is executed or claimed; this constructor failure returns NULL."
+  },
+  "dependency_closure": {
+    "compiled_original_sources": ["src/util/memory.c", "src/util/vfs/vfs-mem.c"],
+    "compiled_header_closure": [
+      "include/mgba-util/common.h",
+      "include/mgba-util/dllexports.h",
+      "include/mgba-util/math.h",
+      "include/mgba-util/memory.h",
+      "include/mgba-util/vfs.h"
+    ],
+    "caller_edge": {
+      "from": "src/gba/core.c:1493-1506",
+      "to": ["include/mgba-util/vfs.h:83-85", "src/util/vfs/vfs-mem.c:90-119"],
+      "result_contract": "The wrapper-null branch returns false; true means only that wrapper construction reached the next operation, not that restore/load/mask succeeded."
+    },
+    "nonexecuted_edges": [
+      "src/gba/core.c::_GBACoreSavedataRestore was source-traced, not compiled or called.",
+      "src/gba/savedata.c::GBASavedataLoad/GBASavedataMask/GBASavedataUnmask were not reached or exercised.",
+      "No frontend logging, user-visible save result, gameplay, physical Flash, restart, or durability path was exercised."
+    ]
+  },
+  "test_evidence": {
+    "test_source": "tests/mgba_vfile_wrapper_alloc_failure.c",
+    "test_source_sha256": "fc322adeedd2e326df0b6b3fff661991e00c382983dc78a7d23bdc08b3c07797",
+    "build_source": "tests/CMakeLists.txt",
+    "build_source_sha256": "ea343d0ee93edc08a572972c68bfb62c164ebdcb0dc331d09240cb842ad3e505",
+    "local_runtime_log": "semantic-snapshots/independent-reviews/copilot-mgba-savedata/vfile-wrapper-allocation-local.log",
+    "local_runtime_log_sha256": "253e97bbe2b703696284382a2ceb8377c9cc0d805dc0d3cd6bb16817cb764c5c",
+    "local_execution": "Native Linux compiler run against individually fetched pinned source bytes; local host evidence, not GitHub Actions or a full mGBA runtime.",
+    "execution_kind": "PINNED_ORIGINAL_VFILE_MEMORY_SOURCES_WITH_SYNTHETIC_LINKER_ALLOCATION_WRAPPERS",
+    "allocation_wrappers": {
+      "malloc": "Fails exactly the next wrapped malloc request; rejects requests above 256 bytes; tested constructor path is the VFileMemChunk wrapper object.",
+      "calloc": "Observes positive-control backing allocation and rejects requests above 8 bytes; it does not inject calloc failure in this separate witness.",
+      "free": "Counts positive-control teardown frees while the probe is active."
+    },
+    "limits": {
+      "max_wrapper_allocation_bytes": 256,
+      "max_backing_allocation_bytes": 8,
+      "gba_restore_executed": false,
+      "full_mgba_runtime_executed": false,
+      "actual_game_or_save_executed": false,
+      "physical_flash_or_durability_tested": false
+    },
+    "assertions": [
+      "positive VFileMemChunk allocates bounded wrapper/backing and preserves four source bytes",
+      "positive VFile close returns true and frees both owned allocations",
+      "injected wrapper malloc failure returns NULL before any backing calloc",
+      "failed construction creates no VFile to close and releases no allocation"
+    ],
+    "result": "PASS_BOUNDED_PINNED_VFILE_WRAPPER_ALLOCATION_CHARACTERIZATION",
+    "ci_provenance": {
+      "binding": "The existing PR workflow produces a run-specific manifest and artifact; this record is not rewritten with a self-referential future run identity.",
+      "push_event_run_count": 0,
+      "push_event_status": "ABSENT; existing workflow has no push trigger"
+    }
+  },
+  "objection_receipt": {
+    "disposition": "RESOLVED_SOURCE_AND_BOUNDED_VFILE_TEST_ONLY",
+    "claim_scope": "Constructor-level wrapper malloc failure behavior and successful-control teardown only.",
+    "substantive_finding": "The failure is distinct from backing calloc OOM: the VFile wrapper allocation itself fails, and VFileMemChunk returns NULL before backing allocation; the GBA restore caller then returns false before touching savedata state.",
+    "unresolved_obligations": [
+      {
+        "id": "gba-restore-caller-execution",
+        "disposition": "NEEDS_EVIDENCE",
+        "reason": "The actual _GBACoreSavedataRestore caller was not compiled or executed."
+      },
+      {
+        "id": "caller-consumption-and-logs",
+        "disposition": "NEEDS_EVIDENCE",
+        "reason": "Frontend consumption, user-visible reporting and any higher-level recovery are untested."
+      },
+      {
+        "id": "full-size-domain-and-platform",
+        "disposition": "NEEDS_EVIDENCE",
+        "reason": "Test allocations are capped at 256-byte wrapper and 8-byte backing limits; other OS_SRC implementations and large-size/overflow behavior are not tested."
+      },
+      {
+        "id": "savedata-state-and-teardown",
+        "disposition": "NEEDS_EVIDENCE",
+        "reason": "No GBA savedata mask/unmask, load, deinit, close-failure or persistence transition is exercised."
+      },
+      {
+        "id": "license-and-transitive-dependencies",
+        "disposition": "NEEDS_EVIDENCE",
+        "reason": "The selected pinned originals carry MPL-2.0 notices; transitive build dependencies and combined-distribution legal status remain open."
+      }
+    ]
+  },
+  "license_boundary": {
+    "source_notices": "MPL-2.0 verified for all eight pinned original source/header files.",
+    "transitive_dependency_closure_complete": false,
+    "combined_distribution_legal_conclusion": false,
+    "disposition": "NEEDS_EVIDENCE"
+  },
+  "phase1_state": {
+    "decision": "FAIL_INCOMPLETE",
+    "approved_before": 0,
+    "approved_after": 0,
+    "phase2_started": false,
+    "shared_gate_or_register_edited": false,
+    "semantic_approval": false
+  },
+  "negative_control_inventory": [
+    "source-revision-mismatch",
+    "source-blob-mismatch",
+    "source-byte-sha256-mismatch",
+    "dossier-row-mismatch",
+    "source-closure-incomplete",
+    "test-source-hash-mismatch",
+    "build-source-hash-mismatch",
+    "native-log-hash-or-assertion-mismatch",
+    "false-gba-caller-runtime-claim",
+    "false-full-emulator-or-gameplay-label",
+    "allocation-bound-overclaim",
+    "missing-unresolved-teardown-obligation",
+    "license-boundary-overclaim",
+    "phase1-approval-promotion",
+    "source-byte-mutation",
+    "parent-matrix-objection-promotion"
+  ]
+}

@@ -8,11 +8,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#if defined(ENABLE_VFS_FD) && !defined(_WIN32)
+#include <fcntl.h>
+#include <unistd.h>
+#endif
 
 #include <mgba/core/core.h>
 #include <mgba/gba/core.h>
 #include <mgba/internal/gba/gba.h>
 #include <mgba/internal/gba/memory.h>
+#include <mgba/internal/gba/savedata.h>
 #include <mgba/internal/gba/serialize.h>
 #include <mgba/internal/gba/io.h>
 #include <mgba/internal/arm/isa-inlines.h>
@@ -77,6 +82,188 @@ static void check_thumb(struct mCore *core, uint32_t addr, uint16_t expected, co
            label, data, cpu->prefetch[0] & 0xFFFFu, expected);
     check(label, data == expected && (cpu->prefetch[0] & 0xFFFFu) == expected);
 }
+#if defined(ENABLE_VFS_FD) && !defined(_WIN32)
+static struct VFile *create_savedata_file(char path[64], size_t size, uint8_t fill) {
+    memcpy(path, "/tmp/xgba-mgba-savedata-XXXXXX", sizeof("/tmp/xgba-mgba-savedata-XXXXXX"));
+    int fd = mkstemp(path);
+    if (fd < 0) return NULL;
+    uint8_t bytes[4096];
+    memset(bytes, fill, sizeof(bytes));
+    size_t written = 0;
+    while (written < size) {
+        size_t chunk = size - written;
+        if (chunk > sizeof(bytes)) chunk = sizeof(bytes);
+        ssize_t result = write(fd, bytes, chunk);
+        if (result <= 0) {
+     close(fd);
+     unlink(path);
+     return NULL;
+        }
+        written += (size_t) result;
+    }
+    if (lseek(fd, 0, SEEK_SET) < 0) {
+        close(fd);
+        unlink(path);
+        return NULL;
+    }
+    struct VFile *vf = VFileFromFD(fd);
+    if (!vf) {
+        close(fd);
+        unlink(path);
+    }
+    return vf;
+}
+
+static int read_savedata_file_byte(const char *path, off_t offset) {
+    int fd = open(path, O_RDONLY);
+    if (fd < 0) return -1;
+    uint8_t value;
+    bool ok = lseek(fd, offset, SEEK_SET) == offset && read(fd, &value, 1) == 1;
+    close(fd);
+    return ok ? value : -1;
+}
+
+static void reset_savedata_file(struct GBA *gba, const char *path) {
+    mTimingDeschedule(&gba->timing, &gba->memory.savedata.dust);
+    GBASavedataReset(&gba->memory.savedata);
+    GBASavedataForceType(&gba->memory.savedata, GBA_SAVEDATA_AUTODETECT);
+    GBALoadSave(gba, NULL);
+    if (path) unlink(path);
+}
+
+static void test_native_savedata_file_backend(struct GBA *gba) {
+    char path[64];
+    struct VFile *vf = create_savedata_file(path, GBA_SIZE_FLASH512, 0xA5);
+    if (!vf) {
+        check("native_savedata_flash_fixture_created", false);
+        return;
+    }
+    GBALoadSave(gba, vf);
+    GBASavedataForceType(&gba->memory.savedata, GBA_SAVEDATA_FLASH1M);
+    check("native_savedata_flash_direct_growth_zero_fills_new_bank",
+          gba->memory.savedata.data &&
+          gba->memory.savedata.data[0] == 0xA5 &&
+          gba->memory.savedata.data[GBA_SIZE_FLASH512] == 0 &&
+          read_savedata_file_byte(path, GBA_SIZE_FLASH512) == 0);
+    reset_savedata_file(gba, path);
+
+    GBALoadSave(gba, NULL);
+    GBASavedataForceType(&gba->memory.savedata, GBA_SAVEDATA_FLASH512);
+    gba->memory.savedata.command = FLASH_COMMAND_SWITCH_BANK;
+    GBASavedataWriteFlash(&gba->memory.savedata, 0, 1);
+    check("native_savedata_flash_anonymous_promotion_leaves_new_bank_zero",
+          gba->memory.savedata.type == GBA_SAVEDATA_FLASH1M &&
+          gba->memory.savedata.data[GBA_SIZE_FLASH512 - 1] == 0xFF &&
+          gba->memory.savedata.data[GBA_SIZE_FLASH512] == 0);
+    reset_savedata_file(gba, NULL);
+
+    vf = create_savedata_file(path, GBA_SIZE_FLASH512, 0xA5);
+    if (!vf) {
+        check("native_savedata_flash_promotion_fixture_created", false);
+        return;
+    }
+    GBALoadSave(gba, vf);
+    GBASavedataForceType(&gba->memory.savedata, GBA_SAVEDATA_FLASH512);
+    gba->memory.savedata.command = FLASH_COMMAND_SWITCH_BANK;
+    GBASavedataWriteFlash(&gba->memory.savedata, 0, 1);
+    check("native_savedata_flash_bank_promotion_erases_new_bank",
+          gba->memory.savedata.type == GBA_SAVEDATA_FLASH1M &&
+          gba->memory.savedata.data[GBA_SIZE_FLASH512] == 0xFF &&
+          read_savedata_file_byte(path, GBA_SIZE_FLASH512) == 0xFF);
+    reset_savedata_file(gba, path);
+
+    vf = create_savedata_file(path, GBA_SIZE_EEPROM512, 0xA5);
+    if (!vf) {
+        check("native_savedata_eeprom_fixture_created", false);
+        return;
+    }
+    GBALoadSave(gba, vf);
+    GBASavedataForceType(&gba->memory.savedata, GBA_SAVEDATA_EEPROM);
+    check("native_savedata_eeprom_direct_growth_zero_fills_upper_range",
+          gba->memory.savedata.data &&
+          gba->memory.savedata.data[0] == 0xA5 &&
+          gba->memory.savedata.data[GBA_SIZE_EEPROM512] == 0 &&
+          read_savedata_file_byte(path, GBA_SIZE_EEPROM512) == 0);
+    reset_savedata_file(gba, path);
+
+    vf = create_savedata_file(path, GBA_SIZE_EEPROM512, 0xA5);
+    if (!vf) {
+        check("native_savedata_eeprom_promotion_fixture_created", false);
+        return;
+    }
+    GBALoadSave(gba, vf);
+    GBASavedataForceType(&gba->memory.savedata, GBA_SAVEDATA_EEPROM512);
+    gba->memory.savedata.command = EEPROM_COMMAND_WRITE;
+    gba->memory.savedata.writeAddress = GBA_SIZE_EEPROM512 * 8;
+    GBASavedataWriteEEPROM(&gba->memory.savedata, 1, 2);
+    check("native_savedata_eeprom_promotion_erases_upper_range",
+          gba->memory.savedata.type == GBA_SAVEDATA_EEPROM &&
+          gba->memory.savedata.data[GBA_SIZE_EEPROM512] == 0xFF &&
+          read_savedata_file_byte(path, GBA_SIZE_EEPROM512) == 0xFF);
+    reset_savedata_file(gba, path);
+
+    GBALoadSave(gba, NULL);
+    GBASavedataForceType(&gba->memory.savedata, GBA_SAVEDATA_EEPROM512);
+    gba->memory.savedata.command = EEPROM_COMMAND_WRITE;
+    gba->memory.savedata.writeAddress = GBA_SIZE_EEPROM512 * 8;
+    GBASavedataWriteEEPROM(&gba->memory.savedata, 1, 2);
+    check("native_savedata_eeprom_anonymous_promotion_leaves_unwritten_bytes_zero",
+          gba->memory.savedata.type == GBA_SAVEDATA_EEPROM &&
+          gba->memory.savedata.data[0] == 0xFF &&
+          gba->memory.savedata.data[GBA_SIZE_EEPROM512] == 0x80 &&
+          gba->memory.savedata.data[GBA_SIZE_EEPROM512 + 1] == 0 &&
+          gba->memory.savedata.data[GBA_SIZE_EEPROM - 1] == 0);
+    reset_savedata_file(gba, NULL);
+
+    vf = create_savedata_file(path, 0, 0);
+    if (!vf) {
+        check("native_savedata_eeprom_empty_fixture_created", false);
+        return;
+    }
+    GBALoadSave(gba, vf);
+    GBASavedataForceType(&gba->memory.savedata, GBA_SAVEDATA_EEPROM);
+    check("native_savedata_eeprom_8k_empty_erases_only_first_512_bytes",
+          gba->memory.savedata.data &&
+          gba->memory.savedata.data[0] == 0xFF &&
+          gba->memory.savedata.data[GBA_SIZE_EEPROM512 - 1] == 0xFF &&
+          gba->memory.savedata.data[GBA_SIZE_EEPROM512] == 0 &&
+          read_savedata_file_byte(path, GBA_SIZE_EEPROM512) == 0);
+    reset_savedata_file(gba, path);
+
+    vf = create_savedata_file(path, 0, 0);
+    if (!vf) {
+        check("native_savedata_eeprom_512_control_fixture_created", false);
+        return;
+    }
+    GBALoadSave(gba, vf);
+    GBASavedataForceType(&gba->memory.savedata, GBA_SAVEDATA_EEPROM512);
+    check("native_savedata_eeprom_512_empty_file_erases_entire_save",
+          gba->memory.savedata.data &&
+          gba->memory.savedata.data[0] == 0xFF &&
+          gba->memory.savedata.data[GBA_SIZE_EEPROM512 - 1] == 0xFF);
+    reset_savedata_file(gba, path);
+
+    vf = create_savedata_file(path, 4096, 0xA5);
+    if (!vf) {
+        check("native_savedata_clone_write_error_fixture_created", false);
+        return;
+    }
+    GBALoadSave(gba, vf);
+    uint8_t readOnlyOutput[1] = {0};
+    struct VFile *out = VFileFromConstMemory(readOnlyOutput, sizeof(readOnlyOutput));
+    bool cloneReportedSuccess = out && GBASavedataClone(&gba->memory.savedata, out);
+    check("native_savedata_clone_reports_success_after_readonly_output_error",
+          cloneReportedSuccess);
+    if (out) out->close(out);
+    reset_savedata_file(gba, path);
+}
+#else
+static void test_native_savedata_file_backend(struct GBA *gba) {
+    (void) gba;
+    puts("SKIP native_savedata_file_backend_requires_posix_vfs_fd");
+}
+#endif
+
 /* The native 16-bit ROM2_EX cartridge address range has EEPROM and
  * e-Reader priority over normal ROM backing. This fixture tests the real
  * native decoder without altering memory.c.
@@ -320,6 +507,7 @@ static void run_one(bool matrix) {
               gba->memory.romSize == ROM_BYTES_SMALL && gba->memory.matrix.cmd == 0);
         check_arm(core, ADDRESS, OPCODE_A, "vanilla_ARM_fetch_data_consistency");
         check_thumb(core, THUMB_ADDRESS, THUMB_A, "vanilla_Thumb_fetch_data_consistency");
+        test_native_savedata_file_backend(gba);
         test_native_peripherals(core);
     } else {
         fprintf(stderr,"STEP matrix pre-check\n");

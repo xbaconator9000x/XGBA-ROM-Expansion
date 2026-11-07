@@ -1,0 +1,118 @@
+{
+  "schema": "xgba.copilot.mgba_savedata_rewind_restore_map_failure.v1",
+  "review": {
+    "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+    "pull_request": 35,
+    "request_comment_id": 6706381637,
+    "expected_parent_head": "4ed33a3ea3af4d7bd18e34a5f1da5b92db429d65",
+    "reviewer": "GitHub Copilot Coding Agent (@copilot), bounded mCoreRewind caller evidence pass",
+    "identity_limit": "Non-approving source/runtime evidence; not an independent semantic approval or Phase 1 gate decision.",
+    "approval_eligible": false
+  },
+  "source_pin": {
+    "repository": "mgba-emu/mgba",
+    "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+    "dossier_path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "dossier_git_blob_sha1": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "dossier_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+  },
+  "boundary": {
+    "id": "mCoreRewindRestore-currentState-map-failure",
+    "production_caller": "src/core/rewind.c:mCoreRewindRestore",
+    "source_lines": ["src/core/rewind.c:123-170", "src/core/rewind.c:144-162"],
+    "contract": "The caller maps currentState and previousState, passes both results to the patch callback without checking either pointer or the callback result, calls unmap on both, swaps state VFiles, calls mCoreLoadStateNamed, ignores its result, and returns true after consuming the rewind entry.",
+    "fault_injection": "The harness first initializes real pinned VFileMemChunk state, then replaces only the currentState map callback with a bounded test adapter that returns NULL once. The actual pinned mCoreRewindRestore implementation is compiled unchanged and executed.",
+    "test_doubles": [
+      "The map-failure adapter injects one NULL map result.",
+      "The patch callback observes nullable inputs and returns false rather than dereferencing a NULL pointer.",
+      "mCoreLoadStateNamed is stubbed to record the call and return false."
+    ],
+    "finding": "On the tested Linux host, the actual pinned caller still invokes the patch callback, unmaps both states including the failed mapping, swaps the state handles, calls the core-load stub, consumes one rewind entry, and returns true despite the NULL map and false patch/load results. The recovery control uses a fresh valid context; no in-place retry or production core callback is claimed."
+  },
+  "source_files": [
+    {"path":"include/mgba-util/common.h","git_blob_sha1":"923e93086adfa09c9a55fcc2f0f6fa4d560e5888","source_sha256":"ec13354a050e4a7432232214b9991dd74000980ab2b8949389af0871cc1b799f","dossier_row_sha256":"b0a970a0105d3d1b109325bda5fedc99cff7a182cb010f24f826944faa0616ec","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"include/mgba-util/configuration.h","git_blob_sha1":"f4c206d6a3cd1e8014178aeb11198ab47cf2b564","source_sha256":"b7d35ccd44aa5366e72a02005c7585c8a0b4434867ae48597fb915348aeeff42","dossier_row_sha256":"b3be94d7010bdf9524fd0273363531e7383803cb712dc3c43ef91da9652f5c37","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"include/mgba-util/dllexports.h","git_blob_sha1":"a44480df6ec26821b8616650b2575ba794848eca","source_sha256":"96871f8861195f4ff9fedd861ff07ed5b0a10a0e7642d6a780a8221cafd163d4","dossier_row_sha256":"5a0c3158c1515885d4f326ea52cc891074b5e0cd54e40460eab89d55a1746070","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"include/mgba-util/geometry.h","git_blob_sha1":"5164b0b8d435c018b5bf576278db4a07f17b87ce","source_sha256":"a0f1ac2eaa0a38e101ed95c5c17e2ca079c15e953f438757cdfdfe59a41a4668","dossier_row_sha256":"a41455974971834b6ff883b583fcffba5c863a7450bb07469a486ebd03e5d783","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"include/mgba-util/image.h","git_blob_sha1":"12f7a2ca8a34bf2302036141368b3d29087d87a5","source_sha256":"203d64c14d479da4bca33c0343f4efa76e2870483158fc0c8ad9e1fc4ebef7b9","dossier_row_sha256":"2450a862e03848c2789f177b872df56e3470e23aa7a037fa195aa683aa2a90f1","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"include/mgba-util/math.h","git_blob_sha1":"f7b3269c9d51967765379b951ba6f43d24c61865","source_sha256":"04f5ee1686f4b30744d4e62caef4cf16f2f4b80682b88a87e7e18cf117fd421e","dossier_row_sha256":"87d819c03b064e4665a27b5563f4a7261cfcdad051913229884d4f72cfd813f9","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"include/mgba-util/memory.h","git_blob_sha1":"325f748f6fddc33a5539739ebc6eff6f3bb42bad","source_sha256":"509b56f31b2a279d954a16799501a1585cf7aa55f917a180432283b0205c198c","dossier_row_sha256":"cf858e1e109d1346cab0d7b30bcd119c207cfb84e9b45a3e73321c1e3576315e","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"include/mgba-util/patch.h","git_blob_sha1":"b161310b78ec7e612fb6d4abdb8d7511051e9595","source_sha256":"3182ce9904456eb0d9e818c63a4f9f63c53ded17743e0f12289ab47dc255cc5a","dossier_row_sha256":"95a171d630828d0bd713dca2a0be0b6c9f1b0182cafd719e33208e93a5a30ff0","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"include/mgba-util/patch/fast.h","git_blob_sha1":"ee59cd23f6888b5139b10ba7e251395502a937a9","source_sha256":"85cba805323c0b324ebf26dc6a521c062f0828b3f1ad15d9c5ef20765d5e1a7e","dossier_row_sha256":"cc2d6194d74871867f79b9e5927237829373fd5d7ed3fe59cabcce97bb3ce46d","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"include/mgba-util/table.h","git_blob_sha1":"47908244d0aa7ef19b299e4aebd458e2299c80c8","source_sha256":"e30841e105b4f70e917c6d758e1d78fab8068d5461198abcf765a0cb31aa046d","dossier_row_sha256":"fb0ee583cfd99fb1fd1748e716c1e2326a999fe280be807377a1006d11eea1a5","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"include/mgba-util/vector.h","git_blob_sha1":"c837379e2102ca6535db2b292233bd4983c3532c","source_sha256":"ae8d9ed36475bda93ab3d2ff581163cedd289b2275c5254b76ba9e4285696375","dossier_row_sha256":"6a1179a47870dc93b443eff57599611d1b8d43d87560de25863a9e5805d83eb7","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"include/mgba-util/vfs.h","git_blob_sha1":"6c9bd299153af4c3c9cd5487f2425a2481331ee5","source_sha256":"4c829529f21c424196b4d1efe25ce11227312437cf1aa5028cae94a741bf6656","dossier_row_sha256":"5d4c30179d703f5b013badf083d6c99c736186091873d65edcb3f0943c2763dd","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"include/mgba/core/config.h","git_blob_sha1":"4a68b49eed99a7b874fbcf971df853f778f8dfd0","source_sha256":"010093e4be456563d787661ff7f0c05dff6ec925d772e9e92aac41b963df78fb","dossier_row_sha256":"cf31fc3ff0f5fc0b5157724823d83541273e273f3c261c3aff5aa8fe86926677","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"include/mgba/core/core.h","git_blob_sha1":"64ddf851ef00ab09416a9c1c9b5a88798fcd6fc8","source_sha256":"e77d0b72af5b76d9b66292968359122a15ab5c4c624d684af7ad339fa700e7a9","dossier_row_sha256":"0fb39db4601aad348aa35a4adbb7a4a41b05a26128957595547a95bc72208a87","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"include/mgba/core/input.h","git_blob_sha1":"f850a840cfcee92c466fa2cf77e266dbd90e0501","source_sha256":"68faca8aa39cc52e3ff85a0698f23113d796ef55d471eed8c0598968a9940bdb","dossier_row_sha256":"8d63f6f00dd3ceb4bb56a71bb635b72cd0824d8e96294f9f4602d54a5e002965","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"include/mgba/core/interface.h","git_blob_sha1":"b5ffa3049749b9141aa09fc3693bf758a13f4e13","source_sha256":"da6ea4e344c46be5943859a24c0149c12a803b3e951c07140cc795cab09651de","dossier_row_sha256":"093b18935d1a1968f5ce81caa23611a578cc8810a03bde39f3e3f55d0d6b2830","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"include/mgba/core/rewind.h","git_blob_sha1":"2f33886cad3cdbbc860c2cdbc8dae61df17e74b3","source_sha256":"28d0d7023a3d16e4f84af55316019fad170c5153449701f278b2e281b1a90f4c","dossier_row_sha256":"81674fa355a7a5bd9dc3b904e559b33e604bfcb3ef48c5f4cccc3439db0bd159","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"include/mgba/core/serialize.h","git_blob_sha1":"177a7871aa2761c0b478256ce16c7015a36b0fb8","source_sha256":"c1301365f7f24c8842e84b51324cc419e5ea01843f5366e9edbbf1cdf40f5c49","dossier_row_sha256":"4e61192f417f79c7210d2aae3132db1afbedff078fc1e6779b8944ec07bc38b7","license_notice":"MPL-2.0","build_role":"included_header","verdict":"NEEDS_EVIDENCE"},
+    {"path":"src/core/rewind.c","git_blob_sha1":"c462ddd6606a8e1ee59a3e8ac17183393aba13de","source_sha256":"942c084a00095436de4c5433b6bdefb13bd8f7342440743cf1f50d931fb708e6","dossier_row_sha256":"ff1ce3e72985990fa6fefe1251a3c22a6d17adb91692498727692ee86383c084","license_notice":"MPL-2.0","build_role":"production_caller_compiled_and_executed","verdict":"NEEDS_EVIDENCE","source_lines":["src/core/rewind.c:123-170"]},
+    {"path":"src/util/memory.c","git_blob_sha1":"89646d3bcb5a23e6c75ee5ea8ee8dfd7b940027b","source_sha256":"920e7bc5d3ddf4bc69c864d526c9bd141ece547894e9430f5bde3c7fe0acc1e5","dossier_row_sha256":"f022333144a428531384d50b32cff338bb88f52c8912efb2f1cf5b07eed4875c","license_notice":"MPL-2.0","build_role":"compiled_translation_unit","verdict":"NEEDS_EVIDENCE"},
+    {"path":"src/util/patch-fast.c","git_blob_sha1":"81b3aa45a1500b3653c75810fe52cbe77df03295","source_sha256":"b47045d060dacbc2547f29369237778b1fd249d353b1915833392fd625ecdf9c","dossier_row_sha256":"a933fab4fefffd84a8c962bf9923f94f75f791e1c4d2d7dc21f7ccaa57dcc42a","license_notice":"MPL-2.0","build_role":"compiled_translation_unit","verdict":"NEEDS_EVIDENCE"},
+    {"path":"src/util/vfs/vfs-mem.c","git_blob_sha1":"048194e2dd2d0b3b395a852d2092c694663c88a2","source_sha256":"6b5951a0cd634d398a69ce57766298bd32d5e6410ee0aa4e8b8894c6aaa5829b","dossier_row_sha256":"3c95e0a322b5aff0655ec59a1c1f5d34a740a21676da0bf5cce444d2434248ce","license_notice":"MPL-2.0","build_role":"compiled_translation_unit","verdict":"NEEDS_EVIDENCE"}
+  ],
+  "test_evidence": {
+    "source_path": "tests/mgba_rewind_restore_map_failure.c",
+    "source_sha256": "9b0ed62bb02aeb70b659e35e25d7eb2b6fec5c5913e6f34a48f718c8d749eced",
+    "build_path": "tests/CMakeLists.txt",
+    "build_sha256": "ea343d0ee93edc08a572972c68bfb62c164ebdcb0dc331d09240cb842ad3e505",
+    "execution_kind": "PINNED_ORIGINAL_REWIND_CALLER_NATIVE_HOST_FAULT_ADAPTER",
+    "assertion_count": 10,
+    "local_log_path": "semantic-snapshots/independent-reviews/copilot-mgba-savedata/rewind-restore-map-failure-local.log",
+    "local_log_sha256": "39678ebe91f02ee46ccf67781505974200a4bfaa98fdb68e021f0d677dc56e63",
+    "compile_command": "cc -std=c11 -DDISABLE_THREADING -ffunction-sections -fdata-sections -I/tmp/mgba-rewind-caller/source/include tests/mgba_rewind_restore_map_failure.c /tmp/mgba-rewind-caller/source/src/core/rewind.c /tmp/mgba-rewind-caller/source/src/util/patch-fast.c /tmp/mgba-rewind-caller/source/src/util/memory.c /tmp/mgba-rewind-caller/source/src/util/vfs/vfs-mem.c -Wl,--gc-sections -o /tmp/mgba-rewind-caller/witness",
+    "positive_fault_recovery_controls": [
+      "real pinned VFile maps reach the patch observer, both unmaps execute, the core-load stub runs, and state-VFile close callbacks execute.",
+      "Injected NULL map reaches the patch observer as NULL; patch observer returns false; both unmaps execute; core-load stub returns false; pinned restore still returns true and consumes one entry.",
+      "A fresh context with valid maps restores after the fault control."
+    ],
+    "limits": {
+      "rewind_caller_compiled_and_executed": true,
+      "pinned_rewind_translation_unit_unchanged": true,
+      "full_mgba_runtime_executed": false,
+      "production_patch_implementation_used_for_fault_case": false,
+      "production_core_load_callback_executed": false,
+      "gameplay_or_real_save_executed": false,
+      "physical_flash_or_durability_tested": false,
+      "threaded_rewind_tested": false
+    }
+  },
+  "licensing": {
+    "selected_source_notice": "MPL-2.0 verified for all 22 pinned original source/header files.",
+    "transitive_dependency_closure_complete": false,
+    "combined_distribution_legal_conclusion": false,
+    "disposition": "NEEDS_EVIDENCE"
+  },
+  "unresolved_obligations": [
+    "The fault is injected by a test adapter, not by an actual production VFile backend failure.",
+    "The patch consumer and core-load callback are test doubles; behavior of the real patch callback and mCore load/save integration is not established.",
+    "The full mGBA runtime, threaded rewind path, gameplay, actual .sav data, physical Flash, durability and frontend user-visible recovery were not tested.",
+    "Transitive licensing and combined-distribution conclusions remain open."
+  ],
+  "phase1_state": {
+    "decision": "FAIL_INCOMPLETE",
+    "approved_before": 0,
+    "approved_after": 0,
+    "shared_gate_or_register_edited": false,
+    "semantic_approval": false
+  },
+  "negative_control_inventory": [
+    "source-revision-mismatch",
+    "source-blob-mismatch",
+    "source-byte-sha256-mismatch",
+    "dossier-row-mismatch",
+    "dependency-closure-incomplete",
+    "test-source-hash-mismatch",
+    "build-source-hash-mismatch",
+    "runtime-log-mismatch",
+    "false-rewind-execution-claim",
+    "false-production-patch-or-core-claim",
+    "false-gameplay-or-real-save-claim",
+    "false-physical-flash-or-durability-claim",
+    "license-boundary-overclaim",
+    "phase1-approval-promotion",
+    "source-mutation"
+  ]
+}
