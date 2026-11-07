@@ -21,7 +21,7 @@ blobs. The compressed dossier is Git blob
 | `src/util/vfs/vfs-mem.c` | `048194e2dd2d0b3b395a852d2092c694663c88a2` | `6b5951a0cd634d398a69ce57766298bd32d5e6410ee0aa4e8b8894c6aaa5829b` | `3c95e0a322b5aff0655ec59a1c1f5d34a740a21676da0bf5cce444d2434248ce` | Full pinned TU compiled and memory-backend controls executed. |
 | `src/gba/savedata.c` | `fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb` | `9887e36795ae51e39eecad09565d27d3feabe316d3e595b17f288e3205e13161` | `99a6b3e97c52d67712e10204e08ced8819c7330e899b9f767aa280fc330c42e0` | Seven exact bodies extracted, compiled, and executed with bounded support stubs. |
 | `src/gba/gba.c` | `c30bd943909dc00df0b5b9932e6d9ddb6e1c404e` | `e84eaba17f6c96ac7b78431afaee79d7633dd50118f92e31e4432793f80c4c7b` | `d1870b438fe6dd9bfa628a99d90189778e112588c14ae08f28fa379903595056` | `GBAUnloadROM` extracted, compiled, and executed; `GBADestroy` source-pinned and audited only. |
-| `src/gba/core.c` | `6bfc518bb8899205c07d1d0fc091a287cb42f874` | `47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596` | `3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784` | `_GBACoreDeinit` source-pinned and audited only; not compiled or executed. |
+| `src/gba/core.c` | `6bfc518bb8899205c07d1d0fc091a287cb42f874` | `47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596` | `3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784` | `_GBACoreDeinit` audited only; exact `_GBACoreSavedataRestore` body executed in the bounded writeback witness below. |
 | `src/core/scripting.c` | `7ccb51e897685ce24b37dabc76beb27427331b4f` | `8bb8d2ca9a744b51a96d5258b7a1cec49b724f92ae843a1504b22d4ae9d138b1` | `9975d4c10ec523f164e9e0292ae795ccb8522343d7b926c233bee159de08abc8` | Callback/error path source-pinned and audited only; not compiled or executed. |
 | `src/script/stdlib.c` | `f84b62515315c119ec4ff5b9fb6df4de4517c738` | `52c9fc2d9490f3f158f20c8eddfed07440ec22e4f174043f96e3704599c87b99` | `db8b3609ef7ae747d57b1b3a163dd9af6fbbf9c22d661b2a5261e274cbae6ad1` | Script-facing registration path source-pinned and audited only; not compiled or executed. |
 | `include/mgba-util/vfs.h` | `6c9bd299153af4c3c9cd5487f2425a2481331ee5` | `4c829529f21c424196b4d1efe25ce11227312437cf1aa5028cae94a741bf6656` | `5d4c30179d703f5b013badf083d6c99c736186091873d65edcb3f0943c2763dd` | Direct harness compile input; interface contract inspected. |
@@ -136,6 +136,41 @@ durability, `.sav` interoperability, stock-gameplay, or physical Flash
 evidence. The test does not establish how a real OS reports close failures or
 that a failed `close` leaves the descriptor open; that behavior is a controlled
 fault-injection assumption. No callback error report is inferred.
+
+## Distinct savedata-restore POSIX write path
+
+The pinned `src/gba/core.c` `_GBACoreSavedataRestore` caller uses
+`VFileMemChunk` and invokes `GBASavedataLoad` when `writeback` is true. When
+`savedata->data` is null but its real POSIX `VFile` is present,
+`GBASavedataLoad` copies through `savedata->vf->write`. This is a separate
+save-data restore path from the already-tested mapped-save sync/unmap and
+masked short-read cases. The original caller and original `GBASavedataLoad`
+body execute with the complete pinned POSIX fd and memory VFile translation
+units; a local syscall wrapper controls only the write result. The caller
+translation unit is not compiled: a narrow fixture `mCore` object supplies the
+original function's `board` field.
+
+The exact `_GBACoreSavedataRestore` function-body SHA-256 is
+`8f3654b0b9164674275a28137a89decf55047436aa8df09225ccfcb326a6ea0b`.
+Its source file identity and canonical dossier row are listed above; the
+source files and headers carry MPL-2.0 notices. Only source-derived bodies are
+extracted to a temporary build file; no mGBA source file is copied into this
+repository. The runner verifies the caller body as well as the existing
+savedata and VFile source identities.
+
+| Case | Observed pinned caller result | Host-file observation |
+|---|---|---|
+| Full write | Caller returns true; original VFile path issues the full write and the following zero-length write. | All 2048 input bytes match. |
+| Positive short write | The injected real POSIX `write` writes and returns 1 for a 2048-byte request. Caller returns true and issues no retry. | Only the first byte is present; this is a controlled host fault observation, not a claim about ordinary filesystem behavior. |
+| Negative write | The wrapper returns `-1`/`EIO`; caller returns false. | The empty file remains empty. |
+
+This is a compiled, source-extracted host witness, not a full mGBA frontend or
+headless emulator run. The machine record marks the complete core translation
+unit, headless process, and frontend runtime as unobserved. It verifies the
+caller function's boolean result and same-host file contents only. It does not
+show frontend handling of that result, save-state UI behavior, durable
+persistence, `.sav` interoperability, stock
+gameplay, or physical Flash behavior. No approval or gate status is promoted.
 
 ## Validation and CI
 

@@ -79,6 +79,16 @@ struct GBA {
 	int idleLoop;
 };
 
+struct mCore {
+	struct GBA* board;
+};
+
+enum SavedataWriteFault {
+	SAVEDATA_WRITE_FAULT_NONE,
+	SAVEDATA_WRITE_FAULT_NEGATIVE,
+	SAVEDATA_WRITE_FAULT_SHORT
+};
+
 static void* failSyncMap;
 static void* failUnmapMap;
 static int failCloseFd = -1;
@@ -92,6 +102,11 @@ static unsigned closeCalls;
 static unsigned closeErrors;
 static unsigned shortReadBytes;
 static unsigned shortReadRequested;
+static unsigned savedataWriteCalls;
+static enum SavedataWriteFault savedataWriteFaultMode;
+static bool savedataWriteTrace;
+static bool savedataWriteFaultObserved;
+static ssize_t savedataFirstWriteResult;
 static bool traceEnabled;
 static char trace[64];
 static size_t traceLength;
@@ -130,6 +145,8 @@ static void GBASavedataUnmask(struct GBASavedata* savedata);
 static void GBASavedataForceType(struct GBASavedata* savedata,
                                  enum GBASavedataType type);
 static void GBAUnloadROM(struct GBA* gba);
+static bool _GBACoreSavedataRestore(struct mCore* core, const void* sram,
+                                    size_t size, bool writeback);
 
 PHASE1_INSERT_PINNED_ASHES
 
@@ -168,6 +185,8 @@ static void GBAUnlCartUnload(struct GBA* gba) {
 }
 
 PHASE1_INSERT_PINNED_GBA_UNLOAD_ROM
+
+PHASE1_INSERT_PINNED_GBA_CORE_SAVEDATA_RESTORE
 
 int __real_msync(void* memory, size_t size, int flags);
 int __wrap_msync(void* memory, size_t size, int flags) {
@@ -218,6 +237,32 @@ ssize_t __wrap_read(int fd, void* buffer, size_t size) {
 		shortReadBytes = result > 0 ? (unsigned) result : 0;
 	}
 	return result;
+}
+
+ssize_t __real_write(int fd, const void* buffer, size_t size);
+ssize_t __wrap_write(int fd, const void* buffer, size_t size) {
+	if (savedataWriteTrace) {
+		++savedataWriteCalls;
+		ssize_t result;
+		if (!savedataWriteFaultObserved &&
+		    savedataWriteFaultMode == SAVEDATA_WRITE_FAULT_NEGATIVE) {
+			savedataWriteFaultObserved = true;
+			errno = EIO;
+			result = -1;
+		} else if (!savedataWriteFaultObserved &&
+		           savedataWriteFaultMode == SAVEDATA_WRITE_FAULT_SHORT &&
+		           size > 1) {
+			savedataWriteFaultObserved = true;
+			result = __real_write(fd, buffer, 1);
+		} else {
+			result = __real_write(fd, buffer, size);
+		}
+		if (savedataWriteCalls == 1) {
+			savedataFirstWriteResult = result;
+		}
+		return result;
+	}
+	return __real_write(fd, buffer, size);
 }
 
 static void fail(const char* message) {
@@ -480,6 +525,83 @@ static void test_memory_vfile(void) {
 	       "chunk_sync=1 chunk_close=1\n", backing[0]);
 }
 
+static void test_restore_write_case(const char* directory, const char* label,
+                                    enum SavedataWriteFault faultMode,
+                                    bool expectedReturn,
+                                    size_t expectedFileSize) {
+	char path[PATH_MAX];
+	snprintf(path, sizeof(path), "%s/%s.sav", directory, label);
+	int fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0600);
+	if (fd < 0) {
+		fail("create restore savedata file");
+	}
+	struct GBA gba;
+	memset(&gba, 0, sizeof(gba));
+	struct VFile* vf = VFileFromFD(fd);
+	if (!vf) {
+		fail("create restore POSIX VFile");
+	}
+	GBASavedataInit(&gba.memory.savedata, vf);
+	struct mCore core = { .board = &gba };
+	uint8_t input[2048];
+	for (size_t i = 0; i < sizeof(input); ++i) {
+		input[i] = (uint8_t) (i * 13 + 7);
+	}
+	savedataWriteCalls = 0;
+	savedataWriteFaultMode = faultMode;
+	savedataWriteFaultObserved = false;
+	savedataFirstWriteResult = -2;
+	savedataWriteTrace = true;
+	bool callerReturn = _GBACoreSavedataRestore(&core, input, sizeof(input), true);
+	savedataWriteTrace = false;
+	savedataWriteFaultMode = SAVEDATA_WRITE_FAULT_NONE;
+
+	struct stat status;
+	uint8_t output[sizeof(input)];
+	int verifyFd = open(path, O_RDONLY);
+	if (verifyFd < 0 || fstat(verifyFd, &status) < 0) {
+		fail("inspect restored savedata file");
+	}
+	ssize_t bytesRead = status.st_size ?
+		pread(verifyFd, output, (size_t) status.st_size, 0) : 0;
+	if (close(verifyFd) < 0) {
+		fail("close restored savedata verification file");
+	}
+	bool contentMatch = bytesRead == (ssize_t) expectedFileSize &&
+		(expectedFileSize == 0 ||
+		 memcmp(output, input, expectedFileSize) == 0);
+	bool prefixMatch = bytesRead == 1 && output[0] == input[0];
+	bool expectedFaultObserved =
+		faultMode == SAVEDATA_WRITE_FAULT_NONE || savedataWriteFaultObserved;
+	unsigned expectedWriteCalls =
+		faultMode == SAVEDATA_WRITE_FAULT_NONE ? 2 : 1;
+	if (callerReturn != expectedReturn ||
+	    savedataWriteCalls != expectedWriteCalls ||
+	    !expectedFaultObserved || status.st_size != (off_t) expectedFileSize ||
+	    (faultMode == SAVEDATA_WRITE_FAULT_SHORT ? !prefixMatch :
+	     faultMode == SAVEDATA_WRITE_FAULT_NONE ? !contentMatch :
+	     bytesRead != 0)) {
+		fprintf(stderr, "savedata restore write case changed: %s\n", label);
+		exit(1);
+	}
+	if (!vf->close(vf)) {
+		fail("close restored savedata VFile");
+	}
+	printf("PHASE1_TEARDOWN_CASE restore_%s caller_return=%u "
+	       "write_calls=%u first_write=%zd requested=2048 file_size=%lld "
+	       "%s=%u%s\n",
+	       label, (unsigned) callerReturn, savedataWriteCalls,
+	       savedataFirstWriteResult, (long long) status.st_size,
+	       faultMode == SAVEDATA_WRITE_FAULT_SHORT ?
+		       "prefix_match" : "content_match",
+	       (unsigned) (faultMode == SAVEDATA_WRITE_FAULT_SHORT ?
+		           prefixMatch : contentMatch),
+	       faultMode == SAVEDATA_WRITE_FAULT_SHORT ? " retry=0" : "");
+	if (unlink(path) < 0) {
+		fail("remove restored savedata file");
+	}
+}
+
 int main(void) {
 	char directory[] = "/tmp/mgba-vfs-teardown-XXXXXX";
 	if (!mkdtemp(directory)) {
@@ -491,6 +613,12 @@ int main(void) {
 	test_unload_case(directory, "close_failure", 164, false, false, true);
 	test_masked_writeback(directory);
 	test_memory_vfile();
+	test_restore_write_case(directory, "full_write", SAVEDATA_WRITE_FAULT_NONE,
+	                        true, 2048);
+	test_restore_write_case(directory, "short_write", SAVEDATA_WRITE_FAULT_SHORT,
+	                        true, 1);
+	test_restore_write_case(directory, "negative_write",
+	                        SAVEDATA_WRITE_FAULT_NEGATIVE, false, 0);
 	if (rmdir(directory) < 0) {
 		fail("remove temporary directory");
 	}

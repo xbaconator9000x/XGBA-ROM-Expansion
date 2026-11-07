@@ -118,8 +118,9 @@ BODY_HASHES = {
     "unload_rom": "1c7090ddfe712b836048af6492dedb4f8c4d2ec94ac0f30f3b8e92648071b7f6",
     "gba_destroy": "45831c7737fc196fa77546805aa6f0cca2fd34565bd3d7a77d65d58e1a858535",
     "gba_core_deinit": "f118627b62bee1476c5351def9c9d5378e31091277913b6a71615ffcb789a04f",
+    "savedata_restore": "8f3654b0b9164674275a28137a89decf55047436aa8df09225ccfcb326a6ea0b",
 }
-FIXTURE_SHA256 = "c731670c511ceaf53db2fac8372efe5bfa36ad443bf8808b675b740e4e2cbe9f"
+FIXTURE_SHA256 = "0b60bdb3178cfa60ef5f696b1a3a866b5adb490c41aa432fb16f00377d3b9bc8"
 EXPECTED_LINES = (
     "PHASE1_TEARDOWN_CASE success sync_calls=1 sync_errors=0 unmap_calls=1 unmap_errors=0 close_calls=1 close_errors=0 state_cleared=1 orphan_map_read=0 retry_close=0 fresh_process_byte=161 trace=SUC",
     "PHASE1_TEARDOWN_CASE sync_failure sync_calls=1 sync_errors=1 unmap_calls=1 unmap_errors=0 close_calls=1 close_errors=0 state_cleared=1 orphan_map_read=0 retry_close=0 fresh_process_byte=162 trace=SUC",
@@ -127,6 +128,9 @@ EXPECTED_LINES = (
     "PHASE1_TEARDOWN_CASE close_failure sync_calls=1 sync_errors=0 unmap_calls=1 unmap_errors=0 close_calls=1 close_errors=1 state_cleared=1 orphan_map_read=0 retry_close=1 fresh_process_byte=164 trace=SUC",
     "PHASE1_TEARDOWN_CASE masked_writeback_short_read sync_calls=2 sync_errors=1 unmap_calls=2 unmap_errors=1 close_calls=2 close_errors=1 state_cleared=1 orphan_map_read=90 retry_close=1 fresh_process_byte=229 short_read=32 requested=4096 trace=SUCSUC",
     "PHASE1_TEARDOWN_CASE memory borrowed_unmap_live=1 borrowed_sync=1 borrowed_close=1 borrowed_byte=204 chunk_unmap_live=1 chunk_sync=1 chunk_close=1",
+    "PHASE1_TEARDOWN_CASE restore_full_write caller_return=1 write_calls=2 first_write=2048 requested=2048 file_size=2048 content_match=1",
+    "PHASE1_TEARDOWN_CASE restore_short_write caller_return=1 write_calls=1 first_write=1 requested=2048 file_size=1 prefix_match=1 retry=0",
+    "PHASE1_TEARDOWN_CASE restore_negative_write caller_return=0 write_calls=1 first_write=-1 requested=2048 file_size=0 content_match=1",
 )
 
 
@@ -273,6 +277,9 @@ def verify_sources(source_root, checkout_identity):
          BODY_HASHES["gba_destroy"]),
         ("src/gba/core.c", "static void _GBACoreDeinit(struct mCore* core)",
          BODY_HASHES["gba_core_deinit"]),
+        ("src/gba/core.c",
+         "static bool _GBACoreSavedataRestore(struct mCore* core, const void* sram, size_t size, bool writeback)",
+         BODY_HASHES["savedata_restore"]),
     )
     bodies = {}
     for index, (path, signature, digest) in enumerate(function_specs):
@@ -297,6 +304,9 @@ def verify_sources(source_root, checkout_identity):
             "savedata teardown error-return sinks changed")
     require("savedataUpdated" not in bodies["12"],
             "unexpected scripting callback in GBAUnloadROM")
+    require("success = GBASavedataLoad(&gba->memory.savedata, vf);" in
+            bodies["15"] and "if (writeback)" in bodies["15"],
+            "savedata restore caller no longer reaches the pinned writeback path")
     return sources, bodies
 
 
@@ -313,6 +323,8 @@ def reject_source_mutations(sources):
          "savedata->vf->close(savedata->vf)"),
         ("src/gba/savedata.c", "GBASavedataLoad(savedata, vf);",
          "return;"),
+        ("src/gba/core.c", "success = GBASavedataLoad(&gba->memory.savedata, vf);",
+         "success = true;"),
         ("src/gba/gba.c", "gba->memory.savedata.realVf->close(gba->memory.savedata.realVf);",
          "return;"),
     )
@@ -343,6 +355,9 @@ def parse_output(output):
         "masked_short_read_result_ignored": True,
         "fresh_process_page_cache_reads": 5,
         "savedata_updated_reference_in_unload": False,
+        "restore_short_write_reported_success": True,
+        "restore_negative_write_reported_failure": True,
+        "restore_short_write_retried": False,
     }
 
 
@@ -359,6 +374,9 @@ def reject_evidence_mutations(output):
         output.replace("borrowed_unmap_live=1", "borrowed_unmap_live=0", 1),
         output.replace("state_cleared=1", "state_cleared=0", 1),
         output.replace("PHASE1_TEARDOWN_DONE\n", "", 1),
+        output.replace("restore_short_write caller_return=1", "restore_short_write caller_return=0", 1),
+        output.replace("write_calls=1 first_write=1", "write_calls=2 first_write=1", 1),
+        output.replace("restore_negative_write caller_return=0", "restore_negative_write caller_return=1", 1),
     )
     for changed in cases:
         try:
@@ -394,6 +412,7 @@ def main():
         "PHASE1_INSERT_PINNED_SAVEDATA_LOAD": bodies["9"],
         "PHASE1_INSERT_PINNED_SAVEDATA_UNMASK": bodies["10"],
         "PHASE1_INSERT_PINNED_GBA_UNLOAD_ROM": bodies["12"],
+        "PHASE1_INSERT_PINNED_GBA_CORE_SAVEDATA_RESTORE": bodies["15"],
     }
     expanded = fixture
     for marker, body in markers.items():
@@ -425,7 +444,8 @@ def main():
             str(source_root / "src/util/vfs/vfs-fd.c"),
             str(source_root / "src/util/vfs/vfs-mem.c"),
             str(source_path), "-Wl,--wrap=msync", "-Wl,--wrap=munmap",
-            "-Wl,--wrap=close", "-Wl,--wrap=read", "-o", str(binary),
+            "-Wl,--wrap=close", "-Wl,--wrap=read", "-Wl,--wrap=write",
+            "-o", str(binary),
         ]
         compiled = run(command, timeout=90)
         require(compiled.returncode == 0,
@@ -440,6 +460,7 @@ def main():
 
     evidence = {
         "class": "PINNED_MGBA_LINUX_VFILE_TEARDOWN_ERROR_PROPAGATION_NATIVE",
+        "execution_scope": "COMPILED_EXTRACTED_PINNED_FUNCTIONS_AND_REAL_PINNED_POSIX_VFILE_TRANSLATION_UNITS_WITH_HOST_WRITE_FAULT_INJECTION",
         "mgba_commit": PIN,
         "source_tree_identity_verified": tree_identity_verified,
         "source_git_blobs": {path: value[0] for path, value in FILES.items()},
@@ -453,6 +474,11 @@ def main():
         "original_vfs_memory_translation_unit_compiled": True,
         "original_savedata_init_deinit_mask_load_unmask_executed": True,
         "original_gba_unload_rom_executed": True,
+        "original_gba_core_savedata_restore_executed": True,
+        "original_gba_core_savedata_restore_full_write_and_fault_cases": True,
+        "full_mgba_core_translation_unit_compiled": False,
+        "full_headless_process_observed": False,
+        "frontend_runtime_observed": False,
         "gba_core_deinit_and_destroy_source_audited_not_compiled": True,
         "compiler_version": subprocess.check_output(
             [compiler, "--version"], text=True

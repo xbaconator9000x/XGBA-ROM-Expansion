@@ -18,10 +18,13 @@ GOOD = "\n".join(runner.EXPECTED_LINES) + "\nPHASE1_TEARDOWN_DONE\n"
 class TestVfsFdTeardownEvidence(unittest.TestCase):
     def test_positive_matrix(self):
         result = runner.parse_output(GOOD)
-        self.assertEqual(len(result["cases"]), 6)
+        self.assertEqual(len(result["cases"]), 9)
         self.assertTrue(result["close_failure_return_ignored_by_gba_unload"])
         self.assertFalse(result["unmap_error_return_channel"])
         self.assertFalse(result["savedata_updated_reference_in_unload"])
+        self.assertTrue(result["restore_short_write_reported_success"])
+        self.assertTrue(result["restore_negative_write_reported_failure"])
+        self.assertFalse(result["restore_short_write_retried"])
 
     def assert_mutation_rejected(self, before, after):
         changed = GOOD.replace(before, after, 1)
@@ -58,6 +61,19 @@ class TestVfsFdTeardownEvidence(unittest.TestCase):
     def test_memory_unmap_contract(self):
         self.assert_mutation_rejected(
             "borrowed_unmap_live=1", "borrowed_unmap_live=0")
+
+    def test_short_write_success_and_no_retry(self):
+        self.assert_mutation_rejected(
+            "restore_short_write caller_return=1",
+            "restore_short_write caller_return=0")
+        self.assert_mutation_rejected(
+            "write_calls=1 first_write=1",
+            "write_calls=2 first_write=1")
+
+    def test_negative_write_failure(self):
+        self.assert_mutation_rejected(
+            "restore_negative_write caller_return=0",
+            "restore_negative_write caller_return=1")
 
     def test_missing_terminal_rejected(self):
         with self.assertRaises(ValueError):
@@ -112,7 +128,7 @@ class TestVfsFdTeardownEvidence(unittest.TestCase):
                          runner.FIXTURE_SHA256)
 
     def test_internal_evidence_mutations(self):
-        self.assertEqual(runner.reject_evidence_mutations(GOOD), 11)
+        self.assertEqual(runner.reject_evidence_mutations(GOOD), 14)
 
 
 if __name__ == "__main__":
