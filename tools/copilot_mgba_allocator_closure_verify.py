@@ -21,7 +21,7 @@ RECORD = Path(
     "semantic-snapshots/independent-reviews/copilot-mgba-savedata/"
     "allocator-source-closure.json"
 )
-RECORD_SHA256 = "ac6f02bd8efb9434eaf2025aa0559ec572af33347fbb14e80ec7aae19b230ca0"
+RECORD_SHA256 = "b2050bccba62430df34852ed987b76030c54ee5c2e03fb57812b3ce9f1e539af"
 PIN = "fd9dc5c2cbf234365068855851107e762fc6211b"
 DOSSIER_SHA256 = "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
 DOSSIER_BLOB = "3b982876c7d810a827af8c80c7e5d9231fdaa327"
@@ -246,18 +246,25 @@ def validate(record: dict, matrix: dict, rows: dict, sources: dict[str, bytes]) 
     )
     ci = record.get("ci_provenance", {})
     require(
-        ci.get("exact_parent_run_id") == 41997398570
+        ci.get("exact_parent_run_id") == 42326526215
         and ci.get("event") == "pull_request"
-        and ci.get("head_sha") == "1112c64043d36ccc41d099ce4c8188779a53129a"
-        and ci.get("run_attempt") == 2
-        and ci.get("job_id") == 127160335121
+        and ci.get("head_sha") == "ad4f81190369992c5704bcf33a67af658b1d036a"
+        and ci.get("run_attempt") == 1
+        and ci.get("job_id") == 128262988670
         and ci.get("job_conclusion") == "success"
-        and ci.get("receipt_verifier_step") == 15
+        and ci.get("allocator_verifier_step") == 16
         and ci.get("native_assertions") == 43
         and ci.get("savedata_assertions") == 9
         and ci.get("hazard_observations") == 4
+        and ci.get("test_source_sha256")
+        == "233206a92473469d5ebcd74cdcdedaf6e49395cb67b0cbe19cb2d3a0e2fead18"
+        and ci.get("runtime_log_sha256")
+        == "334addf291ce91cd7f2419b7dc8b4780b63825959ce28c8f13af3aa5c7e23000"
+        and ci.get("artifact_id") == 13554923719
+        and ci.get("artifact_zip_sha256")
+        == "1873fececf94f5ecbc1a160fda25e0669876edd663e69b65d4e0e8607f03a0d2"
         and ci.get("push_event_run_count") == 0
-        and "not this new allocator receipt" in ci.get("limitations", ""),
+        and "did not inject allocation failure" in ci.get("limitations", ""),
         "CI evidence identity or claim limit mismatch",
     )
     require(

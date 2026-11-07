@@ -151,17 +151,21 @@
     "disposition": "NEEDS_EVIDENCE"
   },
   "ci_provenance": {
-    "exact_parent_run_id": 41997398570,
+    "exact_parent_run_id": 42326526215,
     "event": "pull_request",
-    "head_sha": "1112c64043d36ccc41d099ce4c8188779a53129a",
-    "run_attempt": 2,
-    "job_id": 127160335121,
+    "head_sha": "ad4f81190369992c5704bcf33a67af658b1d036a",
+    "run_attempt": 1,
+    "job_id": 128262988670,
     "job_conclusion": "success",
-    "receipt_verifier_step": 15,
+    "allocator_verifier_step": 16,
     "native_assertions": 43,
     "savedata_assertions": 9,
     "hazard_observations": 4,
-    "limitations": "Run targeted the exact parent only; it verified the then-current 15-receipt package and native synthetic-cartridge evidence, not this new allocator receipt or allocation failure injection.",
+    "test_source_sha256": "233206a92473469d5ebcd74cdcdedaf6e49395cb67b0cbe19cb2d3a0e2fead18",
+    "runtime_log_sha256": "334addf291ce91cd7f2419b7dc8b4780b63825959ce28c8f13af3aa5c7e23000",
+    "artifact_id": 13554923719,
+    "artifact_zip_sha256": "1873fececf94f5ecbc1a160fda25e0669876edd663e69b65d4e0e8607f03a0d2",
+    "limitations": "This exact-parent PR run validated the allocator receipt source identity and all ten verifier mutation controls; the native synthetic-cartridge harness did not inject allocation failure and is not game-save gameplay, physical Flash, restart, or durability evidence.",
     "push_event_run_count": 0
   },
   "phase1_state": {
