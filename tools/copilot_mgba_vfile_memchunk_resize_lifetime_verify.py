@@ -344,6 +344,7 @@ def validate(
 
 
 def run_controls(
+    root: Path,
     record: dict,
     rows: dict[str, tuple[str, str, str]],
     sources: dict[str, bytes],
@@ -363,7 +364,7 @@ def run_controls(
             mutate_sources(candidate_sources)
         try:
             validate(
-                ROOT,
+                root,
                 candidate,
                 rows,
                 candidate_sources,
@@ -478,7 +479,7 @@ def main() -> int:
         revision
     )
     controls = (
-        run_controls(record, rows, sources, matrix, test_source, build_source, native_log)
+        run_controls(root, record, rows, sources, matrix, test_source, build_source, native_log)
         if args.self_test else []
     )
     require(
