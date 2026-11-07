@@ -79,11 +79,13 @@ int msync(void* address, size_t length, int flags) {
 	const char* target = getenv("XGBA_SYNC_TARGET");
 	if (target && _pathForAddress(address, path, sizeof(path)) && strcmp(path, target) == 0) {
 		const char* operation = (flags & MS_ASYNC) ? "async" : "sync";
-		const char* inject = getenv("XGBA_SYNC_INJECT_EIO");
-		bool injected = (flags & MS_ASYNC) && inject && strcmp(inject, "1") == 0;
+		const char* inject = getenv("XGBA_SYNC_INJECT_OPERATION");
+		bool injected = inject && strcmp(inject, operation) == 0;
 		if (injected) {
 			_recordSync(getenv("XGBA_SYNC_MARKER"), operation, true, -1);
-			_waitForRelease();
+			if (flags & MS_ASYNC) {
+				_waitForRelease();
+			}
 			errno = EIO;
 			return -1;
 		}

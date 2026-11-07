@@ -63,6 +63,36 @@ class HeadlessRuntimeSyncTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_matrix(changed)
 
+    def test_teardown_ms_sync_failure_has_no_mgba_error_channel(self):
+        teardown = self.matrix["local_execution"]["teardown_sync_failure"]
+        self.assertEqual(teardown["teardown_ms_sync"], "returned -1 with errno EIO")
+        self.assertFalse(teardown["unmap_ms_sync_return_observed_by_mGBA"])
+        self.assertIsNone(teardown["mGBA_log_for_teardown_error"])
+        for key, value in (
+            ("teardown_ms_sync", "returned success"),
+            ("unmap_ms_sync_return_observed_by_mGBA", True),
+            ("mGBA_log_for_teardown_error", "Savedata failed to sync!"),
+            ("process_exit_status", 1),
+        ):
+            changed = copy.deepcopy(self.matrix)
+            changed["local_execution"]["teardown_sync_failure"][key] = value
+            with self.assertRaises(ValueError):
+                validate_matrix(changed)
+
+    def test_teardown_failure_reopen_is_not_a_persistence_receipt(self):
+        changed = copy.deepcopy(self.matrix)
+        changed["local_execution"]["cold_process_reopen_after_teardown_failure"][
+            "same_os_page_cache_durability_claim"
+        ] = True
+        with self.assertRaises(ValueError):
+            validate_matrix(changed)
+        changed = copy.deepcopy(self.matrix)
+        changed["local_execution"]["cold_process_reopen_after_teardown_failure"][
+            "script_read_sram_byte"
+        ] = "0x43"
+        with self.assertRaises(ValueError):
+            validate_matrix(changed)
+
     def test_cannot_drop_observed_callback_or_teardown_or_failure_logger(self):
         for key, value in (("save_sync_callback_attempts", 0), ("mGBA_log", "Savedata synced"),
                            ("teardown_unmap_attempts", 0)):

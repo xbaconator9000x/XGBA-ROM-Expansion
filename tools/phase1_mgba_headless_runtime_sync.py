@@ -119,8 +119,10 @@ SOURCES = {
         "0073a68b6688f1baa26acaf609af52e9f29308605e449e7c3182c9f4d768da44",
         "bb351807533d3de29f1f87c2c3a644a70c67430f556e83e219b1e25292589942",
         "reuse_existing_vfs_review",
-        "Native POSIX mapped-file sync uses msync(MS_ASYNC); injected EIO tests this host boundary.",
-        {246: "static bool _vfdSync(", 258: "return msync(buffer, size, MS_ASYNC) == 0;"},
+        "Native POSIX mapped-file callback and teardown use msync(MS_ASYNC) and msync(MS_SYNC); injected EIO tests these host boundaries.",
+        {151: "static void _vfdUnmap(", 153: "msync(memory, size, MS_SYNC);",
+         154: "munmap(memory, size);", 246: "static bool _vfdSync(",
+         258: "return msync(buffer, size, MS_ASYNC) == 0;"},
     ),
     "src/core/log.c": (
         "39d6db88cad3ca6f521a532c114b6488adb77279",
@@ -142,6 +144,8 @@ DEPENDENCY_EDGES = [
     ["gba/gba.c", "GBASavedataClean"],
     ["gba/savedata.c", "VFile.sync"],
     ["util/vfs/vfs-fd.c", "msync(MS_ASYNC)"],
+    ["headless-main.c", "core->unloadROM(core)"],
+    ["util/vfs/vfs-fd.c", "_vfdUnmap -> msync(MS_SYNC) -> munmap"],
     ["gba/savedata.c", "mLOG(GBA_SAVE, INFO)"],
     ["script/context.c", "script/engines/lua.c"],
     ["script/engines/lua.c", "core/scripting.c Lua core adapter"],
@@ -184,8 +188,8 @@ def expected_matrix():
             "save_open": "Script-mediated mCoreLoadSaveFile(path, temporary=false), not headless autoload.",
             "write": "Script busWrite8 targets GBA SRAM, which the pinned core detects and marks dirty.",
             "sync": "Real pinned GBAFrameEnded -> GBASavedataClean -> VFile sync -> Linux vfs-fd msync(MS_ASYNC).",
-            "fault_injection": "LD_PRELOAD interposer matches only the mapped .sav path and makes its msync return -1/EIO; it does not replace mGBA savedata logic.",
-            "backend_sync_distinction": "The savedata callback uses msync(MS_ASYNC); teardown unmap separately calls msync(MS_SYNC). Injection targets only MS_ASYNC and both results are recorded.",
+            "fault_injection": "LD_PRELOAD interposer matches only the mapped .sav path and can make only the selected MS_ASYNC callback or MS_SYNC unmap msync return -1/EIO; it does not replace mGBA savedata logic.",
+            "backend_sync_distinction": "The savedata callback uses msync(MS_ASYNC); teardown unmap separately calls msync(MS_SYNC). Each injected case targets only one operation and records both results.",
             "shutdown": "Harness sends SIGINT only after the sync event; headless exits 0 through its normal signal cleanup path.",
         },
         "local_execution": {
@@ -210,12 +214,26 @@ def expected_matrix():
                 "process_exit_status": 0,
                 "error_propagated_to_process_status": False,
             },
+            "teardown_sync_failure": {
+                "callback_ms_async": "success",
+                "teardown_ms_sync": "returned -1 with errno EIO",
+                "unmap_ms_sync_return_observed_by_mGBA": False,
+                "mGBA_log_for_teardown_error": None,
+                "process_exit_status": 0,
+            },
             "cold_process_reopen_after_failed_sync": {
                 "separate_headless_process": True,
                 "preceded_by_successful_teardown_unmap": True,
                 "script_loadSaveFile_succeeded": True,
                 "script_read_sram_byte": "0x43",
                 "process_exit_status": 0,
+            },
+            "cold_process_reopen_after_teardown_failure": {
+                "separate_headless_process": True,
+                "script_loadSaveFile_succeeded": True,
+                "script_read_sram_byte": "0x44",
+                "process_exit_status": 0,
+                "same_os_page_cache_durability_claim": False,
             },
             "native_frontend_ui_observed": False,
             "full_gui_frontend_observed": False,
@@ -231,6 +249,7 @@ def expected_matrix():
             "The msync failure is host-level injected EIO, not a physical storage failure or frontend UI observation.",
             "A second process reads the OS-visible .sav after the callback msync failure, but shutdown's separate MS_SYNC unmap succeeded first; the read is not attributable to the failed callback and is not proof of durable storage, power-loss survival, or independent media persistence.",
             "The headless process exit code is 0 after callback sync failure; the INFO logger is the observed failure channel, not a propagated process error. Teardown separately issues an MS_SYNC unmap flush.",
+            "The distinct final MS_SYNC teardown error is injected in the compiled headless process; pinned void _vfdUnmap ignores the msync result and emits no teardown-specific mGBA log. A fresh process observes the same-host OS-visible byte, not evidence that the failed flush persisted data.",
             "Only four newly selected source files receive bounded runtime-path review; other dependency identities are reused or dependency-only and are not counted as new whole-file reviews.",
         ],
         "distribution_notice": (
@@ -249,6 +268,10 @@ def validate_matrix(payload):
             "a headless process must not be relabeled as GUI frontend UI")
     require(payload["local_execution"]["durable_persistence_or_power_loss_observed"] is False,
             "process reopen cannot establish durable persistence")
+    require(payload["local_execution"]["teardown_sync_failure"]["unmap_ms_sync_return_observed_by_mGBA"] is False,
+            "pinned POSIX unmap has no result channel")
+    require(payload["local_execution"]["cold_process_reopen_after_teardown_failure"]["same_os_page_cache_durability_claim"] is False,
+            "cold reopen after teardown failure cannot establish persistence")
     return True
 
 
@@ -311,12 +334,18 @@ def _make_rom(path):
     path.write_bytes(rom)
 
 
-def _wait_and_interrupt(process, event_path, log_path, release_path=None, timeout=8):
+def _wait_and_interrupt(process, event_path, log_path, release_path=None, event_operation=None, timeout=8):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if process.poll() is not None:
             raise RuntimeError("headless process exited before event: " + log_path.read_text(errors="replace")[-2000:])
-        if event_path.exists() and event_path.stat().st_size:
+        event_seen = event_path.exists() and event_path.stat().st_size
+        if event_seen and event_operation:
+            event_seen = any(
+                line.startswith("operation=" + event_operation + " ")
+                for line in event_path.read_text(encoding="utf-8").splitlines()
+            )
+        if event_seen:
             if release_path:
                 release_path.touch()
             process.send_signal(signal.SIGINT)
@@ -334,7 +363,8 @@ def _wait_and_interrupt(process, event_path, log_path, release_path=None, timeou
         raise RuntimeError("headless process did not exit after SIGINT")
 
 
-def _run(headless, script, rom, directory, name, sync_path=None, inject=False, harness=None):
+def _run(headless, script, rom, directory, name, sync_path=None, inject_operation=None,
+         harness=None, event_operation=None):
     log_path = directory / (name + ".log")
     marker = directory / (name + ".marker")
     release = directory / (name + ".release")
@@ -348,13 +378,13 @@ def _run(headless, script, rom, directory, name, sync_path=None, inject=False, h
         env["XGBA_SYNC_TARGET"] = str(sync_path.resolve())
         env["XGBA_SYNC_MARKER"] = str(marker)
         env["XGBA_SYNC_RELEASE"] = str(release)
-        env["XGBA_SYNC_INJECT_EIO"] = "1" if inject else "0"
+        env["XGBA_SYNC_INJECT_OPERATION"] = inject_operation or ""
     else:
         env.pop("LD_PRELOAD", None)
         env.pop("XGBA_SYNC_TARGET", None)
         env.pop("XGBA_SYNC_MARKER", None)
         env.pop("XGBA_SYNC_RELEASE", None)
-        env.pop("XGBA_SYNC_INJECT_EIO", None)
+        env.pop("XGBA_SYNC_INJECT_OPERATION", None)
     with log_path.open("wb") as output:
         process = subprocess.Popen(
             [str(headless), "-l", "8", "-S", "3", "--script", str(script), str(rom)],
@@ -367,6 +397,7 @@ def _run(headless, script, rom, directory, name, sync_path=None, inject=False, h
             marker,
             log_path,
             release_path=release if sync_path is not None else None,
+            event_operation=event_operation,
         )
     text = log_path.read_text(encoding="utf-8", errors="replace")
     return exit_status, marker.read_text(encoding="utf-8") if marker.exists() else "", text, log_path
@@ -406,12 +437,20 @@ def execute_runtime(headless, harness, root=None):
         write_script.write_text(save_script(positive_save, 0x42), encoding="utf-8")
         pos_exit, pos_marker, pos_log, _ = _run(
             headless, write_script, rom, directory, "positive",
-            sync_path=positive_save, inject=False, harness=interposer,
+            sync_path=positive_save, harness=interposer,
         )
         write_script.write_text(save_script(failed_save, 0x43), encoding="utf-8")
         fail_exit, fail_marker, fail_log, _ = _run(
             headless, write_script, rom, directory, "failure",
-            sync_path=failed_save, inject=True, harness=interposer,
+            sync_path=failed_save, inject_operation="async", harness=interposer,
+        )
+        teardown_save = directory / "teardown-failure.sav"
+        teardown_save.write_bytes(b"\xff" * 32768)
+        write_script.write_text(save_script(teardown_save, 0x44), encoding="utf-8")
+        teardown_exit, teardown_marker, teardown_log, _ = _run(
+            headless, write_script, rom, directory, "teardown-failure",
+            sync_path=teardown_save, inject_operation="sync", harness=interposer,
+            event_operation="async",
         )
 
         reopen_marker = directory / "reopen.marker"
@@ -430,8 +469,28 @@ def execute_runtime(headless, harness, root=None):
             headless, reopen_script, rom, directory, "reopen",
         )
         reopened = reopen_marker.read_text(encoding="utf-8").strip() if reopen_marker.exists() else ""
+        teardown_reopen_marker = directory / "teardown-reopen.marker"
+        teardown_reopen_script = directory / "teardown-reopen.lua"
+        teardown_reopen_script.write_text(
+            "assert(emu:loadSaveFile(" + _lua_string(teardown_save) + ", false))\n"
+            "local value = emu:read8(0x0E000000)\n"
+            "assert(value == 0x44)\n"
+            "local f = assert(io.open(" + _lua_string(teardown_reopen_marker) + ", \"w\"))\n"
+            "f:write(string.format(\"loaded=true value=%02X\\n\", value))\n"
+            "f:close()\n"
+            "print(\"COLD_PROCESS_TEARDOWN_REOPEN_OK\")\n",
+            encoding="utf-8",
+        )
+        teardown_reopen_exit, _, teardown_reopen_log, _ = _run(
+            headless, teardown_reopen_script, rom, directory, "teardown-reopen",
+        )
+        teardown_reopened = (
+            teardown_reopen_marker.read_text(encoding="utf-8").strip()
+            if teardown_reopen_marker.exists() else ""
+        )
 
-        require(pos_exit == 0 and fail_exit == 0 and reopen_exit == 0,
+        require(pos_exit == 0 and fail_exit == 0 and teardown_exit == 0
+                and reopen_exit == 0 and teardown_reopen_exit == 0,
                 "headless process exit status changed")
         pos_async = [line for line in pos_marker.splitlines() if line.startswith("operation=async ")]
         pos_sync = [line for line in pos_marker.splitlines() if line.startswith("operation=sync ")]
@@ -446,6 +505,19 @@ def execute_runtime(headless, harness, root=None):
                 "EIO callback sync injection was not observed exactly once: " + repr(fail_marker))
         require(len(fail_sync) == 1 and "injected=0 result=0" in fail_sync[0],
                 "teardown unmap flush after injected failure was not observed: " + repr(fail_marker))
+        teardown_async = [
+            line for line in teardown_marker.splitlines() if line.startswith("operation=async ")
+        ]
+        teardown_sync = [
+            line for line in teardown_marker.splitlines() if line.startswith("operation=sync ")
+        ]
+        require(len(teardown_async) == 1 and "injected=0 result=0" in teardown_async[0],
+                "teardown case did not first complete its MS_ASYNC callback: " + repr(teardown_marker))
+        require(len(teardown_sync) == 1 and "injected=1 result=-1" in teardown_sync[0],
+                "final MS_SYNC EIO was not observed exactly once: " + repr(teardown_marker))
+        require(teardown_log.count("Savedata synced") == 1
+                and "Savedata failed to sync!" not in teardown_log,
+                "teardown failure changed the callback logger contract")
         require(pos_log.count("Savedata synced") == 1,
                 "successful mGBA sync log was not observed exactly once")
         require(fail_log.count("Savedata failed to sync!") == 1,
@@ -453,6 +525,12 @@ def execute_runtime(headless, harness, root=None):
         require("COLD_PROCESS_SAV_REOPEN_OK" in reopen_log and reopened == "loaded=true value=43",
                 "separate-process save reopen/read did not match the injected-run value: "
                 + repr(reopened) + " / " + repr(reopen_log))
+        require(
+            "COLD_PROCESS_TEARDOWN_REOPEN_OK" in teardown_reopen_log
+            and teardown_reopened == "loaded=true value=44",
+            "fresh process did not observe the OS-visible byte after injected teardown EIO: "
+            + repr(teardown_reopened) + " / " + repr(teardown_reopen_log),
+        )
         return {
             "pinned_headless_binary_sha256": hashlib.sha256(headless.read_bytes()).hexdigest(),
             "native_interposer_sha256": hashlib.sha256(interposer.read_bytes()).hexdigest(),
@@ -473,6 +551,18 @@ def execute_runtime(headless, harness, root=None):
                 "teardown_unmap_attempts": len(fail_sync),
                 "errno": "EIO",
                 "error_propagated_to_process_status": False,
+            },
+            "teardown_failure": {
+                "exit_status": teardown_exit,
+                "sync_marker": teardown_marker.strip(),
+                "callback_ms_async": "success",
+                "teardown_ms_sync": "injected EIO",
+                "mGBA_log": "Savedata synced",
+                "teardown_error_logged_by_mGBA": False,
+                "mGBA_unmap_error_return_channel": False,
+                "cold_reopen": teardown_reopened,
+                "cold_reopen_exit_status": teardown_reopen_exit,
+                "cold_reopen_durability_claim": False,
             },
             "cold_reopen": {
                 "exit_status": reopen_exit,

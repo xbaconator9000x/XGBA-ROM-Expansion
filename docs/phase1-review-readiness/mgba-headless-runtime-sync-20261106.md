@@ -38,10 +38,25 @@ upstream file is changed.
 
 The existing workflow builds headless with Lua, compiles the small host
 interposer, runs a successful sync, an injected EIO sync failure, and a fresh
-process reopen. The fail-closed tests reject drifted identities, invented
+process reopen after both the callback-failure and final-teardown-failure cases.
+The fail-closed tests reject drifted identities, invented
 frontend UI/durability/approval claims, missing failure logging, incorrect
-process return propagation, missing no-retry behavior, and fabricated reopen
-results.
+process return propagation, invented teardown error reporting, and fabricated
+reopen or persistence results.
+
+## Distinct final-unmap fault case
+
+The additional teardown case targets only the final `msync(MS_SYNC)` in the
+original pinned POSIX `vfs-fd.c` path. Its preceding frame-end
+`msync(MS_ASYNC)` succeeds; the harness then injects EIO at unmap, records the
+failed flush, and confirms the headless process exits 0. The callback log still
+says `Savedata synced`; no teardown-specific mGBA error log or unmap return
+channel exists because `_vfdUnmap` is `void` and discards both `msync` and
+`munmap` results. A separate headless process reopens the file and observes the
+same-host byte, but that is not evidence that the failed final flush persisted
+it. This is a process-level integration of a distinct fault point; it does not
+repeat or replace PR #35's lower-level VFile teardown and allocation-failure
+work.
 
 ## Limits
 
@@ -58,3 +73,6 @@ results.
   durability or independent storage.
 - The run does not execute a GUI, stock gameplay, cartridge hardware, or
   physical Flash and does not create an independent review receipt.
+- The final `MS_SYNC` failure occurs at teardown after an ordinary successful
+  callback; its EIO and same-host reopen are host-injection observations only,
+  not durable persistence or proof of a real storage failure.
