@@ -37,3 +37,17 @@ target_compile_definitions(xgba_mgba_bank_boundary PRIVATE ${_mgba_compile_defs}
 target_include_directories(xgba_mgba_bank_boundary PRIVATE
   "${PINNED_MGBA_ROOT}/include" "${CMAKE_BINARY_DIR}/pinned-mgba/include")
 add_test(NAME xgba_mgba_bank_boundary COMMAND xgba_mgba_bank_boundary)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+  add_executable(xgba_mgba_allocator_failure
+    mgba_allocator_failure.c
+    "${PINNED_MGBA_ROOT}/src/util/memory.c"
+    "${PINNED_MGBA_ROOT}/src/util/vfs/vfs-mem.c")
+  target_include_directories(xgba_mgba_allocator_failure PRIVATE
+    "${PINNED_MGBA_ROOT}/include")
+  target_compile_options(xgba_mgba_allocator_failure PRIVATE
+    -fno-builtin-calloc -fno-builtin-memcpy)
+  target_link_options(xgba_mgba_allocator_failure PRIVATE
+    "LINKER:--wrap=calloc" "LINKER:--wrap=memcpy")
+  add_test(NAME xgba_mgba_allocator_failure COMMAND xgba_mgba_allocator_failure)
+endif()
