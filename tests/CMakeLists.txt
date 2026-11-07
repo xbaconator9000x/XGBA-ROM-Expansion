@@ -22,6 +22,21 @@ set(PINNED_MGBA_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../upstream/mgba")
 if(NOT EXISTS "${PINNED_MGBA_ROOT}/src/gba/cart/matrix.c")
     message(FATAL_ERROR "Clone pinned mGBA into upstream/mgba before configuring")
 endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+  add_executable(xgba_mgba_vfile_wrapper_alloc_failure
+    mgba_vfile_wrapper_alloc_failure.c
+    "${PINNED_MGBA_ROOT}/src/util/memory.c"
+    "${PINNED_MGBA_ROOT}/src/util/vfs/vfs-mem.c")
+  target_include_directories(xgba_mgba_vfile_wrapper_alloc_failure PRIVATE
+    "${PINNED_MGBA_ROOT}/include")
+  target_compile_options(xgba_mgba_vfile_wrapper_alloc_failure PRIVATE
+    -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-free)
+  target_link_options(xgba_mgba_vfile_wrapper_alloc_failure PRIVATE
+    "LINKER:--wrap=malloc" "LINKER:--wrap=calloc" "LINKER:--wrap=free")
+  add_test(NAME xgba_mgba_vfile_wrapper_alloc_failure
+    COMMAND xgba_mgba_vfile_wrapper_alloc_failure)
+endif()
 add_subdirectory("${PINNED_MGBA_ROOT}" "${CMAKE_BINARY_DIR}/pinned-mgba")
 add_executable(xgba_mgba_bank_boundary "${CMAKE_CURRENT_SOURCE_DIR}/mgba_bank_boundary.c")
 target_link_libraries(xgba_mgba_bank_boundary PRIVATE mgba)

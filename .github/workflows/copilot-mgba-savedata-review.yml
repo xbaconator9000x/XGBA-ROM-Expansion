@@ -5,6 +5,7 @@ on:
       - '.github/workflows/copilot-mgba-savedata-review.yml'
       - 'tests/mgba_bank_boundary.c'
       - 'tests/mgba_allocator_failure.c'
+      - 'tests/mgba_vfile_wrapper_alloc_failure.c'
       - 'tests/run_pinned_mgba_boundary.sh'
       - 'tests/CMakeLists.txt'
       - 'tools/copilot_mgba_savedata_review.py'
@@ -15,6 +16,7 @@ on:
       - 'tools/copilot_mgba_source_objection_receipts_verify.py'
       - 'tools/copilot_mgba_allocator_closure_verify.py'
       - 'tools/copilot_mgba_allocator_failure_verify.py'
+      - 'tools/copilot_mgba_vfile_wrapper_alloc_verify.py'
       - 'tools/verify_native_mgba_regressions.py'
       - 'semantic-snapshots/independent-reviews/copilot-mgba-savedata/**'
       - 'docs/PHASE1_STATUS.md'
@@ -54,6 +56,7 @@ jobs:
             tools/copilot_mgba_source_objection_receipts_verify.py \
             tools/copilot_mgba_allocator_closure_verify.py \
             tools/copilot_mgba_allocator_failure_verify.py \
+            tools/copilot_mgba_vfile_wrapper_alloc_verify.py \
             tools/verify_native_mgba_regressions.py
           python3 tools/verify_native_mgba_regressions.py --self-test
       - name: Fetch immutable mGBA source pin
@@ -79,6 +82,20 @@ jobs:
           python3 tools/copilot_mgba_allocator_failure_verify.py \
             --checkout upstream/mgba \
             --native-log audit-output/mgba-allocator-failure-runtime.log \
+            --self-test
+      - name: Build and execute bounded VFile wrapper-allocation witness
+        run: |
+          cmake --build build-mgba-boundary --target xgba_mgba_vfile_wrapper_alloc_failure --parallel 2
+          mkdir -p audit-output
+          ulimit -c 0 || true
+          set -o pipefail
+          build-mgba-boundary/xgba_mgba_vfile_wrapper_alloc_failure \
+            2>&1 | tee audit-output/mgba-vfile-wrapper-allocation-runtime.log
+      - name: Verify VFile wrapper-allocation evidence and mutation controls
+        run: |
+          python3 tools/copilot_mgba_vfile_wrapper_alloc_verify.py \
+            --checkout upstream/mgba \
+            --native-log audit-output/mgba-vfile-wrapper-allocation-runtime.log \
             --self-test
       - name: Create summary from this successful native run
         run: |
@@ -180,9 +197,13 @@ jobs:
               tools/copilot_mgba_source_objection_receipts_verify.py \
               tools/copilot_mgba_allocator_closure_verify.py \
               tools/copilot_mgba_allocator_failure_verify.py \
+              tools/copilot_mgba_vfile_wrapper_alloc_verify.py \
               tests/mgba_allocator_failure.c \
+              tests/mgba_vfile_wrapper_alloc_failure.c \
               semantic-snapshots/independent-reviews/copilot-mgba-savedata/allocation-failure-probe.json \
               semantic-snapshots/independent-reviews/copilot-mgba-savedata/allocation-failure-native-local.log \
+              semantic-snapshots/independent-reviews/copilot-mgba-savedata/vfile-wrapper-allocation-failure.json \
+              semantic-snapshots/independent-reviews/copilot-mgba-savedata/vfile-wrapper-allocation-local.log \
               semantic-snapshots/independent-reviews/copilot-mgba-savedata/cross-tranche-objection-matrix.json \
               semantic-snapshots/independent-reviews/copilot-mgba-savedata/source-objection-receipts.json \
               semantic-snapshots/independent-reviews/copilot-mgba-savedata/allocator-source-closure.json \
@@ -191,6 +212,7 @@ jobs:
               audit-output/mgba-boundary-configure.log \
               audit-output/mgba-boundary-build.log \
               audit-output/mgba-allocator-failure-runtime.log \
+              audit-output/mgba-vfile-wrapper-allocation-runtime.log \
               audit-output/mgba_native_test_revision.txt \
               compiler-evidence/mgba-native-boundary-result.json \
               compiler-evidence/mgba-native-regression-gate.json 2>/dev/null || true
