@@ -72,6 +72,10 @@ on:
     branches:
       - 'phase1/mgba-savedata-boundary-witness-20261027'
     paths:
+      - 'tools/phase1_mgba_vfs_fd_teardown_native.py'
+      - 'tests/phase1_mgba_vfs_fd_teardown_native.c'
+      - 'tests/test_phase1_mgba_vfs_fd_teardown_native.py'
+      - 'docs/phase1-review-readiness/mgba-vfs-fd-teardown-errors-20261104.md'
       - 'tools/phase1_mgba_observer_receipt_eligibility.py'
       - 'tests/test_phase1_mgba_observer_receipt_eligibility.py'
       - 'docs/phase1-review-readiness/mgba-observer-receipt-eligibility-20261105.json'
