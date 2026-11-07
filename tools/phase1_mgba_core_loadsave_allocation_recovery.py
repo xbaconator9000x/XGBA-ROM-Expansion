@@ -255,7 +255,9 @@ def verify_sources(checkout):
         ("struct VFileFD* vfd = malloc(sizeof(struct VFileFD));",
          "if (!vfd) {\n\t\treturn 0;\n\t}"),
     )
-    require("bool (*loadSave)(struct mCore*, struct VFile*);" in
+    require("bool (*loadSave)(struct mCore*, struct VFile* vf);" in
+            sources["include/mgba/core/core.h"] and
+            "bool (*loadTemporarySave)(struct mCore*, struct VFile* vf);" in
             sources["include/mgba/core/core.h"],
             "pinned mCore save callback declaration changed")
     return sources
