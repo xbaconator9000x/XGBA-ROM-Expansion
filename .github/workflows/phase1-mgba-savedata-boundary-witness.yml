@@ -20,6 +20,11 @@ on:
       - 'tools/phase1_mgba_vfs_fd_teardown_native.py'
       - 'tests/phase1_mgba_vfs_fd_teardown_native.c'
       - 'tests/test_phase1_mgba_vfs_fd_teardown_native.py'
+      - 'tools/phase1_mgba_vfs_fd_allocation_native.py'
+      - 'tests/phase1_mgba_vfs_fd_allocation_native.c'
+      - 'tests/test_phase1_mgba_vfs_fd_allocation_native.py'
+      - 'docs/phase1-review-readiness/mgba-vfs-fd-allocation-failure-20261107.json'
+      - 'docs/phase1-review-readiness/mgba-vfs-fd-allocation-failure-20261107.md'
       - 'tools/phase1_mgba_vfs_stdio_native.py'
       - 'tests/phase1_mgba_vfs_stdio_native.c'
       - 'tests/test_phase1_mgba_vfs_stdio_native.py'
@@ -76,6 +81,11 @@ on:
       - 'tests/phase1_mgba_vfs_fd_teardown_native.c'
       - 'tests/test_phase1_mgba_vfs_fd_teardown_native.py'
       - 'docs/phase1-review-readiness/mgba-vfs-fd-teardown-errors-20261104.md'
+      - 'tools/phase1_mgba_vfs_fd_allocation_native.py'
+      - 'tests/phase1_mgba_vfs_fd_allocation_native.c'
+      - 'tests/test_phase1_mgba_vfs_fd_allocation_native.py'
+      - 'docs/phase1-review-readiness/mgba-vfs-fd-allocation-failure-20261107.json'
+      - 'docs/phase1-review-readiness/mgba-vfs-fd-allocation-failure-20261107.md'
       - 'tools/phase1_mgba_observer_receipt_eligibility.py'
       - 'tests/test_phase1_mgba_observer_receipt_eligibility.py'
       - 'docs/phase1-review-readiness/mgba-observer-receipt-eligibility-20261105.json'
@@ -109,7 +119,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Syntax checks
-        run: python3 -m py_compile tools/phase1_mgba_savedata_boundary_witness.py tools/phase1_mgba_savedata_handoff_verify.py tools/phase1_mgba_saveconverter_eeprom_tail.py tools/phase1_mgba_saveconverter_gba_off.py tools/phase1_mgba_saveconverter_qfile.py tools/phase1_mgba_vfs_fd_native.py tools/phase1_mgba_vfs_fd_teardown_native.py tools/phase1_mgba_vfs_stdio_native.py tools/phase1_mgba_cross_backend_observability.py tools/phase1_mgba_platform_observer_closure.py tools/phase1_mgba_fault_observer_handoff.py tools/phase1_mgba_observer_receipt_eligibility.py tools/phase1_mgba_vfs_fd_callback_native.py tools/phase1_mgba_frontend_log_observers.py tools/phase1_mgba_frontend_runtime_feasibility.py tools/phase1_mgba_headless_timeout_diagnostic.py tools/phase1_mgba_headless_runtime_sync.py
+        run: python3 -m py_compile tools/phase1_mgba_savedata_boundary_witness.py tools/phase1_mgba_savedata_handoff_verify.py tools/phase1_mgba_saveconverter_eeprom_tail.py tools/phase1_mgba_saveconverter_gba_off.py tools/phase1_mgba_saveconverter_qfile.py tools/phase1_mgba_vfs_fd_native.py tools/phase1_mgba_vfs_fd_teardown_native.py tools/phase1_mgba_vfs_fd_allocation_native.py tools/phase1_mgba_vfs_stdio_native.py tools/phase1_mgba_cross_backend_observability.py tools/phase1_mgba_platform_observer_closure.py tools/phase1_mgba_fault_observer_handoff.py tools/phase1_mgba_observer_receipt_eligibility.py tools/phase1_mgba_vfs_fd_callback_native.py tools/phase1_mgba_frontend_log_observers.py tools/phase1_mgba_frontend_runtime_feasibility.py tools/phase1_mgba_headless_timeout_diagnostic.py tools/phase1_mgba_headless_runtime_sync.py
       - name: Fail-closed EEPROM parser and fixture controls
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_saveconverter_eeprom_tail.py" -v
       - name: Fail-closed QFile observation parser and 17 adversarial controls
@@ -118,6 +128,8 @@ jobs:
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_vfs_fd_native.py" -v
       - name: Fail-closed Linux VFile teardown evidence controls
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_vfs_fd_teardown_native.py" -v
+      - name: Fail-closed Linux VFile allocation-failure ownership controls
+        run: python3 -m unittest discover -s tests -p "test_phase1_mgba_vfs_fd_allocation_native.py" -v
       - name: Fail-closed Linux stdio VFile evidence controls
         run: python3 -m unittest discover -s tests -p "test_phase1_mgba_vfs_stdio_native.py" -v
       - name: Fail-closed cross-backend save observability controls
@@ -177,6 +189,11 @@ jobs:
           python3 tools/phase1_mgba_vfs_fd_teardown_native.py \
             --checkout /tmp/xgba-mgba-boundary \
             --harness tests/phase1_mgba_vfs_fd_teardown_native.c
+      - name: Execute pinned compiled POSIX VFile allocation-failure ownership witness
+        run: |
+          python3 tools/phase1_mgba_vfs_fd_allocation_native.py \
+            --checkout /tmp/xgba-mgba-boundary \
+            --harness tests/phase1_mgba_vfs_fd_allocation_native.c
       - name: Execute pinned native stdio VFile save lifecycle
         run: |
           python3 tools/phase1_mgba_vfs_stdio_native.py \
