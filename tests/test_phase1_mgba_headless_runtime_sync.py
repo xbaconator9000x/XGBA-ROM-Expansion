@@ -25,7 +25,7 @@ class HeadlessRuntimeSyncTests(unittest.TestCase):
 
     def test_source_rows_bind_original_identity_and_review_scope(self):
         paths = {row["path"] for row in self.matrix["source_records"]}
-        self.assertEqual(len(paths), 12)
+        self.assertEqual(len(paths), 13)
         new_paths = {
             row["path"] for row in self.matrix["source_records"]
             if row["review_scope"] == "bounded_new_runtime_path_review"
@@ -35,6 +35,7 @@ class HeadlessRuntimeSyncTests(unittest.TestCase):
             "src/script/context.c",
             "src/script/engines/lua.c",
             "src/gba/memory.c",
+            "src/util/vfs.c",
         })
 
     def test_cannot_invent_gui_frontend_or_physical_persistence(self):
@@ -92,6 +93,29 @@ class HeadlessRuntimeSyncTests(unittest.TestCase):
         ] = "0x43"
         with self.assertRaises(ValueError):
             validate_matrix(changed)
+
+    def test_failed_save_reopen_contract_is_caller_observed_and_non_approving(self):
+        case = self.matrix["reopen_failure_contract"]
+        self.assertEqual(case["expected_api_result"], False)
+        self.assertEqual(case["expected_script_observation"], "loadSaveFile=false")
+        self.assertEqual(case["expected_headless_process_exit_status"], 0)
+        self.assertFalse(case["expected_headless_script_load_error_log"])
+        self.assertEqual(case["evidence_class"],
+                         "COMPILED_PINNED_HEADLESS_PROCESS_WITH_HOST_OPEN_FAULT_INJECTION")
+        self.assertFalse(case["persistence_claim"])
+        self.assertEqual(case["status"], "REQUIRED_IN_EXISTING_CI")
+
+        for key, value in (
+            ("expected_api_result", True),
+            ("expected_script_observation", "loadSaveFile=true"),
+            ("expected_headless_process_exit_status", 1),
+            ("persistence_claim", True),
+            ("status", "PASSED"),
+        ):
+            changed = copy.deepcopy(self.matrix)
+            changed["reopen_failure_contract"][key] = value
+            with self.assertRaises(ValueError):
+                validate_matrix(changed)
 
     def test_cannot_drop_observed_callback_or_teardown_or_failure_logger(self):
         for key, value in (("save_sync_callback_attempts", 0), ("mGBA_log", "Savedata synced"),

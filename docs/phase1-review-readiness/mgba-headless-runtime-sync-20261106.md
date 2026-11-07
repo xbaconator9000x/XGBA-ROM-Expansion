@@ -32,13 +32,13 @@ Flash, power-loss, or independent semantic approval witness. Status remains
 The machine-readable record binds the exact pinned source revision/tree,
 compressed dossier blob/archive hash, source Git blobs, full-byte SHA-256
 values, dossier-row hashes, MPL-2.0 notices, and dependency edges. It
-distinguishes four new bounded runtime-path source inspections from reused
+distinguishes five bounded runtime-path source inspections from reused
 source-review identities and dependency-only identities. No source pin or
 upstream file is changed.
 
 The existing workflow builds headless with Lua, compiles the small host
-interposer, runs a successful sync, an injected EIO sync failure, and a fresh
-process reopen after both the callback-failure and final-teardown-failure cases.
+interposer, runs successful and injected sync cases, the final-teardown failure,
+the targeted existing-save open failure, and separate-process reopen controls.
 The fail-closed tests reject drifted identities, invented
 frontend UI/durability/approval claims, missing failure logging, incorrect
 process return propagation, invented teardown error reporting, and fabricated
@@ -57,6 +57,36 @@ same-host byte, but that is not evidence that the failed final flush persisted
 it. This is a process-level integration of a distinct fault point; it does not
 repeat or replace PR #35's lower-level VFile teardown and allocation-failure
 work.
+
+## Distinct existing-save reopen failure
+
+The new case follows the original pinned caller chain: the Lua `BOOL`
+`loadSaveFile` binding calls `mCoreLoadSaveFile`, which opens the supplied path
+with `O_CREAT | O_RDWR`; the pinned POSIX `VFileOpen` dispatcher selects
+`VFileOpenFD`, whose `open` result becomes a null VFile on failure. A compiled
+`mgba-headless` process first creates and writes the controlled `.sav`; a later
+process attempts to reopen that existing path while the host interposer returns
+`-1/EIO` only for that exact path. The script records and asserts the API's
+`false` result. It handles the failure instead of failing script loading, so
+the headless process is expected to exit normally. The harness also compares
+the full save hash before and after the failed open, then starts another
+separate process without injection and requires a successful reopen/read of
+the original byte.
+
+The additional `src/util/vfs.c` provenance is pinned to Git blob
+`3158c52659a83333cb23aeb0dd7ea4bba35908fc`, full-source SHA-256
+`7b94fe172db57a97fef22047e79378bba3c8848b0808bca014d3a6554c1adc06`, and
+canonical dossier-row SHA-256
+`47d41523b021d9d124e30aae47163dd32773f50223bcde11b82d4b27508107a2`.
+It is a bounded dispatcher-path review, not a whole-file approval.
+
+This is a distinct POSIX open-boundary fault, not another `msync`/unmap/close
+case and not an allocation failure. The later process reads the same-host save
+after a previously successful write and teardown; this is a recovery control
+for an injected open failure, **not** evidence about failed flush persistence,
+power-loss durability, or independent media. The machine record marks this
+case `REQUIRED_IN_EXISTING_CI`; the Actions output, rather than the static
+contract, is the execution evidence.
 
 ## Limits
 

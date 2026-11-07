@@ -48,7 +48,17 @@ SOURCES = {
         "6e453bae6a2dd590ac92ce6f86821a8e342dcc34f9f762836152bdad9b49e989",
         "reuse_existing_feasibility_review",
         "Script-facing file open returns the core loadSave result; it is not headless autoload.",
-        {244: "bool mCoreLoadSaveFile(", 245: "VFileOpen(path, O_CREAT | O_RDWR);", 252: "return core->loadSave(core, vf);"},
+        {244: "bool mCoreLoadSaveFile(", 245: "VFileOpen(path, O_CREAT | O_RDWR);",
+         247: "return false;", 252: "return core->loadSave(core, vf);"},
+    ),
+    "src/util/vfs.c": (
+        "3158c52659a83333cb23aeb0dd7ea4bba35908fc",
+        "7b94fe172db57a97fef22047e79378bba3c8848b0808bca014d3a6554c1adc06",
+        "47d41523b021d9d124e30aae47163dd32773f50223bcde11b82d4b27508107a2",
+        "bounded_new_runtime_path_review",
+        "VFileOpen dispatches this POSIX fd build to VFileOpenFD; the failed open is returned as NULL.",
+        {22: "struct VFile* VFileOpen(const char* path, int flags) {",
+         100: "return VFileOpenFD(path, flags);"},
     ),
     "src/core/scripting.c": (
         "7ccb51e897685ce24b37dabc76beb27427331b4f",
@@ -136,6 +146,10 @@ SOURCES = {
 
 DEPENDENCY_EDGES = [
     ["headless-main.c", "mScriptContextLoadFile"],
+    ["core/scripting.c", "mCore.loadSaveFile BOOL binding"],
+    ["core/core.c", "mCoreLoadSaveFile -> VFileOpen(path, O_CREAT | O_RDWR)"],
+    ["util/vfs.c", "VFileOpen -> VFileOpenFD"],
+    ["util/vfs/vfs-fd.c", "VFileOpenFD -> POSIX open"],
     ["headless-main.c", "mScriptContextAttachCore"],
     ["core/scripting.c", "mCoreLoadSaveFile"],
     ["core/core.c", "GBALoadSave"],
@@ -154,7 +168,7 @@ DEPENDENCY_EDGES = [
 
 def expected_matrix():
     return {
-        "schema": "phase1.mgba.headless-runtime-sync.v1",
+        "schema": "phase1.mgba.headless-runtime-sync.v2",
         "repository": "mgba-emu/mgba",
         "pinned_revision": PIN,
         "pinned_tree": TREE,
@@ -183,6 +197,19 @@ def expected_matrix():
             for path, data in SOURCES.items()
         ],
         "dependency_edges": DEPENDENCY_EDGES,
+        "reopen_failure_contract": {
+            "caller": "A later headless Lua script calls mCore.loadSaveFile(path, false) on an existing .sav.",
+            "pinned_call_path": "Lua BOOL binding -> mCoreLoadSaveFile -> VFileOpen -> VFileOpenFD -> POSIX open.",
+            "host_fault": "The LD_PRELOAD test interposer targets only that exact existing save path and returns -1/EIO before the host open.",
+            "expected_api_result": False,
+            "expected_script_observation": "loadSaveFile=false",
+            "expected_headless_process_exit_status": 0,
+            "expected_headless_script_load_error_log": False,
+            "recovery_control": "A later separate headless process reopens the unchanged save and reads the pre-fault SRAM byte.",
+            "evidence_class": "COMPILED_PINNED_HEADLESS_PROCESS_WITH_HOST_OPEN_FAULT_INJECTION",
+            "persistence_claim": False,
+            "status": "REQUIRED_IN_EXISTING_CI",
+        },
         "path_contract": {
             "caller": "Original pinned mgba-headless main; --script calls the pinned mCore script adapter's loadSaveFile and write8 methods.",
             "save_open": "Script-mediated mCoreLoadSaveFile(path, temporary=false), not headless autoload.",
@@ -191,6 +218,7 @@ def expected_matrix():
             "fault_injection": "LD_PRELOAD interposer matches only the mapped .sav path and can make only the selected MS_ASYNC callback or MS_SYNC unmap msync return -1/EIO; it does not replace mGBA savedata logic.",
             "backend_sync_distinction": "The savedata callback uses msync(MS_ASYNC); teardown unmap separately calls msync(MS_SYNC). Each injected case targets only one operation and records both results.",
             "shutdown": "Harness sends SIGINT only after the sync event; headless exits 0 through its normal signal cleanup path.",
+            "reopen_failure": "A second script-mediated loadSaveFile call encounters a path-specific injected POSIX open EIO; the Lua caller records false, then a later fresh process performs an ordinary reopen control.",
         },
         "local_execution": {
             "pinned_headless_binary_built": True,
@@ -250,7 +278,8 @@ def expected_matrix():
             "A second process reads the OS-visible .sav after the callback msync failure, but shutdown's separate MS_SYNC unmap succeeded first; the read is not attributable to the failed callback and is not proof of durable storage, power-loss survival, or independent media persistence.",
             "The headless process exit code is 0 after callback sync failure; the INFO logger is the observed failure channel, not a propagated process error. Teardown separately issues an MS_SYNC unmap flush.",
             "The distinct final MS_SYNC teardown error is injected in the compiled headless process; pinned void _vfdUnmap ignores the msync result and emits no teardown-specific mGBA log. A fresh process observes the same-host OS-visible byte, not evidence that the failed flush persisted data.",
-            "Only four newly selected source files receive bounded runtime-path review; other dependency identities are reused or dependency-only and are not counted as new whole-file reviews.",
+            "The distinct save-reopen failure case injects EIO at the host open boundary for an existing .sav, observes the original script API's false result, and checks a later ordinary reopen; that same-host read is not durable-storage evidence.",
+            "Only the newly added VFile dispatcher receives bounded runtime-path review for the reopen case; other dependency identities are reused or dependency-only and are not counted as new whole-file reviews.",
         ],
         "distribution_notice": (
             "All upstream source records are MPL-2.0. Preserve upstream notices and the repository license when redistributing combined artifacts; this package includes provenance and test harness code, not copied upstream implementation."
@@ -272,6 +301,14 @@ def validate_matrix(payload):
             "pinned POSIX unmap has no result channel")
     require(payload["local_execution"]["cold_process_reopen_after_teardown_failure"]["same_os_page_cache_durability_claim"] is False,
             "cold reopen after teardown failure cannot establish persistence")
+    reopen = payload["reopen_failure_contract"]
+    require(reopen["expected_api_result"] is False
+            and reopen["expected_script_observation"] == "loadSaveFile=false"
+            and reopen["expected_headless_process_exit_status"] == 0,
+            "the caller-observed open failure must not be changed into success or process failure")
+    require(reopen["persistence_claim"] is False
+            and reopen["status"] == "REQUIRED_IN_EXISTING_CI",
+            "a same-host reopen control is not a persistence receipt")
     return True
 
 
@@ -364,7 +401,7 @@ def _wait_and_interrupt(process, event_path, log_path, release_path=None, event_
 
 
 def _run(headless, script, rom, directory, name, sync_path=None, inject_operation=None,
-         harness=None, event_operation=None):
+         harness=None, event_operation=None, open_target=None):
     log_path = directory / (name + ".log")
     marker = directory / (name + ".marker")
     release = directory / (name + ".release")
@@ -373,18 +410,26 @@ def _run(headless, script, rom, directory, name, sync_path=None, inject_operatio
     if env.get("LD_LIBRARY_PATH"):
         library_path += os.pathsep + env["LD_LIBRARY_PATH"]
     env["LD_LIBRARY_PATH"] = library_path
-    if sync_path is not None:
+    if sync_path is not None or open_target is not None:
         env["LD_PRELOAD"] = str(harness.resolve())
+    else:
+        env.pop("LD_PRELOAD", None)
+    if sync_path is not None:
         env["XGBA_SYNC_TARGET"] = str(sync_path.resolve())
         env["XGBA_SYNC_MARKER"] = str(marker)
         env["XGBA_SYNC_RELEASE"] = str(release)
         env["XGBA_SYNC_INJECT_OPERATION"] = inject_operation or ""
     else:
-        env.pop("LD_PRELOAD", None)
         env.pop("XGBA_SYNC_TARGET", None)
         env.pop("XGBA_SYNC_MARKER", None)
         env.pop("XGBA_SYNC_RELEASE", None)
         env.pop("XGBA_SYNC_INJECT_OPERATION", None)
+    if open_target is not None:
+        env["XGBA_OPEN_TARGET"] = str(open_target.resolve())
+        env["XGBA_OPEN_MARKER"] = str(directory / (name + ".open-marker"))
+    else:
+        env.pop("XGBA_OPEN_TARGET", None)
+        env.pop("XGBA_OPEN_MARKER", None)
     with log_path.open("wb") as output:
         process = subprocess.Popen(
             [str(headless), "-l", "8", "-S", "3", "--script", str(script), str(rom)],
@@ -453,6 +498,29 @@ def execute_runtime(headless, harness, root=None):
             event_operation="async",
         )
 
+        open_failure_script = directory / "reopen-open-failure.lua"
+        open_failure_script.write_text(
+            "local loaded = emu:loadSaveFile(" + _lua_string(positive_save) + ", false)\n"
+            "local f = assert(io.open(" + _lua_string(directory / "reopen-open-failure.marker")
+            + ", \"w\"))\n"
+            "f:write(\"loadSaveFile=\" .. tostring(loaded) .. \"\\n\")\n"
+            "f:close()\n"
+            "assert(loaded == false)\n"
+            "print(\"SAVE_REOPEN_OPEN_FAILURE_CAUGHT\")\n",
+            encoding="utf-8",
+        )
+        save_before_open_failure = hashlib.sha256(positive_save.read_bytes()).hexdigest()
+        open_failure_exit, open_failure_marker, open_failure_log, _ = _run(
+            headless, open_failure_script, rom, directory, "reopen-open-failure",
+            harness=interposer, open_target=positive_save,
+        )
+        open_fault_marker_path = directory / "reopen-open-failure.open-marker"
+        open_fault_marker = (
+            open_fault_marker_path.read_text(encoding="utf-8")
+            if open_fault_marker_path.exists() else ""
+        )
+        save_after_open_failure = hashlib.sha256(positive_save.read_bytes()).hexdigest()
+
         reopen_marker = directory / "reopen.marker"
         reopen_script = directory / "reopen.lua"
         reopen_script.write_text(
@@ -489,8 +557,26 @@ def execute_runtime(headless, harness, root=None):
             if teardown_reopen_marker.exists() else ""
         )
 
+        recovery_marker = directory / "open-failure-recovery.marker"
+        recovery_script = directory / "open-failure-recovery.lua"
+        recovery_script.write_text(
+            "assert(emu:loadSaveFile(" + _lua_string(positive_save) + ", false))\n"
+            "local value = emu:read8(0x0E000000)\n"
+            "assert(value == 0x42)\n"
+            "local f = assert(io.open(" + _lua_string(recovery_marker) + ", \"w\"))\n"
+            "f:write(string.format(\"loaded=true value=%02X\\n\", value))\n"
+            "f:close()\n"
+            "print(\"OPEN_FAILURE_RECOVERY_REOPEN_OK\")\n",
+            encoding="utf-8",
+        )
+        recovery_exit, _, recovery_log, _ = _run(
+            headless, recovery_script, rom, directory, "open-failure-recovery",
+        )
+        recovered = recovery_marker.read_text(encoding="utf-8").strip() if recovery_marker.exists() else ""
+
         require(pos_exit == 0 and fail_exit == 0 and teardown_exit == 0
-                and reopen_exit == 0 and teardown_reopen_exit == 0,
+                and open_failure_exit == 0 and reopen_exit == 0
+                and teardown_reopen_exit == 0 and recovery_exit == 0,
                 "headless process exit status changed")
         pos_async = [line for line in pos_marker.splitlines() if line.startswith("operation=async ")]
         pos_sync = [line for line in pos_marker.splitlines() if line.startswith("operation=sync ")]
@@ -531,6 +617,23 @@ def execute_runtime(headless, harness, root=None):
             "fresh process did not observe the OS-visible byte after injected teardown EIO: "
             + repr(teardown_reopened) + " / " + repr(teardown_reopen_log),
         )
+        require(open_fault_marker == "operation=open injected=1 result=-1 errno=EIO\n"
+                or open_fault_marker == "operation=open64 injected=1 result=-1 errno=EIO\n",
+                "targeted existing-save open EIO was not observed exactly once: "
+                + repr(open_fault_marker))
+        require(open_failure_marker.strip() == "loadSaveFile=false",
+                "the original script API caller did not observe the failed save reopen: "
+                + repr(open_failure_marker) + " / " + repr(open_failure_log))
+        require(save_before_open_failure == save_after_open_failure,
+                "injected failed reopen modified the pre-existing save file")
+        require("Failed to load script" not in open_failure_log,
+                "the handled false result was incorrectly propagated as a headless script-load failure")
+        require(
+            "OPEN_FAILURE_RECOVERY_REOPEN_OK" in recovery_log
+            and recovered == "loaded=true value=42",
+            "fresh process did not reopen the unchanged save after the injected open failure: "
+            + repr(recovered) + " / " + repr(recovery_log),
+        )
         return {
             "pinned_headless_binary_sha256": hashlib.sha256(headless.read_bytes()).hexdigest(),
             "native_interposer_sha256": hashlib.sha256(interposer.read_bytes()).hexdigest(),
@@ -563,6 +666,19 @@ def execute_runtime(headless, harness, root=None):
                 "cold_reopen": teardown_reopened,
                 "cold_reopen_exit_status": teardown_reopen_exit,
                 "cold_reopen_durability_claim": False,
+            },
+            "reopen_failure": {
+                "exit_status": open_failure_exit,
+                "host_open_marker": open_fault_marker.strip(),
+                "script_result_marker": open_failure_marker.strip(),
+                "mGBA_script_load_error_logged": "Failed to load script" in open_failure_log,
+                "preexisting_save_sha256_before": save_before_open_failure,
+                "preexisting_save_sha256_after": save_after_open_failure,
+                "save_unchanged": save_before_open_failure == save_after_open_failure,
+                "error_propagated_to_process_status": False,
+                "separate_process_recovery_reopen": recovered,
+                "recovery_exit_status": recovery_exit,
+                "same_os_page_cache_durability_claim": False,
             },
             "cold_reopen": {
                 "exit_status": reopen_exit,
