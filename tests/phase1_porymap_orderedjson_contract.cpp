@@ -17,7 +17,16 @@ static void stage(const char *name) {
     std::fflush(stderr);
 }
 
-int main() {
+int main(int argc, char **argv) {
+    if (argc == 2 && std::string(argv[1]) == "--comments-eof") {
+        stage("comments-eof");
+        QString error;
+        OrderedJson comment = OrderedJson::parse(
+            QString("{/* comment */\"key\":1}"), &error, poryjson::JsonParse::COMMENTS);
+        check(comment.is_object() && error.isEmpty(), "comments_mode_accepts_complete_document");
+        return 0;
+    }
+
     stage("truncated");
     QString error;
     OrderedJson malformed = OrderedJson::parse(QString("{\"key\":"), &error);
@@ -33,11 +42,12 @@ int main() {
     OrderedJson standardComment = OrderedJson::parse(QString("{/* comment */\"key\":1}"), &error);
     check(standardComment.is_null() && !error.isEmpty(), "standard_comment_rejected");
 
-    stage("comments-mode");
+    stage("comments-sentinel");
     error.clear();
     OrderedJson comment = OrderedJson::parse(
-        QString("{/* comment */\"key\":1}"), &error, poryjson::JsonParse::COMMENTS);
-    check(comment.is_object() && error.isEmpty(), "comments_mode_accepts_comment");
+        QString("{/* comment */\"key\":1}x"), &error, poryjson::JsonParse::COMMENTS);
+    check(comment.is_null() && error.contains("unexpected trailing"),
+          "comments_mode_consumes_comment_before_trailing_sentinel");
 
     stage("duplicate-keys");
     error.clear();
@@ -64,8 +74,8 @@ int main() {
 
     stage("qjson-conversion");
     OrderedJson fractional = OrderedJson::fromQJsonValue(QJsonValue(1.75));
-    check(fractional.is_number() && fractional.int_value() == 1,
-          "qjson_double_conversion_truncates_to_integer");
+    check(fractional.is_number() && fractional.int_value() == 0,
+          "fractional_qjson_double_falls_back_to_zero");
 
     stage("cross-object-lookup");
     OrderedJson::object firstObject;
@@ -79,6 +89,6 @@ int main() {
     check(firstValue == QString("first"), "first_object_lookup");
     check(secondValue == QString("first"), "pinned_static_iterator_cross_object_behavior");
 
-    std::puts("PHASE1_ORDEREDJSON_RESULT malformed=reject trailing=reject comments=explicit duplicate=last-value-first-position root-array=valid-empty-object-view qjson-double=truncated static-lookup=first-object");
+    std::puts("PHASE1_ORDEREDJSON_RESULT malformed=reject trailing=reject comments=sentinel-consumed duplicate=last-value-first-position root-array=valid-empty-object-view qjson-double=zero-default static-lookup=first-object");
     return 0;
 }

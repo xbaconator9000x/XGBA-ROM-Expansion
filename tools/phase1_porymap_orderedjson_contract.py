@@ -6,6 +6,8 @@ import gzip
 import hashlib
 import io
 import json
+import resource
+import signal
 import subprocess
 import zipfile
 from pathlib import Path
@@ -197,9 +199,9 @@ def validate_identity(path, data, dossier, expected):
 def check_native_output(output):
     require(output.count("PHASE1_ORDEREDJSON_RESULT ") == 1, "native result missing or duplicated")
     expected = (
-        "PHASE1_ORDEREDJSON_RESULT malformed=reject trailing=reject comments=explicit "
+        "PHASE1_ORDEREDJSON_RESULT malformed=reject trailing=reject comments=sentinel-consumed "
         "duplicate=last-value-first-position root-array=valid-empty-object-view "
-        "qjson-double=truncated static-lookup=first-object"
+        "qjson-double=zero-default static-lookup=first-object"
     )
     require(expected in output, "unexpected native OrderedJson behavior")
     require("PHASE1_ORDEREDJSON_FATAL" not in output, "native OrderedJson harness failed")
@@ -351,9 +353,25 @@ def main():
         "native harness failed: stdout=" + run.stdout[-2000:] + " stderr=" + run.stderr[-2000:],
     )
     check_native_output(run.stdout)
+    def disable_core_dump():
+        resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+
+    comments_eof = subprocess.run(
+        [str(executable.resolve()), "--comments-eof"],
+        text=True,
+        capture_output=True,
+        preexec_fn=disable_core_dump,
+    )
+    require(
+        comments_eof.returncode == -signal.SIGABRT
+        and "ASSERT:" in comments_eof.stderr
+        and "qstring.h" in comments_eof.stderr,
+        "valid COMMENTS-mode EOF behavior changed; reevaluate the recorded Qt assertion",
+    )
     transcript_negatives = 0
     for changed in (
         run.stdout.replace("trailing=reject", "trailing=accept"),
+        run.stdout.replace("comments=sentinel-consumed", "comments=accepted"),
         run.stdout.replace("duplicate=last-value-first-position", "duplicate=first-value"),
         run.stdout.replace("root-array=valid-empty-object-view", "root-array=error"),
         run.stdout.replace("static-lookup=first-object", "static-lookup=per-object"),
@@ -370,7 +388,15 @@ def main():
         "porymap_pin": PIN,
         "native_original_source_executed": True,
         "native_framework": "Qt6Core",
+        "native_qt_version": subprocess.check_output(
+            ["pkg-config", "--modversion", "Qt6Core"], text=True
+        ).strip(),
         "native_transcript": run.stdout.strip(),
+        "comments_mode_eof_probe": {
+            "isolated_child_exit": comments_eof.returncode,
+            "observed_qt_assertion": "ASSERT:" in comments_eof.stderr,
+            "core_dump_disabled": True,
+        },
         "source_records": [
             {
                 "path": path,
@@ -387,8 +413,8 @@ def main():
         "findings": [
             "JsonObject::operator[] caches a function-static iterator into the first object's map; subsequent object lookups reuse it.",
             "ParseUtil::tryParseOrderedJsonFile assigns object_items() without checking the parsed top-level type, so valid arrays/scalars become empty objects with no parse error.",
-            "Json::fromQJsonValue converts every QJsonValue::Double through toInt(), truncating fractional values.",
-            "Parsing rejects truncated/trailing input; COMMENTS mode explicitly accepts comments; duplicate keys replace the value without changing the first insertion position.",
+            "Json::fromQJsonValue converts every QJsonValue::Double through toInt(); fractional 1.75 becomes the Qt default integer 0.",
+            "Parsing rejects truncated/trailing input; COMMENTS mode consumes a comment before a trailing sentinel but aborts on a valid commented document at EOF in the tested Qt6 build; duplicate keys replace the value without changing the first insertion position.",
         ],
         "caller_and_license_limits": [
             "Porymap parse/save callers are pinned source context, not full GUI execution.",
@@ -406,6 +432,7 @@ def main():
         "source_records": len(LIBRARY),
         "source_mutations_rejected": source_negatives,
         "transcript_mutations_rejected": transcript_negatives,
+        "comments_eof_qt_assertion_observed": True,
         "output": str(args.output),
     }, sort_keys=True))
 

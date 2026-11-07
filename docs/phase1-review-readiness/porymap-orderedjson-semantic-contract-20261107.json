@@ -96,14 +96,20 @@
     {
       "id": "ORDEREDJSON-QJSON-FRACTIONAL-CONVERSION",
       "source_anchor": "src/lib/orderedjson.cpp:287-292",
-      "source_observation": "Json::fromQJsonValue converts every QJsonValue::Double through toInt(), truncating fractional input.",
+      "source_observation": "Json::fromQJsonValue converts every QJsonValue::Double through toInt(); fractional 1.75 becomes the Qt default integer 0.",
       "native_control": "The original implementation and Qt6 QJsonValue are compiled and exercised with 1.75."
     },
     {
       "id": "ORDEREDJSON-PARSE-AND-DUPLICATE-CONTRACT",
       "source_anchor": "src/lib/orderedjson.cpp:JsonParser and Json::parse",
-      "source_observation": "Truncated and trailing input fail with an error; comments require COMMENTS mode; duplicate object keys overwrite the value while the OrderedMap retains first insertion order.",
-      "native_control": "Compiled original implementation with positive and malformed inputs; exact assertions in the harness."
+      "source_observation": "Truncated and trailing input fail with an error; COMMENTS mode recognizes comments before a sentinel; duplicate object keys overwrite the value while OrderedMap retains first insertion order.",
+      "native_control": "Compiled original implementation with positive and malformed inputs; the sentinel keeps the parser from reaching its comments-mode EOF assertion."
+    },
+    {
+      "id": "ORDEREDJSON-COMMENTS-EOF-ASSERTION",
+      "source_anchor": "src/lib/orderedjson.cpp:395-442",
+      "source_observation": "consume_garbage calls consume_comment again after the top-level value reaches EOF. consume_comment reads str[i] before checking i == str.size(), so a complete commented document triggers a Qt QString bounds assertion in the tested Qt6 build.",
+      "native_control": "A bounded child process with core dumps disabled executes the original implementation and requires Qt's QString assertion; the parent test continues and records the result."
     }
   ],
   "evidence_labels": {
@@ -130,6 +136,7 @@
     ],
     "native_transcript_mutations": [
       "Trailing-input result",
+      "Comments-before-trailing-sentinel result",
       "Duplicate-key result",
       "Root-array result",
       "Cross-object lookup result"
