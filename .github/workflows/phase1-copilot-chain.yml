@@ -32,7 +32,7 @@ jobs:
           repo=os.environ["REPO"]
           token=os.environ.get("GH_TOKEN","")
           def get(path):
-              req=urllib.request.Request("https://api.github.com/repos/"+repo+"/"+path,headers={"Accept":"application/vnd.github+json","User-Agent":"xgba-phase1-dispatch"})
+              req=urllib.request.Request("https://api.github.com/repos/"+repo+"/"+path,headers={"Accept":"application/vnd.github+json","Authorization":"Bearer "+token,"User-Agent":"xgba-phase1-dispatch"})
               for attempt in range(4):
                   try:
                       with urllib.request.urlopen(req,timeout=30) as response:return json.load(response)
@@ -42,7 +42,7 @@ jobs:
                           print("STOP: transient GitHub API failure after retries:",str(exc));raise SystemExit(0)
                       time.sleep(2*(attempt+1))
           pr=get("pulls/27")
-          comments=get("issues/27/comments?per_page=100")
+          comments=get("issues/27/comments?per_page=30")
           marker="XGBA_CHAIN_DISPATCH_STAGE_"
           queue=[
               ("1", "OrderedJson", "Existing stage 2: OrderedJson read/write error contract; reconcile current HEAD and previous FEX receipts."),
