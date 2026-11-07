@@ -141,7 +141,7 @@
     "source_path": "tests/mgba_vfile_memchunk_resize_lifetime.c",
     "source_sha256": "763d4cee33ebefe5f29adab39ce433bccebe94de682c74e1bb9662646bd5f7b9",
     "build_path": "tests/CMakeLists.txt",
-    "build_sha256": "c469109c26ee56bf0e1ce223c3ef18c0be9571539c709ae79a60f128e9b9b51b",
+    "build_sha256": "ea343d0ee93edc08a572972c68bfb62c164ebdcb0dc331d09240cb842ad3e505",
     "local_log_path": "semantic-snapshots/independent-reviews/copilot-mgba-savedata/vfile-memchunk-resize-lifetime-local.log",
     "local_log_sha256": "0ddb652b820b18a76fa09bf3151182557b3fec411103f10fc00b7ae8214d9364",
     "local_compile_command": "cc -std=c11 -I/tmp/mgba-memchunk-resize/include tests/mgba_vfile_memchunk_resize_lifetime.c /tmp/mgba-memchunk-resize/src/util/memory.c /tmp/mgba-memchunk-resize/src/util/vfs/vfs-mem.c -o /tmp/mgba-memchunk-resize/witness",

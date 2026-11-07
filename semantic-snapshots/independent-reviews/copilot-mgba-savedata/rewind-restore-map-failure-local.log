@@ -1,0 +1,12 @@
+SCOPE unchanged pinned rewind.c, patch-fast.c, memory.c, and vfs-mem.c; mCoreRewindRestore executes; map-failure adapter, patch observer, and core-load callback are test doubles
+PASS positive rewind context initializes
+PASS valid mappings reach patch callback and both unmaps
+PASS positive rewind teardown closes both state VFiles
+PASS fault rewind context initializes
+PASS failed map reaches patch callback and both unmaps still run
+PASS restore returns true and consumes the entry after map failure
+PASS fault rewind teardown closes both state VFiles
+PASS recovery control context initializes
+PASS fresh valid restore succeeds after the injected-failure case
+PASS recovery control teardown closes both state VFiles
+SUMMARY assertions=10 failures=0

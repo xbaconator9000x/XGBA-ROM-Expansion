@@ -24,6 +24,23 @@ if(NOT EXISTS "${PINNED_MGBA_ROOT}/src/gba/cart/matrix.c")
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+  add_executable(xgba_mgba_rewind_restore_map_failure
+    mgba_rewind_restore_map_failure.c
+    "${PINNED_MGBA_ROOT}/src/core/rewind.c"
+    "${PINNED_MGBA_ROOT}/src/util/patch-fast.c"
+    "${PINNED_MGBA_ROOT}/src/util/memory.c"
+    "${PINNED_MGBA_ROOT}/src/util/vfs/vfs-mem.c")
+  target_include_directories(xgba_mgba_rewind_restore_map_failure PRIVATE
+    "${PINNED_MGBA_ROOT}/include")
+  target_compile_definitions(xgba_mgba_rewind_restore_map_failure PRIVATE
+    DISABLE_THREADING)
+  target_compile_options(xgba_mgba_rewind_restore_map_failure PRIVATE
+    -ffunction-sections -fdata-sections)
+  target_link_options(xgba_mgba_rewind_restore_map_failure PRIVATE
+    "LINKER:--gc-sections")
+  add_test(NAME xgba_mgba_rewind_restore_map_failure
+    COMMAND xgba_mgba_rewind_restore_map_failure)
+
   add_executable(xgba_mgba_vfile_memchunk_unmap
     mgba_vfile_memchunk_unmap.c
     "${PINNED_MGBA_ROOT}/src/util/memory.c"
