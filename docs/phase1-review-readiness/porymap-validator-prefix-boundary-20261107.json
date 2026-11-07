@@ -1,0 +1,182 @@
+{
+  "schema": "phase1-porymap-validator-handoff-v1",
+  "status": "NON_APPROVING_NEEDS_EVIDENCE",
+  "phase1_gate": "FAIL_INCOMPLETE",
+  "independent_approvals_added": 0,
+  "source_pin": {
+    "repository": "huderlem/porymap",
+    "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116"
+  },
+  "candidate_inventory": {
+    "workpack_sha256": "5de8d2880a520aa4a80bf0a5b968ba6d19bb0a6a388260a08bd3906b2b4a5cb4",
+    "member": "evidence/candidate_review_dossiers.jsonl.gz",
+    "archive_sha256": "fe7785c38c7cbd80256ff591dabf1308f06f51f6324b44a743b8b087defd27ac",
+    "semantic_dossier": false,
+    "original_semantic_dossier_available": false,
+    "review_receipt_available": false
+  },
+  "focal_files": [
+    {
+      "path": "include/core/validator.h",
+      "git_blob_sha1": "46b916ce2c5b20373db43f9e0e1775a1d4e160b8",
+      "full_source_sha256": "3068855e704739ea84b5473860f1e418e0679e4c87bb8368339f70ed51eda6d7",
+      "candidate_row_sha256": "62ff3588f1ed1eac7f4f908ab42018aa05e2a2f0107bc9277f561d4f3cd7496e",
+      "whole_file_scope": "All declarations and constructors for PrefixValidator, IdentifierValidator, UppercaseValidator, prefix member, comments/contracts, and setPrefix declaration.",
+      "disposition": "NEEDS_EVIDENCE",
+      "reviewer": null,
+      "independent_review_receipt": null
+    },
+    {
+      "path": "src/core/validator.cpp",
+      "git_blob_sha1": "2b0fcf0b5ce61e4baa9141b05d6fb4cd4e9f087e",
+      "full_source_sha256": "0112d5d372ba6180b5a1681e299225d1b8a8d26d0d4029eeddade10ee1675346",
+      "candidate_row_sha256": "42033ffbdbfda93c5ab5c8889fd4c424415d6f1c14d587a94bd4339718501e43",
+      "whole_file_scope": "Regex setup, optional-empty semantics, missing-prefix validation, fixup behavior, and isValid delegation.",
+      "disposition": "NEEDS_EVIDENCE",
+      "reviewer": null,
+      "independent_review_receipt": null
+    }
+  ],
+  "dependency_context_only": [
+    {
+      "path": "src/ui/newdefinedialog.cpp",
+      "git_blob_sha1": "9ac3a3ff2d5e1768edd3af00ce220191525d0f50",
+      "full_source_sha256": "c6a645de9dc5efc623c25e973737c26774d25651b6056ac12640e8e4e54f6640",
+      "candidate_row_sha256": "401d87a34484f43a3db6987d2120b700efc61ca3ea4566861fea2d06ae5083f6",
+      "edge": "Unprefixed define-name validator caller."
+    },
+    {
+      "path": "src/ui/newmapgroupdialog.cpp",
+      "git_blob_sha1": "8c3c923fcf0111f8c049ac47057ced16af01b465",
+      "full_source_sha256": "878161a5bad3ea41d5112ad6a3baa9bc291ecf8153dbd3006bd2e101f67c9594",
+      "candidate_row_sha256": "f42bb2fdbb29f1e459ab99083e1a4c5ae758ea1680a1bf9d29e8dbb9bb9aaabb",
+      "edge": "Unprefixed map-group identifier caller."
+    },
+    {
+      "path": "src/ui/newlocationdialog.cpp",
+      "git_blob_sha1": "37552cf04f37afe669f4bc7f4e6bae7f9f961a39",
+      "full_source_sha256": "31dacb4329054f26679257b8eead908b758a71ba5a9c76f6d1d15dfbf14713b7",
+      "candidate_row_sha256": "39be6a9037936f44aa1f3813e52556821044f2fd9736774327e373003fb9780f",
+      "edge": "Configured map-section prefix caller."
+    },
+    {
+      "path": "src/ui/newtilesetdialog.cpp",
+      "git_blob_sha1": "8749b63e28218adef3b17c43fbb8cefc836a76e4",
+      "full_source_sha256": "e7ba28724606e1328458681c448ecfa4749dfab9517a4708e6ccd93e6574c6df",
+      "candidate_row_sha256": "8d181f807dbbc98c5890eb1a680d5c35d30da29cf78175cd6beb1a5600381050",
+      "edge": "Configured tileset symbol prefix caller."
+    },
+    {
+      "path": "src/ui/newlayoutdialog.cpp",
+      "git_blob_sha1": "de20bb290b7847314ae931279bb9ebe4430b34bf",
+      "full_source_sha256": "69f3589c365f858f5400730b45e6ed3c2d2765937ace5932f5a4027dad93dae6",
+      "candidate_row_sha256": "809a340ba9936c7501a52361f7425afe80f573bc04482543e0bb6118f4b9fc27",
+      "edge": "Shared validator assigned to layout name and ID fields."
+    },
+    {
+      "path": "src/editor.cpp",
+      "git_blob_sha1": "34112f6355b13d9381de7188624c36e5efeba151",
+      "full_source_sha256": "a505ba77243efdcaa2da8cce448e97ce80aa355145fb567290cb6d549bead270",
+      "candidate_row_sha256": "bdee490bd8de75bfc2306ca7264737becb5196580ce0b3241a00292ed1119d24",
+      "edge": "Group-base-label IdentifierValidator caller."
+    },
+    {
+      "path": "src/ui/newmapdialog.cpp",
+      "git_blob_sha1": "c8a028025bf1a9aabb8fd96cccf3d0a76214bb0e",
+      "full_source_sha256": "04cf3279c1dc02697c8af03aa19bf1c515010605c789619c60a11baa29630dac",
+      "candidate_row_sha256": "ad399234177122e2df573a6b5eb09263b79deed968c7db3c151d54250f1e40a5",
+      "edge": "Validator attached to new map's name, group, and layout ID."
+    },
+    {
+      "path": "src/ui/maplistmodels.cpp",
+      "git_blob_sha1": "ba4e9a792be958f7b93d70807f92d2919464deaf",
+      "full_source_sha256": "c56c7525d39b00468f7ba6841ad8c8ed03d957602e79d5f5186fa82ff466e477",
+      "candidate_row_sha256": "9de71a51ff6afc219634e6f1cdaafa801bc0c4419d97eb93b0e906309dcd7387",
+      "edge": "Inline map-group name editing caller."
+    },
+    {
+      "path": "src/ui/tileseteditor.cpp",
+      "git_blob_sha1": "723a2afdeb89c1752e9811a07715462c2279c645",
+      "full_source_sha256": "a85e7827754d3f08cec5ebe90aa7a737958524ac379d563adfd269d1b7557ced",
+      "candidate_row_sha256": "940f1b1723b84449dbc3f20648e057643c96d9be19a08e9fa210746193a35ee7",
+      "edge": "Metatile-label caller enables empty identifiers."
+    },
+    {
+      "path": "src/ui/colorinputwidget.cpp",
+      "git_blob_sha1": "6ed587aa92f3a69ebecab1ee6a7993c7c026f5dd",
+      "full_source_sha256": "4c6697837de61cfe63c1a6aff1b0ce088a32b8d47e86253f215c61e4dc170037",
+      "candidate_row_sha256": "ba68d86ff30b37f10e9e7d45b480d98d94add86d6170c4329cffed550f033fab",
+      "edge": "UppercaseValidator caller for color hex input."
+    },
+    {
+      "path": "porymap.pro",
+      "git_blob_sha1": "53d8055ecfe5d88afb6f183b82d4a3472727ad4f",
+      "full_source_sha256": "cff608e64a2d610ea029d199c2be3b50b7941437b62c80fa3eaffdba70de2996",
+      "candidate_row_sha256": "93059d533a8cc5a5cc0fbe774b64bd8bf83ff107344a870cace53d6d96cf35e2",
+      "edge": "Builds validator.cpp/header with Qt Core/GUI."
+    },
+    {
+      "path": "LICENSE.md",
+      "git_blob_sha1": "65c5ca88a67c30becee01c5a8816d964b03862f9",
+      "full_source_sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768",
+      "candidate_row_sha256": "a620cf8ec560f8bf6f54e9d96403ec1cb204f3ddad7fef812ce7893059396986",
+      "edge": "LGPL text notice context; no redistribution conclusion."
+    }
+  ],
+  "source_findings": {
+    "validator_symbol_references": {
+      "scope": "all .cpp/.cc/.cxx/.h/.hpp files under pinned src/ and include/",
+      "matches": [
+        "include/core/validator.h",
+        "src/core/validator.cpp",
+        "src/editor.cpp",
+        "src/ui/colorinputwidget.cpp",
+        "src/ui/maplistmodels.cpp",
+        "src/ui/newdefinedialog.cpp",
+        "src/ui/newlayoutdialog.cpp",
+        "src/ui/newlocationdialog.cpp",
+        "src/ui/newmapdialog.cpp",
+        "src/ui/newmapgroupdialog.cpp",
+        "src/ui/newtilesetdialog.cpp",
+        "src/ui/tileseteditor.cpp"
+      ]
+    },
+    "declared_but_unimplemented": {
+      "path": "include/core/validator.h",
+      "symbol": "PrefixValidator::setPrefix",
+      "definition_search": "No matching implementation in pinned src/ or include/.",
+      "native_probe": "Calling the declaration in a separately compiled probe fails to link with an unresolved PrefixValidator::setPrefix symbol.",
+      "in_tree_callers_found": false,
+      "in_tree_call_sites": [],
+      "classification": "bounded compiled-link observation; no upstream change"
+    }
+  },
+  "native_witness": {
+    "source": "unchanged pinned validator.cpp/header plus Qt6 moc output; direct Qt validator calls",
+    "positive_controls": [
+      "ASCII identifier and underscore-leading identifier accepted",
+      "configured prefix accepted",
+      "fixup prepends configured prefix",
+      "uppercase validator mutates the input to uppercase"
+    ],
+    "negative_controls": [
+      "identifier beginning with a digit rejected",
+      "identifier containing a hyphen rejected",
+      "empty identifier is intermediate unless allow-empty is enabled",
+      "valid unprefixed input is intermediate and not isValid for a prefixed validator"
+    ],
+    "known_objection": "Header declares PrefixValidator::setPrefix but no pinned implementation exists; explicit link probe fails for that symbol.",
+    "not_tested": [
+      "QLineEdit actual GUI editing and event behavior",
+      "all Qt versions or platform-specific input behavior",
+      "project identifier uniqueness and write/save outcomes",
+      "distribution compliance"
+    ]
+  },
+  "review_handoff": {
+    "per_file_records": "tools/phase1_porymap_validator_native.py emits immutable identities, candidate row hashes, scope roles, null independent receipts, and NEEDS_EVIDENCE dispositions.",
+    "reviewer": null,
+    "independent_receipt": null,
+    "approval_claimed": false
+  }
+}

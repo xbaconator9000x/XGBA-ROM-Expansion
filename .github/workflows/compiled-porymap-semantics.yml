@@ -31,6 +31,11 @@ on:
       - 'tests/phase1_porymap_advancemap_import.cpp'
       - 'docs/phase1-review-readiness/porymap-advancemap-import-boundary-20261107.md'
       - 'docs/phase1-review-readiness/porymap-advancemap-import-boundary-20261107.json'
+      - 'tools/phase1_porymap_validator_native.py'
+      - 'tests/phase1_porymap_validator_native.cpp'
+      - 'tests/phase1_porymap_validator_link_probe.cpp'
+      - 'docs/phase1-review-readiness/porymap-validator-prefix-boundary-20261107.md'
+      - 'docs/phase1-review-readiness/porymap-validator-prefix-boundary-20261107.json'
       - 'docs/phase1-review-readiness/porymap-qt-translation-sqlite-scope-blocked-20261107.json'
       - 'tools/qt_metaobject_contracts.py'
       - '.github/workflows/compiled-porymap-semantics.yml'
@@ -61,6 +66,11 @@ on:
       - 'tests/phase1_porymap_advancemap_import.cpp'
       - 'docs/phase1-review-readiness/porymap-advancemap-import-boundary-20261107.md'
       - 'docs/phase1-review-readiness/porymap-advancemap-import-boundary-20261107.json'
+      - 'tools/phase1_porymap_validator_native.py'
+      - 'tests/phase1_porymap_validator_native.cpp'
+      - 'tests/phase1_porymap_validator_link_probe.cpp'
+      - 'docs/phase1-review-readiness/porymap-validator-prefix-boundary-20261107.md'
+      - 'docs/phase1-review-readiness/porymap-validator-prefix-boundary-20261107.json'
       - 'docs/phase1-review-readiness/porymap-qt-translation-sqlite-scope-blocked-20261107.json'
       - '.github/workflows/compiled-porymap-semantics.yml'
 permissions:
@@ -87,6 +97,11 @@ jobs:
           python3 tools/phase1_porymap_advancemap_import.py \
             --porymap upstream/porymap \
             --output porymap-compiler-evidence/porymap-advancemap-import.json
+      - name: Exercise pinned Porymap validators and declared setter link boundary
+        run: |
+          python3 tools/phase1_porymap_validator_native.py \
+            --porymap upstream/porymap \
+            --output porymap-compiler-evidence/porymap-validator-native.json
       - name: Inventory external-editor preference and compile original config writer
         run: |
           python3 tools/phase1_porymap_external_editor_boundary.py \
