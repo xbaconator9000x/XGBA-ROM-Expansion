@@ -1,0 +1,276 @@
+{
+  "schema": "xgba.copilot.mgba_savedata_allocation_failure_probe.v1",
+  "review": {
+    "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+    "pull_request": 35,
+    "request_comment_id": 6701109918,
+    "expected_parent_head": "0781388525031cc4a1db3fe72e920d20cdb11f41",
+    "reviewer": "GitHub Copilot Coding Agent (@copilot), bounded allocation-failure evidence pass",
+    "reviewer_identity_limit": "Task-scoped evidence handoff, not an external approval, independent receipt, or Phase 1 gate authorization.",
+    "approval_eligible": false
+  },
+  "source_pin": {
+    "repository": "mgba-emu/mgba",
+    "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+    "dossier_path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "dossier_git_blob_sha1": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "dossier_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609",
+    "retrieval": "Each original source was fetched at the immutable revision and matched to its Git blob, byte SHA-256, canonical dossier-row SHA-256, and MPL-2.0 notice."
+  },
+  "source_files": [
+    {
+      "path": "src/util/memory.c",
+      "git_blob_sha1": "89646d3bcb5a23e6c75ee5ea8ee8dfd7b940027b",
+      "source_sha256": "920e7bc5d3ddf4bc69c864d526c9bd141ece547894e9430f5bde3c7fe0acc1e5",
+      "dossier_row_sha256": "f022333144a428531384d50b32cff338bb88f52c8912efb2f1cf5b07eed4875c",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": true,
+      "source_lines": ["src/util/memory.c:8-14"]
+    },
+    {
+      "path": "src/util/vfs/vfs-mem.c",
+      "git_blob_sha1": "048194e2dd2d0b3b395a852d2092c694663c88a2",
+      "source_sha256": "6b5951a0cd634d398a69ce57766298bd32d5e6410ee0aa4e8b8894c6aaa5829b",
+      "dossier_row_sha256": "3c95e0a322b5aff0655ec59a1c1f5d34a740a21676da0bf5cce444d2434248ce",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": true,
+      "source_lines": [
+        "src/util/vfs/vfs-mem.c:90-119",
+        "src/util/vfs/vfs-mem.c:121-136",
+        "src/util/vfs/vfs-mem.c:253-262"
+      ]
+    },
+    {
+      "path": "include/mgba-util/memory.h",
+      "git_blob_sha1": "325f748f6fddc33a5539739ebc6eff6f3bb42bad",
+      "source_sha256": "509b56f31b2a279d954a16799501a1585cf7aa55f917a180432283b0205c198c",
+      "dossier_row_sha256": "cf858e1e109d1346cab0d7b30bcd119c207cfb84e9b45a3e73321c1e3576315e",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": false,
+      "source_lines": ["include/mgba-util/memory.h:13-14"]
+    },
+    {
+      "path": "include/mgba-util/vfs.h",
+      "git_blob_sha1": "6c9bd299153af4c3c9cd5487f2425a2481331ee5",
+      "source_sha256": "4c829529f21c424196b4d1efe25ce11227312437cf1aa5028cae94a741bf6656",
+      "dossier_row_sha256": "5d4c30179d703f5b013badf083d6c99c736186091873d65edcb3f0943c2763dd",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": false,
+      "source_lines": [
+        "include/mgba-util/vfs.h:35-45",
+        "include/mgba-util/vfs.h:83-85"
+      ]
+    },
+    {
+      "path": "include/mgba-util/common.h",
+      "git_blob_sha1": "923e93086adfa09c9a55fcc2f0f6fa4d560e5888",
+      "source_sha256": "ec13354a050e4a7432232214b9991dd74000980ab2b8949389af0871cc1b799f",
+      "dossier_row_sha256": "b0a970a0105d3d1b109325bda5fedc99cff7a182cb010f24f826944faa0616ec",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": false,
+      "source_lines": ["include/mgba-util/common.h:1-7", "include/mgba-util/common.h:86-86"]
+    },
+    {
+      "path": "include/mgba-util/dllexports.h",
+      "git_blob_sha1": "a44480df6ec26821b8616650b2575ba794848eca",
+      "source_sha256": "96871f8861195f4ff9fedd861ff07ed5b0a10a0e7642d6a780a8221cafd163d4",
+      "dossier_row_sha256": "5a0c3158c1515885d4f326ea52cc891074b5e0cd54e40460eab89d55a1746070",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": false,
+      "source_lines": ["include/mgba-util/dllexports.h:1-7"]
+    },
+    {
+      "path": "include/mgba-util/math.h",
+      "git_blob_sha1": "f7b3269c9d51967765379b951ba6f43d24c61865",
+      "source_sha256": "04f5ee1686f4b30744d4e62caef4cf16f2f4b80682b88a87e7e18cf117fd421e",
+      "dossier_row_sha256": "87d819c03b064e4665a27b5563f4a7261cfcdad051913229884d4f72cfd813f9",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": false,
+      "source_lines": ["include/mgba-util/math.h:95-101"]
+    },
+    {
+      "path": "src/gba/core.c",
+      "git_blob_sha1": "6bfc518bb8899205c07d1d0fc091a287cb42f874",
+      "source_sha256": "47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596",
+      "dossier_row_sha256": "3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": false,
+      "source_lines": ["src/gba/core.c:1493-1506"]
+    },
+    {
+      "path": "src/gba/savedata.c",
+      "git_blob_sha1": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "source_sha256": "9887e36795ae51e39eecad09565d27d3feabe316d3e595b17f288e3205e13161",
+      "dossier_row_sha256": "99a6b3e97c52d67712e10204e08ced8819c7330e899b9f767aa280fc330c42e0",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": false,
+      "source_lines": ["src/gba/savedata.c:71-105", "src/gba/savedata.c:107-135"]
+    },
+    {
+      "path": "include/mgba/internal/gba/savedata.h",
+      "git_blob_sha1": "6227be25e8c9d2c1cc14c06ded34389b96138577",
+      "source_sha256": "30481cada83cc0e3a88b55298f3081cc660e18e55ca7f5a57356e6f2a75224dc",
+      "dossier_row_sha256": "eaee2c8bdb65c51e4f40daeb80af916f57ed430c48c88286562363f687ca6de9",
+      "license_notice": "MPL-2.0",
+      "compiled_unchanged": false,
+      "source_lines": ["include/mgba/internal/gba/savedata.h:68-75"]
+    }
+  ],
+  "dependency_and_caller_trace": {
+    "compiled_original_sources": ["src/util/memory.c", "src/util/vfs/vfs-mem.c"],
+    "compiled_header_closure": [
+      "include/mgba-util/common.h",
+      "include/mgba-util/dllexports.h",
+      "include/mgba-util/math.h",
+      "include/mgba-util/memory.h",
+      "include/mgba-util/vfs.h"
+    ],
+    "build_selection": "Direct translation units only; this does not establish production OS_SRC selection or compile src/gba/core.c.",
+    "edges": [
+      {
+        "from": "src/util/memory.c:8-14",
+        "to": "calloc/free",
+        "contract": "anonymousMemoryMap returns calloc(1,size); mappedMemoryFree ignores size and calls free."
+      },
+      {
+        "from": "src/util/vfs/vfs-mem.c:90-119",
+        "to": ["include/mgba-util/memory.h", "src/util/memory.c"],
+        "contract": "VFileMemChunk allocates a wrapper separately; on a failed backing calloc it still returns that wrapper, and a non-null input is copied without checking the backing pointer."
+      },
+      {
+        "from": "src/util/vfs/vfs-mem.c:121-136",
+        "to": ["src/util/memory.c", "src/util/vfs/vfs-mem.c:180-199"],
+        "contract": "Expansion replaces the backing pointer and copies/frees the old buffer without checking whether the new allocation succeeded; expanding write can then report the requested size."
+      },
+      {
+        "from": "src/gba/core.c:1493-1506",
+        "to": ["src/util/vfs/vfs-mem.c:90-119", "src/gba/savedata.c:107-118"],
+        "contract": "Restore checks only the VFile wrapper. Writeback propagates GBASavedataLoad's bool but ignores close's bool; non-writeback passes the VFile to GBASavedataMask and keeps success=true."
+      },
+      {
+        "from": "src/gba/savedata.c:107-135",
+        "to": ["src/gba/savedata.c:71-105"],
+        "contract": "GBASavedataMask stores the VFile. GBASavedataUnmask closes it only in the non-real-VFile branch after deinit; GBASavedataDeinit itself unmaps and clears but does not close. Caller ownership and teardown are not executed in this probe."
+      }
+    ],
+    "runtime_boundary": "Only original memory.c and vfs-mem.c functions were compiled and called. Original GBA restore and savedata-mask callers were source-traced, not compiled or executed."
+  },
+  "test_evidence": {
+    "test_source": "tests/mgba_allocator_failure.c",
+    "test_source_sha256": "5fcc7ade2fee5668b7f59744ba4a43d7a22f8615f5d853905ea121738e384075",
+    "build_source": "tests/CMakeLists.txt",
+    "build_source_sha256": "a9e54f0f4d355c44829aa17ff0d5399584315a3307d7d85acaa9ed834fbe77dc",
+    "local_runtime_log": "semantic-snapshots/independent-reviews/copilot-mgba-savedata/allocation-failure-native-local.log",
+    "local_runtime_log_sha256": "7d8cf3415c42eeec023f1a28e99ea5ecade8faeebea0a238f7212c9cb21b57bd",
+    "local_execution": "Native Linux compiler run against individually fetched pinned source bytes; not an Actions run or full emulator build.",
+    "execution_kind": "PINNED_ORIGINAL_VFILE_MEMORY_SOURCES_WITH_SYNTHETIC_LINKER_WRAPPERS",
+    "commands": {
+      "local_compile": "cc -std=c11 -I/tmp/mgba-alloc-review/include -fno-builtin-calloc -fno-builtin-memcpy tests/mgba_allocator_failure.c /tmp/mgba-alloc-review/src/util/memory.c /tmp/mgba-alloc-review/src/util/vfs/vfs-mem.c -Wl,--wrap=calloc -Wl,--wrap=memcpy -o /tmp/mgba-alloc-review/allocator-failure",
+      "local_run_and_log": "/tmp/mgba-alloc-review/allocator-failure > /tmp/mgba-alloc-review/native-run-current.log",
+      "local_verifier": "python3 tools/copilot_mgba_allocator_failure_verify.py --source-directory /tmp/mgba-alloc-review --native-log semantic-snapshots/independent-reviews/copilot-mgba-savedata/allocation-failure-native-local.log --self-test",
+      "workflow_build": "cmake --build build-mgba-boundary --target xgba_mgba_allocator_failure --parallel 2",
+      "workflow_run": "build-mgba-boundary/xgba_mgba_allocator_failure | tee audit-output/mgba-allocator-failure-runtime.log",
+      "workflow_verifier": "python3 tools/copilot_mgba_allocator_failure_verify.py --checkout upstream/mgba --native-log audit-output/mgba-allocator-failure-runtime.log --self-test"
+    },
+    "linker_wrappers": {
+      "calloc": "Fails the next backing allocation once, records the request, and caps tested backing allocations at 8 bytes.",
+      "memcpy": "When an injected allocation has failed, suppresses the subsequent invalid copy to prevent undefined behavior; resulting failure-path continuation is instrumentation-controlled."
+    },
+    "tested_sizes": {
+      "requested_bytes": [4, 5, 8],
+      "max_requested_bytes": 8,
+      "max_observed_backing_allocation_bytes": 8,
+      "global_size_or_overflow_safety_proven": false
+    },
+    "assertions": [
+      "positive five-byte initialization rounds to an eight-byte backing allocation and copies correctly",
+      "null-input backing failure returns a non-null VFile with null map and close=true",
+      "non-null initialization copy is intercepted after injected backing failure; VFile remains non-null and map is null",
+      "failed expansion suppresses the old-buffer and write copies; write returns one, reported size is five, and map is null",
+      "all three null-backed failure wrappers close with true"
+    ],
+    "execution_claims": {
+      "original_allocator_and_vfile_translation_units_compiled_unchanged": true,
+      "synthetic_linker_wrappers_used": true,
+      "gba_savedata_restore_executed": false,
+      "full_mgba_runtime_executed": false,
+      "gameplay_or_real_save_executed": false,
+      "physical_flash_or_durable_persistence_tested": false,
+      "actual_uninstrumented_null_memcpy_outcome_observed": false
+    },
+    "native_run": {
+      "assertions": 8,
+      "failures": 0,
+      "result": "PASS_BOUNDED_VFILE_ALLOCATION_FAILURE_CHARACTERIZATION"
+    }
+  },
+  "disposition": {
+    "verdict": "NEEDS_EVIDENCE",
+    "source_level_finding": "The controlled failure paths show that the VFile layer can return a non-null wrapper, a successful-looking write count, and true close despite a missing backing allocation; the memcpy wrapper suppresses invalid copies, so these results do not establish original crash, recovery, or caller behavior.",
+    "unresolved_obligations": [
+      {
+        "id": "gba-restore-caller-runtime-and-ownership",
+        "disposition": "NEEDS_EVIDENCE",
+        "reason": "The actual _GBACoreSavedataRestore and GBASavedataMask caller paths, logs, transfer/close lifecycle, and return values were source-traced only."
+      },
+      {
+        "id": "uninstrumented-null-copy-outcome",
+        "disposition": "NEEDS_EVIDENCE",
+        "reason": "The wrapper deliberately suppresses invalid memcpy calls; no claim is made about a native crash, signal, corruption, or recovery."
+      },
+      {
+        "id": "full-size-domain-and-rounding",
+        "disposition": "NEEDS_EVIDENCE",
+        "reason": "Tests are capped at 8 backing bytes. The source passes size_t to toPow2(uint32_t), and truncation/overflow behavior outside the tested domain is not tested."
+      },
+      {
+        "id": "platform-os-src-allocator-variants",
+        "disposition": "NEEDS_EVIDENCE",
+        "reason": "The harness compiles the generic memory.c directly and does not establish other platform OS_SRC implementations or production build selection."
+      },
+      {
+        "id": "allocation-failure-observability-and-logging",
+        "disposition": "NEEDS_EVIDENCE",
+        "reason": "No GBA caller log or end-user-visible error path was executed."
+      },
+      {
+        "id": "license-and-transitive-dependencies",
+        "disposition": "NEEDS_EVIDENCE",
+        "reason": "MPL-2.0 file notices are pinned; transitive dependency coverage and combined-distribution legal status are not established."
+      }
+    ]
+  },
+  "license_boundary": {
+    "per_file_notice": "MPL-2.0 verified for all ten pinned original source/header files in this record.",
+    "transitive_dependency_closure_complete": false,
+    "combined_distribution_legal_conclusion": false,
+    "disposition": "NEEDS_EVIDENCE"
+  },
+  "phase1_state": {
+    "decision": "FAIL_INCOMPLETE",
+    "p0_approved_before": 0,
+    "p0_approved_after": 0,
+    "approved_before": 0,
+    "approved_after": 0,
+    "phase2_started": false,
+    "shared_gate_or_register_edited": false,
+    "semantic_approval": false
+  },
+  "negative_control_inventory": [
+    "source-revision-mismatch",
+    "source-blob-mismatch",
+    "source-byte-sha256-mismatch",
+    "dossier-row-mismatch",
+    "source-closure-incomplete",
+    "test-source-hash-mismatch",
+    "build-source-hash-mismatch",
+    "native-log-hash-or-assertion-mismatch",
+    "false-gba-restore-runtime-claim",
+    "false-full-emulator-or-gameplay-label",
+    "test-size-bound-overclaim",
+    "missing-unresolved-caller-obligation",
+    "license-boundary-overclaim",
+    "phase1-approval-promotion",
+    "source-byte-mutation"
+  ]
+}
