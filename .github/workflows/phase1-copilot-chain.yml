@@ -1,0 +1,94 @@
+name: Phase 1 Copilot continuous verified queue
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/phase1-copilot-chain.yml']
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+concurrency:
+  group: xgba-phase1-copilot-dispatch
+  cancel-in-progress: false
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect verified completion and advance one bounded package
+        env:
+          GH_TOKEN: ${{ secrets.XGBA_COPILOT_DISPATCH_PAT }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, time, urllib.request, urllib.error
+          repo=os.environ["REPO"]
+          token=os.environ.get("GH_TOKEN","")
+          def api(path, payload=None):
+              url="https://api.github.com/repos/"+repo+"/"+path
+              headers={"Accept":"application/vnd.github+json","User-Agent":"xgba-phase1-queue"}
+              if token: headers["Authorization"]="Bearer "+token
+              if payload is not None: headers["Content-Type"]="application/json"
+              request=urllib.request.Request(url,headers=headers,data=None if payload is None else json.dumps(payload).encode(),method="POST" if payload is not None else "GET")
+              for n in range(3):
+                  try:
+                      with urllib.request.urlopen(request,timeout=22) as response:return json.load(response)
+                  except (urllib.error.HTTPError,urllib.error.URLError,TimeoutError) as exc:
+                      if isinstance(exc,urllib.error.HTTPError) and exc.code not in (429,500,502,503,504):raise
+                      if n==2:
+                          print("STOP: GitHub API unavailable:",exc);raise SystemExit(0)
+                      time.sleep(2*(n+1))
+          if not token:
+              print("DRY RUN: missing XGBA_COPILOT_DISPATCH_PAT");raise SystemExit(0)
+          pr=api("pulls/27")
+          head=pr["head"]["sha"]
+          print("PR27 HEAD",head)
+          if pr["state"]!="open" or not pr.get("draft"):
+              print("STOP: PR27 not open draft");raise SystemExit(0)
+          runs=api("actions/runs?head_sha="+head+"&per_page=100").get("workflow_runs",[])
+          good=lambda event:any(x.get("event")==event and x.get("status")=="completed" and x.get("conclusion")=="success" and x.get("head_sha")==head for x in runs)
+          bad=[x for x in runs if x.get("event") in ("push","pull_request") and x.get("status")=="completed" and x.get("conclusion") in ("failure","cancelled","timed_out")]
+          pending=[x for x in runs if x.get("event") in ("push","pull_request","dynamic") and x.get("status") in ("queued","in_progress","waiting","pending")]
+          if not (good("push") and good("pull_request")) or bad or pending:
+              print("STOP: exact-head CI incomplete, failed or agent still active",len(bad),len(pending));raise SystemExit(0)
+          # Page from the end: the first 100 comments are not necessarily recent.
+          issue=api("issues/27")
+          count=issue.get("comments",0)
+          page=max(1,(count-1)//100+1)
+          comments=api("issues/27/comments?per_page=100&page="+str(page))
+          if page>1: comments=api("issues/27/comments?per_page=100&page="+str(page-1))+comments
+          marker="XGBA_AUTO_PACKAGE_V2"
+          sent=[c for c in comments if c.get("body","").startswith(marker+" DISPATCH ")]
+          # Do not start a second session until Copilot supplies an attributable exact-head receipt.
+          if sent:
+              last=sent[-1]
+              ticket=re.search(r"DISPATCH (\d+)",last["body"])
+              if not ticket:
+                  print("STOP: invalid dispatch ticket");raise SystemExit(0)
+              number=int(ticket.group(1))
+              receipts=[c for c in comments if c.get("user",{}).get("login","").lower() in ("copilot","github-copilot[bot]") and (marker+" COMPLETE "+str(number)) in c.get("body","") and head in c.get("body","") and c.get("created_at","")>last.get("created_at","")]
+              if not receipts:
+                  print("WAIT: dispatched package",number,"has no attributable exact-head completion receipt");raise SystemExit(0)
+              # A completed package must advance HEAD, not merely repeat a comment on old code.
+              previous=re.search(r"HEAD ([0-9a-f]{40})",last["body"])
+              if not previous or previous.group(1)==head:
+                  print("STOP: no new HEAD since dispatch");raise SystemExit(0)
+              number+=1
+          else:
+              number=1
+          # A new package is selected from real pinned source at execution time; never reuse the invalid FEX/SQLite targets.
+          message=(marker+" DISPATCH "+str(number)+" HEAD "+head+"\n"+
+              "@copilot PHASE 1 ONLY: Execute ONE NEW substantial source-grounded Porymap semantic package on THIS EXISTING DRAFT PR #27 branch. Before selecting, re-read current HEAD, governing PR #8 protocol, original pinned Porymap 26b919d7, existing dossiers/receipts and PR27 work. Deterministically select the highest-priority ACTUALLY PRESENT unreviewed dependency-connected source scope; exclude prior OrderedJson/Tileset work, nonexistent FEX archive and Qt translation/SQLite, previously reviewed whole-file identities, and other active assignments. Confirm original blobs, full-byte SHA256, original dossier row/archive hashes or explicitly NEEDS_EVIDENCE. Commit a meaningful bounded new source analysis and executable positive/negative regression package with machine-readable provenance; do not fabricate 40-80 files or independent approvals. Reconcile latest HEAD before write, run exact-head push AND PR CI. When finished, post a top-level PR comment containing EXACT TEXT '"+marker+" COMPLETE "+str(number)+"' AND the FULL final 40-character HEAD SHA, plus actual changed paths, tests, evidence and blocked scopes. If blocked, say BLOCKED (not COMPLETE) and identify precise issue. No new PR/branch, main/protected gate/audit/source-pin edits, merge, Phase 2, paid APIs or overages. Never duplicate an active agent session.")
+          try:
+              result=api("issues/27/comments",{"body":message})
+          except urllib.error.HTTPError as exc:
+              if exc.code==403:
+                  detail=exc.read().decode("utf-8","replace")[:1200]
+                  print("BLOCKED: GitHub refused comment creation HTTP 403; response:",detail,"No assignment posted.")
+                  raise SystemExit(0)
+              raise
+          print("DISPATCHED PACKAGE",number,"comment",result.get("id"),"HEAD",head)
+          PY

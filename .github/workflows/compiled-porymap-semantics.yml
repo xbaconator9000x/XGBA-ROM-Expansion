@@ -34,6 +34,8 @@ on:
       - 'tools/phase1_porymap_validator_native.py'
       - 'tests/phase1_porymap_validator_native.cpp'
       - 'tests/phase1_porymap_validator_link_probe.cpp'
+      - 'tests/test_phase1_copilot_chain.py'
+      - '.github/workflows/phase1-copilot-chain.yml'
       - 'docs/phase1-review-readiness/porymap-validator-prefix-boundary-20261107.md'
       - 'docs/phase1-review-readiness/porymap-validator-prefix-boundary-20261107.json'
       - 'docs/phase1-review-readiness/porymap-qt-translation-sqlite-scope-blocked-20261107.json'
@@ -69,6 +71,8 @@ on:
       - 'tools/phase1_porymap_validator_native.py'
       - 'tests/phase1_porymap_validator_native.cpp'
       - 'tests/phase1_porymap_validator_link_probe.cpp'
+      - 'tests/test_phase1_copilot_chain.py'
+      - '.github/workflows/phase1-copilot-chain.yml'
       - 'docs/phase1-review-readiness/porymap-validator-prefix-boundary-20261107.md'
       - 'docs/phase1-review-readiness/porymap-validator-prefix-boundary-20261107.json'
       - 'docs/phase1-review-readiness/porymap-qt-translation-sqlite-scope-blocked-20261107.json'
@@ -81,6 +85,8 @@ jobs:
     timeout-minutes: 85
     steps:
       - uses: actions/checkout@v4
+      - name: Verify Copilot dispatcher candidate syntax and safe guards
+        run: python3 tests/test_phase1_copilot_chain.py
       - name: Install pinned editor host build prerequisites
         run: |
           sudo apt-get update -qq
