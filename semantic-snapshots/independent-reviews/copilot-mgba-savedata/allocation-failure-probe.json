@@ -159,7 +159,7 @@
     "test_source": "tests/mgba_allocator_failure.c",
     "test_source_sha256": "5fcc7ade2fee5668b7f59744ba4a43d7a22f8615f5d853905ea121738e384075",
     "build_source": "tests/CMakeLists.txt",
-    "build_source_sha256": "bf298eb72e23c437f0296aa4affc49bcd88bd37d53c51a6c0fe15edd8070dbf5",
+    "build_source_sha256": "fe170c49e5c110c372ac49cdee1cf18da9880dcbf3b839f93e95374698ab2215",
     "local_runtime_log": "semantic-snapshots/independent-reviews/copilot-mgba-savedata/allocation-failure-native-local.log",
     "local_runtime_log_sha256": "7d8cf3415c42eeec023f1a28e99ea5ecade8faeebea0a238f7212c9cb21b57bd",
     "local_execution": "Native Linux compiler run against individually fetched pinned source bytes; not an Actions run or full emulator build.",

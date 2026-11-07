@@ -157,7 +157,7 @@
     "test_source": "tests/mgba_vfile_wrapper_alloc_failure.c",
     "test_source_sha256": "fc322adeedd2e326df0b6b3fff661991e00c382983dc78a7d23bdc08b3c07797",
     "build_source": "tests/CMakeLists.txt",
-    "build_source_sha256": "bf298eb72e23c437f0296aa4affc49bcd88bd37d53c51a6c0fe15edd8070dbf5",
+    "build_source_sha256": "fe170c49e5c110c372ac49cdee1cf18da9880dcbf3b839f93e95374698ab2215",
     "local_runtime_log": "semantic-snapshots/independent-reviews/copilot-mgba-savedata/vfile-wrapper-allocation-local.log",
     "local_runtime_log_sha256": "253e97bbe2b703696284382a2ceb8377c9cc0d805dc0d3cd6bb16817cb764c5c",
     "local_execution": "Native Linux compiler run against individually fetched pinned source bytes; local host evidence, not GitHub Actions or a full mGBA runtime.",

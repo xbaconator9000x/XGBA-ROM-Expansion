@@ -24,6 +24,15 @@ if(NOT EXISTS "${PINNED_MGBA_ROOT}/src/gba/cart/matrix.c")
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+  add_executable(xgba_mgba_vfile_memchunk_resize_lifetime
+    mgba_vfile_memchunk_resize_lifetime.c
+    "${PINNED_MGBA_ROOT}/src/util/memory.c"
+    "${PINNED_MGBA_ROOT}/src/util/vfs/vfs-mem.c")
+  target_include_directories(xgba_mgba_vfile_memchunk_resize_lifetime PRIVATE
+    "${PINNED_MGBA_ROOT}/include")
+  add_test(NAME xgba_mgba_vfile_memchunk_resize_lifetime
+    COMMAND xgba_mgba_vfile_memchunk_resize_lifetime)
+
   add_executable(xgba_mgba_vfile_borrowed_seek_boundary
     mgba_vfile_borrowed_seek_boundary.c
     "${PINNED_MGBA_ROOT}/src/util/memory.c"

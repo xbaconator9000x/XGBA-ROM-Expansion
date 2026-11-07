@@ -16,7 +16,7 @@ RECORD = Path(
     "semantic-snapshots/independent-reviews/copilot-mgba-savedata/"
     "vfile-wrapper-allocation-failure.json"
 )
-RECORD_SHA256 = "df8e73220cc1669076309629fce5e8925fe652f7f63450fcd58a211d44a0f4c4"
+RECORD_SHA256 = "d8ea5b632ba941801a286287a9250154ab8d6b2e1872044d41e88d6bf0392da5"
 MATRIX = Path(
     "semantic-snapshots/independent-reviews/copilot-mgba-savedata/"
     "cross-tranche-objection-matrix.json"
