@@ -82,6 +82,12 @@ jobs:
           # A new package is selected from real pinned source at execution time; never reuse the invalid FEX/SQLite targets.
           message=(marker+" DISPATCH "+str(number)+" HEAD "+head+"\n"+
               "@copilot PHASE 1 ONLY: Execute ONE NEW substantial source-grounded Porymap semantic package on THIS EXISTING DRAFT PR #27 branch. Before selecting, re-read current HEAD, governing PR #8 protocol, original pinned Porymap 26b919d7, existing dossiers/receipts and PR27 work. Deterministically select the highest-priority ACTUALLY PRESENT unreviewed dependency-connected source scope; exclude prior OrderedJson/Tileset work, nonexistent FEX archive and Qt translation/SQLite, previously reviewed whole-file identities, and other active assignments. Confirm original blobs, full-byte SHA256, original dossier row/archive hashes or explicitly NEEDS_EVIDENCE. Commit a meaningful bounded new source analysis and executable positive/negative regression package with machine-readable provenance; do not fabricate 40-80 files or independent approvals. Reconcile latest HEAD before write, run exact-head push AND PR CI. When finished, post a top-level PR comment containing EXACT TEXT '"+marker+" COMPLETE "+str(number)+"' AND the FULL final 40-character HEAD SHA, plus actual changed paths, tests, evidence and blocked scopes. If blocked, say BLOCKED (not COMPLETE) and identify precise issue. No new PR/branch, main/protected gate/audit/source-pin edits, merge, Phase 2, paid APIs or overages. Never duplicate an active agent session.")
-          result=api("issues/27/comments",{"body":message})
+          try:
+              result=api("issues/27/comments",{"body":message})
+          except urllib.error.HTTPError as exc:
+              if exc.code==403:
+                  print("BLOCKED: dispatch PAT cannot create issue comments (HTTP 403). Verify repository-scoped Issues: Read and write permission, token expiration, and organization policy. No Copilot assignment posted.")
+                  raise SystemExit(0)
+              raise
           print("DISPATCHED PACKAGE",number,"comment",result.get("id"),"HEAD",head)
           PY
