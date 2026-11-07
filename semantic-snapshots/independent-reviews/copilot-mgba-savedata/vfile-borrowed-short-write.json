@@ -131,7 +131,7 @@
     "source_path": "tests/mgba_vfile_borrowed_short_write.c",
     "source_sha256": "aa5aa9ffe7eaf0b1175cb3ce36d3f09be958798be2a7195f2915ffad99357fba",
     "build_path": "tests/CMakeLists.txt",
-    "build_sha256": "fe170c49e5c110c372ac49cdee1cf18da9880dcbf3b839f93e95374698ab2215",
+    "build_sha256": "c469109c26ee56bf0e1ce223c3ef18c0be9571539c709ae79a60f128e9b9b51b",
     "local_log_path": "semantic-snapshots/independent-reviews/copilot-mgba-savedata/vfile-borrowed-short-write-local.log",
     "local_log_sha256": "30ce1799da7b0c434a0eeee2407a63c8333b4a4beae625d13b04fc03cb7fcbb1",
     "local_compile_command": "cc -std=c11 -I/tmp/mgba-borrowed/include tests/mgba_vfile_borrowed_short_write.c /tmp/mgba-borrowed/src/util/memory.c /tmp/mgba-borrowed/src/util/vfs/vfs-mem.c -o /tmp/mgba-borrowed/borrowed-short-write",

@@ -142,7 +142,7 @@
     "source_path": "tests/mgba_vfile_borrowed_seek_boundary.c",
     "source_sha256": "892d7ba78f32793d60892794b3a0b49c66aa346517787974bca73fa94ff9627f",
     "build_path": "tests/CMakeLists.txt",
-    "build_sha256": "fe170c49e5c110c372ac49cdee1cf18da9880dcbf3b839f93e95374698ab2215",
+    "build_sha256": "c469109c26ee56bf0e1ce223c3ef18c0be9571539c709ae79a60f128e9b9b51b",
     "local_log_path": "semantic-snapshots/independent-reviews/copilot-mgba-savedata/vfile-borrowed-seek-boundary-local.log",
     "local_log_sha256": "3f738611ad9af57285cdc2a260903d9112734dfc7cf85b3dc26c3931fb5b86a9",
     "local_compile_command": "cc -std=c11 -I/tmp/mgba-seek-boundary/include tests/mgba_vfile_borrowed_seek_boundary.c /tmp/mgba-seek-boundary/src/util/memory.c /tmp/mgba-seek-boundary/src/util/vfs/vfs-mem.c -o /tmp/mgba-seek-boundary/seek-boundary",

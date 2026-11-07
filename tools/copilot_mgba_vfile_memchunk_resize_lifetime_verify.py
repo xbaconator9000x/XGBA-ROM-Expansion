@@ -16,7 +16,7 @@ RECORD = Path(
     "semantic-snapshots/independent-reviews/copilot-mgba-savedata/"
     "vfile-memchunk-resize-lifetime.json"
 )
-RECORD_SHA256 = "7e0551a2b16cc84447d5d9483538d0805ab5a6ab9f3f8d8ea784a69d77add996"
+RECORD_SHA256 = "0184dc872c3ba418e912ea7f2770e362388c54474b6abccc2566eacb394b2c37"
 MATRIX = Path(
     "semantic-snapshots/independent-reviews/copilot-mgba-savedata/"
     "cross-tranche-objection-matrix.json"

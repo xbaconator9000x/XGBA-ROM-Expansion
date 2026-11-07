@@ -1,0 +1,8 @@
+SCOPE unchanged pinned memory.c and vfs-mem.c; owned VFileMemChunk map/unmap round-trip; production rewind caller source-traced only
+PASS constructor maps an owned copy of the four-byte seed
+PASS mapping beyond the logical extent is rejected
+PASS read after unmap preserves the mapped bytes
+PASS writes remain available after unmap
+PASS a fresh mapping exposes the post-unmap write
+PASS close succeeds after unmap and leaves the caller seed unchanged
+SUMMARY assertions=6 failures=0

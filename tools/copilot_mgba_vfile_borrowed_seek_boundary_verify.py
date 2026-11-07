@@ -16,7 +16,7 @@ RECORD = Path(
     "semantic-snapshots/independent-reviews/copilot-mgba-savedata/"
     "vfile-borrowed-seek-boundary.json"
 )
-RECORD_SHA256 = "3ed46ce4ab2429e7cc1bb69377b73984127e6b83899a08807031c3630419cc73"
+RECORD_SHA256 = "5b5f695623d7574fa529a805ab10b66bfb02a05af532729cbefc9d61fd202a5e"
 MATRIX = Path(
     "semantic-snapshots/independent-reviews/copilot-mgba-savedata/"
     "cross-tranche-objection-matrix.json"
