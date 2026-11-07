@@ -16,6 +16,10 @@ on:
       - 'tests/phase1_porymap_qgifimage_native_faults.cpp'
       - 'tools/phase1_porymap_qgifimage_native_faults.py'
       - 'docs/phase1-review-readiness/porymap-qgifimage-native-fault-witness-20261106.md'
+      - 'tools/phase1_porymap_tileset_closure.py'
+      - 'tests/phase1_porymap_tileset_native.cpp'
+      - 'docs/phase1-review-readiness/porymap-backlog-shortlist-20261107.json'
+      - 'docs/phase1-review-readiness/porymap-tileset-persistence-native-witness-20261107.md'
   pull_request:
     paths:
       - '.github/workflows/phase1-porymap-full-project-roundtrip.yml'
@@ -30,6 +34,10 @@ on:
       - 'tests/phase1_porymap_qgifimage_native_faults.cpp'
       - 'tools/phase1_porymap_qgifimage_native_faults.py'
       - 'docs/phase1-review-readiness/porymap-qgifimage-native-fault-witness-20261106.md'
+      - 'tools/phase1_porymap_tileset_closure.py'
+      - 'tests/phase1_porymap_tileset_native.cpp'
+      - 'docs/phase1-review-readiness/porymap-backlog-shortlist-20261107.json'
+      - 'docs/phase1-review-readiness/porymap-tileset-persistence-native-witness-20261107.md'
   workflow_dispatch:
 permissions:
   contents: read
@@ -67,6 +75,17 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-base-dev-tools qmake6 libqt6svg6-dev libgl1-mesa-dev pkg-config g++ gdb strace
+      - name: Verify pinned Tileset source closure and native writer failures
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_porymap_tileset_closure.py
+          python3 tools/phase1_porymap_tileset_closure.py \
+            --source-root upstream-porymap \
+            --workpack imports/XGBA_Phase1_v1.5_Complete_Workpack.zip \
+            --harness tests/phase1_porymap_tileset_native.cpp \
+            --build-dir "$RUNNER_TEMP/phase1-porymap-tileset-native" \
+            --output phase1-evidence/tileset-native.json \
+            --self-test
       - name: Compile unchanged QtGifImage and GIFLIB; inject bounded device faults
         run: |
           set -euo pipefail
