@@ -1,0 +1,7 @@
+SCOPE unchanged pinned vfs-mem.c; borrowed-memory VFile short-write and close ownership only; GBA caller not executed
+PASS constructor borrows bounded four-byte storage
+PASS in-bounds write completes and updates borrowed bytes
+PASS boundary-crossing write reports a one-byte short write without touching guards
+PASS write at borrowed-buffer end reports zero and does not grow
+PASS close returns true and leaves caller-owned storage intact
+SUMMARY assertions=5 failures=0 complete_write=2 boundary_write=1 end_write=0
