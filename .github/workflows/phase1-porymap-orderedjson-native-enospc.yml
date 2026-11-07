@@ -7,12 +7,20 @@ on:
       - 'tests/phase1_porymap_orderedjson_native.cpp'
       - 'tools/phase1_porymap_orderedjson_native_enospc.py'
       - 'docs/phase1-review-readiness/porymap-orderedjson-native-enospc-20261029.md'
+      - 'tools/phase1_porymap_orderedjson_contract.py'
+      - 'tests/phase1_porymap_orderedjson_contract.cpp'
+      - 'docs/phase1-review-readiness/porymap-orderedjson-semantic-contract-20261107.json'
+      - 'docs/phase1-review-readiness/porymap-fex-archive-assignment-blocked-20261107.json'
       - '.github/workflows/phase1-porymap-orderedjson-native-enospc.yml'
   pull_request:
     paths:
       - 'tests/phase1_porymap_orderedjson_native.cpp'
       - 'tools/phase1_porymap_orderedjson_native_enospc.py'
       - 'docs/phase1-review-readiness/porymap-orderedjson-native-enospc-20261029.md'
+      - 'tools/phase1_porymap_orderedjson_contract.py'
+      - 'tests/phase1_porymap_orderedjson_contract.cpp'
+      - 'docs/phase1-review-readiness/porymap-orderedjson-semantic-contract-20261107.json'
+      - 'docs/phase1-review-readiness/porymap-fex-archive-assignment-blocked-20261107.json'
       - '.github/workflows/phase1-porymap-orderedjson-native-enospc.yml'
   workflow_dispatch:
 permissions:
@@ -43,6 +51,14 @@ jobs:
             --log phase1-evidence/porymap-orderedjson-native.log \
             --trace phase1-evidence/porymap-orderedjson-native-strace.log \
             --output phase1-evidence/porymap-orderedjson-native.json
+      - name: Verify OrderedJson source closure and native semantic contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_porymap_orderedjson_contract.py
+          python3 tools/phase1_porymap_orderedjson_contract.py \
+            --porymap upstream-porymap \
+            --harness tests/phase1_porymap_orderedjson_contract.cpp \
+            --output phase1-evidence/porymap-orderedjson-contract.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
