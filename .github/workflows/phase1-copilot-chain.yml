@@ -1,0 +1,68 @@
+name: Phase 1 Copilot staged dispatch (fail closed)
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+concurrency:
+  group: xgba-phase1-copilot-dispatch
+  cancel-in-progress: false
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fail closed until owner explicitly provisions token
+        env:
+          DISPATCH_TOKEN: ${{ secrets.XGBA_COPILOT_DISPATCH_PAT }}
+        run: |
+          if [ -z "$DISPATCH_TOKEN" ]; then
+            echo "DRY RUN: no XGBA_COPILOT_DISPATCH_PAT. No comments or Copilot sessions launched."
+          fi
+      - name: Inspect PR 27 and dispatch only after strict verified stage handoff
+        env:
+          GH_TOKEN: ${{ secrets.XGBA_COPILOT_DISPATCH_PAT }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request
+          repo=os.environ["REPO"]
+          token=os.environ.get("GH_TOKEN","")
+          def get(path):
+              req=urllib.request.Request("https://api.github.com/repos/"+repo+"/"+path,headers={"Accept":"application/vnd.github+json","User-Agent":"xgba-phase1-dispatch"})
+              with urllib.request.urlopen(req,timeout=15) as response:return json.load(response)
+          pr=get("pulls/27")
+          comments=get("issues/27/comments?per_page=100")
+          marker="XGBA_CHAIN_DISPATCH_STAGE_"
+          queue=[
+              ("FEX", "OrderedJson", "Existing stage 2: OrderedJson read/write error contract; reconcile current HEAD and previous FEX receipts."),
+              ("OrderedJson", "QtSQLite", "Existing stage 3: Qt translations/SQLite licensing; reconcile current HEAD and previous stage receipts."),
+              ("QtSQLite", "QtGifImage", "Existing stage 4: only genuinely unresolved QtGifImage attribution/closure; do not redo native witness.")
+          ]
+          print("PR #27 head:",pr["head"]["sha"])
+          if pr["state"]!="open" or not pr.get("draft",False):
+              print("STOP: PR not open draft");raise SystemExit(0)
+          if not token:
+              print("DRY RUN: no dispatch PAT; inspection only");raise SystemExit(0)
+          # Never trust comment text alone as a completion receipt: require exact head SHA and successful PR + push CI.
+          runs=get("actions/runs?head_sha="+pr["head"]["sha"]+"&per_page=100").get("workflow_runs",[])
+          good=lambda event:any(r.get("event")==event and r.get("head_sha")==pr["head"]["sha"] and r.get("status")=="completed" and r.get("conclusion")=="success" for r in runs)
+          if not (good("push") and good("pull_request")):
+              print("STOP: no successful exact-head push and PR CI");raise SystemExit(0)
+          # Copilot must report an exact-head stage handoff. Existing comments from other identities do not authorize dispatch.
+          bodies=[(c.get("user",{}).get("login",""),c.get("body","")) for c in comments]
+          for previous,nextstage,request in queue:
+              evidence=[b for author,b in bodies if author.lower() in ("copilot","github-copilot[bot]") and ("STAGE "+previous+" DELIVERED") in b and pr["head"]["sha"] in b]
+              if not evidence:continue
+              if any(marker+nextstage in b for _,b in bodies):
+                  print("STOP: next stage already dispatched",nextstage);raise SystemExit(0)
+              # A trusted owner-issued PAT is required to trigger Copilot; built-in GITHUB_TOKEN is deliberately not used.
+              message=marker+nextstage+"\n@copilot PHASE 1 ONLY, existing PR #27 branch: "+request+" Follow docs/phase1-review-readiness/PR27_HYBRID_COPILOT_EXECUTION_QUEUE_20261107.md. Do not create new branches/PRs, merge, modify main/audit/gate, or claim independent approval. Commit evidence and verify exact-head CI. If blocked, report exact reason."
+              req=urllib.request.Request("https://api.github.com/repos/"+repo+"/issues/27/comments",data=json.dumps({"body":message}).encode(),headers={"Accept":"application/vnd.github+json","Authorization":"Bearer "+token,"Content-Type":"application/json","User-Agent":"xgba-phase1-dispatch"},method="POST")
+              with urllib.request.urlopen(req,timeout=15) as response:print("DISPATCHED",nextstage,response.status)
+              break
+          else:print("NO ELIGIBLE VERIFIED HANDOFF; no dispatch")
+          PY
