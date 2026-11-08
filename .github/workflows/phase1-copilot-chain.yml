@@ -60,6 +60,12 @@ jobs:
           page=max(1,(count-1)//100+1)
           comments=api("issues/27/comments?per_page=100&page="+str(page))
           if page>1: comments=api("issues/27/comments?per_page=100&page="+str(page-1))+comments
+          # Fail closed while a manual Copilot assignment is outstanding on this PR.
+          # An automated ticket cannot safely supersede an unreceipted manual request.
+          manual=[c for c in comments if "@copilot" in c.get("body","").lower() and c.get("user",{}).get("login","").lower()!="copilot" and not c.get("body","").startswith("XGBA_AUTO_PACKAGE_V2 DISPATCH ")]
+          if manual:
+              print("STOP: manual Copilot assignment exists; automatic dispatch requires explicit reconciliation")
+              raise SystemExit(0)
           marker="XGBA_AUTO_PACKAGE_V2"
           sent=[c for c in comments if c.get("body","").startswith(marker+" DISPATCH ")]
           # Do not start a second session until Copilot supplies an attributable exact-head receipt.
