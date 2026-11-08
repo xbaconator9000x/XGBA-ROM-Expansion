@@ -715,7 +715,8 @@ def main():
             body = old.validate_declaration(source, signature, digest)
         else:
             body = old.validate_body(source, signature, digest)
-        bodies.append(body)
+        if name != "VFileMemChunk":
+            bodies.append(body)
     expanded = expanded.replace(marker, "\n\n".join(bodies), 1)
 
     with tempfile.TemporaryDirectory(prefix="xgba-mgba-restore-consumer-") as temp:
