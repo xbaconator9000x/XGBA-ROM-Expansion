@@ -143,5 +143,44 @@ class DispatcherRegressionTests(unittest.TestCase):
         self.assertTrue(all(call.args[0].get_method() == "GET" for call in mocked.call_args_list))
 
 
+    def test_spoofed_copilot_username_cannot_advance_queue(self):
+        head = "c" * 40
+        prior = "d" * 40
+        dispatch = {
+            "body": "XGBA_AUTO_PACKAGE_V2 DISPATCH 4 HEAD " + prior,
+            "created_at": "2026-11-07T00:00:00Z",
+            "user": {"login": "xbaconator9000x"},
+        }
+        spoof = {
+            "body": "XGBA_AUTO_PACKAGE_V2 COMPLETE 4 " + head,
+            "created_at": "2026-11-07T01:00:00Z",
+            "user": {"login": "copilot", "id": 999, "type": "User"},
+        }
+
+        def fake_urlopen(request, timeout):
+            self.assertEqual(request.get_method(), "GET")
+            if request.full_url.endswith("/pulls/27"):
+                payload = {"state": "open", "draft": True, "head": {"sha": head}}
+            elif "/actions/runs?" in request.full_url:
+                payload = {"workflow_runs": [
+                    {"event": event, "status": "completed",
+                     "conclusion": "success", "head_sha": head}
+                    for event in ("push", "pull_request")
+                ]}
+            elif request.full_url.endswith("/issues/27"):
+                payload = {"comments": 2}
+            elif "/issues/27/comments?" in request.full_url:
+                payload = [dispatch, spoof]
+            else:
+                self.fail(f"unexpected API request: {request.full_url}")
+            return io.BytesIO(json.dumps(payload).encode())
+
+        status, output, mocked = run_dispatcher("test-token", fake_urlopen)
+        self.assertEqual(status, 0)
+        self.assertIn("WAIT: dispatched package 4", output)
+        self.assertTrue(all(call.args[0].get_method() == "GET" for call in mocked.call_args_list))
+
+
+
 if __name__ == "__main__":
     unittest.main()
