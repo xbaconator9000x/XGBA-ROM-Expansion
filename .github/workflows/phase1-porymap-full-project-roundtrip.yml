@@ -5,6 +5,8 @@ on:
       - phase1/porymap-full-qt-project-roundtrip-20261028
     paths:
       - '.github/workflows/phase1-porymap-full-project-roundtrip.yml'
+      - '.github/workflows/phase1-copilot-chain.yml'
+      - 'tests/test_phase1_copilot_chain.py'
       - 'tests/porymap_qt_project_roundtrip.cpp'
       - 'tests/porymap_qt_editor_gui_save.cpp'
       - 'tools/phase1_porymap_gui_syscall_attribution.py'
@@ -23,6 +25,8 @@ on:
   pull_request:
     paths:
       - '.github/workflows/phase1-porymap-full-project-roundtrip.yml'
+      - '.github/workflows/phase1-copilot-chain.yml'
+      - 'tests/test_phase1_copilot_chain.py'
       - 'tests/porymap_qt_project_roundtrip.cpp'
       - 'tests/porymap_qt_editor_gui_save.cpp'
       - 'tools/phase1_porymap_gui_syscall_attribution.py'
@@ -47,6 +51,10 @@ jobs:
     timeout-minutes: 65
     steps:
       - uses: actions/checkout@v4
+      - name: Verify Phase 1 Copilot dispatcher syntax and fail-closed regression controls
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_phase1_copilot_chain.py' -v
       - name: Clone immutable Porymap and FireRed project source
         run: |
           set -euo pipefail
