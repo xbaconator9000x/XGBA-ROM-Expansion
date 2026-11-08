@@ -55,6 +55,18 @@ class DispatcherRegressionTests(unittest.TestCase):
     def test_embedded_python_compiles(self):
         compile(dispatcher_source(), str(WORKFLOW), "exec")
 
+    def test_required_workflow_guard_is_executable_not_swallowed_by_comment(self):
+        source = dispatcher_source()
+        self.assertIn(
+            'required_workflow="Phase 1 full pinned Porymap Qt project save/reopen"',
+            source,
+        )
+        self.assertNotIn(r"\\n          required_workflow=", source)
+        self.assertNotIn(r"\\n          good=lambda", source)
+        self.assertRegex(source, r'(?m)^required_workflow=')
+        self.assertRegex(source, r'(?m)^good=lambda event:')
+        compile(source, str(WORKFLOW), "exec")
+
     def test_literal_escaped_newline_is_rejected(self):
         source = dispatcher_source()
         marker = (
