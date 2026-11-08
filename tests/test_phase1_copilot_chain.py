@@ -213,5 +213,52 @@ class DispatcherRegressionTests(unittest.TestCase):
         self.assertTrue(all(call.args[0].get_method() == "GET" for call in mocked.call_args_list))
 
 
+    def test_overfull_ci_run_inventory_fails_closed(self):
+        head = "f" * 40
+
+        def fake_urlopen(request, timeout):
+            self.assertEqual(request.get_method(), "GET")
+            if request.full_url.endswith("/pulls/27"):
+                payload = {"state": "open", "draft": True, "head": {"sha": head}}
+            elif "/actions/runs?" in request.full_url:
+                payload = {"total_count": 101, "workflow_runs": [
+                    {"event": event, "status": "completed",
+                     "conclusion": "success", "head_sha": head}
+                    for event in ("push", "pull_request")
+                ]}
+            else:
+                self.fail(f"unexpected API request: {request.full_url}")
+            return io.BytesIO(json.dumps(payload).encode())
+
+        status, output, mocked = run_dispatcher("test-token", fake_urlopen)
+        self.assertEqual(status, 0)
+        self.assertIn("CI run inventory exceeds one page", output)
+        self.assertTrue(all(call.args[0].get_method() == "GET" for call in mocked.call_args_list))
+
+    def test_overfull_comment_inventory_fails_closed(self):
+        head = "f" * 40
+
+        def fake_urlopen(request, timeout):
+            self.assertEqual(request.get_method(), "GET")
+            if request.full_url.endswith("/pulls/27"):
+                payload = {"state": "open", "draft": True, "head": {"sha": head}}
+            elif "/actions/runs?" in request.full_url:
+                payload = {"total_count": 2, "workflow_runs": [
+                    {"event": event, "status": "completed",
+                     "conclusion": "success", "head_sha": head}
+                    for event in ("push", "pull_request")
+                ]}
+            elif request.full_url.endswith("/issues/27"):
+                payload = {"comments": 201}
+            else:
+                self.fail(f"unexpected API request: {request.full_url}")
+            return io.BytesIO(json.dumps(payload).encode())
+
+        status, output, mocked = run_dispatcher("test-token", fake_urlopen)
+        self.assertEqual(status, 0)
+        self.assertIn("discussion exceeds inspected comment window", output)
+        self.assertTrue(all(call.args[0].get_method() == "GET" for call in mocked.call_args_list))
+
+
 if __name__ == "__main__":
     unittest.main()
