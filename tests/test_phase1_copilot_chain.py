@@ -93,7 +93,7 @@ class DispatcherRegressionTests(unittest.TestCase):
                                     "event": "push",
                                     "status": "completed",
                                     "conclusion": "success",
-                                    "head_sha": head,
+                                    "head_sha": head, "name": "Phase 1 full pinned Porymap Qt project save/reopen",
                                 }
                             ]
                         }
@@ -126,7 +126,7 @@ class DispatcherRegressionTests(unittest.TestCase):
                             "event": event,
                             "status": "completed",
                             "conclusion": "success",
-                            "head_sha": head,
+                            "head_sha": head, "name": "Phase 1 full pinned Porymap Qt project save/reopen",
                         }
                         for event in ("push", "pull_request")
                     ]
@@ -166,7 +166,7 @@ class DispatcherRegressionTests(unittest.TestCase):
             elif "/actions/runs?" in request.full_url:
                 payload = {"total_count": 2, "workflow_runs": [
                     {"event": event, "status": "completed",
-                     "conclusion": "success", "head_sha": head}
+                     "conclusion": "success", "head_sha": head, "name": "Phase 1 full pinned Porymap Qt project save/reopen"}
                     for event in ("push", "pull_request")
                 ]}
             elif request.full_url.endswith("/issues/27"):
@@ -198,7 +198,7 @@ class DispatcherRegressionTests(unittest.TestCase):
             elif "/actions/runs?" in request.full_url:
                 payload = {"total_count": 2, "workflow_runs": [
                     {"event": event, "status": "completed",
-                     "conclusion": "success", "head_sha": head}
+                     "conclusion": "success", "head_sha": head, "name": "Phase 1 full pinned Porymap Qt project save/reopen"}
                     for event in ("push", "pull_request")
                 ]}
             elif request.full_url.endswith("/issues/27"):
@@ -245,7 +245,7 @@ class DispatcherRegressionTests(unittest.TestCase):
             elif "/actions/runs?" in request.full_url:
                 payload = {"workflow_runs": [
                     {"event": event, "status": "completed",
-                     "conclusion": "success", "head_sha": head}
+                     "conclusion": "success", "head_sha": head, "name": "Phase 1 full pinned Porymap Qt project save/reopen"}
                     for event in ("push", "pull_request")
                 ]}
             else:
@@ -267,7 +267,7 @@ class DispatcherRegressionTests(unittest.TestCase):
             elif "/actions/runs?" in request.full_url:
                 payload = {"total_count": 3, "workflow_runs": [
                     {"event": event, "status": "completed",
-                     "conclusion": "success", "head_sha": head}
+                     "conclusion": "success", "head_sha": head, "name": "Phase 1 full pinned Porymap Qt project save/reopen"}
                     for event in ("push", "pull_request")
                 ]}
             else:
@@ -289,7 +289,7 @@ class DispatcherRegressionTests(unittest.TestCase):
             elif "/actions/runs?" in request.full_url:
                 payload = {"total_count": 101, "workflow_runs": [
                     {"event": event, "status": "completed",
-                     "conclusion": "success", "head_sha": head}
+                     "conclusion": "success", "head_sha": head, "name": "Phase 1 full pinned Porymap Qt project save/reopen"}
                     for event in ("push", "pull_request")
                 ]}
             else:
@@ -311,7 +311,7 @@ class DispatcherRegressionTests(unittest.TestCase):
             elif "/actions/runs?" in request.full_url:
                 payload = {"total_count": 2, "workflow_runs": [
                     {"event": event, "status": "completed",
-                     "conclusion": "success", "head_sha": head}
+                     "conclusion": "success", "head_sha": head, "name": "Phase 1 full pinned Porymap Qt project save/reopen"}
                     for event in ("push", "pull_request")
                 ]}
             elif request.full_url.endswith("/issues/27"):
@@ -326,6 +326,29 @@ class DispatcherRegressionTests(unittest.TestCase):
         self.assertTrue(all(call.args[0].get_method() == "GET" for call in mocked.call_args_list))
 
 
+
+    def test_unrelated_successful_ci_cannot_authorize_dispatch(self):
+        head = "7" * 40
+
+        def fake_urlopen(request, timeout):
+            self.assertEqual(request.get_method(), "GET")
+            if request.full_url.endswith("/pulls/27"):
+                payload = {"state": "open", "draft": True, "head": {"sha": head}}
+            elif "/actions/runs?" in request.full_url:
+                payload = {"total_count": 2, "workflow_runs": [
+                    {"event": event, "status": "completed", "conclusion": "success",
+                     "head_sha": head, "name": "Unrelated green workflow"}
+                    for event in ("push", "pull_request")
+                ]}
+            else:
+                self.fail(f"unexpected API request: {request.full_url}")
+            return io.BytesIO(json.dumps(payload).encode())
+
+        status, output, mocked = run_dispatcher("test-token", fake_urlopen)
+        self.assertEqual(status, 0)
+        self.assertIn("STOP: exact-head CI incomplete", output)
+        self.assertTrue(all(call.args[0].get_method() == "GET"
+                            for call in mocked.call_args_list))
 
     def test_concurrent_head_change_blocks_dispatch_post(self):
         head = "1" * 40
@@ -342,7 +365,7 @@ class DispatcherRegressionTests(unittest.TestCase):
             elif "/actions/runs?" in request.full_url:
                 payload = {"total_count": 2, "workflow_runs": [
                     {"event": event, "status": "completed",
-                     "conclusion": "success", "head_sha": head}
+                     "conclusion": "success", "head_sha": head, "name": "Phase 1 full pinned Porymap Qt project save/reopen"}
                     for event in ("push", "pull_request")
                 ]}
             elif request.full_url.endswith("/issues/27"):
