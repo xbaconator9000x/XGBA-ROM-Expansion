@@ -87,6 +87,7 @@ class DispatcherRegressionTests(unittest.TestCase):
                 return io.BytesIO(
                     json.dumps(
                         {
+                            "total_count": 1,
                             "workflow_runs": [
                                 {
                                     "event": "push",
@@ -119,6 +120,7 @@ class DispatcherRegressionTests(unittest.TestCase):
                 payload = {"state": "open", "draft": True, "head": {"sha": head}}
             elif "/actions/runs?" in request.full_url:
                 payload = {
+                    "total_count": 2,
                     "workflow_runs": [
                         {
                             "event": event,
@@ -162,7 +164,7 @@ class DispatcherRegressionTests(unittest.TestCase):
             if request.full_url.endswith("/pulls/27"):
                 payload = {"state": "open", "draft": True, "head": {"sha": head}}
             elif "/actions/runs?" in request.full_url:
-                payload = {"workflow_runs": [
+                payload = {"total_count": 2, "workflow_runs": [
                     {"event": event, "status": "completed",
                      "conclusion": "success", "head_sha": head}
                     for event in ("push", "pull_request")
@@ -194,7 +196,7 @@ class DispatcherRegressionTests(unittest.TestCase):
             if request.full_url.endswith("/pulls/27"):
                 payload = {"state": "open", "draft": True, "head": {"sha": head}}
             elif "/actions/runs?" in request.full_url:
-                payload = {"workflow_runs": [
+                payload = {"total_count": 2, "workflow_runs": [
                     {"event": event, "status": "completed",
                      "conclusion": "success", "head_sha": head}
                     for event in ("push", "pull_request")
@@ -252,7 +254,7 @@ class DispatcherRegressionTests(unittest.TestCase):
 
         status, output, mocked = run_dispatcher("test-token", fake_urlopen)
         self.assertEqual(status, 0)
-        self.assertIn("CI run inventory exceeds one page", output)
+        self.assertIn("CI run inventory missing, truncated or exceeds one page", output)
         self.assertTrue(all(call.args[0].get_method() == "GET" for call in mocked.call_args_list))
 
     def test_overfull_comment_inventory_fails_closed(self):
