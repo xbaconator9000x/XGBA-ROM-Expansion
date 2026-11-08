@@ -213,6 +213,26 @@ class DispatcherRegressionTests(unittest.TestCase):
         self.assertTrue(all(call.args[0].get_method() == "GET" for call in mocked.call_args_list))
 
 
+    def test_receipt_requires_exact_structured_body_and_head(self):
+        source = dispatcher_source()
+        self.assertIn('re.fullmatch(re.escape(marker)+r" COMPLETE "', source)
+        self.assertIn('r" HEAD "+re.escape(head)', source)
+        self.assertNotIn('(marker+" COMPLETE "+str(number)) in c.get("body","")', source)
+        marker = "XGBA_AUTO_PACKAGE_V2"
+        number = 4
+        head = "a" * 40
+        pattern = re.escape(marker) + r" COMPLETE " + str(number) + r" HEAD " + re.escape(head)
+        self.assertIsNotNone(re.fullmatch(pattern, f"{marker} COMPLETE 4 HEAD {head}"))
+        for forged in (
+            f"prefix {marker} COMPLETE 4 HEAD {head}",
+            f"{marker} COMPLETE 4 HEAD {head} trailing",
+            f"{marker} COMPLETE 4 HEAD {'b' * 40}",
+            f"{marker} COMPLETE 40 HEAD {head}",
+            f"{marker} COMPLETE 4 {head}",
+        ):
+            with self.subTest(forged=forged):
+                self.assertIsNone(re.fullmatch(pattern, forged))
+
     def test_overfull_ci_run_inventory_fails_closed(self):
         head = "f" * 40
 
