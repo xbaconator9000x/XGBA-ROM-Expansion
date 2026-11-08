@@ -334,7 +334,7 @@ def verify_sources(checkout):
     validate_body(
         sources["src/gba/savedata.c"], GBA_SAVEDATA_CLONE_SIGNATURE,
         GBA_SAVEDATA_CLONE_BODY_SHA256,
-        ("return read >= 0;", "return true;"),
+        ("return read >= 0;", "case GBA_SAVEDATA_AUTODETECT:"),
     )
     require("size_t (*savedataClone)(struct mCore*, void** sram);" in
             sources["include/mgba/core/core.h"],
