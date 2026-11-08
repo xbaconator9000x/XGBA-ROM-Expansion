@@ -182,5 +182,36 @@ class DispatcherRegressionTests(unittest.TestCase):
 
 
 
+    def test_manual_copilot_assignment_blocks_new_dispatch(self):
+        head = "e" * 40
+        manual = {
+            "body": "@copilot Continue existing pinned review package on PR27",
+            "user": {"login": "xbaconator9000x"},
+        }
+
+        def fake_urlopen(request, timeout):
+            self.assertEqual(request.get_method(), "GET")
+            if request.full_url.endswith("/pulls/27"):
+                payload = {"state": "open", "draft": True, "head": {"sha": head}}
+            elif "/actions/runs?" in request.full_url:
+                payload = {"workflow_runs": [
+                    {"event": event, "status": "completed",
+                     "conclusion": "success", "head_sha": head}
+                    for event in ("push", "pull_request")
+                ]}
+            elif request.full_url.endswith("/issues/27"):
+                payload = {"comments": 1}
+            elif "/issues/27/comments?" in request.full_url:
+                payload = [manual]
+            else:
+                self.fail(f"unexpected API request: {request.full_url}")
+            return io.BytesIO(json.dumps(payload).encode())
+
+        status, output, mocked = run_dispatcher("test-token", fake_urlopen)
+        self.assertEqual(status, 0)
+        self.assertIn("STOP: manual Copilot assignment exists", output)
+        self.assertTrue(all(call.args[0].get_method() == "GET" for call in mocked.call_args_list))
+
+
 if __name__ == "__main__":
     unittest.main()
