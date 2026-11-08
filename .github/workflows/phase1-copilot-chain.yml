@@ -53,7 +53,10 @@ jobs:
               print("STOP: exact-head CI run inventory missing, truncated or exceeds one page")
               raise SystemExit(0)
           runs=run_response.get("workflow_runs",[])
-          # Require the named project round-trip workflow for BOTH event types; an\n          # unrelated successful workflow must never authorize another package.\n          required_workflow="Phase 1 full pinned Porymap Qt project save/reopen"\n          good=lambda event:any(x.get("name")==required_workflow and x.get("event")==event and x.get("status")=="completed" and x.get("conclusion")=="success" and x.get("head_sha")==head for x in runs)
+          # Require the named project round-trip workflow for BOTH event types; an
+          # unrelated successful workflow must never authorize another package.
+          required_workflow="Phase 1 full pinned Porymap Qt project save/reopen"
+          good=lambda event:any(x.get("name")==required_workflow and x.get("event")==event and x.get("status")=="completed" and x.get("conclusion")=="success" and x.get("head_sha")==head for x in runs)
           bad=[x for x in runs if x.get("event") in ("push","pull_request") and x.get("status")=="completed" and x.get("conclusion") in ("failure","cancelled","timed_out")]
           pending=[x for x in runs if x.get("event") in ("push","pull_request","dynamic") and x.get("status") in ("queued","in_progress","waiting","pending")]
           if not (good("push") and good("pull_request")) or bad or pending:
