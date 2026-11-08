@@ -70,14 +70,6 @@ void mappedMemoryFree(void* memory, size_t size) {
 	free(memory);
 }
 
-size_t toPow2(size_t size) {
-	size_t result = 1;
-	while (result < size) {
-		result <<= 1;
-	}
-	return result;
-}
-
 static bool observedRestoreClose(struct VFile* vf) {
 	++restoreVFilesClosed;
 	vf->close = restoreVFileClose;
@@ -144,7 +136,7 @@ static bool loadExtraState(struct mCore* core,
 	return true;
 }
 
-static void currentVideoSize(struct mCore* core, unsigned* width,
+static void currentVideoSize(const struct mCore* core, unsigned* width,
                              unsigned* height) {
 	(void) core;
 	*width = 0;

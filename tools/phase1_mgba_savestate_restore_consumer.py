@@ -364,7 +364,7 @@ FUNCTIONS = {
     ),
 }
 
-HARNESS_SHA256 = "bfd62a370537587eb473c4ff81eee8cb5b554c7ab6adc9f1e4deafdc5d2f111b"
+HARNESS_SHA256 = "90c89cfbbc26dd6e97caf04750e2aaec60e5a939cf154946f15826e4b9a10820"
 TERMINAL = "PHASE1_SAVESTATE_RESTORE_DONE\n"
 MPL_NOTICE = re.compile(rb"Mozilla Public\s+\*\s+License,\s+v\.\s+2\.0\.")
 
@@ -715,7 +715,7 @@ def main():
             body = old.validate_declaration(source, signature, digest)
         else:
             body = old.validate_body(source, signature, digest)
-        if name != "VFileMemChunk":
+        if name not in ("VFileMemChunk", "headless main"):
             bodies.append(body)
     expanded = expanded.replace(marker, "\n\n".join(bodies), 1)
 
