@@ -155,7 +155,7 @@ def expected_source_records(old):
     return records
 
 
-def verify_new_sources(checkout, old_sources):
+def verify_new_sources(checkout, old_sources, old):
     sources = {}
     for path, (blob, digest, _, _) in NEW_SOURCES.items():
         raw = (checkout / path).read_bytes()
@@ -432,7 +432,7 @@ def main():
             git(checkout, "rev-parse", "HEAD^{tree}") == TREE,
             "wrong pinned mGBA revision or tree")
     old_sources, _ = old.verify_sources(checkout)
-    new_sources = verify_new_sources(checkout, old_sources)
+    new_sources = verify_new_sources(checkout, old_sources, old)
     source_mutations_rejected = reject_source_mutations(
         old_sources, new_sources, old
     )
