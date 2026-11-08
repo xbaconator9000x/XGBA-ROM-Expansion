@@ -235,6 +235,50 @@ class DispatcherRegressionTests(unittest.TestCase):
             with self.subTest(forged=forged):
                 self.assertIsNone(re.fullmatch(pattern, forged))
 
+    def test_missing_ci_run_count_fails_closed(self):
+        head = "9" * 40
+
+        def fake_urlopen(request, timeout):
+            self.assertEqual(request.get_method(), "GET")
+            if request.full_url.endswith("/pulls/27"):
+                payload = {"state": "open", "draft": True, "head": {"sha": head}}
+            elif "/actions/runs?" in request.full_url:
+                payload = {"workflow_runs": [
+                    {"event": event, "status": "completed",
+                     "conclusion": "success", "head_sha": head}
+                    for event in ("push", "pull_request")
+                ]}
+            else:
+                self.fail(f"unexpected API request: {request.full_url}")
+            return io.BytesIO(json.dumps(payload).encode())
+
+        status, output, mocked = run_dispatcher("test-token", fake_urlopen)
+        self.assertEqual(status, 0)
+        self.assertIn("CI run inventory missing, truncated or exceeds one page", output)
+        self.assertTrue(all(call.args[0].get_method() == "GET" for call in mocked.call_args_list))
+
+    def test_truncated_ci_run_count_fails_closed(self):
+        head = "8" * 40
+
+        def fake_urlopen(request, timeout):
+            self.assertEqual(request.get_method(), "GET")
+            if request.full_url.endswith("/pulls/27"):
+                payload = {"state": "open", "draft": True, "head": {"sha": head}}
+            elif "/actions/runs?" in request.full_url:
+                payload = {"total_count": 3, "workflow_runs": [
+                    {"event": event, "status": "completed",
+                     "conclusion": "success", "head_sha": head}
+                    for event in ("push", "pull_request")
+                ]}
+            else:
+                self.fail(f"unexpected API request: {request.full_url}")
+            return io.BytesIO(json.dumps(payload).encode())
+
+        status, output, mocked = run_dispatcher("test-token", fake_urlopen)
+        self.assertEqual(status, 0)
+        self.assertIn("CI run inventory missing, truncated or exceeds one page", output)
+        self.assertTrue(all(call.args[0].get_method() == "GET" for call in mocked.call_args_list))
+
     def test_overfull_ci_run_inventory_fails_closed(self):
         head = "f" * 40
 
