@@ -69,7 +69,7 @@ jobs:
               if not ticket:
                   print("STOP: invalid dispatch ticket");raise SystemExit(0)
               number=int(ticket.group(1))
-              receipts=[c for c in comments if c.get("user",{}).get("login","").lower() in ("copilot","github-copilot[bot]") and (marker+" COMPLETE "+str(number)) in c.get("body","") and head in c.get("body","") and c.get("created_at","")>last.get("created_at","")]
+              receipts=[c for c in comments if c.get("user",{}).get("id")==198982749 and c.get("user",{}).get("type")=="Bot" and c.get("user",{}).get("node_id")=="BOT_kgDOC9w8XQ" and c.get("user",{}).get("login","").lower() in ("copilot","copilot-swe-agent[bot]","github-copilot[bot]") and (marker+" COMPLETE "+str(number)) in c.get("body","") and head in c.get("body","") and c.get("created_at","")>last.get("created_at","")]
               if not receipts:
                   print("WAIT: dispatched package",number,"has no attributable exact-head completion receipt");raise SystemExit(0)
               # A completed package must advance HEAD, not merely repeat a comment on old code.
