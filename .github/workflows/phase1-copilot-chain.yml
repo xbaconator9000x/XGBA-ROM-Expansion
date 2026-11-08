@@ -49,8 +49,8 @@ jobs:
           if pr["state"]!="open" or not pr.get("draft"):
               print("STOP: PR27 not open draft");raise SystemExit(0)
           run_response=api("actions/runs?head_sha="+head+"&per_page=100")
-          if run_response.get("total_count",0)>100:
-              print("STOP: exact-head CI run inventory exceeds one page; cannot certify completeness")
+          if not isinstance(run_response.get("total_count"),int) or run_response["total_count"]>100 or run_response["total_count"]!=len(run_response.get("workflow_runs",[])):
+              print("STOP: exact-head CI run inventory missing, truncated or exceeds one page")
               raise SystemExit(0)
           runs=run_response.get("workflow_runs",[])
           good=lambda event:any(x.get("event")==event and x.get("status")=="completed" and x.get("conclusion")=="success" and x.get("head_sha")==head for x in runs)
@@ -61,7 +61,7 @@ jobs:
           # Page from the end: the first 100 comments are not necessarily recent.
           issue=api("issues/27")
           count=issue.get("comments",0)
-          if count>200:
+          if not isinstance(count,int) or count<0 or count>200:
               print("STOP: PR discussion exceeds inspected comment window; manual assignments may be hidden")
               raise SystemExit(0)
           page=max(1,(count-1)//100+1)
