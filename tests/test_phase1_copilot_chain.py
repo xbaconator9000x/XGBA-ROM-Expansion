@@ -326,5 +326,40 @@ class DispatcherRegressionTests(unittest.TestCase):
         self.assertTrue(all(call.args[0].get_method() == "GET" for call in mocked.call_args_list))
 
 
+
+    def test_concurrent_head_change_blocks_dispatch_post(self):
+        head = "1" * 40
+        newer = "2" * 40
+        pr_reads = 0
+
+        def fake_urlopen(request, timeout):
+            nonlocal pr_reads
+            self.assertEqual(request.get_method(), "GET")
+            if request.full_url.endswith("/pulls/27"):
+                pr_reads += 1
+                payload = {"state": "open", "draft": True,
+                           "head": {"sha": head if pr_reads == 1 else newer}}
+            elif "/actions/runs?" in request.full_url:
+                payload = {"total_count": 2, "workflow_runs": [
+                    {"event": event, "status": "completed",
+                     "conclusion": "success", "head_sha": head}
+                    for event in ("push", "pull_request")
+                ]}
+            elif request.full_url.endswith("/issues/27"):
+                payload = {"comments": 0}
+            elif "/issues/27/comments?" in request.full_url:
+                payload = []
+            else:
+                self.fail(f"unexpected API request: {request.full_url}")
+            return io.BytesIO(json.dumps(payload).encode())
+
+        status, output, mocked = run_dispatcher("test-token", fake_urlopen)
+        self.assertEqual(status, 0)
+        self.assertEqual(pr_reads, 2)
+        self.assertIn("head/state changed before dispatch", output)
+        self.assertTrue(all(call.args[0].get_method() == "GET"
+                            for call in mocked.call_args_list))
+
+
 if __name__ == "__main__":
     unittest.main()
