@@ -95,6 +95,12 @@ jobs:
           # A new package is selected from real pinned source at execution time; never reuse the invalid FEX/SQLite targets.
           message=(marker+" DISPATCH "+str(number)+" HEAD "+head+"\n"+
               "@copilot PHASE 1 ONLY: Execute ONE NEW substantial source-grounded Porymap semantic package on THIS EXISTING DRAFT PR #27 branch. Before selecting, re-read current HEAD, governing PR #8 protocol, original pinned Porymap 26b919d7, existing dossiers/receipts and PR27 work. Deterministically select the highest-priority ACTUALLY PRESENT unreviewed dependency-connected source scope; exclude prior OrderedJson/Tileset work, nonexistent FEX archive and Qt translation/SQLite, previously reviewed whole-file identities, and other active assignments. Confirm original blobs, full-byte SHA256, original dossier row/archive hashes or explicitly NEEDS_EVIDENCE. Commit a meaningful bounded new source analysis and executable positive/negative regression package with machine-readable provenance; do not fabricate 40-80 files or independent approvals. Reconcile latest HEAD before write, run exact-head push AND PR CI. When finished, post a top-level PR comment with ONLY the exact line '"+marker+" COMPLETE "+str(number)+" HEAD <FULL_FINAL_40_CHARACTER_SHA>' and put actual changed paths, tests, evidence and blocked scopes in a separate evidence comment. If blocked, say BLOCKED (not COMPLETE) and identify precise issue. No new PR/branch, main/protected gate/audit/source-pin edits, merge, Phase 2, paid APIs or overages. Never duplicate an active agent session.")
+          # Recheck the draft PR immediately before posting: a concurrent commit or
+          # branch change invalidates both the CI evidence and package scope.
+          fresh=api("pulls/27")
+          if fresh.get("head",{}).get("sha")!=head or fresh.get("state")!="open" or not fresh.get("draft"):
+              print("STOP: PR27 head/state changed before dispatch; revalidate on next run")
+              raise SystemExit(0)
           try:
               result=api("issues/27/comments",{"body":message})
           except urllib.error.HTTPError as exc:
