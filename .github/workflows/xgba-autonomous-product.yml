@@ -1,0 +1,45 @@
+name: XGBA autonomous product dispatcher (bounded)
+on:
+  pull_request:
+    paths:
+      - 'tools/xgba_autonomous_product.py'
+      - 'tests/test_xgba_autonomous_product.py'
+      - '.github/workflows/xgba-autonomous-product.yml'
+      - 'docs/XGBA_AUTONOMY_RUNBOOK_20261110.md'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/xgba_autonomous_product.py'
+      - 'tests/test_xgba_autonomous_product.py'
+      - '.github/workflows/xgba-autonomous-product.yml'
+  schedule:
+    - cron: '23,53 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+concurrency:
+  group: xgba-product-agent-queue
+  cancel-in-progress: false
+jobs:
+  validate-and-advance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PYTHONPATH: .
+      XGBA_COPILOT_AGENT_PAT: ${{ secrets.XGBA_COPILOT_AGENT_PAT }}
+      XGBA_AUTONOMY_ENABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Offline regression and fail-closed preflight
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_autonomous_product.py tests/test_xgba_autonomous_product.py
+          python3 -m unittest discover -s tests -p test_xgba_autonomous_product.py -v
+          python3 tools/xgba_autonomous_product.py --mode dry-run
+      - name: Advance ONE task at most (default branch only)
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python3 tools/xgba_autonomous_product.py --mode run
