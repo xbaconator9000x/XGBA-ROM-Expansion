@@ -84,7 +84,7 @@ SOURCES = {
         "da6ea4e344c46be5943859a24c0149c12a803b3e951c07140cc795cab09651de",
         "093b18935d1a1968f5ce81caa23611a578cc8810a03bde39f3e3f55d0d6b2830",
         "PARTIAL_CALLBACK_VECTOR_INTERFACE",
-        "COMPILED_CALLBACK_LIST_SIZE_SHIM",
+        "COMPILED_CALLBACK_LIST_ACCESSOR_SHIMS",
     ),
     "include/mgba/core/cheats.h": (
         "23a15c42976c998d292b382d08d51c0e3b797a65",
@@ -196,7 +196,7 @@ FILE_EDGES = {
     ],
     "include/mgba/core/interface.h": [
         "Declares mCoreCallbacksList and the callback-list size API",
-        "The host harness implements the generated size accessor as list->size; callbacks remain empty",
+        "The host harness implements generated size and const-pointer accessors as list->size and &list->vector[index]; callbacks remain empty",
     ],
     "include/mgba/core/cheats.h": [
         "Provides dormant cheat branch declarations referenced by mCoreLoadStateNamed",
@@ -247,7 +247,7 @@ FILE_OBJECTIONS = {
     "src/platform/headless-main.c": "The headless callsite and flags are source-traced, not executed as a frontend process.",
     "include/mgba/core/core.h": "Only the callback interface needed by the extracted functions is compiled; this is not whole-header semantic review.",
     "include/mgba/core/serialize.h": "Only the extdata structure, tag, and flag interface is exercised; other state API behaviors remain outside scope.",
-    "include/mgba/core/interface.h": "The callback-list API is compiled, but the host supplies only its size accessor and registers no callbacks.",
+    "include/mgba/core/interface.h": "The callback-list API is compiled, but host size and const-pointer accessors replace the generated vector functions; no callbacks are registered.",
     "include/mgba/core/cheats.h": "Cheat declarations are required by the unexecuted branch; cheat parsing and cleanup are not tested.",
     "include/mgba/core/log.h": "Log declarations are compiled, but the logger implementation and frontend log routing are not exercised.",
     "include/mgba/internal/gba/gba.h": "The board layout is compiled but the full GBA core object graph and lifecycle are not run.",
@@ -389,7 +389,7 @@ FUNCTIONS = {
     ),
 }
 
-HARNESS_SHA256 = "a57a85f0d36fb26e316f53994fbeee12f9bb135366d237090db028e0045a3f9d"
+HARNESS_SHA256 = "190c1445e41e8586a0e377a77d8a127f9d6d7fe06d18cd98832eaa7865449998"
 TERMINAL = "PHASE1_SAVESTATE_RESTORE_DONE\n"
 MPL_NOTICE = re.compile(rb"Mozilla Public\s+\*\s+License,\s+v\.\s+2\.0\.")
 
@@ -690,6 +690,8 @@ def verify_receipt(root, old, receipt_path=None):
         "compiled_extracted_gba_savedata_init_and_timer_callback": True,
         "savedata_init_non_autodetect_reinitialization_branch_executed": False,
         "host_callback_list_size_shim_returns_list_size": True,
+        "host_callback_list_const_pointer_shim_returns_vector_element": True,
+        "host_callback_list_accessors_exercised": False,
         "compiled_complete_vfile_memory_translation_unit": True,
         "headless_caller_source_traced_not_executed": True,
         "host_memory_vfile_and_allocator_tracking": True,

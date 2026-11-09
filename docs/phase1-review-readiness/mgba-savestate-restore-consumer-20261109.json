@@ -92,7 +92,7 @@
       "canonical_dossier_row_sha256": "093b18935d1a1968f5ce81caa23611a578cc8810a03bde39f3e3f55d0d6b2830",
       "license": "MPL-2.0",
       "review_scope": "PARTIAL_CALLBACK_VECTOR_INTERFACE",
-      "execution_scope": "COMPILED_CALLBACK_LIST_SIZE_SHIM"
+      "execution_scope": "COMPILED_CALLBACK_LIST_ACCESSOR_SHIMS"
     },
     {
       "path": "include/mgba/core/cheats.h",
@@ -246,7 +246,7 @@
     ],
     "include/mgba/core/interface.h": [
       "Declares mCoreCallbacksList and the callback-list size API",
-      "The host harness implements the generated size accessor as list->size; callbacks remain empty"
+      "The host harness implements generated size and const-pointer accessors as list->size and &list->vector[index]; callbacks remain empty"
     ],
     "include/mgba/core/cheats.h": [
       "Provides dormant cheat branch declarations referenced by mCoreLoadStateNamed",
@@ -296,7 +296,7 @@
     "src/platform/headless-main.c": "The headless callsite and flags are source-traced, not executed as a frontend process.",
     "include/mgba/core/core.h": "Only the callback interface needed by the extracted functions is compiled; this is not whole-header semantic review.",
     "include/mgba/core/serialize.h": "Only the extdata structure, tag, and flag interface is exercised; other state API behaviors remain outside scope.",
-    "include/mgba/core/interface.h": "The callback-list API is compiled, but the host supplies only its size accessor and registers no callbacks.",
+    "include/mgba/core/interface.h": "The callback-list API is compiled, but host size and const-pointer accessors replace the generated vector functions; no callbacks are registered.",
     "include/mgba/core/cheats.h": "Cheat declarations are required by the unexecuted branch; cheat parsing and cleanup are not tested.",
     "include/mgba/core/log.h": "Log declarations are compiled, but the logger implementation and frontend log routing are not exercised.",
     "include/mgba/internal/gba/gba.h": "The board layout is compiled but the full GBA core object graph and lifecycle are not run.",
@@ -379,6 +379,8 @@
     "compiled_extracted_gba_savedata_init_and_timer_callback": true,
     "savedata_init_non_autodetect_reinitialization_branch_executed": false,
     "host_callback_list_size_shim_returns_list_size": true,
+    "host_callback_list_const_pointer_shim_returns_vector_element": true,
+    "host_callback_list_accessors_exercised": false,
     "compiled_complete_vfile_memory_translation_unit": true,
     "headless_caller_source_traced_not_executed": true,
     "host_memory_vfile_and_allocator_tracking": true,

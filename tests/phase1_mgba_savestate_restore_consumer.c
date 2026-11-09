@@ -109,6 +109,11 @@ size_t mCoreCallbacksListSize(const struct mCoreCallbacksList* callbacks) {
 	return callbacks->size;
 }
 
+const struct mCoreCallbacks* mCoreCallbacksListGetConstPointer(
+    const struct mCoreCallbacksList* callbacks, size_t index) {
+	return &callbacks->vector[index];
+}
+
 void GBASavedataInitFlash(struct GBASavedata* savedata) {
 	(void) savedata;
 }

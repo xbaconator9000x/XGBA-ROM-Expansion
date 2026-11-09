@@ -33,9 +33,10 @@ VFiles. It does not execute the full mGBA core, the headless/GUI frontend,
 native filesystem persistence, ordinary user-generated savestates, stock
 gameplay, or physical Flash. The `GBASavedataInit` non-autodetect branch is
 compiled but not executed; non-SRAM initializer branches are fixture stubs. The
-callback-list-size accessor is a host shim equivalent to the pinned generated
-vector accessor, and no callbacks are registered. The source records bind each
-of 19 selected files to its pinned Git blob,
+callback-list size and const-pointer accessors are host shims equivalent to the
+pinned generated vector accessors; the accessors are not called because the
+callback list is empty. The source records bind each of 19 selected files to
+its pinned Git blob,
 full-byte SHA-256, canonical dossier-row SHA-256, scope, dependency edges, and
 per-file objections. All selected files carry MPL-2.0 notices; transitive
 distribution licensing is unresolved.
