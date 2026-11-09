@@ -223,12 +223,12 @@ class FakeStateAPI:
         self.sha = "first-blob"
 
     def get(self, path):
+        if path.endswith("/git/ref/heads/main"):
+            return {"object": {"sha": "main-sha"}}
         if "/git/ref/heads/" in path:
             if not self.branch:
                 raise p.ApiError(404, path)
             return {"object": {"sha": "branch-sha"}}
-        if path.endswith("/git/ref/heads/main"):
-            return {"object": {"sha": "main-sha"}}
         if "/contents/" in path:
             if self.contents is None:
                 raise p.ApiError(404, path)
