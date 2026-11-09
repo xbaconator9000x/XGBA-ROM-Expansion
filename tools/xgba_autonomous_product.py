@@ -94,11 +94,15 @@ def verify_state(state):
         raise PilotError("Invalid history or quota ledger")
     current = state.get("current")
     if current is not None:
-        if (not isinstance(current, dict) or
-            current.get("id") != PACKAGES[idx]["id"] if idx < len(PACKAGES) else True):
+        if idx >= len(PACKAGES) or not isinstance(current, dict):
+            raise PilotError("Cannot have active workpack after queue is exhausted")
+        if current.get("id") != PACKAGES[idx]["id"]:
             raise PilotError("Unknown active workpack")
         if current.get("status") not in {"RESERVED", "DISPATCHED", "WAIT_CI", "BLOCKED"}:
             raise PilotError("Invalid current status")
+        checks = current.get("ci_wait_checks", 0)
+        if type(checks) is not int or checks < 0 or checks > 6:
+            raise PilotError("Invalid CI wait count")
 
 
 def pr_head(api):
@@ -272,10 +276,16 @@ def run(api):
             return
         ci, reason = ci_gate(api, head)
         if ci == "WAIT":
-            if current["status"] != "WAIT_CI":
-                current["status"] = "WAIT_CI"
+            current["ci_wait_checks"] = current.get("ci_wait_checks", 0) + 1
+            if current["ci_wait_checks"] >= 6:
+                current["status"] = "BLOCKED"
+                current["reason"] = "Exact-head CI remained unverified after six scheduled checks: " + reason
                 ledger.save(state, blob)
-            report("WAIT_CI", package=current["id"], reason=reason)
+                report("BLOCKED", package=current["id"], reason=current["reason"])
+                return
+            current["status"] = "WAIT_CI"
+            ledger.save(state, blob)
+            report("WAIT_CI", package=current["id"], checks=current["ci_wait_checks"], reason=reason)
             return
         if ci == "BLOCKED":
             current["status"] = "BLOCKED"
