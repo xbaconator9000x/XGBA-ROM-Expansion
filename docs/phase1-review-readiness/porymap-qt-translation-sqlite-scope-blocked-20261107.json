@@ -1,0 +1,83 @@
+{
+  "stage": 3,
+  "status": "BLOCKED_NO_TRANSLATION_CATALOG_OR_SQLITE_INTEGRATION_IN_PINNED_SCOPE",
+  "review_disposition": "NON_APPROVING",
+  "head_reconciled_before_work": "44606b0aebe067fe898105f98941e4fad05ad9e4",
+  "upstream": {
+    "repository": "huderlem/porymap",
+    "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116"
+  },
+  "scope_result": {
+    "eligible_translation_catalog_files": 0,
+    "eligible_sqlite_integration_files": 0,
+    "new_semantic_file_reviews": 0,
+    "original_semantic_dossier_available": false,
+    "reason": "The pinned build/resource/source listings and candidate-path inventory identify no Qt translation catalogs or SQLite integration to review. The available workpack contains automated candidate triage, not original semantic dossiers or reviewer receipts."
+  },
+  "pinned_evidence": [
+    {
+      "path": "porymap.pro",
+      "git_blob_sha1": "53d8055ecfe5d88afb6f183b82d4a3472727ad4f",
+      "full_source_sha256": "cff608e64a2d610ea029d199c2be3b50b7941437b62c80fa3eaffdba70de2996",
+      "candidate_dossier_row_sha256": "93059d533a8cc5a5cc0fbe774b64bd8bf83ff107344a870cace53d6d96cf35e2",
+      "candidate_status": "CANDIDATE_ONLY_SOURCE_HASH_VERIFIED",
+      "observation": "The qmake project enables Qt Core/GUI/Widgets and optional Charts/QML/Network; it does not declare Qt SQL. It lists resources/text.qrc and has no translation-generation or catalog-install rule in the inspected project file."
+    },
+    {
+      "path": "src/main.cpp",
+      "git_blob_sha1": "dfd3bff258868dbae190117b95dd7ecf811e33ab",
+      "full_source_sha256": "1e1e84af8dcd38c58c8120f4e1dc8157418758dea0bd8751c108bfc12b4dd8bc",
+      "candidate_dossier_row_sha256": "dd7577ba19f4012a292e1a05bd0f60f6f6e1e0d394aa9b4a3882f98d57c3b0f0",
+      "candidate_status": "CANDIDATE_ONLY_SOURCE_HASH_VERIFIED",
+      "observation": "The pinned entrypoint initializes QApplication and MainWindow without a QTranslator/catalog-loading call."
+    },
+    {
+      "path": "resources/text.qrc",
+      "git_blob_sha1": "687a27116687b689757e384af0980eb4acb00c10",
+      "full_source_sha256": "afd8db22780ac3424666737d6cf1039bec57b7fe14630e30473f360d41e552e4",
+      "candidate_dossier_row_sha256": "58456f009b62f7502d9a071214e33bcd572c5757ba748cb678bfd770fe67508",
+      "candidate_status": "CANDIDATE_ONLY_SOURCE_HASH_VERIFIED",
+      "observation": "The resource manifest lists six default JSON data files, script_template.txt, and ../CHANGELOG.md; it lists no .ts or .qm translation catalog."
+    },
+    {
+      "path": "resources/text",
+      "git_tree_sha1": "d6a956246ad7ef65795033378017c0dbb34b4847",
+      "observation": "The pinned directory listing contains only the six region-map/prefab JSON defaults and script_template.txt."
+    },
+    {
+      "path": "LICENSE.md",
+      "git_blob_sha1": "65c5ca88a67c30becee01c5a8816d964b03862f9",
+      "full_source_sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768",
+      "candidate_dossier_row_sha256": "a620cf8ec560f8bf6f54e9d96403ec1cb204f3ddad7fef812ce7893059396986",
+      "candidate_status": "INVENTORIED_NOT_SEMANTICALLY_REVIEWED",
+      "observation": "The root notice begins with GNU LGPL text. This blocker makes no legal, combined-work, or distribution-compliance conclusion."
+    }
+  ],
+  "negative_scope_checks": {
+    "candidate_workpack_sha256": "5de8d2880a520aa4a80bf0a5b968ba6d19bb0a6a388260a08bd3906b2b4a5cb4",
+    "embedded_candidate_dossier_gzip_sha256": "fe7785c38c7cbd80256ff591dabf1308f06f51f6324b44a743b8b087defd27ac",
+    "candidate_rows_total": 14834,
+    "porymap_candidate_rows": 858,
+    "translation_or_sqlite_path_matches": 0,
+    "catalog_suffix_matches": 0,
+    "sqlite_like_suffix_matches": 0,
+    "github_code_search": {
+      "QTranslator": 0,
+      "SQLite_or_sqlite": 0
+    },
+    "interpretation": "These are bounded source-tree and automated candidate-inventory checks, not proof about generated artifacts, downstream packaging, or unindexed external dependencies."
+  },
+  "licensing_and_dependency_boundaries": [
+    "Qt modules are system build dependencies in the inspected qmake project; no Qt translation catalog or Qt SQL linkage was identified.",
+    "The separate Porymap LGPL notice is not inherited by all vendored components, and this blocker does not adjudicate their notices.",
+    "SQLite is not present in the inspected pinned integration scope; no SQLite license or distribution conclusion is asserted."
+  ],
+  "unresolved": [
+    "No original semantic dossier or attributable independent per-file receipt exists for this absent subsystem.",
+    "Full package/install behavior and downstream Qt redistribution obligations were not executed or legally assessed.",
+    "Phase 1 approval and compatibility gates remain incomplete."
+  ],
+  "exact_head_ci": "PENDING",
+  "independent_approvals": 0,
+  "phase1_gate": "FAIL_INCOMPLETE"
+}

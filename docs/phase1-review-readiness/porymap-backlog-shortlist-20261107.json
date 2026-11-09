@@ -1,0 +1,97 @@
+{
+  "status": "NON_APPROVING_BACKLOG_SHORTLIST",
+  "phase1_gate": "FAIL_INCOMPLETE",
+  "independent_approvals_added": 0,
+  "source_pin": {
+    "repository": "huderlem/porymap",
+    "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116"
+  },
+  "inventory_evidence": {
+    "workpack_sha256": "5de8d2880a520aa4a80bf0a5b968ba6d19bb0a6a388260a08bd3906b2b4a5cb4",
+    "candidate_dossier_gzip_sha256": "fe7785c38c7cbd80256ff591dabf1308f06f51f6324b44a743b8b087defd27ac",
+    "candidate_rows_are_semantic_receipts": false
+  },
+  "shortlist": [
+    {
+      "rank": 1,
+      "id": "porymap-tileset-persistence",
+      "status": "SELECTED_NEEDS_EVIDENCE",
+      "focal_files": [
+        {
+          "path": "include/core/tileset.h",
+          "git_blob_sha1": "dcf55ec182200985125ee308a1ac7c8df54ab066",
+          "full_source_sha256": "d1c8b5b37bfa14ccc528d648d9250ce23b25a668dec013e9d159095fbfe8c613",
+          "candidate_row_sha256": "31030025f279eab70c34efe0941876015dee23fd74439b25206b3959f9515009",
+          "scope": "Complete header; declarations, ownership fields and save/load contracts."
+        },
+        {
+          "path": "src/core/tileset.cpp",
+          "git_blob_sha1": "0aa1f7d6726e3c8670f0758724284c792f7d9272",
+          "full_source_sha256": "ec94552b325e26362046b5288a6c448d62ff4407c8bfa9cb5ed392407adc4b99",
+          "candidate_row_sha256": "6fb6cc663f859d2783badd95b7606b497e2c7da2d322fcc1e4e04b367f9ba7e2",
+          "scope": "Complete implementation; ownership, ID mapping, output generation, binary/image/palette load/save, dirty state and query helpers."
+        }
+      ],
+      "direct_caller_context": [
+        "src/ui/tileseteditor.cpp",
+        "src/scriptapi/apimap.cpp",
+        "src/project.cpp"
+      ],
+      "basis": "Source hashes and candidate row hashes are verifiable; no existing whole-file semantic dossier for these focal files was found. Native Qt original-method fault testing is bounded and executable.",
+      "limits": [
+        "Candidate archive rows are automated inventory, not original independent semantic dossiers or approvals.",
+        "Whole GUI/project behavior, script runtime, multi-file rollback, and downstream game compatibility are unverified."
+      ]
+    },
+    {
+      "rank": 2,
+      "id": "porymap-layout-blockdata-persistence",
+      "status": "EXCLUDED_EXISTING_SEMANTIC_OVERLAP",
+      "focal_files": [
+        "src/core/maplayout.cpp",
+        "src/core/blockdata.cpp"
+      ],
+      "evidence": "docs/PHASE1_P0_PORYMAP_PACKED_BLOCK_MASK_LIFETIME_2026-10-27.md",
+      "reason": "The existing dossier already analyzes LE16 serialization, unchecked QFile::write, odd trailing bytes and dimension reconciliation."
+    },
+    {
+      "rank": 3,
+      "id": "firered-mapjson-authored-order",
+      "status": "EXCLUDED_EXISTING_PACKAGE",
+      "focal_files": [
+        "tools/mapjson"
+      ],
+      "evidence": [
+        "tools/mapjson_semantic_proof.py",
+        "docs/phase1-disposition-candidates/0032-firered-mapjson-generator.md"
+      ],
+      "reason": "Existing generator and authored-order evidence."
+    },
+    {
+      "rank": 4,
+      "id": "mgba-matrix-savestate",
+      "status": "EXCLUDED_EXISTING_PACKAGE",
+      "focal_files": [
+        "src/gba"
+      ],
+      "evidence": [
+        "tools/phase1_mgba_matrix_prefetch_lifecycle.py",
+        "tools/phase1_firered_mgba_savestate_mapping.py"
+      ],
+      "reason": "Existing matrix/prefetch and save-state mapping evidence."
+    },
+    {
+      "rank": 5,
+      "id": "poryscript-generated-include",
+      "status": "EXCLUDED_EXISTING_PACKAGE",
+      "focal_files": [
+        "scripts.pory",
+        "scripts.inc"
+      ],
+      "evidence": "docs/phase1-review-readiness/poryscript-compiler-source-closure-20261105.md",
+      "reason": "Existing generated-include and consumer closure evidence."
+    }
+  ],
+  "validator": "tools/phase1_porymap_tileset_closure.py",
+  "native_harness": "tests/phase1_porymap_tileset_native.cpp"
+}

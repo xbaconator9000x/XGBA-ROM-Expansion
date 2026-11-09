@@ -1,0 +1,45 @@
+name: Phase 1 pinned Porymap JSON writer result propagation audit
+on:
+  push:
+    branches:
+      - 'phase1/**'
+    paths:
+      - 'tools/phase1_porymap_json_writer_propagation.py'
+      - '.github/workflows/phase1-porymap-json-writer-propagation.yml'
+  pull_request:
+    paths:
+      - 'tools/phase1_porymap_json_writer_propagation.py'
+      - '.github/workflows/phase1-porymap-json-writer-propagation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-source-json-writer-propagation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: huderlem/porymap
+          ref: 26b919d7ff4b54152de010abd5bf344af2ebe116
+          path: pinned-porymap
+          persist-credentials: false
+      - name: Audit six unchanged JSON writers and result propagation with negative controls
+        run: |
+          set -euo pipefail
+          mkdir -p phase1-evidence
+          python3 -m py_compile tools/phase1_porymap_json_writer_propagation.py
+          python3 tools/phase1_porymap_json_writer_propagation.py \
+            --porymap pinned-porymap \
+            --output phase1-evidence/porymap-json-writer-propagation.json
+          python3 -m json.tool phase1-evidence/porymap-json-writer-propagation.json >/dev/null
+      - name: Archive text-only source boundary evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-porymap-json-writer-propagation-text
+          path: phase1-evidence/porymap-json-writer-propagation.json
+          if-no-files-found: error

@@ -6,7 +6,76 @@ on:
       - 'tools/porymap_compiled_semantics.py'
       - 'tools/porymap_block_semantic_reference.py'
       - 'tools/porymap_shared_semantics.py'
+      - 'tools/phase1_porymap_script_consumer_closure.py'
+      - 'docs/phase1-review-readiness/porymap-event-script-consumer-closure-20261105.md'
+      - 'tools/phase1_porymap_external_editor_boundary.py'
+      - 'docs/phase1-review-readiness/porymap-external-editor-preference-boundary-20261105.md'
+      - 'tools/phase1_porymap_external_script_reload.py'
+      - 'docs/phase1-review-readiness/porymap-external-script-reload-boundary-20261105.md'
+      - 'tools/phase1_porymap_regionmap_persistence.py'
+      - 'tests/phase1_porymap_regionmap_persistence.cpp'
+      - 'docs/phase1-review-readiness/porymap-regionmap-persistence-boundary-20261105.md'
+      - 'tools/phase1_porymap_regionmap_project_caller.py'
+      - 'tests/phase1_porymap_regionmap_project_caller.cpp'
+      - 'docs/phase1-review-readiness/porymap-regionmap-project-caller-20261105.md'
+      - 'tools/phase1_porymap_regionmap_project_save.py'
+      - 'tests/phase1_porymap_regionmap_project_save.cpp'
+      - 'docs/phase1-review-readiness/porymap-regionmap-project-save-failure-closure-20261106.md'
+      - 'tools/phase1_porymap_cross_map_undo.py'
+      - 'tests/phase1_porymap_cross_map_undo.cpp'
+      - 'docs/phase1-review-readiness/porymap-cross-map-undo-boundary-20261106.md'
+      - 'tools/phase1_porymap_editor_map_switch.py'
+      - 'tests/phase1_porymap_editor_map_switch.cpp'
+      - 'docs/phase1-review-readiness/porymap-editor-map-switch-20261106.md'
+      - 'tools/phase1_porymap_advancemap_import.py'
+      - 'tests/phase1_porymap_advancemap_import.cpp'
+      - 'docs/phase1-review-readiness/porymap-advancemap-import-boundary-20261107.md'
+      - 'docs/phase1-review-readiness/porymap-advancemap-import-boundary-20261107.json'
+      - 'tools/phase1_porymap_validator_native.py'
+      - 'tests/phase1_porymap_validator_native.cpp'
+      - 'tests/phase1_porymap_validator_link_probe.cpp'
+      - 'tests/test_phase1_copilot_chain.py'
+      - '.github/workflows/phase1-copilot-chain.yml'
+      - 'docs/phase1-review-readiness/porymap-validator-prefix-boundary-20261107.md'
+      - 'docs/phase1-review-readiness/porymap-validator-prefix-boundary-20261107.json'
+      - 'docs/phase1-review-readiness/porymap-qt-translation-sqlite-scope-blocked-20261107.json'
       - 'tools/qt_metaobject_contracts.py'
+      - '.github/workflows/compiled-porymap-semantics.yml'
+  pull_request:
+    paths:
+      - 'tools/phase1_porymap_script_consumer_closure.py'
+      - 'docs/phase1-review-readiness/porymap-event-script-consumer-closure-20261105.md'
+      - 'tools/phase1_porymap_external_editor_boundary.py'
+      - 'docs/phase1-review-readiness/porymap-external-editor-preference-boundary-20261105.md'
+      - 'tools/phase1_porymap_external_script_reload.py'
+      - 'docs/phase1-review-readiness/porymap-external-script-reload-boundary-20261105.md'
+      - 'tools/phase1_porymap_regionmap_persistence.py'
+      - 'tests/phase1_porymap_regionmap_persistence.cpp'
+      - 'docs/phase1-review-readiness/porymap-regionmap-persistence-boundary-20261105.md'
+      - 'tools/phase1_porymap_regionmap_project_caller.py'
+      - 'tests/phase1_porymap_regionmap_project_caller.cpp'
+      - 'docs/phase1-review-readiness/porymap-regionmap-project-caller-20261105.md'
+      - 'tools/phase1_porymap_regionmap_project_save.py'
+      - 'tests/phase1_porymap_regionmap_project_save.cpp'
+      - 'docs/phase1-review-readiness/porymap-regionmap-project-save-failure-closure-20261106.md'
+      - 'tools/phase1_porymap_cross_map_undo.py'
+      - 'tests/phase1_porymap_cross_map_undo.cpp'
+      - 'docs/phase1-review-readiness/porymap-cross-map-undo-boundary-20261106.md'
+      - 'tools/phase1_porymap_editor_map_switch.py'
+      - 'tests/phase1_porymap_editor_map_switch.cpp'
+      - 'docs/phase1-review-readiness/porymap-editor-map-switch-20261106.md'
+      - 'tools/phase1_porymap_advancemap_import.py'
+      - 'tests/phase1_porymap_advancemap_import.cpp'
+      - 'docs/phase1-review-readiness/porymap-advancemap-import-boundary-20261107.md'
+      - 'docs/phase1-review-readiness/porymap-advancemap-import-boundary-20261107.json'
+      - 'tools/phase1_porymap_validator_native.py'
+      - 'tests/phase1_porymap_validator_native.cpp'
+      - 'tests/phase1_porymap_validator_link_probe.cpp'
+      - 'tests/test_phase1_copilot_chain.py'
+      - '.github/workflows/phase1-copilot-chain.yml'
+      - 'docs/phase1-review-readiness/porymap-validator-prefix-boundary-20261107.md'
+      - 'docs/phase1-review-readiness/porymap-validator-prefix-boundary-20261107.json'
+      - 'docs/phase1-review-readiness/porymap-qt-translation-sqlite-scope-blocked-20261107.json'
       - '.github/workflows/compiled-porymap-semantics.yml'
 permissions:
   contents: read
@@ -16,6 +85,8 @@ jobs:
     timeout-minutes: 85
     steps:
       - uses: actions/checkout@v4
+      - name: Verify Copilot dispatcher candidate syntax and safe guards
+        run: python3 tests/test_phase1_copilot_chain.py
       - name: Install pinned editor host build prerequisites
         run: |
           sudo apt-get update -qq
@@ -27,6 +98,82 @@ jobs:
           git -C upstream/porymap fetch --quiet origin 26b919d7ff4b54152de010abd5bf344af2ebe116
           git -C upstream/porymap checkout --quiet --detach 26b919d7ff4b54152de010abd5bf344af2ebe116
           test "$(git -C upstream/porymap rev-parse HEAD)" = 26b919d7ff4b54152de010abd5bf344af2ebe116
+      - name: Exercise pinned AdvanceMap importer and malformed-dimension boundary
+        run: |
+          python3 tools/phase1_porymap_advancemap_import.py \
+            --porymap upstream/porymap \
+            --output porymap-compiler-evidence/porymap-advancemap-import.json
+      - name: Exercise pinned Porymap validators and declared setter link boundary
+        run: |
+          python3 tools/phase1_porymap_validator_native.py \
+            --porymap upstream/porymap \
+            --output porymap-compiler-evidence/porymap-validator-native.json
+      - name: Inventory external-editor preference and compile original config writer
+        run: |
+          python3 tools/phase1_porymap_external_editor_boundary.py \
+            --porymap upstream/porymap \
+            --dossier docs/phase1-review-readiness/porymap-external-editor-preference-boundary-20261105.md \
+            --output porymap-compiler-evidence/porymap-external-editor-boundary.json \
+            --archive porymap-compiler-evidence/porymap-external-editor-boundary.tar.gz
+      - name: Inventory pinned event-script consumer source closure
+        run: |
+          python3 tools/phase1_porymap_script_consumer_closure.py \
+            --porymap upstream/porymap \
+            --dossier docs/phase1-review-readiness/porymap-event-script-consumer-closure-20261105.md \
+            --output porymap-compiler-evidence/porymap-script-consumer-source-closure.json \
+            --archive porymap-compiler-evidence/porymap-script-consumer-source-closure.tar.gz
+      - name: Exercise pinned external-script watcher and launch boundaries
+        run: |
+          python3 tools/phase1_porymap_external_script_reload.py \
+            --porymap upstream/porymap \
+            --dossier docs/phase1-review-readiness/porymap-external-script-reload-boundary-20261105.md \
+            --output porymap-compiler-evidence/porymap-external-script-reload-boundary.json \
+            --archive porymap-compiler-evidence/porymap-external-script-reload-boundary.tar.gz
+      - name: Exercise pinned RegionMap save and dirty-state boundaries
+        run: |
+          python3 tools/phase1_porymap_regionmap_persistence.py \
+            --porymap upstream/porymap \
+            --harness tests/phase1_porymap_regionmap_persistence.cpp \
+            --dossier docs/phase1-review-readiness/porymap-regionmap-persistence-boundary-20261105.md \
+            --output porymap-compiler-evidence/porymap-regionmap-persistence.json \
+            --archive porymap-compiler-evidence/porymap-regionmap-persistence.tar.gz \
+            --log porymap-compiler-evidence/porymap-regionmap-persistence.log
+      - name: Verify pinned RegionMap entry-to-Project caller boundary
+        run: |
+          python3 tools/phase1_porymap_regionmap_project_caller.py \
+            --porymap upstream/porymap \
+            --harness tests/phase1_porymap_regionmap_project_caller.cpp \
+            --dossier docs/phase1-review-readiness/porymap-regionmap-project-caller-20261105.md \
+            --output porymap-compiler-evidence/porymap-regionmap-project-caller.json \
+            --archive porymap-compiler-evidence/porymap-regionmap-project-caller.tar.gz \
+            --log porymap-compiler-evidence/porymap-regionmap-project-caller.log
+      - name: Exercise pinned RegionMap multi-map Project save failure boundary
+        run: |
+          python3 tools/phase1_porymap_regionmap_project_save.py \
+            --porymap upstream/porymap \
+            --harness tests/phase1_porymap_regionmap_project_save.cpp \
+            --dossier docs/phase1-review-readiness/porymap-regionmap-project-save-failure-closure-20261106.md \
+            --output porymap-compiler-evidence/porymap-regionmap-project-save.json \
+            --archive porymap-compiler-evidence/porymap-regionmap-project-save.tar.gz \
+            --log porymap-compiler-evidence/porymap-regionmap-project-save.log
+      - name: Exercise pinned cross-map connection undo and dirty-state boundary
+        run: |
+          python3 tools/phase1_porymap_cross_map_undo.py \
+            --porymap upstream/porymap \
+            --harness tests/phase1_porymap_cross_map_undo.cpp \
+            --dossier docs/phase1-review-readiness/porymap-cross-map-undo-boundary-20261106.md \
+            --output porymap-compiler-evidence/porymap-cross-map-undo.json \
+            --archive porymap-compiler-evidence/porymap-cross-map-undo.tar.gz \
+            --log porymap-compiler-evidence/porymap-cross-map-undo.log
+      - name: Exercise pinned editor map-switch undo-group boundary
+        run: |
+          python3 tools/phase1_porymap_editor_map_switch.py \
+            --porymap upstream/porymap \
+            --harness tests/phase1_porymap_editor_map_switch.cpp \
+            --dossier docs/phase1-review-readiness/porymap-editor-map-switch-20261106.md \
+            --output porymap-compiler-evidence/porymap-editor-map-switch.json \
+            --archive porymap-compiler-evidence/porymap-editor-map-switch.tar.gz \
+            --log porymap-compiler-evidence/porymap-editor-map-switch.log
       - name: Configure original qmake Qt application
         run: |
           set -o pipefail

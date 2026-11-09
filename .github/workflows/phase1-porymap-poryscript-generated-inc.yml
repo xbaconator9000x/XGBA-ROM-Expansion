@@ -1,0 +1,49 @@
+name: Phase 1 pinned Porymap Poryscript generated include dependency
+on:
+  push:
+    branches:
+      - phase1/porymap-full-qt-project-roundtrip-20261028
+    paths:
+      - '.github/workflows/phase1-porymap-poryscript-generated-inc.yml'
+      - 'tools/phase1_porymap_poryscript_generated_inc.py'
+      - 'docs/phase1-review-readiness/porymap-poryscript-generated-inc-20261029.md'
+  pull_request:
+    paths:
+      - '.github/workflows/phase1-porymap-poryscript-generated-inc.yml'
+      - 'tools/phase1_porymap_poryscript_generated_inc.py'
+      - 'docs/phase1-review-readiness/porymap-poryscript-generated-inc-20261029.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-generated-include-dependency:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clone pinned upstream source owners
+        run: |
+          set -euo pipefail
+          git clone --quiet --filter=blob:none https://github.com/huderlem/porymap.git upstream-porymap
+          git -C upstream-porymap checkout --quiet --detach 26b919d7ff4b54152de010abd5bf344af2ebe116
+          git clone --quiet --filter=blob:none https://github.com/huderlem/poryscript.git upstream-poryscript
+          git -C upstream-poryscript checkout --quiet --detach c32481161c767b25a3425fa9f1f8729927ff3d55
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream-firered
+          git -C upstream-firered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+      - name: Verify generated-include source dependency and negative controls
+        run: |
+          set -euo pipefail
+          mkdir -p phase1-evidence
+          python3 -m py_compile tools/phase1_porymap_poryscript_generated_inc.py
+          python3 tools/phase1_porymap_poryscript_generated_inc.py \
+            --porymap upstream-porymap --poryscript upstream-poryscript \
+            --firered upstream-firered \
+            --output phase1-evidence/porymap-poryscript-generated-inc.json
+      - name: Archive text-only partial evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-porymap-poryscript-generated-inc-text
+          path: phase1-evidence/*.json
+          if-no-files-found: warn
+          retention-days: 30
