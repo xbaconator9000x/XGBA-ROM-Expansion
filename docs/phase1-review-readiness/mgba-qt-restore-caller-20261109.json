@@ -1,0 +1,201 @@
+{
+  "schema": "phase1.mgba.qt-restore-caller.v1",
+  "repository": "mgba-emu/mgba",
+  "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "pinned_tree": "5863e657d270d0fe3ccaa4299f48d5689d74fa1f",
+  "machine_dossier": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "git_blob": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "compressed_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+  },
+  "status": "NEEDS_EVIDENCE",
+  "overall": "FAIL_INCOMPLETE",
+  "independent_approvals": 0,
+  "evidence_class": "COMPILED_EXTRACTED_PINNED_QT_QIODEVICE_AND_FILENAME_CALLERS_AND_VFILE_WRAPPER_WITH_NATIVE_QT6CORE_AND_HOST_CORE_THREAD_FIXTURES",
+  "source_records": [
+    {
+      "path": "src/core/serialize.c",
+      "git_blob": "ff8a9a86747336bd792bf9c964c53f232a702a08",
+      "full_source_sha256": "45fb69d5da0c0c4c135efb2641c7d1c6140d575b1819f60a45985ebfa0081f3c",
+      "canonical_dossier_row_sha256": "e9ad34d5514e106adc1f56111abf530b72118d1780d8593ae490ee63772ab9b5",
+      "license": "MPL-2.0",
+      "review_scope": "PARTIAL_CORE_RESULT_AND_ERROR_CHANNEL_TRACE",
+      "execution_scope": "SOURCE_TRACED_MCORE_LOAD_RESULT; NOT EXECUTED BY THIS QT HOST WITNESS",
+      "finding": "The pinned named-state loader returns false when fixed-size state extraction fails; that branch has no direct log call."
+    },
+    {
+      "path": "src/platform/qt/CoreController.cpp",
+      "git_blob": "183cea418a70963bd5332ef66bdff54a0dcccd46",
+      "full_source_sha256": "8ca7ca7b26fa030ef76322085a6f634b5e3ca4fd40a4e6549b6a12abace260b2",
+      "canonical_dossier_row_sha256": "1cbedd6e36f387b7c579bcea8c77bed82e9c3e8b18954974847c647dcf8b0f28",
+      "license": "MPL-2.0",
+      "review_scope": "PARTIAL_QT_RESTORE_CALLER_AND_BACKUP_RECOVERY",
+      "execution_scope": "COMPILED_EXTRACTED_QIODEVICE_AND_FILENAME_LOADSTATE_PLUS_LOADBACKUPSTATE",
+      "finding": "The QIODevice and filename loaders capture a backup, propagate the core bool only into success signals, and close their input VFiles after either result; backup recovery also closes its temporary VFile."
+    },
+    {
+      "path": "src/platform/qt/CoreController.h",
+      "git_blob": "3b7d8bafb7202b66e326221890e2c68655d1be72",
+      "full_source_sha256": "3618b5e08c89274b89fa03683840ac79c8aeadc9e7f8ab87a20c65ac58a215a4",
+      "canonical_dossier_row_sha256": "2276f54d6a154f7e2ac2973b5f7ffe229e776caaf94aca15cf2ff49d814596e0",
+      "license": "MPL-2.0",
+      "review_scope": "PARTIAL_QT_PUBLIC_LOAD_AND_SUCCESS_SIGNAL_CONTRACT",
+      "execution_scope": "SOURCE_TRACED_DECLARATIONS; FRONTEND CLASS NOT COMPILED",
+      "finding": "The public slots expose QIODevice and filename/slot load entrypoints plus stateLoaded, but no dedicated load-failed signal."
+    },
+    {
+      "path": "src/platform/qt/LoadSaveState.cpp",
+      "git_blob": "115d598925d4a85d68630f9909c065256f031ff4",
+      "full_source_sha256": "3b0c955cd33dfd3d0732ce2268aaf2747b9abcd62ee818f5cd38beda2702cbf0",
+      "canonical_dossier_row_sha256": "fb08e234dad5bcbf91bc59596ad6a916a3a0a3ad431bd64556ba9fe716f1585f",
+      "license": "MPL-2.0",
+      "review_scope": "PARTIAL_SLOT_UI_ENTRY_TRACE",
+      "execution_scope": "SOURCE_TRACED_SLOT_DISPATCH; WIDGET NOT EXECUTED",
+      "finding": "The slot-dialog selection dispatches a selected slot to CoreController and then closes the dialog."
+    },
+    {
+      "path": "src/platform/qt/LogController.cpp",
+      "git_blob": "526cdb9a4054698a0047379613c63fa64efad47d",
+      "full_source_sha256": "cb9e77b62ae0752495badb6942f3aec846b2fc0b1db6c33be96a8235d4d16299",
+      "canonical_dossier_row_sha256": "96796da1768502b3567e311199957f5890452d635f1d4e0bc6d0ff27391ea100",
+      "license": "MPL-2.0",
+      "review_scope": "PARTIAL_LOG_FILTER_AND_UI_ERROR_ROUTE_TRACE",
+      "execution_scope": "SOURCE_TRACED_LOG_FILTER_AND_QT_ERROR_DIALOG; NOT EXECUTED",
+      "finding": "Log forwarding is filter- and sink-dependent; a Qt-category ERROR may open a dialog, but this does not establish a dialog for core SAVESTATE failures."
+    },
+    {
+      "path": "src/platform/qt/VFileDevice.cpp",
+      "git_blob": "337c4462228809477717c659397d037b47d1141b",
+      "full_source_sha256": "dc54f83ec81f59ced56a0285643c4520f28830cd999f53814866de8b3cfe0b8a",
+      "canonical_dossier_row_sha256": "9bef3ff9694cfdfcb5e3f5bf9382c8cb22a67621c17400afb5572bb67e7df9a5",
+      "license": "MPL-2.0",
+      "review_scope": "PARTIAL_QIODEVICE_TO_VFILE_WRAPPER",
+      "execution_scope": "COMPILED_EXTRACTED_OPEN_WRAP_AND_ABSTRACT_WRAPPER_METHODS",
+      "finding": "VFileDevice::wrap opens the QIODevice or returns null; the abstract wrapper delegates I/O and closes the device before deleting only its wrapper."
+    },
+    {
+      "path": "src/platform/qt/VFileDevice.h",
+      "git_blob": "15f79bbcbdfe3a08bf5047a9306c79da131f8766",
+      "full_source_sha256": "75a15f5762042f5568f2329663b2d18828553c1211e737ee44fe33bb0020a178",
+      "canonical_dossier_row_sha256": "282cc6a467c2aea1841b52618713dc081e0e996f245055e8ba16387964cb7afd",
+      "license": "MPL-2.0",
+      "review_scope": "PARTIAL_VFILE_DEVICE_API_TRACE",
+      "execution_scope": "SOURCE_TRACED_DECLARATION; TEST FIXTURE USES PINNED VFILE ABI",
+      "finding": "The API declares filename opens, QIODevice-to-VFile wrapping and a VFileDevice owner; the test compiles against the pinned VFile ABI."
+    },
+    {
+      "path": "src/platform/qt/Window.cpp",
+      "git_blob": "af6592985329f08898cf078a666763954383c832",
+      "full_source_sha256": "67fcb2da1d2990e20bf57fd78f51881ce6a62a193cbabb5af5c3ec8fae29dea3",
+      "canonical_dossier_row_sha256": "21da719393e20ace0bb1a7080aa8fc1d674fb10072d27fbbe06c74454d4a2398",
+      "license": "MPL-2.0",
+      "review_scope": "PARTIAL_FILE_DIALOG_USER_LOAD_ENTRY_TRACE",
+      "execution_scope": "SOURCE_TRACED_FILENAME_DISPATCH; WINDOW NOT EXECUTED",
+      "finding": "The file-dialog user path dispatches a selected filename to the named CoreController load slot."
+    },
+    {
+      "path": "src/platform/sdl/main.c",
+      "git_blob": "91f22bd593d4952076c2a9a11da5a8d6951db2a8",
+      "full_source_sha256": "8bf9ae94c051bb6b8fd2e5bdd974652de6109afab80753e66023281f3956b81b",
+      "canonical_dossier_row_sha256": "9b9c93092a263d137e7392e87ff64707bbb555d61f5a7317add771537a391f2c",
+      "license": "MPL-2.0",
+      "review_scope": "PARTIAL_SDL_USER_LOAD_ENTRY_TRACE",
+      "execution_scope": "SOURCE_TRACED_OPTIONAL_STATE_OPEN_RUNFUNCTION_AND_CLOSE; SDL NOT EXECUTED",
+      "finding": "SDL opens the optional user state path, runs _loadState on the core thread, ignores the loader bool, and closes the VFile afterward."
+    }
+  ],
+  "extracted_original_body_sha256": {
+    "void CoreController::loadState(QIODevice* iodev, int flags)": "b2c111f89228dab6aa53c07e3e2475ee6894683c467aeaa88431f1712e73d989",
+    "void CoreController::loadState(const QString& path, int flags)": "0a326ed4783abd42cf4c5eb27943ecee733e9e3cc3e718c9184c7505a226e129",
+    "void CoreController::loadBackupState()": "f904d5ba24d51e184d68701645a1098d01ffcd46373a91a185762147011983b8",
+    "VFile* VFileDevice::wrap(QIODevice* iodev, QIODevice::OpenMode mode)": "e2c976bfdfe419c034bf83b8df224a763d7d517cd19dd441303ad3e072519956",
+    "VFile* VFileDevice::open(const QString& path, int mode)": "db69e2be1408c4af0e0156019df0479b8c9812a10dc5ea8151d8f46333a3273b",
+    "VFileAbstractWrapper::VFileAbstractWrapper(QIODevice* iodev)": "ba8f95f9bd78c92a5ee8f1bebb7d1791ebb0ddca29f533fc7efc94019851cd35",
+    "bool VFileAbstractWrapper::close(VFile* vf)": "60b0132710b58f08d88fe22ad30d21cc382ef9592e91772497cdc666e6e6cbe5",
+    "off_t VFileAbstractWrapper::seek(VFile* vf, off_t offset, int whence)": "5ff472269218a71e4804e2915e1e03c96ba63605caad69078507762d7c847cdb",
+    "ssize_t VFileAbstractWrapper::read(VFile* vf, void* buffer, size_t size)": "8d6ed2fd8d663c60fbba2a5869320723d2e143ab0b889e0e686b960aa4d0fb70",
+    "ssize_t VFileAbstractWrapper::readline(VFile* vf, char* buffer, size_t size)": "37ba030ba348db90fffd9f232d7a13599aea0294e3b826afc9fb966f1427d03f",
+    "ssize_t VFileAbstractWrapper::write(VFile* vf, const void* buffer, size_t size)": "3aabf3293a5642f70ebe5ad116d81413c27decdc69463e15f5160504d89f6508",
+    "void* VFileAbstractWrapper::map(VFile*, size_t, int)": "815b4a626bdc3834412c1f3969b07ad8476182487408cac7ddc0042e8fc7a4cf",
+    "void VFileAbstractWrapper::unmap(VFile*, void*, size_t)": "85da835fffe68e9fa35bfc331e5f5e04fdded28d120452cd1ff66541f9a8a819",
+    "void VFileAbstractWrapper::truncate(VFile*, size_t)": "7597f0a064ddad637297aeb7fbb8e97c492a085f21ba9d8f8cadc66cb79c8da3",
+    "ssize_t VFileAbstractWrapper::size(VFile* vf)": "20914c31966a5131a72a6b836686f288ff725d1a50c0f0148899ef72164501b2",
+    "bool VFileAbstractWrapper::sync(VFile*, void*, size_t)": "b67c1786cecfefd5e46862b575df42fd3d3c38b5c526690a463243415c2d0200"
+  },
+  "source_call_graph": [
+    "Qt Window file dialog -> CoreController::loadState(filename); LoadSaveState slot dialog -> CoreController::loadState(slot).",
+    "The tested original QIODevice overload calls VFileDevice::wrap; the tested filename overload calls VFileDevice::open. Both capture a backup, call mCoreLoadStateNamed on the core thread, emit frameAvailable/stateLoaded only on true, and close their temporary input VFile after the callback.",
+    "VFileDevice::open is the original pinned forwarder; this harness substitutes only VFileOpen with a Qt QBuffer fixture, then executes the original filename CoreController method and wrapper close path.",
+    "VFileDevice::wrap opens the caller-owned QIODevice and returns null on open failure; its abstract VFile wrapper delegates read/seek and close closes the QIODevice then deletes the wrapper.",
+    "mCoreLoadStateNamed returns false when mCoreExtractState cannot produce fixed-size state; this source branch has no direct log call. The Qt load slot has no explicit false-result signal.",
+    "Qt LogController presentation remains filter/sink/category dependent; the Qt-category error dialog is not evidence that savestate failures are presented.",
+    "SDL's optional state path opens a VFile, runs _loadState on the core thread, ignores mCoreLoadStateNamed's bool, and closes the VFile."
+  ],
+  "observations": {
+    "rejected_state": {
+      "load_result": false,
+      "qiodevice_closed": true,
+      "success_signals": 0,
+      "backup_retained": true,
+      "core_unchanged": true
+    },
+    "backup_recovery": {
+      "load_result": true,
+      "backup_closed": true,
+      "success_signals": 1,
+      "original_state_restored": true
+    },
+    "filename_retry": {
+      "load_result": true,
+      "qiodevice_closed": true,
+      "success_signals": 2,
+      "requested_flags_observed": 70
+    },
+    "open_failure": {
+      "device_close_calls": 0,
+      "core_callback_invoked": false,
+      "success_signals_unchanged": true
+    },
+    "filename_open_failure": {
+      "core_callback_invoked": true,
+      "mcore_load_or_save_called": false,
+      "success_signals_unchanged": true
+    }
+  },
+  "source_mutations_rejected": 7,
+  "output_mutations_rejected": 8,
+  "limitations": {
+    "compiled_original_corecontroller_qiodevice_loadstate_body": true,
+    "compiled_original_corecontroller_filename_loadstate_body": true,
+    "compiled_original_corecontroller_loadbackupstate_body": true,
+    "compiled_original_vfiledevice_open_wrap_and_abstract_wrapper_bodies": true,
+    "native_qt6core_qiodevice": true,
+    "pinned_vfile_abi_header": true,
+    "core_thread_execution": "SYNCHRONOUS_HOST_FIXTURE",
+    "mcore_save_and_load_implementation": "HOST_FIXTURE_NOT_PINNED_CORE",
+    "backup_memory_file": "HOST_FIXTURE_NOT_PINNED_VFILEMEMCHUNK",
+    "full_qt_frontend_build": false,
+    "qt_widgets_or_window_execution": false,
+    "qt_filename_overload_execution": true,
+    "native_filesystem_open": false,
+    "vfileopen_implementation": "HOST_QBUFFER_FIXTURE",
+    "qt_log_controller_execution": false,
+    "sdl_frontend_build_or_execution": false,
+    "prior_libretro_caller_behavior_repeated": false,
+    "native_filesystem_state_file_or_natural_malformed_state": false,
+    "durable_savestate_or_save_data": false,
+    "stock_gameplay_or_physical_flash": false,
+    "transitive_distribution_licensing_resolved": false
+  },
+  "prior_evidence": {
+    "libretro_caller_receipt": "docs/phase1-review-readiness/mgba-savestate-caller-integration-20261109.json",
+    "overlap": "Reuses prior core restore concepts only; this witness executes the distinct Qt QIODevice caller and Qt VFile wrapper.",
+    "frontend_runtime_feasibility": "docs/phase1-review-readiness/mgba-frontend-runtime-feasibility-20261106.json",
+    "known_blocker": "The full pinned Qt frontend was previously not buildable in the recorded configurations; this native Qt6Core extracted-method witness does not claim a full frontend."
+  },
+  "licensing": {
+    "all_source_records_mpl_2_0": true,
+    "upstream_modified": false,
+    "transitive_distribution_licensing_resolved": false
+  }
+}
