@@ -94,6 +94,18 @@ class PilotTests(unittest.TestCase):
         with self.assertRaises(p.PilotError):
             p.validate_pr(case)
 
+    def test_public_task_projection_does_not_expose_prompt_or_token(self):
+        task = {"id": "123456", "state": "in_progress", "head_ref": "foo",
+                "prompt": "internal prompt", "token": "highly-secret",
+                "created_at": "2026-11-09T00:00:00Z"}
+        projection = p.public_task_identity(task)
+        self.assertEqual(projection["id"], "123456")
+        self.assertEqual(projection["state"], "in_progress")
+        self.assertEqual(projection["head_ref"], "foo")
+        self.assertNotIn("prompt", projection)
+        self.assertNotIn("token", projection)
+        self.assertEqual(p.public_task_list([task]), [projection])
+
     def test_preflight_read_only(self):
         api = FakeClient()
         sha, active = p.preflight(api)
