@@ -1,0 +1,45 @@
+name: XGBA opt-in resource prototype CI
+on:
+  pull_request:
+    paths:
+      - 'tools/xgba_resource_*.py'
+      - 'tests/test_xgba_resource_*.py'
+      - 'docs/XGBA_RESOURCE_PROTOTYPE_REUSE_20261110.md'
+      - '.github/workflows/xgba-resource-prototype-ci.yml'
+  push:
+    branches:
+      - 'phase1/xgba-optin-resource-prototype-20261110'
+    paths:
+      - 'tools/xgba_resource_*.py'
+      - 'tests/test_xgba_resource_*.py'
+      - 'docs/XGBA_RESOURCE_PROTOTYPE_REUSE_20261110.md'
+      - '.github/workflows/xgba-resource-prototype-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-resource-prototype-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  product-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Source and deterministic behavioral tests (never semantic approval)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s docs/XGBA_RESOURCE_PROTOTYPE_REUSE_20261110.md
+          shopt -s nullglob
+          source_files=(tools/xgba_resource_*.py)
+          test_files=(tests/test_xgba_resource_*.py)
+          if (("${#source_files[@]}" == 0 || "${#test_files[@]}" == 0)); then
+            echo "PENDING_IMPLEMENTATION: no product code/test bundle yet (not a PASS for any workpack)"
+            exit 0
+          fi
+          for file in "${source_files[@]}" "${test_files[@]}"; do
+            python3 -m py_compile "$file"
+          done
+          python3 -m unittest discover -s tests -p 'test_xgba_resource_*.py' -v
+          echo "Product tests PASS. No independent semantic approval inferred."
