@@ -1,0 +1,38 @@
+name: Phase 1 pinned FireRed save-sector ID host sanitizer
+on:
+  pull_request:
+    paths:
+      - 'tools/phase1_firered_save_id_bounds.py'
+      - '.github/workflows/phase1-firered-save-id-bounds.yml'
+      - 'docs/PHASE1_P0_FIRERED_SAVE_SECTOR_ID_BOUNDS_2026-10-27.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-pinned-host-sanitizer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact invoking evidence commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Checkout immutable FireRed source
+        uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: pinned-firered
+          persist-credentials: false
+      - name: Check source identity and execute host sanitizer controls
+        run: |
+          python3 tools/phase1_firered_save_id_bounds.py \
+            --source-dir pinned-firered \
+            --cc clang \
+            --out evidence/save-sector-id-bounds.json
+      - name: Upload evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-firered-save-sector-id-bounds
+          path: evidence/save-sector-id-bounds.json
+          if-no-files-found: warn

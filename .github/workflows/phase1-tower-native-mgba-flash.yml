@@ -1,0 +1,65 @@
+name: Phase 1 native mGBA Trainer Tower Flash transaction
+on:
+  push:
+    branches:
+      - phase1/tower-prefix-integrity-20261027
+    paths:
+      - 'tests/phase1_tower_native/**'
+      - 'tools/phase1_tower_mgba_native_flash_transaction.py'
+      - 'docs/phase1-review-readiness/tower-mgba-native-flash-transaction-20261029.md'
+      - '.github/workflows/phase1-tower-native-mgba-flash.yml'
+  pull_request:
+    paths:
+      - 'tests/phase1_tower_native/**'
+      - 'tools/phase1_tower_mgba_native_flash_transaction.py'
+      - 'docs/phase1-review-readiness/tower-mgba-native-flash-transaction-20261029.md'
+      - '.github/workflows/phase1-tower-native-mgba-flash.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-mgba-flash-bus:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout immutable mGBA
+        uses: actions/checkout@v4
+        with:
+          repository: mgba-emu/mgba
+          ref: fd9dc5c2cbf234365068855851107e762fc6211b
+          path: upstream-mgba
+          persist-credentials: false
+      - name: Checkout immutable FireRed
+        uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - name: Compile unchanged native mGBA with synthetic transaction harness
+        run: |
+          set -euo pipefail
+          cmake -S tests/phase1_tower_native -B build-phase1-tower-native -DCMAKE_BUILD_TYPE=Debug 2>&1 | tee tower-native-configure.log
+          cmake --build build-phase1-tower-native --target phase1_tower_mgba_flash --parallel 2 2>&1 | tee tower-native-build.log
+      - name: Execute pinned source and native transcript negative controls
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/phase1_tower_mgba_native_flash_transaction.py
+          python3 tools/phase1_tower_mgba_native_flash_transaction.py \
+            --mgba upstream-mgba --firered upstream-firered \
+            --source tests/phase1_tower_native/phase1_tower_mgba_flash.c \
+            --executable build-phase1-tower-native/phase1_tower_mgba_flash \
+            --log phase1-evidence/tower-mgba-native-flash.log \
+            --output phase1-evidence/tower-mgba-native-flash.json
+      - name: Preserve evidence even when native execution fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-tower-native-mgba-flash
+          path: |
+            phase1-evidence/
+            tower-native-configure.log
+            tower-native-build.log
+          if-no-files-found: warn
+          retention-days: 90

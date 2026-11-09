@@ -1,0 +1,52 @@
+name: Phase 1 original FireRed special-sector C host execution
+on:
+  push:
+    branches:
+      - phase1/tower-prefix-integrity-20261027
+    paths:
+      - '.github/workflows/phase1-tower-special-sector-host.yml'
+      - 'tools/phase1_tower_special_sector_host.py'
+      - 'tests/phase1_tower_special_sector_host.c'
+      - 'docs/phase1-review-readiness/trainer-tower-special-sector-host-20261029.md'
+  pull_request:
+    paths:
+      - '.github/workflows/phase1-tower-special-sector-host.yml'
+      - 'tools/phase1_tower_special_sector_host.py'
+      - 'tests/phase1_tower_special_sector_host.c'
+      - 'docs/phase1-review-readiness/trainer-tower-special-sector-host-20261029.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-special-sector-host:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: pinned-firered
+          persist-credentials: false
+      - name: Verify original source and execute unchanged special-sector C wrappers
+        run: |
+          set -euo pipefail
+          mkdir -p phase1-evidence
+          python3 -m py_compile tools/phase1_tower_special_sector_host.py
+          python3 tools/phase1_tower_special_sector_host.py \
+            --source pinned-firered \
+            --harness tests/phase1_tower_special_sector_host.c \
+            --output phase1-evidence/tower-special-sector-host.json \
+            --log phase1-evidence/tower-special-sector-host.txt
+          python3 -m json.tool phase1-evidence/tower-special-sector-host.json >/dev/null
+      - name: Retain text-only pinned C host execution evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-tower-special-sector-host-text
+          path: phase1-evidence/
+          if-no-files-found: warn
+          retention-days: 45

@@ -1,0 +1,78 @@
+name: Phase 1 original-agbcc Trainer Tower sector30/31 native ARM experiment
+on:
+  push:
+    branches: [phase1/tower-prefix-integrity-20261027]
+    paths:
+      - 'tests/phase1_tower_native_arm_flash/**'
+      - 'tools/phase1_tower_original_arm_flash.py'
+      - 'docs/phase1-review-readiness/tower-original-arm-flash-20261029.md'
+      - '.github/workflows/phase1-tower-original-arm-flash.yml'
+  pull_request:
+    paths:
+      - 'tests/phase1_tower_native_arm_flash/**'
+      - 'tools/phase1_tower_original_arm_flash.py'
+      - 'docs/phase1-review-readiness/tower-original-arm-flash-20261029.md'
+      - '.github/workflows/phase1-tower-original-arm-flash.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-agbcc-arm-special-sectors:
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/pokefirered
+          ref: ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          path: upstream-firered
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pret/agbcc
+          ref: da598c1d918402c42c0c0d7128ba14567f3175e9
+          path: upstream-agbcc
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: mgba-emu/mgba
+          ref: fd9dc5c2cbf234365068855851107e762fc6211b
+          path: upstream-mgba
+          persist-credentials: false
+      - name: Build original agbcc and pristine FireRed ROM
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi libpng-dev build-essential cmake
+          (cd upstream-agbcc && ./build.sh && ./install.sh ../upstream-firered) > phase1-agbcc-build.log 2>&1 || { tail -100 phase1-agbcc-build.log; exit 1; }
+          make -C upstream-firered -j2 > phase1-firered-build.log 2>&1 || { tail -100 phase1-firered-build.log; exit 1; }
+          test -s upstream-firered/pokefirered.elf
+          test -s upstream-firered/pokefirered.gba
+      - name: Compile original mGBA and test-only direct-entry harness
+        run: |
+          set -euo pipefail
+          cmake -S tests/phase1_tower_native_arm_flash -B build-phase1-tower-arm-flash -DCMAKE_BUILD_TYPE=Debug > phase1-mgba-configure.log 2>&1 || { tail -100 phase1-mgba-configure.log; exit 1; }
+          cmake --build build-phase1-tower-arm-flash --target phase1_tower_original_arm_flash --parallel 2 > phase1-mgba-build.log 2>&1 || { tail -100 phase1-mgba-build.log; exit 1; }
+      - name: Original Flash detection then original ARM sector30/31 transactions
+        run: |
+          set -euo pipefail
+          python3 tools/phase1_tower_original_arm_flash.py \
+            --firered upstream-firered --agbcc upstream-agbcc --mgba upstream-mgba \
+            --elf upstream-firered/pokefirered.elf --rom upstream-firered/pokefirered.gba \
+            --executable build-phase1-tower-arm-flash/phase1_tower_original_arm_flash \
+            --log phase1-evidence/tower-original-arm-flash.log \
+            --output phase1-evidence/tower-original-arm-flash.json
+      - name: Preserve text evidence only; never publish ROM or ELF
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-tower-original-agbcc-arm-flash
+          path: |
+            phase1-evidence/*.json
+            phase1-evidence/*.log
+            phase1-agbcc-build.log
+            phase1-firered-build.log
+            phase1-mgba-configure.log
+            phase1-mgba-build.log
+          if-no-files-found: warn
