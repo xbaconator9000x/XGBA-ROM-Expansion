@@ -1,0 +1,495 @@
+{
+  "schema": "xgba.phase1.firered_map_runtime_consumer_handoff.v1",
+  "prepared_at": "2026-11-09",
+  "repository_head_at_preparation": "bdd93fd1c6a87ebdeefdd3f5d087ae1adde43d77",
+  "protocol": {
+    "path": "docs/PHASE1_SYSTEM_BATCH_REVIEW_PROTOCOL_2026-10-27.md",
+    "read_from_pr": 8,
+    "branch": "phase1/review-readiness-handoff-20261027",
+    "head": "dddd2fd27371eb8f45b36c0403ba8ed38f5b732a",
+    "requirements_followed": [
+      "Immutable pinned source identities and dossier provenance",
+      "Separate full-file text inspection from dependency closure and independent disposition",
+      "Record unresolved dependencies and unavailable tests",
+      "Preserve FAIL_INCOMPLETE and zero approvals"
+    ]
+  },
+  "status": {
+    "handoff": "NON_APPROVING",
+    "independent_verdict": "NEEDS_REVIEW",
+    "independent_reviewer": null,
+    "whole_file_semantic_approval": false,
+    "independent_approvals_added": 0,
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "phase2_started": false,
+    "receipt_created": false
+  },
+  "fire_red_source_pin": {
+    "repository": "pret/pokefirered",
+    "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
+  },
+  "upstream_license_evidence": {
+    "pinned_readme_path": "README.md",
+    "pinned_readme_git_blob_sha1": "819422657623aae0cb0d2d0d23893b2927fcf0d7",
+    "pinned_readme_sha256": "ab59004406fa7c682aed5f7d034e527ac9b9c8cf4a0257920b1340bc25e99f3d",
+    "license_file": "Not present in the pinned upstream root listing observed during preparation; the listing response was not archived.",
+    "assessment": "README does not establish a license for these files; legal review remains pending."
+  },
+  "packet_provenance": {
+    "selected_packet": "docs/phase1-review-readiness/packet-0200-0299.json",
+    "selected_packet_git_blob_sha1": "c998c2ea8c887968e586b1792c5207ecb5286839",
+    "selected_packet_sha256": "fde3a0dbf9f8b5cf19bc2591d81508f9dc9084e4d62d57d1ead8835b744f6586",
+    "prior_partial_handoff": "docs/phase1-review-readiness/analyst-third-packet-source-handoff-260-299-20261104.json",
+    "prior_partial_handoff_sha256": "67be57f089ed4276e6b5c41b2a2b18bdc0f489371ac7a53ac9d22bb8a9aac079",
+    "original_machine_dossier_archive": {
+      "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+      "git_blob_sha1": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+      "sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+    }
+  },
+  "reconciliation": {
+    "selected_indices": [295, 296, 297, 298],
+    "excluded_second_packet": {
+      "packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+      "git_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+      "sha256": "71835c0bd7c1c2b58670f4f1051233326dc16a5def3ad6da7d06ff230d403b02",
+      "indices": [112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 129],
+      "actual_repository": "mgba-emu/mgba",
+      "actual_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+      "scope": "Qt translation catalogs and bundled SQLite; not FireRed",
+      "reason_excluded": "The requested packet indices do not satisfy the explicit FireRed-source scope."
+    },
+    "other_exclusions": [
+      {
+        "packet_indices": "260-292",
+        "reason": "Authored scripts.inc sources overlap the Poryscript/map-script ABI assignments on PRs #16, #20 and #36."
+      },
+      {
+        "packet_index": 293,
+        "path": "src/agb_flash.c",
+        "reason": "Flash-sector work is assigned to PR #10."
+      },
+      {
+        "packet_index": 299,
+        "path": "src/load_save.c",
+        "reason": "Save-reload source work is already documented in this PR's earlier closure."
+      }
+    ],
+    "active_scope_reconciliation": [
+      "PR #6: authored map-header/layout join; not repeated.",
+      "PR #7: compiled mapjson connection-object bytes; prior evidence reused without re-running.",
+      "PR #10: flash-sector work; excluded.",
+      "PRs #14 and #27: Porymap writer and Qt save/reopen work; not duplicated.",
+      "PRs #16, #20 and #36: Poryscript/map-script ABI work; authored scripts excluded."
+    ]
+  },
+  "source_records": [
+    {
+      "package": "border_connection_readers",
+      "packet_index": 297,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "src/fieldmap.c",
+        "git_blob_sha1": "41567772299000ba5855419e5c39ad9373a34c20",
+        "sha256": "bbe15c7af1059a9f796dddaca28bdaaf206b715895029e189fa6ae012272ce68",
+        "line_count": 951,
+        "whole_file_scope": "ALL_SOURCE_LINES_READ; dependency closure remains partial"
+      },
+      "original_dossier_provenance": {
+        "packet_row_dossier_sha256": "37b3344254c75efe559b1a14b888a04a3e23aad7d9d4d999eee1e481666785d1",
+        "archive_row_sha256": "2d27cda56d10d8dc2b2a41ff6a408f8fad709222886aec188ac39d007c1189e9",
+        "archive_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+      },
+      "source_anchors": [
+        "39-55: border metatile macro and border-dimension modulo",
+        "90-113: map initialization from the current header/layout",
+        "129-170: connection-list traversal and direction flags",
+        "192-344: connected-map border fills",
+        "452-516: saved map-view serialization and restore",
+        "574-684: border selection, camera crossing, and transition",
+        "686-791: incoming and positional connection selection"
+      ],
+      "callers_readers_build_closure": [
+        {
+          "path": "src/overworld.c",
+          "git_blob_sha1": "339014da46ae8543143edc99ab72bf7496203a0d",
+          "scope": "Existing dossier/source anchors only; not a new whole-file disposition",
+          "relationship": "Resolves saved mapLayoutId through gMapLayouts and supplies the current map header before map initialization."
+        },
+        {
+          "path": "include/global.fieldmap.h",
+          "git_blob_sha1": "e2828ec0cb1439718e830fbef4366770b3b77b1c",
+          "relationship": "Defines MapConnection, MapConnections, MapLayout and MapHeader fields; MapHeader.connections is at 0x0C."
+        },
+        {
+          "path": "include/fieldmap.h",
+          "git_blob_sha1": "639e329a9a0f721abd7e40001228859cb9466005",
+          "relationship": "Exports map-grid, connection lookup, border and camera-move interfaces."
+        },
+        {
+          "path": "Makefile",
+          "git_blob_sha1": "8b454dbd18eb0069fa5851d788697190890a5b37",
+          "anchors": "169-172, 247",
+          "relationship": "Wildcard C source collection includes src/fieldmap.c; includes map_data_rules.mk."
+        },
+        {
+          "path": "map_data_rules.mk",
+          "git_blob_sha1": "b32b85a91d9460642345ca983c37d165e820741f",
+          "anchors": "22-34",
+          "relationship": "Connects generated map/layout includes and maps.o to mapjson and authored JSON inputs."
+        },
+        {
+          "path": "tools/mapjson/mapjson.cpp",
+          "git_blob_sha1": "8d8ec4e4e6e1c011b06f00819abe40bad10d19d5",
+          "relationship": "Existing source dossier pins layout and map-connection text generation; not re-reviewed here."
+        },
+        {
+          "path": "asm/macros/map.inc",
+          "git_blob_sha1": "83ef472c926ce767c9133ab9bd6922280b38bb2d",
+          "relationship": "Existing source dossier pins generated native record and header macros; not re-reviewed here."
+        }
+      ],
+      "source_observations": [
+        "GetBorderBlockAt applies modulo by borderWidth and borderHeight without an in-function zero-dimension guard.",
+        "InitBackupMapLayoutConnections checks the MapHeader.connections pointer, then trusts count/list; it sets recognized direction flags even when a connected-header lookup does not yield a map for the fill routine.",
+        "GetIncomingConnection's NULL/list checks are conditional on UBFIX. CameraMove passes its result to SetPositionFromConnection without a local NULL test.",
+        "GetMapConnectionAtPos checks the header pointer, filters dive/emerge and tests directional coordinate bounds, then returns the first matching connection."
+      ],
+      "objections_and_unresolved": [
+        "The generated table's linked extent, layout-table bounds, runtime selected layout, border dimensions and fallback coordinate domains are not proven by this source read.",
+        "Connection count/list integrity, target-map resolution, duplicate-direction behavior and the CameraMove caller precondition need compiled/runtime evidence.",
+        "SavedMapViewIsEmpty has a non-UBFIX branch that scans 0x200 entries; the existing save-boundary dossier covers this adjacent issue, and this handoff does not revalidate it."
+      ],
+      "licensing": {
+        "status": "PENDING_ORIGINAL_LICENSE_REVIEW",
+        "basis": "The pinned FireRed root listing has no LICENSE file; the pinned README does not establish a file license; no legal clearance is claimed."
+      },
+      "negative_controls": [
+        {
+          "mutation": "Change the xprime modulo divisor in GetBorderBlockAt from mapLayout->borderWidth to 1.",
+          "expected_result": "Reject the changed pinned source SHA-256.",
+          "control_class": "source_identity_only",
+          "runtime_semantics_exercised": false,
+          "observed_result": "PINNED_SOURCE_IDENTITY_REJECTED_LOCAL_NON_CI"
+        },
+        {
+          "mutation": "Remove the connections->connections == NULL term from the UBFIX guard in GetIncomingConnection.",
+          "expected_result": "Reject the changed pinned source SHA-256.",
+          "control_class": "source_identity_only",
+          "runtime_semantics_exercised": false,
+          "observed_result": "PINNED_SOURCE_IDENTITY_REJECTED_LOCAL_NON_CI"
+        }
+      ],
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "independent_approval": false
+    },
+    {
+      "package": "border_connection_readers",
+      "packet_index": 298,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "src/itemfinder.c",
+        "git_blob_sha1": "deaa0266162e5c29058bc5156bfd1e01ab360390",
+        "sha256": "7f240eea2f57ac87d922e18fa960be8ec0a7d39c65c3c7cbb9c09222eaed9a30",
+        "line_count": 658,
+        "whole_file_scope": "ALL_SOURCE_LINES_READ; dependency closure remains partial"
+      },
+      "original_dossier_provenance": {
+        "packet_row_dossier_sha256": "a7396ec32d10a2f47cbc81f8ffd721925f1cf181b9852dd6fd06986ba729120b",
+        "archive_row_sha256": "2f475afaaf9f90997df21df3bdc2c55892444ac3d92ffbf4cf63e5c027fc3e3f",
+        "archive_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+      },
+      "source_anchors": [
+        "131-148: field callback and initial current-map search",
+        "202-239: current-map hidden item search and connected-map fallback",
+        "287-381: event lookup, connection offset transforms and neighborhood traversal",
+        "383-478: nearest-item arbitration and direction selection",
+        "480-658: itemfinder task, sprite and resource lifetime"
+      ],
+      "callers_readers_build_closure": [
+        {
+          "path": "src/item_use.c",
+          "git_blob_sha1": "954f4821d469a342865875f4e36cd1abec91409f",
+          "anchor": "333",
+          "scope": "Callsite only; not a new whole-file disposition",
+          "relationship": "Assigns ItemUseOnFieldCB_Itemfinder as the field-use callback."
+        },
+        {
+          "path": "include/itemfinder.h",
+          "git_blob_sha1": "de63e9362d1fb235f4105ecfcbfda848d791cc9a",
+          "relationship": "Declares ItemUseOnFieldCB_Itemfinder."
+        },
+        {
+          "path": "src/fieldmap.c",
+          "git_blob_sha1": "41567772299000ba5855419e5c39ad9373a34c20",
+          "relationship": "Provides GetMapConnectionAtPos and GetMapHeaderFromConnection."
+        },
+        {
+          "path": "include/global.fieldmap.h",
+          "git_blob_sha1": "e2828ec0cb1439718e830fbef4366770b3b77b1c",
+          "relationship": "Defines connection offset as u32 and the target group/map bytes; this representation is not normalized by Itemfinder."
+        },
+        {
+          "path": "Makefile",
+          "git_blob_sha1": "8b454dbd18eb0069fa5851d788697190890a5b37",
+          "anchors": "169-172",
+          "relationship": "Wildcard C source collection includes src/itemfinder.c."
+        }
+      ],
+      "source_observations": [
+        "The scan checks the current map's hidden items, then scans x-7 through x+7 and y-5 through y+5, consulting GetMapConnectionAtPos for coordinates outside the local dimensions.",
+        "Direction-specific connected-map coordinate transforms combine connection->offset with map dimensions and store intermediate coordinates in 16-bit locals.",
+        "The selected connected MapHeader and events are used without local NULL validation in HiddenItemInConnectedMapAtPos/HiddenItemAtPos."
+      ],
+      "objections_and_unresolved": [
+        "No target execution establishes the signed/unsigned conversion behavior for negative or extreme offsets, nearest-item result, or sprite response.",
+        "Map header, events pointer, event array extent, hidden-item flag state and connection list validity remain caller/data preconditions.",
+        "No claim is made that any malformed connection or hidden-item record is authored or reachable."
+      ],
+      "licensing": {
+        "status": "PENDING_ORIGINAL_LICENSE_REVIEW",
+        "basis": "The pinned FireRed root listing has no LICENSE file; the pinned README does not establish a file license; no legal clearance is claimed."
+      },
+      "negative_controls": [
+        {
+          "mutation": "Replace GetMapConnectionAtPos(curX, curY) with a NULL connection in FindHiddenItemsInConnectedMaps.",
+          "expected_result": "Reject the changed pinned source SHA-256.",
+          "control_class": "source_identity_only",
+          "runtime_semantics_exercised": false,
+          "observed_result": "PINNED_SOURCE_IDENTITY_REJECTED_LOCAL_NON_CI"
+        },
+        {
+          "mutation": "Change the CONNECTION_NORTH branch in HiddenItemInConnectedMapAtPos to CONNECTION_EAST.",
+          "expected_result": "Reject the changed pinned source SHA-256.",
+          "control_class": "source_identity_only",
+          "runtime_semantics_exercised": false,
+          "observed_result": "PINNED_SOURCE_IDENTITY_REJECTED_LOCAL_NON_CI"
+        }
+      ],
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "independent_approval": false
+    },
+    {
+      "package": "field_frame_consumers",
+      "packet_index": 295,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "src/field_camera.c",
+        "git_blob_sha1": "88f94bff08ef951523facf2b579fbc3d4d8455b2",
+        "sha256": "256f0b9606918403f3230bd814d3234d1731609d683bdac0a7f45f5604e8383d",
+        "line_count": 572,
+        "whole_file_scope": "ALL_SOURCE_LINES_READ; dependency closure remains partial"
+      },
+      "original_dossier_provenance": {
+        "packet_row_dossier_sha256": "1ceac48b4ff09c0ff0457193d038b96eba7b9c4fa7f67251b9e40f0e847e2a85",
+        "archive_row_sha256": "c7fceb61b52437c78bcca8ac5c35e04254cebffd569e65bf3caf19519aabe30a",
+        "archive_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+      },
+      "source_anchors": [
+        "93-135: whole-map draw and camera slice redraw dispatch",
+        "137-239: map-grid reads and directional tilemap slices",
+        "309-327: map-coordinate to tilemap buffer bounds",
+        "357-423: camera pixel update and CameraMove dispatch",
+        "434-500: no-object-refresh variant",
+        "502-573: pan callback and sprite coordinate offsets"
+      ],
+      "callers_readers_build_closure": [
+        {
+          "path": "src/overworld.c",
+          "git_blob_sha1": "339014da46ae8543143edc99ab72bf7496203a0d",
+          "anchors": "1465, 2359",
+          "scope": "Callsite only; not a new whole-file disposition",
+          "relationship": "Calls CameraUpdate and CameraUpdateNoObjectRefresh in distinct frame paths."
+        },
+        {
+          "path": "src/fieldmap.c",
+          "git_blob_sha1": "41567772299000ba5855419e5c39ad9373a34c20",
+          "relationship": "CameraMove updates map coordinates and loads a connected map on a border transition."
+        },
+        {
+          "path": "src/event_object_movement.c",
+          "git_blob_sha1": "8e82824d376d566dbff5ac863f1013d10ad5ec8b",
+          "scope": "Callsite/interface edge only; not a new whole-file disposition",
+          "relationship": "Exports camera-object creation and camera-update object-position helpers."
+        },
+        {
+          "path": "include/field_camera.h",
+          "git_blob_sha1": "e48d1c8a7aac148bb8c06ca8b1bc8c973b3907dd",
+          "relationship": "Declares camera APIs consumed by the overworld loop."
+        },
+        {
+          "path": "Makefile",
+          "git_blob_sha1": "8b454dbd18eb0069fa5851d788697190890a5b37",
+          "anchors": "169-172",
+          "relationship": "Wildcard C source collection includes src/field_camera.c."
+        }
+      ],
+      "source_observations": [
+        "CameraUpdate and CameraUpdateNoObjectRefresh derive tile deltas from pixel movement and call CameraMove when a tile boundary is crossed.",
+        "CameraUpdate refreshes object events and redraws map slices; CameraUpdateNoObjectRefresh intentionally omits the object refresh.",
+        "In each vertical movement-completion branch, the source assigns deltaX rather than deltaY (397-403 and 474-480)."
+      ],
+      "objections_and_unresolved": [
+        "The repeated vertical-branch deltaX assignment is an unresolved source anomaly; no compiled comparison, runtime reproduction or intended-behavior justification is available.",
+        "Frame ordering, camera callback lifecycle, movement-speed producer state, object event updates and VRAM scheduling are not fully closed by these four files.",
+        "No renderer or GBA execution is available; tilemap bounds and visible behavior are not certified."
+      ],
+      "licensing": {
+        "status": "PENDING_ORIGINAL_LICENSE_REVIEW",
+        "basis": "The pinned FireRed root listing has no LICENSE file; the pinned README does not establish a file license; no legal clearance is claimed."
+      },
+      "negative_controls": [
+        {
+          "mutation": "In CameraUpdate's vertical completion branch, change deltaX = 1 to deltaY = 1.",
+          "expected_result": "Reject the changed pinned source SHA-256.",
+          "control_class": "source_identity_only",
+          "runtime_semantics_exercised": false,
+          "observed_result": "PINNED_SOURCE_IDENTITY_REJECTED_LOCAL_NON_CI"
+        },
+        {
+          "mutation": "Remove CameraMove(deltaX, deltaY) from the camera tile-crossing branch.",
+          "expected_result": "Reject the changed pinned source SHA-256.",
+          "control_class": "source_identity_only",
+          "runtime_semantics_exercised": false,
+          "observed_result": "PINNED_SOURCE_IDENTITY_REJECTED_LOCAL_NON_CI"
+        }
+      ],
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "independent_approval": false
+    },
+    {
+      "package": "field_frame_consumers",
+      "packet_index": 296,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "src/field_control_avatar.c",
+        "git_blob_sha1": "b1b6465941133b927505be92d189a7c283e4722f",
+        "sha256": "305daa295f88ce682b2b1868700d2f76012c659cb0df2905e6177a51ee4e9b8d",
+        "line_count": 1182,
+        "whole_file_scope": "ALL_SOURCE_LINES_READ; dependency closure remains partial"
+      },
+      "original_dossier_provenance": {
+        "packet_row_dossier_sha256": "c0fd8a04c04ad2434c2b47cb325cd79200e8bb4465634a53817c1dcab620b7f3",
+        "archive_row_sha256": "0ba60a4ee047bcd420f980a2edd42bf6ba09b3722f5a7fee6136e24d894aca71",
+        "archive_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+      },
+      "source_anchors": [
+        "76-156: input-state derivation and playback gating",
+        "193-299: player field input dispatch and priority",
+        "345-405: map-coordinate and player-position helpers",
+        "618-679: step-triggered event dispatch",
+        "825-1023: warp selection, setup and event lookup",
+        "1025-1064: coordinate-event search",
+        "1118-1182: dive/warp and exported event helpers"
+      ],
+      "callers_readers_build_closure": [
+        {
+          "path": "src/overworld.c",
+          "git_blob_sha1": "339014da46ae8543143edc99ab72bf7496203a0d",
+          "anchors": "1401, 1405, 1432",
+          "scope": "Callsite only; not a new whole-file disposition",
+          "relationship": "Supplies input to FieldGetPlayerInput and dispatches ProcessPlayerFieldInput."
+        },
+        {
+          "path": "src/fieldmap.c",
+          "git_blob_sha1": "41567772299000ba5855419e5c39ad9373a34c20",
+          "relationship": "Supplies map-grid metatile/elevation reads used by the complete input/event path."
+        },
+        {
+          "path": "include/field_control_avatar.h",
+          "git_blob_sha1": "a6631493d7eb2cb59d4883566ed1f2df0fb2c232",
+          "relationship": "Declares the field input APIs consumed by the overworld loop."
+        },
+        {
+          "path": "Makefile",
+          "git_blob_sha1": "8b454dbd18eb0069fa5851d788697190890a5b37",
+          "anchors": "169-172",
+          "relationship": "Wildcard C source collection includes src/field_control_avatar.c."
+        }
+      ],
+      "source_observations": [
+        "FieldGetPlayerInput gates keys on script, quest-log and player transition state.",
+        "ProcessPlayerFieldInput reads map-grid state and dispatches coordinate, warp, interaction and step-count behavior in a fixed order.",
+        "Warp and event helpers iterate map event arrays and assume the current map header/event relationships supplied by the broader overworld loader."
+      ],
+      "objections_and_unresolved": [
+        "The full caller graph spans many script, event, link, inventory and player-state modules not included as whole-file records here.",
+        "Map event pointer/count integrity, warp destination validity, variable/flag state, link behavior and save/re-entry lifecycle remain unverified.",
+        "No compiled script-table, native runtime, emulator or editor evidence is claimed."
+      ],
+      "licensing": {
+        "status": "PENDING_ORIGINAL_LICENSE_REVIEW",
+        "basis": "The pinned FireRed root listing has no LICENSE file; the pinned README does not establish a file license; no legal clearance is claimed."
+      },
+      "negative_controls": [
+        {
+          "mutation": "Change the coordinate-event VarGet comparison to an unconditional return of the event script.",
+          "expected_result": "Reject the changed pinned source SHA-256.",
+          "control_class": "source_identity_only",
+          "runtime_semantics_exercised": false,
+          "observed_result": "PINNED_SOURCE_IDENTITY_REJECTED_LOCAL_NON_CI"
+        },
+        {
+          "mutation": "Relax TryStartWarpEventScript's warpEventId and warp-behavior condition to test only warpEventId != -1.",
+          "expected_result": "Reject the changed pinned source SHA-256.",
+          "control_class": "source_identity_only",
+          "runtime_semantics_exercised": false,
+          "observed_result": "PINNED_SOURCE_IDENTITY_REJECTED_LOCAL_NON_CI"
+        }
+      ],
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "independent_approval": false
+    }
+  ],
+  "local_validation": {
+    "json_syntax": "PASS",
+    "pinned_source_blobs_and_line_counts": "PASS",
+    "packet_rows_and_original_archive_rows": "PASS",
+    "source_identity_mutation_controls": "8_OF_8_REJECTED_LOCAL_NON_CI",
+    "behavioral_or_native_validation": false
+  },
+  "evidence_reused_without_reexecution": [
+    {
+      "workflow_run": 40421312981,
+      "head_sha": "acd2ab3b99d50982b3aa2d3d296763133ed4a264",
+      "artifact_zip_sha256": "fd6730336f987426e269093a35c43b31674321226259b95475aab1107a6e10ca",
+      "maps_authored_object_sha256": "1b52f4efdb9c7125e5860af211f8097882f2dadc6ee0d997a020945c1cd4ef98",
+      "scope": "Previously delivered compiled connection-object evidence only; not evidence for these new runtime consumers or this head."
+    },
+    {
+      "workflow_run": 40421631854,
+      "head_sha": "b84f8b2dd300123afb82525648e932647a75c899",
+      "artifact_zip_sha256": "bedfb0bd827a34c9506a3849fbade2f6b691051d40f507ac3187bbd66b93936c",
+      "maps_authored_object_sha256": "90a7e17a223dec05577d3faefc8af46c7fb1ed0ff3f3f3006e468d4154ee07dc",
+      "scope": "Previously delivered compiled connection-object evidence only; not evidence for these new runtime consumers or this head."
+    }
+  ],
+  "tool_and_runtime_boundary": {
+    "arm_none_eabi_gcc": "ABSENT",
+    "arm_none_eabi_as": "ABSENT",
+    "agbcc": "ABSENT",
+    "qemu_system_arm": "ABSENT",
+    "mgba": "ABSENT",
+    "fresh_native_build": false,
+    "runtime_reader_executed": false,
+    "emulator_executed": false,
+    "linked_rom_validated": false,
+    "exact_head_compiled_workflow_ci": "ABSENT",
+    "current_pr_check_kind": "Copilot dynamic task, not compiled mapjson workflow"
+  },
+  "toolchain_pins_unchanged": {
+    "fire_red": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+    "agbcc": "da598c1d",
+    "mgba": "fd9dc5c2cbf234365068855851107e762fc6211b",
+    "porymap": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+    "poryscript": "c3248116"
+  }
+}
