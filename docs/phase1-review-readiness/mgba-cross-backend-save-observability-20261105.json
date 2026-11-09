@@ -1,0 +1,460 @@
+{
+  "schema": "phase1.mgba.cross-backend-save-observability.v1",
+  "repository": "mgba-emu/mgba",
+  "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "machine_dossier": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "git_blob_sha": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+  },
+  "license_artifact": {
+    "path": "LICENSE",
+    "git_blob_sha": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+    "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+    "dossier_row_sha256": "b23d241b38f5808b3714b8f4f5d255db9a47e3ab9b114972bcc7e042bc92acf0",
+    "license": "MPL-2.0"
+  },
+  "reviewed_new_files": [
+    {
+      "path": "src/core/core.c",
+      "git_blob_sha": "17edcde68b8d4f0885c6c6ddd17c4e6ca64701f8",
+      "source_sha256": "94b5dc1cec2d9b157ef2933681c644a6dfb43dcebe9f6b887d68b104ac640ea5",
+      "dossier_row_sha256": "6e453bae6a2dd590ac92ce6f86821a8e342dcc34f9f762836152bdad9b49e989",
+      "license": "MPL-2.0",
+      "review_disposition": "reviewed_source_only",
+      "anchors": [
+        {"line": 135, "contains": "core->unloadROM(core);"},
+        {"line": 257, "contains": "bool mCoreAutoloadSave"}
+      ]
+    },
+    {
+      "path": "include/mgba/core/interface.h",
+      "git_blob_sha": "b5ffa3049749b9141aa09fc3693bf758a13f4e13",
+      "source_sha256": "da6ea4e344c46be5943859a24c0149c12a803b3e951c07140cc795cab09651de",
+      "dossier_row_sha256": "093b18935d1a1968f5ce81caa23611a578cc8810a03bde39f3e3f55d0d6b2830",
+      "license": "MPL-2.0",
+      "review_disposition": "reviewed_source_only",
+      "anchors": [
+        {"line": 49, "contains": "shutdown"},
+        {"line": 51, "contains": "savedataUpdated"}
+      ]
+    },
+    {
+      "path": "include/mgba/core/thread.h",
+      "git_blob_sha": "7164f6409cc9aec8df893df64d495a6f38b9c3f7",
+      "source_sha256": "c055b87b8e2bd1b255641cef4a1bc9f1d06125d785395b47a4c8ecfb9c9857d7",
+      "dossier_row_sha256": "2965deaa47903417eecf6eb10d041692b38d3561f156ff6576ebb4209b35756d",
+      "license": "MPL-2.0",
+      "review_disposition": "reviewed_source_only",
+      "anchors": [
+        {"line": 107, "contains": "void mCoreThreadEnd"}
+      ]
+    },
+    {
+      "path": "src/platform/qt/CoreController.h",
+      "git_blob_sha": "3b7d8bafb7202b66e326221890e2c68655d1be72",
+      "source_sha256": "3618b5e08c89274b89fa03683840ac79c8aeadc9e7f8ab87a20c65ac58a215a4",
+      "dossier_row_sha256": "2276f54d6a154f7e2ac2973b5f7ffe229e776caaf94aca15cf2ff49d814596e0",
+      "license": "MPL-2.0",
+      "review_disposition": "reviewed_source_only",
+      "anchors": [
+        {"line": 228, "contains": "void stopping();"},
+        {"line": 230, "contains": "void failed();"}
+      ]
+    },
+    {
+      "path": "src/platform/qt/CoreManager.cpp",
+      "git_blob_sha": "459846c61103b77645a4170ebd784599cb4cbe79",
+      "source_sha256": "1961c67b62916f301b76620a01a30479d79fe2c807d47990753914a8cef3d753",
+      "dossier_row_sha256": "6e8985a122d48aa5ddd00854c325bd87bb16ff30f49425a4500a8b09fb45edcc",
+      "license": "MPL-2.0",
+      "review_disposition": "reviewed_source_only",
+      "anchors": [
+        {"line": 155, "contains": "Failed to open save file; in-game saves cannot be updated."},
+        {"line": 159, "contains": "core->deinit(core);"}
+      ]
+    },
+    {
+      "path": "src/platform/qt/LogController.cpp",
+      "git_blob_sha": "526cdb9a4054698a0047379613c63fa64efad47d",
+      "source_sha256": "cb9e77b62ae0752495badb6942f3aec846b2fc0b1db6c33be96a8235d4d16299",
+      "dossier_row_sha256": "96796da1768502b3567e311199957f5890452d635f1d4e0bc6d0ff27391ea100",
+      "license": "MPL-2.0",
+      "review_disposition": "reviewed_source_only",
+      "anchors": [
+        {"line": 62, "contains": "\"logPosted\""},
+        {"line": 120, "contains": "level == mLOG_ERROR"},
+        {"line": 125, "contains": "emit logPosted"}
+      ]
+    },
+    {
+      "path": "src/platform/qt/main.cpp",
+      "git_blob_sha": "d0ea3cb178dd2eb70d8ebbd7308a469d3eded1a2",
+      "source_sha256": "a4244173f58fcd1c8f7b72356bacf0b2a70055adcdc4b8fed08e850d415a89fd",
+      "dossier_row_sha256": "063560feab649a1d40893ea1e0c1378c2c2ce67d22fcbb7a528c45573f5ac581",
+      "license": "MPL-2.0",
+      "review_disposition": "reviewed_source_only",
+      "anchors": [
+        {"line": 146, "contains": "int ret = application.exec();"},
+        {"line": 147, "contains": "if (ret != 0)"}
+      ]
+    },
+    {
+      "path": "src/platform/libretro/libretro.h",
+      "git_blob_sha": "2f174837012e7bec32868a2fcf49fe425f1a83a9",
+      "source_sha256": "7e61792e17843954a71bf52b2e88c571baa07436519fa708ed487785a109ceb8",
+      "dossier_row_sha256": "3015f7cef9977a6df63538db43bc1c6cfbbd33ed5a71945829f1e456e4f02778",
+      "license": "MIT",
+      "review_disposition": "reviewed_source_only",
+      "anchors": [
+        {"line": 3877, "contains": "retro_unload_game(void);"},
+        {"line": 3883, "contains": "retro_get_memory_data(unsigned id);"}
+      ]
+    },
+    {
+      "path": "src/platform/python/_builder.py",
+      "git_blob_sha": "f18a3c95e39d5f52c3f442d5f6ce09cf160a5b7f",
+      "source_sha256": "c453544bda4b1839bb830c945ba36ff1604a9c937d1648d4a03255f60b36fbb2",
+      "dossier_row_sha256": "994dbf44d938851d6e5952ba994da9beceb7eea2de7cd5284b7056cd4806c8e0",
+      "license": "MPL-2.0 via root LICENSE; no embedded notice",
+      "review_disposition": "reviewed_source_only",
+      "anchors": [
+        {"line": 65, "contains": "ffi.cdef"}
+      ]
+    },
+    {
+      "path": "src/platform/python/core.c",
+      "git_blob_sha": "6d7c1c855a713508d7548737f9337e5e7e9d2afb",
+      "source_sha256": "f16f45c8435db5d17d452144cc2d30f25b228bf6cb961dc7e18b4c30eebbf971",
+      "dossier_row_sha256": "96ffdc818f85bd5889eded1052250c2838329261e03db942cc7ca410b550f331",
+      "license": "MPL-2.0",
+      "review_disposition": "reviewed_source_only",
+      "anchors": [
+        {"line": 10, "contains": "mCorePythonCallbackCreate"},
+        {"line": 13, "contains": "callbacks->videoFrameEnded"},
+        {"line": 14, "contains": "callbacks->coreCrashed"}
+      ]
+    },
+    {
+      "path": "src/platform/python/core.h",
+      "git_blob_sha": "5e6f23be0f9146bc1f250d7d7085281e21dfed33",
+      "source_sha256": "493805da23f4d40ae858ed0eeec7b41d7226965ac59834bd937d8febd4a2f34d",
+      "dossier_row_sha256": "e28581e12e1d809f394e38ee895bcff4b162716a903d1098f3071c39ebcf8f82",
+      "license": "MPL-2.0",
+      "review_disposition": "reviewed_source_only",
+      "anchors": [
+        {"line": 10, "contains": "mCorePythonCallbackCreate"}
+      ]
+    },
+    {
+      "path": "src/platform/python/mgba/core.py",
+      "git_blob_sha": "22965b3f9c75c03b9156457aee73d89f3f202d10",
+      "source_sha256": "3813a0c572cacbd76d1bc39596044dbd6c09479b338897a6d854dfb855a2aa43",
+      "dossier_row_sha256": "e3b17a509aa350fc5c90bb330d897d0ba4b8254f53990da25afed8e0b4f0e4bc",
+      "license": "MPL-2.0",
+      "review_disposition": "reviewed_source_only",
+      "anchors": [
+        {"line": 88, "contains": "class CoreCallbacks"},
+        {"line": 93, "contains": "self.core_crashed = []"},
+        {"line": 131, "contains": "self._core.addCoreCallbacks"},
+        {"line": 161, "contains": "core = ffi.gc(native, native.deinit)"}
+      ]
+    },
+    {
+      "path": "src/core/log.c",
+      "git_blob_sha": "39d6db88cad3ca6f521a532c114b6488adb77279",
+      "source_sha256": "7f320ca361e0d4d6c846e6bcc8833d82d884bb3defd9b6ca800c7af9f065b170",
+      "dossier_row_sha256": "a446ca3d2c3895cae2b2e15f0a888f1e427df79162eabb3b75d37f66981f42bb",
+      "license": "MPL-2.0",
+      "review_disposition": "reviewed_source_only",
+      "anchors": [
+        {"line": 73, "contains": "void mLogSetDefaultLogger"},
+        {"line": 114, "contains": "void mLog("},
+        {"line": 234, "contains": "void _mCoreStandardLog"},
+        {"line": 257, "contains": "if (stdlog->logToStdout)"}
+      ]
+    },
+    {
+      "path": "src/platform/python/log.c",
+      "git_blob_sha": "ed3d3f35bc5c979cdf749ea2c746788e7efc9d6a",
+      "source_sha256": "f14f5048c48db01e6289a0ccc1823c7055160aac569dfb12faefbe6ae962a0ad",
+      "dossier_row_sha256": "25ac6434b72711e09e24af95dffe5d06bb46452e9e1be0300ad25d4b3c690121",
+      "license": "MPL-2.0",
+      "review_disposition": "reviewed_source_only",
+      "anchors": [
+        {"line": 8, "contains": "static void _pyLogShim"},
+        {"line": 15, "contains": "struct mLogger* mLoggerPythonCreate"}
+      ]
+    },
+    {
+      "path": "src/platform/python/mgba/log.py",
+      "git_blob_sha": "fb2e73cc833ec5ecd7a3f5b3a5d1330a86a6f1b2",
+      "source_sha256": "0887ca618f5702c8e8948bf7f3ab8d8ce132a57dbfc40f50202917b0e4b9ad07",
+      "dossier_row_sha256": "747793fe1c07a5902f51de0302aa38e28a1de630e17a05982f5e7328364319da",
+      "license": "MPL-2.0",
+      "review_disposition": "reviewed_source_only",
+      "anchors": [
+        {"line": 12, "contains": "def install_default(logger):"},
+        {"line": 42, "contains": "lib.mLogSetDefaultLogger(logger._native)"},
+        {"line": 44, "contains": "def log(self, category, level, message):"}
+      ]
+    },
+    {
+      "path": "src/platform/qt/LogView.cpp",
+      "git_blob_sha": "c34e79e354c7bb50c52fc6ef4be8b14f41aa2496",
+      "source_sha256": "c433122251bc31b8153e6988ddbe7baf7a7617ab55077af1f4ae605831c622c5",
+      "dossier_row_sha256": "ef66505b6849722f60b5507ab8313079db835045169b041bc0a4a50d43530b9e",
+      "license": "MPL-2.0",
+      "review_disposition": "reviewed_source_only",
+      "anchors": [
+        {"line": 51, "contains": "connect(log, &LogController::logPosted"},
+        {"line": 67, "contains": "void LogView::postLog"}
+      ]
+    }
+  ],
+  "reused_prior_sources": [
+    {"path": "include/mgba-util/vfs.h", "evidence_workpaper": "docs/phase1-review-readiness/mgba-vfs-fd-teardown-errors-20261104.md", "status": "prior_pin_reused"},
+    {"path": "src/util/vfs/vfs-fd.c", "evidence_workpaper": "docs/phase1-review-readiness/mgba-vfs-fd-teardown-errors-20261104.md", "status": "prior_pin_reused"},
+    {"path": "src/util/vfs/vfs-file.c", "evidence_workpaper": "docs/phase1-review-readiness/mgba-vfs-stdio-save-teardown-20261104.md", "status": "prior_pin_reused"},
+    {"path": "src/gba/savedata.c", "evidence_workpaper": "docs/phase1-review-readiness/mgba-vfs-fd-teardown-errors-20261104.md", "status": "prior_pin_reused"},
+    {"path": "src/gba/gba.c", "evidence_workpaper": "docs/phase1-review-readiness/mgba-gba-savedata-callback-failure-20261102.md", "status": "prior_pin_reused"},
+    {"path": "src/gba/core.c", "evidence_workpaper": "docs/phase1-review-readiness/mgba-vfs-fd-teardown-errors-20261104.md", "status": "prior_pin_reused"},
+    {"path": "src/core/scripting.c", "evidence_workpaper": "docs/phase1-review-readiness/mgba-gba-savedata-callback-failure-20261102.md", "status": "prior_pin_reused"},
+    {"path": "src/script/stdlib.c", "evidence_workpaper": "docs/phase1-review-readiness/mgba-gba-savedata-callback-failure-20261102.md", "status": "prior_pin_reused"},
+    {"path": "src/platform/qt/CoreController.cpp", "evidence_workpaper": "docs/phase1-review-readiness/mgba-gba-savedata-callback-failure-20261102.md", "status": "prior_pin_reused"},
+    {"path": "src/platform/qt/Window.cpp", "evidence_workpaper": "docs/phase1-review-readiness/mgba-gba-savedata-callback-failure-20261102.md", "status": "prior_pin_reused"},
+    {"path": "src/platform/sdl/main.c", "evidence_workpaper": "docs/phase1-review-readiness/mgba-gba-savedata-callback-failure-20261102.md", "status": "prior_pin_reused"},
+    {"path": "src/platform/libretro/libretro.c", "evidence_workpaper": "docs/phase1-review-readiness/mgba-gba-savedata-callback-failure-20261102.md", "status": "prior_pin_reused"}
+  ],
+  "identified_but_unreviewed": [
+    "src/platform/headless-main.c",
+    "src/platform/3ds/main.c",
+    "src/platform/3ds/3ds-vfs.c",
+    "src/platform/psp2/main.c",
+    "src/platform/psp2/sce-vfs.c",
+    "src/platform/switch/main.c",
+    "src/platform/wii/main.c",
+    "src/platform/windows/vfs-w32.c"
+  ],
+  "edges": [
+    {
+      "id": "fd_sync_to_savedata_clean",
+      "classification": "discarded",
+      "execution": "prior_native_failure",
+      "failure_result": "false",
+      "host_status": "none",
+      "injected_failure": true,
+      "persistence_success_claim": false,
+      "source_refs": ["src/util/vfs/vfs-fd.c", "src/gba/savedata.c"]
+    },
+    {
+      "id": "stdio_sync_to_savedata_clean",
+      "classification": "discarded",
+      "execution": "prior_native_failure",
+      "failure_result": "false",
+      "host_status": "none",
+      "injected_failure": true,
+      "persistence_success_claim": false,
+      "source_refs": ["src/platform/qt/CoreController.cpp", "src/util/vfs/vfs-file.c", "src/gba/savedata.c"]
+    },
+    {
+      "id": "fd_unmap_close_to_core_shutdown",
+      "classification": "discarded",
+      "execution": "prior_native_failure",
+      "failure_result": "failure",
+      "host_status": "none",
+      "injected_failure": true,
+      "persistence_success_claim": false,
+      "source_refs": ["src/util/vfs/vfs-fd.c", "src/gba/gba.c", "src/gba/core.c"]
+    },
+    {
+      "id": "stdio_unmap_close_to_core_shutdown",
+      "classification": "discarded",
+      "execution": "prior_native_failure",
+      "failure_result": "failure",
+      "host_status": "none",
+      "injected_failure": true,
+      "persistence_success_claim": false,
+      "source_refs": ["src/platform/qt/CoreController.cpp", "src/util/vfs/vfs-file.c", "src/gba/gba.c"]
+    },
+    {
+      "id": "dirty_to_clean_script_event",
+      "classification": "propagated",
+      "execution": "prior_native_failure",
+      "failure_result": "one_event",
+      "host_status": "save_data_changed_not_persistence_ack",
+      "injected_failure": true,
+      "persistence_success_claim": false,
+      "source_refs": ["include/mgba/core/interface.h", "src/gba/gba.c", "src/core/scripting.c", "src/script/stdlib.c"]
+    },
+    {
+      "id": "core_shutdown_return_channel",
+      "classification": "discarded",
+      "execution": "source_review_only",
+      "failure_result": "void",
+      "host_status": "none",
+      "injected_failure": false,
+      "persistence_success_claim": false,
+      "source_refs": ["src/core/core.c", "include/mgba/core/thread.h", "src/gba/core.c"]
+    },
+    {
+      "id": "qt_host_shutdown",
+      "classification": "discarded",
+      "execution": "source_review_only",
+      "failure_result": "void",
+      "host_status": "none",
+      "injected_failure": false,
+      "persistence_success_claim": false,
+      "source_refs": ["src/platform/qt/CoreController.h", "src/platform/qt/CoreManager.cpp", "src/platform/qt/main.cpp", "src/platform/qt/CoreController.cpp", "src/platform/qt/Window.cpp"]
+    },
+    {
+      "id": "sdl_host_shutdown",
+      "classification": "discarded",
+      "execution": "source_review_only",
+      "failure_result": "void",
+      "host_status": "none",
+      "injected_failure": false,
+      "persistence_success_claim": false,
+      "source_refs": ["include/mgba/core/thread.h", "src/platform/sdl/main.c"]
+    },
+    {
+      "id": "libretro_host_shutdown",
+      "classification": "discarded",
+      "execution": "source_review_only",
+      "failure_result": "void",
+      "host_status": "memory_api_only",
+      "injected_failure": false,
+      "persistence_success_claim": false,
+      "source_refs": ["src/platform/libretro/libretro.h", "src/platform/libretro/libretro.c"]
+    },
+    {
+      "id": "python_host_shutdown",
+      "classification": "discarded",
+      "execution": "source_review_only",
+      "failure_result": "void",
+      "host_status": "none",
+      "injected_failure": false,
+      "persistence_success_claim": false,
+      "source_refs": ["src/platform/python/_builder.py", "src/platform/python/core.c", "src/platform/python/core.h", "src/platform/python/mgba/core.py"]
+    },
+    {
+      "id": "qt_sync_warning_log",
+      "classification": "conditional",
+      "execution": "source_review_only",
+      "failure_result": "info_message",
+      "host_status": "qt_logPosted_if_info_enabled",
+      "injected_failure": false,
+      "persistence_success_claim": false,
+      "source_refs": ["src/gba/savedata.c", "src/platform/qt/CoreController.cpp", "src/platform/qt/LogController.cpp", "src/platform/qt/LogView.cpp", "src/core/log.c"]
+    },
+    {
+      "id": "sdl_sync_warning_log",
+      "classification": "conditional",
+      "execution": "source_review_only",
+      "failure_result": "info_message",
+      "host_status": "conditional_stdout_or_file",
+      "injected_failure": false,
+      "persistence_success_claim": false,
+      "source_refs": ["src/gba/savedata.c", "src/core/log.c", "src/platform/sdl/main.c"]
+    },
+    {
+      "id": "libretro_sync_warning_log",
+      "classification": "conditional",
+      "execution": "source_review_only",
+      "failure_result": "info_message",
+      "host_status": "conditional_RETRO_LOG_INFO_callback",
+      "injected_failure": false,
+      "persistence_success_claim": false,
+      "source_refs": ["src/gba/savedata.c", "src/core/log.c", "src/platform/libretro/libretro.c", "src/platform/libretro/libretro.h"]
+    },
+    {
+      "id": "python_sync_warning_log",
+      "classification": "conditional",
+      "execution": "source_review_only",
+      "failure_result": "info_message",
+      "host_status": "optional_python_logger",
+      "injected_failure": false,
+      "persistence_success_claim": false,
+      "source_refs": ["src/gba/savedata.c", "src/core/log.c", "src/platform/python/log.c", "src/platform/python/mgba/log.py"]
+    },
+    {
+      "id": "other_platforms",
+      "classification": "unproven",
+      "execution": "not_executed",
+      "failure_result": "unknown",
+      "host_status": "unknown",
+      "injected_failure": false,
+      "persistence_success_claim": false,
+      "source_refs": ["include/mgba/core/thread.h"]
+    }
+  ],
+  "injected_failure_controls": [
+    {
+      "id": "fd_async_sync_eio",
+      "injected": true,
+      "backend_result": "false",
+      "caller_result": "discarded",
+      "host_status": "none",
+      "persistence_success_claim": false,
+      "execution": "prior_native_witness",
+      "evidence_case": "failure async_ms=1 fsync=2 rtc=0 dirty=0 retried=0 fsync_error=1"
+    },
+    {
+      "id": "fd_unmap_sync_eio",
+      "injected": true,
+      "backend_result": "failure",
+      "caller_result": "discarded",
+      "host_status": "none",
+      "persistence_success_claim": false,
+      "execution": "prior_native_witness",
+      "evidence_case": "sync_failure"
+    },
+    {
+      "id": "fd_close_eio",
+      "injected": true,
+      "backend_result": "failure",
+      "caller_result": "discarded",
+      "host_status": "none",
+      "persistence_success_claim": false,
+      "execution": "prior_native_witness",
+      "evidence_case": "close_failure"
+    },
+    {
+      "id": "stdio_flush_eio",
+      "injected": true,
+      "backend_result": "false",
+      "caller_result": "discarded",
+      "host_status": "none",
+      "persistence_success_claim": false,
+      "execution": "prior_native_witness",
+      "evidence_case": "injected_flush"
+    },
+    {
+      "id": "stdio_unmap_short_write",
+      "injected": true,
+      "backend_result": "partial",
+      "caller_result": "discarded",
+      "host_status": "none",
+      "persistence_success_claim": false,
+      "execution": "prior_native_witness",
+      "evidence_case": "mapped_short_unmap"
+    },
+    {
+      "id": "stdio_close_eio",
+      "injected": true,
+      "backend_result": "failure",
+      "caller_result": "discarded",
+      "host_status": "none",
+      "persistence_success_claim": false,
+      "execution": "prior_native_witness",
+      "evidence_case": "unload_close_error"
+    }
+  ],
+  "claims": {
+    "core_shutdown_error_returned": false,
+    "frontend_persistence_error_status_returned": false,
+    "sync_failure_info_log_in_source": true,
+    "savedata_updated_means_persistence_succeeded": false,
+    "physical_flash_or_power_loss_evidence": false
+  }
+}

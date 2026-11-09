@@ -1,0 +1,119 @@
+{
+  "schema": "phase1.mgba.savedata-truncated-restore.v1",
+  "repository": "mgba-emu/mgba",
+  "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "pinned_tree": "5863e657d270d0fe3ccaa4299f48d5689d74fa1f",
+  "machine_dossier": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "git_blob": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "compressed_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+  },
+  "status": "NEEDS_EVIDENCE",
+  "overall": "FAIL_INCOMPLETE",
+  "independent_approvals": 0,
+  "evidence_class": "COMPILED_EXTRACTED_PINNED_FUNCTIONS_WITH_POSIX_MAPPED_SAVE",
+  "call_graph": [
+    "mCore.savedataRestore",
+    "_GBACoreSavedataRestore(writeback=true)",
+    "VFileMemChunk(truncated snapshot)",
+    "GBASavedataLoad(savedata->data != NULL)",
+    "VFileMemChunk.read returns the available 32 bytes",
+    "caller returns false after the destination prefix has been updated"
+  ],
+  "source_records": [
+    {
+      "path": "src/gba/core.c",
+      "git_blob": "6bfc518bb8899205c07d1d0fc091a287cb42f874",
+      "full_source_sha256": "47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596",
+      "canonical_dossier_row_sha256": "3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784",
+      "license": "MPL-2.0",
+      "review_scope": "Exact _GBACoreSavedataRestore body and return propagation; not whole-file review.",
+      "objection_notes": [
+        "The original caller is compiled from its extracted pinned body with a narrow fixture mCore; the complete mGBA core translation unit and frontend are not compiled.",
+        "A false restore result does not prove that downstream savestate callers surface or recover from it."
+      ]
+    },
+    {
+      "path": "src/gba/savedata.c",
+      "git_blob": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "full_source_sha256": "9887e36795ae51e39eecad09565d27d3feabe316d3e595b17f288e3205e13161",
+      "canonical_dossier_row_sha256": "99a6b3e97c52d67712e10204e08ced8819c7330e899b9f767aa280fc330c42e0",
+      "license": "MPL-2.0",
+      "review_scope": "Exact GBASavedataLoad and GBASavedataSize bodies; not whole-file review.",
+      "objection_notes": [
+        "The exact-size read can update the supplied prefix before reporting a short read; the witness records that partial in-memory effect.",
+        "Other GBASavedataLoad branches, including VFile write-through, are separate behaviors and are not generalized from this case."
+      ]
+    },
+    {
+      "path": "src/util/vfs/vfs-mem.c",
+      "git_blob": "048194e2dd2d0b3b395a852d2092c694663c88a2",
+      "full_source_sha256": "6b5951a0cd634d398a69ce57766298bd32d5e6410ee0aa4e8b8894c6aaa5829b",
+      "canonical_dossier_row_sha256": "3c95e0a322b5aff0655ec59a1c1f5d34a740a21676da0bf5cce444d2434248ce",
+      "license": "MPL-2.0",
+      "review_scope": "Complete pinned translation unit compiled; VFileMemChunk/read behavior exercised.",
+      "objection_notes": [
+        "The short source size is supplied by the fixture; it is not an observed naturally truncated frontend state file.",
+        "Memory VFile behavior does not establish other VFile backend semantics."
+      ]
+    },
+    {
+      "path": "src/util/vfs/vfs-fd.c",
+      "git_blob": "2535bd0fb76740745ae038d5523ead28658f1035",
+      "full_source_sha256": "0073a68b6688f1baa26acaf609af52e9f29308605e449e7c3182c9f4d768da44",
+      "canonical_dossier_row_sha256": "bb351807533d3de29f1f87c2c3a644a70c67430f556e83e219b1e25292589942",
+      "license": "MPL-2.0",
+      "review_scope": "Complete pinned POSIX fd VFile translation unit compiled for the mapped destination file.",
+      "objection_notes": [
+        "The exercised input-short-read branch is provided by VFileMemChunk; no POSIX read failure is injected in this case.",
+        "Successful same-host mapping/unmapping is not power-loss durability or .sav interoperability evidence."
+      ]
+    },
+    {
+      "path": "include/mgba-util/vfs.h",
+      "git_blob": "6c9bd299153af4c3c9cd5487f2425a2481331ee5",
+      "full_source_sha256": "4c829529f21c424196b4d1efe25ce11227312437cf1aa5028cae94a741bf6656",
+      "canonical_dossier_row_sha256": "5d4c30179d703f5b013badf083d6c99c736186091873d65edcb3f0943c2763dd",
+      "license": "MPL-2.0",
+      "review_scope": "Pinned VFile callback declarations used by the compiled source closure; not whole-file review.",
+      "objection_notes": [
+        "The interface contract does not define higher-level caller recovery from a short read.",
+        "This header identity alone does not establish frontend-visible error reporting."
+      ]
+    },
+    {
+      "path": "include/mgba/internal/gba/savedata.h",
+      "git_blob": "6227be25e8c9d2c1cc14c06ded34389b96138577",
+      "full_source_sha256": "30481cada83cc0e3a88b55298f3081cc660e18e55ca7f5a57356e6f2a75224dc",
+      "canonical_dossier_row_sha256": "eaee2c8bdb65c51e4f40daeb80af916f57ed430c48c88286562363f687ca6de9",
+      "license": "MPL-2.0",
+      "review_scope": "Pinned savedata structure declarations used by the fixture; not whole-file review.",
+      "objection_notes": [
+        "The witness initializes a narrow fixture structure and does not compile the complete GBA core object graph.",
+        "No full state serialization format or consumer compatibility claim is made."
+      ]
+    }
+  ],
+  "case": {
+    "name": "restore_truncated_input",
+    "destination_size": 4096,
+    "supplied_snapshot_size": 32,
+    "caller_return": false,
+    "partial_prefix_visible": true,
+    "untouched_suffix_preserved": true,
+    "full_snapshot_retry_return": true,
+    "full_snapshot_retry_matches": true
+  },
+  "execution": {
+    "evidence_class": "COMPILED_EXTRACTED_PINNED_FUNCTIONS_WITH_POSIX_MAPPED_SAVE",
+    "full_mgba_core_translation_unit_compiled": false,
+    "full_headless_process_observed": false,
+    "frontend_runtime_observed": false,
+    "host_syscall_fault_injection": false,
+    "fixture_injected_short_snapshot": true,
+    "physical_flash_tested": false,
+    "power_loss_durability_tested": false,
+    "sav_interoperability_tested": false,
+    "stock_gameplay_tested": false
+  }
+}

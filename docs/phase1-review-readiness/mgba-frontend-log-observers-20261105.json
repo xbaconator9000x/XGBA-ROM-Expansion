@@ -1,0 +1,80 @@
+{
+  "schema": "phase1.mgba.frontend-log-observers.v1",
+  "repository": "mgba-emu/mgba",
+  "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "machine_dossier": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "git_blob": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "compressed_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+  },
+  "source_records": [
+    {
+      "path": "src/gba/savedata.c",
+      "git_blob": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "full_source_sha256": "9887e36795ae51e39eecad09565d27d3feabe316d3e595b17f288e3205e13161",
+      "canonical_dossier_row_sha256": "99a6b3e97c52d67712e10204e08ced8819c7330e899b9f767aa280fc330c42e0",
+      "license": "MPL-2.0",
+      "review_scope": "exact function bodies compiled as a bounded host witness; not a complete independent whole-file review"
+    },
+    {
+      "path": "include/mgba/internal/defines.h",
+      "git_blob": "67b8ec8fd2f51ee2c0c6231443af752158397b03",
+      "full_source_sha256": "167896b30ed7f1cd3f9e5cbc99ee994a48a094b3e95989ab2f9e1ebf8cf4b46b",
+      "canonical_dossier_row_sha256": "05a6cd7248412bb03041f85841bf51db1f6a52e4b27bea5ac19c15ffa36a7bc2",
+      "license": "MPL-2.0",
+      "review_scope": "exact function bodies compiled as a bounded host witness; not a complete independent whole-file review"
+    },
+    {
+      "path": "src/core/log.c",
+      "git_blob": "39d6db88cad3ca6f521a532c114b6488adb77279",
+      "full_source_sha256": "7f320ca361e0d4d6c846e6bcc8833d82d884bb3defd9b6ca800c7af9f065b170",
+      "canonical_dossier_row_sha256": "a446ca3d2c3895cae2b2e15f0a888f1e427df79162eabb3b75d37f66981f42bb",
+      "license": "MPL-2.0",
+      "review_scope": "exact function bodies compiled as a bounded host witness; not a complete independent whole-file review"
+    },
+    {
+      "path": "src/feature/gui/gui-runner.c",
+      "git_blob": "c119e22f7e725234143163bd132fb767a8955ef4",
+      "full_source_sha256": "79d53c4a4490a45e6fdf30dd80a3249f697c6f9be6c23ec7cf85cdc9ddd36f67",
+      "canonical_dossier_row_sha256": "cb0ea10bf3911810e514062548d5048730e00f16536b86f765a4fabc958e9f2d",
+      "license": "MPL-2.0",
+      "review_scope": "exact function bodies compiled as a bounded host witness; not a complete independent whole-file review"
+    }
+  ],
+  "paths": [
+    {
+      "name": "core_savedata_to_standard_logger",
+      "source_functions": [
+        "GBASavedataClean",
+        "mSavedataClean",
+        "mLog",
+        "mLogGetContext",
+        "_mCoreStandardLog"
+      ],
+      "host_observation": "exact failure INFO text at stdout and mock log VFile",
+      "frontend_ui_observed": false
+    },
+    {
+      "name": "core_savedata_to_gui_runner_file_logger",
+      "source_functions": [
+        "GBASavedataClean",
+        "mSavedataClean",
+        "mLog",
+        "_log"
+      ],
+      "host_observation": "exact failure INFO text in mock log VFile; filter, absent sink, negative-write recovery, and positive short-write controls",
+      "frontend_ui_observed": false
+    }
+  ],
+  "execution_contract": {
+    "actual_pinned_function_bodies_compiled": true,
+    "mock_vfile_sync_failure": true,
+    "native_linux_host_execution": true,
+    "native_qt_or_console_frontend_execution": false,
+    "real_emulator_or_gameplay": false,
+    "persistence_or_power_loss_evidence": false,
+    "physical_flash_evidence": false,
+    "independent_semantic_approval": false
+  },
+  "distribution_notice": "The extracted mGBA source functions retain their MPL-2.0 notices in source provenance; this combined test harness is distributed with that licensing caveat and is not an upstream mGBA modification."
+}

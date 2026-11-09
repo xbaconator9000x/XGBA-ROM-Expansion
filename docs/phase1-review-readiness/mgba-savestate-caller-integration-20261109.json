@@ -1,0 +1,176 @@
+{
+  "schema": "phase1.mgba.savestate-caller-integration.v1",
+  "repository": "mgba-emu/mgba",
+  "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "pinned_tree": "5863e657d270d0fe3ccaa4299f48d5689d74fa1f",
+  "status": "NEEDS_EVIDENCE",
+  "overall": "FAIL_INCOMPLETE",
+  "independent_approvals": 0,
+  "evidence_class": "COMPILED_EXTRACTED_PINNED_LIBRETRO_RESTORE_CALLER_WITH_PRIOR_CORE_RESTORE_CLOSURE_AND_HOST_MEMORY_VFILE",
+  "machine_dossier": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "git_blob": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "compressed_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+  },
+  "source_records": [
+    {
+      "path": "src/platform/libretro/libretro.c",
+      "git_blob": "12e79131c38e06a8ba46cef97e0872ec51544e38",
+      "full_source_sha256": "da8800c76929e25729573760b6180452cdefa824aa6df21b51c3566553ad67ac",
+      "canonical_dossier_row_sha256": "70da3c3b8a3280ad6d077f9998fc73d69b443505d2d13dfee3dae791105f5f18",
+      "license": "MPL-2.0",
+      "review_scope": "PARTIAL_CALLER_EXECUTION_AND_SERIALIZER_TRACE",
+      "execution_scope": "COMPILED_EXTRACTED_RETRO_UNSERIALIZE; SERIALIZER_CALLERS_SOURCE_TRACED"
+    },
+    {
+      "path": "src/platform/qt/CoreController.cpp",
+      "git_blob": "183cea418a70963bd5332ef66bdff54a0dcccd46",
+      "full_source_sha256": "8ca7ca7b26fa030ef76322085a6f634b5e3ca4fd40a4e6549b6a12abace260b2",
+      "canonical_dossier_row_sha256": "1cbedd6e36f387b7c579bcea8c77bed82e9c3e8b18954974847c647dcf8b0f28",
+      "license": "MPL-2.0",
+      "review_scope": "PARTIAL_CALLSITE_TRACE",
+      "execution_scope": "SOURCE_TRACED_QT_SAVEDATA_PRODUCER_AND_RESTORE_CALLER"
+    },
+    {
+      "path": "src/platform/sdl/main.c",
+      "git_blob": "91f22bd593d4952076c2a9a11da5a8d6951db2a8",
+      "full_source_sha256": "8bf9ae94c051bb6b8fd2e5bdd974652de6109afab80753e66023281f3956b81b",
+      "canonical_dossier_row_sha256": "9b9c93092a263d137e7392e87ff64707bbb555d61f5a7317add771537a391f2c",
+      "license": "MPL-2.0",
+      "review_scope": "PARTIAL_CALLSITE_TRACE",
+      "execution_scope": "SOURCE_TRACED_SDL_RESTORE_RESULT_AND_VFILE_LIFETIME"
+    }
+  ],
+  "function_body_sha256": {
+    "retro_serialize_size": "31c5a1d837287ede1ed1372d85a88d8ef5cfb06a3f8737027bbb83b599bedad0",
+    "retro_serialize": "c5ea2e7f21392a358406ce6b0c42ec04e48d2503e6c2f18e49e3d9513281fd0f",
+    "retro_unserialize": "64ad07d469c48944df1094bc180435c62169d8b422a72d58cd849746fe050dfd"
+  },
+  "file_dependencies": {
+    "src/platform/libretro/libretro.c": [
+      "retro_serialize_size and retro_serialize -> mCoreSaveStateNamed(SAVESTATE_SAVEDATA | SAVESTATE_RTC) -> savedataClone -> EXTDATA_SAVEDATA serialization",
+      "retro_unserialize -> VFileFromConstMemory -> mCoreLoadStateNamed(SAVESTATE_RTC) -> mCoreExtractState -> extdata deserialize and restore callback",
+      "retro_unserialize returns mCoreLoadStateNamed result and closes the temporary input VFile before returning"
+    ],
+    "src/platform/qt/CoreController.cpp": [
+      "Default m_saveStateFlags include SAVESTATE_SAVEDATA; Qt named save calls mCoreSaveStateNamed with those flags",
+      "Qt named and QIODevice load paths call mCoreLoadStateNamed with m_loadStateFlags and close the wrapped/opened input VFile after the call",
+      "Qt emits frameAvailable/stateLoaded only when mCoreLoadStateNamed returns true; it captures a backup state before attempting the load"
+    ],
+    "src/platform/sdl/main.c": [
+      "_loadState calls mCoreLoadStateNamed(thread->core, _state, SAVESTATE_RTC) and ignores its bool result",
+      "mSDLRun opens the optional state VFile, runs _loadState on the core thread, then closes the VFile regardless of load result",
+      "SDL load path does not set SAVESTATE_SAVEDATA; savedata extdata writeback is therefore false when an item is present"
+    ]
+  },
+  "per_file_objections": {
+    "src/platform/libretro/libretro.c": "Only the extracted retro_unserialize body is compiled with the existing extracted core/restore closure and pinned VFile memory translation unit. retro_serialize bodies and the complete libretro frontend are not executed; host fixtures and in-memory input do not establish native libretro behavior.",
+    "src/platform/qt/CoreController.cpp": "Qt callsites and default flags are source-traced only; Qt, QIODevice, core-thread scheduling, signals, backup recovery and frontend error reporting are not executed.",
+    "src/platform/sdl/main.c": "SDL callsites are source-traced only; SDL event/runtime behavior, native filesystem errors, reporting and gameplay are not executed."
+  },
+  "source_closure": [
+    "The libretro producer bodies call mCoreSaveStateNamed with SAVESTATE_SAVEDATA | SAVESTATE_RTC; the pinned core serializer creates EXTDATA_SAVEDATA only when savedataClone returns nonzero bytes.",
+    "The libretro consumer constructs VFileFromConstMemory, calls mCoreLoadStateNamed with SAVESTATE_RTC, closes the input VFile, and returns the core loader result.",
+    "The flags passed by libretro omit SAVESTATE_SAVEDATA, so a present GBA savedata item follows the existing deferred mask/unmask path rather than immediate writeback.",
+    "The exact extracted libretro caller was compiled with the already-pinned mCoreLoadStateNamed, extdata parser, GBA restore/SRAM functions and complete pinned VFile memory translation unit; the full libretro frontend was not compiled.",
+    "Valid core bytes with absent, short-header or short-payload extdata reach the loader through the libretro caller; the pinned core path ignores extdata parse failure and can return true without restoring savedata.",
+    "A short fixed-size core state makes mCoreLoadStateNamed return false; retro_unserialize propagates false and still closes its input VFile.",
+    "A valid savedata extdata item reaches the GBA callback; the SAVESTATE_SAVEDATA-omitting writeback false transfers the temporary restore VFile to GBASavedataMask, and unmask applies and closes it.",
+    "Qt's default named-save flags include SAVESTATE_SAVEDATA, while its load path reports success through stateLoaded and closes the input VFile; the Qt source is not executed here.",
+    "SDL and headless load paths pass flags without SAVESTATE_SAVEDATA and ignore the loader result; both source paths close their input VFiles. Headless identity and callsite are already recorded by the prior PR #13 restore-consumer receipt."
+  ],
+  "observations": {
+    "absent_extdata": {
+      "libretro_return": true,
+      "input_vfile_created_and_closed": true,
+      "restore_vfiles_created": 0,
+      "savedata_unchanged": true,
+      "cleanup_balanced": true
+    },
+    "malformed_extdata": {
+      "libretro_return": true,
+      "input_vfile_closed": true,
+      "restore_vfiles_created": 0,
+      "savedata_unchanged": true,
+      "cleanup_balanced": true
+    },
+    "short_core_state": {
+      "libretro_return": false,
+      "input_vfile_closed": true,
+      "restore_vfiles_created": 0,
+      "failure_propagated": true,
+      "cleanup_balanced": true
+    },
+    "valid_extdata_after_malformed_retry": {
+      "libretro_return": true,
+      "input_vfile_closed": true,
+      "restore_vfiles_created": 1,
+      "restore_vfile_closed_by_unmask": true,
+      "savedata_matches": true,
+      "cleanup_balanced": true
+    }
+  },
+  "source_mutations_rejected": 3,
+  "output_mutations_rejected": 6,
+  "prior_evidence_inventory": {
+    "pr13_restore_consumer": {
+      "path": "docs/phase1-review-readiness/mgba-savestate-restore-consumer-20261109.json",
+      "source_records": 19,
+      "overlap": "Core restore, extdata parse, GBA callback and memory VFile behavior; headless caller source-traced only.",
+      "distinct_gap": "No production Qt, SDL or libretro caller is executed."
+    },
+    "pr13_clone_and_gba_clone_receipts": [
+      "docs/phase1-review-readiness/mgba-core-savestate-clone-caller-20261108.json",
+      "docs/phase1-review-readiness/mgba-gba-clone-vfile-allocation-20261108.json"
+    ],
+    "pr13_other_file_save_callers": [
+      "docs/phase1-review-readiness/mgba-core-loadsave-allocation-recovery-20261107.json",
+      "docs/phase1-review-readiness/mgba-core-autoload-save-ownership-20261107.json"
+    ],
+    "pr35_savedata_review": {
+      "path": "PR #35 semantic-snapshots/independent-reviews/copilot-mgba-savedata/review.json",
+      "git_blob": "e3a1d80c489f5b557748a8250131fce289ac878a",
+      "overlap": "Pinned savedata/backend source review; no mCoreLoadStateNamed frontend execution."
+    },
+    "pr35_source_objection_receipts": {
+      "path": "PR #35 semantic-snapshots/independent-reviews/copilot-mgba-savedata/source-objection-receipts.json",
+      "git_blob": "a10d2c14dbc45d7453b03166dfab5ccc3ac04d48",
+      "overlap": "The mcore-consumer-closure and frontend callback outcome objections remain NEEDS_EVIDENCE; this packet adds bounded caller tracing and one host execution, not a full frontend closure."
+    },
+    "pr35_vfile_wrapper_failure": {
+      "path": "PR #35 semantic-snapshots/independent-reviews/copilot-mgba-savedata/vfile-wrapper-allocation-failure.json",
+      "git_blob": "a0373c0af36fa74911f8ca18c63c14d64533f0f4",
+      "overlap": "VFileMemChunk constructor allocation boundary; no savestate restore caller execution."
+    }
+  },
+  "limitations": {
+    "compiled_unchanged_extracted_libretro_retro_unserialize": true,
+    "compiled_core_and_gba_restore_closure_reused_from_prior_receipt": true,
+    "compiled_pinned_complete_vfile_memory_translation_unit": true,
+    "qt_caller_source_traced_not_executed": true,
+    "sdl_caller_source_traced_not_executed": true,
+    "libretro_serializer_producer_source_traced_not_executed": true,
+    "host_memory_input_and_savedata_vfiles": true,
+    "host_allocator_and_mapping_shims": true,
+    "native_libretro_or_gui_frontend_executed": false,
+    "naturally_malformed_user_savestate_observed": false,
+    "durable_savestate_or_sav_persistence_tested": false,
+    "stock_gameplay_or_physical_flash_tested": false,
+    "transitive_distribution_licensing_resolved": false
+  },
+  "licensing": {
+    "source_notices": "All three newly inventoried frontend source files carry MPL-2.0 notices; the reused core closure's prior receipt records MPL-2.0 for its 19 files.",
+    "upstream_modified": false,
+    "transitive_distribution_licensing_resolved": false
+  },
+  "nonoverlap": {
+    "distinct_from_prior_restore_consumer": true,
+    "new_executed_caller": "src/platform/libretro/libretro.c::retro_unserialize",
+    "prior_core_restore_closure_reused": true,
+    "new_source_traced_callers": [
+      "src/platform/qt/CoreController.cpp",
+      "src/platform/sdl/main.c"
+    ],
+    "no_prior_mCoreLoadStateNamed_caller_execution": true
+  }
+}

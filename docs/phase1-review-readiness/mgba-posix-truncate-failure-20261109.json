@@ -1,0 +1,190 @@
+{
+  "schema": "phase1.mgba.posix-truncate-failure.v1",
+  "repository": "mgba-emu/mgba",
+  "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "pinned_tree": "5863e657d270d0fe3ccaa4299f48d5689d74fa1f",
+  "status": "NEEDS_EVIDENCE",
+  "overall": "FAIL_INCOMPLETE",
+  "independent_approvals": 0,
+  "machine_dossier": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "git_blob": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "compressed_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+  },
+  "distinct_scope": {
+    "prior_pr13_receipt": "docs/phase1-review-readiness/mgba-vfs-fd-teardown-errors-20261104.md",
+    "prior_pr35_receipt": "semantic-snapshots/independent-reviews/copilot-mgba-savedata/fd-stdio-error-propagation-handoff.json",
+    "new_boundary": "Pinned POSIX VFile truncate failure during original SRAM initialization and the resulting mapped-tail access through the registered mCore loadSave callback.",
+    "new_original_files": 0,
+    "nonoverlap_basis": "Existing savedata teardown evidence covers sync, unmap, close, fsync, short writes, and restore handling, but not ignored ftruncate failure during a production savedata growth path."
+  },
+  "source_records": [
+    {
+      "path": "include/mgba-util/vfs.h",
+      "git_blob": "6c9bd299153af4c3c9cd5487f2425a2481331ee5",
+      "full_source_sha256": "4c829529f21c424196b4d1efe25ce11227312437cf1aa5028cae94a741bf6656",
+      "canonical_dossier_row_sha256": "5d4c30179d703f5b013badf083d6c99c736186091873d65edcb3f0943c2763dd",
+      "license": "MPL-2.0",
+      "whole_file_semantic_coverage": false,
+      "reused_identity": true,
+      "scope": "Reused interface identity; VFile truncate is void and has no failure return channel.",
+      "substantive_objection": "The interface cannot report truncate failure to savedata callers."
+    },
+    {
+      "path": "include/mgba/internal/gba/memory.h",
+      "git_blob": "0aad912613e726560d06bbdbf6061986e69e5842",
+      "full_source_sha256": "fca671fc3bc5ab06641f6259ebf092688e1ba1ddd8eb80e4fba9a43cda44fb41",
+      "canonical_dossier_row_sha256": "6d4aad1e87edf5e5e07bc6af2af6f36c396f1a5530518ca575a765e3640dea8e",
+      "license": "MPL-2.0",
+      "whole_file_semantic_coverage": false,
+      "reused_identity": true,
+      "scope": "Reused layout/constant identity; verifies the pinned 32 KiB SRAM extent only.",
+      "substantive_objection": "The witness seeds SRAM type directly; it does not execute autodetection or memory-write caller reachability."
+    },
+    {
+      "path": "src/util/vfs/vfs-fd.c",
+      "git_blob": "2535bd0fb76740745ae038d5523ead28658f1035",
+      "full_source_sha256": "0073a68b6688f1baa26acaf609af52e9f29308605e449e7c3182c9f4d768da44",
+      "canonical_dossier_row_sha256": "bb351807533d3de29f1f87c2c3a644a70c67430f556e83e219b1e25292589942",
+      "license": "MPL-2.0",
+      "whole_file_semantic_coverage": false,
+      "reused_identity": true,
+      "scope": "Original POSIX FD translation unit compiled; selected truncate/map/unmap/close behavior exercised.",
+      "substantive_objection": "A linker wrapper injects errors before the host ftruncate syscall; natural filesystem/storage errors are not observed."
+    },
+    {
+      "path": "src/gba/savedata.c",
+      "git_blob": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "full_source_sha256": "9887e36795ae51e39eecad09565d27d3feabe316d3e595b17f288e3205e13161",
+      "canonical_dossier_row_sha256": "99a6b3e97c52d67712e10204e08ced8819c7330e899b9f767aa280fc330c42e0",
+      "license": "MPL-2.0",
+      "whole_file_semantic_coverage": false,
+      "reused_identity": true,
+      "scope": "Selected exact original initialization, type dispatch, size, deinit and unmask bodies compiled; flash/EEPROM and other savedata paths remain outside scope.",
+      "substantive_objection": "The original SRAM initializer ignores the void truncate result and continues to map and fill the requested range."
+    },
+    {
+      "path": "src/gba/gba.c",
+      "git_blob": "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e",
+      "full_source_sha256": "e84eaba17f6c96ac7b78431afaee79d7633dd50118f92e31e4432793f80c4c7b",
+      "canonical_dossier_row_sha256": "d1870b438fe6dd9bfa628a99d90189778e112588c14ae08f28fa379903595056",
+      "license": "MPL-2.0",
+      "whole_file_semantic_coverage": false,
+      "reused_identity": true,
+      "scope": "Exact GBALoadSave and GBAUnloadROM bodies compiled; prior configured SRAM type is host-seeded.",
+      "substantive_objection": "The full ROM-load, SRAM autodetect/write, board setup, and frontend caller paths are not executed."
+    },
+    {
+      "path": "src/gba/core.c",
+      "git_blob": "6bfc518bb8899205c07d1d0fc091a287cb42f874",
+      "full_source_sha256": "47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596",
+      "canonical_dossier_row_sha256": "3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784",
+      "license": "MPL-2.0",
+      "whole_file_semantic_coverage": false,
+      "reused_identity": true,
+      "scope": "Exact _GBACoreLoadSave callback body compiled; callback registration site source-checked.",
+      "substantive_objection": "The full original core translation unit and frontend invocation are not compiled or executed."
+    }
+  ],
+  "call_chain": [
+    "Pinned src/gba/core.c registers _GBACoreLoadSave as core->loadSave; the harness verifies this registration but invokes the extracted callback directly.",
+    "_GBACoreLoadSave forwards to GBALoadSave.",
+    "GBALoadSave preserves a host-seeded SRAM type, initializes savedata with the supplied VFile, then dispatches GBASavedataForceType.",
+    "GBASavedataInitSRAM queries the one-byte fixture size, calls the void VFile truncate operation, maps the target 32 KiB range, then fills from the old EOF with 0xFF.",
+    "The original POSIX VFile FD implementation calls ftruncate and discards its result."
+  ],
+  "function_sha256": {
+    "static void _ashesToAshes(struct mTiming* timing, void* user, uint32_t cyclesLate)": "4c0e6539fb5c7aad4d915bee1cea35ba2a13b8d89d4bf5551f698a32ac683582",
+    "size_t GBASavedataSize(const struct GBASavedata* savedata)": "9f3e0774073a8f44195f2b1b8c2d4c20977dedd1eb8c4d7ec4c1c42e467b02d1",
+    "void GBASavedataInit(struct GBASavedata* savedata, struct VFile* vf)": "e7acccd1db65be1be7e20e49b23167b4c237d6e6646bac75d16be857269be408",
+    "void GBASavedataDeinit(struct GBASavedata* savedata)": "830e75777a5a94797eb4a5cc0d6294952340887bc5d5457ca4ea3d228a94f7d2",
+    "void GBASavedataUnmask(struct GBASavedata* savedata)": "6517182aaa42db3fdc6fc4eb8582a5c9f5ff2e4364fedbf1abe4e7b7fc644709",
+    "void GBASavedataForceType(struct GBASavedata* savedata, enum GBASavedataType type)": "7ffbdeaf9944c79c2fc2811070817427e071c9e49faa5f865b58d50e12b25cea",
+    "void GBASavedataInitSRAM(struct GBASavedata* savedata)": "d9b4d85db33cea2da5073208f512fe3c82d8f7450c1d074baeff37c79a29efbc",
+    "bool GBALoadSave(struct GBA* gba, struct VFile* sav)": "cfbfe0068178dbc3c1ed8e8a034ed861cfc0deb777e32bcc48979ad710732b73",
+    "static bool _GBACoreLoadSave(struct mCore* core, struct VFile* vf)": "0e348b801d98712108765d16b23ce7faa2ab2b9382011cf1d521d543b053c4de",
+    "void GBAUnloadROM(struct GBA* gba)": "1c7090ddfe712b836048af6492dedb4f8c4d2ec94ac0f30f3b8e92648071b7f6",
+    "static void _vfdTruncate(struct VFile* vf, size_t size)": "bbd51fc63433dea4d80803391db2632dac4b8f5a9b00e6cffe44939f362400c5"
+  },
+  "harness_sha256": "cb648f227f269543f5897553abc4bbc516f824fffec439408cdcf25136510056",
+  "execution": {
+    "status": "COMPILED_WITNESS_PASSED",
+    "evidence_class": "COMPILED_EXTRACTED_ORIGINAL_GBA_SAVEDATA_CALLBACKS_AND_ORIGINAL_POSIX_FD_VFILE_WITH_HOST_FTRUNCATE_INJECTION",
+    "original_posix_fd_translation_unit_compiled": true,
+    "compiled_extracted_original_functions": [
+      "_ashesToAshes",
+      "GBASavedataSize",
+      "GBASavedataInit",
+      "GBASavedataDeinit",
+      "GBASavedataUnmask",
+      "GBASavedataForceType",
+      "GBASavedataInitSRAM",
+      "GBALoadSave",
+      "_GBACoreLoadSave",
+      "GBAUnloadROM",
+      "_vfdTruncate"
+    ],
+    "host_fixture_stubs": [
+      "GBA hardware cleanup not involved in GBAUnloadROM",
+      "GBASavedataLoad unreachable when realVf equals vf",
+      "flash, EEPROM, SRAM512 initialization unreachable for the seeded SRAM case",
+      "callback registry and log macros"
+    ],
+    "full_gba_core_and_savedata_translation_units_compiled": false,
+    "ftruncate_fault": "Linker-wrapped EIO and ENOSPC injected before the real syscall.",
+    "local_validation": {
+      "source_mode": "Exact pinned individual source files fetched to /tmp; not a git checkout.",
+      "source_blob_and_sha256_checks": "Passed for every source record.",
+      "source_mutations_rejected": 3,
+      "output_mutations_rejected": 8
+    },
+    "failure_observation": "The failed truncate leaves the one-byte backing file short; the original shared mapping's fill reaches the next page and raises SIGBUS in the isolated child.",
+    "recovery": "A separate loadSave invocation after removing injection succeeds; no automatic retry is claimed.",
+    "production_cleanup": "Original GBAUnloadROM is called only after successful initialization; fault child process exit reclaims resources.",
+    "natural_storage_failure_observed": false,
+    "native_filesystem_syscalls": [
+      "open",
+      "ftruncate (faulted by wrapper or called normally)",
+      "mmap",
+      "msync",
+      "munmap",
+      "close"
+    ],
+    "native_frontend_or_gameplay": false,
+    "durable_sav_persistence": false,
+    "physical_flash": false,
+    "expected_observations": [
+      "PHASE1_POSIX_TRUNCATE_CASE success caller_return=1 truncate_events=SRC file_size=32768 initial_byte=42 fill=FF cleanup=original_GBAUnloadROM signal=none",
+      "PHASE1_POSIX_TRUNCATE_CASE injected_EIO caller_return=unreturned truncate_events=E signal=SIGBUS automatic_retry=0 cleanup=child_process_exit",
+      "PHASE1_POSIX_TRUNCATE_CASE recovery_after_EIO caller_return=1 truncate_events=SRC file_size=32768 initial_byte=42 fill=FF cleanup=original_GBAUnloadROM signal=none",
+      "PHASE1_POSIX_TRUNCATE_CASE injected_ENOSPC caller_return=unreturned truncate_events=N signal=SIGBUS automatic_retry=0 cleanup=child_process_exit",
+      "PHASE1_POSIX_TRUNCATE_CASE recovery_after_ENOSPC caller_return=1 truncate_events=SRC file_size=32768 initial_byte=42 fill=FF cleanup=original_GBAUnloadROM signal=none",
+      "PHASE1_POSIX_TRUNCATE_DONE"
+    ]
+  },
+  "controls": {
+    "source_mutations_rejected": [
+      "ftruncate call removed or changed",
+      "savedata VFile truncate path removed",
+      "GBALoadSave savedata dispatch removed"
+    ],
+    "output_mutations_rejected": [
+      "success truncate trace",
+      "unreturned failure outcome",
+      "EIO event",
+      "ENOSPC event",
+      "SIGBUS outcome",
+      "no-automatic-retry outcome",
+      "successful target file size",
+      "completion marker"
+    ]
+  },
+  "limitations": [
+    "Source files and selected function bodies are pinned and hash-checked; this is not whole-file semantic review.",
+    "The harness seeds SRAM type instead of executing natural core initialization, SRAM autodetection, or GBAMemoryWrite8 caller reachability.",
+    "The ftruncate errors are injected; this does not demonstrate a natural filesystem/storage failure.",
+    "SIGBUS is a Linux host observation under this controlled one-byte-file and shared-mapping fixture, not evidence of user-visible save corruption.",
+    "The full mGBA core, frontend, actual user save, durable .sav persistence, stock gameplay, and physical Flash are not tested.",
+    "Receipt remains non-approving; independent source semantic review and all broader Phase 1 gate requirements remain outstanding."
+  ]
+}

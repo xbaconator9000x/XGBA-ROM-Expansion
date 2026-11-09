@@ -1,0 +1,245 @@
+{
+  "schema": "phase1.mgba.gba-clone-vfile-allocation.v1",
+  "repository": "mgba-emu/mgba",
+  "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "pinned_tree": "5863e657d270d0fe3ccaa4299f48d5689d74fa1f",
+  "status": "NEEDS_EVIDENCE",
+  "overall": "FAIL_INCOMPLETE",
+  "independent_approvals": 0,
+  "evidence_class": "COMPILED_EXTRACTED_MCORE_SAVESTATE_CALLER_AND_GBA_SAVEDATA_CLONE_CALLBACK_WITH_PINNED_VFILE_MEMORY_BACKEND_AND_HOST_ALLOCATOR_FAULT_INJECTION",
+  "machine_dossier": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "git_blob": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "compressed_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+  },
+  "source_records": [
+    {
+      "path": "src/core/serialize.c",
+      "git_blob": "ff8a9a86747336bd792bf9c964c53f232a702a08",
+      "full_source_sha256": "45fb69d5da0c0c4c135efb2641c7d1c6140d575b1819f60a45985ebfa0081f3c",
+      "canonical_dossier_row_sha256": "e9ad34d5514e106adc1f56111abf530b72118d1780d8593ae490ee63772ab9b5",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_EXTRACTED_MCORE_SAVESTATE_CLONE_CALLER_AND_EXTDATA_HELPERS",
+      "function_body_sha256": {
+        "mCoreSaveStateNamed": "9e654c196c14fadd1e9f98c9c055fa0e7f9f07164a366a4a35c31719bb57648b",
+        "mStateExtdataHeader": "3402135372a9421cae40fc1d86a79b9dab0dd32eee6e82a7252709540112a459",
+        "mStateExtdataInit": "59161c62c270319177d850fae8a4b913d490ebe3a43215343444ea7cfef74a26",
+        "mStateExtdataDeinit": "e909282685c02445a7e16ed9f63e2e630e4587626da1a20a121894b8db5185c4",
+        "mStateExtdataPut": "7aab775b2bd3769b433149cca6f3de9ba583abfaf0d8f147c3021c12d10c7a9b",
+        "mStateExtdataGet": "cd981ae228ceff9e64697a51ef193f3089cd0c573259a2bd6ce2fda0c5d99349",
+        "mStateExtdataSerialize": "7ceae5bc2bdf9540c9a0ed0fb7d2ce24634522771b1ec5d8e966a1204f32eec8",
+        "mStateExtdataDeserialize": "81699573b8d6590f08955286bfe1c619549f085b6e77bbd61617d0bb7a05836a"
+      }
+    },
+    {
+      "path": "src/gba/core.c",
+      "git_blob": "6bfc518bb8899205c07d1d0fc091a287cb42f874",
+      "full_source_sha256": "47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596",
+      "canonical_dossier_row_sha256": "3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_EXTRACTED_ORIGINAL_GBA_CLONE_CALLBACK",
+      "function_body_sha256": {
+        "_GBACoreSavedataClone": "a61a31c42be82148a484832969105ebfae0d7ebc692c054d234e513b638728b7"
+      }
+    },
+    {
+      "path": "src/gba/savedata.c",
+      "git_blob": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "full_source_sha256": "9887e36795ae51e39eecad09565d27d3feabe316d3e595b17f288e3205e13161",
+      "canonical_dossier_row_sha256": "99a6b3e97c52d67712e10204e08ced8819c7330e899b9f767aa280fc330c42e0",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_EXTRACTED_ORIGINAL_GBA_SAVEDATA_SIZE_AND_CLONE",
+      "function_body_sha256": {
+        "GBASavedataClone": "2b49c9f1e0cb3fe36bc6f77e01b35a84a8f015a920044d568908de93c8d7d6ea",
+        "GBASavedataSize": "9f3e0774073a8f44195f2b1b8c2d4c20977dedd1eb8c4d7ec4c1c42e467b02d1"
+      }
+    },
+    {
+      "path": "include/mgba/core/core.h",
+      "git_blob": "64ddf851ef00ab09416a9c1c9b5a88798fcd6fc8",
+      "full_source_sha256": "e77d0b72af5b76d9b66292968359122a15ab5c4c624d684af7ad339fa700e7a9",
+      "canonical_dossier_row_sha256": "0fb39db4601aad348aa35a4adbb7a4a41b05a26128957595547a95bc72208a87",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_PUBLIC_MCORE_CALLBACK_INTERFACE"
+    },
+    {
+      "path": "include/mgba/core/serialize.h",
+      "git_blob": "177a7871aa2761c0b478256ce16c7015a36b0fb8",
+      "full_source_sha256": "c1301365f7f24c8842e84b51324cc419e5ea01843f5366e9edbbf1cdf40f5c49",
+      "canonical_dossier_row_sha256": "4e61192f417f79c7210d2aae3132db1afbedff078fc1e6779b8944ec07bc38b7",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_PUBLIC_SAVESTATE_EXTDATA_INTERFACE"
+    },
+    {
+      "path": "include/mgba/internal/gba/savedata.h",
+      "git_blob": "6227be25e8c9d2c1cc14c06ded34389b96138577",
+      "full_source_sha256": "30481cada83cc0e3a88b55298f3081cc660e18e55ca7f5a57356e6f2a75224dc",
+      "canonical_dossier_row_sha256": "eaee2c8bdb65c51e4f40daeb80af916f57ed430c48c88286562363f687ca6de9",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_GBA_SAVEDATA_LAYOUT"
+    },
+    {
+      "path": "include/mgba-util/vfs.h",
+      "git_blob": "6c9bd299153af4c3c9cd5487f2425a2481331ee5",
+      "full_source_sha256": "4c829529f21c424196b4d1efe25ce11227312437cf1aa5028cae94a741bf6656",
+      "canonical_dossier_row_sha256": "5d4c30179d703f5b013badf083d6c99c736186091873d65edcb3f0943c2763dd",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_VFILE_INTERFACE"
+    },
+    {
+      "path": "include/mgba-util/common.h",
+      "git_blob": "923e93086adfa09c9a55fcc2f0f6fa4d560e5888",
+      "full_source_sha256": "ec13354a050e4a7432232214b9991dd74000980ab2b8949389af0871cc1b799f",
+      "canonical_dossier_row_sha256": "b0a970a0105d3d1b109325bda5fedc99cff7a182cb010f24f826944faa0616ec",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_ENDIAN_AND_COMMON_MACROS"
+    },
+    {
+      "path": "include/mgba/core/cheats.h",
+      "git_blob": "23a15c42976c998d292b382d08d51c0e3b797a65",
+      "full_source_sha256": "b25d46751653727f0a9814fef105b1efbd9498b7aa9d594f3547c6c2307ba3c7",
+      "canonical_dossier_row_sha256": "ddfa71cad7442c8052fe976d215288fa149cde7e7f5c6de8fe67249b62a97d00",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_DORMANT_CHEAT_BRANCH_DECLARATIONS"
+    },
+    {
+      "path": "include/mgba/core/version.h",
+      "git_blob": "b261ab6d3a25de89c63420f48a0e3abe0a3113c1",
+      "full_source_sha256": "e4795aa1d78cfff79cb667d47576d9ed710aa823ffd5670c2f15a4baad51891a",
+      "canonical_dossier_row_sha256": "b6b2dfbf43be03aca5db7e4254ed594cfee09514432085119e6c2a4439f3a8f7",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_DORMANT_METADATA_BRANCH_DECLARATIONS"
+    },
+    {
+      "path": "src/util/vfs/vfs-mem.c",
+      "git_blob": "048194e2dd2d0b3b395a852d2092c694663c88a2",
+      "full_source_sha256": "6b5951a0cd634d398a69ce57766298bd32d5e6410ee0aa4e8b8894c6aaa5829b",
+      "canonical_dossier_row_sha256": "3c95e0a322b5aff0655ec59a1c1f5d34a740a21676da0bf5cce444d2434248ce",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_PINNED_VFILE_MEMORY_BACKEND_TRANSLATION_UNIT",
+      "function_body_sha256": {
+        "VFileFromMemory": "1a711858436bda76766b74512e60ef0c7af3d20600c65d62739edcb813d485fd"
+      }
+    },
+    {
+      "path": "include/mgba/internal/gba/gba.h",
+      "git_blob": "65e994dc63a304cc9fb207536f09bb2c8a6cf3e5",
+      "full_source_sha256": "b50fc8ae1467f9ac1c6be3ba8452e22027571ff5c886695edb9be529d7962d4e",
+      "canonical_dossier_row_sha256": "d6e61894ce31db089d3fd04e64e0938d1e689fb6c7498a8056fced405bf2bba0",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_GBA_BOARD_AND_MEMORY_LAYOUT"
+    },
+    {
+      "path": "include/mgba/internal/gba/memory.h",
+      "git_blob": "0aad912613e726560d06bbdbf6061986e69e5842",
+      "full_source_sha256": "fca671fc3bc5ab06641f6259ebf092688e1ba1ddd8eb80e4fba9a43cda44fb41",
+      "canonical_dossier_row_sha256": "6d4aad1e87edf5e5e07bc6af2af6f36c396f1a5530518ca575a765e3640dea8e",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_GBA_MEMORY_AND_SAVEDATA_SIZE_CONSTANTS"
+    },
+    {
+      "path": "include/mgba/gba/interface.h",
+      "git_blob": "6edb38e6bf3161e28f3130b49b5598fc5d21884a",
+      "full_source_sha256": "d75c2c6bdcef009197252dcfbe059ae61084b137eeab677f818a837e3226038d",
+      "canonical_dossier_row_sha256": "44cd0490e58f1be562051dd1f5ce1240245573f3dc24e447df4176a2c2a1f1a2",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_GBA_SAVEDATA_TYPE_ENUM"
+    },
+    {
+      "path": "include/mgba-util/math.h",
+      "git_blob": "f7b3269c9d51967765379b951ba6f43d24c61865",
+      "full_source_sha256": "04f5ee1686f4b30744d4e62caef4cf16f2f4b80682b88a87e7e18cf117fd421e",
+      "canonical_dossier_row_sha256": "87d819c03b064e4665a27b5563f4a7261cfcdad051913229884d4f72cfd813f9",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_VFILE_MEMORY_BACKEND_MATH_DEPENDENCY"
+    },
+    {
+      "path": "include/mgba-util/memory.h",
+      "git_blob": "325f748f6fddc33a5539739ebc6eff6f3bb42bad",
+      "full_source_sha256": "509b56f31b2a279d954a16799501a1585cf7aa55f917a180432283b0205c198c",
+      "canonical_dossier_row_sha256": "cf858e1e109d1346cab0d7b30bcd119c207cfb84e9b45a3e73321c1e3576315e",
+      "license": "MPL-2.0",
+      "execution_scope": "COMPILED_VFILE_MEMORY_BACKEND_MEMORY_API"
+    }
+  ],
+  "call_graph": [
+    "Pinned mCoreSaveStateNamed calls the harness-bound original _GBACoreSavedataClone callback for SAVESTATE_SAVEDATA.",
+    "The callback obtains the pinned GBA_SAVEDATA_SRAM size and allocates its clone buffer.",
+    "The callback calls the compiled pinned VFileFromMemory implementation with that buffer.",
+    "A host linker wrapper fails exactly the VFileMem wrapper allocation after observing the clone-buffer allocation.",
+    "The original callback frees the clone buffer, clears the output pointer, and returns zero when VFileFromMemory returns NULL.",
+    "The pinned mCore caller omits EXTDATA_SAVEDATA on the zero result but still returns true for the state-only output.",
+    "A separate retry with fault injection disabled completes the original clone and serializes the matching payload."
+  ],
+  "fault_injection": {
+    "boundary": "malloc(sizeof(struct VFileMem)) inside original VFileFromMemory",
+    "host_control": "Failure is armed only after the actual callback's GBA_SIZE_SRAM clone-buffer allocation.",
+    "negative_control": "Normal wrapper allocation and close; subsequent retry after one failed wrapper allocation.",
+    "natural_os_allocation_failure_observed": false
+  },
+  "observations": {
+    "successful_clone": {
+      "mcore_caller_return": true,
+      "callback_clone_size": 32768,
+      "vfile_wrapper_allocation_failures": 0,
+      "vfile_wrapper_freed": true,
+      "clone_buffer_freed_by_extdata": true,
+      "savedata_extdata_present": true,
+      "payload_matches": true
+    },
+    "injected_vfile_wrapper_allocation_failure": {
+      "mcore_caller_return": true,
+      "callback_clone_size": 0,
+      "vfile_wrapper_allocation_failures": 1,
+      "vfile_wrapper_freed": false,
+      "clone_buffer_freed_by_gba_callback": true,
+      "savedata_extdata_present": false
+    },
+    "retry_after_wrapper_failure": {
+      "mcore_caller_return": true,
+      "callback_clone_size": 32768,
+      "vfile_wrapper_allocation_failures": 0,
+      "vfile_wrapper_freed": true,
+      "clone_buffer_freed_by_extdata": true,
+      "savedata_extdata_present": true,
+      "payload_matches": true
+    }
+  },
+  "source_mutations_rejected": 4,
+  "output_mutations_rejected": 6,
+  "evidence_flags": {
+    "original_mcore_savestate_caller_compiled": true,
+    "original_gba_savedata_clone_callback_executed": true,
+    "original_gba_savedata_size_and_clone_executed": true,
+    "original_vfile_from_memory_executed": true,
+    "pinned_vfile_memory_translation_unit_compiled": true,
+    "host_wrapper_allocation_fault_injected": true,
+    "natural_os_allocation_failure_observed": false,
+    "full_mgba_core_compiled": false,
+    "native_mgba_frontend_executed": false,
+    "savestate_frontend_roundtrip_tested": false,
+    "durable_persistence_tested": false,
+    "sav_interoperability_tested": false,
+    "stock_gameplay_tested": false,
+    "physical_flash_tested": false
+  },
+  "prior_witness_nonoverlap": {
+    "previous_receipt": "docs/phase1-review-readiness/mgba-core-savestate-clone-caller-20261108.json",
+    "previous_case": "mCoreSaveStateNamed caller supplied a test callback returning zero",
+    "new_case": "original _GBACoreSavedataClone -> GBASavedataClone -> VFileFromMemory wrapper allocation failure",
+    "distinct_failure_injection_boundary": true
+  },
+  "licensing": {
+    "source_notices": "All pinned source files in source_records carry MPL-2.0 notices.",
+    "upstream_modified": false,
+    "transitive_distribution_licensing_resolved": false
+  },
+  "objection_notes": [
+    "The allocator error is injected by a host linker wrapper; it is not a naturally observed operating-system out-of-memory event.",
+    "The callback is the exact extracted pinned function body, but the complete mGBA core and frontend translation units are not compiled.",
+    "The mCore callback pointer is connected directly to the pinned GBA callback by the harness; full core initialization and callback registration execution are not claimed.",
+    "The pinned VFile memory translation unit is compiled; filesystem-backed VFile behavior and real save-file persistence are outside this case.",
+    "The observed true mCore return with omitted savedata extdata is bounded to this compiled host harness, not a full frontend savestate round trip or user-visible data-loss claim.",
+    "No native frontend, .sav interoperability, durable persistence, stock gameplay, physical Flash, or independent semantic approval is claimed."
+  ]
+}
