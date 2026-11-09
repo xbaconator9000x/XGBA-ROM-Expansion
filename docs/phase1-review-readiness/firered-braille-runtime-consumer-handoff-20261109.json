@@ -1,0 +1,362 @@
+{
+  "schema": "xgba.phase1.firered_braille_runtime_consumer_handoff.v1",
+  "prepared_at": "2026-11-09",
+  "repository_head_at_preparation": "97ffc7fd5eb06e0cd5b71402f2e9e9ea9b9d4f1e",
+  "protocol": {
+    "path": "docs/PHASE1_SYSTEM_BATCH_REVIEW_PROTOCOL_2026-10-27.md",
+    "read_from_pr": 8,
+    "branch": "phase1/review-readiness-handoff-20261027",
+    "head": "dddd2fd27371eb8f45b36c0403ba8ed38f5b732a",
+    "requirements_followed": [
+      "Pin exact source and original dossier/archive identities.",
+      "Separate whole-file source reading from partial dependency closure and independent disposition.",
+      "Record callers, writers, readers, generated assets, build rules, unresolved conditions and evidence limits.",
+      "Keep source observations distinct from inferred runtime reachability.",
+      "Preserve FAIL_INCOMPLETE and zero independent approvals."
+    ]
+  },
+  "status": {
+    "handoff": "NON_APPROVING",
+    "independent_verdict": "NEEDS_REVIEW",
+    "independent_reviewer": null,
+    "whole_file_semantic_approval": false,
+    "independent_approvals_added": 0,
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "phase2_started": false,
+    "receipt_created": false
+  },
+  "fire_red_source_pin": {
+    "repository": "pret/pokefirered",
+    "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
+  },
+  "upstream_license_evidence": {
+    "pinned_readme_path": "README.md",
+    "pinned_readme_git_blob_sha1": "819422657623aae0cb0d2d0d23893b2927fcf0d7",
+    "pinned_readme_sha256": "ab59004406fa7c682aed5f7d034e527ac9b9c8cf4a0257920b1340bc25e99f3d",
+    "license_file": "Not present in the pinned upstream root listing observed during preparation.",
+    "assessment": "The pinned README does not establish a license for these files. Legal review remains pending; source and asset content are not reproduced."
+  },
+  "packet_provenance": {
+    "selected_packet": "docs/phase1-review-readiness/packet-0200-0299.json",
+    "selected_packet_git_blob_sha1": "c998c2ea8c887968e586b1792c5207ecb5286839",
+    "selected_packet_sha256": "fde3a0dbf9f8b5cf19bc2591d81508f9dc9084e4d62d57d1ead8835b744f6586",
+    "enumerated_range": "260-294 inclusive",
+    "original_machine_dossier_archive": {
+      "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+      "git_blob_sha1": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+      "sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+    }
+  },
+  "packet_range_reconciliation": {
+    "selected_indices": [294],
+    "excluded_entries": [
+      {
+        "indices": "260-292",
+        "paths": [
+          "data/maps/ThreeIsland_PokemonCenter_1F/scripts.inc",
+          "data/maps/ThreeIsland_PokemonCenter_2F/scripts.inc",
+          "data/maps/ThreeIsland_Port/scripts.inc",
+          "data/maps/TrainerTower_1F/scripts.inc",
+          "data/maps/TrainerTower_2F/scripts.inc",
+          "data/maps/TrainerTower_3F/scripts.inc",
+          "data/maps/TrainerTower_4F/scripts.inc",
+          "data/maps/TrainerTower_5F/scripts.inc",
+          "data/maps/TrainerTower_6F/scripts.inc",
+          "data/maps/TrainerTower_7F/scripts.inc",
+          "data/maps/TrainerTower_8F/scripts.inc",
+          "data/maps/TrainerTower_Elevator/scripts.inc",
+          "data/maps/TrainerTower_Lobby/scripts.inc",
+          "data/maps/TrainerTower_Roof/scripts.inc",
+          "data/maps/TwoIsland/scripts.inc",
+          "data/maps/TwoIsland_JoyfulGameCorner/scripts.inc",
+          "data/maps/TwoIsland_PokemonCenter_1F/scripts.inc",
+          "data/maps/TwoIsland_PokemonCenter_2F/scripts.inc",
+          "data/maps/UndergroundPath_EastWestTunnel/scripts.inc",
+          "data/maps/UndergroundPath_NorthSouthTunnel/scripts.inc",
+          "data/maps/UnionRoom/scripts.inc",
+          "data/maps/VermilionCity/scripts.inc",
+          "data/maps/VermilionCity_Gym/scripts.inc",
+          "data/maps/VermilionCity_PokemonCenter_1F/scripts.inc",
+          "data/maps/VermilionCity_PokemonCenter_2F/scripts.inc",
+          "data/maps/VictoryRoad_1F/scripts.inc",
+          "data/maps/VictoryRoad_2F/scripts.inc",
+          "data/maps/VictoryRoad_3F/scripts.inc",
+          "data/maps/ViridianCity/scripts.inc",
+          "data/maps/ViridianCity_Mart/scripts.inc",
+          "data/maps/ViridianCity_PokemonCenter_1F/scripts.inc",
+          "data/maps/ViridianCity_PokemonCenter_2F/scripts.inc",
+          "data/maps/ViridianForest/scripts.inc"
+        ],
+        "disposition": "Excluded; authored script files overlap Poryscript/map-script ABI work on PRs #16, #20 and #36. No new whole-file disposition."
+      },
+      {
+        "index": 293,
+        "path": "src/agb_flash.c",
+        "git_blob_sha1": "08aeed1638e214a3cad8b28d103964ab24342fba",
+        "disposition": "Excluded; assigned to PR #10 flash-sector work."
+      }
+    ],
+    "selected_source": {
+      "index": 294,
+      "path": "src/braille_text.c",
+      "git_blob_sha1": "d4afdf87f19a5b3345dd561d0cd1360683b30a6a",
+      "disposition": "Only distinct, unassigned FireRed C source in the requested range."
+    },
+    "outside_scope_reconciliation": [
+      "PR #8 second-packet indices 112-127/129 identify mGBA translation/SQLite sources, not FireRed.",
+      "Indices 295-298 are covered by the prior PR #7 runtime-consumer handoff.",
+      "Index 299 src/load_save.c belongs to the existing PR #7 save-reload closure.",
+      "PR #6 authored map-header/layout join, PRs #14/#27 Porymap work, and PRs #16/#20/#36 Poryscript work are not duplicated."
+    ]
+  },
+  "source_records": [
+    {
+      "package": "braille_renderer_script_entry_and_font_asset",
+      "packet_index": 294,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "src/braille_text.c",
+        "git_blob_sha1": "d4afdf87f19a5b3345dd561d0cd1360683b30a6a",
+        "sha256": "def45ae49f0e1666908c39e5ddd0f63f57cf834d8e23e779cb756e5e9b161c03",
+        "bytes": 9563,
+        "line_count": 212,
+        "whole_file_scope": "ALL_SOURCE_LINES_READ; dependency closure remains partial"
+      },
+      "original_dossier_provenance": {
+        "packet_dossier_sha256": "dcda24274c44df7a6d4ed2e984667b1ddf2f7b3349b7d9b9a572edcdc26a56e9",
+        "archive_row_sha256_including_newline": "56061998283611826e1ced1922b932d8a8d40d4ad597348648aedc22483bb134",
+        "archive_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+      },
+      "source_anchors": [
+        "10-15: three scroll-distance entries and generated font inclusion",
+        "19-24: Braille printer dispatch",
+        "46-50: character read and EOS handling",
+        "153-181: scroll-start and saved-option indexed scroll state",
+        "196-207: glyph pointer arithmetic and four tile decompressions",
+        "209-212: fixed Braille glyph-width result"
+      ],
+      "callers_readers_build_closure": [
+        {
+          "path": "include/global.h",
+          "git_blob_sha1": "77155b09014aa854fcf87260e6ad2969e222da53",
+          "sha256": "044325b90e7c79146cc0cf73d31b6be3e4840059e2e778b63d9b5448fe538429",
+          "scope": "Targeted field-layout excerpt only",
+          "anchors": "338-341",
+          "relationship": "Declares optionsTextSpeed as a 3-bit SaveBlock2 field."
+        },
+        {
+          "path": "include/constants/global.h",
+          "git_blob_sha1": "21c781a0d40aa8b303642bbf1eac9ac09ce2b5a9",
+          "sha256": "7ecf4a63c7be65328135a75f8620786e40343bbe7688e7017e6d780526fd6a0c",
+          "scope": "Targeted constant excerpt only",
+          "anchors": "99-101",
+          "relationship": "Defines named text speeds slow/mid/fast as 0/1/2."
+        },
+        {
+          "path": "include/main.h",
+          "git_blob_sha1": "31b22a3faa75409125257396913689a6a37c98ac",
+          "sha256": "35f92d00306f7359e825828bb94c1860c43699cbfe108f752f35c0449a06fdd8",
+          "scope": "Direct include identity only",
+          "relationship": "One of the pinned direct includes; transitive input/key declarations not fully traced."
+        },
+        {
+          "path": "include/window.h",
+          "git_blob_sha1": "f64adce251582e0752128ddc00891661b9207168",
+          "sha256": "86539c82ace8392589a5f80c137b5c4bd5ef710b90cedcb1726ea9dc8ada9edf",
+          "scope": "Targeted declarations only",
+          "anchors": "68-80",
+          "relationship": "Declares window-copy, fill and scroll operations called by the renderer."
+        },
+        {
+          "path": "include/text.h",
+          "git_blob_sha1": "7090a029bfc454e19e6425df631fda9db866ae0a",
+          "sha256": "ca0d1447747d042d92da4df693be353a5af5a26a6c9dcfdf1e3bbc0d01530299",
+          "scope": "Targeted declarations only",
+          "anchors": "169,191",
+          "relationship": "Declares FontFunc_Braille and GetGlyphWidth_Braille."
+        },
+        {
+          "path": "include/sound.h",
+          "git_blob_sha1": "79dd64c54c2a2caed1539f8d0f0a687e704895fb",
+          "sha256": "ecb613f307e10b1cb6e8dc176fbfde2dadff4f454809fd27ebaad820277f4330",
+          "scope": "Targeted declaration only",
+          "anchors": "44",
+          "relationship": "Declares IsSEPlaying used by the wait-for-sound state."
+        },
+        {
+          "path": "src/new_game.c",
+          "git_blob_sha1": "3768b3ccb98cdad514b858cbc59244f21bedb7b0",
+          "sha256": "55f03492ea90ee853550a40008089d44ca59c28cb47b8aa10aa2494e8d8608cc",
+          "scope": "Targeted default-option excerpt only",
+          "anchors": "60-63",
+          "relationship": "Sets the new-game text speed to mid."
+        },
+        {
+          "path": "src/option_menu.c",
+          "git_blob_sha1": "0b55a34ffd8869e3c616553108e1487c9db657df",
+          "sha256": "a315b476fffc1fc3f4cfd644e190d1a55adb21206a5531b6347083e23c9b25a5",
+          "scope": "Targeted option reader/writer excerpts only",
+          "anchors": "209,216-219,513",
+          "relationship": "Copies the saved speed into an option field, normalizes invalid values in that copy, and writes the menu option back on close."
+        },
+        {
+          "path": "src/new_menu_helpers.c",
+          "git_blob_sha1": "08c032027cda2c34bf0dded37458adeb250aa553",
+          "sha256": "d115f81a76f93ba1a34894acd58f266a1920215784176f94188e4bad8ba51b1c",
+          "scope": "Targeted font-table and clamp excerpts only",
+          "anchors": "121-125,658-663",
+          "relationship": "Registers FontFunc_Braille and GetTextSpeedSetting; the latter clamps invalid values when invoked but is not called by ScrCmd_braillemessage."
+        },
+        {
+          "path": "src/scrcmd.c",
+          "git_blob_sha1": "97b695ee2f6fca80a3b78f52f6a444f696fe5814",
+          "sha256": "898dad5a07ce0a125731b998654d86808885a8d48163d607478a5e70c1cac553",
+          "scope": "Targeted handler excerpt only",
+          "anchors": "1558-1567",
+          "relationship": "Reads the script message pointer and dispatches it to FONT_BRAILLE at fixed printer speed 0."
+        },
+        {
+          "path": "data/script_cmd_table.inc",
+          "git_blob_sha1": "c5d112d9ea66d258d5a372dda89b9ad96ed2b1e1",
+          "sha256": "6b59babf9b8a33bdc37a322a1a4b6e2261426126097330f305823e53415b1389",
+          "scope": "Targeted opcode-table excerpt only",
+          "anchors": "122-125",
+          "relationship": "Maps opcode 0x78 to ScrCmd_braillemessage."
+        },
+        {
+          "path": "asm/macros/event.inc",
+          "git_blob_sha1": "142ad979d7d3093244087a247fa2b4883424f77f",
+          "sha256": "848e5e791adeddbe7ae7fe2717729af666a8d8aa163ab7781c74bfd49ce58671",
+          "scope": "Targeted macro excerpt only",
+          "anchors": "972-977",
+          "relationship": "Defines braillemessage in terms of script opcode 0x78."
+        },
+        {
+          "path": "src/text.c",
+          "git_blob_sha1": "f3eef07ce6dea8269980a5ecfdd6902c1c9c13d2",
+          "sha256": "5696f49443eeaaac74b530421ac7f0cbfc71996c557399583788111c322dd80c",
+          "scope": "Targeted glyph-width table excerpt only",
+          "anchors": "46-50",
+          "relationship": "Registers GetGlyphWidth_Braille."
+        },
+        {
+          "path": "src/load_save.c",
+          "git_blob_sha1": "8b723dd044c6024b3671bb890b25b56a53f99ec5",
+          "sha256": "b6a07136288f9330cf2b56f3a101fb62fd99fb23d76c9ab8de81e8cba458c012",
+          "scope": "Targeted SaveBlock2 allocation/copy excerpts only; persistent save decoding not reviewed",
+          "anchors": "27-44,100-116",
+          "relationship": "Declares the SaveBlock2 storage and pointer and copies the block across pointer changes; does not establish loaded-field validity."
+        },
+        {
+          "path": "graphics/fonts/braille.png",
+          "git_blob_sha1": "cb4451bc2c0087bfd5d072668aa8f09ce550cd3c",
+          "sha256": "339ac5d816dc294cdf2068dfae0442b282a8cb13f44de19f1dd244d02bdad2cc",
+          "scope": "Pinned asset identity and PNG metadata only",
+          "metadata": "256x64, 2-bit colormap; 220 bytes",
+          "relationship": "Authored image input for the generated Braille font asset."
+        },
+        {
+          "path": "graphics_file_rules.mk",
+          "git_blob_sha1": "39b952cd45b6a34eb98318a76aa531fcafff134d",
+          "sha256": "bd56e518ab9527f844642230673ce27a5bae73c7208d917d3288b073859fb685",
+          "scope": "Targeted asset rule excerpt only",
+          "anchors": "81-82",
+          "relationship": "Builds braille.fwjpnfont from braille.png via $(GFX); generated bytes were not produced or checked."
+        },
+        {
+          "path": "Makefile",
+          "git_blob_sha1": "8b454dbd18eb0069fa5851d788697190890a5b37",
+          "sha256": "51960ea72311e53c272ebcc5b481021efba52fcc7db7f0ded4bfcebaf8bbdf47",
+          "scope": "Targeted generic source collection/compile rule excerpts only",
+          "anchors": "169-172,304-307",
+          "relationship": "Wildcard C source collection includes src/braille_text.c; generic project pipeline uses preprocessor/compiler/assembler stages."
+        },
+        {
+          "path": "data/maps/SixIsland_DottedHole_1F/scripts.inc",
+          "git_blob_sha1": "ec0c34e6ed07d32a2470bb67ef43ea2359eefe18",
+          "sha256": "373b94ca425aab08f196e3da11a57cb9ad81cd6129bec34b98aed84ae1e92bac",
+          "scope": "Targeted authored call examples only; excluded from whole-file review due Poryscript overlap",
+          "anchors": "11,18,25,32",
+          "relationship": "Contains authored braillemessage references demonstrating the script-entry path."
+        }
+      ],
+      "source_observations": [
+        "sScrollDistances has only the three named 0/1/2 entries, with values 1/2/4; FontFunc_Braille indexes it directly from the 3-bit saved option at lines 165, 172 and 173.",
+        "ScrCmd_braillemessage passes printer speed 0 and does not call GetTextSpeedSetting. The existence of a clamp in another helper does not establish that every Braille path executes it first.",
+        "A temporary host sanitizer harness using the unchanged source body produced a bounds diagnostic for optionsTextSpeed 3 at line 165. This is conditional on the supplied state and is not evidence that malformed state is reachable in ordinary gameplay.",
+        "DecompressGlyph_Braille derives its asset pointer from glyph without a local range check; all authored glyph IDs and the generated asset extent were not enumerated.",
+        "The pinned PNG is 256x64 with a 2-bit colormap; its nominal 16x16 grid has 64 cells, but the generated compressed font and exact runtime pointer extent were not built or verified."
+      ],
+      "objections_and_unresolved": [
+        "No proof that invalid saved optionsTextSpeed values are reachable on any ordinary stock gameplay path, nor proof that every Braille script is preceded by a clamping GetTextSpeedSetting call.",
+        "Save deserialization, save corruption handling and full save-field lifetime are outside the package.",
+        "The generated braille.fwjpnfont size/encoding and full authored glyph-ID range remain unverified; source pointer arithmetic has no local glyph bound check.",
+        "Script message pointer validity, string termination, all call ordering and all authored script data remain unresolved; the overlapping script files are not treated as newly reviewed.",
+        "The host harness uses synthetic GBA structure/header stubs and mocked window/decompression calls; it proves neither target ABI correctness nor target execution."
+      ],
+      "licensing": {
+        "status": "PENDING_ORIGINAL_LICENSE_REVIEW",
+        "basis": "Pinned upstream root listing has no LICENSE file; pinned README identity is recorded but does not establish a license."
+      },
+      "host_validation": {
+        "class": "LOCAL_SYNTHETIC_HOST_ONLY",
+        "compiler": "GCC 13.3.0",
+        "sanitizers": ["AddressSanitizer", "UndefinedBehaviorSanitizer"],
+        "unchanged_source_sha256": "def45ae49f0e1666908c39e5ddd0f63f57cf834d8e23e779cb756e5e9b161c03",
+        "valid_speed_controls": {
+          "inputs": [0, 1, 2],
+          "expected_scroll_deltas": [1, 2, 4],
+          "observed": "PASS"
+        },
+        "fault_control": {
+          "input": 3,
+          "observed": "UBSan index 3 out of bounds for u8[3] and ASan global-buffer-overflow at src/braille_text.c:165",
+          "interpretation": "Conditional invalid-state behavior only; stock-save/runtime reachability not established."
+        },
+        "source_mutation_control": {
+          "temporary_mutation": "Replace all three sScrollDistances[gSaveBlock2Ptr->optionsTextSpeed] reads with sScrollDistances[OPTIONS_TEXT_SPEED_MID].",
+          "mutated_source_sha256": "f94bdceadd6e050080b8ec7c9b2a5feb1e41750de3ba4d0993f3827014e029a5",
+          "input": 3,
+          "observed": "PASS; no sanitizer bounds diagnostic and expected fixed scroll delta 2.",
+          "control_class": "LOCAL_HARNESS_SENSITIVITY_ONLY",
+          "production_source_changed": false
+        },
+        "limitations": "Temporary harness and stubs are not committed; test does not execute generated font, actual dependencies, GBA ABI, ARM code or emulator behavior."
+      },
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "independent_approval": false
+    }
+  ],
+  "local_validation": {
+    "packet_inventory_260_294": "35_OF_35_ENUMERATED_FROM_PINNED_PACKET",
+    "pinned_source_blob_sha256_line_count": "PASS",
+    "packet_dossier_and_original_archive_row_hashes": "PASS",
+    "json_syntax": "PASS",
+    "host_source_body_sanitizer_controls": "VALID_0_1_2_PASS; INVALID_3_BOUNDS_DIAGNOSTIC; FIXED_INDEX_MUTATION_CONTROL_PASS",
+    "source_mutation_controls_are_runtime_proof": false
+  },
+  "tool_and_runtime_boundary": {
+    "host_gcc": "AVAILABLE_GCC_13.3.0",
+    "arm_none_eabi_gcc": "ABSENT",
+    "arm_none_eabi_as": "ABSENT",
+    "agbcc": "ABSENT",
+    "gbagfx": "ABSENT",
+    "qemu_system_arm": "ABSENT",
+    "mgba": "ABSENT",
+    "generated_font_built": false,
+    "fresh_native_build": false,
+    "runtime_reader_executed": false,
+    "emulator_executed": false,
+    "linked_rom_validated": false,
+    "exact_head_pr_or_push_actions_ci": "TO_BE_QUERIED_AFTER_DELIVERY; no earlier run is reused."
+  },
+  "toolchain_pins_unchanged": {
+    "fire_red": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+    "agbcc": "da598c1d",
+    "mgba": "fd9dc5c2cbf234365068855851107e762fc6211b",
+    "porymap": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+    "poryscript": "c3248116"
+  }
+}
