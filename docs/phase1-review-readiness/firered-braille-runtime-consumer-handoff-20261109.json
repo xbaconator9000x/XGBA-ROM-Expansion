@@ -293,7 +293,7 @@
         "sScrollDistances has only the three named 0/1/2 entries, with values 1/2/4; FontFunc_Braille indexes it directly from the 3-bit saved option at lines 165, 172 and 173.",
         "ScrCmd_braillemessage passes printer speed 0 and does not call GetTextSpeedSetting. The examined new-game and normal options-menu writers constrain ordinary values to 0-2.",
         "The save-sector reader validates checksums and copies accepted bytes without an optionsTextSpeed-specific semantic check. A checksum-valid externally altered field value 3 is an adversarial source-level input; this does not establish that an unmodified stock path generates or executes it.",
-        "A temporary host sanitizer harness using the unchanged source body produced a bounds diagnostic for optionsTextSpeed 3 at line 165. This is conditional on the supplied state and is not evidence that malformed state is reachable in ordinary gameplay.",
+        "The checked-in GCC host test compiles the unchanged source body and passes controls for speeds 0-2, an explicitly injected speed 3 bounds diagnostic, and a temporary fixed-index mutation. This is conditional on supplied state and is not evidence of ordinary stock reachability.",
         "DecompressGlyph_Braille derives its asset pointer from glyph without a local range check; all authored glyph IDs and the generated asset extent were not enumerated.",
         "The pinned PNG is 256x64 with a 2-bit colormap; its nominal 16x16 grid has 64 cells, but the generated compressed font and exact runtime pointer extent were not built or verified."
       ],
@@ -317,21 +317,22 @@
         "checked_in_c_harness": "tests/phase1_firered_braille_host.c",
         "production_source_is_compiled_directly": true,
         "test_asserts_pinned_source_archive_dependencies_and_license_boundary": true,
+        "local_test_result": "PASS; 4 tests",
         "valid_speed_controls": {
           "inputs": [0, 1, 2],
           "expected_scroll_deltas": [1, 2, 4],
-          "expected": "PASS"
+          "observed": "PASS"
         },
         "fault_control": {
           "input": 3,
-          "expected": "UBSan index 3 out of bounds or ASan global-buffer-overflow at src/braille_text.c:165",
+          "observed": "PASS; sanitizer bounds diagnostic detected by the test",
           "interpretation": "Explicitly injected invalid state only; this control is not evidence of ordinary stock reachability."
         },
         "source_mutation_control": {
           "temporary_mutation": "Replace all three sScrollDistances[gSaveBlock2Ptr->optionsTextSpeed] reads with sScrollDistances[OPTIONS_TEXT_SPEED_MID].",
           "mutated_source_sha256": "f94bdceadd6e050080b8ec7c9b2a5feb1e41750de3ba4d0993f3827014e029a5",
           "input": 3,
-          "expected": "PASS; no sanitizer bounds diagnostic and expected fixed scroll delta 2.",
+          "observed": "PASS; no sanitizer bounds diagnostic and expected fixed scroll delta 2.",
           "control_class": "LOCAL_HARNESS_SENSITIVITY_ONLY",
           "production_source_changed": false
         },
@@ -347,7 +348,7 @@
     "pinned_source_blob_sha256_line_count": "PASS",
     "packet_dossier_and_original_archive_row_hashes": "PASS",
     "json_syntax": "PASS",
-    "host_source_body_sanitizer_controls": "REPRODUCIBLE_CHECKED_IN_TEST; local execution pending",
+    "host_source_body_sanitizer_controls": "PASS; 4 checked-in host tests; local only, not stock runtime proof",
     "source_mutation_controls_are_runtime_proof": false
   },
   "tool_and_runtime_boundary": {
