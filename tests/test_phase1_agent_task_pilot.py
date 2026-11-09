@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Offline, no-secret, no-billable-task regression tests for the XGBA pilot."""
+import base64
 import copy
 import json
 import unittest
@@ -211,6 +212,75 @@ class PilotTests(unittest.TestCase):
             with self.subTest(case=case), self.assertRaises(p.PilotError):
                 p.validate_ledger(case)
 
+
+
+class FakeStateAPI:
+    """Exercise the actual GitHub contents CAS request shape without the network."""
+
+    def __init__(self):
+        self.branch = False
+        self.contents = None
+        self.sha = "first-blob"
+
+    def get(self, path):
+        if "/git/ref/heads/" in path:
+            if not self.branch:
+                raise p.ApiError(404, path)
+            return {"object": {"sha": "branch-sha"}}
+        if path.endswith("/git/ref/heads/main"):
+            return {"object": {"sha": "main-sha"}}
+        if "/contents/" in path:
+            if self.contents is None:
+                raise p.ApiError(404, path)
+            return {"sha": self.sha, "content": self.contents}
+        raise AssertionError(path)
+
+    def post(self, path, payload):
+        assert path.endswith("/git/refs")
+        assert payload["ref"] == "refs/heads/" + p.STATE_BRANCH
+        self.branch = True
+        return {"ref": payload["ref"]}
+
+    def put(self, path, payload):
+        assert path.endswith("/contents/" + p.STATE_PATH)
+        assert payload["branch"] == p.STATE_BRANCH
+        if self.contents is None:
+            if "sha" in payload:
+                raise p.ApiError(409, path)
+        elif payload.get("sha") != self.sha:
+            raise p.ApiError(409, path)
+        self.contents = payload["content"]
+        self.sha = "next-blob"
+        return {"content": {"sha": self.sha}}
+
+
+class StateStoreTests(unittest.TestCase):
+    def test_real_encoded_contents_and_cas(self):
+        api = FakeStateAPI()
+        store = p.StateStore(api)
+        store.ensure_branch()
+        self.assertTrue(api.branch)
+        self.assertEqual(store.load(), (None, None))
+        state = {
+            "schema": 1, "marker": p.TASK_MARKER, "independent_semantic_approvals": 0,
+            "ticket": {"package_id": p.TASK_MARKER, "status": "RESERVED",
+                       "baseline_head_sha": "a" * 40, "task_id": None},
+        }
+        sha = store.save(state, None)
+        self.assertEqual(sha, "next-blob")
+        self.assertEqual(json.loads(base64.b64decode(api.contents)), state)
+        loaded, current = store.load()
+        self.assertEqual((loaded, current), (state, sha))
+        with self.assertRaises(p.ApiError):
+            store.save(state, "stale-blob")
+
+    def test_ledger_cannot_claim_independent_approvals(self):
+        state = {
+            "schema": 1, "marker": p.TASK_MARKER, "independent_semantic_approvals": 1,
+            "ticket": {"package_id": p.TASK_MARKER, "status": "AWAITING_REVIEW"},
+        }
+        with self.assertRaisesRegex(p.PilotError, "semantic approval"):
+            p.validate_ledger(state)
 
 if __name__ == "__main__":
     unittest.main()
