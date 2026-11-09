@@ -1,0 +1,153 @@
+{
+  "schema": "phase1.mgba.core-teardown-ownership.v1",
+  "repository": "mgba-emu/mgba",
+  "pinned_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "pinned_tree": "5863e657d270d0fe3ccaa4299f48d5689d74fa1f",
+  "status": "NEEDS_EVIDENCE",
+  "overall": "FAIL_INCOMPLETE",
+  "independent_approvals": 0,
+  "machine_dossier": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "git_blob": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "compressed_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+  },
+  "distinct_scope": {
+    "prior_pr13_receipt": "docs/phase1-review-readiness/mgba-vfs-fd-teardown-errors-20261104.md",
+    "prior_pr35_receipt": "semantic-snapshots/independent-reviews/copilot-mgba-savedata/fd-stdio-error-propagation-handoff.json",
+    "new_boundary": "Execute the original registered _GBACoreDeinit -> GBADestroy -> GBAUnloadROM chain through the pinned POSIX FD VFile close failure, continuing past the prior isolated GBAUnloadROM witness.",
+    "new_original_files": 0,
+    "new_original_function_bodies_executed": [
+      "src/gba/core.c:_GBACoreDeinit",
+      "src/gba/gba.c:GBADestroy"
+    ],
+    "nonoverlap_basis": "PR13 had source-audited but did not compile or execute GBADestroy or _GBACoreDeinit; the new witness compiles those exact bodies and exercises their ownership effects around the existing savedata close boundary."
+  },
+  "source_records": [
+    {
+      "path": "include/mgba-util/vfs.h",
+      "git_blob": "6c9bd299153af4c3c9cd5487f2425a2481331ee5",
+      "full_source_sha256": "4c829529f21c424196b4d1efe25ce11227312437cf1aa5028cae94a741bf6656",
+      "canonical_dossier_row_sha256": "5d4c30179d703f5b013badf083d6c99c736186091873d65edcb3f0943c2763dd",
+      "license": "MPL-2.0",
+      "whole_file_semantic_coverage": false,
+      "scope": "Prior identity reused; inspect VFile unmap void and close bool interface contracts.",
+      "substantive_objection": "The interface has no return channel for unmap failure; a close failure can be returned by the backend but may be discarded by its production owner."
+    },
+    {
+      "path": "src/util/vfs/vfs-fd.c",
+      "git_blob": "2535bd0fb76740745ae038d5523ead28658f1035",
+      "full_source_sha256": "0073a68b6688f1baa26acaf609af52e9f29308605e449e7c3182c9f4d768da44",
+      "canonical_dossier_row_sha256": "bb351807533d3de29f1f87c2c3a644a70c67430f556e83e219b1e25292589942",
+      "license": "MPL-2.0",
+      "whole_file_semantic_coverage": false,
+      "scope": "Prior identity reused; complete pinned translation unit compiled; selected close/unmap backend methods executed.",
+      "substantive_objection": "The test injects EIO before the host close syscall; it does not establish real OS close-error descriptor state or retry safety."
+    },
+    {
+      "path": "src/gba/savedata.c",
+      "git_blob": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "full_source_sha256": "9887e36795ae51e39eecad09565d27d3feabe316d3e595b17f288e3205e13161",
+      "canonical_dossier_row_sha256": "99a6b3e97c52d67712e10204e08ced8819c7330e899b9f767aa280fc330c42e0",
+      "license": "MPL-2.0",
+      "whole_file_semantic_coverage": false,
+      "scope": "Prior identity reused; selected size, deinit, and unmask bodies executed; savedata structure initialization is fixture-set.",
+      "substantive_objection": "The savedata teardown method clears state but does not itself close the VFile; unrelated masked-writeback branches are outside this witness."
+    },
+    {
+      "path": "src/gba/gba.c",
+      "git_blob": "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e",
+      "full_source_sha256": "e84eaba17f6c96ac7b78431afaee79d7633dd50118f92e31e4432793f80c4c7b",
+      "canonical_dossier_row_sha256": "d1870b438fe6dd9bfa628a99d90189778e112588c14ae08f28fa379903595056",
+      "license": "MPL-2.0",
+      "whole_file_semantic_coverage": false,
+      "scope": "Prior identity reused; exact GBAUnloadROM and GBADestroy bodies executed.",
+      "substantive_objection": "GBAUnloadROM discards realVf->close's boolean and clears the pointer; this witness does not execute unrelated board subsystem deinitializers."
+    },
+    {
+      "path": "src/gba/core.c",
+      "git_blob": "6bfc518bb8899205c07d1d0fc091a287cb42f874",
+      "full_source_sha256": "47a213e3f4de2299c8859822459a82ef1ae7784b0341ba49d9dd1433b8339596",
+      "canonical_dossier_row_sha256": "3431f140bdc22e29d591eacae07aadc5b4b0ae20b4c9036ef3d7e89dc9528784",
+      "license": "MPL-2.0",
+      "whole_file_semantic_coverage": false,
+      "scope": "Prior identity reused; exact _GBACoreDeinit body executed; registration site source-checked.",
+      "substantive_objection": "Core deinit is void and frees the board and core after savedata close failure; frontend dispatch into this callback is not executed."
+    }
+  ],
+  "function_sha256": {
+    "size_t GBASavedataSize(const struct GBASavedata* savedata)": "9f3e0774073a8f44195f2b1b8c2d4c20977dedd1eb8c4d7ec4c1c42e467b02d1",
+    "void GBASavedataDeinit(struct GBASavedata* savedata)": "830e75777a5a94797eb4a5cc0d6294952340887bc5d5457ca4ea3d228a94f7d2",
+    "void GBASavedataUnmask(struct GBASavedata* savedata)": "6517182aaa42db3fdc6fc4eb8582a5c9f5ff2e4364fedbf1abe4e7b7fc644709",
+    "void GBAUnloadROM(struct GBA* gba)": "1c7090ddfe712b836048af6492dedb4f8c4d2ec94ac0f30f3b8e92648071b7f6",
+    "void GBADestroy(struct GBA* gba)": "45831c7737fc196fa77546805aa6f0cca2fd34565bd3d7a77d65d58e1a858535",
+    "static void _GBACoreDeinit(struct mCore* core)": "f118627b62bee1476c5351def9c9d5378e31091277913b6a71615ffcb789a04f"
+  },
+  "harness_sha256": "0c2aa81ace20ee79dc769b2626878e867001d022b352d72f91038818cd78a841",
+  "call_chain": [
+    "src/gba/core.c registers _GBACoreDeinit as core->deinit.",
+    "_GBACoreDeinit calls GBADestroy(core->board), then frees the board and core; it returns void.",
+    "GBADestroy calls GBAUnloadROM before other board cleanup.",
+    "GBAUnloadROM deinitializes savedata, calls realVf->close, ignores its bool, and clears realVf.",
+    "The original POSIX VFile close body returns false without freeing its wrapper when the wrapped close syscall reports failure."
+  ],
+  "execution": {
+    "evidence_class": "COMPILED_EXTRACTED_ORIGINAL_CORE_AND_GBA_TEARDOWN_BODIES_WITH_ORIGINAL_POSIX_FD_TRANSLATION_UNIT",
+    "original_vfs_fd_translation_unit_compiled": true,
+    "extracted_original_functions_compiled": [
+      "GBASavedataSize",
+      "GBASavedataDeinit",
+      "GBASavedataUnmask",
+      "GBAUnloadROM",
+      "GBADestroy",
+      "_GBACoreDeinit"
+    ],
+    "full_core_and_gba_translation_units_compiled": false,
+    "secondary_deinit_functions": "Host no-op fixtures",
+    "savedata_initialization": "Explicit host setup assigns the original VFile and mapped SRAM state; it does not execute GBASavedataInit.",
+    "close_fault": "Injected EIO returned before invoking the real close syscall.",
+    "recovery_boundary": "Harness-only retained VFile pointer is closed after production teardown; production has no savedata reference or automatic retry.",
+    "native_frontend_or_gameplay": false,
+    "durable_sav_persistence": false,
+    "physical_flash": false
+  },
+  "expected_observations": [
+    {
+      "case": "normal",
+      "sync_calls": 1,
+      "sync_errors": 0,
+      "unmap_calls": 1,
+      "close_calls": 1,
+      "close_errors": 0,
+      "savedata_refs_cleared": true,
+      "board_freed": true,
+      "core_freed": true,
+      "fd_open_after_production": false,
+      "production_retry": false
+    },
+    {
+      "case": "sync_and_close_failure",
+      "sync_calls": 1,
+      "sync_errors": 1,
+      "unmap_calls": 1,
+      "close_calls": 1,
+      "close_errors": 1,
+      "savedata_refs_cleared": true,
+      "board_freed": true,
+      "core_freed": true,
+      "fd_open_after_production": true,
+      "wrapper_survives_for_harness_cleanup": true,
+      "harness_cleanup_close": true,
+      "production_retry": false
+    }
+  ],
+  "source_mutations_rejected": 3,
+  "output_mutations_rejected": 10,
+  "unresolved_objections": [
+    "The close EIO is a controlled host injection, not a naturally observed POSIX close failure.",
+    "Because the failure shim returns before the real syscall, the observed live descriptor is a fixture assumption and not a general OS close-error rule.",
+    "The complete mGBA translation units, frontend caller dispatch, and unrelated subsystem cleanup are not executed.",
+    "The harness manually owns a VFile pointer after production teardown to safely close the test resource; production code does not retain or retry it.",
+    "Same-kernel page cache and mapping cleanup are not power-loss durability, .sav interoperability, stock gameplay, or physical Flash evidence.",
+    "All selected original records remain partial/non-approving; transitive distribution licensing and independent semantic review remain unresolved."
+  ]
+}
