@@ -126,6 +126,19 @@ def live_tasks(client):
             raise PilotError("Unexpected agent task API response")
     return [task for task in tasks if task["state"] in ACTIVE_STATES]
 
+def public_task_identity(task):
+    """Allowlist non-secret task metadata for public read-only diagnostic logs."""
+    result = {}
+    for key in ("id", "state", "head_ref", "base_ref", "created_at", "updated_at"):
+        value = task.get(key)
+        if isinstance(value, (str, int)) and len(str(value)) <= 128:
+            result[key] = value
+    return result
+
+
+def public_task_list(tasks):
+    return [public_task_identity(task) for task in tasks]
+
 
 def preflight(client):
     pr = client.get(REPO_PATH + "/pulls/" + str(PR_NUMBER))
@@ -323,7 +336,8 @@ def main():
     if args.mode == "preflight":
         sha, active = preflight(client)
         print(json.dumps({"mode": args.mode, "pr_head_sha": sha,
-                          "active_task_count": len(active), "billable_tasks_created": 0,
+                          "active_task_count": len(active),
+                          "active_tasks": public_task_list(active), "billable_tasks_created": 0,
                           "note": "Read access proven; write permission and billing cannot be proven without a POST."}))
     elif args.mode == "inspect":
         print(json.dumps(inspect(client, StateStore(client)), sort_keys=True))
