@@ -1,0 +1,626 @@
+{
+  "schema": "xgba.phase1.remaining_p0_partial_analyst_batch.v11",
+  "date": "2026-10-29",
+  "source_packet": "docs/phase1-review-readiness/packet-0000-0099.json",
+  "source_packet_blob_sha1": "a48c12900acc7e0211a8071119763e2b5de4b1a4",
+  "previous_partial_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    45,
+    46,
+    47,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    58,
+    59,
+    60,
+    61,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    82,
+    83,
+    84,
+    85,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97,
+    98,
+    99
+  ],
+  "new_partial_indices": [
+    44,
+    81,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91
+  ],
+  "partial_source_inspected": 8,
+  "curated_29_source_inspected": 29,
+  "remaining_p0_partial_total": 94,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "machine_dossier_sha256_note": "Original machine dossier bytes not fetched; SHA256 copied from pinned packet and unverified.",
+  "license_note": "mGBA MPL-2.0 file notices and LICENSE, Porymap repository LGPLv3 LICENSE.md identified; independent file/dependency clearance pending.",
+  "records": [
+    {
+      "packet_index": 44,
+      "source": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "path": "src/config.cpp",
+        "git_blob_sha1": "9264f99bb18e0a725ef023f514c00df529d1d28d",
+        "url": "https://github.com/huderlem/porymap/blob/26b919d7ff4b54152de010abd5bf344af2ebe116/src/config.cpp"
+      },
+      "machine_dossier_sha256_unverified": "0107235fca6f03579e911aa555b30492c7dfa39a854fbcbced2989476dce2953",
+      "whole_source_sha256_from_machine_packet_unverified": "fe8b6e3e4780ae8a63321d157d6fea43f438af3ab7a7fc697a9f9a2b43d4419d",
+      "line_anchors": [
+        {
+          "line": 215,
+          "text": "bool KeyValueConfigBase::load(const QString &root) {"
+        },
+        {
+          "line": 255,
+          "text": "bool KeyValueConfigBase::save() {"
+        },
+        {
+          "line": 1167,
+          "text": "void ProjectConfig::init() {"
+        },
+        {
+          "line": 1223,
+          "text": "QString ProjectConfig::getFilePath(ProjectFilePath pathId) {"
+        }
+      ],
+      "responsibilities": "Original Qt config loader strips comments, initializes empty configs, parses key/value lines, writes serialized settings, detects base-game version, and falls back from missing custom project paths.",
+      "dependency_edges": [
+        "src/config.h",
+        "src/project.cpp",
+        "src/mainwindow.cpp"
+      ],
+      "unresolved": [
+        "Native Qt short-write or ENOSPC result from QFile::write is not checked in this function; reproduce before claiming a lost-settings defect.",
+        "Confirm default and custom project path behavior with populated multi-map projects and fresh process.",
+        "Review LGPLv3 repository notice and file-level exceptions; no file-level clearance is claimed."
+      ],
+      "reviewer_questions": [
+        "Independently read full exact pinned source including inactive branches and error paths",
+        "Verify original machine dossier bytes and SHA256 rather than copied packet value",
+        "Trace consumers, build flags, native representation, save/editor dependencies as applicable",
+        "Reconcile pinned repository license and file-level exceptions",
+        "Only a genuinely distinct reviewer can submit immutable-source-bound approval"
+      ],
+      "license_evidence": {
+        "repository": "huderlem/porymap",
+        "revision": "26b919d7ff4b54152de010abd5bf344af2ebe116",
+        "license_path": "LICENSE.md",
+        "license_git_blob_sha1": "65c5ca88a67c30becee01c5a8816d964b03862f9",
+        "observed_repository_license": "GNU LESSER GENERAL PUBLIC LICENSE Version 3",
+        "file_notice": "NOT_PRESENT_IN_SCOPED_SOURCE_HEADER"
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "PORYMAP_QT_CONFIG_SOURCE_NOT_GUI_RUNTIME",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    },
+    {
+      "packet_index": 81,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gb/test/gbx.c",
+        "git_blob_sha1": "fe802e4100d6a24619e18e41969276ce36286fbf",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gb/test/gbx.c"
+      },
+      "machine_dossier_sha256_unverified": "ca512c966dc873c45a6afbfd332b59d4b5cfbbe0154f2b79d63d1023fe072b17",
+      "whole_source_sha256_from_machine_packet_unverified": "b984c1eea3f24005209f3312a1be9aba056b72a0606eceef41aa74e6166bb2d8",
+      "line_anchors": [
+        {
+          "line": 31,
+          "text": "static struct VFile* makeGBX(const struct GBXParams* params, unsigned padding) {"
+        },
+        {
+          "line": 134,
+          "text": "struct VFile* vf = makeGBX(&params, 0x8000);"
+        },
+        {
+          "line": 221,
+          "text": "struct VFile* vf = makeGBX(&params, 0x8000);"
+        },
+        {
+          "line": 350,
+          "text": "struct VFile* vf = makeGBX(&params, 0x8000);"
+        }
+      ],
+      "responsibilities": "Original mGBA Game Boy GBX test fixture builds in-memory footer-bearing ROM VFiles and exercises mapper identification and ROM sizing with assertions.",
+      "dependency_edges": [
+        "src/gb/gb.c",
+        "src/gb/mbc.c",
+        "include/mgba/gb/core.h"
+      ],
+      "unresolved": [
+        "Confirm test registration, GBX malformed-footer matrix and VFile ownership in native test binary.",
+        "Do not treat GBX MBC/RTC test outcomes as FireRed GBA Flash or stock gameplay evidence.",
+        "Full-source review, machine dossier byte verification and independent reviewer pending."
+      ],
+      "reviewer_questions": [
+        "Independently read full exact pinned source including inactive branches and error paths",
+        "Verify original machine dossier bytes and SHA256 rather than copied packet value",
+        "Trace consumers, build flags, native representation, save/editor dependencies as applicable",
+        "Reconcile pinned repository license and file-level exceptions",
+        "Only a genuinely distinct reviewer can submit immutable-source-bound approval"
+      ],
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "observed_repository_license": "Mozilla Public License Version 2.0",
+        "file_notice": "Mozilla Public License, v. 2.0."
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "GAME_BOY_GBX_TEST_ONLY_NOT_GBA_FLASH",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    },
+    {
+      "packet_index": 86,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/cart/unlicensed.c",
+        "git_blob_sha1": "a0f18fc5e176f523a5938eea5baac7f6bbc7d0f0",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/cart/unlicensed.c"
+      },
+      "machine_dossier_sha256_unverified": "b68bdab9b04e8f2e2b07afc42116c0c7117a1b227628aa75faadb3d6159782d6",
+      "whole_source_sha256_from_machine_packet_unverified": "6228809ba4f50c3d2d3d66978bb3a36505b80da6c945eafdbe43100a29cd9dd0",
+      "line_anchors": [
+        {
+          "line": 34,
+          "text": "void GBAUnlCartDetect(struct GBA* gba) {"
+        },
+        {
+          "line": 86,
+          "text": "void GBAUnlCartWriteSRAM(struct GBA* gba, uint32_t address, uint8_t value) {"
+        },
+        {
+          "line": 155,
+          "text": "static void _multicartSettle(struct mTiming* timing, void* context, uint32_t cyclesLate) {"
+        },
+        {
+          "line": 207,
+          "text": "void GBAUnlCartDeserialize(struct GBA* gba, const struct GBASerializedState* state) {"
+        }
+      ],
+      "responsibilities": "Original mGBA unlicensed cartridge detection routes VFame and multicart modes, SRAM/ROM writes, delayed bank settlement and savestate type checks.",
+      "dependency_edges": [
+        "src/gba/cart/vfame.c",
+        "src/gba/memory.c",
+        "src/gba/serialize.c"
+      ],
+      "unresolved": [
+        "Trace multicart settle scheduling, ROM mapping bounds and reset/unload ownership under native runtime.",
+        "Savestate bootleg type mismatch is guarded; do not infer persistent FireRed Flash compatibility.",
+        "Whole-file control flow, license and external reviewer pending."
+      ],
+      "reviewer_questions": [
+        "Independently read full exact pinned source including inactive branches and error paths",
+        "Verify original machine dossier bytes and SHA256 rather than copied packet value",
+        "Trace consumers, build flags, native representation, save/editor dependencies as applicable",
+        "Reconcile pinned repository license and file-level exceptions",
+        "Only a genuinely distinct reviewer can submit immutable-source-bound approval"
+      ],
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "observed_repository_license": "Mozilla Public License Version 2.0",
+        "file_notice": "Mozilla Public License, v. 2.0."
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "GBA_UNLICENSED_MULTICART_SOURCE_NOT_STOCK_FIRERED",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    },
+    {
+      "packet_index": 87,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/cart/vfame.c",
+        "git_blob_sha1": "a45a420c0077fccc5dbff80fda562611d7ed2104",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/cart/vfame.c"
+      },
+      "machine_dossier_sha256_unverified": "7ac4f7b8a426d3169767f685fb88d022028cbc4d5e2d1d2c19018c78e2834b27",
+      "whole_source_sha256_from_machine_packet_unverified": "e5294e424b3c237524a239ff5bcbe13df67ea450d78248d5e836e312d236e6f7",
+      "line_anchors": [
+        {
+          "line": 63,
+          "text": "bool GBAVFameDetect(struct GBAVFameCart* cart, uint32_t* rom, size_t romSize, uint32_t crc32) {"
+        },
+        {
+          "line": 105,
+          "text": "uint32_t GBAVFameModifyRomAddress(struct GBAVFameCart* cart, uint32_t address, size_t romSize) {"
+        },
+        {
+          "line": 241,
+          "text": "void GBAVFameSramWrite(struct GBAVFameCart* cart, uint32_t address, uint8_t value, uint8_t* sramData) {"
+        },
+        {
+          "line": 278,
+          "text": "static uint32_t _modifySramAddress(enum GBAVFameCartType type, uint32_t address, int mode) {"
+        }
+      ],
+      "responsibilities": "Original mGBA VFame bootleg cartridge detection, mirrored ROM reads, SRAM write-sequence mode changes and address-bit reordering.",
+      "dependency_edges": [
+        "src/gba/cart/unlicensed.c",
+        "src/gba/memory.c",
+        "include/mgba/internal/gba/cart/unlicensed.h"
+      ],
+      "unresolved": [
+        "Verify mode-sequence and mirrored-ROM address boundaries in native VFame-specific fixtures.",
+        "Original source comments acknowledge unknown behavior for some mode changes; preserve this uncertainty.",
+        "No FireRed Flash or physical cartridge claim; whole-file independent review pending."
+      ],
+      "reviewer_questions": [
+        "Independently read full exact pinned source including inactive branches and error paths",
+        "Verify original machine dossier bytes and SHA256 rather than copied packet value",
+        "Trace consumers, build flags, native representation, save/editor dependencies as applicable",
+        "Reconcile pinned repository license and file-level exceptions",
+        "Only a genuinely distinct reviewer can submit immutable-source-bound approval"
+      ],
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "observed_repository_license": "Mozilla Public License Version 2.0",
+        "file_notice": "Mozilla Public License, v. 2.0."
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "GBA_VFAME_BOOTLEG_SOURCE_NOT_STOCK_FIRERED",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    },
+    {
+      "packet_index": 88,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/cheats.c",
+        "git_blob_sha1": "4fb23b1de17b8bf140862a926c2d8e928024f9e9",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/cheats.c"
+      },
+      "machine_dossier_sha256_unverified": "e202ba6ce695f625f6b42ff72fed47eb654e8a7dfcc105decd424e1636621083",
+      "whole_source_sha256_from_machine_packet_unverified": "081bde3fc8dc52df676330c5d7e38fa208cee8f55111e91786ec35ad687b692d",
+      "line_anchors": [
+        {
+          "line": 75,
+          "text": "struct mCheatDevice* GBACheatDeviceCreate(void) {"
+        },
+        {
+          "line": 102,
+          "text": "static bool GBACheatAddAutodetect(struct GBACheatSet* set, uint32_t op1, uint32_t op2) {"
+        },
+        {
+          "line": 205,
+          "text": "bool GBACheatAddLine(struct mCheatSet* set, const char* line, int type) {"
+        },
+        {
+          "line": 335,
+          "text": "int GBACheatAddressIsReal(uint32_t address) {"
+        }
+      ],
+      "responsibilities": "Original mGBA GBA cheat device dispatch, autodetection across code formats, line parsing, breakpoint refresh and address-region classification.",
+      "dependency_edges": [
+        "src/gba/cheats/codebreaker.c",
+        "src/gba/cheats/gameshark.c",
+        "src/gba/cheats/parv3.c"
+      ],
+      "unresolved": [
+        "Trace breakpoint install/remove lifecycle and cheat-device ownership under native debugger execution.",
+        "Autodetect confidence and malformed-code rejection require executable boundary tests.",
+        "Cheat host path is not evidence of unmodified FireRed gameplay or Flash persistence."
+      ],
+      "reviewer_questions": [
+        "Independently read full exact pinned source including inactive branches and error paths",
+        "Verify original machine dossier bytes and SHA256 rather than copied packet value",
+        "Trace consumers, build flags, native representation, save/editor dependencies as applicable",
+        "Reconcile pinned repository license and file-level exceptions",
+        "Only a genuinely distinct reviewer can submit immutable-source-bound approval"
+      ],
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "observed_repository_license": "Mozilla Public License Version 2.0",
+        "file_notice": "Mozilla Public License, v. 2.0."
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "GBA_CHEAT_HOST_SOURCE_NOT_STOCK_GAMEPLAY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    },
+    {
+      "packet_index": 89,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/cheats/codebreaker.c",
+        "git_blob_sha1": "d1c6dcf33ac505ec6fdba895084c67a83013b825",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/cheats/codebreaker.c"
+      },
+      "machine_dossier_sha256_unverified": "196fc54ef2de2cef0612bf38f6906e85e92d9f0d963f6e39f0ffe8d31cfbc133",
+      "whole_source_sha256_from_machine_packet_unverified": "ace40160677b887bd8e0db6e8cc24f4a6ac07e1e6b4bfa30609ecbb64b5d0ed1",
+      "line_anchors": [
+        {
+          "line": 26,
+          "text": "static void _cbDecrypt(struct GBACheatSet* cheats, uint32_t* op1, uint16_t* op2) {"
+        },
+        {
+          "line": 153,
+          "text": "static void _cbReseed(struct GBACheatSet* cheats, uint32_t op1, uint16_t op2) {"
+        },
+        {
+          "line": 189,
+          "text": "bool GBACheatAddCodeBreaker(struct GBACheatSet* cheats, uint32_t op1, uint16_t op2) {"
+        },
+        {
+          "line": 353,
+          "text": "bool GBACheatAddCodeBreakerLine(struct GBACheatSet* cheats, const char* line) {"
+        }
+      ],
+      "responsibilities": "Original mGBA CodeBreaker byteswap/decryption, pseudorandom table reseeding, code decoding and hexadecimal line parsing.",
+      "dependency_edges": [
+        "src/gba/cheats.c",
+        "include/mgba/internal/gba/cheats.h",
+        "src/gba/cheats/gameshark.c"
+      ],
+      "unresolved": [
+        "Check master-code transitions, decryption table bounds and truncated input against compiled parser.",
+        "No cheat-enabled gameplay or external cartridge result is established.",
+        "Machine dossier bytes, whole-file review and distinct reviewer pending."
+      ],
+      "reviewer_questions": [
+        "Independently read full exact pinned source including inactive branches and error paths",
+        "Verify original machine dossier bytes and SHA256 rather than copied packet value",
+        "Trace consumers, build flags, native representation, save/editor dependencies as applicable",
+        "Reconcile pinned repository license and file-level exceptions",
+        "Only a genuinely distinct reviewer can submit immutable-source-bound approval"
+      ],
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "observed_repository_license": "Mozilla Public License Version 2.0",
+        "file_notice": "Mozilla Public License, v. 2.0."
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "GBA_CODEBREAKER_HOST_SOURCE_NOT_STOCK_GAMEPLAY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    },
+    {
+      "packet_index": 90,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/cheats/gameshark.c",
+        "git_blob_sha1": "8974a6f54e3f3eae003f0eb9ad907f7c981409f6",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/cheats/gameshark.c"
+      },
+      "machine_dossier_sha256_unverified": "c03b1c7807c2fb360b9c32e96c5187d8e17b117b4630a1ab671c60ac44676718",
+      "whole_source_sha256_from_machine_packet_unverified": "03c0d4ef2c2cdab44e6bc67480ee6a4bd309684bcd3678df427a323d6f468577",
+      "line_anchors": [
+        {
+          "line": 54,
+          "text": "void GBACheatEncryptGameShark(uint32_t* op1, uint32_t* op2, const uint32_t* seeds) {"
+        },
+        {
+          "line": 88,
+          "text": "void GBACheatSetGameSharkVersion(struct GBACheatSet* cheats, enum GBACheatGameSharkVersion version) {"
+        },
+        {
+          "line": 104,
+          "text": "bool GBACheatAddGameSharkRaw(struct GBACheatSet* cheats, uint32_t op1, uint32_t op2) {"
+        },
+        {
+          "line": 270,
+          "text": "bool GBACheatAddGameSharkLine(struct GBACheatSet* cheats, const char* line) {"
+        }
+      ],
+      "responsibilities": "Original mGBA GameShark TEA-like encrypt/decrypt and seed-version selection, raw code dispatch, multiline state and line parser.",
+      "dependency_edges": [
+        "src/gba/cheats.c",
+        "src/gba/cheats/parv3.c",
+        "include/mgba/internal/gba/cheats.h"
+      ],
+      "unresolved": [
+        "Test incomplete multi-address and ROM-patch state transitions with malformed lines.",
+        "Check version-specific seed dependencies against native fixtures; do not infer emulator stock gameplay.",
+        "Machine dossier verification and independent licensing/whole-file review pending."
+      ],
+      "reviewer_questions": [
+        "Independently read full exact pinned source including inactive branches and error paths",
+        "Verify original machine dossier bytes and SHA256 rather than copied packet value",
+        "Trace consumers, build flags, native representation, save/editor dependencies as applicable",
+        "Reconcile pinned repository license and file-level exceptions",
+        "Only a genuinely distinct reviewer can submit immutable-source-bound approval"
+      ],
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "observed_repository_license": "Mozilla Public License Version 2.0",
+        "file_notice": "Mozilla Public License, v. 2.0."
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "GBA_GAMESHARK_HOST_SOURCE_NOT_STOCK_GAMEPLAY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    },
+    {
+      "packet_index": 91,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/cheats/parv3.c",
+        "git_blob_sha1": "e254ac94d64715b9b534f12be86f8eb18afe993d",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/cheats/parv3.c"
+      },
+      "machine_dossier_sha256_unverified": "fd9b6cd7c6cd4254f88f57955375690af0121a0669d972cacf4b47343381d8c3",
+      "whole_source_sha256_from_machine_packet_unverified": "0cd4edd4c3da0fd2ab3ba74af76e82d7bcd57bf54449b2a8f378c2ad5767d4c8",
+      "line_anchors": [
+        {
+          "line": 72,
+          "text": "static bool _addPAR3Cond(struct GBACheatSet* cheats, uint32_t op1, uint32_t op2) {"
+        },
+        {
+          "line": 144,
+          "text": "static bool _addPAR3Special(struct GBACheatSet* cheats, uint32_t op2) {"
+        },
+        {
+          "line": 245,
+          "text": "bool GBACheatAddProActionReplayRaw(struct GBACheatSet* cheats, uint32_t op1, uint32_t op2) {"
+        },
+        {
+          "line": 355,
+          "text": "bool GBACheatAddProActionReplayLine(struct GBACheatSet* cheats, const char* line) {"
+        }
+      ],
+      "responsibilities": "Original mGBA Pro Action Replay v3 condition and special-code parsing, block state, ROM patches and line parser; some actions are explicit stubs.",
+      "dependency_edges": [
+        "src/gba/cheats.c",
+        "src/gba/cheats/gameshark.c",
+        "include/mgba/internal/gba/cheats.h"
+      ],
+      "unresolved": [
+        "Original PARv3 disable/slowdown cases explicitly return unsupported; do not report successful execution.",
+        "Exercise incompletePatch and incompleteCheat transitions under compiled malformed-code tests.",
+        "Whole-file, original dossier bytes, licensing and external review pending."
+      ],
+      "reviewer_questions": [
+        "Independently read full exact pinned source including inactive branches and error paths",
+        "Verify original machine dossier bytes and SHA256 rather than copied packet value",
+        "Trace consumers, build flags, native representation, save/editor dependencies as applicable",
+        "Reconcile pinned repository license and file-level exceptions",
+        "Only a genuinely distinct reviewer can submit immutable-source-bound approval"
+      ],
+      "license_evidence": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "license_path": "LICENSE",
+        "license_git_blob_sha1": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+        "observed_repository_license": "Mozilla Public License Version 2.0",
+        "file_notice": "Mozilla Public License, v. 2.0."
+      },
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "platform_scope": "GBA_PARV3_HOST_SOURCE_NOT_STOCK_GAMEPLAY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_INDEPENDENT_FILE_SCOPE_AND_DEPENDENCY_RECONCILIATION"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+# Phase 1 review and CI: Python bytecode is generated, not source evidence.
+# Keep automated Copilot progress checkpoints receipt-only and reproducible.
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

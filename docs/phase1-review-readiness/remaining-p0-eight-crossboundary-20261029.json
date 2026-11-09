@@ -1,0 +1,522 @@
+{
+  "schema": "xgba.phase1.remaining_p0_partial_analyst_batch.v9",
+  "date": "2026-10-29",
+  "source_packet": "docs/phase1-review-readiness/packet-0000-0099.json",
+  "source_packet_blob_sha1": "a48c12900acc7e0211a8071119763e2b5de4b1a4",
+  "previous_partial_indices": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    33,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    45,
+    46,
+    47,
+    51,
+    52,
+    53,
+    54,
+    55,
+    58,
+    59,
+    60,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    82,
+    83,
+    92,
+    93,
+    94,
+    95,
+    97,
+    98
+  ],
+  "new_partial_indices": [
+    0,
+    32,
+    56,
+    61,
+    84,
+    85,
+    96,
+    99
+  ],
+  "partial_source_inspected": 8,
+  "curated_29_source_inspected": 29,
+  "remaining_p0_partial_total": 78,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "machine_dossier_sha256_note": "Copied from pinned machine packet, original machine dossier bytes not independently verified.",
+  "records": [
+    {
+      "packet_index": 0,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "include/global.h",
+        "git_blob_sha1": "77155b09014aa854fcf87260e6ad2969e222da53",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/include/global.h"
+      },
+      "machine_dossier_sha256_unverified": "df2f2145007b8becdb214cf48ba08d1102b64a4eb8f7b8fee7b05b9e877988b5",
+      "line_anchors": [
+        {
+          "line": 4,
+          "text": "#include \"config.h\""
+        },
+        {
+          "line": 31,
+          "text": "#define INCBIN(...) {0}"
+        },
+        {
+          "line": 40,
+          "text": "#define ARRAY_COUNT(array) (sizeof(array) / sizeof((array)[0]))"
+        },
+        {
+          "line": 73,
+          "text": "#define Q_24_8(n) ((s32)((n) << 8))"
+        }
+      ],
+      "responsibilities": "FireRed global compiler/preprocessor macros, fixed-point conversions, array lengths and ABI imports.",
+      "dependency_edges": [
+        "include/config.h",
+        "include/gba/gba.h",
+        "include/global.fieldmap.h"
+      ],
+      "unresolved": [
+        "Trace original agbcc and MODERN conditional branches, signed shifts and generated INCBIN inputs.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, file-level licensing and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read full pinned source, inactive branches and error paths",
+        "Independently trace producers, consumers and compiler/runtime contracts",
+        "Verify original machine dossier SHA256 and license notices",
+        "Only a genuinely distinct reviewer may submit a source-hash-bound verdict"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 32,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "include/global.fieldmap.h",
+        "git_blob_sha1": "e2828ec0cb1439718e830fbef4366770b3b77b1c",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/include/global.fieldmap.h"
+      },
+      "machine_dossier_sha256_unverified": "863407ab9551aca51e29f0d647458ec979a034e481e1db8f4a4d5212bcefc0b9",
+      "line_anchors": [
+        {
+          "line": 7,
+          "text": "#define MAPGRID_METATILE_ID_MASK 0x03FF // Bits 0-9"
+        },
+        {
+          "line": 8,
+          "text": "#define MAPGRID_COLLISION_MASK   0x0C00 // Bits 10-11"
+        },
+        {
+          "line": 9,
+          "text": "#define MAPGRID_ELEVATION_MASK   0xF000 // Bits 12-15"
+        },
+        {
+          "line": 91,
+          "text": "struct MapLayout"
+        }
+      ],
+      "responsibilities": "FireRed mapgrid masks and MapLayout/event structure declarations define authored metatile/collision/elevation and serialized map ABI.",
+      "dependency_edges": [
+        "include/global.h",
+        "src/fieldmap.c",
+        "src/map.c"
+      ],
+      "unresolved": [
+        "Resolve compiled structure layouts, border dimensions and Porymap/FireRed metatile interchange.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, file-level licensing and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read full pinned source, inactive branches and error paths",
+        "Independently trace producers, consumers and compiler/runtime contracts",
+        "Verify original machine dossier SHA256 and license notices",
+        "Only a genuinely distinct reviewer may submit a source-hash-bound verdict"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 56,
+      "source": {
+        "repository": "huderlem/poryscript",
+        "revision": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+        "path": "emitter/emitter.go",
+        "git_blob_sha1": "d35843ef29929ead47351646d7a33dd5c692b850",
+        "url": "https://github.com/huderlem/poryscript/blob/c32481161c767b25a3425fa9f1f8729927ff3d55/emitter/emitter.go"
+      },
+      "machine_dossier_sha256_unverified": "0217c6a7c53ef8cff85cc114422636ff6c50cbd821bd8c8d0213f7ee620198ee",
+      "line_anchors": [
+        {
+          "line": 15,
+          "text": "type Emitter struct {"
+        },
+        {
+          "line": 23,
+          "text": "func New(program *ast.Program, optimize, enableLineMarkers bool, inputFilepath string) *Emitter {"
+        },
+        {
+          "line": 33,
+          "text": "func (e *Emitter) Emit() (string, error) {"
+        },
+        {
+          "line": 112,
+          "text": "func (e *Emitter) emitMapScriptStatement(mapScriptStmt *ast.MapScriptsStatement, textLabels map[string]struct{}) (string, error) {"
+        }
+      ],
+      "responsibilities": "Poryscript emitter translates AST map scripts into assembler text with optimization and line-marker configuration.",
+      "dependency_edges": [
+        "emitter/chunk.go",
+        "parser/parser.go",
+        "pret/pokefirered/src/script.c"
+      ],
+      "unresolved": [
+        "Check emitted sentinel/table byte contracts in GNU ARM and native FireRed readers.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, file-level licensing and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read full pinned source, inactive branches and error paths",
+        "Independently trace producers, consumers and compiler/runtime contracts",
+        "Verify original machine dossier SHA256 and license notices",
+        "Only a genuinely distinct reviewer may submit a source-hash-bound verdict"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 61,
+      "source": {
+        "repository": "huderlem/poryscript",
+        "revision": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+        "path": "parser/parser.go",
+        "git_blob_sha1": "3957939076696de0a3e701c223c53afffe8d1b0e",
+        "url": "https://github.com/huderlem/poryscript/blob/c32481161c767b25a3425fa9f1f8729927ff3d55/parser/parser.go"
+      },
+      "machine_dossier_sha256_unverified": "803e914456762e84f716a504e41bc661a6c2a8b78e828956bb510de618b8991c",
+      "line_anchors": [
+        {
+          "line": 58,
+          "text": "type CommandConfig struct {"
+        },
+        {
+          "line": 68,
+          "text": "type Parser struct {"
+        },
+        {
+          "line": 98,
+          "text": "func New(l *lexer.Lexer, commandConfig CommandConfig, fontConfigFilepath, defaultFontID string, maxLineLength int, compileSwitches map[string]string) *Parser {"
+        },
+        {
+          "line": 135,
+          "text": "func (p *Parser) validateTextLineWidth(tok token.Token) {"
+        }
+      ],
+      "responsibilities": "Poryscript parser consumes lexer/configuration, compile switches and font/text width validation to build AST.",
+      "dependency_edges": [
+        "parser/formattext.go",
+        "lexer/lexer.go",
+        "emitter/emitter.go"
+      ],
+      "unresolved": [
+        "Trace invalid tokens, text replacements and parser errors through emitted output.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, file-level licensing and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read full pinned source, inactive branches and error paths",
+        "Independently trace producers, consumers and compiler/runtime contracts",
+        "Verify original machine dossier SHA256 and license notices",
+        "Only a genuinely distinct reviewer may submit a source-hash-bound verdict"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 84,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/cart/ereader.c",
+        "git_blob_sha1": "7d7383f6ff869fa6e4a2f6ba85b2f3e99965a303",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/cart/ereader.c"
+      },
+      "machine_dossier_sha256_unverified": "fcf681116cfc79667cbcd8af6f5c08c7a9275ea5c65b17fa59171a406190f2f2",
+      "line_anchors": [
+        {
+          "line": 23,
+          "text": "#define EREADER_BLOCK_SIZE 40"
+        },
+        {
+          "line": 182,
+          "text": "void GBACartEReaderInit(struct GBACartEReader* ereader) {"
+        },
+        {
+          "line": 212,
+          "text": "void GBACartEReaderWrite(struct GBACartEReader* ereader, uint32_t address, uint16_t value) {"
+        },
+        {
+          "line": 232,
+          "text": "void GBACartEReaderWriteFlash(struct GBACartEReader* ereader, uint32_t address, uint8_t value) {"
+        }
+      ],
+      "responsibilities": "mGBA e-Reader cartridge control and Flash access are peripheral emulation, distinct from FireRed's stock Trainer Tower stub.",
+      "dependency_edges": [
+        "include/mgba/internal/gba/cart/ereader.h",
+        "src/gba/cart/gpio.c",
+        "pret/pokefirered/src/cereader_tool.c"
+      ],
+      "unresolved": [
+        "Trace original e-Reader peripheral protocol and bounded native input; no physical reader inference.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, file-level licensing and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read full pinned source, inactive branches and error paths",
+        "Independently trace producers, consumers and compiler/runtime contracts",
+        "Verify original machine dossier SHA256 and license notices",
+        "Only a genuinely distinct reviewer may submit a source-hash-bound verdict"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 85,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/cart/gpio.c",
+        "git_blob_sha1": "f714cf85828a9a5d69448ed2e497e270931104aa",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/cart/gpio.c"
+      },
+      "machine_dossier_sha256_unverified": "30134b76242edf51515010c980f03efe76856b3e2ef4348ca8296ed03871fea3",
+      "line_anchors": [
+        {
+          "line": 46,
+          "text": "void GBAHardwareInit(struct GBACartridgeHardware* hw, uint16_t* base) {"
+        },
+        {
+          "line": 51,
+          "text": "void GBAHardwareReset(struct GBACartridgeHardware* hw) {"
+        },
+        {
+          "line": 74,
+          "text": "void GBAHardwareGPIOWrite(struct GBACartridgeHardware* hw, uint32_t address, uint16_t value) {"
+        },
+        {
+          "line": 114,
+          "text": "void GBAHardwareInitRTC(struct GBACartridgeHardware* hw) {"
+        }
+      ],
+      "responsibilities": "mGBA cartridge GPIO handles RTC, gyro, rumble and light peripheral initialization/reset and pin writes.",
+      "dependency_edges": [
+        "include/mgba/internal/gba/cart/gpio.h",
+        "src/gba/overrides.c",
+        "src/gba/memory.c"
+      ],
+      "unresolved": [
+        "Trace peripheral mapping, reset and RTC state serialization.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, file-level licensing and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read full pinned source, inactive branches and error paths",
+        "Independently trace producers, consumers and compiler/runtime contracts",
+        "Verify original machine dossier SHA256 and license notices",
+        "Only a genuinely distinct reviewer may submit a source-hash-bound verdict"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 96,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/memory.c",
+        "git_blob_sha1": "aa01fdcc7d6ae5ecdf8753efc63b3a60a1e8d3dc",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/memory.c"
+      },
+      "machine_dossier_sha256_unverified": "4b18ab8b7b5f947457093503c6c085e0ba6677f321255d140720cb2965b07f54",
+      "line_anchors": [
+        {
+          "line": 21,
+          "text": "#define IDLE_LOOP_THRESHOLD 10000"
+        },
+        {
+          "line": 42,
+          "text": "void GBAMemoryInit(struct GBA* gba) {"
+        },
+        {
+          "line": 104,
+          "text": "void GBAMemoryDeinit(struct GBA* gba) {"
+        },
+        {
+          "line": 119,
+          "text": "void GBAMemoryReset(struct GBA* gba) {"
+        }
+      ],
+      "responsibilities": "mGBA GBA memory implementation defines waitstates and memory reset/init, ARM callbacks and idle-loop handling.",
+      "dependency_edges": [
+        "include/mgba/internal/gba/memory.h",
+        "src/gba/dma.c",
+        "src/gba/savedata.c",
+        "src/gba/io.c"
+      ],
+      "unresolved": [
+        "Validate banked Flash/ROM mapping and timing in compiled emulator, not physical hardware.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, file-level licensing and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read full pinned source, inactive branches and error paths",
+        "Independently trace producers, consumers and compiler/runtime contracts",
+        "Verify original machine dossier SHA256 and license notices",
+        "Only a genuinely distinct reviewer may submit a source-hash-bound verdict"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    },
+    {
+      "packet_index": 99,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/gba/video.c",
+        "git_blob_sha1": "28f072ec0b880d272f4f9564cc5ca8f5af389caf",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/gba/video.c"
+      },
+      "machine_dossier_sha256_unverified": "20c76a3c969ef4b98f090290b1183872d6c87cb4f68521375e5f5369d16479c0",
+      "line_anchors": [
+        {
+          "line": 59,
+          "text": "void GBAVideoInit(struct GBAVideo* video) {"
+        },
+        {
+          "line": 69,
+          "text": "void GBAVideoReset(struct GBAVideo* video) {"
+        },
+        {
+          "line": 148,
+          "text": "void _startHdraw(struct mTiming* timing, void* context, uint32_t cyclesLate) {"
+        },
+        {
+          "line": 205,
+          "text": "void _startHblank(struct mTiming* timing, void* context, uint32_t cyclesLate) {"
+        }
+      ],
+      "responsibilities": "mGBA video initializes renderer and schedules HDraw/HBlank timing events coupled to DMA and interrupts.",
+      "dependency_edges": [
+        "include/mgba/internal/gba/video.h",
+        "src/gba/dma.c",
+        "src/gba/io.c"
+      ],
+      "unresolved": [
+        "Trace frame/scanline timing and DMA activation with native tests.",
+        "Original machine dossier bytes/SHA256 not independently retrieved or verified",
+        "Full-file coverage, file-level licensing and distinct reviewer pending"
+      ],
+      "reviewer_questions": [
+        "Read full pinned source, inactive branches and error paths",
+        "Independently trace producers, consumers and compiler/runtime contracts",
+        "Verify original machine dossier SHA256 and license notices",
+        "Only a genuinely distinct reviewer may submit a source-hash-bound verdict"
+      ],
+      "evidence_class": "PINNED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    }
+  ]
+}

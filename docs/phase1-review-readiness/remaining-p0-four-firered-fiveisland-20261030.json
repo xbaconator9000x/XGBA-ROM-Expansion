@@ -1,0 +1,393 @@
+{
+  "schema": "xgba.phase1.second_packet_firered_150_153_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+  "source_packet_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0000-0199-20261030.json",
+  "new_partial_indices": [
+    150,
+    151,
+    152,
+    153
+  ],
+  "prior_second_packet_indices": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149
+  ],
+  "other_p0_partial_total": 132,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 161,
+  "other_p0_without_partial": 177,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Four disjoint original FireRed authored source-only analyst partials; original machine bytes rehashed separately; no compiled/native/stock gameplay, .sav/physical Flash, independent license clearance or approvals.",
+  "records": [
+    {
+      "packet_index": 150,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FiveIsland_PokemonCenter_1F/scripts.inc",
+        "git_blob_sha1": "5c90166865006f74c7191e69610304fab5e2a1ef",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FiveIsland_PokemonCenter_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "3a14c26dd5638da7d345f3017ff59430719e77faae034a76319fffedad7deea5",
+      "whole_source_sha256_from_packet": "76ced550e3c6272ac15be7c3a98fd9208b71fe872ff01ce26d7ace946037b400",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FiveIsland_PokemonCenter_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, FiveIsland_PokemonCenter_1F_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume"
+        },
+        {
+          "line": 7,
+          "text": "\tsetrespawn HEAL_LOCATION_FIVE_ISLAND"
+        },
+        {
+          "line": 13,
+          "text": "\tcall EventScript_PkmnCenterNurse"
+        },
+        {
+          "line": 18,
+          "text": "\tmsgbox FiveIsland_PokemonCenter_1F_Text_OnMyWayToPrepareMeal, MSGBOX_NPC"
+        }
+      ],
+      "source_observations": "Transition sets Five Island healing respawn; shared CableClub resume and nurse call; chef and trainer text are NPC scripts, not persistence witnesses.",
+      "required_source_tokens": [
+        "HEAL_LOCATION_FIVE_ISLAND",
+        "CableClub_OnResume",
+        "EventScript_PkmnCenterNurse",
+        "MSGBOX_NPC"
+      ],
+      "dependency_edges": [
+        "heal location enum and respawn serialization",
+        "CableClub_OnResume shared handler",
+        "EventScript_PkmnCenterNurse implementation",
+        "map.json NPC script references"
+      ],
+      "unresolved": [
+        "Authored script to generated map table, assembler/linker and runtime consumer not closed",
+        "External handlers, map flags and asset/derivative licensing require independent full-source review",
+        "No compiled, native gameplay, .sav persistence or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Read every exact pinned source line and inactive branch independently",
+        "Verify original compressed machine dossier bytes and SHA256",
+        "Resolve generated map table and actual engine consumers",
+        "Reconcile original script asset and derivative licensing",
+        "Only a genuinely distinct reviewer may sign a durable receipt"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 151,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FiveIsland_PokemonCenter_2F/scripts.inc",
+        "git_blob_sha1": "f008eb3ac173de517ff0adf1f7785e306d06f571",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FiveIsland_PokemonCenter_2F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "a0bd3d69c0d88df6bd67439f952086896539d36a358275f13d78aa4b837494ca",
+      "whole_source_sha256_from_packet": "91cda73f15a243d193be287eb447bcf543a4584f0e9ac6c2280eef2c89253e7b",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FiveIsland_PokemonCenter_2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CableClub_OnTransition"
+        },
+        {
+          "line": 8,
+          "text": "@ The below 3 are unused and leftover from RS"
+        },
+        {
+          "line": 18,
+          "text": "\tcall CableClub_EventScript_RecordCorner"
+        }
+      ],
+      "source_observations": "CableClub 2F dispatches four shared map lifecycle hooks; three explicitly RS-leftover script stubs are labelled unused in source, without proving linker reachability.",
+      "required_source_tokens": [
+        "CableClub_OnFrame",
+        "CableClub_OnWarp",
+        "CableClub_OnLoad",
+        "CableClub_OnTransition"
+      ],
+      "dependency_edges": [
+        "CableClub frame/warp/transition tables",
+        "map.json events and warp destinations",
+        "shared link event handler implementations",
+        "macro assembler/linker script table layout"
+      ],
+      "unresolved": [
+        "Authored script to generated map table, assembler/linker and runtime consumer not closed",
+        "External handlers, map flags and asset/derivative licensing require independent full-source review",
+        "No compiled, native gameplay, .sav persistence or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Read every exact pinned source line and inactive branch independently",
+        "Verify original compressed machine dossier bytes and SHA256",
+        "Resolve generated map table and actual engine consumers",
+        "Reconcile original script asset and derivative licensing",
+        "Only a genuinely distinct reviewer may sign a durable receipt"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 152,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FiveIsland_ResortGorgeous/scripts.inc",
+        "git_blob_sha1": "df2b867b8497c21f148417eadbe0577d91a05880",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FiveIsland_ResortGorgeous/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "c8ff19449399919ab59814a70d383330dd23c6897728b3a40ad6aa87faf45e43",
+      "whole_source_sha256_from_packet": "9b678994ecfe24c5503bfdb8e924c8e74847477cb7ce4b3dd305c30b007fabcd",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FiveIsland_ResortGorgeous_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, FiveIsland_ResortGorgeous_OnWarp"
+        },
+        {
+          "line": 7,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_FIVE_ISLAND_RESORT_GORGEOUS, 1, FiveIsland_ResortGorgeous_EventScript_TurnPlayerNorth"
+        },
+        {
+          "line": 15,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_FIVE_ISLAND_RESORT_GORGEOUS, 1, FiveIsland_ResortGorgeous_EventScript_SelphyReturnHomeScene"
+        },
+        {
+          "line": 23,
+          "text": "\tapplymovement LOCALID_RESORT_GORGEOUS_SELPHY, Common_Movement_WalkInPlaceFasterUp"
+        },
+        {
+          "line": 25,
+          "text": "\topendoor 39, 8"
+        },
+        {
+          "line": 29,
+          "text": "\tclosedoor 39, 8"
+        },
+        {
+          "line": 32,
+          "text": "\tclearflag FLAG_HIDE_RESORT_GORGEOUS_INSIDE_SELPHY"
+        },
+        {
+          "line": 33,
+          "text": "\tsetvar VAR_MAP_SCENE_FIVE_ISLAND_RESORT_GORGEOUS, 2"
+        }
+      ],
+      "source_observations": "Resort Gorgeous warp/frame scene=1 rotates player and runs Selphy house entry with explicit door open/close, hide/show flag and scene=2; no observed gameplay.",
+      "required_source_tokens": [
+        "VAR_MAP_SCENE_FIVE_ISLAND_RESORT_GORGEOUS",
+        "LOCALID_RESORT_GORGEOUS_SELPHY",
+        "FLAG_HIDE_RESORT_GORGEOUS_INSIDE_SELPHY",
+        "closedoor"
+      ],
+      "dependency_edges": [
+        "Selphy rescue scene producer and flag persistence",
+        "map.json local object IDs and door coordinates",
+        "metatile door animation/warp engine",
+        "script frame and warp table consumers"
+      ],
+      "unresolved": [
+        "Authored script to generated map table, assembler/linker and runtime consumer not closed",
+        "External handlers, map flags and asset/derivative licensing require independent full-source review",
+        "No compiled, native gameplay, .sav persistence or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Read every exact pinned source line and inactive branch independently",
+        "Verify original compressed machine dossier bytes and SHA256",
+        "Resolve generated map table and actual engine consumers",
+        "Reconcile original script asset and derivative licensing",
+        "Only a genuinely distinct reviewer may sign a durable receipt"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 153,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FiveIsland_RocketWarehouse/scripts.inc",
+        "git_blob_sha1": "846909f0ca95a6ca24b5586c484b8e0244215c44",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FiveIsland_RocketWarehouse/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "e7583ba417ce78317bbb85cb18785c88f74e9536514b46b62ca23a2c1de5f349",
+      "whole_source_sha256_from_packet": "b449c6890230455482311d27df2a70c2d818bcb067cf62fdf967da4e23f591f9",
+      "line_anchors": [
+        {
+          "line": 4,
+          "text": "FiveIsland_RocketWarehouse_MapScripts::"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, FiveIsland_RocketWarehouse_OnLoad"
+        },
+        {
+          "line": 14,
+          "text": "\tcall_if_defeated TRAINER_TEAM_ROCKET_ADMIN, FiveIsland_RocketWarehouse_EventScript_SetArrowsForReEntry"
+        },
+        {
+          "line": 18,
+          "text": "\tsetmetatile 26, 20, METATILE_SilphCo_Arrow_Up, 0"
+        },
+        {
+          "line": 47,
+          "text": "\ttrainerbattle_single TRAINER_SCIENTIST_GIDEON, FiveIsland_RocketWarehouse_Text_GideonIntro, FiveIsland_RocketWarehouse_Text_GideonDefeat, FiveIsland_RocketWarehouse_EventScript_DefeatedGideon"
+        },
+        {
+          "line": 59,
+          "text": "\tsetflag FLAG_RECOVERED_SAPPHIRE"
+        },
+        {
+          "line": 60,
+          "text": "\tgiveitem ITEM_SAPPHIRE"
+        },
+        {
+          "line": 75,
+          "text": "\ttrainerbattle_single TRAINER_TEAM_ROCKET_ADMIN_2, FiveIsland_RocketWarehouse_Text_Admin2Intro, FiveIsland_RocketWarehouse_Text_Admin2Defeat, FiveIsland_RocketWarehouse_EventScript_DefeatedAdmin2"
+        },
+        {
+          "line": 89,
+          "text": "\tsetflag FLAG_HIDE_FIVE_ISLAND_ROCKETS"
+        },
+        {
+          "line": 92,
+          "text": "\tsetflag FLAG_DEFEATED_ROCKETS_IN_WAREHOUSE"
+        },
+        {
+          "line": 122,
+          "text": "\tcall FiveIsland_RocketWarehouse_EventScript_SetArrowsForReEntry"
+        },
+        {
+          "line": 123,
+          "text": "\tspecial DrawWholeMapView"
+        }
+      ],
+      "source_observations": "Rocket Warehouse load re-entry arrow metatiles conditional on defeated admin; separate admin progression flags, Sapphire reward, position-dependent movement and map redraw; no compiled or native witness.",
+      "required_source_tokens": [
+        "TRAINER_TEAM_ROCKET_ADMIN",
+        "FLAG_RECOVERED_SAPPHIRE",
+        "FLAG_DEFEATED_ROCKETS_IN_WAREHOUSE",
+        "DrawWholeMapView"
+      ],
+      "dependency_edges": [
+        "map.json trainer/event and arrow tile coordinates",
+        "trainerbattle macro callback and flags",
+        "Sapphire inventory/save semantics",
+        "metatile layout and DrawWholeMapView consumer"
+      ],
+      "unresolved": [
+        "Authored script to generated map table, assembler/linker and runtime consumer not closed",
+        "External handlers, map flags and asset/derivative licensing require independent full-source review",
+        "No compiled, native gameplay, .sav persistence or physical Flash witness"
+      ],
+      "reviewer_questions": [
+        "Read every exact pinned source line and inactive branch independently",
+        "Verify original compressed machine dossier bytes and SHA256",
+        "Resolve generated map table and actual engine consumers",
+        "Reconcile original script asset and derivative licensing",
+        "Only a genuinely distinct reviewer may sign a durable receipt"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}

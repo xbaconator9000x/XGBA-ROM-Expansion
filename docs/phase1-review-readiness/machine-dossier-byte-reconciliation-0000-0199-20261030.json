@@ -1,0 +1,21 @@
+{
+  "schema": "xgba.phase1.machine_dossier_byte_reconciliation.v1",
+  "date": "2026-10-30",
+  "snapshot_git_blobs": {
+    "candidate_review_dossiers.jsonl.gz": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "semantic_review_queue.csv.gz": "52fe1a9b8498dd4fa3ea0e6e0236ae1cdeda7268",
+    "phase1_mapping_gate.json": "dab5789433dc55cf325a917a220d060088bf1d29"
+  },
+  "packet_git_blobs": {
+    "docs/phase1-review-readiness/packet-0000-0099.json": "a48c12900acc7e0211a8071119763e2b5de4b1a4",
+    "docs/phase1-review-readiness/packet-0100-0199.json": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63"
+  },
+  "machine_dossier_byte_checks": 200,
+  "source_census_target": 14834,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "whole_file_semantic_approved": 0,
+  "phase1_gate": "FAIL_INCOMPLETE",
+  "scope": "Exact-head CI rehashes original 14,834 compressed machine dossier records against original queue and reconciles 200 P0 packet identities, original machine dossier SHA256 and source content SHA256; not independent semantic interpretation or licensing approval.",
+  "validation_status": "REQUIRES_EXACT_HEAD_ACTIONS_SUCCESS"
+}

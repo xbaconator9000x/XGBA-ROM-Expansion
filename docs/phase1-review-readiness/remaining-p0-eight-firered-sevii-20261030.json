@@ -1,0 +1,705 @@
+{
+  "schema": "xgba.phase1.second_packet_firered_sevii_partial.v1",
+  "date": "2026-10-30",
+  "source_packet": "docs/phase1-review-readiness/packet-0100-0199.json",
+  "source_packet_blob_sha1": "3ddc0b8f66c8f14351a18208fa11e823f73b1d63",
+  "machine_dossier_receipt": "docs/phase1-review-readiness/machine-dossier-byte-reconciliation-0000-0199-20261030.json",
+  "new_partial_indices": [
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149
+  ],
+  "prior_second_packet_indices": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141
+  ],
+  "other_p0_partial_total": 128,
+  "curated_p0_partial_total": 29,
+  "total_p0_partial": 157,
+  "other_p0_without_partial": 181,
+  "independent_p0_approved": 0,
+  "independent_total_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "scope_note": "Eight disjoint pinned authored FireRed script partials; no compiled/native/stock gameplay/.sav/physical Flash, license clearance or independent approvals.",
+  "records": [
+    {
+      "packet_index": 142,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/CinnabarIsland_PokemonCenter_1F/scripts.inc",
+        "git_blob_sha1": "bb7f622bdb178ce386e5b52dc58690a77ec85111",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/CinnabarIsland_PokemonCenter_1F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "9251ac8e3686c3aeda4c039791dc3abfb129d8989df020430987d09edc55cd4a",
+      "whole_source_sha256_from_packet": "f89e4cf3f755de8b4c8431a1b9723acfedd44f9cd19c97377dfd38ea39949d9f",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "CinnabarIsland_PokemonCenter_1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CinnabarIsland_PokemonCenter_1F_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume"
+        },
+        {
+          "line": 7,
+          "text": "\tsetrespawn HEAL_LOCATION_CINNABAR_ISLAND"
+        },
+        {
+          "line": 13,
+          "text": "\tcall EventScript_PkmnCenterNurse"
+        },
+        {
+          "line": 45,
+          "text": "\tsetvar VAR_MAP_SCENE_CINNABAR_ISLAND_2, 1"
+        },
+        {
+          "line": 47,
+          "text": "\twarp MAP_CINNABAR_ISLAND, 14, 11"
+        },
+        {
+          "line": 140,
+          "text": "\tstep_end"
+        }
+      ],
+      "source_observations": "Cinnabar heal location and Bill sailing exit: facing-dependent movements, scene variables and warp.",
+      "required_source_tokens": [
+        "HEAL_LOCATION_CINNABAR_ISLAND",
+        "VAR_MAP_SCENE_CINNABAR_ISLAND_2",
+        "MAP_CINNABAR_ISLAND",
+        "EventScript_PkmnCenterNurse"
+      ],
+      "dependency_edges": [
+        "heal location and nurse shared handlers",
+        "Bill and Sevii sailing shared scripts",
+        "map.json NPC/warp references",
+        "facing and movement command encoding"
+      ],
+      "unresolved": [
+        "Map JSON, assembler/linker and runtime consumer closure not established",
+        "External handlers, map flags and asset licensing require independent full-source review",
+        "No compiled witness, native gameplay, .sav persistence or physical Flash execution"
+      ],
+      "reviewer_questions": [
+        "Inspect every pinned line and inactive branch independently",
+        "Verify original machine dossier bytes and SHA256",
+        "Resolve generated table and actual engine call paths",
+        "Reconcile original script asset/derivative licensing",
+        "Only a distinct reviewer may sign a full evidence receipt"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 143,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/CinnabarIsland_PokemonCenter_2F/scripts.inc",
+        "git_blob_sha1": "68721f82b17098357607a22c296a64585f5c53b3",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/CinnabarIsland_PokemonCenter_2F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "e59b48231cbde46b6ed15aa4667c803fd4355c3167176c572182919a37a0508a",
+      "whole_source_sha256_from_packet": "89ee788770a97be1e5132c56f46972ef1d5b804f7e62d0afbdcc00b5fb9589d9",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "CinnabarIsland_PokemonCenter_2F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, CableClub_OnFrame"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_WARP_INTO_MAP_TABLE, CableClub_OnWarp"
+        },
+        {
+          "line": 4,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, CableClub_OnLoad"
+        },
+        {
+          "line": 5,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CableClub_OnTransition"
+        },
+        {
+          "line": 8,
+          "text": "@ The below 3 are unused and leftover from RS"
+        },
+        {
+          "line": 10,
+          "text": "\tcall CableClub_EventScript_Colosseum"
+        },
+        {
+          "line": 14,
+          "text": "\tcall CableClub_EventScript_TradeCenter"
+        },
+        {
+          "line": 18,
+          "text": "\tcall CableClub_EventScript_RecordCorner"
+        },
+        {
+          "line": 19,
+          "text": "\tend"
+        }
+      ],
+      "source_observations": "Four CableClub shared hooks; legacy RS-labelled Colosseum, TradeCenter and RecordCorner stubs.",
+      "required_source_tokens": [
+        "CableClub_OnFrame",
+        "CableClub_OnWarp",
+        "CableClub_OnLoad",
+        "unused and leftover from RS"
+      ],
+      "dependency_edges": [
+        "CableClub shared frame/warp tables",
+        "shared load/transition callbacks",
+        "map.json warp references",
+        "global link event handlers"
+      ],
+      "unresolved": [
+        "Map JSON, assembler/linker and runtime consumer closure not established",
+        "External handlers, map flags and asset licensing require independent full-source review",
+        "No compiled witness, native gameplay, .sav persistence or physical Flash execution"
+      ],
+      "reviewer_questions": [
+        "Inspect every pinned line and inactive branch independently",
+        "Verify original machine dossier bytes and SHA256",
+        "Resolve generated table and actual engine call paths",
+        "Reconcile original script asset/derivative licensing",
+        "Only a distinct reviewer may sign a full evidence receipt"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 144,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/CinnabarIsland_PokemonLab_Entrance/scripts.inc",
+        "git_blob_sha1": "7969a84f33d21d0813bb5f2d375050fc25b6f518",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/CinnabarIsland_PokemonLab_Entrance/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "9e723c0c201c3234a1349300257b22d3412a2cb90eba6b7802cd289887c259d8",
+      "whole_source_sha256_from_packet": "be8aaf400ee541df99fb2ec26b82df24e1e879273d53a41068e15f5f65b5e274",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "CinnabarIsland_PokemonLab_Entrance_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, CinnabarIsland_PokemonLab_Entrance_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 6,
+          "text": "\tcall_if_eq VAR_MAP_SCENE_CINNABAR_ISLAND_POKEMON_LAB_EXPERIMENT_ROOM_REVIVE_STATE, 1, CinnabarIsland_PokemonLab_Entrance_EventScript_ReadyFossil"
+        },
+        {
+          "line": 9,
+          "text": "CinnabarIsland_PokemonLab_Entrance_EventScript_ReadyFossil::"
+        },
+        {
+          "line": 10,
+          "text": "\tsetvar VAR_MAP_SCENE_CINNABAR_ISLAND_POKEMON_LAB_EXPERIMENT_ROOM_REVIVE_STATE, 2"
+        },
+        {
+          "line": 31,
+          "text": "\tend"
+        }
+      ],
+      "source_observations": "Fossil revival scene state advances from 1 to 2 on map transition; scientist and lab signs.",
+      "required_source_tokens": [
+        "VAR_MAP_SCENE_CINNABAR_ISLAND_POKEMON_LAB_EXPERIMENT_ROOM_REVIVE_STATE",
+        "EventScript_ReadyFossil",
+        "setvar",
+        "EventScript_Scientist"
+      ],
+      "dependency_edges": [
+        "fossil revival room event state",
+        "VAR_MAP_SCENE persistence",
+        "map.json NPC/sign references",
+        "script macro command interpreter"
+      ],
+      "unresolved": [
+        "Map JSON, assembler/linker and runtime consumer closure not established",
+        "External handlers, map flags and asset licensing require independent full-source review",
+        "No compiled witness, native gameplay, .sav persistence or physical Flash execution"
+      ],
+      "reviewer_questions": [
+        "Inspect every pinned line and inactive branch independently",
+        "Verify original machine dossier bytes and SHA256",
+        "Resolve generated table and actual engine call paths",
+        "Reconcile original script asset/derivative licensing",
+        "Only a distinct reviewer may sign a full evidence receipt"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 145,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/DiglettsCave_B1F/scripts.inc",
+        "git_blob_sha1": "093f485980c7f6f22fb50e5e13a38fb359187ab6",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/DiglettsCave_B1F/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "96b37da248e697df6db7daf584fbdd10d2d003f1f298f496e9c5cd0e72e674ac",
+      "whole_source_sha256_from_packet": "335a0ecf2c1c51ae6bc88bda0d7c73e21c098353848a65f14bcbf2a0b3536009",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "DiglettsCave_B1F_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, DiglettsCave_B1F_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_DIGLETTS_CAVE_B1F"
+        },
+        {
+          "line": 7,
+          "text": "\tend"
+        }
+      ],
+      "source_observations": "Minimal transition-only world-map flag for Diglett's Cave B1F.",
+      "required_source_tokens": [
+        "MAP_SCRIPT_ON_TRANSITION",
+        "DiglettsCave_B1F_OnTransition",
+        "FLAG_WORLD_MAP_DIGLETTS_CAVE_B1F",
+        ".byte 0"
+      ],
+      "dependency_edges": [
+        "map.json map-script reference",
+        "world map flag constant",
+        "setworldmapflag opcode",
+        "map-script generator/linker"
+      ],
+      "unresolved": [
+        "Map JSON, assembler/linker and runtime consumer closure not established",
+        "External handlers, map flags and asset licensing require independent full-source review",
+        "No compiled witness, native gameplay, .sav persistence or physical Flash execution"
+      ],
+      "reviewer_questions": [
+        "Inspect every pinned line and inactive branch independently",
+        "Verify original machine dossier bytes and SHA256",
+        "Resolve generated table and actual engine call paths",
+        "Reconcile original script asset/derivative licensing",
+        "Only a distinct reviewer may sign a full evidence receipt"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 146,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FiveIsland/scripts.inc",
+        "git_blob_sha1": "117dd4ee385181266e0ce858f8310c6c5f75b077",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FiveIsland/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "bed3cacd2d5a4758eebba4f67ede91215cfa000506081e74d01a9e8d2c1607a9",
+      "whole_source_sha256_from_packet": "83e9d96d3e4e2038b117d389a5cc66d1d0ab7f048d38e677a77f3a65ff461ec0",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FiveIsland_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, FiveIsland_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_FIVE_ISLAND"
+        },
+        {
+          "line": 19,
+          "text": "\tend"
+        }
+      ],
+      "source_observations": "Five Island world-map transition and sign/Bug Catcher/Fisher NPC dialogue.",
+      "required_source_tokens": [
+        "FLAG_WORLD_MAP_FIVE_ISLAND",
+        "FiveIsland_EventScript_IslandSign",
+        "FiveIsland_EventScript_BugCatcher",
+        "FiveIsland_EventScript_Fisher"
+      ],
+      "dependency_edges": [
+        "map.json sign/NPC events",
+        "world-map flag constant",
+        "msgbox text assets",
+        "map-script generator/linker"
+      ],
+      "unresolved": [
+        "Map JSON, assembler/linker and runtime consumer closure not established",
+        "External handlers, map flags and asset licensing require independent full-source review",
+        "No compiled witness, native gameplay, .sav persistence or physical Flash execution"
+      ],
+      "reviewer_questions": [
+        "Inspect every pinned line and inactive branch independently",
+        "Verify original machine dossier bytes and SHA256",
+        "Resolve generated table and actual engine call paths",
+        "Reconcile original script asset/derivative licensing",
+        "Only a distinct reviewer may sign a full evidence receipt"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 147,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FiveIsland_LostCave_Entrance/scripts.inc",
+        "git_blob_sha1": "3aba609f373c02a26f52e3eae10293d5ca372196",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FiveIsland_LostCave_Entrance/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "b6d6a7e01d7959557cc887fe0655c7131f92b776b96ac957c07d878ab6bf52aa",
+      "whole_source_sha256_from_packet": "8ca8d8bafeee1db469db4285dbe6d8af0d8e1558077622dcb0996b39e379d999",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FiveIsland_LostCave_Entrance_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_TRANSITION, FiveIsland_LostCave_Entrance_OnTransition"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 6,
+          "text": "\tsetworldmapflag FLAG_WORLD_MAP_FIVE_ISLAND_LOST_CAVE_ENTRANCE"
+        },
+        {
+          "line": 7,
+          "text": "\tend"
+        }
+      ],
+      "source_observations": "Lost Cave entrance transition sets its world-map flag.",
+      "required_source_tokens": [
+        "MAP_SCRIPT_ON_TRANSITION",
+        "FiveIsland_LostCave_Entrance_OnTransition",
+        "FLAG_WORLD_MAP_FIVE_ISLAND_LOST_CAVE_ENTRANCE",
+        ".byte 0"
+      ],
+      "dependency_edges": [
+        "map.json map-script binding",
+        "world map flag constant",
+        "setworldmapflag command",
+        "map-script generator/linker"
+      ],
+      "unresolved": [
+        "Map JSON, assembler/linker and runtime consumer closure not established",
+        "External handlers, map flags and asset licensing require independent full-source review",
+        "No compiled witness, native gameplay, .sav persistence or physical Flash execution"
+      ],
+      "reviewer_questions": [
+        "Inspect every pinned line and inactive branch independently",
+        "Verify original machine dossier bytes and SHA256",
+        "Resolve generated table and actual engine call paths",
+        "Reconcile original script asset/derivative licensing",
+        "Only a distinct reviewer may sign a full evidence receipt"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 148,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FiveIsland_LostCave_Room10/scripts.inc",
+        "git_blob_sha1": "1ead85aa03b303182d2deac85b1227a5820fd702",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FiveIsland_LostCave_Room10/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "35c6755cbfb5f8f759b2b8b9b7662529f6f006df047b02ca985a21d0e0eb9e0b",
+      "whole_source_sha256_from_packet": "e9ddcd2050cb9bc6e1f3204239611c5401645e0185cb215666cfce8acb2032db",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FiveIsland_LostCave_Room10_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_RESUME, FiveIsland_LostCave_Room10_OnResume"
+        },
+        {
+          "line": 3,
+          "text": "\tmap_script MAP_SCRIPT_ON_FRAME_TABLE, FiveIsland_LostCave_Room10_OnFrame"
+        },
+        {
+          "line": 7,
+          "text": "\tcall_if_defeated TRAINER_LADY_SELPHY, FiveIsland_LostCave_Room10_EventScript_StopSelphySceneTrigger"
+        },
+        {
+          "line": 11,
+          "text": "\tsetvar VAR_MAP_SCENE_FIVE_ISLAND_LOST_CAVE_ROOM10, 1"
+        },
+        {
+          "line": 15,
+          "text": "\tmap_script_2 VAR_MAP_SCENE_FIVE_ISLAND_LOST_CAVE_ROOM10, 0, FiveIsland_LostCave_Room10_EventScript_FindSelphyScene"
+        },
+        {
+          "line": 28,
+          "text": "\ttrainerbattle_no_intro TRAINER_LADY_SELPHY, FiveIsland_LostCave_Room10_Text_SelphyDefeat"
+        },
+        {
+          "line": 31,
+          "text": "\tcall FiveIsland_LostCave_Room10_EventScript_SetSelphyFound"
+        },
+        {
+          "line": 40,
+          "text": "\tsetvar VAR_MAP_SCENE_FIVE_ISLAND_LOST_CAVE_ROOM10, 1"
+        },
+        {
+          "line": 41,
+          "text": "\tsetvar VAR_MAP_SCENE_FIVE_ISLAND_RESORT_GORGEOUS, 1"
+        },
+        {
+          "line": 45,
+          "text": "\tsettrainerflag TRAINER_LADY_SELPHY"
+        },
+        {
+          "line": 46,
+          "text": "\tcall FiveIsland_LostCave_Room10_EventScript_SetSelphyFound"
+        },
+        {
+          "line": 63,
+          "text": "\tstep_end"
+        }
+      ],
+      "source_observations": "Selphy scene resume/frame state, trainer battle, questlog branch, object flags and Resort Gorgeous warp.",
+      "required_source_tokens": [
+        "TRAINER_LADY_SELPHY",
+        "VAR_MAP_SCENE_FIVE_ISLAND_LOST_CAVE_ROOM10",
+        "MAP_FIVE_ISLAND_RESORT_GORGEOUS",
+        "EventScript_SetSelphyFound"
+      ],
+      "dependency_edges": [
+        "trainer defeat flag and battle macros",
+        "quest log special branch",
+        "map scene and object visibility flags",
+        "Resort Gorgeous warp and map.json"
+      ],
+      "unresolved": [
+        "Map JSON, assembler/linker and runtime consumer closure not established",
+        "External handlers, map flags and asset licensing require independent full-source review",
+        "No compiled witness, native gameplay, .sav persistence or physical Flash execution"
+      ],
+      "reviewer_questions": [
+        "Inspect every pinned line and inactive branch independently",
+        "Verify original machine dossier bytes and SHA256",
+        "Resolve generated table and actual engine call paths",
+        "Reconcile original script asset/derivative licensing",
+        "Only a distinct reviewer may sign a full evidence receipt"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    },
+    {
+      "packet_index": 149,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "data/maps/FiveIsland_Meadow/scripts.inc",
+        "git_blob_sha1": "2b9951634a74f4875f36b6e240e9b30a52ce540c",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/maps/FiveIsland_Meadow/scripts.inc"
+      },
+      "machine_dossier_sha256_verified_in_original_bytes": "e63338d200e00ee92d9eefd38ed770b524cc55df5df47f8bf1fd7f6e81e9ad85",
+      "whole_source_sha256_from_packet": "f7d580566f280c0575d2107824849402bfe69ebe5d40db3d01e60cb8a70e89da",
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "FiveIsland_Meadow_MapScripts::"
+        },
+        {
+          "line": 2,
+          "text": "\tmap_script MAP_SCRIPT_ON_LOAD, FiveIsland_Meadow_OnLoad"
+        },
+        {
+          "line": 3,
+          "text": "\t.byte 0"
+        },
+        {
+          "line": 6,
+          "text": "\tcall_if_set FLAG_UNLOCKED_ROCKET_WAREHOUSE, FiveIsland_Meadow_EventScript_SetWarehouseDoorUnlocked"
+        },
+        {
+          "line": 11,
+          "text": "\tgoto_if_set FLAG_UNLOCKED_ROCKET_WAREHOUSE, FiveIsland_Meadow_EventScript_WarehouseDoorAlreadyOpen"
+        },
+        {
+          "line": 18,
+          "text": "\tsetflag FLAG_UNLOCKED_ROCKET_WAREHOUSE"
+        },
+        {
+          "line": 22,
+          "text": "\tcall FiveIsland_Meadow_EventScript_SetWarehouseDoorUnlocked"
+        },
+        {
+          "line": 23,
+          "text": "\tspecial DrawWholeMapView"
+        },
+        {
+          "line": 51,
+          "text": "\tend"
+        }
+      ],
+      "source_observations": "Rocket warehouse door unlocked by two password flags; metatile update and redraw; three Rocket trainers.",
+      "required_source_tokens": [
+        "FLAG_UNLOCKED_ROCKET_WAREHOUSE",
+        "FLAG_LEARNED_YES_NAH_CHANSEY",
+        "METATILE_SeviiIslands45_RocketWarehouseDoor_Unlocked",
+        "DrawWholeMapView"
+      ],
+      "dependency_edges": [
+        "warehouse password flags and persistence",
+        "setmetatile collision/render contract",
+        "DrawWholeMapView special",
+        "trainerbattle and map.json bindings"
+      ],
+      "unresolved": [
+        "Map JSON, assembler/linker and runtime consumer closure not established",
+        "External handlers, map flags and asset licensing require independent full-source review",
+        "No compiled witness, native gameplay, .sav persistence or physical Flash execution"
+      ],
+      "reviewer_questions": [
+        "Inspect every pinned line and inactive branch independently",
+        "Verify original machine dossier bytes and SHA256",
+        "Resolve generated table and actual engine call paths",
+        "Reconcile original script asset/derivative licensing",
+        "Only a distinct reviewer may sign a full evidence receipt"
+      ],
+      "platform_scope": "AUTHORED_FIRERED_SCRIPT_SOURCE_ONLY_NOT_EXECUTED",
+      "license_evidence": {
+        "repository": "pret/pokefirered",
+        "file_notice": "NO_LICENSE_NOTICE_IN_SELECTED_SCRIPT_HEADER",
+        "license_clearance": "NOT_ESTABLISHED"
+      },
+      "license_status": "PENDING_INDEPENDENT_ORIGINAL_ASSET_AND_DERIVATIVE_LICENSING",
+      "evidence_class": "PINNED_AUTHORED_SOURCE_ONLY",
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW"
+    }
+  ]
+}

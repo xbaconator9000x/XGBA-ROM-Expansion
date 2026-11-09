@@ -1,0 +1,242 @@
+{
+  "schema": "xgba.phase1.curated_p0_analyst_batch.v2",
+  "date": "2026-10-29",
+  "phase": "Phase 1 only",
+  "origin": "analyst source evidence, not independent review",
+  "source_blobs_inspected": 4,
+  "prior_registry_only": 4,
+  "p0_independent_approved": 0,
+  "total_independent_approved": 0,
+  "gate": "FAIL_INCOMPLETE",
+  "records": [
+    {
+      "ordinal": 12,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "Makefile",
+        "git_blob_sha1": "8b454dbd18eb0069fa5851d788697190890a5b37",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/Makefile"
+      },
+      "source_anchors": [
+        "include config.mk",
+        "ROM := poke$(BUILD_NAME).gba",
+        "ifeq ($(MODERN),0)",
+        "CC1 := tools/agbcc/bin/agbcc$(EXE)",
+        "$(OBJCOPY) -O binary --gap-fill 0xFF --pad-to 0x9000000 $< $@"
+      ],
+      "line_anchors": [
+        {
+          "line": 1,
+          "text": "include config.mk"
+        },
+        {
+          "line": 48,
+          "text": "ROM := poke$(BUILD_NAME).gba"
+        },
+        {
+          "line": 80,
+          "text": "ifeq ($(MODERN),0)"
+        },
+        {
+          "line": 82,
+          "text": "CC1 := tools/agbcc/bin/agbcc$(EXE)"
+        },
+        {
+          "line": 395,
+          "text": "$(OBJCOPY) -O binary --gap-fill 0xFF --pad-to 0x9000000 $< $@"
+        }
+      ],
+      "responsibilities": "Original build selects agbcc when MODERN=0; compiler preprocessing/assembler/linker and objcopy pad to 0x09000000 absolute ROM end, a 16MiB cartridge image from 0x08000000; linker memory region remains separate.",
+      "dependency_edges": [
+        "config.mk GAME_VERSION MODERN COMPARE",
+        "ld_script.ld ROM 32M region",
+        "tools/agbcc/bin/agbcc",
+        "GNU ARM binutils objcopy",
+        "generated map assets"
+      ],
+      "unresolved": [
+        "No evidence 32MiB linked output boots or is safe",
+        "Full Makefile dependency rules and all generated assets not independently reviewed"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "ordinal": 13,
+      "source": {
+        "repository": "pret/pokefirered",
+        "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+        "path": "ld_script.ld",
+        "git_blob_sha1": "9a4b45031e93c1e1da8186d8c697332710526048",
+        "url": "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/ld_script.ld"
+      },
+      "source_anchors": [
+        "EWRAM (rwx) : ORIGIN = 0x2000000, LENGTH = 256K",
+        "ROM    (rx) : ORIGIN = 0x8000000, LENGTH = 32M",
+        "src/rom_header.o(.text);",
+        "src/script.o(.text);",
+        "src/save.o(.text);"
+      ],
+      "line_anchors": [
+        {
+          "line": 6,
+          "text": "EWRAM (rwx) : ORIGIN = 0x2000000, LENGTH = 256K"
+        },
+        {
+          "line": 8,
+          "text": "ROM    (rx) : ORIGIN = 0x8000000, LENGTH = 32M"
+        },
+        {
+          "line": 53,
+          "text": "src/rom_header.o(.text);"
+        },
+        {
+          "line": 108,
+          "text": "src/script.o(.text);"
+        },
+        {
+          "line": 214,
+          "text": "src/save.o(.text);"
+        }
+      ],
+      "responsibilities": "Linker declares ROM 32M and EWRAM 256K but uses explicit ordered section placement for original ROM and save/script objects; region size does not change Makefile binary padding or emulator mapping.",
+      "dependency_edges": [
+        "Makefile objcopy --pad-to 0x9000000",
+        "src/rom_header.o boot header",
+        "src/script.o and src/save.o",
+        "sym_ewram.ld sym_bss.ld sym_common.ld"
+      ],
+      "unresolved": [
+        "Large 1076-line linker script only scoped inspected",
+        "No map-file region-overflow or relocation proof for expanded ROM"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "ordinal": 22,
+      "source": {
+        "repository": "huderlem/poryscript",
+        "revision": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+        "path": "main.go",
+        "git_blob_sha1": "10db05ef1518460da78b0bd41f22bb091917a385",
+        "url": "https://github.com/huderlem/poryscript/blob/c32481161c767b25a3425fa9f1f8729927ff3d55/main.go"
+      },
+      "source_anchors": [
+        "const version = \"3.6.1\"",
+        "result := strings.SplitN(value, \"=\", 2)",
+        "bytes, err = ioutil.ReadAll(os.Stdin)",
+        "_, err = io.WriteString(f, output)",
+        "emitter := emitter.New(program, options.optimize, options.enableLineMarkers, options.inputFilepath)"
+      ],
+      "line_anchors": [
+        {
+          "line": 18,
+          "text": "const version = \"3.6.1\""
+        },
+        {
+          "line": 27,
+          "text": "result := strings.SplitN(value, \"=\", 2)"
+        },
+        {
+          "line": 89,
+          "text": "bytes, err = ioutil.ReadAll(os.Stdin)"
+        },
+        {
+          "line": 106,
+          "text": "_, err = io.WriteString(f, output)"
+        },
+        {
+          "line": 146,
+          "text": "emitter := emitter.New(program, options.optimize, options.enableLineMarkers, options.inputFilepath)"
+        }
+      ],
+      "responsibilities": "Original CLI parses -s compile switches and optimization/line markers; input stdin/file -> lexer/parser -> emitter -> stdout/file; writeOutput checks WriteString errors but does not explicitly Close output file, so close/flush failure behavior needs actual native test.",
+      "dependency_edges": [
+        "lexer.New parser.New emitter.New",
+        "command_config.json and font_config.json",
+        "FireRed Makefile generated .pory->.inc integration"
+      ],
+      "unresolved": [
+        "No CLI output-file fsync or close error proof",
+        "No Poryscript-to-ARM whole pipeline test for all flags"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_UPSTREAM_LICENSE_RECONCILIATION"
+    },
+    {
+      "ordinal": 28,
+      "source": {
+        "repository": "mgba-emu/mgba",
+        "revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+        "path": "src/arm/arm.c",
+        "git_blob_sha1": "0b92d7f55f1fb853d4b1b9c9163ee086126066e2",
+        "url": "https://github.com/mgba-emu/mgba/blob/fd9dc5c2cbf234365068855851107e762fc6211b/src/arm/arm.c"
+      },
+      "source_anchors": [
+        "void ARMSetPrivilegeMode(struct ARMCore* cpu, enum PrivilegeMode mode) {",
+        "void ARMReset(struct ARMCore* cpu) {",
+        "void ARMRaiseIRQ(struct ARMCore* cpu) {",
+        "static inline void ARMStep(struct ARMCore* cpu) {",
+        "static inline void ThumbStep(struct ARMCore* cpu) {",
+        "void ARMRunFake(struct ARMCore* cpu, uint32_t opcode) {"
+      ],
+      "line_anchors": [
+        {
+          "line": 12,
+          "text": "void ARMSetPrivilegeMode(struct ARMCore* cpu, enum PrivilegeMode mode) {"
+        },
+        {
+          "line": 90,
+          "text": "void ARMReset(struct ARMCore* cpu) {"
+        },
+        {
+          "line": 124,
+          "text": "void ARMRaiseIRQ(struct ARMCore* cpu) {"
+        },
+        {
+          "line": 201,
+          "text": "static inline void ARMStep(struct ARMCore* cpu) {"
+        },
+        {
+          "line": 220,
+          "text": "static inline void ThumbStep(struct ARMCore* cpu) {"
+        },
+        {
+          "line": 256,
+          "text": "void ARMRunFake(struct ARMCore* cpu, uint32_t opcode) {"
+        }
+      ],
+      "responsibilities": "Original ARM/Thumb CPU interpreter updates prefetch[0/1] and PC by instruction width; privilege switch swaps banked SP/LR/SPSR, IRQ entry captures CPSR and branches to vector; ARMRunFake replaces prefetched opcode without actual memory fetch.",
+      "dependency_edges": [
+        "src/gba/gba.c GBAReset",
+        "src/gba/memory.c activeRegion and activeMask",
+        "ARM ISA tables and instruction dispatch",
+        "mGBA timing and event scheduler"
+      ],
+      "unresolved": [
+        "No native counterexample for ROM bank remap stale prefetch",
+        "No independent complete CPU or save-state semantic disposition"
+      ],
+      "analyst_status": "PARTIAL_SOURCE_GROUNDED_NO_INDEPENDENT_APPROVAL",
+      "whole_file_semantic_coverage": false,
+      "machine_dossier_sha1": null,
+      "independent_reviewer": null,
+      "independent_verdict": "NEEDS_REVIEW",
+      "license_status": "PENDING_MPL_2_0_NOTICE_AND_FILE_SCOPE_RECONCILIATION"
+    }
+  ]
+}
