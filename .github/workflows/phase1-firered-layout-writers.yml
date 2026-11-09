@@ -14,6 +14,9 @@ on:
       - 'tools/phase1_firered_boot_irq_ram_lifetime.py'
       - 'tools/phase1_firered_mgba_irq_bridge.py'
       - 'tools/phase1_firered_mgba_savestate_mapping.py'
+      - 'tools/phase1_firered_connection_object_audit.py'
+      - 'tests/test_phase1_firered_connection_object_audit.py'
+      - 'docs/PHASE1_P0_FIRERED_NATIVE_CONNECTION_TABLE_BYTES_2026-11-09.md'
       - 'docs/PHASE1_P0_FIRERED_MGBA_SAVESTATE_MATRIX_2026-10-27.md'
       - '.github/workflows/phase1-firered-layout-writers.yml'
       - 'docs/PHASE1_P0_FIRERED_LAYOUT_WRITER_CENSUS_2026-10-26.md'
@@ -32,6 +35,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   pinned-layout-writers:
@@ -130,6 +134,39 @@ jobs:
             --firered upstream-firered \
             --mgba upstream-mgba \
             --output phase1-evidence/firered-mgba-savestate-mapping.json
+      - name: Download previously compiled modern mapjson witness
+        uses: actions/download-artifact@v4
+        with:
+          name: xgba-phase1-native-mapjson-connection-order
+          path: phase1-evidence/connection-object/modern
+          run-id: 40421312981
+          github-token: ${{ github.token }}
+      - name: Download previously compiled classic agbcc mapjson witness
+        uses: actions/download-artifact@v4
+        with:
+          name: xgba-phase1-native-mapjson-connection-order-classic
+          path: phase1-evidence/connection-object/classic
+          run-id: 40421631854
+          github-token: ${{ github.token }}
+      - name: Run connection-object unit tests and verify archived compiled table bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p test_phase1_firered_connection_object_audit.py -v
+          mapfile -t modern_objects < <(find phase1-evidence/connection-object/modern -type f -name maps-authored.o)
+          mapfile -t modern_includes < <(find phase1-evidence/connection-object/modern -type f -name connections-authored.inc)
+          mapfile -t classic_objects < <(find phase1-evidence/connection-object/classic -type f -name maps-authored.o)
+          test "${#modern_objects[@]}" -eq 1
+          test "${#modern_includes[@]}" -eq 1
+          test "${#classic_objects[@]}" -eq 1
+          python3 tools/phase1_firered_connection_object_audit.py \
+            --variant modern \
+            --object "${modern_objects[0]}" \
+            --connections-include "${modern_includes[0]}" \
+            --map-groups upstream-firered/data/maps/map_groups.json \
+            --compare-object "${classic_objects[0]}" \
+            > phase1-evidence/firered-connection-object-audit.json
+          cat phase1-evidence/firered-connection-object-audit.json
       - name: Preserve pinned evidence
         if: always()
         uses: actions/upload-artifact@v4
