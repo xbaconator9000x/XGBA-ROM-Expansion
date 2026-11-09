@@ -4,10 +4,10 @@
   "schema": 1,
   "ticket": {
     "baseline_head_sha": "fa5cafd042999f2a0dee8f0c394fa61cfbca8a8b",
-    "observed_task_state": null,
+    "observed_task_state": "queued",
     "package_id": "XGBA_PHASE1_PILOT_PORYMAP_001",
     "reserved_at": "2026-11-09T10:31:09.655343+00:00",
-    "status": "RESERVED",
-    "task_id": null
+    "status": "DISPATCHED",
+    "task_id": "de280d82-3e98-496d-a0f4-64f98e40e22c"
   }
 }
