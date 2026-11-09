@@ -1,0 +1,61 @@
+name: Phase 1 Copilot Agent Tasks safe pilot
+on:
+  pull_request:
+    paths:
+      - 'tools/phase1_agent_task_pilot.py'
+      - 'tests/test_phase1_agent_task_pilot.py'
+      - 'docs/PHASE1_AGENT_TASK_PILOT.md'
+      - '.github/workflows/phase1-agent-task-pilot.yml'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Read-only preflight, inspect, or one opt-in task'
+        required: true
+        default: preflight
+        type: choice
+        options: [preflight, inspect, dispatch]
+      confirm_task:
+        description: 'Dispatch ONLY: enter I_AUTHORIZE_ONE_AGENT_TASK'
+        required: false
+        default: 'NO'
+        type: string
+      confirm_zero_overages:
+        description: 'Dispatch ONLY: enter ZERO_OVERAGES_CONFIRMED after checking billing cap'
+        required: false
+        default: 'NO'
+        type: string
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: xgba-phase1-agent-task-pilot
+  cancel-in-progress: false
+jobs:
+  offline-regression:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate pilot offline with no secrets or task creation
+        run: |
+          python3 -m py_compile tools/phase1_agent_task_pilot.py tests/test_phase1_agent_task_pilot.py
+          python3 -m unittest discover -s tests -p test_phase1_agent_task_pilot.py -v
+          python3 tools/phase1_agent_task_pilot.py --mode dry-run > /tmp/xgba-pilot-dry-run.json
+          python3 -c 'import json; s=json.load(open("/tmp/xgba-pilot-dry-run.json")); assert s["billable_tasks_created"] == 0'
+  manual:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      XGBA_COPILOT_AGENT_PAT: ${{ secrets.XGBA_COPILOT_AGENT_PAT }}
+      XGBA_CONFIRM_TASK: ${{ inputs.confirm_task }}
+      XGBA_CONFIRM_ZERO_OVERAGES: ${{ inputs.confirm_zero_overages }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Regression tests before any API request
+        run: |
+          python3 -m py_compile tools/phase1_agent_task_pilot.py tests/test_phase1_agent_task_pilot.py
+          python3 -m unittest discover -s tests -p test_phase1_agent_task_pilot.py -v
+      - name: Run selected mode (dispatch separately gated in Python)
+        run: python3 tools/phase1_agent_task_pilot.py --mode '${{ inputs.mode }}'
