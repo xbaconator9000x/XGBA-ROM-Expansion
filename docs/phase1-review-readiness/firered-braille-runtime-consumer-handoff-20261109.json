@@ -249,6 +249,14 @@
           "relationship": "Declares the SaveBlock2 storage and pointer and copies the block across pointer changes; does not establish loaded-field validity."
         },
         {
+          "path": "src/save.c",
+          "git_blob_sha1": "36b960f375c92711aa49b99bdfe9c6b3a99d6b1c",
+          "sha256": "24f0b70d72cc83c50f7b2d6d73cb211c9b1272ab5fa40dc1d553ad48d1f4511c",
+          "scope": "Targeted checksum/load excerpts only",
+          "anchors": "439-463,466-522,803-821",
+          "relationship": "Validates save-sector checksums and copies accepted sector bytes into SaveBlock2 storage; the inspected reader has no optionsTextSpeed semantic check."
+        },
+        {
           "path": "graphics/fonts/braille.png",
           "git_blob_sha1": "cb4451bc2c0087bfd5d072668aa8f09ce550cd3c",
           "sha256": "339ac5d816dc294cdf2068dfae0442b282a8cb13f44de19f1dd244d02bdad2cc",
@@ -283,14 +291,15 @@
       ],
       "source_observations": [
         "sScrollDistances has only the three named 0/1/2 entries, with values 1/2/4; FontFunc_Braille indexes it directly from the 3-bit saved option at lines 165, 172 and 173.",
-        "ScrCmd_braillemessage passes printer speed 0 and does not call GetTextSpeedSetting. The existence of a clamp in another helper does not establish that every Braille path executes it first.",
+        "ScrCmd_braillemessage passes printer speed 0 and does not call GetTextSpeedSetting. The examined new-game and normal options-menu writers constrain ordinary values to 0-2.",
+        "The save-sector reader validates checksums and copies accepted bytes without an optionsTextSpeed-specific semantic check. A checksum-valid externally altered field value 3 is an adversarial source-level input; this does not establish that an unmodified stock path generates or executes it.",
         "A temporary host sanitizer harness using the unchanged source body produced a bounds diagnostic for optionsTextSpeed 3 at line 165. This is conditional on the supplied state and is not evidence that malformed state is reachable in ordinary gameplay.",
         "DecompressGlyph_Braille derives its asset pointer from glyph without a local range check; all authored glyph IDs and the generated asset extent were not enumerated.",
         "The pinned PNG is 256x64 with a 2-bit colormap; its nominal 16x16 grid has 64 cells, but the generated compressed font and exact runtime pointer extent were not built or verified."
       ],
       "objections_and_unresolved": [
-        "No proof that invalid saved optionsTextSpeed values are reachable on any ordinary stock gameplay path, nor proof that every Braille script is preceded by a clamping GetTextSpeedSetting call.",
-        "Save deserialization, save corruption handling and full save-field lifetime are outside the package.",
+        "No proof that a checksum-valid externally altered speed value 3 is accepted through every complete game-load path and later reaches the Braille scroll state; that end-to-end sequence was not executed.",
+        "The source-level load path verifies sector checksums, not the semantic range of optionsTextSpeed; normal stock writers nevertheless produce only 0-2.",
         "The generated braille.fwjpnfont size/encoding and full authored glyph-ID range remain unverified; source pointer arithmetic has no local glyph bound check.",
         "Script message pointer validity, string termination, all call ordering and all authored script data remain unresolved; the overlapping script files are not treated as newly reviewed.",
         "The host harness uses synthetic GBA structure/header stubs and mocked window/decompression calls; it proves neither target ABI correctness nor target execution."
@@ -300,29 +309,33 @@
         "basis": "Pinned upstream root listing has no LICENSE file; pinned README identity is recorded but does not establish a license."
       },
       "host_validation": {
-        "class": "LOCAL_SYNTHETIC_HOST_ONLY",
-        "compiler": "GCC 13.3.0",
+        "class": "REPRODUCIBLE_HOST_TEST_WITH_SYNTHETIC_STUBS_ONLY",
+        "compiler": "GCC with AddressSanitizer and UndefinedBehaviorSanitizer",
         "sanitizers": ["AddressSanitizer", "UndefinedBehaviorSanitizer"],
         "unchanged_source_sha256": "def45ae49f0e1666908c39e5ddd0f63f57cf834d8e23e779cb756e5e9b161c03",
+        "checked_in_test": "tests/test_phase1_firered_braille_host.py",
+        "checked_in_c_harness": "tests/phase1_firered_braille_host.c",
+        "production_source_is_compiled_directly": true,
+        "test_asserts_pinned_source_archive_dependencies_and_license_boundary": true,
         "valid_speed_controls": {
           "inputs": [0, 1, 2],
           "expected_scroll_deltas": [1, 2, 4],
-          "observed": "PASS"
+          "expected": "PASS"
         },
         "fault_control": {
           "input": 3,
-          "observed": "UBSan index 3 out of bounds for u8[3] and ASan global-buffer-overflow at src/braille_text.c:165",
-          "interpretation": "Conditional invalid-state behavior only; stock-save/runtime reachability not established."
+          "expected": "UBSan index 3 out of bounds or ASan global-buffer-overflow at src/braille_text.c:165",
+          "interpretation": "Explicitly injected invalid state only; this control is not evidence of ordinary stock reachability."
         },
         "source_mutation_control": {
           "temporary_mutation": "Replace all three sScrollDistances[gSaveBlock2Ptr->optionsTextSpeed] reads with sScrollDistances[OPTIONS_TEXT_SPEED_MID].",
           "mutated_source_sha256": "f94bdceadd6e050080b8ec7c9b2a5feb1e41750de3ba4d0993f3827014e029a5",
           "input": 3,
-          "observed": "PASS; no sanitizer bounds diagnostic and expected fixed scroll delta 2.",
+          "expected": "PASS; no sanitizer bounds diagnostic and expected fixed scroll delta 2.",
           "control_class": "LOCAL_HARNESS_SENSITIVITY_ONLY",
           "production_source_changed": false
         },
-        "limitations": "Temporary harness and stubs are not committed; test does not execute generated font, actual dependencies, GBA ABI, ARM code or emulator behavior."
+        "limitations": "Harness stubs are synthetic and the mutation is created only in a temporary directory. The test does not execute the generated font, GBA ABI, ARM code, save loader or emulator."
       },
       "independent_reviewer": null,
       "independent_verdict": "NEEDS_REVIEW",
@@ -334,7 +347,7 @@
     "pinned_source_blob_sha256_line_count": "PASS",
     "packet_dossier_and_original_archive_row_hashes": "PASS",
     "json_syntax": "PASS",
-    "host_source_body_sanitizer_controls": "VALID_0_1_2_PASS; INVALID_3_BOUNDS_DIAGNOSTIC; FIXED_INDEX_MUTATION_CONTROL_PASS",
+    "host_source_body_sanitizer_controls": "REPRODUCIBLE_CHECKED_IN_TEST; local execution pending",
     "source_mutation_controls_are_runtime_proof": false
   },
   "tool_and_runtime_boundary": {
@@ -350,7 +363,7 @@
     "runtime_reader_executed": false,
     "emulator_executed": false,
     "linked_rom_validated": false,
-    "exact_head_actions_ci_snapshot": {
+    "prior_documentation_commit_ci_snapshot": {
       "queried_head_sha": "706e79cc94b1526c862b6c478b889030e87431cb",
       "pr_check_runs": "ABSENT; get_check_runs returned total_count 0.",
       "combined_statuses": "ABSENT; get_status returned total_count 0.",

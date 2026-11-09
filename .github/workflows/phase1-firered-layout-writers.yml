@@ -31,6 +31,11 @@ on:
       - 'docs/PHASE1_P0_FIRERED_BOOT_IRQ_RAM_LIFETIME_2026-10-26.md'
       - 'docs/PHASE1_P0_FIRERED_MGBA_IRQ_BRIDGE_2026-10-26.md'
       - 'docs/PHASE1_STATUS.md'
+      - 'docs/PHASE1_P0_FIRERED_BRAILLE_RUNTIME_CONSUMER_CLOSURE_2026-11-09.md'
+      - 'docs/phase1-review-readiness/firered-braille-runtime-consumer-handoff-20261109.json'
+      - 'tests/test_phase1_firered_braille_host.py'
+      - 'tests/phase1_firered_braille_host.c'
+      - 'tests/phase1_firered_braille_host_stubs/**'
   workflow_dispatch:
 
 permissions:
@@ -58,6 +63,14 @@ jobs:
           ref: fd9dc5c2cbf234365068855851107e762fc6211b
           path: upstream-mgba
           persist-credentials: false
+      - name: Reproduce pinned Braille renderer host bounds witness
+        env:
+          PHASE1_FIRERED_SOURCE: upstream-firered
+        run: |
+          python3 -m unittest discover \
+            -s tests \
+            -p test_phase1_firered_braille_host.py \
+            -v
       - name: Compile checkers
         run: |
           python3 -m py_compile tools/phase1_firered_layout_writer_census.py
