@@ -350,7 +350,15 @@
     "runtime_reader_executed": false,
     "emulator_executed": false,
     "linked_rom_validated": false,
-    "exact_head_pr_or_push_actions_ci": "TO_BE_QUERIED_AFTER_DELIVERY; no earlier run is reused."
+    "exact_head_actions_ci_snapshot": {
+      "queried_head_sha": "706e79cc94b1526c862b6c478b889030e87431cb",
+      "pr_check_runs": "ABSENT; get_check_runs returned total_count 0.",
+      "combined_statuses": "ABSENT; get_status returned total_count 0.",
+      "matching_pull_request_workflow_run": "ABSENT; latest listed PR run #40465227907 was for 03608155216b4f283fd92b7c5d795dd066698244.",
+      "matching_push_workflow_run": "ABSENT; latest listed push run #40295010451 was for 4efae3b9bafe36ed092f368b5974eca6ee73eadc.",
+      "trigger_assessment": "The workflow pull_request path filter excludes these documentation paths and the workflow has no push trigger.",
+      "scope": "Historical exact-head snapshot for the queried documentation commit only. A fresh query is required for the final metadata-only commit; older runs are not reused."
+    }
   },
   "toolchain_pins_unchanged": {
     "fire_red": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
