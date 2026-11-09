@@ -1,5 +1,11 @@
 {
-  "current": null,
+  "current": {
+    "baseline": "1e6e984b346b9e051ef7fa72d904fc7a7382bc9d",
+    "created_at": "2026-11-09T23:49:01.125040+00:00",
+    "id": "R2_DETERMINISTIC_PACKER",
+    "status": "RESERVED",
+    "task_id": null
+  },
   "daily_dispatches": {
     "2026-11-09": 1
   },
