@@ -422,10 +422,9 @@ def main():
         (root / BASE_HARNESS).read_bytes()
     ).hexdigest() == BASE_HARNESS_SHA256,
             "prior pinned restore harness identity changed")
-    marker = "PHASE1_INSERT_PINNED_RESTORE_FUNCTIONS"
-    require(harness.count(marker) == 1, "caller integration marker changed")
+    base_marker = "PHASE1_INSERT_PINNED_RESTORE_FUNCTIONS"
     base = (root / BASE_HARNESS).read_text(encoding="utf-8")
-    require(base.count(marker) == 1, "prior restore harness marker changed")
+    require(base.count(base_marker) == 1, "prior restore harness marker changed")
     bodies = []
     for name, (path, signature, digest, kind) in restore.FUNCTIONS.items():
         if kind == "declaration":
@@ -434,7 +433,7 @@ def main():
             body = old.validate_body(source_map[path], signature, digest)
         if name not in ("VFileMemChunk", "headless main"):
             bodies.append(body)
-    base = base.replace(marker, "\n\n".join(bodies), 1)
+    base = base.replace(base_marker, "\n\n".join(bodies), 1)
     base = base.replace("int main(void) {",
                         "int prior_restore_consumer_main(void) {", 1)
     caller_body = old.validate_body(
@@ -442,10 +441,11 @@ def main():
         FUNCTIONS["retro_unserialize"][0],
         FUNCTIONS["retro_unserialize"][1],
     )
-    require(harness.count("PHASE1_INSERT_PINNED_LIBRETRO_UNSERIALIZE") == 1,
+    caller_marker = "PHASE1_INSERT_PINNED_LIBRETRO_UNSERIALIZE"
+    require(harness.count(caller_marker) == 1,
             "libretro caller extraction marker changed")
     expanded = base + "\n" + harness.replace(
-        "PHASE1_INSERT_PINNED_LIBRETRO_UNSERIALIZE", caller_body, 1
+        caller_marker, caller_body, 1
     )
 
     with tempfile.TemporaryDirectory(

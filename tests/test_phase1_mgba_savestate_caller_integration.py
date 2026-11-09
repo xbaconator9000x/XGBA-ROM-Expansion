@@ -51,6 +51,15 @@ class TestSavestateCallerIntegration(unittest.TestCase):
             hashlib.sha256(harness).hexdigest(), runner.HARNESS_SHA256
         )
 
+    def test_injection_markers_are_bound_to_their_harnesses(self):
+        base = (ROOT / runner.BASE_HARNESS).read_text(encoding="utf-8")
+        harness = (
+            ROOT / "tests/phase1_mgba_savestate_caller_integration.c"
+        ).read_text(encoding="utf-8")
+        self.assertEqual(base.count("PHASE1_INSERT_PINNED_RESTORE_FUNCTIONS"), 1)
+        self.assertEqual(harness.count("PHASE1_INSERT_PINNED_LIBRETRO_UNSERIALIZE"), 1)
+        self.assertNotIn("PHASE1_INSERT_PINNED_RESTORE_FUNCTIONS", harness)
+
     def test_receipt_preserves_native_and_durability_limits(self):
         restore = runner.load_restore_runner(ROOT)
         limitations = runner.verify_receipt(ROOT, restore)["limitations"]
