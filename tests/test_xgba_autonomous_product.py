@@ -174,6 +174,26 @@ class TestAutoProduct(unittest.TestCase):
         self.assertEqual(len(api.posts), 1)
         self.assertEqual(store.value["current"]["id"], a.PACKAGES[1]["id"])
 
+    def test_missing_ci_eventually_blocks_not_forever_waiting(self):
+        api, store = FakeAPI(), FakeLedger(None)
+        store.value["current"] = {
+            "id": a.PACKAGES[0]["id"], "status": "DISPATCHED",
+            "task_id": api.task_id, "baseline": "a" * 40,
+        }
+        api.sha = "b" * 40
+        api.task_state = "completed"
+        api.ci = None
+        with patch.object(a, "Ledger", return_value=store), patch.object(a, "live_tasks", return_value=[]), patch.dict(
+            "os.environ", {"GITHUB_REPOSITORY": a.REPO, "XGBA_AUTONOMY_ENABLED": "1"}
+        ):
+            for index in range(6):
+                a.run(api)
+                self.assertEqual(store.value["current"]["status"],
+                                 "WAIT_CI" if index < 5 else "BLOCKED")
+        self.assertEqual(api.posts, [])
+        self.assertEqual(store.value["next"], 0)
+        self.assertIn("six scheduled checks", store.value["current"]["reason"])
+
     def test_completed_without_commit_blocks(self):
         api, store = FakeAPI(), FakeLedger(None)
         store.value["current"] = {
