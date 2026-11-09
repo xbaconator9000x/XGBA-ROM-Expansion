@@ -42,7 +42,7 @@ SOURCES = {
         "9887e36795ae51e39eecad09565d27d3feabe316d3e595b17f288e3205e13161",
         "99a6b3e97c52d67712e10204e08ced8819c7330e899b9f767aa280fc330c42e0",
         "PARTIAL_FUNCTION_CLOSURE",
-        "COMPILED_EXTRACTED_SRAM_LOAD_MASK_UNMASK_AND_CLEANUP",
+        "COMPILED_EXTRACTED_SRAM_LOAD_MASK_UNMASK_INIT_AND_CLEANUP",
     ),
     "src/util/vfs/vfs-mem.c": (
         "048194e2dd2d0b3b395a852d2092c694663c88a2",
@@ -78,6 +78,13 @@ SOURCES = {
         "4e61192f417f79c7210d2aae3132db1afbedff078fc1e6779b8944ec07bc38b7",
         "PARTIAL_INTERFACE",
         "COMPILED_EXTDATA_TAG_AND_FLAGS_INTERFACE",
+    ),
+    "include/mgba/core/interface.h": (
+        "b5ffa3049749b9141aa09fc3693bf758a13f4e13",
+        "da6ea4e344c46be5943859a24c0149c12a803b3e951c07140cc795cab09651de",
+        "093b18935d1a1968f5ce81caa23611a578cc8810a03bde39f3e3f55d0d6b2830",
+        "PARTIAL_CALLBACK_VECTOR_INTERFACE",
+        "COMPILED_CALLBACK_LIST_SIZE_SHIM",
     ),
     "include/mgba/core/cheats.h": (
         "23a15c42976c998d292b382d08d51c0e3b797a65",
@@ -163,7 +170,8 @@ FILE_EDGES = {
     ],
     "src/gba/savedata.c": [
         "GBASavedataLoad -> GBASavedataSize -> SRAM extent from include/mgba/internal/gba/memory.h",
-        "GBASavedataMask/Unmask -> Deinit, ForceType, InitSRAM, VFile map/unmap/close",
+        "GBASavedataMask/Unmask -> Deinit, ForceType, InitSRAM, GBASavedataInit, VFile map/unmap/close",
+        "GBASavedataInit -> _ashesToAshes timer callback",
     ],
     "src/util/vfs/vfs-mem.c": [
         "VFileMemChunk -> VFile methods from include/mgba-util/vfs.h",
@@ -185,6 +193,10 @@ FILE_EDGES = {
     "include/mgba/core/serialize.h": [
         "Declares extdata operations, SAVESTATE_SAVEDATA, and EXTDATA_SAVEDATA",
         "Used by src/core/serialize.c",
+    ],
+    "include/mgba/core/interface.h": [
+        "Declares mCoreCallbacksList and the callback-list size API",
+        "The host harness implements the generated size accessor as list->size; callbacks remain empty",
     ],
     "include/mgba/core/cheats.h": [
         "Provides dormant cheat branch declarations referenced by mCoreLoadStateNamed",
@@ -229,12 +241,13 @@ FILE_EDGES = {
 FILE_OBJECTIONS = {
     "src/core/serialize.c": "Only extracted extdata and named-load functions run; the full translation unit, PNG path, native malformed state, and frontend behavior are not exercised.",
     "src/gba/core.c": "Only the extracted restore callback runs; full GBA core initialization and callback registration are not compiled or executed.",
-    "src/gba/savedata.c": "Only the listed SRAM load/mask/unmask closure runs; non-SRAM type initializers are fixture stubs and flash/EEPROM paths are excluded.",
+    "src/gba/savedata.c": "The SRAM load/mask/unmask closure and exact GBASavedataInit body are compiled; the non-autodetect initializer branch is not observed, non-SRAM initializers are fixture stubs, and flash/EEPROM paths are excluded.",
     "src/util/vfs/vfs-mem.c": "The complete translation unit is compiled, but memory mapping is shimmed with host allocation and no OS-backed save file is used.",
     "src/util/vfs.c": "Only the extracted VFileReadline body is compiled; it is assigned to the memory VFile but never invoked by these cases.",
     "src/platform/headless-main.c": "The headless callsite and flags are source-traced, not executed as a frontend process.",
     "include/mgba/core/core.h": "Only the callback interface needed by the extracted functions is compiled; this is not whole-header semantic review.",
     "include/mgba/core/serialize.h": "Only the extdata structure, tag, and flag interface is exercised; other state API behaviors remain outside scope.",
+    "include/mgba/core/interface.h": "The callback-list API is compiled, but the host supplies only its size accessor and registers no callbacks.",
     "include/mgba/core/cheats.h": "Cheat declarations are required by the unexecuted branch; cheat parsing and cleanup are not tested.",
     "include/mgba/core/log.h": "Log declarations are compiled, but the logger implementation and frontend log routing are not exercised.",
     "include/mgba/internal/gba/gba.h": "The board layout is compiled but the full GBA core object graph and lifecycle are not run.",
@@ -314,6 +327,18 @@ FUNCTIONS = {
         "9f3e0774073a8f44195f2b1b8c2d4c20977dedd1eb8c4d7ec4c1c42e467b02d1",
         "function",
     ),
+    "_ashesToAshes": (
+        "src/gba/savedata.c",
+        "static void _ashesToAshes(struct mTiming* timing, void* user, uint32_t cyclesLate)",
+        "4c0e6539fb5c7aad4d915bee1cea35ba2a13b8d89d4bf5551f698a32ac683582",
+        "function",
+    ),
+    "GBASavedataInit": (
+        "src/gba/savedata.c",
+        "void GBASavedataInit(struct GBASavedata* savedata, struct VFile* vf)",
+        "e7acccd1db65be1be7e20e49b23167b4c237d6e6646bac75d16be857269be408",
+        "function",
+    ),
     "GBASavedataDeinit": (
         "src/gba/savedata.c",
         "void GBASavedataDeinit(struct GBASavedata* savedata)",
@@ -364,7 +389,7 @@ FUNCTIONS = {
     ),
 }
 
-HARNESS_SHA256 = "90c89cfbbc26dd6e97caf04750e2aaec60e5a939cf154946f15826e4b9a10820"
+HARNESS_SHA256 = "a57a85f0d36fb26e316f53994fbeee12f9bb135366d237090db028e0045a3f9d"
 TERMINAL = "PHASE1_SAVESTATE_RESTORE_DONE\n"
 MPL_NOTICE = re.compile(rb"Mozilla Public\s+\*\s+License,\s+v\.\s+2\.0\.")
 
@@ -636,6 +661,7 @@ def verify_receipt(root, old, receipt_path=None):
         "A short extdata header or payload can therefore leave the state-load return true while no savedata restore VFile is created; the harness observes this on the pinned extracted bodies.",
         "With flags including SAVESTATE_SAVEDATA, the GBA callback writeback path loads through a temporary VFileMemChunk and closes it before returning.",
         "With flags zero, the GBA callback transfers the temporary VFile to GBASavedataMask; GBASavedataUnmask later reads it into the real save VFile and closes it.",
+        "The mask/unmask path calls GBASavedataForceType; its branch that reinitializes an already-typed savedata object calls GBASavedataInit, whose exact pinned body is compiled but not exercised by these SRAM cases.",
         "mCoreLoadStateNamed deinitializes extdata after the callback, freeing its item buffer; VFileMemChunk owns a separate copied buffer in the controlled witness.",
     ], "restore source closure changed")
     require(receipt.get("nonoverlap") == {
@@ -661,6 +687,9 @@ def verify_receipt(root, old, receipt_path=None):
     require(receipt.get("limitations") == {
         "compiled_extracted_mcore_deserialize_extract_load": True,
         "compiled_extracted_gba_restore_callback_and_sram_functions": True,
+        "compiled_extracted_gba_savedata_init_and_timer_callback": True,
+        "savedata_init_non_autodetect_reinitialization_branch_executed": False,
+        "host_callback_list_size_shim_returns_list_size": True,
         "compiled_complete_vfile_memory_translation_unit": True,
         "headless_caller_source_traced_not_executed": True,
         "host_memory_vfile_and_allocator_tracking": True,
@@ -672,7 +701,7 @@ def verify_receipt(root, old, receipt_path=None):
         "transitive_distribution_licensing_resolved": False,
     }, "restore receipt evidence limits changed")
     require(receipt.get("licensing") == {
-        "source_notices": "All 18 listed upstream files carry MPL-2.0 notices.",
+        "source_notices": "All 19 listed upstream files carry MPL-2.0 notices.",
         "upstream_modified": False,
         "transitive_distribution_licensing_resolved": False,
     }, "restore receipt licensing boundary changed")

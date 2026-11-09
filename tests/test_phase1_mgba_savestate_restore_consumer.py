@@ -39,7 +39,7 @@ class TestSavestateRestoreConsumerWitness(unittest.TestCase):
         receipt = runner.verify_receipt(ROOT, None)
         self.assertEqual(receipt["overall"], "FAIL_INCOMPLETE")
         self.assertEqual(receipt["independent_approvals"], 0)
-        self.assertEqual(len(receipt["source_records"]), 18)
+        self.assertEqual(len(receipt["source_records"]), 19)
         self.assertTrue(receipt["nonoverlap"]["distinct_downstream_consumer"])
 
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8") as temp:

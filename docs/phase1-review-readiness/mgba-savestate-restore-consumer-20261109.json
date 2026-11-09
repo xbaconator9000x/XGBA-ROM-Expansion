@@ -38,7 +38,7 @@
       "canonical_dossier_row_sha256": "99a6b3e97c52d67712e10204e08ced8819c7330e899b9f767aa280fc330c42e0",
       "license": "MPL-2.0",
       "review_scope": "PARTIAL_FUNCTION_CLOSURE",
-      "execution_scope": "COMPILED_EXTRACTED_SRAM_LOAD_MASK_UNMASK_AND_CLEANUP"
+      "execution_scope": "COMPILED_EXTRACTED_SRAM_LOAD_MASK_UNMASK_INIT_AND_CLEANUP"
     },
     {
       "path": "src/util/vfs/vfs-mem.c",
@@ -84,6 +84,15 @@
       "license": "MPL-2.0",
       "review_scope": "PARTIAL_INTERFACE",
       "execution_scope": "COMPILED_EXTDATA_TAG_AND_FLAGS_INTERFACE"
+    },
+    {
+      "path": "include/mgba/core/interface.h",
+      "git_blob": "b5ffa3049749b9141aa09fc3693bf758a13f4e13",
+      "full_source_sha256": "da6ea4e344c46be5943859a24c0149c12a803b3e951c07140cc795cab09651de",
+      "canonical_dossier_row_sha256": "093b18935d1a1968f5ce81caa23611a578cc8810a03bde39f3e3f55d0d6b2830",
+      "license": "MPL-2.0",
+      "review_scope": "PARTIAL_CALLBACK_VECTOR_INTERFACE",
+      "execution_scope": "COMPILED_CALLBACK_LIST_SIZE_SHIM"
     },
     {
       "path": "include/mgba/core/cheats.h",
@@ -188,6 +197,8 @@
     "_GBACoreSavedataRestore": "8f3654b0b9164674275a28137a89decf55047436aa8df09225ccfcb326a6ea0b",
     "GBASavedataLoad": "f272ab49e19f5be2284c9dc851f53b070606fd75b626db60a92b499c2d05c2b2",
     "GBASavedataSize": "9f3e0774073a8f44195f2b1b8c2d4c20977dedd1eb8c4d7ec4c1c42e467b02d1",
+    "_ashesToAshes": "4c0e6539fb5c7aad4d915bee1cea35ba2a13b8d89d4bf5551f698a32ac683582",
+    "GBASavedataInit": "e7acccd1db65be1be7e20e49b23167b4c237d6e6646bac75d16be857269be408",
     "GBASavedataDeinit": "830e75777a5a94797eb4a5cc0d6294952340887bc5d5457ca4ea3d228a94f7d2",
     "GBASavedataMask": "713b702618c61c33848bf9d88c9c4799d4f133471369df394747275c3e739277",
     "GBASavedataUnmask": "6517182aaa42db3fdc6fc4eb8582a5c9f5ff2e4364fedbf1abe4e7b7fc644709",
@@ -209,7 +220,8 @@
     ],
     "src/gba/savedata.c": [
       "GBASavedataLoad -> GBASavedataSize -> SRAM extent from include/mgba/internal/gba/memory.h",
-      "GBASavedataMask/Unmask -> Deinit, ForceType, InitSRAM, VFile map/unmap/close"
+      "GBASavedataMask/Unmask -> Deinit, ForceType, InitSRAM, GBASavedataInit, VFile map/unmap/close",
+      "GBASavedataInit -> _ashesToAshes timer callback"
     ],
     "src/util/vfs/vfs-mem.c": [
       "VFileMemChunk -> VFile methods from include/mgba-util/vfs.h",
@@ -231,6 +243,10 @@
     "include/mgba/core/serialize.h": [
       "Declares extdata operations, SAVESTATE_SAVEDATA, and EXTDATA_SAVEDATA",
       "Used by src/core/serialize.c"
+    ],
+    "include/mgba/core/interface.h": [
+      "Declares mCoreCallbacksList and the callback-list size API",
+      "The host harness implements the generated size accessor as list->size; callbacks remain empty"
     ],
     "include/mgba/core/cheats.h": [
       "Provides dormant cheat branch declarations referenced by mCoreLoadStateNamed",
@@ -274,12 +290,13 @@
   "per_file_objections": {
     "src/core/serialize.c": "Only extracted extdata and named-load functions run; the full translation unit, PNG path, native malformed state, and frontend behavior are not exercised.",
     "src/gba/core.c": "Only the extracted restore callback runs; full GBA core initialization and callback registration are not compiled or executed.",
-    "src/gba/savedata.c": "Only the listed SRAM load/mask/unmask closure runs; non-SRAM type initializers are fixture stubs and flash/EEPROM paths are excluded.",
+    "src/gba/savedata.c": "The SRAM load/mask/unmask closure and exact GBASavedataInit body are compiled; the non-autodetect initializer branch is not observed, non-SRAM initializers are fixture stubs, and flash/EEPROM paths are excluded.",
     "src/util/vfs/vfs-mem.c": "The complete translation unit is compiled, but memory mapping is shimmed with host allocation and no OS-backed save file is used.",
     "src/util/vfs.c": "Only the extracted VFileReadline body is compiled; it is assigned to the memory VFile but never invoked by these cases.",
     "src/platform/headless-main.c": "The headless callsite and flags are source-traced, not executed as a frontend process.",
     "include/mgba/core/core.h": "Only the callback interface needed by the extracted functions is compiled; this is not whole-header semantic review.",
     "include/mgba/core/serialize.h": "Only the extdata structure, tag, and flag interface is exercised; other state API behaviors remain outside scope.",
+    "include/mgba/core/interface.h": "The callback-list API is compiled, but the host supplies only its size accessor and registers no callbacks.",
     "include/mgba/core/cheats.h": "Cheat declarations are required by the unexecuted branch; cheat parsing and cleanup are not tested.",
     "include/mgba/core/log.h": "Log declarations are compiled, but the logger implementation and frontend log routing are not exercised.",
     "include/mgba/internal/gba/gba.h": "The board layout is compiled but the full GBA core object graph and lifecycle are not run.",
@@ -298,6 +315,7 @@
     "A short extdata header or payload can therefore leave the state-load return true while no savedata restore VFile is created; the harness observes this on the pinned extracted bodies.",
     "With flags including SAVESTATE_SAVEDATA, the GBA callback writeback path loads through a temporary VFileMemChunk and closes it before returning.",
     "With flags zero, the GBA callback transfers the temporary VFile to GBASavedataMask; GBASavedataUnmask later reads it into the real save VFile and closes it.",
+    "The mask/unmask path calls GBASavedataForceType; its branch that reinitializes an already-typed savedata object calls GBASavedataInit, whose exact pinned body is compiled but not exercised by these SRAM cases.",
     "mCoreLoadStateNamed deinitializes extdata after the callback, freeing its item buffer; VFileMemChunk owns a separate copied buffer in the controlled witness."
   ],
   "observations": {
@@ -358,6 +376,9 @@
   "limitations": {
     "compiled_extracted_mcore_deserialize_extract_load": true,
     "compiled_extracted_gba_restore_callback_and_sram_functions": true,
+    "compiled_extracted_gba_savedata_init_and_timer_callback": true,
+    "savedata_init_non_autodetect_reinitialization_branch_executed": false,
+    "host_callback_list_size_shim_returns_list_size": true,
     "compiled_complete_vfile_memory_translation_unit": true,
     "headless_caller_source_traced_not_executed": true,
     "host_memory_vfile_and_allocator_tracking": true,
@@ -369,7 +390,7 @@
     "transitive_distribution_licensing_resolved": false
   },
   "licensing": {
-    "source_notices": "All 18 listed upstream files carry MPL-2.0 notices.",
+    "source_notices": "All 19 listed upstream files carry MPL-2.0 notices.",
     "upstream_modified": false,
     "transitive_distribution_licensing_resolved": false
   }

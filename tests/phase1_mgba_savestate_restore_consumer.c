@@ -105,6 +105,10 @@ void mLog(int category, enum mLogLevel level, const char* format, ...) {
 	(void) format;
 }
 
+size_t mCoreCallbacksListSize(const struct mCoreCallbacksList* callbacks) {
+	return callbacks->size;
+}
+
 void GBASavedataInitFlash(struct GBASavedata* savedata) {
 	(void) savedata;
 }
