@@ -34,7 +34,10 @@ result; those Qt paths and backup recovery are source-traced only. SDL's
 core-thread callback; the SDL frontend is likewise not run. The existing PR #13
 restore-consumer receipt already records the headless caller and core restore
 closure. PR #35's savedata and VFile wrapper-allocation receipts cover distinct
-backend/source obligations and do not execute these load callers.
+backend/source obligations and do not execute these load callers. Its source
+objection receipt still marks the mCore consumer closure and frontend callback
+outcome as `NEEDS_EVIDENCE`; this packet adds bounded libretro caller execution,
+not a full frontend closure.
 
 The three new per-file records bind Git blob IDs, full-byte SHA-256 values,
 canonical pinned-dossier row hashes, MPL-2.0 notices, limited review scopes,

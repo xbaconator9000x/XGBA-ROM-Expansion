@@ -345,10 +345,19 @@ def verify_receipt(root, restore, receipt_path=None):
             "docs/phase1-review-readiness/mgba-core-savestate-clone-caller-20261108.json",
             "docs/phase1-review-readiness/mgba-gba-clone-vfile-allocation-20261108.json",
         ],
+        "pr13_other_file_save_callers": [
+            "docs/phase1-review-readiness/mgba-core-loadsave-allocation-recovery-20261107.json",
+            "docs/phase1-review-readiness/mgba-core-autoload-save-ownership-20261107.json",
+        ],
         "pr35_savedata_review": {
             "path": "PR #35 semantic-snapshots/independent-reviews/copilot-mgba-savedata/review.json",
             "git_blob": "e3a1d80c489f5b557748a8250131fce289ac878a",
             "overlap": "Pinned savedata/backend source review; no mCoreLoadStateNamed frontend execution.",
+        },
+        "pr35_source_objection_receipts": {
+            "path": "PR #35 semantic-snapshots/independent-reviews/copilot-mgba-savedata/source-objection-receipts.json",
+            "git_blob": "a10d2c14dbc45d7453b03166dfab5ccc3ac04d48",
+            "overlap": "The mcore-consumer-closure and frontend callback outcome objections remain NEEDS_EVIDENCE; this packet adds bounded caller tracing and one host execution, not a full frontend closure.",
         },
         "pr35_vfile_wrapper_failure": {
             "path": "PR #35 semantic-snapshots/independent-reviews/copilot-mgba-savedata/vfile-wrapper-allocation-failure.json",
