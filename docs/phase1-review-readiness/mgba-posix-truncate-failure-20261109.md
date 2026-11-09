@@ -20,7 +20,7 @@ The native Linux run passed these cases:
 | Injected `ENOSPC` | Same bounded signal outcome under a distinct injected errno. |
 | Recovery after `ENOSPC` | A separate invocation with injection removed succeeds and cleans up. |
 
-Three source mutations and eight contradictory output mutations are rejected. The focused Python tests also verify missing-case rejection and fail closed if the receipt is changed to an approval state. Local compiled witness execution passed using exact pinned source files in `/tmp`; exact-head CI remains required for this PR revision.
+Three source mutations and eight contradictory output mutations are rejected. The focused Python tests also verify missing-case rejection and fail closed if the receipt is changed to an approval state. Local compiled witness execution passed using exact pinned source files in `/tmp`. Exact-head CI is tracked independently; local validation is not a substitute for it.
 
 ## Evidence limits and disposition
 

@@ -108,7 +108,7 @@
   },
   "harness_sha256": "cb648f227f269543f5897553abc4bbc516f824fffec439408cdcf25136510056",
   "execution": {
-    "status": "LOCAL_WITNESS_PASSED_AWAITING_EXACT_HEAD_CI",
+    "status": "COMPILED_WITNESS_PASSED",
     "evidence_class": "COMPILED_EXTRACTED_ORIGINAL_GBA_SAVEDATA_CALLBACKS_AND_ORIGINAL_POSIX_FD_VFILE_WITH_HOST_FTRUNCATE_INJECTION",
     "original_posix_fd_translation_unit_compiled": true,
     "compiled_extracted_original_functions": [
