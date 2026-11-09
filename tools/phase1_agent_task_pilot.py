@@ -165,6 +165,8 @@ def validate_ledger(data):
         return
     if not isinstance(data, dict) or data.get("schema") != 1 or data.get("marker") != TASK_MARKER:
         raise PilotError("Unknown state ledger; manual reconciliation required")
+    if data.get("independent_semantic_approvals") != 0:
+        raise PilotError("Agent ledger must never claim independent semantic approval")
     ticket = data.get("ticket")
     if not isinstance(ticket, dict) or ticket.get("status") not in {
         "RESERVED", "DISPATCHED", "AWAITING_REVIEW", "BLOCKED"
