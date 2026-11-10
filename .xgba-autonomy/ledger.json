@@ -1,11 +1,5 @@
 {
-  "current": {
-    "baseline": "25046eaf0cc0e6639194f6adc4ee92f40327559a",
-    "created_at": "2026-11-10T07:35:19.479380+00:00",
-    "id": "R3_OPTIN_HOST_BRIDGE",
-    "status": "DISPATCHED",
-    "task_id": "7e49fd8f-81ec-4554-bf47-b7ecf1cbaf93"
-  },
+  "current": null,
   "daily_dispatches": {
     "2026-11-09": 2,
     "2026-11-10": 1
@@ -25,10 +19,17 @@
       "review_approved": false,
       "status": "DELIVERED_AWAITING_INDEPENDENT_REVIEW",
       "task_id": "2b5c6db2-48f6-42af-a105-77174149bab1"
+    },
+    {
+      "head": "a0edc50d6ba8241f3a5920e0115bc8dfc6d8c24d",
+      "package": "R3_OPTIN_HOST_BRIDGE",
+      "review_approved": false,
+      "status": "DELIVERED_AWAITING_INDEPENDENT_REVIEW",
+      "task_id": "7e49fd8f-81ec-4554-bf47-b7ecf1cbaf93"
     }
   ],
   "independent_semantic_approvals": 0,
-  "next": 2,
+  "next": 3,
   "repository": "xbaconator9000x/XGBA-ROM-Expansion",
   "schema": 1,
   "target_pr": 40
