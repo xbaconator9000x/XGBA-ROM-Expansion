@@ -174,6 +174,27 @@ class TestAutoProduct(unittest.TestCase):
         with self.assertRaises(PilotError):
             a.verify_state(s)
 
+    def test_blocked_ticket_reports_status_without_mutating_or_reposting(self):
+        api, store = FakeAPI(), FakeLedger(None)
+        store.value["current"] = {
+            "id": a.PACKAGES[0]["id"], "status": "BLOCKED",
+            "task_id": api.task_id, "baseline": api.sha,
+            "reason": "Task finished with no new PR commit",
+        }
+        with patch.object(a, "Ledger", return_value=store), patch.object(
+            a, "live_tasks", return_value=[]
+        ), patch.object(a, "report") as result, patch.dict("os.environ", {
+            "GITHUB_REPOSITORY": a.REPO, "XGBA_AUTONOMY_ENABLED": "1",
+            "XGBA_WAKE_HEAD_SHA": "",
+        }):
+            a.run(api)
+        result.assert_called_once_with(
+            "NEEDS_MANUAL_RECONCILIATION",
+            package=a.PACKAGES[0]["id"], task_status="BLOCKED")
+        self.assertEqual(store.value["current"]["status"], "BLOCKED")
+        self.assertEqual(store.writes, [])
+        self.assertEqual(api.posts, [])
+
     def test_missing_delivery_code_is_not_accepted(self):
         api = FakeAPI()
         api.changed = [a.PACKAGES[0]["files"][0]]
