@@ -1,0 +1,389 @@
+{
+  "schema": "copilot-poryscript-abi-review/v1",
+  "review_id": "copilot-poryscript-abi-20261030",
+  "reviewed_at": "2026-10-30",
+  "scope": "Phase 1 source-backed review of pinned Poryscript map-script emitter/parser and FireRed map-script assembly/reader ABI. No Phase 2 work.",
+  "reviewer": {
+    "identity": "@copilot (GitHub Copilot Coding Agent, issue #33 review)",
+    "source_interpreter_identity": "xbaconator9000x (prior P0 packets and PRs #16, #20, #21)",
+    "independent_source_inspection": true,
+    "separate_human_attestation": false
+  },
+  "upstream_pins": {
+    "huderlem/poryscript": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+    "pret/pokefirered": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982"
+  },
+  "original_evidence": {
+    "pr_16_synthetic_witness": {
+      "head": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d",
+      "role": "Prior Clang/LLD emitter-shaped fixture; explicitly not actual CLI output."
+    },
+    "pr_20_actual_cli_packet": {
+      "head_at_witness": "587132181ef728b635968dd091b1cf171e78f753",
+      "later_pr_head": "afb5fc1714235f1349f51b256ba20ac4c78e2019",
+      "role": "Actual Poryscript CLI, FireRed preprocessor, and GNU ARM witness implementation."
+    },
+    "pr_21_root_makefile_packet": {
+      "head": "a324b99b486d56d57eab94049a2a25ad091a862b",
+      "role": "FireRed root Makefile build/ROM geometry evidence; Makefile source blob independently checked below."
+    },
+    "actual_cli_workflow": {
+      "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+      "pull_request": 20,
+      "workflow_run_id": 40506170513,
+      "job_id": 122195911391,
+      "head_sha": "587132181ef728b635968dd091b1cf171e78f753",
+      "conclusion": "success",
+      "checker_git_blob_sha1": "4a137032662f0c711fcf1aee7a0fdd6ddfa001cb",
+      "workflow_git_blob_sha1": "3b574b0d65c751b5297c066985e46b862b137728",
+      "artifact_id": 12735216391,
+      "artifact_name": "phase1-poryscript-real-cli-gnu-arm",
+      "artifact_zip_sha256": "37cc5d0e03fd481c61721816533b8869709b1a23b7b9bc6f76df701252f988e5",
+      "result_source": "Successful GitHub Actions job log and artifact metadata, independently read for this review."
+    }
+  },
+  "actual_cli_witness": {
+    "status": "success",
+    "artifact_zip_sha256": "37cc5d0e03fd481c61721816533b8869709b1a23b7b9bc6f76df701252f988e5",
+    "actual_poryscript_cli_executed": true,
+    "actual_firered_preprocessor_used": true,
+    "actual_firered_macros_used": true,
+    "optimized_and_unoptimized_equal": true,
+    "negative_controls_passed": 7,
+    "synthetic_pory_input_sha256": "f0d8f344c10f9567db0ec8aea754b7b096c69f69fa59ff6b95abe9a21d7dbb0c",
+    "actual_cli_emitted_sha256": "411a9e954470723a9b0186e74eaaa3544aad2f12658737e35fc320b9da1d4b7d",
+    "unlinked_rodata_sha256": "4f29b83ebbcd085627fb92d956889780c65956b98728e435cb79463a32f73234",
+    "linked_rodata_sha256": "f7915d62b201f52079c834b7996bed2e46f938d2a21a9ee1df20dd7dc5c6b2af",
+    "relocation_type": "R_ARM_ABS32",
+    "relocation_offsets": [1, 6, 15, 23],
+    "linked_script_target_offsets_from_base": [29, 11, 30, 31],
+    "outer_record_bytes": 5,
+    "outer_sentinel_bytes": 1,
+    "conditional_record_bytes": 8,
+    "conditional_sentinel_bytes": 2,
+    "synthetic_link_base": "0x08000000",
+    "negative_evidence": "Direct GNU GAS rejected the actual CLI's double-colon global label; the pinned FireRed preprocessor was required and used.",
+    "not_proven": [
+      "full FireRed Makefile object or ROM build",
+      "original agbcc or stock linker equivalence",
+      "native GBA or mGBA table execution",
+      "malformed-table safety in native execution",
+      "Poryscript output integration into the pinned FireRed source build",
+      "all Poryscript grammar, command, and optimization variants",
+      "Porymap authoring round trip"
+    ]
+  },
+  "actual_cli_command": [
+    "python3 -m py_compile tools/verify_poryscript_actual_cli_arm_table.py",
+    "python3 tools/verify_poryscript_actual_cli_arm_table.py --poryscript upstream-poryscript --firered upstream-firered --output phase1-evidence/poryscript-real-cli-gnu-arm-table.json"
+  ],
+  "local_rerun": {
+    "status": "BLOCKED_MISSING_PINNED_CHECKOUTS_AND_GNU_ARM_BINUTILS",
+    "observations": [
+      "go is available, but arm-none-eabi-as and arm-none-eabi-ld are absent.",
+      "No exact-pinned Poryscript or FireRed Git checkout is present in the workspace; the reusable checker requires each checkout's exact HEAD and source blobs.",
+      "The historical exact-head Actions run above supplies actual CLI/GNU ARM evidence; this review does not claim a local rerun."
+    ],
+    "source_blob_validation": "Raw files fetched from immutable upstream commit URLs were independently checked against all recorded Git blob IDs and line-range SHA-256 values with the task-specific validator."
+  },
+  "findings": [
+    {
+      "id": "PSFR-ABI-01",
+      "status": "CONFIRMED_FOR_FIXTURE",
+      "statement": "The valid fixture's packed layout is internally consistent: outer entries are tag + 32-bit pointer (5 bytes), conditional entries are two 16-bit operands + pointer (8 bytes), and the native bytewise pointer reader handles the unaligned pointer positions. The two tables have different zero-terminator widths.",
+      "resolution": "Accept the exact CLI/GNU ARM witness for these fixture bytes, labels, and relocations only; do not extend it to ROM/runtime or malformed-input safety."
+    },
+    {
+      "id": "PSFR-ABI-02",
+      "status": "CONTRACT_OBJECTION_CONFIRMED_FROM_PINNED_SOURCE",
+      "statement": "Poryscript's parser chooses direct versus table syntax from punctuation and appends any identifier as the map-script type; it does not check that table syntax is restricted to FireRed's table types or that direct syntax is not used for them. It also has no duplicate-type rejection. The FireRed consumer dispatches type 2 and type 4 through the conditional-table reader, while direct types are run as script bytecode; duplicate outer tags resolve to the first match.",
+      "resolution": "Keep as a confirmed source-level producer/consumer contract objection. Require parser-level type-shape and duplicate-tag rejection (or a source-backed proof of intended semantics) before approving the parser/emitter contract. No upstream pin was changed."
+    },
+    {
+      "id": "PSFR-ABI-03",
+      "status": "CONTRACT_OBJECTION_CONFIRMED_FROM_PINNED_SOURCE",
+      "statement": "The conditional reader treats a zero first 16-bit operand as the table sentinel. Poryscript parses and emits the operand text without rejecting zero, so a table entry beginning with zero is indistinguishable from termination and later entries are unreachable.",
+      "resolution": "Keep as a source-level objection. Add an actual-CLI negative fixture and either reject zero as the first operand or document and verify a valid alternate encoding; no such run occurred in this review."
+    },
+    {
+      "id": "PSFR-ABI-04",
+      "status": "UNRESOLVED_NATIVE_INPUT_SAFETY",
+      "statement": "Neither native reader has a table length, end pointer, or bounds check. Missing sentinels, truncated records, or invalid relocated pointers can advance/read past the table; the host bounded decoder and compile-time mutation controls do not establish native safety.",
+      "resolution": "No resolution claimed. Requires a separate native execution or bounded-container contract; preserve as unresolved evidence."
+    },
+    {
+      "id": "PSFR-ABI-05",
+      "status": "INTEGRATION_BOUNDARY_CONFIRMED",
+      "statement": "FireRed's preprocessor converts Poryscript's double-colon labels to GAS-compatible global labels. The root Makefile routes .s data through preproc, CPP, enum-enabled preproc, and ARM assembler; mapjson emits a MapHeader pointer to the map's MapScripts label. The actual-CLI witness uses the pinned preprocessor and native macro bodies but does not insert output into that full root build.",
+      "resolution": "Accept the observed preprocessing dependency and map-header ownership link. Full Poryscript CLI-to-Makefile/ROM integration remains unproven."
+    }
+  ],
+  "file_verdicts": [
+    {
+      "repository": "huderlem/poryscript",
+      "path": "parser/parser.go",
+      "verdict": "NEEDS_EVIDENCE",
+      "basis": "The scoped parser lines confirm the type-shape, duplicate-tag, and zero-sentinel objections, but this is not a whole-file semantic disposition and the actual CLI negative cases were not run."
+    },
+    {
+      "repository": "huderlem/poryscript",
+      "path": "emitter/emitter.go",
+      "verdict": "NEEDS_EVIDENCE",
+      "basis": "The map-table writer and generated-label ranges are source-anchored, but a full emitter review and actual-CLI malformed-input controls are outstanding."
+    },
+    {
+      "repository": "huderlem/poryscript",
+      "path": "emitter/chunk.go",
+      "verdict": "NEEDS_EVIDENCE",
+      "basis": "Generated chunk labels and entrypoint scope were inspected for ownership only; full control-flow emission semantics were not reviewed."
+    },
+    {
+      "repository": "huderlem/poryscript",
+      "path": "main.go",
+      "verdict": "NEEDS_EVIDENCE",
+      "basis": "CLI parse-to-emitter flow and default optimization/line-marker flags were inspected; complete CLI configuration behavior was not reviewed."
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "asm/macros/map.inc",
+      "verdict": "NEEDS_EVIDENCE",
+      "basis": "Both relevant macro bodies were verified; unrelated map/event macros and the full file's contracts were not dispositioned."
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "src/script.c",
+      "verdict": "NEEDS_EVIDENCE",
+      "basis": "The full map-script table reader and callers were traced; the remaining file was not reviewed as a whole and native malformed-input safety is unresolved."
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "include/global.h",
+      "verdict": "NEEDS_EVIDENCE",
+      "basis": "The bytewise T1/T2 read macros were verified to interpret the packed little-endian pointers; the rest of the header was not reviewed."
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "include/constants/map_scripts.h",
+      "verdict": "NEEDS_EVIDENCE",
+      "basis": "All type constants were read and matched to the consumers, but this proposal is not registered as a whole-file approval."
+    }
+  ],
+  "unresolved_obligations": [
+    "Run the existing actual CLI/GNU ARM checker on local exact-pinned Git checkouts with GNU ARM binutils when available; the current local blocker is recorded above.",
+    "Add actual CLI negative fixtures for direct/table type mismatch, duplicate map-script tags, and zero first conditional operand; verify parser rejects or document the resulting behavior.",
+    "Trace the complete cross-file ownership/link path from authored Poryscript through the real FireRed build inputs; no Poryscript-generated output was inserted into a full ROM build.",
+    "Establish malformed table bounds behavior in the native target or retain the explicit unsafe-input assumption.",
+    "Obtain a separate reviewer attestation before registering any whole-file approval."
+  ],
+  "accounting": {
+    "approved_before": 0,
+    "new_approvals": 0,
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "shared_queue_register_gate_modified": false,
+    "phase2_started": false,
+    "machine_census_started": false
+  },
+  "source_evidence": [
+    {
+      "repository": "huderlem/poryscript",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "path": "emitter/emitter.go",
+      "git_blob_sha1": "d35843ef29929ead47351646d7a33dd5c692b850",
+      "sha256": "92ea1029f3cc4d0e531232867f89721e2198b9e498978d0a1cb686ca5e8a6166",
+      "evidence_ranges": [
+        {"start": 112, "end": 157, "sha256": "614ae7bedea892174d671d0bca2d5c4f1fba7f2e9b7abb20a8276253f53f7509"},
+        {"start": 584, "end": 644, "sha256": "fe500d0297967144dfaf98893dff5c1e4c912490a474a0d8447a3a86bb5c3182"}
+      ]
+    },
+    {
+      "repository": "huderlem/poryscript",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "path": "emitter/chunk.go",
+      "git_blob_sha1": "bb3a6514988eb2699022551d3dbfe2bdce260377",
+      "sha256": "25cb53a50ddccf1a5d9000ae6336e11a21f8ff6e2087940393667fc8ff045ed2",
+      "evidence_ranges": [
+        {"start": 21, "end": 37, "sha256": "2f240944e84385e482e7f4693f14fc18a7a8d977783faf42027345bbf1d9cd43"},
+        {"start": 67, "end": 85, "sha256": "b4e82e50fa4476fe4bacaee0dbdffdd3f88a8b1225234bd3706cc3f138d6e15d"},
+        {"start": 126, "end": 143, "sha256": "7ac6dea09d3020689a0ba03e2bb3ca238cac516c84934d0a114f21845a3bac44"}
+      ]
+    },
+    {
+      "repository": "huderlem/poryscript",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "path": "parser/parser.go",
+      "git_blob_sha1": "3957939076696de0a3e701c223c53afffe8d1b0e",
+      "sha256": "0e19ccb37fb9c19ea111dbbf20c7cb3a7959e9ef9bb8e9d390b7ff1535d218a3",
+      "evidence_ranges": [
+        {"start": 338, "end": 400, "sha256": "574d92ba135ffc2768e9abcee15fa7a67c0295da6248fff8b60febdb4e9db276"},
+        {"start": 1162, "end": 1315, "sha256": "12484fc01eb1e3f8914e2aee66e663106abf4bf5fff7aa9814b433433af32cf0"}
+      ]
+    },
+    {
+      "repository": "huderlem/poryscript",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "path": "main.go",
+      "git_blob_sha1": "10db05ef1518460da78b0bd41f22bb091917a385",
+      "sha256": "56b6a1346300a8dd02fb065d96442417b033b0f5a86b679a90b51535939d44e0",
+      "evidence_ranges": [
+        {"start": 47, "end": 82, "sha256": "ad2241d7d1536d9a0874e16fad27368802399169652ff1b8ac372f9ae41641d4"},
+        {"start": 131, "end": 155, "sha256": "a71b183b9a8c4ac0a769d6c93b2b80e2df9efa800b5b6383732cdb64e1b9b62f"}
+      ]
+    },
+    {
+      "repository": "huderlem/poryscript",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "path": "README.md",
+      "git_blob_sha1": "c77e022eb86e74a41b184daac5953d14c72cacc3",
+      "sha256": "d7aa099a6bcdd43745e746527589907d3cd4cd4b3db109319ccf8c609dec36f3",
+      "evidence_ranges": [
+        {"start": 755, "end": 775, "sha256": "6655fa9238f45b18768542e14b4e11eaf95673c5d14bd7b9841925f087f9c14b"},
+        {"start": 787, "end": 790, "sha256": "798fccb1767985f710c941a1120901e3700a0d39512aa943854d0ec61f644701"}
+      ]
+    },
+    {
+      "repository": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "asm/macros/map.inc",
+      "git_blob_sha1": "83ef472c926ce767c9133ab9bd6922280b38bb2d",
+      "sha256": "571fa86a3ef5da94e84b935046871b77859b0d45233ed64a400c05b61812e611",
+      "evidence_ranges": [
+        {"start": 9, "end": 20, "sha256": "3336348ca865050d5e3ec192a58504ac03f1074a52758f9223b5e1f0bfc27f45"}
+      ]
+    },
+    {
+      "repository": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/script.c",
+      "git_blob_sha1": "d0433bdda062b138e53d1a1d3184b4566ad7d9dc",
+      "sha256": "1cc4aade1f821e5f218ba7c191b1217e5a3cf942d0bfd0f32f775ce1f808437c",
+      "evidence_ranges": [
+        {"start": 382, "end": 400, "sha256": "304bb0ac5b61b7d1443ebfab1f9e0582cf2b457058a8bd180d73449059577dcf"},
+        {"start": 409, "end": 436, "sha256": "a5d0f44df95bf0c36e294a8cd46e7da0b6cf933431cd6fa1df86b39e88bdbafa"},
+        {"start": 438, "end": 479, "sha256": "c94673bb31e39f27b2466be3b3fab9df32421e68d3a3f468ccda0855db6b9936"}
+      ]
+    },
+    {
+      "repository": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "include/global.h",
+      "git_blob_sha1": "77155b09014aa854fcf87260e6ad2969e222da53",
+      "sha256": "044325b90e7c79146cc0cf73d31b6be3e4840059e2e778b63d9b5448fe538429",
+      "evidence_ranges": [
+        {"start": 106, "end": 115, "sha256": "494f0a086887db800f5c48a8fee3be33f0888f18e88d89428f147b30094d16f4"}
+      ]
+    },
+    {
+      "repository": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "include/constants/map_scripts.h",
+      "git_blob_sha1": "1353de360cf1e00b6efbb26ec59c4822c99b59bf",
+      "sha256": "02f8c3a4dd660d5b11f7d4af1f5a6d4530a994df33ba8304024e2a5ba004afc8",
+      "evidence_ranges": [
+        {"start": 4, "end": 10, "sha256": "722319e60ede58f007c7b6db5a4d7dc30b847d502e896ab5e3d12b06479edf3a"}
+      ]
+    },
+    {
+      "repository": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "include/global.fieldmap.h",
+      "git_blob_sha1": "e2828ec0cb1439718e830fbef4366770b3b77b1c",
+      "sha256": "34a8c91e10803ba48b97a2df8a721ca37fad7572b2ff951a4ab7ec15a5f050eb",
+      "evidence_ranges": [
+        {"start": 191, "end": 210, "sha256": "4e6424cf5acae1ad05c0a5d007d9f95684340c42b8121350a6f7681e820f6f07"}
+      ]
+    },
+    {
+      "repository": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "src/event_data.c",
+      "git_blob_sha1": "da9391cf0ef74c1addf550def8616c81f16e89e3",
+      "sha256": "163fcef03561426fc185b499eef1088dc7a4334b612968a82df3a0fa6131d06f",
+      "evidence_ranges": [
+        {"start": 186, "end": 214, "sha256": "53e373be9f0f0cc7480c4de62f23c52191ff2c6c0d95f22eca99e3271775a191"},
+        {"start": 235, "end": 241, "sha256": "647121e08d7c9f497140abb6a956706246e2cb617ed086768102f2a9732b649a"}
+      ]
+    },
+    {
+      "repository": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "include/constants/vars.h",
+      "git_blob_sha1": "5c7bbf8a3356606af13e744ac24de806c1b0869e",
+      "sha256": "be26624aac5cbc9ea4d364d5cc33500b4b6c7ecd47812a50b961d948f6914b12",
+      "evidence_ranges": [
+        {"start": 4, "end": 10, "sha256": "69c743692c998fcd1057e978fbd20f5b7699095d775a08675afe706f2365a640"}
+      ]
+    },
+    {
+      "repository": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "Makefile",
+      "git_blob_sha1": "8b454dbd18eb0069fa5851d788697190890a5b37",
+      "sha256": "51960ea72311e53c272ebcc5b481021efba52fcc7db7f0ded4bfcebaf8bbdf47",
+      "evidence_ranges": [
+        {"start": 181, "end": 184, "sha256": "c66c78deca9cd3b50b3ee309fffcd899cfbc7c46f119c5ba207a7f7f7dce51df"},
+        {"start": 342, "end": 344, "sha256": "62c9c06af0ad92d52e8f3d4831d01833571bf107834507efa6778eb6205bf21d"},
+        {"start": 386, "end": 395, "sha256": "8a80f10d8b8b4071662c6e3f9ef2c789448212974b8efc63a34c55365312c173"}
+      ]
+    },
+    {
+      "repository": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "map_data_rules.mk",
+      "git_blob_sha1": "b32b85a91d9460642345ca983c37d165e820741f",
+      "sha256": "e8698d24501c59e73fec9f64ef87c19ba8983d53bcb0592e49e82369ef5378be",
+      "evidence_ranges": [
+        {"start": 22, "end": 34, "sha256": "8ab9f506aa15af3762d7713275f4c657be5a875fb3961416ed3d0a46c8f02464"}
+      ]
+    },
+    {
+      "repository": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "tools/preproc/preproc.cpp",
+      "git_blob_sha1": "20c2de51b635a5d59f2b4e1ecd93d8fc2748ebe1",
+      "sha256": "b8e0f4c7e514667cf5582684a283ca3caefa727b098f85a0e32401e0260bbd6f",
+      "evidence_ranges": [
+        {"start": 96, "end": 108, "sha256": "fe9840658242ac5619ef8824c9c4746292a9eaa89413d3a43160a14d35c6a347"}
+      ]
+    },
+    {
+      "repository": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "tools/preproc/asm_file.cpp",
+      "git_blob_sha1": "e649c2c3da79a2956993b9b1d9fbb67b1a900ad3",
+      "sha256": "5c1425e7399062b8908e21e0b15daa20a1950c6cb03f2d65c02c9de755031d3b",
+      "evidence_ranges": [
+        {"start": 163, "end": 185, "sha256": "7ff50459a63434e0a6cbfb46798435a25dc21796ff2dc00ce9ce991c04b9b13e"}
+      ]
+    },
+    {
+      "repository": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "tools/mapjson/mapjson.cpp",
+      "git_blob_sha1": "8d8ec4e4e6e1c011b06f00819abe40bad10d19d5",
+      "sha256": "c8a4af233a24c70ee49f2739bec7b313da8f50e15d2a25b31db1d40cc179aab9",
+      "evidence_ranges": [
+        {"start": 122, "end": 184, "sha256": "8ba5d231949bb14096a6e51a19c6c2e4b22cab4951dfa7b475705573ab311568"}
+      ]
+    },
+    {
+      "repository": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "data/event_scripts.s",
+      "git_blob_sha1": "88d75946a7300ccf952f4a36c283966c6aebf5c0",
+      "sha256": "3b1bd10d26c0a74fb3452ab42fc9d14dfca785f8b71389db06c71f5dfdd50a27",
+      "evidence_ranges": [
+        {"start": 90, "end": 105, "sha256": "0a8310dbe298f688f7077c0dc43f0743ae6e378a1659f9abe58cab4546b24b5c"}
+      ]
+    },
+    {
+      "repository": "pret/pokefirered",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "path": "data/maps.s",
+      "git_blob_sha1": "fc88d8fc2521e92db22264bf6cf33966fda977ba",
+      "sha256": "5ad1da0c025c658bb07209b34cc0c68f595d6a00d67f1944af8a9820ac3c6b52",
+      "evidence_ranges": [
+        {"start": 11, "end": 17, "sha256": "7ec03c6a8fbca3ab8d3a5a507d03dc973931e4739000a30770d94b3a14fc7401"}
+      ]
+    }
+  ]
+}

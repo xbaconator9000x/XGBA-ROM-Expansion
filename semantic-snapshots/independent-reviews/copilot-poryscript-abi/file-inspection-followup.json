@@ -1,0 +1,334 @@
+{
+  "schema": "copilot-poryscript-abi-file-inspection/v1",
+  "recorded_at": "2026-11-04",
+  "scope": "Source-inspection follow-up only; not a new whole-file semantic disposition, runtime witness, or approval.",
+  "basis": {
+    "prior_exact_head": "fc54588319aea2a798f2455fb594c367209f8b85",
+    "prior_workflow_run_id": 41850174614,
+    "prior_review_record_job_id": 126702487227,
+    "prior_actual_cli_job_id": 126702487573,
+    "prior_run_note": "The run predates this follow-up record. It verified the then-current 81 source rows and 58 ranges against exact pinned commits, ran 10 tests, and ran the actual CLI/GNU ARM fixture. Its results are provenance only, not verification of this new record or semantic approval."
+  },
+  "reviewer": {
+    "id": "copilot-issue33-file-inspection-followup",
+    "identity": "@copilot (GitHub Copilot Coding Agent; issue #33 review-readiness follow-up)",
+    "source_interpreter_identity": "xbaconator9000x (author of the original PR #20 witness implementation)",
+    "distinct_from_source_interpreter": true,
+    "authenticated_github_review_attribution": false,
+    "independent_human_attestation": false,
+    "attribution_blocker": "Available GitHub tools expose reading and replying to review comments but no operation for submitting an authenticated Copilot pull-request review. This record therefore cannot satisfy authenticated reviewer attribution."
+  },
+  "accounting": {
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "approved_p0": 0,
+    "p0_total": 338,
+    "approved_total": 0,
+    "inventory_total": 14834,
+    "whole_file_semantic_reviews": 0,
+    "new_qualifying_copilot_receipts": 0,
+    "phase2_started": false,
+    "shared_queue_register_gate_modified": false
+  },
+  "files": [
+    {
+      "repository": "huderlem/poryscript",
+      "path": "emitter/emitter.go",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "git_blob_sha1": "d35843ef29929ead47351646d7a33dd5c692b850",
+      "sha256": "92ea1029f3cc4d0e531232867f89721e2198b9e498978d0a1cb686ca5e8a6166",
+      "dossier_record_line_sha256": "4096fe0edde549aa63fe7e2e8fc329b4eba394e259b33fa9d405580cfe57cfa5",
+      "extent": "Full pinned file content retrieved; ABI inspection findings are limited to the cited emitter ranges and direct relationships.",
+      "evidence_ranges": [
+        {
+          "start": 112,
+          "end": 157,
+          "sha256": "614ae7bedea892174d671d0bca2d5c4f1fba7f2e9b7abb20a8276253f53f7509"
+        },
+        {
+          "start": 584,
+          "end": 644,
+          "sha256": "fe500d0297967144dfaf98893dff5c1e4c912490a474a0d8447a3a86bb5c3182"
+        }
+      ],
+      "source_observations": [
+        "emitMapScriptStatement emits direct map_script records, a one-byte zero outer terminator, table labels, map_script_2 entries, and two-byte zero table terminators.",
+        "The emitter renders embedded script bodies after their table entries; global versus local scope controls the generated assembly label form.",
+        "This source inspection does not establish parser acceptance policy, assembler/linker output beyond the separate synthetic CLI fixture, or stock-ROM integration."
+      ],
+      "dependency_links": [
+        {
+          "repository": "huderlem/poryscript",
+          "path": "parser/parser.go",
+          "direction": "inbound",
+          "relation": "parsed MapScriptsStatement is consumed by emitter"
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "asm/macros/map.inc",
+          "direction": "outbound",
+          "relation": "emitted map_script and map_script_2 macro contract"
+        },
+        {
+          "repository": "huderlem/poryscript",
+          "path": "emitter/chunk.go",
+          "direction": "outbound",
+          "relation": "other emitted script bodies are rendered through chunk machinery"
+        }
+      ],
+      "license_evidence": {
+        "status": "ROOT_LICENSE_IDENTIFIED_NOT_FULL_DEPENDENCY_LICENSE_REVIEWED",
+        "path": "LICENSE.md",
+        "identity": "MIT License; copyright notice names huderlem",
+        "unresolved": "Transitive Go modules and any redistribution-specific license obligations were not exhaustively assessed."
+      },
+      "validation": {
+        "source_and_dossier": "Covered by prior exact-head CI verification of the full closure record; receipt must be revalidated at its own exact head.",
+        "related_native_evidence": "Actual pinned CLI/preprocessor/GNU ARM fixture and two probe controls exist; synthetic input only, not a whole-file semantic proof."
+      },
+      "unresolved_obligations": [
+        "O-PARSER-SHAPE",
+        "O-CONDITION-SENTINEL",
+        "O-DEPENDENCIES",
+        "O-ATTESTATION",
+        "O-WHOLEFILE"
+      ],
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "huderlem/poryscript",
+      "path": "parser/parser.go",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "git_blob_sha1": "3957939076696de0a3e701c223c53afffe8d1b0e",
+      "sha256": "0e19ccb37fb9c19ea111dbbf20c7cb3a7959e9ef9bb8e9d390b7ff1535d218a3",
+      "dossier_record_line_sha256": "6e9701de26d8e502907b6bd95205e8717f24b3b9506034d0177fd149b5d602da",
+      "extent": "Full pinned file content retrieved; ABI inspection findings are limited to the cited parser ranges and direct relationships.",
+      "evidence_ranges": [
+        {
+          "start": 338,
+          "end": 400,
+          "sha256": "574d92ba135ffc2768e9abcee15fa7a67c0295da6248fff8b60febdb4e9db276"
+        },
+        {
+          "start": 1162,
+          "end": 1315,
+          "sha256": "12484fc01eb1e3f8914e2aee66e663106abf4bf5fff7aa9814b433433af32cf0"
+        }
+      ],
+      "source_observations": [
+        "parseMapscriptsStatement creates separate direct and table AST collections and accepts labels or embedded blocks for each form.",
+        "Table condition and comparison text is collected as tokens/constants; this parser path does not itself enforce the runtime's nonzero first-operand sentinel rule or table/direct type consistency.",
+        "Duplicate tags and broader grammar/AST interactions are not exhaustively adjudicated by this focused inspection."
+      ],
+      "dependency_links": [
+        {
+          "repository": "huderlem/poryscript",
+          "path": "ast/ast.go",
+          "direction": "outbound",
+          "relation": "parser constructs map-script AST nodes"
+        },
+        {
+          "repository": "huderlem/poryscript",
+          "path": "lexer/lexer.go",
+          "direction": "outbound",
+          "relation": "parser consumes lexer tokens"
+        },
+        {
+          "repository": "huderlem/poryscript",
+          "path": "token/token.go",
+          "direction": "outbound",
+          "relation": "map-script token and scope types"
+        },
+        {
+          "repository": "huderlem/poryscript",
+          "path": "emitter/emitter.go",
+          "direction": "outbound",
+          "relation": "parsed MapScriptsStatement is emitted"
+        }
+      ],
+      "license_evidence": {
+        "status": "ROOT_LICENSE_IDENTIFIED_NOT_FULL_DEPENDENCY_LICENSE_REVIEWED",
+        "path": "LICENSE.md",
+        "identity": "MIT License; copyright notice names huderlem",
+        "unresolved": "Transitive Go modules and any redistribution-specific license obligations were not exhaustively assessed."
+      },
+      "validation": {
+        "source_and_dossier": "Covered by prior exact-head CI verification of the full closure record; receipt must be revalidated at its own exact head.",
+        "related_native_evidence": "The actual pinned CLI/GNU ARM probe exercises a synthetic input through parser and emitter; it is not exhaustive parser coverage."
+      },
+      "unresolved_obligations": [
+        "O-PARSER-SHAPE",
+        "O-CONDITION-SENTINEL",
+        "O-DEPENDENCIES",
+        "O-ATTESTATION",
+        "O-WHOLEFILE"
+      ],
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "pret/pokefirered",
+      "path": "src/script.c",
+      "commit": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+      "git_blob_sha1": "d0433bdda062b138e53d1a1d3184b4566ad7d9dc",
+      "sha256": "1cc4aade1f821e5f218ba7c191b1217e5a3cf942d0bfd0f32f775ce1f808437c",
+      "dossier_record_line_sha256": "3238aa0cc7d3c95d800566b4b033735482fca8fba379a578247c1520cfcd63ce",
+      "extent": "Full pinned file content retrieved; ABI inspection findings are limited to the cited script-interpreter ranges and direct relationships.",
+      "evidence_ranges": [
+        {
+          "start": 82,
+          "end": 140,
+          "sha256": "62ef41d3fa1f806d07cbf28398b77de4a0af2422ae14a5e1ac92ea50f8fd40e6"
+        },
+        {
+          "start": 188,
+          "end": 195,
+          "sha256": "611c702c06f58ed3e2168b56d71ea3e7b84710f9840ad110053b05a70130c5ab"
+        },
+        {
+          "start": 382,
+          "end": 400,
+          "sha256": "304bb0ac5b61b7d1443ebfab1f9e0582cf2b457058a8bd180d73449059577dcf"
+        },
+        {
+          "start": 409,
+          "end": 436,
+          "sha256": "a5d0f44df95bf0c36e294a8cd46e7da0b6cf933431cd6fa1df86b39e88bdbafa"
+        },
+        {
+          "start": 438,
+          "end": 479,
+          "sha256": "c94673bb31e39f27b2466be3b3fab9df32421e68d3a3f468ccda0855db6b9936"
+        }
+      ],
+      "source_observations": [
+        "MapHeaderGetScriptTable walks outer records in five-byte steps and stops on a zero tag.",
+        "MapHeaderCheckScriptTable reads two 16-bit operands, treats a zero first operand as table termination, advances four bytes to each next condition, and reads a four-byte pointer on a match.",
+        "RunScriptCommand dispatches script opcodes through the command table, but these paths do not provide an explicit map-table byte-length bound.",
+        "Map script entry points are called by overworld handlers; opcode behavior additionally depends on the command table and its scrcmd handlers."
+      ],
+      "dependency_links": [
+        {
+          "repository": "pret/pokefirered",
+          "path": "src/overworld.c",
+          "direction": "inbound",
+          "relation": "map-transition path invokes script handler"
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "data/script_cmd_table.inc",
+          "direction": "inbound",
+          "relation": "bytecode command dispatch table"
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "include/global.h",
+          "direction": "outbound",
+          "relation": "table pointer and operand readers"
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "include/script.h",
+          "direction": "outbound",
+          "relation": "script context and public interpreter declarations"
+        },
+        {
+          "repository": "pret/pokefirered",
+          "path": "src/scrcmd.c",
+          "direction": "outbound",
+          "relation": "script command implementations"
+        }
+      ],
+      "license_evidence": {
+        "status": "UNRESOLVED",
+        "unresolved": "No applicable FireRed root license or complete license treatment for this source and its transitive dependencies was established in this package."
+      },
+      "validation": {
+        "source_and_dossier": "Covered by prior exact-head CI verification of the full closure record; receipt must be revalidated at its own exact head.",
+        "related_native_evidence": "The CLI fixture assembles FireRed macros, not this C reader; no native FireRed reader execution or malformed-table memory-safety validation occurred."
+      },
+      "unresolved_obligations": [
+        "O-CONDITION-SENTINEL",
+        "O-BOUNDS",
+        "O-DEPENDENCIES",
+        "O-LICENSING",
+        "O-ATTESTATION",
+        "O-WHOLEFILE"
+      ],
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE"
+    },
+    {
+      "repository": "mgba-emu/mgba",
+      "path": "src/gba/memory.c",
+      "commit": "fd9dc5c2cbf234365068855851107e762fc6211b",
+      "git_blob_sha1": "aa01fdcc7d6ae5ecdf8753efc63b3a60a1e8d3dc",
+      "sha256": "501dbbca7d5d7cbaa86240de2d6a4e2e1186b50f74dde11bcf2f323c4af8c437",
+      "dossier_record_line_sha256": "da478c383edfaab1832a3be0d81fa976687d6c036fba366805388485f391267b",
+      "extent": "Full pinned file content retrieved; ABI inspection findings are limited to the cited ROM-read ranges and direct relationships.",
+      "evidence_ranges": [
+        {
+          "start": 586,
+          "end": 624,
+          "sha256": "ff1e1e97346ebb4a6fe525799fd377daa1eb29910250fa09f972ec9b0c6fe13b"
+        },
+        {
+          "start": 701,
+          "end": 716,
+          "sha256": "d6ca2767d9a903778c2a87c898fa8161a1c6aeff44aaf49799e99562ec9a0464"
+        }
+      ],
+      "source_observations": [
+        "ROM 8-bit and 16-bit bus reads mask addresses into the ROM window and compare the resulting offsets against romSize before loading bytes.",
+        "Out-of-range reads follow emulator-specific fallback paths, including logging and synthesized values; this is not evidence that FireRed table pointers are valid or that emulator reads are equivalent to hardware behavior.",
+        "The ROM loader and memory state are connected through gba.c and the pinned memory header; no mGBA execution or boundary harness was run for these map-script fixtures."
+      ],
+      "dependency_links": [
+        {
+          "repository": "mgba-emu/mgba",
+          "path": "src/gba/gba.c",
+          "direction": "inbound",
+          "relation": "loaded ROM storage is read through GBA memory bus"
+        },
+        {
+          "repository": "mgba-emu/mgba",
+          "path": "include/mgba/internal/gba/memory.h",
+          "direction": "outbound",
+          "relation": "ROM window and size constants/state"
+        },
+        {
+          "repository": "mgba-emu/mgba",
+          "path": "include/mgba/internal/gba/gba.h",
+          "direction": "outbound",
+          "relation": "GBA runtime state consumed by memory handlers"
+        }
+      ],
+      "license_evidence": {
+        "status": "FILE_NOTICE_AND_ROOT_LICENSE_IDENTIFIED_NOT_FULL_DEPENDENCY_LICENSE_REVIEWED",
+        "identity": "File header refers to Mozilla Public License 2.0; pinned root LICENSE is MPL 2.0.",
+        "unresolved": "Transitive dependencies and the complete distribution context were not exhaustively assessed."
+      },
+      "validation": {
+        "source_and_dossier": "Covered by prior exact-head CI verification of the full closure record; receipt must be revalidated at its own exact head.",
+        "related_native_evidence": "No mGBA ROM execution, malformed table read, or ROM-boundary test was performed."
+      },
+      "unresolved_obligations": [
+        "O-MGBA-ROM",
+        "O-BOUNDS",
+        "O-DEPENDENCIES",
+        "O-LICENSING",
+        "O-ATTESTATION",
+        "O-WHOLEFILE"
+      ],
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE"
+    }
+  ],
+  "summary": {
+    "files_with_full_source_text_retrieved": 4,
+    "whole_file_semantic_reviews": 0,
+    "new_copilot_reviewed_passed_files": 0,
+    "new_approvals": 0,
+    "phase1_gate": "FAIL_INCOMPLETE"
+  }
+}

@@ -1,0 +1,269 @@
+{
+  "schema": "copilot-poryscript-abi-lexer-input-followup/v1",
+  "recorded_at": "2026-11-06",
+  "issue_comment_id": 6677058831,
+  "scope": "Phase 1 only. A disjoint Poryscript lexical-input dependency tranche selected from the existing 81-file closure inventory. It examines numeric tokenization relevant to conditional operands; it does not repeat the prior emitter/parser, FireRed dispatch, map-header, or preprocessor handoffs and does not claim complete ABI closure.",
+  "basis": {
+    "prior_exact_head": "fb5d2684a560d87e0648d37fb077ec6c6fe9d7f0",
+    "prior_pr_workflow_run_id": 42159796360,
+    "prior_push_workflow_run_id": 42159790053,
+    "selection": "Both files were present only as HASH_VERIFIED_ONLY rows in closure-review.json and are absent from all earlier file-inspection handoffs. They form a lexer implementation/test pair on the Poryscript parser input path.",
+    "prior_pr_and_push_note": "At prior exact head fb5d2684a560d87e0648d37fb077ec6c6fe9d7f0, PR run 42159796360 passed both jobs; push run 42159790053 passed review-record and skipped the native witness."
+  },
+  "reviewer": {
+    "id": "copilot-issue33-poryscript-lexer-input",
+    "identity": "@copilot (GitHub Copilot Coding Agent; issue #6677058831 Poryscript lexer-input follow-up)",
+    "source_interpreter_identity": "xbaconator9000x (author of the original PR #20 witness implementation)",
+    "distinct_from_source_interpreter": true,
+    "authenticated_github_review_attribution": false,
+    "independent_human_attestation": false,
+    "attribution_blocker": "The available GitHub tools cannot submit an authenticated independent pull-request review. Identity distinction is not qualifying independent attribution."
+  },
+  "accounting": {
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "approved_p0": 0,
+    "p0_total": 338,
+    "approved_total": 0,
+    "inventory_total": 14834,
+    "whole_file_semantic_reviews": 0,
+    "new_qualifying_copilot_receipts": 0,
+    "phase2_started": false,
+    "shared_queue_register_gate_modified": false
+  },
+  "pins": {
+    "huderlem/poryscript": "c32481161c767b25a3425fa9f1f8729927ff3d55"
+  },
+  "original_machine_evidence": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "bytes": 949448,
+    "sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609",
+    "git_blob_sha1": "3b982876c7d810a827af8c80c7e5d9231fdaa327"
+  },
+  "license_source": {
+    "repository": "huderlem/poryscript",
+    "path": "LICENSE.md",
+    "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+    "git_blob_sha1": "bc574ff56a7df993996053c7b2afec43e80bdd64",
+    "sha256": "de6e3c2adfef309c6e3089a9943adb61d2087e9c6df8d77f5b8c2963535f9c8e",
+    "dossier_record_line_sha256": "a2b7fabf0cdc52ad897ab8d911f5cf789cff98ab7f1975ec0fc0bc983ac864c0",
+    "assessment": "Pinned license source identity only; applicability is not adjudicated."
+  },
+  "files": [
+    {
+      "repository": "huderlem/poryscript",
+      "path": "lexer/lexer.go",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "git_blob_sha1": "34ef7b989e38a7f9f0f893809a55a72e995f1bb8",
+      "sha256": "5ac010250d2aaad04dfc9017712276dcbe4937375c5add185bd587cfbcc14b05",
+      "dossier_record_line_sha256": "a28c8d74a78347ed83f0e309fa69c185e17959d178de217eb5565440b36106b7",
+      "byte_length": 14278,
+      "line_count": 492,
+      "full_source_bytes_retrieved": true,
+      "complete_source_inspection": true,
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE",
+      "source_extent": "COMPLETE_PINNED_FILE_READ",
+      "source_observations": [
+        "NextToken emits integer tokens for decimal and 0x-prefixed values; decimal tokenization accepts an optional leading minus, while hexadecimal scanning accepts only ASCII hex digits.",
+        "The 0x branch constructs an INT token even when readHexNumber returns an empty string, so the lexically accepted token literal is 0x; this is not a numeric-range or parser-acceptance guarantee.",
+        "The lexer does not enforce a 16-bit operand range. The exact pinned lexer also tokenizes 0, 0x10000, -1, and 65536 as INT values; downstream parser/emitter/assembler behavior remains a separate contract.",
+        "Operators relevant to conditional expressions include ==, !=, <, <=, >, >=, &&, and ||. Source positions track byte and UTF-8 character offsets separately.",
+        "Whole-file reading also covers comment skipping, identifiers, strings, raw strings, Unicode decoding, and end-of-input handling; no claim is made that these paths are fully validated."
+      ],
+      "evidence_ranges": [],
+      "supplemental_evidence_ranges": [
+        {
+          "start": 1,
+          "end": 492,
+          "sha256": "5ac010250d2aaad04dfc9017712276dcbe4937375c5add185bd587cfbcc14b05"
+        }
+      ],
+      "dependency_links": [
+        {
+          "repository": "huderlem/poryscript",
+          "path": "parser/parser.go",
+          "direction": "inbound",
+          "relation": "Parser obtains tokens from this lexer."
+        },
+        {
+          "repository": "huderlem/poryscript",
+          "path": "token/token.go",
+          "direction": "outbound",
+          "relation": "Lexer constructs the token types and literals defined here."
+        },
+        {
+          "repository": "huderlem/poryscript",
+          "path": "lexer/lexer_test.go",
+          "direction": "inbound",
+          "relation": "Pinned unit tests exercise this lexer implementation."
+        }
+      ],
+      "license_evidence": {
+        "status": "UNRESOLVED",
+        "path": "LICENSE.md",
+        "unresolved": "Pinned license identity is recorded, but applicability and dependency-license review are not adjudicated."
+      },
+      "unresolved_obligations": [
+        "O-EMPTY-HEX",
+        "O-OPERAND-RANGE",
+        "O-PARSER-SEMANTICS",
+        "O-LICENSE",
+        "O-DEPENDENCY-CLOSURE",
+        "O-ATTRIBUTION"
+      ]
+    },
+    {
+      "repository": "huderlem/poryscript",
+      "path": "lexer/lexer_test.go",
+      "commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+      "git_blob_sha1": "07b8fd737425521a1859e8f9f92930117415742f",
+      "sha256": "6caca074d54b1762174d241b479bcb0905a0cfdc925ee5375ac316817bf1293e",
+      "dossier_record_line_sha256": "9b393270b862199d05baaa770a260eed05c1d2f0adf0bba7030c9b24df5713cd",
+      "byte_length": 10678,
+      "line_count": 324,
+      "full_source_bytes_retrieved": true,
+      "complete_source_inspection": true,
+      "whole_file_semantic_disposition": false,
+      "verdict": "NEEDS_EVIDENCE",
+      "source_extent": "COMPLETE_PINNED_FILE_READ",
+      "source_observations": [
+        "TestNextToken covers a long 0x-prefixed value, a leading-zero decimal, and a negative decimal, along with comparison and boolean operators.",
+        "The pinned lexer tests do not cover empty 0x, conditional operand width overflow, or the FireRed zero-operand sentinel collision.",
+        "The remaining tests exercise multiline and typed strings; this file is test code and does not itself implement production ABI behavior."
+      ],
+      "evidence_ranges": [],
+      "supplemental_evidence_ranges": [
+        {
+          "start": 1,
+          "end": 324,
+          "sha256": "6caca074d54b1762174d241b479bcb0905a0cfdc925ee5375ac316817bf1293e"
+        }
+      ],
+      "dependency_links": [
+        {
+          "repository": "huderlem/poryscript",
+          "path": "lexer/lexer.go",
+          "direction": "outbound",
+          "relation": "The test package invokes New and NextToken."
+        },
+        {
+          "repository": "huderlem/poryscript",
+          "path": "token/token.go",
+          "direction": "outbound",
+          "relation": "Assertions compare lexer output against these token definitions."
+        }
+      ],
+      "license_evidence": {
+        "status": "UNRESOLVED",
+        "path": "LICENSE.md",
+        "unresolved": "Pinned license identity is recorded, but applicability and dependency-license review are not adjudicated."
+      },
+      "unresolved_obligations": [
+        "O-TEST-GAPS",
+        "O-LICENSE",
+        "O-DEPENDENCY-CLOSURE",
+        "O-ATTRIBUTION"
+      ]
+    }
+  ],
+  "objections": [
+    {
+      "id": "O-EMPTY-HEX",
+      "observation": "The pinned lexer emits an INT token for 0x with no hexadecimal digits.",
+      "resolution": "A temporary probe against exact pinned lexer source observed acceptance; parser, CLI, assembler, and FireRed runtime consequences are not established.",
+      "status": "UNRESOLVED"
+    },
+    {
+      "id": "O-OPERAND-RANGE",
+      "observation": "The lexer tokenizes values beyond 16 bits and negative decimals without enforcing the eventual script operand width.",
+      "resolution": "Exact pinned lexer token behavior was probed; downstream numeric conversion, assembler truncation, and conditional-table behavior remain open.",
+      "status": "UNRESOLVED"
+    },
+    {
+      "id": "O-PARSER-SEMANTICS",
+      "observation": "Lexical acceptance does not establish parser acceptance, emitted assembly, or FireRed's zero-operand terminator behavior.",
+      "resolution": "The prior CLI/GNU ARM witness is retained as historical evidence only and was not rerun for this lexer tranche.",
+      "status": "UNRESOLVED"
+    },
+    {
+      "id": "O-TEST-GAPS",
+      "observation": "The pinned lexer tests cover regular hex, negative and leading-zero decimal forms but omit empty hex and width boundaries.",
+      "resolution": "The exact pinned lexer package tests passed; the missing cases remain untested upstream.",
+      "status": "UNRESOLVED"
+    },
+    {
+      "id": "O-LICENSE",
+      "observation": "The Poryscript license file is source-hash-pinned.",
+      "resolution": "Its applicability and transitive dependency license obligations are not adjudicated.",
+      "status": "UNRESOLVED"
+    },
+    {
+      "id": "O-DEPENDENCY-CLOSURE",
+      "observation": "The lexer-to-parser and lexer-to-token links are recorded, but the complete compiler and runtime dependency closure is not established by this tranche.",
+      "resolution": "No exhaustive include, build, assembler, or runtime closure is claimed.",
+      "status": "UNRESOLVED"
+    },
+    {
+      "id": "O-ATTRIBUTION",
+      "observation": "Copilot identity is distinct from the original evidence author, but authenticated independent GitHub review attribution and separate human attestation are unavailable.",
+      "resolution": "All file verdicts remain NEEDS_EVIDENCE and no approval is counted.",
+      "status": "UNRESOLVED"
+    }
+  ],
+  "negative_controls": [
+    {
+      "id": "NC-SOURCE-IDENTITY",
+      "test": "test_poryscript_lexer_handoff_rejects_identity_and_dossier_mutations"
+    },
+    {
+      "id": "NC-FULL-FILE-RANGE",
+      "test": "test_poryscript_lexer_handoff_rejects_source_range_mutations"
+    },
+    {
+      "id": "NC-DEPENDENCY",
+      "test": "test_poryscript_lexer_handoff_rejects_dependency_mutations"
+    },
+    {
+      "id": "NC-LICENSE",
+      "test": "test_poryscript_lexer_handoff_rejects_license_and_objection_mutations"
+    },
+    {
+      "id": "NC-VERDICT",
+      "test": "test_poryscript_lexer_handoff_rejects_verdict_attribution_and_gate_mutations"
+    },
+    {
+      "id": "NC-SOURCE-ROOT",
+      "test": "test_poryscript_lexer_source_verification_rejects_modified_file"
+    }
+  ],
+  "review_handoff": {
+    "status": "READY_FOR_INDEPENDENT_REVIEW_NOT_APPROVAL",
+    "pending_requirements": [
+      "authenticated_independent_reviewer",
+      "resolve_or_bound_empty_hex_and_operand_range_objections",
+      "complete parser/emitter/assembler/runtime dependency review",
+      "applicable_source_license_review",
+      "exact_head_pr_and_push_ci"
+    ]
+  },
+  "summary": {
+    "selected_source_files": 2,
+    "complete_pinned_file_bytes_retrieved": 2,
+    "complete_source_files_read": 2,
+    "source_identity_records": 2,
+    "whole_file_semantic_reviews": 0,
+    "new_copilot_reviewed_passed_files": 0,
+    "new_qualifying_copilot_receipts": 0,
+    "new_approvals": 0,
+    "phase1_gate": "FAIL_INCOMPLETE"
+  },
+  "validation": {
+    "source_checkout": "Raw files retrieved at exact pinned commit; Git blob SHA-1 and SHA-256 matched both original dossier rows.",
+    "pinned_lexer_tests": "PASS",
+    "pinned_lexer_test_command": "go test ./lexer",
+    "pinned_lexer_source_commit": "c32481161c767b25a3425fa9f1f8729927ff3d55",
+    "temporary_token_boundary_probe": "PASS: exact pinned lexer tokenized 0, 0x, 0x10000, -1, and 65536 as INT tokens; this is lexer-only behavior, not CLI/runtime evidence.",
+    "actual_cli_gnu_arm_witness": "REUSED_PRIOR_EXACT_HEAD_EVIDENCE_NOT_RERUN",
+    "exact_head_ci": "PENDING_FOR_THIS_CHANGE"
+  }
+}
