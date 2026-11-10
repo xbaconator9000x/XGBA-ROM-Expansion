@@ -1,12 +1,5 @@
 {
-  "current": {
-    "baseline": "1e6e984b346b9e051ef7fa72d904fc7a7382bc9d",
-    "created_at": "2026-11-09T23:49:01.125040+00:00",
-    "id": "R2_DETERMINISTIC_PACKER",
-    "reason": "Unexpected paths in code delta: tests/__pycache__/test_xgba_resource_pack.cpython-312.pyc, tests/__pycache__/test_xgba_resource_sidecar.cpython-312.pyc, tools/__pycache__/xgba_resource_pack.cpython-312.pyc, tools/__pycache__/xgba_resource_sidecar.cpython-312.pyc",
-    "status": "BLOCKED",
-    "task_id": "2b5c6db2-48f6-42af-a105-77174149bab1"
-  },
+  "current": null,
   "daily_dispatches": {
     "2026-11-09": 2
   },
@@ -17,10 +10,18 @@
       "review_approved": false,
       "status": "DELIVERED_AWAITING_INDEPENDENT_REVIEW",
       "task_id": "9f583fcf-ae9d-4d9d-8d76-f2893ea6ec82"
+    },
+    {
+      "package": "R2_DETERMINISTIC_PACKER",
+      "task_id": "2b5c6db2-48f6-42af-a105-77174149bab1",
+      "head": "25046eaf0cc0e6639194f6adc4ee92f40327559a",
+      "status": "DELIVERED_AWAITING_INDEPENDENT_REVIEW",
+      "review_approved": false,
+      "reconciliation": "Reviewed exact-head clean delta removes .pyc artifacts, adds .gitignore and expected R2 source+tests; product-contracts 15/15 CI checks success. No independent semantic approval."
     }
   ],
   "independent_semantic_approvals": 0,
-  "next": 1,
+  "next": 2,
   "repository": "xbaconator9000x/XGBA-ROM-Expansion",
   "schema": 1,
   "target_pr": 40
