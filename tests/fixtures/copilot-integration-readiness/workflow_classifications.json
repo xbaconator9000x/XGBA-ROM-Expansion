@@ -1,0 +1,206 @@
+{
+  "pull_request": {
+    "number": 77,
+    "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "base_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "cases": {
+    "executed_success": {
+      "runs": [
+        {
+          "id": 101,
+          "run_number": 11,
+          "run_attempt": 2,
+          "workflow_id": 42,
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "html_url": "https://github.com/example/project/actions/runs/101",
+          "created_at": "2026-11-04T10:00:00Z",
+          "pull_requests": [
+            {
+              "number": 77,
+              "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "base_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            }
+          ],
+          "jobs": {
+            "available": true,
+            "total_count": 1,
+            "complete": true,
+            "jobs": [
+              {
+                "id": 201,
+                "run_attempt": 2,
+                "status": "completed",
+                "conclusion": "success",
+                "html_url": "https://github.com/example/project/actions/runs/101/job/201"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "executed_failure": {
+      "runs": [
+        {
+          "id": 102,
+          "run_number": 12,
+          "run_attempt": 1,
+          "workflow_id": 42,
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "failure",
+          "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "html_url": "https://github.com/example/project/actions/runs/102",
+          "created_at": "2026-11-04T10:01:00Z",
+          "pull_requests": [
+            {
+              "number": 77,
+              "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "base_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            }
+          ],
+          "jobs": {
+            "available": true,
+            "total_count": 1,
+            "complete": true,
+            "jobs": [
+              {
+                "id": 202,
+                "run_attempt": 1,
+                "status": "completed",
+                "conclusion": "failure",
+                "html_url": "https://github.com/example/project/actions/runs/102/job/202"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "action_required_zero_job": {
+      "runs": [
+        {
+          "id": 103,
+          "run_number": 13,
+          "run_attempt": 1,
+          "workflow_id": 42,
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "action_required",
+          "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "html_url": "https://github.com/example/project/actions/runs/103",
+          "created_at": "2026-11-04T10:02:00Z",
+          "pull_requests": [
+            {
+              "number": 77,
+              "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "base_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            }
+          ],
+          "jobs": {
+            "available": true,
+            "total_count": 0,
+            "complete": true,
+            "jobs": []
+          }
+        }
+      ]
+    },
+    "pending": {
+      "runs": [
+        {
+          "id": 104,
+          "run_number": 14,
+          "run_attempt": 1,
+          "workflow_id": 42,
+          "event": "pull_request",
+          "status": "in_progress",
+          "conclusion": null,
+          "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "html_url": "https://github.com/example/project/actions/runs/104",
+          "created_at": "2026-11-04T10:03:00Z",
+          "pull_requests": [
+            {
+              "number": 77,
+              "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "base_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            }
+          ],
+          "jobs": {
+            "available": true,
+            "total_count": 0,
+            "complete": true,
+            "jobs": []
+          }
+        }
+      ]
+    },
+    "missing": {
+      "runs": []
+    },
+    "stale_head": {
+      "runs": [
+        {
+          "id": 105,
+          "run_number": 15,
+          "run_attempt": 1,
+          "workflow_id": 42,
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "dddddddddddddddddddddddddddddddddddddddd",
+          "html_url": "https://github.com/example/project/actions/runs/105",
+          "created_at": "2026-11-04T10:04:00Z",
+          "pull_requests": [
+            {
+              "number": 77,
+              "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "base_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            }
+          ],
+          "jobs": {
+            "available": true,
+            "total_count": 1,
+            "complete": true,
+            "jobs": [
+              {"id": 205, "run_attempt": 1, "status": "completed", "conclusion": "success"}
+            ]
+          }
+        }
+      ]
+    },
+    "stale_base": {
+      "runs": [
+        {
+          "id": 106,
+          "run_number": 16,
+          "run_attempt": 1,
+          "workflow_id": 42,
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "html_url": "https://github.com/example/project/actions/runs/106",
+          "created_at": "2026-11-04T10:05:00Z",
+          "pull_requests": [
+            {
+              "number": 77,
+              "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "base_sha": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            }
+          ],
+          "jobs": {
+            "available": true,
+            "total_count": 1,
+            "complete": true,
+            "jobs": [
+              {"id": 206, "run_attempt": 1, "status": "completed", "conclusion": "success"}
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

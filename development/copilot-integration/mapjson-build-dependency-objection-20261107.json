@@ -1,0 +1,236 @@
+{
+  "schema": "xgba.phase1.source-objection-evidence.v1",
+  "case_id": "MAPJSON-INCREMENTAL-HEADER-DEPENDENCY-20261107",
+  "observed_date": "2026-11-07",
+  "scope": "One bounded incremental-build dependency objection in the pinned FireRed mapjson tool; not a whole-file semantic disposition.",
+  "source_registry": {
+    "repository": "pret/pokefirered",
+    "revision": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+    "queue_path": "semantic-snapshots/current/semantic_review_queue.csv.gz",
+    "queue_sha256": "c50498b751ecbe38d7a5939e06fa85cf4e62d529a943983710d4c5b9095d2eff",
+    "dossiers_path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "dossiers_sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609",
+    "manifest_path": "development/copilot-integration/manifest.json",
+    "manifest_sha256": "99accfcada883f086468e8f62c55a252ee24076dba777575584aaf15e60e52cf",
+    "triage_path": "development/copilot-integration/blocker-triage-20261104.json",
+    "triage_sha256": "f87c618981d8006b30adc3178eeed68bc9ecb41801dded28ac0289cfbfc73659"
+  },
+  "related_integration_blocker": {
+    "id": "B010",
+    "pr_number": 7,
+    "category": "stale_main_base",
+    "original_triage_row_sha256": "233da07b729045bac6b68565aa4f4b5aeb652c9fc6328e6ea928bc20e28e8907",
+    "manifest_head_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+    "manifest_base_ref": "main",
+    "manifest_base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+    "live_pr_observation": {
+      "head_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+      "base_ref": "main",
+      "base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+      "current_main_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+      "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/7"
+    },
+    "observed_workflow": {
+      "workflow_id": 396576283,
+      "run_id": 40465227907,
+      "attempt": 1,
+      "event": "pull_request",
+      "tested_head_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+      "job_id": 122058886027,
+      "successful_steps": 22,
+      "total_steps": 22,
+      "run_time_base_sha": null,
+      "base_provenance": "unavailable_actions_api",
+      "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40465227907"
+    },
+    "disposition": "BLOCKED",
+    "relationship": "B010 is the adjacent FireRed layout-writer stack blocker. This source objection does not refresh PR #7, prove its base, or resolve B010."
+  },
+  "source_files": [
+    {
+      "path": "Makefile",
+      "git_blob_sha": "8b454dbd18eb0069fa5851d788697190890a5b37",
+      "source_sha256": "51960ea72311e53c272ebcc5b481021efba52fcc7db7f0ded4bfcebaf8bbdf47",
+      "dossier_sha256": "fc7dc1909b629aabb0af68bfa4e20c4743e24bac05adc8d7da12d9e29170fa1d",
+      "priority": "P1",
+      "machine_status": "CANDIDATE_ONLY_SOURCE_HASH_VERIFIED",
+      "role": "Names the mapjson executable, includes make_tools.mk and map_data_rules.mk, and invokes tool setup before generation."
+    },
+    {
+      "path": "make_tools.mk",
+      "git_blob_sha": "d7b9315ad7beb37116793d8f805160679d3b4001",
+      "source_sha256": "3f6da9f7f50a7f9d3ec22e7a651a477296d624540ad7428d474e9ccd8c7c988b",
+      "dossier_sha256": "24b824006fa820f87ee4a263bb807f3fd685e02c8cc4115765fef544632dfc64",
+      "priority": "P2",
+      "machine_status": "CANDIDATE_ONLY_SOURCE_HASH_VERIFIED",
+      "role": "The tools aggregate invokes a nested make in tools/mapjson."
+    },
+    {
+      "path": "map_data_rules.mk",
+      "git_blob_sha": "b32b85a91d9460642345ca983c37d165e820741f",
+      "source_sha256": "e8698d24501c59e73fec9f64ef87c19ba8983d53bcb0592e49e82369ef5378be",
+      "dossier_sha256": "2823273a7c3e917a1a51ea972c8ce0d58ac010f741d24d5c2988ce7c3e35d967",
+      "priority": "P0",
+      "machine_status": "CANDIDATE_ONLY_SOURCE_HASH_VERIFIED",
+      "role": "Calls MAPJSON for per-map, map-group, layout and event-constant generation."
+    },
+    {
+      "path": "tools/mapjson/Makefile",
+      "git_blob_sha": "100e809c6c27e6c04d3b6f2406ff288922d80c13",
+      "source_sha256": "0da2d19bc6cd24afaf53b15fa916f53d5fb0c13b6ef1b0d65bab2eaeebfc9e6b",
+      "dossier_sha256": "35f5424e06001be56aa69f58c4b80ba5da45cf53f777200e2b045c4bc8ec2f92",
+      "priority": "P1",
+      "machine_status": "CANDIDATE_ONLY_SOURCE_HASH_VERIFIED",
+      "role": "Builds json11.cpp and mapjson.cpp; its HEADERS variable lists mapjson.h but omits json11.h."
+    },
+    {
+      "path": "tools/mapjson/mapjson.cpp",
+      "git_blob_sha": "8d8ec4e4e6e1c011b06f00819abe40bad10d19d5",
+      "source_sha256": "c8a4af233a24c70ee49f2739bec7b313da8f50e15d2a25b31db1d40cc179aab9",
+      "dossier_sha256": "a5d3fe4ee8cb7abda3dc34eacf0e6c48a3c737bc2465b505ad825761480b4c00",
+      "priority": "P0",
+      "machine_status": "CANDIDATE_ONLY_SOURCE_HASH_VERIFIED",
+      "role": "The generator translation unit directly includes json11.h."
+    },
+    {
+      "path": "tools/mapjson/mapjson.h",
+      "git_blob_sha": "6e961a28ec0e2c6a017e7dda2e9d81f07e3e3ceb",
+      "source_sha256": "ddcd590fd8abbffd207c8a78f6fac932e841391af4973fb26e625cfe11c38ec6",
+      "dossier_sha256": "81271186c8b6daf306db65b8c5033e47afae28652a7192a1faedd9ec10b51a47",
+      "priority": "P1",
+      "machine_status": "CANDIDATE_ONLY_SOURCE_HASH_VERIFIED",
+      "role": "The declared local header prerequisite; contains the FATAL_ERROR macro used by mapjson.cpp."
+    },
+    {
+      "path": "tools/mapjson/json11.cpp",
+      "git_blob_sha": "fcacdbeb39c3110e4564f57a8f26b7bb34678a7e",
+      "source_sha256": "58379deadaf7ddca4b91461b546a0193250af69258b2607fa839fc9282065655",
+      "dossier_sha256": "8b2263b003a94d067bfe309e44692386be5f914bcc71d3c94ff315736ccbc47d",
+      "priority": "P1",
+      "machine_status": "CANDIDATE_ONLY_SOURCE_HASH_VERIFIED",
+      "role": "The JSON library translation unit also directly includes json11.h."
+    },
+    {
+      "path": "tools/mapjson/json11.h",
+      "git_blob_sha": "c04c4362f9784006c7a45ad04729fab1c77dd1d9",
+      "source_sha256": "54b80082fe1580e37588bbf553eff54daacb82203be57f5fc8ec2e89d1d7bdfa",
+      "dossier_sha256": "ce29e014c3f587c949553512a4d4c365a55047643602ec951e34a87f85627f92",
+      "priority": "P1",
+      "machine_status": "CANDIDATE_ONLY_SOURCE_HASH_VERIFIED",
+      "role": "Direct compile-time dependency of both listed translation units, absent from Makefile prerequisites."
+    }
+  ],
+  "dependency_edges": [
+    {
+      "from": "Makefile:108,117",
+      "to": "make_tools.mk:16-19",
+      "relation": "root tool aggregate and executable path"
+    },
+    {
+      "from": "make_tools.mk:16-19",
+      "to": "tools/mapjson/Makefile:17-21",
+      "relation": "nested mapjson build"
+    },
+    {
+      "from": "tools/mapjson/mapjson.cpp:27",
+      "to": "tools/mapjson/json11.h",
+      "relation": "direct include"
+    },
+    {
+      "from": "tools/mapjson/json11.cpp:20",
+      "to": "tools/mapjson/json11.h",
+      "relation": "direct include"
+    },
+    {
+      "from": "tools/mapjson/Makefile:5-7,20",
+      "to": "tools/mapjson/json11.h",
+      "relation": "missing prerequisite: HEADERS contains mapjson.h only"
+    },
+    {
+      "from": "map_data_rules.mk:27-39",
+      "to": "MAPJSON",
+      "relation": "generated map, group, layout and event-constant consumers"
+    }
+  ],
+  "objection": {
+    "id": "MAPJSON-MAKEFILE-OMITS-JSON11-HEADER",
+    "claim": "The incremental mapjson target omits json11.h from prerequisites even though both listed translation units include it. A newer/changed json11.h can therefore leave an existing mapjson executable considered up to date.",
+    "source_lines": [
+      {
+        "path": "tools/mapjson/Makefile",
+        "lines": "5-7,20"
+      },
+      {
+        "path": "tools/mapjson/mapjson.cpp",
+        "lines": "27-30"
+      },
+      {
+        "path": "tools/mapjson/json11.cpp",
+        "lines": "20-21"
+      }
+    ],
+    "status": "NEEDS_EVIDENCE",
+    "scope_limit": "The probe demonstrates missing incremental dependency tracking, not a stale executable's changed runtime result or a failure of a clean build."
+  },
+  "licensing": {
+    "json11": {
+      "status": "MIT_NOTICE_PRESENT_IN_PINNED_SOURCE",
+      "evidence_path": "tools/mapjson/json11.h",
+      "evidence_lines": "30-44",
+      "notice_carry_through_required": true
+    },
+    "mapjson_component": {
+      "status": "NEEDS_EVIDENCE",
+      "reason": "No component notice was found in the pinned mapjson source files and the pinned repository root tree has no root LICENSE file; this is not a legal determination."
+    },
+    "distribution_clearance": "NEEDS_EVIDENCE"
+  },
+  "host_synthetic_validation": {
+    "classification": "HOST_SYNTHETIC",
+    "compiler": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "host_architecture": "x86_64",
+    "make_version": "GNU Make 4.3",
+    "method": "Fetched the exact pinned sources into /tmp, recomputed their Git blob SHA-1 and source SHA-256, built the host mapjson target, and mutated only a temporary json11.h copy.",
+    "pinned_makefile": {
+      "command": "make -q mapjson",
+      "exit_code_after_temporary_json11_header_change": 0,
+      "meaning": "Target reported up to date; no rebuild was scheduled."
+    },
+    "negative_control": {
+      "mutation": "Add json11.h to HEADERS in a temporary copy of the Makefile.",
+      "command": "make -q -f Makefile.control mapjson",
+      "exit_code": 1,
+      "meaning": "The control correctly reports that the target must rebuild.",
+      "dry_run_compile": "g++ -Wall -std=c++11 -O2 json11.cpp mapjson.cpp -o mapjson"
+    },
+    "transcript": [
+      "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+      "GNU Make 4.3",
+      "Temporary copy built successfully with make -j2.",
+      "Appended a comment to temporary json11.h only.",
+      "Pinned Makefile: make -q mapjson => exit 0; target reported up to date despite newer json11.h.",
+      "Control Makefile adds json11.h to HEADERS: make -q -f Makefile.control mapjson => exit 1; rebuild required.",
+      "Control dry run: g++ -Wall -std=c++11 -O2 json11.cpp mapjson.cpp -o mapjson"
+    ],
+    "transcript_sha256": "d72333ecd0f4f31205aae072119c9b8e2d8b27a5f6f99ecf5e516da0f392652e",
+    "source_mutation_in_repository": false
+  },
+  "unverified": {
+    "clean_full_firered_rom_build": true,
+    "arm_target_build": true,
+    "runtime_gameplay": true,
+    "save_restart_or_physical_flash": true,
+    "independent_whole_file_disposition": true,
+    "source_component_license_clearance": true
+  },
+  "phase1": {
+    "gate": "FAIL_INCOMPLETE",
+    "approved_dispositions": 0,
+    "p0_approved_dispositions": 0,
+    "disposition": "NEEDS_EVIDENCE",
+    "blocker_b010": "BLOCKED",
+    "blockers_resolved": 0,
+    "semantic_approval_from_host_or_ci": false,
+    "source_pins_changed": false
+  }
+}

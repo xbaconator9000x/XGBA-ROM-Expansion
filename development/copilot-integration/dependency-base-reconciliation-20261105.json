@@ -1,0 +1,493 @@
+{
+  "schema": "xgba.phase1.dependency_base_reconciliation.v1",
+  "observed_at": "2026-11-05",
+  "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+  "source_hashes": {
+    "development/copilot-integration/manifest.json": "99accfcada883f086468e8f62c55a252ee24076dba777575584aaf15e60e52cf",
+    "development/copilot-integration/blocker-triage-20261104.json": "f87c618981d8006b30adc3178eeed68bc9ecb41801dded28ac0289cfbfc73659",
+    "tests/fixtures/copilot-integration-readiness/stale_workflow_evidence_20261104.json": "5648c1772da65ae6a758e605a28aaffacf5036a5f5741fae845a50cc60e6b7b4"
+  },
+  "policy": {
+    "phase": 1,
+    "phase1_gate": "FAIL_INCOMPLETE",
+    "independent_approvals": 0,
+    "historical_external_approvals_p0": "0/338",
+    "historical_external_approvals_total": "0/14834",
+    "source_pins_changed": false,
+    "semantic_approval_from_ci": false
+  },
+  "first_concrete_blocker": {
+    "blocker_id": "B012",
+    "pr_number": 8,
+    "dependency_pr": 7,
+    "reason": "PR #8's live base now names PR #7's live head, but their compare is diverged (126 ahead, 49 behind; merge base 6321f8ea1254a9dbf2cc442cadcdbb14e2a6ea39), and the required push workflow's only selected success tests an older head."
+  },
+  "safe_integration_order": [
+    "Refresh PR #7 against current main and validate its exact head.",
+    "Reconcile PR #8's branch history with PR #7's exact live head; rerun the required push workflow on the resulting head.",
+    "Only then rebase and validate PRs #11, #12, #14, #15, #16, #17, #18, and #21 against PR #8's resulting exact head; obtain PR base provenance where the Actions API currently omits it."
+  ],
+  "dependency_advance": {
+    "pr_number": 8,
+    "previous_child_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+    "live_head_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+    "merge_base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+    "status": "ahead",
+    "ahead_by": 32,
+    "behind_by": 0,
+    "url": "https://api.github.com/repos/xbaconator9000x/XGBA-ROM-Expansion/compare/b76a2b686d4acf4302b9dacfad28494660d9b5f9...c3988a51fda1ba8310856ed720740acb85e9ea05"
+  },
+  "api_limitations": [
+    "Actions run and job records did not expose the run-time PR base SHA; green pull_request runs prove only the listed head, jobs, and steps.",
+    "Only the selected relevant run records are included; absence of an event means no matching event was observed in the queried workflow history, not that GitHub guarantees it never ran.",
+    "Compare API merge-base data establishes commit ancestry only; it is not semantic review or approval."
+  ],
+  "rows": [
+    {
+      "blocker_id": "B012",
+      "pr_number": 8,
+      "dependency_pr": 7,
+      "manifest": {
+        "head_sha": "a03acca40614db990756aa88730688dcf084ee31",
+        "base_ref": "phase1/firered-layout-writers-20261026",
+        "base_sha": "8eb234e3508d55621ecc03531823036d336fa4d1"
+      },
+      "live_pr": {
+        "head_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "base_ref": "phase1/firered-layout-writers-20261026",
+        "base_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/8"
+      },
+      "dependency": {
+        "branch": "phase1/firered-layout-writers-20261026",
+        "manifest_head_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+        "live_head_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/7"
+      },
+      "compare": {
+        "base_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+        "head_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "merge_base_sha": "6321f8ea1254a9dbf2cc442cadcdbb14e2a6ea39",
+        "status": "diverged",
+        "ahead_by": 126,
+        "behind_by": 49,
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/compare/03608155216b4f283fd92b7c5d795dd066698244...c3988a51fda1ba8310856ed720740acb85e9ea05"
+      },
+      "workflow": {
+        "id": 397824487,
+        "path": ".github/workflows/phase1-review-readiness-packets.yml",
+        "blob_sha": "53774b95479595767475df53ac01ef25ec82641d",
+        "verified_at_head_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "configured_events": ["push", "workflow_dispatch"],
+        "required_automatic_events": ["push"],
+        "source_pins": [],
+        "runs": [
+          {
+            "id": 40449595853,
+            "attempt": 1,
+            "event": "push",
+            "head_sha": "3f8fab19de2248aeee846cc344769ff069031398",
+            "base_sha": null,
+            "base_provenance": "not applicable to push",
+            "status": "completed",
+            "conclusion": "success",
+            "jobs": [
+              {
+                "id": 122008940528,
+                "conclusion": "success",
+                "steps_completed": 9,
+                "successful_steps": 9,
+                "critical_steps": [
+                  "Test deterministic packet builder and negative controls",
+                  "Reconcile all 2000 source-verified machine records",
+                  "Build first 100 P0-first review packets without approval"
+                ],
+                "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40449595853/job/122008940528"
+              }
+            ],
+            "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40449595853"
+          }
+        ]
+      },
+      "classification": "live_base_sha_matches_dependency_but_history_diverges_and_required_push_is_stale",
+      "closure_action": "Reconcile PR #8's diverged history with PR #7's exact head, then require a successful push run on the resulting exact head."
+    },
+    {
+      "blocker_id": "B015",
+      "pr_number": 11,
+      "dependency_pr": 8,
+      "manifest": {
+        "head_sha": "a59756ee192659ac60988195bf7e5f1a4fea29f6",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"
+      },
+      "live_pr": {
+        "head_sha": "2021d98987c7c895288f9b70ad756ab9608f4ea0",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/11"
+      },
+      "dependency": {
+        "branch": "phase1/review-readiness-handoff-20261027",
+        "manifest_head_sha": "a03acca40614db990756aa88730688dcf084ee31",
+        "live_head_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/8"
+      },
+      "compare": {
+        "left_sha": "2021d98987c7c895288f9b70ad756ab9608f4ea0",
+        "right_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "merge_base_sha": "18dee74bf3042326645eb13ae7df3c551325b5a8",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/compare/2021d98987c7c895288f9b70ad756ab9608f4ea0...c3988a51fda1ba8310856ed720740acb85e9ea05"
+      },
+      "workflow": {
+        "id": 397970898,
+        "path": ".github/workflows/phase1-binary-aware-triage-v2.yml",
+        "blob_sha": "83ca22b0e465dbeb2f06d5bcf86dab2adb119ddb",
+        "verified_at_head_sha": "2021d98987c7c895288f9b70ad756ab9608f4ea0",
+        "configured_events": ["push", "pull_request", "workflow_dispatch"],
+        "required_automatic_events": ["push", "pull_request"],
+        "source_pins": [],
+        "runs": [
+          {
+            "id": 41211559000,
+            "attempt": 1,
+            "event": "push",
+            "head_sha": "2021d98987c7c895288f9b70ad756ab9608f4ea0",
+            "base_sha": null,
+            "base_provenance": "not applicable to push",
+            "status": "completed",
+            "conclusion": "success",
+            "jobs": [{"id": 124567465572, "conclusion": "success", "steps_completed": 7, "successful_steps": 7, "critical_steps": ["Confirm exact event head checkout", "Syntax and typed binary negative controls", "Preserve historical v1 2000-record integrity without reinterpretation"], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41211559000/job/124567465572"}],
+            "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41211559000"
+          },
+          {
+            "id": 41211562929,
+            "attempt": 1,
+            "event": "pull_request",
+            "head_sha": "2021d98987c7c895288f9b70ad756ab9608f4ea0",
+            "base_sha": null,
+            "base_provenance": "Actions API did not return run-time PR base SHA",
+            "status": "completed",
+            "conclusion": "success",
+            "jobs": [{"id": 124567476690, "conclusion": "success", "steps_completed": 7, "successful_steps": 7, "critical_steps": ["Confirm exact event head checkout", "Syntax and typed binary negative controls", "Preserve historical v1 2000-record integrity without reinterpretation"], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41211562929/job/124567476690"}],
+            "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41211562929"
+          }
+        ]
+      },
+      "classification": "stale_dependency_base_and_changed_manifest_head; current-head_jobs_successful_but_pr_base_unverified",
+      "closure_action": "Rebase PR #11 onto PR #8's current head, then obtain exact-base PR evidence and rerun required push/PR events on the resulting head."
+    },
+    {
+      "blocker_id": "B017",
+      "pr_number": 12,
+      "dependency_pr": 8,
+      "manifest": {
+        "head_sha": "9ed9d2630a098525e7703853de0b804c56658da9",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"
+      },
+      "live_pr": {
+        "head_sha": "9ed9d2630a098525e7703853de0b804c56658da9",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/12"
+      },
+      "dependency": {
+        "branch": "phase1/review-readiness-handoff-20261027",
+        "manifest_head_sha": "a03acca40614db990756aa88730688dcf084ee31",
+        "live_head_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/8"
+      },
+      "compare": {
+        "left_sha": "9ed9d2630a098525e7703853de0b804c56658da9",
+        "right_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "merge_base_sha": "18dee74bf3042326645eb13ae7df3c551325b5a8",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/compare/9ed9d2630a098525e7703853de0b804c56658da9...c3988a51fda1ba8310856ed720740acb85e9ea05"
+      },
+      "workflow": {
+        "id": 398019265,
+        "path": ".github/workflows/phase1-mgba-savedata-handoff.yml",
+        "blob_sha": "97f7e2afaccf0a79e64d9b48639b5acc18ec2945",
+        "verified_at_head_sha": "9ed9d2630a098525e7703853de0b804c56658da9",
+        "configured_events": ["pull_request", "workflow_dispatch"],
+        "required_automatic_events": ["pull_request"],
+        "source_pins": ["mgba-emu/mgba@fd9dc5c2cbf234365068855851107e762fc6211b"],
+        "runs": [
+          {
+            "id": 40475197646,
+            "attempt": 1,
+            "event": "pull_request",
+            "head_sha": "9ed9d2630a098525e7703853de0b804c56658da9",
+            "base_sha": null,
+            "base_provenance": "Actions API did not return run-time PR base SHA",
+            "status": "completed",
+            "conclusion": "success",
+            "jobs": [{"id": 122091600198, "conclusion": "success", "steps_completed": 7, "successful_steps": 7, "critical_steps": ["Verify whole-file identity, functions, consumers and negative controls"], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40475197646/job/122091600198"}],
+            "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40475197646"
+          }
+        ]
+      },
+      "classification": "stale_dependency_base; current-head_job_successful_but_pr_base_unverified",
+      "closure_action": "Rebase PR #12 onto PR #8's current head, then obtain exact-base PR evidence on the resulting head."
+    },
+    {
+      "blocker_id": "B020",
+      "pr_number": 14,
+      "dependency_pr": 8,
+      "manifest": {
+        "head_sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"
+      },
+      "live_pr": {
+        "head_sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/14"
+      },
+      "dependency": {
+        "branch": "phase1/review-readiness-handoff-20261027",
+        "manifest_head_sha": "a03acca40614db990756aa88730688dcf084ee31",
+        "live_head_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/8"
+      },
+      "compare": {
+        "left_sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03",
+        "right_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "merge_base_sha": "18dee74bf3042326645eb13ae7df3c551325b5a8",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/compare/618861ff17a4b9cfbb180f5531cf58d8414cbd03...c3988a51fda1ba8310856ed720740acb85e9ea05"
+      },
+      "workflow": {
+        "id": 398126932,
+        "path": ".github/workflows/phase1-porymap-qt-writer-failure.yml",
+        "blob_sha": "397b19f7feb8ce8c5d42d35edae28768136fe7dd",
+        "verified_at_head_sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03",
+        "configured_events": ["push", "pull_request", "workflow_dispatch"],
+        "required_automatic_events": ["push", "pull_request"],
+        "source_pins": ["huderlem/porymap@26b919d7ff4b54152de010abd5bf344af2ebe116"],
+        "runs": [
+          {"id": 40490882094, "attempt": 1, "event": "push", "head_sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03", "base_sha": null, "base_provenance": "not applicable to push", "status": "completed", "conclusion": "success", "jobs": [{"id": 122144214009, "conclusion": "success", "steps_completed": 10, "successful_steps": 10, "critical_steps": ["Compile and execute pinned Qt serializer success and failure controls"], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40490882094/job/122144214009"}], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40490882094"},
+          {"id": 40490889813, "attempt": 1, "event": "pull_request", "head_sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03", "base_sha": null, "base_provenance": "Actions API did not return run-time PR base SHA", "status": "completed", "conclusion": "success", "jobs": [{"id": 122144238540, "conclusion": "success", "steps_completed": 10, "successful_steps": 10, "critical_steps": ["Compile and execute pinned Qt serializer success and failure controls"], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40490889813/job/122144238540"}], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40490889813"}
+        ]
+      },
+      "classification": "stale_dependency_base; current-head_jobs_successful_but_pr_base_unverified",
+      "closure_action": "Rebase PR #14 onto PR #8's current head, then obtain exact-base PR evidence and rerun required push/PR events."
+    },
+    {
+      "blocker_id": "B022",
+      "pr_number": 15,
+      "dependency_pr": 8,
+      "manifest": {
+        "head_sha": "7c283d21b48ef3b2276a225465b59ff492364a12",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"
+      },
+      "live_pr": {
+        "head_sha": "7c283d21b48ef3b2276a225465b59ff492364a12",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/15"
+      },
+      "dependency": {
+        "branch": "phase1/review-readiness-handoff-20261027",
+        "manifest_head_sha": "a03acca40614db990756aa88730688dcf084ee31",
+        "live_head_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/8"
+      },
+      "compare": {
+        "left_sha": "7c283d21b48ef3b2276a225465b59ff492364a12",
+        "right_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "merge_base_sha": "18dee74bf3042326645eb13ae7df3c551325b5a8",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/compare/7c283d21b48ef3b2276a225465b59ff492364a12...c3988a51fda1ba8310856ed720740acb85e9ea05"
+      },
+      "workflow": {
+        "id": 398142984,
+        "path": ".github/workflows/phase1_firered_load_save_review.yml",
+        "blob_sha": "324b4ffd1720bae9740ed263ee746fce61516d28",
+        "verified_at_head_sha": "7c283d21b48ef3b2276a225465b59ff492364a12",
+        "configured_events": ["pull_request", "workflow_dispatch"],
+        "required_automatic_events": ["pull_request"],
+        "source_pins": ["pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982"],
+        "runs": [
+          {"id": 40492941829, "attempt": 1, "event": "pull_request", "head_sha": "7c283d21b48ef3b2276a225465b59ff492364a12", "base_sha": null, "base_provenance": "Actions API did not return run-time PR base SHA", "status": "completed", "conclusion": "success", "jobs": [{"id": 122151128239, "conclusion": "success", "steps_completed": 7, "successful_steps": 7, "critical_steps": ["Verify whole file, dependencies and negative controls"], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40492941829/job/122151128239"}], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40492941829"}
+        ]
+      },
+      "classification": "stale_dependency_base; current-head_job_successful_but_pr_base_unverified",
+      "closure_action": "Rebase PR #15 onto PR #8's current head, then obtain exact-base PR evidence on the resulting head."
+    },
+    {
+      "blocker_id": "B024",
+      "pr_number": 16,
+      "dependency_pr": 8,
+      "manifest": {
+        "head_sha": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"
+      },
+      "live_pr": {
+        "head_sha": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/16"
+      },
+      "dependency": {
+        "branch": "phase1/review-readiness-handoff-20261027",
+        "manifest_head_sha": "a03acca40614db990756aa88730688dcf084ee31",
+        "live_head_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/8"
+      },
+      "compare": {
+        "left_sha": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d",
+        "right_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "merge_base_sha": "18dee74bf3042326645eb13ae7df3c551325b5a8",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/compare/dd6fb2c8e6ec15818ccb841760b540a04dc8212d...c3988a51fda1ba8310856ed720740acb85e9ea05"
+      },
+      "workflow": {
+        "id": 398174497,
+        "path": ".github/workflows/phase1-poryscript-compiled-map-table.yml",
+        "blob_sha": "5b9ca72bd95962ff27d18459dc23e274088ecc6f",
+        "verified_at_head_sha": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d",
+        "configured_events": ["push", "pull_request", "workflow_dispatch"],
+        "required_automatic_events": ["push", "pull_request"],
+        "source_pins": ["huderlem/poryscript@c32481161c767b25a3425fa9f1f8729927ff3d55", "pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982"],
+        "runs": [
+          {"id": 40497600452, "attempt": 1, "event": "push", "head_sha": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d", "base_sha": null, "base_provenance": "not applicable to push", "status": "completed", "conclusion": "success", "jobs": [{"id": 122166890605, "conclusion": "success", "steps_completed": 12, "successful_steps": 12, "critical_steps": ["Verify synthetic negative controls and pinned ARM source-to-relocation witness"], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40497600452/job/122166890605"}], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40497600452"},
+          {"id": 40497606189, "attempt": 1, "event": "pull_request", "head_sha": "dd6fb2c8e6ec15818ccb841760b540a04dc8212d", "base_sha": null, "base_provenance": "Actions API did not return run-time PR base SHA", "status": "completed", "conclusion": "success", "jobs": [{"id": 122166909960, "conclusion": "success", "steps_completed": 12, "successful_steps": 12, "critical_steps": ["Verify synthetic negative controls and pinned ARM source-to-relocation witness"], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40497606189/job/122166909960"}], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40497606189"}
+        ]
+      },
+      "classification": "stale_dependency_base; current-head_jobs_successful_but_pr_base_unverified",
+      "closure_action": "Rebase PR #16 onto PR #8's current head, then obtain exact-base PR evidence and rerun required push/PR events."
+    },
+    {
+      "blocker_id": "B026",
+      "pr_number": 17,
+      "dependency_pr": 8,
+      "manifest": {
+        "head_sha": "302465862501f542250d719444b3a9831406f6ac",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"
+      },
+      "live_pr": {
+        "head_sha": "302465862501f542250d719444b3a9831406f6ac",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/17"
+      },
+      "dependency": {
+        "branch": "phase1/review-readiness-handoff-20261027",
+        "manifest_head_sha": "a03acca40614db990756aa88730688dcf084ee31",
+        "live_head_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/8"
+      },
+      "compare": {
+        "left_sha": "302465862501f542250d719444b3a9831406f6ac",
+        "right_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "merge_base_sha": "18dee74bf3042326645eb13ae7df3c551325b5a8",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/compare/302465862501f542250d719444b3a9831406f6ac...c3988a51fda1ba8310856ed720740acb85e9ea05"
+      },
+      "workflow": {
+        "id": 398199191,
+        "path": ".github/workflows/phase1-firered-flash-review.yml",
+        "blob_sha": "f396aef85fb08ef00bc8e3f6583acd23983fe8eb",
+        "verified_at_head_sha": "302465862501f542250d719444b3a9831406f6ac",
+        "configured_events": ["push", "pull_request", "workflow_dispatch"],
+        "required_automatic_events": ["push", "pull_request"],
+        "source_pins": ["pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982"],
+        "source_verifier_blob_sha": "42c172195830997503bf3076f64c0014840e1188",
+        "runs": [
+          {"id": 40500700458, "attempt": 1, "event": "push", "head_sha": "302465862501f542250d719444b3a9831406f6ac", "base_sha": null, "base_provenance": "not applicable to push", "status": "completed", "conclusion": "success", "jobs": [{"id": 122177356994, "conclusion": "success", "steps_completed": 8, "successful_steps": 8, "critical_steps": ["Verify pinned Git blobs, complete-file inventories, and negative controls"], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40500700458/job/122177356994"}], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40500700458"},
+          {"id": 40500706821, "attempt": 1, "event": "pull_request", "head_sha": "302465862501f542250d719444b3a9831406f6ac", "base_sha": null, "base_provenance": "Actions API did not return run-time PR base SHA", "status": "completed", "conclusion": "success", "jobs": [{"id": 122177378145, "conclusion": "success", "steps_completed": 8, "successful_steps": 8, "critical_steps": ["Verify pinned Git blobs, complete-file inventories, and negative controls"], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40500706821/job/122177378145"}], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40500706821"}
+        ]
+      },
+      "classification": "stale_dependency_base; current-head_jobs_successful_but_pr_base_unverified",
+      "closure_action": "Rebase PR #17 onto PR #8's current head, then obtain exact-base PR evidence and rerun required push/PR events."
+    },
+    {
+      "blocker_id": "B028",
+      "pr_number": 18,
+      "dependency_pr": 8,
+      "manifest": {
+        "head_sha": "61a49f48e372272ff2ffcc720e21366bd91507bd",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"
+      },
+      "live_pr": {
+        "head_sha": "61a49f48e372272ff2ffcc720e21366bd91507bd",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/18"
+      },
+      "dependency": {
+        "branch": "phase1/review-readiness-handoff-20261027",
+        "manifest_head_sha": "a03acca40614db990756aa88730688dcf084ee31",
+        "live_head_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/8"
+      },
+      "compare": {
+        "left_sha": "61a49f48e372272ff2ffcc720e21366bd91507bd",
+        "right_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "merge_base_sha": "18dee74bf3042326645eb13ae7df3c551325b5a8",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/compare/61a49f48e372272ff2ffcc720e21366bd91507bd...c3988a51fda1ba8310856ed720740acb85e9ea05"
+      },
+      "workflow": {
+        "id": 398228822,
+        "path": ".github/workflows/phase1-firered-mgba-flash-identification.yml",
+        "blob_sha": "990ca5cd6968c87ae68e0a29a7fdfe3f6edf3a15",
+        "verified_at_head_sha": "61a49f48e372272ff2ffcc720e21366bd91507bd",
+        "configured_events": ["push", "pull_request", "workflow_dispatch"],
+        "required_automatic_events": ["push", "pull_request"],
+        "source_pins": ["pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982", "mgba-emu/mgba@fd9dc5c2cbf234365068855851107e762fc6211b"],
+        "source_verifier_blob_sha": "da859b31db2e0bd0c9d4f81a71b2146454aa68e4",
+        "runs": [
+          {"id": 40510958691, "attempt": 1, "event": "push", "head_sha": "61a49f48e372272ff2ffcc720e21366bd91507bd", "base_sha": null, "base_provenance": "not applicable to push", "status": "completed", "conclusion": "success", "jobs": [{"id": 122212425084, "conclusion": "success", "steps_completed": 11, "successful_steps": 11, "critical_steps": ["Verify 11 pinned blobs, cross-repo source contract and negative controls", "Compile actual mGBA override function with 12 branch cases", "Compile pinned Flash ID reader with 11 bank/timing cases", "Compile actual FireRed/mGBA Flash identification cross-boundary"], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40510958691/job/122212425084"}], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40510958691"},
+          {"id": 40510965719, "attempt": 1, "event": "pull_request", "head_sha": "61a49f48e372272ff2ffcc720e21366bd91507bd", "base_sha": null, "base_provenance": "Actions API did not return run-time PR base SHA", "status": "completed", "conclusion": "success", "jobs": [{"id": 122212449057, "conclusion": "success", "steps_completed": 11, "successful_steps": 11, "critical_steps": ["Verify 11 pinned blobs, cross-repo source contract and negative controls", "Compile actual mGBA override function with 12 branch cases", "Compile pinned Flash ID reader with 11 bank/timing cases", "Compile actual FireRed/mGBA Flash identification cross-boundary"], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40510965719/job/122212449057"}], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40510965719"}
+        ]
+      },
+      "classification": "stale_dependency_base; current-head_jobs_successful_but_pr_base_unverified",
+      "closure_action": "Rebase PR #18 onto PR #8's current head, then obtain exact-base PR evidence and rerun required push/PR events."
+    },
+    {
+      "blocker_id": "B032",
+      "pr_number": 21,
+      "dependency_pr": 8,
+      "manifest": {
+        "head_sha": "a324b99b486d56d57eab94049a2a25ad091a862b",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9"
+      },
+      "live_pr": {
+        "head_sha": "a324b99b486d56d57eab94049a2a25ad091a862b",
+        "base_ref": "phase1/review-readiness-handoff-20261027",
+        "base_sha": "b76a2b686d4acf4302b9dacfad28494660d9b5f9",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/21"
+      },
+      "dependency": {
+        "branch": "phase1/review-readiness-handoff-20261027",
+        "manifest_head_sha": "a03acca40614db990756aa88730688dcf084ee31",
+        "live_head_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/8"
+      },
+      "compare": {
+        "left_sha": "a324b99b486d56d57eab94049a2a25ad091a862b",
+        "right_sha": "c3988a51fda1ba8310856ed720740acb85e9ea05",
+        "merge_base_sha": "18dee74bf3042326645eb13ae7df3c551325b5a8",
+        "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/compare/a324b99b486d56d57eab94049a2a25ad091a862b...c3988a51fda1ba8310856ed720740acb85e9ea05"
+      },
+      "workflow": {
+        "id": 398273014,
+        "path": ".github/workflows/phase1-firered-root-build-contract.yml",
+        "blob_sha": "a5d4deafac6c936d80f58c56ea152f012ff0d340",
+        "verified_at_head_sha": "a324b99b486d56d57eab94049a2a25ad091a862b",
+        "configured_events": ["push", "pull_request", "workflow_dispatch"],
+        "required_automatic_events": ["push", "pull_request"],
+        "source_pins": ["pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982"],
+        "runs": [
+          {"id": 40510912386, "attempt": 1, "event": "push", "head_sha": "a324b99b486d56d57eab94049a2a25ad091a862b", "base_sha": null, "base_provenance": "not applicable to push", "status": "completed", "conclusion": "success", "jobs": [{"id": 122212261979, "conclusion": "success", "steps_completed": 9, "successful_steps": 9, "critical_steps": ["Verify exact upstream blobs and negative controls", "Verify gate remains fail closed"], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40510912386/job/122212261979"}], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40510912386"},
+          {"id": 40510922233, "attempt": 1, "event": "pull_request", "head_sha": "a324b99b486d56d57eab94049a2a25ad091a862b", "base_sha": null, "base_provenance": "Actions API did not return run-time PR base SHA", "status": "completed", "conclusion": "success", "jobs": [{"id": 122212296917, "conclusion": "success", "steps_completed": 9, "successful_steps": 9, "critical_steps": ["Verify exact upstream blobs and negative controls", "Verify gate remains fail closed"], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40510922233/job/122212296917"}], "url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/40510922233"}
+        ]
+      },
+      "classification": "stale_dependency_base; current-head_jobs_successful_but_pr_base_unverified",
+      "closure_action": "Rebase PR #21 onto PR #8's current head, then obtain exact-base PR evidence and rerun required push/PR events."
+    }
+  ]
+}

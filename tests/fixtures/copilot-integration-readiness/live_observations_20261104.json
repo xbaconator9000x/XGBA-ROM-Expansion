@@ -1,0 +1,154 @@
+{
+  "observed_at": "2026-11-04",
+  "source": "Read-only GitHub pull-request, workflow-run, and workflow-job APIs",
+  "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+  "current_main_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+  "pull_requests": [
+    {
+      "number": 7,
+      "state": "open",
+      "draft": true,
+      "head_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+      "base_ref": "main",
+      "base_sha": "f848fb21d3056e3f5653154cd48a699a52c8d5a5",
+      "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/7"
+    },
+    {
+      "number": 8,
+      "state": "open",
+      "draft": true,
+      "head_sha": "995e00904384191170075e8a57d18161ef1a2ec2",
+      "base_ref": "phase1/firered-layout-writers-20261026",
+      "base_sha": "03608155216b4f283fd92b7c5d795dd066698244",
+      "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/8",
+      "dependency_observation": "Current PR metadata base SHA equals current PR #7 head SHA."
+    },
+    {
+      "number": 13,
+      "state": "open",
+      "draft": true,
+      "head_sha": "0bf5a496df18ef9e3c6cf39ef361ffbe93931c6a",
+      "base_ref": "phase1/mgba-savedata-review-handoff-20261027",
+      "base_sha": "9ed9d2630a098525e7703853de0b804c56658da9",
+      "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/13"
+    },
+    {
+      "number": 27,
+      "state": "open",
+      "draft": true,
+      "head_sha": "2cb51ea83a3ef4c3186d19d2f9a80e88fa5d2f36",
+      "base_ref": "phase1/porymap-qt-writer-failure-boundary-20261027",
+      "base_sha": "618861ff17a4b9cfbb180f5531cf58d8414cbd03",
+      "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/27"
+    },
+    {
+      "number": 35,
+      "state": "open",
+      "draft": true,
+      "head_sha": "9a31fb1dfa0a08f95a06a3c2bf8cd431aafccd29",
+      "base_ref": "main",
+      "base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+      "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/35",
+      "overlap": "Savedata review work overlaps PRs #12/#13."
+    },
+    {
+      "number": 36,
+      "state": "open",
+      "draft": true,
+      "head_sha": "fc54588319aea2a798f2455fb594c367209f8b85",
+      "base_ref": "main",
+      "base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+      "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/36",
+      "overlap": "Poryscript ABI review work overlaps PRs #16/#20."
+    },
+    {
+      "number": 37,
+      "state": "open",
+      "draft": true,
+      "head_sha": "9233dfe2800f4deeed729fade251047a35a793ed",
+      "base_ref": "main",
+      "base_sha": "de2a775184d69411016ff683a8075af72ef4a58d",
+      "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/37"
+    }
+  ],
+  "workflow_runs": [
+    {
+      "pr_number": 13,
+      "workflow_id": 398059096,
+      "run_id": 41853164293,
+      "run_attempt": 2,
+      "event": "pull_request",
+      "head_sha": "0bf5a496df18ef9e3c6cf39ef361ffbe93931c6a",
+      "conclusion": "success",
+      "jobs": {"total": 1, "completed_success": 1},
+      "job_urls": [
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41853164293/job/126701990749"
+      ],
+      "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41853164293",
+      "base_provenance": "not returned by the Actions run read"
+    },
+    {
+      "pr_number": 27,
+      "workflow_id": 399979453,
+      "run_id": 41871074286,
+      "run_attempt": 1,
+      "event": "pull_request",
+      "head_sha": "2cb51ea83a3ef4c3186d19d2f9a80e88fa5d2f36",
+      "conclusion": "action_required",
+      "jobs": {"total": 0, "completed_success": 0},
+      "job_urls": [],
+      "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41871074286",
+      "classification": "authorization gate; no job executed; not green"
+    },
+    {
+      "pr_number": 35,
+      "workflow_id": 401590285,
+      "run_id": 41037997890,
+      "run_attempt": 2,
+      "event": "pull_request",
+      "head_sha": "9a31fb1dfa0a08f95a06a3c2bf8cd431aafccd29",
+      "conclusion": "success",
+      "jobs": {"total": 1, "completed_success": 1},
+      "job_urls": [
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41037997890/job/124019365309"
+      ],
+      "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41037997890",
+      "base_provenance": "not returned by the Actions run read"
+    },
+    {
+      "pr_number": 36,
+      "workflow_id": 401588179,
+      "run_id": 41850174614,
+      "run_attempt": 2,
+      "event": "pull_request",
+      "head_sha": "fc54588319aea2a798f2455fb594c367209f8b85",
+      "conclusion": "success",
+      "jobs": {"total": 2, "completed_success": 2},
+      "job_urls": [
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41850174614/job/126702487227",
+        "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41850174614/job/126702487573"
+      ],
+      "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41850174614",
+      "base_provenance": "not returned by the Actions run read"
+    },
+    {
+      "pr_number": 37,
+      "workflow_id": 401606059,
+      "run_id": 41871673473,
+      "run_attempt": 1,
+      "event": "pull_request",
+      "head_sha": "9233dfe2800f4deeed729fade251047a35a793ed",
+      "conclusion": "action_required",
+      "jobs": {"total": 0, "completed_success": 0},
+      "job_urls": [],
+      "source_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/41871673473",
+      "classification": "authorization gate; no job executed; not green"
+    }
+  ],
+  "limitations": [
+    "Actions reads exposed PR numbers, run head SHAs, attempts, and jobs, but not run-time PR base SHA; successful exact-head runs are not promoted to exact-base evidence.",
+    "PR #27 workflow #399979453 is an observed current-head workflow, not a workflow ID pinned as required for PR #27 in the manifest.",
+    "PR #35/#36 exact-head CI validates their review packets only; neither CI nor owner review is an independent semantic approval.",
+    "No Actions run was retried and no PR, branch, gate, queue, or source pin was mutated."
+  ]
+}
