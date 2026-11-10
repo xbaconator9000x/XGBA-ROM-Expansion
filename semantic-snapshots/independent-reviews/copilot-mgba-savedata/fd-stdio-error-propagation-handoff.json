@@ -1,0 +1,326 @@
+{
+  "schema": "xgba.copilot.mgba_fd_stdio_error_propagation_handoff.v1",
+  "reviewer": {
+    "identity": "GitHub Copilot Coding Agent (@copilot), reviewer-side PR #35 follow-up",
+    "prior_interpreter": "PR #13 teardown workpapers and fixtures authored by xbaconator9000x",
+    "identity_limit": "Attributable evidence handoff only; not a distinct human review or approval.",
+    "approval_eligible": false
+  },
+  "request_attribution": {
+    "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+    "pull_request": 35,
+    "comment_id": 6646374068,
+    "comment_author": "xbaconator9000x",
+    "comment_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/35#issuecomment-6646374068"
+  },
+  "scope": {
+    "repository": "mgba-emu/mgba",
+    "source_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+    "subset": [
+      "include/mgba-util/vfs.h",
+      "src/util/vfs/vfs-fd.c",
+      "src/util/vfs/vfs-file.c",
+      "src/gba/savedata.c",
+      "src/gba/gba.c"
+    ],
+    "purpose": "Resolve bounded source-contract objections around POSIX fd/stdio teardown and GBA savedata error propagation; do not repeat or replace the 20-file identity inventory.",
+    "overall_file_verdict": "NEEDS_EVIDENCE",
+    "semantic_approval": false
+  },
+  "machine_dossier": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "git_blob_sha1": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+  },
+  "pr13_test_provenance": {
+    "fd": {
+      "fixture_sha256": "c731670c511ceaf53db2fac8372efe5bfa36ad443bf8808b675b740e4e2cbe9f",
+      "native_cases": ["success", "sync_failure", "unmap_failure", "close_failure", "masked_writeback_short_read", "memory"],
+      "parser_test_path": "tests/test_phase1_mgba_vfs_fd_teardown_native.py",
+      "parser_test_sha256": "b195d6e0b875bf4128169d2a73853d21a3e1868f3296ed4c9190fc1fd7601b90",
+      "parser_methods": 20,
+      "parser_methods_are_native_cases": false,
+      "execution_class": "PR13 workpaper-reported local native Linux evidence; no exact-current-head PR13 job executed."
+    },
+    "stdio": {
+      "fixture_sha256": "2458e0ed4e5cafc1e60dbac18e2bc5945b718377bd25b55213e63f55bf5c7a39",
+      "native_cases": ["regular_lifecycle", "mapped_short_unmap", "raw_short_load", "unmask_short_read", "injected_flush", "dev_full_clean", "unload_close_error"],
+      "parser_test_path": "tests/test_phase1_mgba_vfs_stdio_native.py",
+      "parser_test_sha256": "3021e7b6711d5b332cc77fda8d2647d19f701813061e693a5286d3559bd78cc5",
+      "parser_methods": 18,
+      "parser_methods_are_native_cases": false,
+      "execution_class": "PR13 workpaper-reported local native Linux evidence; no exact-current-head PR13 job executed."
+    }
+  },
+  "selected_files": [
+    {
+      "path": "include/mgba-util/vfs.h",
+      "git_blob_sha1": "6c9bd299153af4c3c9cd5487f2425a2481331ee5",
+      "source_sha256": "4c829529f21c424196b4d1efe25ce11227312437cf1aa5028cae94a741bf6656",
+      "dossier_row_sha256": "5d4c30179d703f5b013badf083d6c99c736186091873d65edcb3f0943c2763dd",
+      "source_anchors": ["VFile:35-45"],
+      "scope_note": "Complete interface identity pinned; selected VFile method contracts audited."
+    },
+    {
+      "path": "src/util/vfs/vfs-fd.c",
+      "git_blob_sha1": "2535bd0fb76740745ae038d5523ead28658f1035",
+      "source_sha256": "0073a68b6688f1baa26acaf609af52e9f29308605e449e7c3182c9f4d768da44",
+      "dossier_row_sha256": "bb351807533d3de29f1f87c2c3a644a70c67430f556e83e219b1e25292589942",
+      "source_anchors": ["_vfdClose:102-117", "_vfdUnmap(POSIX):151-155"],
+      "scope_note": "Complete translation-unit identity pinned; POSIX close/unmap selected methods audited, not a cross-platform disposition."
+    },
+    {
+      "path": "src/util/vfs/vfs-file.c",
+      "git_blob_sha1": "4a63e53f842b31b24d6188e6525ddcf121a0c7da",
+      "source_sha256": "77737a3fa897db96e31f1f5e56faa0c06afa0cc86c7697642b28026308ba0921",
+      "dossier_row_sha256": "263f5e29518c63b6c0cfb36819debd8c57dfc630a6490376255e2f1fd1fe3849",
+      "source_anchors": ["_vffClose:66-73", "_vffMap:91-103", "_vffUnmap:105-116", "_vffTruncate:118-134", "_vffSync:147-159"],
+      "scope_note": "Complete original translation-unit identity pinned; selected stdio teardown methods audited."
+    },
+    {
+      "path": "src/gba/savedata.c",
+      "git_blob_sha1": "fdafa5b99a50ce0abcb9adb4dc25bae6497a65fb",
+      "source_sha256": "9887e36795ae51e39eecad09565d27d3feabe316d3e595b17f288e3205e13161",
+      "dossier_row_sha256": "99a6b3e97c52d67712e10204e08ced8819c7330e899b9f767aa280fc330c42e0",
+      "source_anchors": ["GBASavedataDeinit:71-105", "GBASavedataMask/Unmask:107-135", "GBASavedataLoad:194-226"],
+      "scope_note": "Complete source identity pinned; teardown and raw/masked load result handling selected."
+    },
+    {
+      "path": "src/gba/gba.c",
+      "git_blob_sha1": "c30bd943909dc00df0b5b9932e6d9ddb6e1c404e",
+      "source_sha256": "e84eaba17f6c96ac7b78431afaee79d7633dd50118f92e31e4432793f80c4c7b",
+      "dossier_row_sha256": "d1870b438fe6dd9bfa628a99d90189778e112588c14ae08f28fa379903595056",
+      "source_anchors": ["GBAUnloadROM:168-176"],
+      "scope_note": "Complete source identity pinned; selected unload caller result sink audited."
+    }
+  ],
+  "objection_resolutions": [
+    {
+      "id": "vfile-return-contract",
+      "status": "RESOLVED_SOURCE_CONTRACT",
+      "source_files": ["include/mgba-util/vfs.h"],
+      "source_lines": ["include/mgba-util/vfs.h:35-45"],
+      "finding": "VFile.close returns bool, while VFile.unmap and VFile.truncate return void; read/write return ssize_t. The interface itself cannot propagate unmap/truncate errors.",
+      "negative_test_evidence": [
+        {
+          "id": "fd-unmap-failure",
+          "fixture": "tests/phase1_mgba_vfs_fd_teardown_native.c",
+          "sha256": "c731670c511ceaf53db2fac8372efe5bfa36ad443bf8808b675b740e4e2cbe9f",
+          "case": "unmap_failure",
+          "execution": "PR13 workpaper-reported local native Linux fixture; not run in PR35 Actions."
+        },
+        {
+          "id": "stdio-short-unmap",
+          "fixture": "tests/phase1_mgba_vfs_stdio_native.c",
+          "sha256": "2458e0ed4e5cafc1e60dbac18e2bc5945b718377bd25b55213e63f55bf5c7a39",
+          "case": "mapped_short_unmap",
+          "execution": "PR13 workpaper-reported local native Linux fixture; not run in PR35 Actions."
+        }
+      ],
+      "remaining": "Behavior outside the selected pinned interface and backend implementations is not resolved."
+    },
+    {
+      "id": "posix-unmap-msync-munmap",
+      "status": "RESOLVED_SOURCE_FACT; RUNTIME_NEEDS_EVIDENCE",
+      "source_files": ["src/util/vfs/vfs-fd.c", "include/mgba-util/vfs.h", "src/gba/savedata.c"],
+      "source_lines": ["src/util/vfs/vfs-fd.c:151-155", "include/mgba-util/vfs.h:35-45", "src/gba/savedata.c:71-105"],
+      "finding": "The POSIX _vfdUnmap calls msync(MS_SYNC) and then munmap, ignores both return values, and returns through a void VFile.unmap slot. Savedata deinit therefore has no unmap-error result to inspect.",
+      "negative_test_evidence": [
+        {
+          "id": "fd-sync-failure",
+          "fixture": "tests/phase1_mgba_vfs_fd_teardown_native.c",
+          "sha256": "c731670c511ceaf53db2fac8372efe5bfa36ad443bf8808b675b740e4e2cbe9f",
+          "case": "sync_failure",
+          "execution": "PR13 workpaper-reported local native Linux fixture; not run in PR35 Actions."
+        },
+        {
+          "id": "fd-unmap-failure",
+          "fixture": "tests/phase1_mgba_vfs_fd_teardown_native.c",
+          "sha256": "c731670c511ceaf53db2fac8372efe5bfa36ad443bf8808b675b740e4e2cbe9f",
+          "case": "unmap_failure",
+          "execution": "PR13 workpaper-reported local native Linux fixture; not run in PR35 Actions."
+        }
+      ],
+      "remaining": "Exact-head PR13 Actions for the teardown package had action_required and zero jobs; PR35 run 41920176499 did not execute this fixture. Host syscall injection does not establish durable persistence, OS failure semantics, emulator cold reload, or physical Flash."
+    },
+    {
+      "id": "bool-close-and-caller",
+      "status": "RESOLVED_SOURCE_FACT; HOST_FAILURE_SEMANTICS_NEEDS_EVIDENCE",
+      "source_files": ["src/util/vfs/vfs-fd.c", "src/util/vfs/vfs-file.c", "src/gba/gba.c"],
+      "source_lines": ["src/util/vfs/vfs-fd.c:102-117", "src/util/vfs/vfs-file.c:66-73", "src/gba/gba.c:168-176"],
+      "finding": "Both backend close functions can return false on close/fclose failure before freeing their wrapper. GBAUnloadROM ignores realVf->close's bool and clears realVf. A retained wrapper in a fixture is not proof that a real failed fd close is open or that retry is safe after fclose failure.",
+      "negative_test_evidence": [
+        {
+          "id": "fd-close-failure",
+          "fixture": "tests/phase1_mgba_vfs_fd_teardown_native.c",
+          "sha256": "c731670c511ceaf53db2fac8372efe5bfa36ad443bf8808b675b740e4e2cbe9f",
+          "case": "close_failure",
+          "execution": "PR13 workpaper says injected wrapper fails before real close; local native fixture only."
+        },
+        {
+          "id": "stdio-unload-close-error",
+          "fixture": "tests/phase1_mgba_vfs_stdio_native.c",
+          "sha256": "2458e0ed4e5cafc1e60dbac18e2bc5945b718377bd25b55213e63f55bf5c7a39",
+          "case": "unload_close_error",
+          "execution": "PR13 workpaper-reported local native Linux fixture; callback fails but fclose is not retried."
+        }
+      ],
+      "remaining": "No real OS close failure injection, descriptor-state conclusion, retry contract, frontend resource recovery, or exact-head PR13 fixture CI."
+    },
+    {
+      "id": "stdio-fflush-fclose-short-io",
+      "status": "RESOLVED_SOURCE_FACT; BACKEND_RUNTIME_NEEDS_EVIDENCE",
+      "source_files": ["src/util/vfs/vfs-file.c", "include/mgba-util/vfs.h"],
+      "source_lines": ["src/util/vfs/vfs-file.c:66-159", "include/mgba-util/vfs.h:35-45"],
+      "finding": "_vffSync checks the buffered fwrite element count and returns fflush's result; _vffClose returns false on fclose failure. _vffMap ignores seek/read results, _vffUnmap ignores seek/write results and returns void, and _vffTruncate ignores zero-fill fwrite results while advancing its local size.",
+      "negative_test_evidence": [
+        {
+          "id": "stdio-flush-failure",
+          "fixture": "tests/phase1_mgba_vfs_stdio_native.c",
+          "sha256": "2458e0ed4e5cafc1e60dbac18e2bc5945b718377bd25b55213e63f55bf5c7a39",
+          "case": "injected_flush",
+          "execution": "PR13 workpaper-reported local native Linux fixture; not run in PR35 Actions."
+        },
+        {
+          "id": "stdio-short-output",
+          "fixture": "tests/phase1_mgba_vfs_stdio_native.c",
+          "sha256": "2458e0ed4e5cafc1e60dbac18e2bc5945b718377bd25b55213e63f55bf5c7a39",
+          "case": "mapped_short_unmap",
+          "execution": "PR13 workpaper-reported local native Linux fixture; no truncate short-write test."
+        },
+        {
+          "id": "stdio-dev-full",
+          "fixture": "tests/phase1_mgba_vfs_stdio_native.c",
+          "sha256": "2458e0ed4e5cafc1e60dbac18e2bc5945b718377bd25b55213e63f55bf5c7a39",
+          "case": "dev_full_clean",
+          "execution": "PR13 workpaper-reported local Linux /dev/full host error; not emulator evidence."
+        }
+      ],
+      "remaining": "No exact-head PR13 fixture CI; map/seek and truncate short-write cases remain untested; host stdio behavior is not emulator, cold-reload, or durability evidence."
+    },
+    {
+      "id": "savedata-short-io-propagation",
+      "status": "RESOLVED_SOURCE_FACT; CALLER_RUNTIME_NEEDS_EVIDENCE",
+      "source_files": ["src/gba/savedata.c", "src/gba/gba.c", "include/mgba-util/vfs.h"],
+      "source_lines": ["src/gba/savedata.c:71-135", "src/gba/savedata.c:194-226", "src/gba/gba.c:168-176", "include/mgba-util/vfs.h:35-45"],
+      "finding": "In the raw GBASavedataLoad path, the output write count overwrites the read count and success checks only non-negativity; the masked unmask path ignores GBASavedataLoad and temporary close results; GBAUnloadROM ignores realVf->close. Deinit invokes void unmap and clears pointers.",
+      "negative_test_evidence": [
+        {
+          "id": "stdio-short-raw-load",
+          "fixture": "tests/phase1_mgba_vfs_stdio_native.c",
+          "sha256": "2458e0ed4e5cafc1e60dbac18e2bc5945b718377bd25b55213e63f55bf5c7a39",
+          "case": "raw_short_load",
+          "execution": "PR13 workpaper-reported local native Linux fixture: output accepts 3 of 8 bytes and original load returns true."
+        },
+        {
+          "id": "stdio-unmask-short-read",
+          "fixture": "tests/phase1_mgba_vfs_stdio_native.c",
+          "sha256": "2458e0ed4e5cafc1e60dbac18e2bc5945b718377bd25b55213e63f55bf5c7a39",
+          "case": "unmask_short_read",
+          "execution": "PR13 workpaper-reported local native Linux fixture: 32 of 4096 bytes read; unmask completes."
+        },
+        {
+          "id": "fd-masked-short-read",
+          "fixture": "tests/phase1_mgba_vfs_fd_teardown_native.c",
+          "sha256": "c731670c511ceaf53db2fac8372efe5bfa36ad443bf8808b675b740e4e2cbe9f",
+          "case": "masked_writeback_short_read",
+          "execution": "PR13 workpaper-reported local native Linux fixture; not run in PR35 Actions."
+        }
+      ],
+      "remaining": "No full-core/frontend caller execution, complete negative/zero/short/error I/O matrix, RTC path coverage, cold reload, or stock-gameplay evidence."
+    },
+    {
+      "id": "license-and-dependency-boundary",
+      "status": "FILE_NOTICE_AND_PINNED_CLOSURE_IDENTITY_RESOLVED; DISTRIBUTION_AND_COVERAGE_NEEDS_EVIDENCE",
+      "source_files": ["include/mgba-util/vfs.h", "src/util/vfs/vfs-fd.c", "src/util/vfs/vfs-file.c", "src/gba/savedata.c", "src/gba/gba.c"],
+      "source_lines": ["include/mgba-util/vfs.h:1-5", "src/util/vfs/vfs-fd.c:1-5", "src/util/vfs/vfs-file.c:1-5", "src/gba/savedata.c:1-5", "src/gba/gba.c:1-5"],
+      "finding": "All five selected original files are in the previously hash-verified 20-file pinned closure and carry MPL-2.0 source notices. The closure and dossier identities are pinned here; this is not a legal conclusion for a combined distribution or proof that every frontend/platform caller is covered.",
+      "negative_test_evidence": [
+        {
+          "id": "closure-identity-negative-controls",
+          "fixture": "tests/test_phase1_mgba_vfs_fd_teardown_native.py",
+          "sha256": "b195d6e0b875bf4128169d2a73853d21a3e1868f3296ed4c9190fc1fd7601b90",
+          "case": "test_internal_evidence_mutations",
+          "execution": "PR13 parser/evidence control source; workpaper reports eleven malformed evidence mutations rejected. Not license advice or PR35 teardown CI."
+        }
+      ],
+      "remaining": "Combined-distribution licensing, platform/backend selection, and full frontend caller/dependency coverage remain unresolved."
+    }
+  ],
+  "pr35_actions": {
+    "workflow_file": ".github/workflows/copilot-mgba-savedata-review.yml",
+    "workflow_id": 401590285,
+    "run_id": 41920176499,
+    "run_attempt": 2,
+    "event": "pull_request",
+    "head_sha": "da037a0f87e0bc71c09ca158cab7bf7c85b5ebbb",
+    "run_conclusion": "success",
+    "job_id": 126922594700,
+    "job_name": "pinned-savedata-review",
+    "job_conclusion": "success",
+    "completed_steps": 14,
+    "artifact_id": 13370374104,
+    "artifact_name": "copilot-mgba-savedata-review-41920176499-2",
+    "artifact_sha256": "eb34bbbd12ce288af393871697fe5cdd0202bec609528bcc69040f3e3446d752",
+    "artifact_bytes": 7727,
+    "api_log_content_sha256": "1eda7db3f3062a7231caaf3fc256b809ae75ed7808d0a842b6c7ee5111b752cc",
+    "api_log_content_bytes": 72119,
+    "native_baseline": {
+      "mGBA_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+      "test_source_sha256": "233206a92473469d5ebcd74cdcdedaf6e49395cb67b0cbe19cb2d3a0e2fead18",
+      "runtime_log_sha256": "334addf291ce91cd7f2419b7dc8b4780b63825959ce28c8f13af3aa5c7e23000",
+      "assertions": 43,
+      "savedata_assertions": 9,
+      "hazard_observations": 4,
+      "source_mutations_rejected": 3,
+      "phase1_gate": "FAIL_INCOMPLETE",
+      "semantic_approvals": 0
+    },
+    "scope_limit": "The successful PR35 run validates the earlier savedata packet and baseline native harness; it does not execute either PR13 teardown fixture or this new handoff verifier."
+  },
+  "push_coverage": {
+    "workflow_events": ["pull_request", "workflow_dispatch"],
+    "push_trigger_configured": false,
+    "actions_push_run_query": {
+      "workflow_id": 401590285,
+      "filter_event": "push",
+      "result_count": 0,
+      "checked_at": "2026-11-05T00:44:39Z"
+    },
+    "conclusion": "No push coverage is established; do not infer push success from PR CI."
+  },
+  "pr13_fixture_ci": {
+    "current_head": "d4a753a8909f364ed133eda4b4253a06a985b9ab",
+    "current_head_run_id": 41882603072,
+    "current_head_conclusion": "action_required",
+    "current_head_jobs": 0,
+    "prior_fd_code_run_id": 41853164293,
+    "prior_fd_code_run_head": "0bf5a496df18ef9e3c6cf39ef361ffbe93931c6a",
+    "prior_fd_code_run_conclusion": "success",
+    "prior_fd_code_run_is_current_head": false,
+    "stdio_code_head_run_id": 41881695685,
+    "stdio_code_head_run_conclusion": "action_required",
+    "stdio_code_head_jobs": 0,
+    "current_teardown_fixture_ci": "NEEDS_EVIDENCE"
+  },
+  "phase1_state": {
+    "decision": "FAIL_INCOMPLETE",
+    "p0_candidates": 338,
+    "p0_approved": 0,
+    "inventory_total": 14834,
+    "approved": 0,
+    "phase2_started": false,
+    "shared_gate_or_register_edited": false
+  },
+  "promotion_gate": {
+    "all_selected_file_verdicts": "NEEDS_EVIDENCE",
+    "copilot_reviewed_passed": false,
+    "external_approved": false,
+    "reasons": [
+      "PR13 current exact-head teardown workflow has action_required and zero jobs.",
+      "PR35 successful run predates this handoff and does not execute either teardown fixture.",
+      "No push trigger or push run exists for the PR35 validation workflow.",
+      "Authenticated distinct reviewer/maintainer receipt prerequisites are not met."
+    ]
+  }
+}

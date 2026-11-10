@@ -1,0 +1,10 @@
+SCOPE unchanged pinned vfs-mem.c; borrowed-memory non-expanding seek bounds and cursor preservation; GBA caller not executed
+PASS constructor exposes only the four-byte borrowed extent
+PASS valid absolute seek reads from the requested offset
+PASS relative underflow is rejected without changing the cursor
+PASS valid negative end-relative seek remains inside the extent
+PASS end-relative underflow is rejected without changing the cursor
+PASS negative absolute seek is rejected without changing the cursor
+PASS invalid whence is rejected without changing the cursor
+PASS valid negative relative seek and all rejected seeks preserve guards and extent
+SUMMARY assertions=8 failures=0

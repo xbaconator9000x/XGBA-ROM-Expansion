@@ -45,6 +45,17 @@ native_oversize_nonM_ARM_visible_bytes
 native_oversize_nonM_ROM_end_access
 native_oversize_nonM_has_no_extra_CPU_address_window
 """.split())
+REQUIRED_SAVEDATA_TESTS=frozenset("""
+native_savedata_flash_direct_growth_zero_fills_new_bank
+native_savedata_flash_anonymous_promotion_leaves_new_bank_zero
+native_savedata_flash_bank_promotion_erases_new_bank
+native_savedata_eeprom_direct_growth_zero_fills_upper_range
+native_savedata_eeprom_promotion_erases_upper_range
+native_savedata_eeprom_anonymous_promotion_leaves_unwritten_bytes_zero
+native_savedata_eeprom_8k_empty_erases_only_first_512_bytes
+native_savedata_eeprom_512_empty_file_erases_entire_save
+native_savedata_clone_reports_success_after_readonly_output_error
+""".split())
 REQUIRED_NATIVE_GAPS=frozenset("""
 native_remap_leaves_prefetch_stale_until_refetch=true
 native_savestate_CRC_mismatch_only_warns=true
@@ -85,7 +96,11 @@ def check(log:str,record:dict,source_bytes:bytes)->dict:
     if len(set(passed))!=len(passed):raise EvidenceRejected("Duplicate PASS assertion name")
     if len(set(gaps))!=len(gaps):raise EvidenceRejected("Duplicate observation name")
     missing=REQUIRED_TESTS-set(passed)
-    if missing:raise EvidenceRejected("Required assertions missing: "+",".join(sorted(missing)))
+    if missing:raise EvidenceRejected("Required baseline assertions missing: "+",".join(sorted(missing)))
+    missing_savedata=REQUIRED_SAVEDATA_TESTS-set(passed)
+    if missing_savedata:raise EvidenceRejected("Required savedata assertions missing: "+",".join(sorted(missing_savedata)))
+    unexpected=set(passed)-(REQUIRED_TESTS|REQUIRED_SAVEDATA_TESTS)
+    if unexpected:raise EvidenceRejected("Unexpected PASS assertions: "+",".join(sorted(unexpected)))
     if set(gaps)!=REQUIRED_NATIVE_GAPS:
         raise EvidenceRejected("Native hazard observations changed: "+str(sorted(set(gaps)^REQUIRED_NATIVE_GAPS)))
     if (record.get("positive_checks_passed")!=len(passed)
@@ -102,6 +117,7 @@ def check(log:str,record:dict,source_bytes:bytes)->dict:
         "runtime_stdout_sha256":sha(log.encode()),
         "assertions_verified":len(passed),
         "required_assertions_preserved":len(REQUIRED_TESTS),
+        "savedata_assertions_verified":len(REQUIRED_SAVEDATA_TESTS),
         "native_gap_observations":gaps,
         "native_XGBA_runtime_verified":False,
         "independent_semantic_dispositions_approved":0,
@@ -111,7 +127,8 @@ def check(log:str,record:dict,source_bytes:bytes)->dict:
 
 def self_test()->None:
     source=b"pinned-fixture-for-unit-test"
-    passed="\n".join("PASS "+name for name in sorted(REQUIRED_TESTS))
+    expected=REQUIRED_TESTS|REQUIRED_SAVEDATA_TESTS
+    passed="\n".join("PASS "+name for name in sorted(expected))
     obs="\n".join("OBSERVATION "+name for name in sorted(REQUIRED_NATIVE_GAPS))
     # Sort order is persisted in metadata; actual runner uses chronological order.
     data=passed+"\n"+obs+"\nSUMMARY hard_failures=0 native_gap_observations=4 xgba_runtime_implemented=false phase1_mapping_complete=false\n"
@@ -119,19 +136,20 @@ def self_test()->None:
          "run_kind":"NATIVE_MGBA_SYNTHETIC_CARTRIDGE_ONLY",
          "native_probe_exit_code":0,"external_XGBA_banking_implemented":False,
          "phase1_mapping_complete":False,"independent_semantic_reviews_approved":0,
-         "positive_checks_passed":len(REQUIRED_TESTS),"positive_checks_failed":0,
+         "positive_checks_passed":len(expected),"positive_checks_failed":0,
          "native_gap_observations":sorted(REQUIRED_NATIVE_GAPS)}
-    assert check(data,rec,source)["assertions_verified"]==34
+    assert check(data,rec,source)["assertions_verified"]==43
     negatives=[
         (data.replace("PASS "+sorted(REQUIRED_TESTS)[0]+"\n",""),rec,source),
-        ("PASS "+sorted(REQUIRED_TESTS)[0]+"\n"+data,{**rec,"positive_checks_passed":35},source),
+        (data.replace("PASS "+sorted(REQUIRED_SAVEDATA_TESTS)[0]+"\n",""),rec,source),
+        ("PASS unexpected\n"+data,{**rec,"positive_checks_passed":44},source),
         ("FAIL injected\n"+data,rec,source),
         (data.replace("OBSERVATION "+sorted(REQUIRED_NATIVE_GAPS)[0],
                       "OBSERVATION "+sorted(REQUIRED_NATIVE_GAPS)[0].replace("=true","=false")),rec,source),
         (data,{**rec,"test_source_sha256":"0"*64},source),
         (data,{**rec,"source_revision":"wrong"},source),
         (data,{**rec,"native_probe_exit_code":139},source),
-        (data,{**rec,"positive_checks_passed":33},source),
+        (data,{**rec,"positive_checks_passed":42},source),
         (data,{**rec,"phase1_mapping_complete":True},source),
         (data,{**rec,"native_gap_observations":[]},source),
     ]
@@ -139,7 +157,7 @@ def self_test()->None:
         try:check(logs,record,blob)
         except EvidenceRejected:continue
         raise AssertionError("Fail-open negative fixture "+str(i))
-    print("Native mGBA evidence gate: 1 positive +",len(negatives),"negative controls PASS")
+    print("Native mGBA evidence gate: 1 positive (34 baseline + 9 savedata) +",len(negatives),"negative controls PASS")
 
 def main()->None:
     parser=argparse.ArgumentParser()

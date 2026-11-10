@@ -1,0 +1,317 @@
+{
+  "schema": "xgba.copilot.mgba_savedata_final_source_tranche_handoff.v1",
+  "reviewer": {
+    "identity": "GitHub Copilot Coding Agent (@copilot), reviewer-side PR #35 follow-up",
+    "source_packet_interpreter": "xbaconator9000x, pinned mGBA Phase 1 source and PR #13 evidence packet",
+    "identity_limit": "Attributable source audit only; not a distinct human reviewer, receipt, or semantic approval.",
+    "approval_eligible": false
+  },
+  "request_attribution": {
+    "repository": "xbaconator9000x/XGBA-ROM-Expansion",
+    "pull_request": 35,
+    "comment_id": 6648209121,
+    "comment_author": "xbaconator9000x",
+    "comment_url": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/35#issuecomment-6648209121",
+    "expected_parent_head": "0bef6d4342340eff98aebd26bf73f9af09f8dffe"
+  },
+  "scope": {
+    "repository": "mgba-emu/mgba",
+    "source_revision": "fd9dc5c2cbf234365068855851107e762fc6211b",
+    "purpose": "Final disjoint tranche of the existing 20-file pinned savedata inventory: complete analysis of the nine remaining VFS memory/dispatch, scripting callback, and compile/license dependency records.",
+    "subset": [
+      "src/util/vfs/vfs-mem.c",
+      "src/util/vfs.c",
+      "src/core/scripting.c",
+      "src/script/stdlib.c",
+      "include/mgba-util/common.h",
+      "include/mgba-util/dllexports.h",
+      "include/mgba-util/vector.h",
+      "include/mgba-util/memory.h",
+      "include/mgba-util/math.h"
+    ],
+    "prior_tranche_exclusions": [
+      "src/gba/core.c",
+      "include/mgba/core/core.h",
+      "include/mgba/gba/core.h",
+      "include/mgba/internal/gba/gba.h",
+      "include/mgba/internal/gba/savedata.h",
+      "include/mgba/internal/defines.h",
+      "include/mgba-util/vfs.h",
+      "src/util/vfs/vfs-fd.c",
+      "src/util/vfs/vfs-file.c",
+      "src/gba/savedata.c",
+      "src/gba/gba.c"
+    ],
+    "whole_file_analysis_count": 9,
+    "whole_file_hash_only_count": 0,
+    "overall_file_verdict": "NEEDS_EVIDENCE",
+    "semantic_approval": false
+  },
+  "machine_dossier": {
+    "path": "semantic-snapshots/current/candidate_review_dossiers.jsonl.gz",
+    "git_blob_sha1": "3b982876c7d810a827af8c80c7e5d9231fdaa327",
+    "sha256": "1c7cc9d6d8da71ff95021b986ffde8a93b7369ca703dc1b6e321c65b5f0eb609"
+  },
+  "selected_files": [
+    {
+      "path": "src/util/vfs/vfs-mem.c",
+      "git_blob_sha1": "048194e2dd2d0b3b395a852d2092c694663c88a2",
+      "source_sha256": "6b5951a0cd634d398a69ce57766298bd32d5e6410ee0aa4e8b8894c6aaa5829b",
+      "dossier_row_sha256": "3c95e0a322b5aff0655ec59a1c1f5d34a740a21676da0bf5cce444d2434248ce",
+      "byte_length": 7681,
+      "line_count": 331,
+      "whole_file_analysis": "COMPLETE",
+      "analysis_type": "Behavioral source analysis",
+      "verdict": "NEEDS_EVIDENCE",
+      "independent_approval": false,
+      "source_anchors": [
+        "src/util/vfs/vfs-mem.c:34-119",
+        "src/util/vfs/vfs-mem.c:121-152",
+        "src/util/vfs/vfs-mem.c:154-234",
+        "src/util/vfs/vfs-mem.c:237-288",
+        "src/util/vfs/vfs-mem.c:290-331"
+      ],
+      "review_findings": [
+        "VFileFromMemory and VFileFromConstMemory borrow caller storage; _vfmClose frees only the wrapper. VFileMemChunk uses owned anonymous memory and _vfmCloseFree releases it.",
+        "The mutable borrowed-memory backend can short-write at bufferSize; the const backend write callback returns -1. VFileMemChunk expands on writes/seeks, while truncate-without-expansion zero-fills newly visible bytes.",
+        "All memory-backend unmap calls are no-ops and sync returns true without performing I/O; this is an in-memory API contract, not durable save confirmation.",
+        "_vfmExpand does not check anonymousMemoryMap before copying, and its capacity rounding delegates size_t values to the uint32_t toPow2 helper. Allocation and representable-size limits remain material error-path obligations."
+      ],
+      "unresolved": "Trace the pinned anonymousMemoryMap implementation and all relevant limits/failure behavior; exercise memory-VFile edge cases including zero size, allocation failure, short write, and large-size arithmetic. No physical persistence claim applies."
+    },
+    {
+      "path": "src/util/vfs.c",
+      "git_blob_sha1": "3158c52659a83333cb23aeb0dd7ea4bba35908fc",
+      "source_sha256": "7b94fe172db57a97fef22047e79378bba3c8848b0808bca014d3a6554c1adc06",
+      "dossier_row_sha256": "47d41523b021d9d124e30aae47163dd32773f50223bcde11b82d4b27508107a2",
+      "byte_length": 7598,
+      "line_count": 352,
+      "whole_file_analysis": "COMPLETE",
+      "analysis_type": "Behavioral source analysis",
+      "verdict": "NEEDS_EVIDENCE",
+      "independent_approval": false,
+      "source_anchors": [
+        "src/util/vfs.c:21-123",
+        "src/util/vfs.c:125-169",
+        "src/util/vfs.c:287-352"
+      ],
+      "review_findings": [
+        "VFileOpen selects exactly one compile-time backend in precedence order: stdio, PSP2, 3DS, then fd; a build without any supported backend is rejected at compile time. A test built with one backend does not establish other platform dispatch behavior.",
+        "The PSP2/3DS/fd and stdio backends receive translated or original flags through different code paths; the 3DS truncate and append operations do not surface their void/seek results.",
+        "VFileReadline and the endian scalar helpers return the count reported by the backend rather than requiring a full transfer; read helpers only decode when the count is exact."
+      ],
+      "unresolved": "The caller/backend matrix across platform build configurations and the effects of backend-specific flag handling remain untested. This file does not establish which backend a downstream product selects."
+    },
+    {
+      "path": "src/core/scripting.c",
+      "git_blob_sha1": "7ccb51e897685ce24b37dabc76beb27427331b4f",
+      "source_sha256": "8bb8d2ca9a744b51a96d5258b7a1cec49b724f92ae843a1504b22d4ae9d138b1",
+      "dossier_row_sha256": "9975d4c10ec523f164e9e0292ae795ccb8522343d7b926c233bee159de08abc8",
+      "byte_length": 57714,
+      "line_count": 1540,
+      "whole_file_analysis": "COMPLETE",
+      "analysis_type": "Behavioral source analysis; unrelated scripting/debugger portions inspected but not assessed as savedata behavior",
+      "verdict": "NEEDS_EVIDENCE",
+      "independent_approval": false,
+      "source_anchors": [
+        "src/core/scripting.c:414-465",
+        "src/core/scripting.c:535-674",
+        "src/core/scripting.c:1028-1062",
+        "src/core/scripting.c:1426-1540"
+      ],
+      "review_findings": [
+        "The mCore script wrapper exposes save/load state buffer and file functions. File methods return the mCore save/load result but ignore VFile.close's bool; saveStateBuffer maps the produced file and copies it without checking the map result.",
+        "Script load-state defaults omit SAVESTATE_SAVEDATA, while save-state defaults include SAVESTATE_ALL. These are wrapper defaults, not proof of GBA RTC or savedata serialization correctness.",
+        "mScriptContextAttachCore registers savedataUpdated using the callback macro; the macro dispatches the named event to the script context. Detach removes the callback. No persistence result is passed through this callback path."
+      ],
+      "unresolved": "Trace serialization and RTC implementation/callers, and determine downstream handling of script save/load booleans and ignored close/map outcomes. The source-extracted callback fixture does not execute this complete translation unit or a real script engine/frontend."
+    },
+    {
+      "path": "src/script/stdlib.c",
+      "git_blob_sha1": "f84b62515315c119ec4ff5b9fb6df4de4517c738",
+      "source_sha256": "52c9fc2d9490f3f158f20c8eddfed07440ec22e4f174043f96e3704599c87b99",
+      "dossier_row_sha256": "db8b3609ef7ae747d57b1b3a163dd9af6fbbf9c22d661b2a5261e274cbae6ad1",
+      "byte_length": 13807,
+      "line_count": 307,
+      "whole_file_analysis": "COMPLETE",
+      "analysis_type": "Behavioral source analysis; callback/API documentation and registration reviewed",
+      "verdict": "NEEDS_EVIDENCE",
+      "independent_approval": false,
+      "source_anchors": [
+        "src/script/stdlib.c:20-103",
+        "src/script/stdlib.c:199-307"
+      ],
+      "review_findings": [
+        "The callback API adds/removes context callbacks and documents savedataUpdated as “The emulation has just finished modifying save data”; it does not define persistence success.",
+        "The standard library exports SAVESTATE_SAVEDATA and SAVESTATE_RTC flags, but these declarations alone do not define what the serializer writes or what a consumer observes after load."
+      ],
+      "unresolved": "No script execution, RTC/save-state round trip, frontend notification behavior, or persistence result is tested by this source review."
+    },
+    {
+      "path": "include/mgba-util/common.h",
+      "git_blob_sha1": "923e93086adfa09c9a55fcc2f0f6fa4d560e5888",
+      "source_sha256": "ec13354a050e4a7432232214b9991dd74000980ab2b8949389af0871cc1b799f",
+      "dossier_row_sha256": "b0a970a0105d3d1b109325bda5fedc99cff7a182cb010f24f826944faa0616ec",
+      "byte_length": 12589,
+      "line_count": 350,
+      "whole_file_analysis": "COMPLETE",
+      "analysis_type": "Complete compile/portability dependency analysis",
+      "verdict": "NEEDS_EVIDENCE",
+      "independent_approval": false,
+      "source_anchors": [
+        "include/mgba-util/common.h:19-90",
+        "include/mgba-util/common.h:104-135",
+        "include/mgba-util/common.h:146-263"
+      ],
+      "review_findings": [
+        "The header supplies platform-dependent ssize_t, POSIX declarations, atomic macros, byte-order operations, and shared integer/size types used by the VFile and script paths.",
+        "Endian macros and platform compatibility branches are compile-time contracts; inspecting this header does not prove that every target configuration builds or that disk bytes are durable."
+      ],
+      "unresolved": "Pin and test the actual platform build configurations used by consumers; the header cannot settle backend-specific I/O or persistence behavior."
+    },
+    {
+      "path": "include/mgba-util/dllexports.h",
+      "git_blob_sha1": "a44480df6ec26821b8616650b2575ba794848eca",
+      "source_sha256": "96871f8861195f4ff9fedd861ff07ed5b0a10a0e7642d6a780a8221cafd163d4",
+      "dossier_row_sha256": "5a0c3158c1515885d4f326ea52cc891074b5e0cd54e40460eab89d55a1746070",
+      "byte_length": 523,
+      "line_count": 19,
+      "whole_file_analysis": "COMPLETE",
+      "analysis_type": "Complete compile/export dependency analysis",
+      "verdict": "NEEDS_EVIDENCE",
+      "independent_approval": false,
+      "source_anchors": [
+        "include/mgba-util/dllexports.h:6-19"
+      ],
+      "review_findings": [
+        "MGBA_EXPORT is empty for static, non-MSVC, or standalone builds and selects dllexport/dllimport for the corresponding MSVC DLL modes; it does not alter savedata semantics."
+      ],
+      "unresolved": "Consumers' actual shared/static build configuration and exported-symbol linkage are not established by this source snapshot."
+    },
+    {
+      "path": "include/mgba-util/vector.h",
+      "git_blob_sha1": "c837379e2102ca6535db2b292233bd4983c3532c",
+      "source_sha256": "ae8d9ed36475bda93ab3d2ff581163cedd289b2275c5254b76ba9e4285696375",
+      "dossier_row_sha256": "6a1179a47870dc93b443eff57599611d1b8d43d87560de25863a9e5805d83eb7",
+      "byte_length": 4475,
+      "line_count": 128,
+      "whole_file_analysis": "COMPLETE",
+      "analysis_type": "Complete container dependency analysis",
+      "verdict": "NEEDS_EVIDENCE",
+      "independent_approval": false,
+      "source_anchors": [
+        "include/mgba-util/vector.h:17-35",
+        "include/mgba-util/vector.h:37-112",
+        "include/mgba-util/vector.h:114-128"
+      ],
+      "review_findings": [
+        "The vector macros provide size/capacity operations; initialization/ensure-capacity use calloc/realloc without propagating allocation failures, while deinit clears storage and counters. The header is a dependency in the pinned native VFS evidence closure, not a save-file durability primitive."
+      ],
+      "unresolved": "The vector implementation's relevant consumers and allocation-failure behavior have not been tested as part of this tranche; it is not evidence that the mGBA VFile memory allocation path succeeds."
+    },
+    {
+      "path": "include/mgba-util/memory.h",
+      "git_blob_sha1": "325f748f6fddc33a5539739ebc6eff6f3bb42bad",
+      "source_sha256": "509b56f31b2a279d954a16799501a1585cf7aa55f917a180432283b0205c198c",
+      "dossier_row_sha256": "cf858e1e109d1346cab0d7b30bcd119c207cfb84e9b45a3e73321c1e3576315e",
+      "byte_length": 443,
+      "line_count": 18,
+      "whole_file_analysis": "COMPLETE",
+      "analysis_type": "Complete API declaration/dependency analysis",
+      "verdict": "NEEDS_EVIDENCE",
+      "independent_approval": false,
+      "source_anchors": [
+        "include/mgba-util/memory.h:9-16"
+      ],
+      "review_findings": [
+        "The API declares anonymousMemoryMap(size_t) returning void* and mappedMemoryFree(void*, size_t) returning void; the interface has no explicit error result beyond a potentially null mapping."
+      ],
+      "unresolved": "The platform implementation and allocation failure/cleanup behavior are outside the remaining nine records and must be inspected before closing the VFileMem growth obligation."
+    },
+    {
+      "path": "include/mgba-util/math.h",
+      "git_blob_sha1": "f7b3269c9d51967765379b951ba6f43d24c61865",
+      "source_sha256": "04f5ee1686f4b30744d4e62caef4cf16f2f4b80682b88a87e7e18cf117fd421e",
+      "dossier_row_sha256": "87d819c03b064e4665a27b5563f4a7261cfcdad051913229884d4f72cfd813f9",
+      "byte_length": 3996,
+      "line_count": 145,
+      "whole_file_analysis": "COMPLETE",
+      "analysis_type": "Complete arithmetic dependency analysis",
+      "verdict": "NEEDS_EVIDENCE",
+      "independent_approval": false,
+      "source_anchors": [
+        "include/mgba-util/math.h:13-101",
+        "include/mgba-util/math.h:103-145"
+      ],
+      "review_findings": [
+        "The VFileMem growth path's toPow2 helper accepts uint32_t although its caller passes size_t. Zero returns zero; values needing a 2^32 result cannot be represented by the return type and require a caller-side bound that is not established by these files."
+      ],
+      "unresolved": "Prove the caller size domain and supported address width or test boundary values; no oversized allocation behavior is approved."
+    }
+  ],
+  "caller_and_dependency_closure": {
+    "traced_source_edges": [
+      "src/gba/core.c:_GBACoreSavedataClone allocates a caller-owned output buffer, wraps it with VFileFromMemory, and then calls GBASavedataClone; its exact whole-file source identity is in the prior six-file handoff.",
+      "src/core/scripting.c:_mScriptCoreSaveState creates VFileMemChunk(NULL, 0), calls mCoreSaveStateNamed, maps/copies bytes, and closes; file save/load wrappers use VFileOpen and return serialization/load booleans while ignoring close booleans.",
+      "src/util/vfs.c:VFileOpen dispatches to one compile-time backend; the pinned source branch and target build configuration determine whether the VFile is memory, stdio, POSIX fd, PSP2, or 3DS.",
+      "src/core/scripting.c registers/removes savedataUpdated in core callback tables; its callback macro forwards an event name but no VFile sync result.",
+      "src/script/stdlib.c documents savedataUpdated as a completed save-data modification event and exports SAVESTATE_SAVEDATA and SAVESTATE_RTC flags; implementation of serialization remains elsewhere."
+    ],
+    "dependency_gaps": [
+      "The memory.h declarations' platform implementation (anonymousMemoryMap/mappedMemoryFree) is not among the nine remaining dossier files.",
+      "The VFile interface header and core/GBA savedata implementations are covered in prior handoffs, not repeated here.",
+      "The complete mCore save-state serializer, GBA RTC serialization implementation, script engine, and external embedder/frontend consumers are not covered by this nine-file tranche.",
+      "The full dependency closure for every platform backend and downstream distribution is not established."
+    ],
+    "licensing": {
+      "notice": "MPL-2.0",
+      "all_nine_leading_notices_checked": true,
+      "whole_file_byte_hashes_and_dossier_rows_bound": true,
+      "combined_distribution_conclusion": false
+    }
+  },
+  "prior_pr13_evidence": {
+    "execution_policy": "Do not repeat the original PR13 native tests in this tranche; inspect and cite prior evidence only.",
+    "callback_fixture": {
+      "path": "tests/phase1_mgba_vfs_fd_callback_native.c",
+      "sha256": "4963287bf10a7e2a3cd5e52788bc3aa518d70319fafb8e580c1a9b935059b6d4",
+      "execution_class": "Local Linux host source-extracted witness with injected msync failure; not full mGBA runtime or gameplay."
+    },
+    "callback_runner": {
+      "path": "tools/phase1_mgba_vfs_fd_callback_native.py",
+      "sha256": "cc67ed3f5fd9b3a6a9e7f30076b38422dc19a43b3530a6576b97b4f1ed13bb53"
+    },
+    "observed_scope": "Original POSIX fd VFile translation unit, extracted GBASavedataClean/GBAFrameEnded and callback registration were exercised; the memory backend, scripting translation unit, full RTC/serialization round trip, physical Flash, cold restart, and power-loss durability were not.",
+    "current_exact_head_ci": {
+      "pr35_run_id": 41951361703,
+      "pr35_head_sha": "0bef6d4342340eff98aebd26bf73f9af09f8dffe",
+      "event": "pull_request",
+      "conclusion": "action_required",
+      "job_count": 0,
+      "pr13_run_id": 41882603072,
+      "pr13_head_sha": "d4a753a8909f364ed133eda4b4253a06a985b9ab",
+      "pr13_conclusion": "action_required",
+      "pr13_job_count": 0,
+      "push_event_run_count_for_pr35_branch": 0,
+      "logs_result": "No failed jobs found; workflow run has zero jobs."
+    }
+  },
+  "phase1_state": {
+    "decision": "FAIL_INCOMPLETE",
+    "p0_approved_before": 0,
+    "p0_approved_after": 0,
+    "approved_before": 0,
+    "approved_after": 0,
+    "phase2_started": false,
+    "shared_gate_or_register_edited": false
+  },
+  "unresolved_obligations": [
+    "All nine files received whole-file source review, but each disposition remains NEEDS_EVIDENCE; hashes, documentation, and source reads are not independent semantic approvals.",
+    "Execute bounded native tests of VFileFromMemory, VFileFromConstMemory, and VFileMemChunk including allocation failure, short-write, size overflow, zero-size, ownership, and close behavior; do not conflate these with physical Flash or durable files.",
+    "Inspect and pin the platform implementation of anonymousMemoryMap/mappedMemoryFree and prove supported allocation bounds.",
+    "Trace actual script engine and frontend consumers of state API booleans and savedataUpdated; test ignored close/map error behavior in the supported product runtime.",
+    "Inspect the complete mCore/GBA savedata and RTC serializer implementations and test RTC/save-state round trips plus cold restart independently.",
+    "Current exact-head PR workflow run 41951361703 and PR13 run 41882603072 are action_required with zero jobs. No push event run was found for the PR35 branch. Maintainer authorization is required before CI evidence exists.",
+    "The MPL-2.0 notice is present in all nine selected source files; transitive dependency/licensing review for combined distribution remains incomplete."
+  ]
+}
