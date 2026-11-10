@@ -71,10 +71,51 @@ class FakeLedger:
 class TestAutoProduct(unittest.TestCase):
     def test_dry_run_catalog(self):
         a.verify_state(a.new_state())
-        self.assertEqual(len(a.PACKAGES), 3)
+        self.assertEqual(len(a.PACKAGES), 6)
         files = [f for p in a.PACKAGES for f in p["files"]]
         self.assertEqual(len(files), len(set(files)))
         self.assertFalse(any("matrix" in f for f in files))
+
+    def test_existing_three_deliveries_remain_immutable_and_next_is_r4(self):
+        state = a.new_state()
+        for i in range(3):
+            state["history"].append({
+                "package": a.PACKAGES[i]["id"],
+                "task_id": "old-task-" + str(i) + "1" * 10,
+                "head": str(i + 1) * 40,
+                "status": "DELIVERED_AWAITING_INDEPENDENT_REVIEW",
+                "review_approved": False,
+            })
+        state["next"] = 3
+        a.verify_state(state)
+        api, store = FakeAPI(), FakeLedger(None)
+        store.value = state
+        api.sha = "a" * 40
+        with patch.object(a, "Ledger", return_value=store), patch.object(
+            a, "live_tasks", return_value=[]
+        ), patch.dict("os.environ", {
+            "GITHUB_REPOSITORY": a.REPO,
+            "XGBA_AUTONOMY_ENABLED": "1",
+            "XGBA_WAKE_HEAD_SHA": "",
+        }):
+            a.run(api)
+        self.assertEqual(len(api.posts), 1)
+        self.assertEqual(store.value["next"], 3)
+        self.assertEqual(store.value["current"]["id"], "R4_FIRE_RED_NATIVE_ADAPTER")
+        self.assertEqual(store.value["history"], state["history"])
+        self.assertIn("NATIVE C", api.posts[0][1]["prompt"])
+
+    def test_r4_to_r6_require_native_source_and_test_files(self):
+        expected = [
+            ("R4_FIRE_RED_NATIVE_ADAPTER", ".c"),
+            ("R5_MGBA_OPTIN_PROVIDER", ".c"),
+            ("R6_FIRERED_MGBA_SMOKE", ".py"),
+        ]
+        for i, (package, source_extension) in enumerate(expected, start=3):
+            self.assertEqual(a.PACKAGES[i]["id"], package)
+            self.assertTrue(a.PACKAGES[i]["files"][0].endswith(source_extension))
+            self.assertTrue(a.PACKAGES[i]["files"][1].endswith(".py"))
+            self.assertIn("BLOCK", a.PACKAGES[i]["goal"].upper())
 
     def test_existing_pr_validated(self):
         api = FakeAPI()
