@@ -3,11 +3,12 @@
     "baseline": "25046eaf0cc0e6639194f6adc4ee92f40327559a",
     "created_at": "2026-11-10T07:35:19.479380+00:00",
     "id": "R3_OPTIN_HOST_BRIDGE",
-    "status": "RESERVED",
-    "task_id": null
+    "status": "DISPATCHED",
+    "task_id": "7e49fd8f-81ec-4554-bf47-b7ecf1cbaf93"
   },
   "daily_dispatches": {
-    "2026-11-09": 2
+    "2026-11-09": 2,
+    "2026-11-10": 1
   },
   "history": [
     {
