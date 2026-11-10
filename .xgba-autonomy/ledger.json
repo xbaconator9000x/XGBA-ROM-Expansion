@@ -1,5 +1,11 @@
 {
-  "current": null,
+  "current": {
+    "baseline": "25046eaf0cc0e6639194f6adc4ee92f40327559a",
+    "created_at": "2026-11-10T07:35:19.479380+00:00",
+    "id": "R3_OPTIN_HOST_BRIDGE",
+    "status": "RESERVED",
+    "task_id": null
+  },
   "daily_dispatches": {
     "2026-11-09": 2
   },
@@ -12,12 +18,12 @@
       "task_id": "9f583fcf-ae9d-4d9d-8d76-f2893ea6ec82"
     },
     {
-      "package": "R2_DETERMINISTIC_PACKER",
-      "task_id": "2b5c6db2-48f6-42af-a105-77174149bab1",
       "head": "25046eaf0cc0e6639194f6adc4ee92f40327559a",
-      "status": "DELIVERED_AWAITING_INDEPENDENT_REVIEW",
+      "package": "R2_DETERMINISTIC_PACKER",
+      "reconciliation": "Reviewed exact-head clean delta removes .pyc artifacts, adds .gitignore and expected R2 source+tests; product-contracts 15/15 CI checks success. No independent semantic approval.",
       "review_approved": false,
-      "reconciliation": "Reviewed exact-head clean delta removes .pyc artifacts, adds .gitignore and expected R2 source+tests; product-contracts 15/15 CI checks success. No independent semantic approval."
+      "status": "DELIVERED_AWAITING_INDEPENDENT_REVIEW",
+      "task_id": "2b5c6db2-48f6-42af-a105-77174149bab1"
     }
   ],
   "independent_semantic_approvals": 0,
