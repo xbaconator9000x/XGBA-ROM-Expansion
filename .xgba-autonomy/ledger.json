@@ -1,5 +1,11 @@
 {
-  "current": null,
+  "current": {
+    "baseline": "1f8238fd730fb7af6db6b45d3c63d51f653eb8c3",
+    "created_at": "2026-11-10T12:52:19.182780+00:00",
+    "id": "R5_MGBA_OPTIN_PROVIDER",
+    "status": "RESERVED",
+    "task_id": null
+  },
   "daily_dispatches": {
     "2026-11-09": 2,
     "2026-11-10": 2
@@ -28,14 +34,14 @@
       "task_id": "7e49fd8f-81ec-4554-bf47-b7ecf1cbaf93"
     },
     {
-      "package": "R4_FIRE_RED_NATIVE_ADAPTER",
-      "task_id": "e751f9c0-d667-4173-a70e-f508ac8bff3b",
-      "head": "1f8238fd730fb7af6db6b45d3c63d51f653eb8c3",
-      "status": "DELIVERED_AWAITING_INDEPENDENT_REVIEW",
-      "review_approved": false,
       "delivery_origin": "MANUAL_RECOVERY_NOT_COPILOT",
+      "head": "1f8238fd730fb7af6db6b45d3c63d51f653eb8c3",
       "original_copilot_task_outcome": "COMPLETED_WITHOUT_PR_COMMIT",
-      "recovery_evidence": "Exact-head push+PR CI success, 24/24 resource tests, original pinned FireRed sprite.c LoadSpriteSheet native body compiled/executed with bounded EWRAM/VRAM harness; no game ROM execution, requires independent review"
+      "package": "R4_FIRE_RED_NATIVE_ADAPTER",
+      "recovery_evidence": "Exact-head push+PR CI success, 24/24 resource tests, original pinned FireRed sprite.c LoadSpriteSheet native body compiled/executed with bounded EWRAM/VRAM harness; no game ROM execution, requires independent review",
+      "review_approved": false,
+      "status": "DELIVERED_AWAITING_INDEPENDENT_REVIEW",
+      "task_id": "e751f9c0-d667-4173-a70e-f508ac8bff3b"
     }
   ],
   "independent_semantic_approvals": 0,
