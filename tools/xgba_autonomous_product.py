@@ -90,8 +90,28 @@ def verify_state(state):
     idx = state.get("next")
     if type(idx) is not int or not 0 <= idx <= len(PACKAGES):
         raise PilotError("Invalid workpack cursor")
-    if not isinstance(state.get("history"), list) or not isinstance(state.get("daily_dispatches"), dict):
+    history = state.get("history")
+    counts = state.get("daily_dispatches")
+    if not isinstance(history, list) or not isinstance(counts, dict):
         raise PilotError("Invalid history or quota ledger")
+    if len(history) != idx:
+        raise PilotError("History length does not match package cursor")
+    for i, entry in enumerate(history):
+        if (not isinstance(entry, dict) or
+            entry.get("package") != PACKAGES[i]["id"] or
+            entry.get("status") != "DELIVERED_AWAITING_INDEPENDENT_REVIEW" or
+            entry.get("review_approved") is not False or
+            not isinstance(entry.get("task_id"), str) or
+            not re.fullmatch(r"[A-Za-z0-9-]{8,128}", entry["task_id"]) or
+            not isinstance(entry.get("head"), str) or
+            not re.fullmatch(r"[0-9a-f]{40}", entry["head"])):
+            raise PilotError("Unverified or out-of-order delivery history")
+    for day, count in counts.items():
+        if (not isinstance(day, str) or
+            not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day) or
+            type(count) is not int or
+            count < 0 or count > MAX_PER_UTC_DAY):
+            raise PilotError("Invalid historical daily dispatch count")
     current = state.get("current")
     if current is not None:
         if idx >= len(PACKAGES) or not isinstance(current, dict):
