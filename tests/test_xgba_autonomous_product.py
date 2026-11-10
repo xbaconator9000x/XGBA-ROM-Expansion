@@ -103,6 +103,30 @@ class TestAutoProduct(unittest.TestCase):
         with self.assertRaises(PilotError):
             a.verify_state(state)
 
+    def test_state_rejects_forged_quota_and_delivery_history(self):
+        original = a.new_state()
+        for invalid in (-1, True, a.MAX_PER_UTC_DAY + 1, "1"):
+            state = copy.deepcopy(original)
+            state["daily_dispatches"] = {"2026-11-10": invalid}
+            with self.subTest(count=invalid), self.assertRaises(PilotError):
+                a.verify_state(state)
+        state = copy.deepcopy(original)
+        state["daily_dispatches"] = {"tomorrow": 1}
+        with self.assertRaises(PilotError):
+            a.verify_state(state)
+        state = copy.deepcopy(original)
+        state["next"] = 1
+        with self.assertRaises(PilotError):
+            a.verify_state(state)
+        state["history"].append({"package": a.PACKAGES[0]["id"],
+                                 "status": "DELIVERED_AWAITING_INDEPENDENT_REVIEW",
+                                 "review_approved": True, "head": "a" * 40,
+                                 "task_id": "12345678"})
+        with self.assertRaises(PilotError):
+            a.verify_state(state)
+        state["history"][0]["review_approved"] = False
+        a.verify_state(state)
+
     def test_state_rejects_foreign_package(self):
         s = a.new_state()
         s["current"] = {"id": "DIFFERENT", "status": "DISPATCHED"}
