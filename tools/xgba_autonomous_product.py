@@ -68,6 +68,64 @@ PACKAGES = (
             "Do not edit mGBA, FireRed or Porymap upstream sources; this is a prototype."
         ),
     },
+    {
+        "id": "R4_FIRE_RED_NATIVE_ADAPTER",
+        "files": ("tools/xgba_resource_firered_adapter.c", "tests/test_xgba_resource_firered_adapter.py"),
+        "goal": (
+            "PRIORITY: FIRE RED REAL ENGINE INTEGRATION, NO GENERAL MAPPING. "
+            "First inspect docs/XGBA_FIRERED_INTEGRATION_PRIORITY_20261110.md "
+            "and existing pointer/lifetime contracts. Implement a real opt-in "
+            "NATIVE C adapter at tools/xgba_resource_firered_adapter.c that can "
+            "be wired into one source-grounded STATIC GRAPHICS resource callsite "
+            "of pinned pret/pokefirered@ce6406d8c2eaf46d543c8a2606de0c3cb1951982. "
+            "The Python integration test must actually compile the adapter in "
+            "a temporary pinned FireRed source checkout (upstream/pokefirered) "
+            "and execute at least two negative controls, checking real callable "
+            "pointer/buffer ABI, bounded staging into GBA-visible RAM and "
+            "unchanged legacy fallback. NO mocked FireRed engine. Use an "
+            "explicit stable resource ID, not an invented CPU address. "
+            "If a true compiled FireRed integration is blocked, report precise "
+            "BLOCKED evidence and DO NOT deliver a fake green simulation. "
+            "Only commit the two required files; do not modify immutable upstream "
+            "sources or source pins."
+        ),
+    },
+    {
+        "id": "R5_MGBA_OPTIN_PROVIDER",
+        "files": ("tools/xgba_resource_mgba_adapter.c", "tests/test_xgba_resource_mgba_adapter.py"),
+        "goal": (
+            "Implement an explicit opt-in NATIVE C mGBA resource-provider ABI "
+            "to bridge the existing R1/R2/R3 host resource system to a real "
+            "pinned mgba-emu/mgba@fd9dc5c2cbf234365068855851107e762fc6211b "
+            "emulator build. Build against original checked-out emulator source "
+            "and execute native tests, including retrieving a named resource "
+            "from storage beyond 32MiB and refusal on mismatch/truncation. "
+            "Prove ordinary ROM/Matrix/EEPROM/e-Reader/Flash/DMA routes remain "
+            "unchanged with extension disabled, never invent arbitrary GBA "
+            "bus addresses or raw host pointers in game code. Respect MPL-2.0. "
+            "No host-only simulator is an acceptable emulator integration; "
+            "if cannot compile against actual pinned mGBA, BLOCK accurately. "
+            "Only commit the required two files."
+        ),
+    },
+    {
+        "id": "R6_FIRERED_MGBA_SMOKE",
+        "files": ("tools/xgba_resource_integration_smoke.py", "tests/test_xgba_resource_integration_smoke.py"),
+        "goal": (
+            "Implement a reproducible end-to-end demonstration: compile a "
+            "FireRed-derived executable using the pinned open-source decomp "
+            "and R4 source adapter, load an opt-in sidecar resource stored "
+            "above 32 MiB through the R5 mGBA provider, and execute the "
+            "actual ROM in an actual mGBA emulator/test harness. Observe one "
+            "real FireRed resource load into a bounded GBA-visible buffer. "
+            "Provide binary/game trace evidence, exact input/output hashes, "
+            "a positive case and at least four negative/legacy controls. "
+            "No copyrighted ROM distribution. A Python-only or mocked "
+            "emulator/engine simulation CANNOT pass. Report BLOCKED if a true "
+            "reproducible emulator+game execution is not yet possible. "
+            "Only the two required files may be changed."
+        ),
+    },
 )
 
 
@@ -194,7 +252,8 @@ def prompt_for(pkg, head):
         "Execute one substantial implementation package on EXISTING draft PR #40 "
         "(head_ref=" + HEAD + ", base_ref=main). Do NOT create a branch or PR. "
         "Check HEAD and the latest discussions before editing. "
-        "Read docs/XGBA_RESOURCE_PROTOTYPE_REUSE_20261110.md and existing "
+        "Read docs/XGBA_RESOURCE_PROTOTYPE_REUSE_20261110.md, "
+        "docs/XGBA_FIRERED_INTEGRATION_PRIORITY_20261110.md and existing "
         "tests/mgba_bank_boundary.c. Standard GBA memory layout and Matrix "
         "64 MiB bank-switching have ALREADY been documented and tested in XGBA: "
         "do NOT recreate, re-review or recount those tests. "
