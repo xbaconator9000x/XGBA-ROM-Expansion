@@ -328,7 +328,7 @@ def run(api):
 
     if current:
         if current["status"] in ("RESERVED", "BLOCKED"):
-            report("NEEDS_MANUAL_RECONCILIATION", package=current["id"], status=current["status"])
+            report("NEEDS_MANUAL_RECONCILIATION", package=current["id"], task_status=current["status"])
             return
         tid = current["task_id"]
         detail = api.get(AGENT_PATH + "/" + urllib.parse.quote(tid, safe=""))
