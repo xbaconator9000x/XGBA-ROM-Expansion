@@ -30,6 +30,44 @@
 - Existing pilot PR #38: `https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/38`.
 - Discontinued legacy scheduled workflow: `.github/workflows/phase1-copilot-chain.yml` is retained as manual-only to avoid duplicate dispatch, repeated syntax failures, and wasted runners.
 
+## Watchdog congruence and event-driven reconciliation (10 November 2026)
+
+**Single authority for paid-capable dispatch:** the default-branch GitHub Actions job
+`XGBA autonomous product dispatcher (bounded)`. It is the only service allowed
+to POST GitHub Copilot Agent Tasks and atomically maintain
+`xgba-autonomous-product-state:.xgba-autonomy/ledger.json`. The pre-existing
+hourly ChatGPT task `Continuous XGBA Phase 1` is **supervisory only**:
+it must read this same ledger/PR/CI, never independently POST another Agent Task,
+create a duplicate automation, restart the 14,834-file census, or override
+semantic approval counts.
+
+**Primary wakeups:** in addition to schedule and manual dispatch, the GitHub
+dispatcher now listens to `workflow_run: completed` for
+`XGBA opt-in resource prototype CI`. Only success events from this same repo,
+the exact PR #40 head branch, and `push`/`pull_request` sources qualify.
+The default-branch dispatcher separately re-reads PR #40 and requires the CI
+event's commit SHA to equal its latest head before accessing tasks or ledger.
+`workflow_run` never checks out or executes untrusted PR code, downloads PR
+artifacts, or evaluates PR-authored scripts. Existing single-run concurrency,
+task queue, CAS ledger, finite three-package cap and $0-overage requirement remain.
+
+**Fallback:** GitHub cron `23,53 * * * *` is best-effort, not a guaranteed
+30-minute cadence. An hourly ChatGPT watchdog checks PR #40, current task,
+exact-head checks and the latest GitHub dispatcher runs; it reports genuine
+delays/failures and repairs bounded defects only under the pre-existing
+no-direct-main / no-duplicate-dispatch / no-false-approval constraints. A green
+workflow with an `AGENT_ACTIVE` or `WAIT_OTHER_AGENT` result is **not**
+evidence that delivery finished. A stalled ledger must not be automatically
+cleared just because a branch commit or green test appears.
+
+**Terminal behaviour:** After R3, GitHub must record all R1/R2/R3 as
+`DELIVERED_AWAITING_INDEPENDENT_REVIEW`, `next=3`, `current=null`.
+The dispatcher then returns `QUEUE_DONE_AWAITING_REVIEW` and creates
+**no additional paid-capable Agent Task**. The watchdog reports the transition
+and requests independently reviewed integration before any additional
+implementation queue is authorised. Host-side prototype tests do not prove a
+playable expanded ROM or ordinary GBA cartridge compatibility.
+
 ## Success criteria
 
 1. Exact-head PR checks pass with offline negative tests before deployment.
