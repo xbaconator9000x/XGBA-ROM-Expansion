@@ -254,6 +254,13 @@ def run(api):
     if os.environ.get("GITHUB_REPOSITORY") != REPO or os.environ.get("XGBA_AUTONOMY_ENABLED") != "1":
         raise PilotError("Autonomous mode must be deliberately enabled for XGBA only")
     head = pr_head(api)
+    # A completed CI event can arrive late after Copilot pushes another commit.
+    # Never reconcile, reserve or dispatch based on a stale workflow_run.
+    wake_head = os.environ.get("XGBA_WAKE_HEAD_SHA", "")
+    if wake_head:
+        if not re.fullmatch(r"[0-9a-f]{40}", wake_head) or wake_head != head:
+            report("IGNORED_STALE_CI_WAKE", current_pr_head=head, trigger_head=wake_head)
+            return
     active = live_tasks(api)
     ledger = Ledger(api)
     ledger.ensure()
