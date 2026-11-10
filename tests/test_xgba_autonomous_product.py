@@ -155,6 +155,33 @@ class TestAutoProduct(unittest.TestCase):
         api.ci = "failure"
         self.assertEqual(a.ci_gate(api, api.sha)[0], "BLOCKED")
 
+    def test_stale_ci_wakeup_is_read_only_and_cannot_dispatch(self):
+        api, store = FakeAPI(), FakeLedger(None)
+        with patch.object(a, "Ledger", return_value=store), patch.object(
+            a, "live_tasks", side_effect=AssertionError("No agent calls for stale CI event")
+        ), patch.dict("os.environ", {
+            "GITHUB_REPOSITORY": a.REPO,
+            "XGBA_AUTONOMY_ENABLED": "1",
+            "XGBA_WAKE_HEAD_SHA": "b" * 40,
+        }):
+            a.run(api)
+        self.assertEqual(api.posts, [])
+        self.assertEqual(store.writes, [])
+        self.assertIsNone(store.value["current"])
+
+    def test_invalid_ci_wakeup_is_read_only(self):
+        api, store = FakeAPI(), FakeLedger(None)
+        with patch.object(a, "Ledger", return_value=store), patch.object(
+            a, "live_tasks", side_effect=AssertionError("Invalid SHA must stop")
+        ), patch.dict("os.environ", {
+            "GITHUB_REPOSITORY": a.REPO,
+            "XGBA_AUTONOMY_ENABLED": "1",
+            "XGBA_WAKE_HEAD_SHA": "../../foreign",
+        }):
+            a.run(api)
+        self.assertEqual(api.posts, [])
+        self.assertEqual(store.writes, [])
+
     def test_active_other_task_means_no_new_task(self):
         api, store = FakeAPI(), FakeLedger(None)
         api.active = [{"id": "unrelated", "state": "in_progress"}]

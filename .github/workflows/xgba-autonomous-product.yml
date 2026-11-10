@@ -14,6 +14,9 @@ on:
       - '.github/workflows/xgba-autonomous-product.yml'
   schedule:
     - cron: '23,53 * * * *'
+  workflow_run:
+    workflows: ['XGBA opt-in resource prototype CI']
+    types: [completed]
   workflow_dispatch:
 permissions:
   contents: read
@@ -24,6 +27,14 @@ concurrency:
   cancel-in-progress: false
 jobs:
   validate-and-advance:
+    # workflow_run executes default-branch code with secrets; never trust a
+    # different repository/branch's workflow name, event or conclusion.
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.head_repository.full_name == github.repository &&
+       github.event.workflow_run.head_branch == 'phase1/xgba-optin-resource-prototype-20261110' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'pull_request'))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -39,7 +50,9 @@ jobs:
           python3 -m unittest discover -s tests -p test_xgba_autonomous_product.py -v
           python3 tools/xgba_autonomous_product.py --mode dry-run
       - name: Advance ONE task at most (default branch only)
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
+          # Python re-checks exact current PR HEAD; stale CI triggers are read-only.
+          XGBA_WAKE_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: python3 tools/xgba_autonomous_product.py --mode run
