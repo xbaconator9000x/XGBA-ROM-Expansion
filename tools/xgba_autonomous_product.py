@@ -121,7 +121,7 @@ PACKAGES = (
             "Provide binary/game trace evidence, exact input/output hashes, "
             "a positive case and at least four negative/legacy controls. "
             "No copyrighted ROM distribution. A Python-only or mocked "
-            "emulator/engine simulation CANNOT pass. Fail clearly if a true "
+            "emulator/engine simulation CANNOT pass. Report BLOCKED if a true "
             "reproducible emulator+game execution is not yet possible. "
             "Only the two required files may be changed."
         ),
