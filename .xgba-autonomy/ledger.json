@@ -3,12 +3,12 @@
     "baseline": "1f8238fd730fb7af6db6b45d3c63d51f653eb8c3",
     "created_at": "2026-11-10T12:52:19.182780+00:00",
     "id": "R5_MGBA_OPTIN_PROVIDER",
-    "status": "RESERVED",
-    "task_id": null
+    "status": "DISPATCHED",
+    "task_id": "ed12463e-fcf8-49ff-9f72-654a8785b8af"
   },
   "daily_dispatches": {
     "2026-11-09": 2,
-    "2026-11-10": 2
+    "2026-11-10": 3
   },
   "history": [
     {
