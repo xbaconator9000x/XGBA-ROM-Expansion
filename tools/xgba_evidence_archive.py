@@ -2,7 +2,19 @@
 """Preserve selected byte-identical native screenshots and report summaries from verified CI."""
 import hashlib, io, json, os, struct, time, zipfile
 from pathlib import Path
-from urllib.request import Request, urlopen
+from urllib.request import Request, urlopen, HTTPRedirectHandler, build_opener
+from urllib.parse import urlsplit
+
+class DropAuthOnCrossHostRedirect(HTTPRedirectHandler):
+    # GitHub artifacts redirect to separately signed Azure object-store URLs.
+    # Never forward the GitHub Actions Bearer token to that destination.
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        redirected = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if redirected and urlsplit(newurl).hostname != urlsplit(req.full_url).hostname:
+            redirected.remove_header("Authorization")
+        return redirected
+
+SAFE_OPENER = build_opener(DropAuthOnCrossHostRedirect())
 
 REPO="xbaconator9000x/XGBA-ROM-Expansion"
 ROOT=Path(__file__).resolve().parents[1]
@@ -31,7 +43,7 @@ def fetch(url,token,maxlen):
           "Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28",
           "User-Agent":"xgba-verified-evidence"})
         try:
-            with urlopen(req,timeout=90) as response:data=response.read(maxlen+1)
+            with SAFE_OPENER.open(req,timeout=90) as response:data=response.read(maxlen+1)
             if len(data)>maxlen:raise ValueError("Oversized response")
             return data
         except Exception:
