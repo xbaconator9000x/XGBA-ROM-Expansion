@@ -83,7 +83,8 @@ def prepare_r8_game() -> None:
         ("struct XgbaR7Probe {", R8_PRESENT + "\nstruct XgbaR7Probe {"),
     ]
     for old, new in replacements:
-        if original.count(old) != 1:
+        expected_count = 2 if old == "received == 64" else 1
+        if original.count(old) != expected_count:
             raise AssertionError(f"R7 FireRed source fixture changed: {old}")
         original = original.replace(old, new)
     r7.R7_GAME_CODE = original
