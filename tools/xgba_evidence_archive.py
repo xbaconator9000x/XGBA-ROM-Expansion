@@ -20,6 +20,15 @@ REPO="xbaconator9000x/XGBA-ROM-Expansion"
 ROOT=Path(__file__).resolve().parents[1]
 BASE=ROOT/"evidence"/"verified"
 SOURCES={
+ "r23":(43028611280,13860021282,"d28f34b02b0cdc5d52342460a79dcc99a4ae0700",75,
+  ("01-native-emerald-before-mixed-battle.png "
+   "02-original-emerald-local-plus-two-external-opponents.png "
+   "03-r20-original-emerald-map-after-battle.png "
+   "04-r20-second-native-mixed-source-battle.png "
+   "r23-05-original-emerald-fully-recovered-external-field.png "
+   "r23-06-original-emerald-two-reacquired-external-opponents.png "
+   "r23-07-original-emerald-fully-recovered-external-field.png "
+   "r23-08-original-emerald-two-reacquired-external-opponents.png proof.json").split()),
  "r22":(43026113878,13856624718,"3f3be04358ceb921a91cfc774aa3c80bcb6c2c4e",73,
   ("01-original-littleroot-two-maps-loaded.png "
    "02-real-route101-external-crossing.png "
@@ -145,6 +154,44 @@ def gallery():
        "No executable ROMs, sidecars, save files or raw proprietary game assets are archived.",
        "Screenshots contain game imagery belonging to its rights holders and are shown",
        "only as limited, noncommercial engineering documentation.","",
+       "## R23 — four original Emerald battles and forced EWRAM phase eviction","",
+       "R23 passed 12/12 exact-head native original Emerald tests. Overworld",
+       "Littleroot and Route 101 map packs and two original compressed enemy",
+       "front sprites replace each other in the same bounded 16KiB physical",
+       "EWRAM arena. Three returns to original field reacquire both maps",
+       "before BG VRAM initialization; four battles fetch fresh fronts.",
+       "Four allocator pressure cycles confirm 16 original allocations/frees,",
+       "four oversized refusals and 24,576 verified live guard bytes.",
+       "This is real phase eviction, not three-connected-map eviction.",
+       "",
+       row(["First externally backed field","First source-backed real battle"]),
+       row(["---","---"]),
+       row([thumb("r23","01-native-emerald-before-mixed-battle.png","Before the first original double battle"),
+            thumb("r23","02-original-emerald-local-plus-two-external-opponents.png","First original Emerald battle")]),
+       "",
+       row(["First field restoration","Second source-backed battle"]),
+       row(["---","---"]),
+       row([thumb("r23","03-r20-original-emerald-map-after-battle.png","Map graphics reacquired after first battle"),
+            thumb("r23","04-r20-second-native-mixed-source-battle.png","Second genuine battle")]),
+       "",
+       row(["Second field restoration","Third source-backed battle"]),
+       row(["---","---"]),
+       row([thumb("r23","r23-05-original-emerald-fully-recovered-external-field.png","Reacquired original field after battle two"),
+            thumb("r23","r23-06-original-emerald-two-reacquired-external-opponents.png","Third original double battle")]),
+       "",
+       row(["Third field restoration","Fourth source-backed battle"]),
+       row(["---","---"]),
+       row([thumb("r23","r23-07-original-emerald-fully-recovered-external-field.png","Reacquired field after battle three"),
+            thumb("r23","r23-08-original-emerald-two-reacquired-external-opponents.png","Fourth genuine battle")]),
+       "",
+       "[R23 exact-head native CI 12/12](https://github.com/"+REPO+"/actions/runs/43028611280) · "
+       "[SHA provenance](verified/r23/provenance.json) · [proof](verified/r23/proof.json) · "
+       "[source PR #75](https://github.com/"+REPO+"/pull/75)",
+       "",
+       "**Limits:** Battle-vs-map working-set eviction only, not arbitrary",
+       "third connected map, in-flight DMA, variable-size pack paging or",
+       "original stock GBA/mGBA compatibility.",
+       "",
        "## R22 — 102 original Emerald D-pad connected-map crossings","",
        "R22 passed 7/7 native tests with original Emerald game and pinned mGBA.",
        "The game crossed Littleroot Town and Route 101 boundaries 102 times,",
@@ -399,7 +446,7 @@ def main():
     if os.getenv("GITHUB_REPOSITORY",REPO)!=REPO:raise ValueError("Unexpected repository")
     count=0
     for name,info in SOURCES.items():count+=archive_one(name,info,token)
-    if count<86:raise ValueError("Incomplete R9–R22 evidence collection")
+    if count<95:raise ValueError("Incomplete R9–R23 evidence collection")
     (ROOT/"evidence"/"README.md").write_text(gallery())
     readme=ROOT/"README.md"
     text=readme.read_text()

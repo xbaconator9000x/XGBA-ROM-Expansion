@@ -7,6 +7,39 @@ No executable ROMs, sidecars, save files or raw proprietary game assets are arch
 Screenshots contain game imagery belonging to its rights holders and are shown
 only as limited, noncommercial engineering documentation.
 
+## R23 — four original Emerald battles and forced EWRAM phase eviction
+
+R23 passed 12/12 exact-head native original Emerald tests. Overworld
+Littleroot and Route 101 map packs and two original compressed enemy
+front sprites replace each other in the same bounded 16KiB physical
+EWRAM arena. Three returns to original field reacquire both maps
+before BG VRAM initialization; four battles fetch fresh fronts.
+Four allocator pressure cycles confirm 16 original allocations/frees,
+four oversized refusals and 24,576 verified live guard bytes.
+This is real phase eviction, not three-connected-map eviction.
+
+| First externally backed field | First source-backed real battle |
+| --- | --- |
+| [![Before the first original double battle](verified/r23/01-native-emerald-before-mixed-battle.png)](verified/r23/01-native-emerald-before-mixed-battle.png) | [![First original Emerald battle](verified/r23/02-original-emerald-local-plus-two-external-opponents.png)](verified/r23/02-original-emerald-local-plus-two-external-opponents.png) |
+
+| First field restoration | Second source-backed battle |
+| --- | --- |
+| [![Map graphics reacquired after first battle](verified/r23/03-r20-original-emerald-map-after-battle.png)](verified/r23/03-r20-original-emerald-map-after-battle.png) | [![Second genuine battle](verified/r23/04-r20-second-native-mixed-source-battle.png)](verified/r23/04-r20-second-native-mixed-source-battle.png) |
+
+| Second field restoration | Third source-backed battle |
+| --- | --- |
+| [![Reacquired original field after battle two](verified/r23/r23-05-original-emerald-fully-recovered-external-field.png)](verified/r23/r23-05-original-emerald-fully-recovered-external-field.png) | [![Third original double battle](verified/r23/r23-06-original-emerald-two-reacquired-external-opponents.png)](verified/r23/r23-06-original-emerald-two-reacquired-external-opponents.png) |
+
+| Third field restoration | Fourth source-backed battle |
+| --- | --- |
+| [![Reacquired field after battle three](verified/r23/r23-07-original-emerald-fully-recovered-external-field.png)](verified/r23/r23-07-original-emerald-fully-recovered-external-field.png) | [![Fourth genuine battle](verified/r23/r23-08-original-emerald-two-reacquired-external-opponents.png)](verified/r23/r23-08-original-emerald-two-reacquired-external-opponents.png) |
+
+[R23 exact-head native CI 12/12](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43028611280) · [SHA provenance](verified/r23/provenance.json) · [proof](verified/r23/proof.json) · [source PR #75](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/75)
+
+**Limits:** Battle-vs-map working-set eviction only, not arbitrary
+third connected map, in-flight DMA, variable-size pack paging or
+original stock GBA/mGBA compatibility.
+
 ## R22 — 102 original Emerald D-pad connected-map crossings
 
 R22 passed 7/7 native tests with original Emerald game and pinned mGBA.
