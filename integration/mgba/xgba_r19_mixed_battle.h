@@ -145,6 +145,12 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
         }
         core->setKeys(core,0);
         r14_wait(core,70);
+        fprintf(stderr,"R20_WORLD_REACQUIRE_DIAG state=%u map=%u loads=%u "
+                "epoch=%u owner=%u world_claims=%u battle_claims=%u reads=%u\n",
+                r19_word(core,map,1),r19_word(core,map,3),
+                r19_word(core,map,5),r19_word(core,map,25),
+                r19_word(core,map,24),r19_word(core,map,26),
+                r19_word(core,map,27),device->successful_reads);
         r19_verify(core,map,resource,routeOffset,routeLen,9);
         if (r19_word(core,map,5)<4u ||
             r19_word(core,map,26)<2u ||
