@@ -18,6 +18,10 @@ on:
     branches: [main]
     paths:
       - 'tools/xgba_r16_emerald_decomp_patch.py'
+      - 'integration/mgba/xgba_mgba_device.c'
+      - 'integration/mgba/xgba_mgba_device.h'
+      - 'tests/test_xgba_r25_dma_lifetime.c'
+      - 'tests/r24_stub/**'
       - 'integration/emerald/**'
       - 'integration/mgba/xgba_r24_boundary.h'
       - 'integration/mgba/xgba_mgba_headless.c'
