@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import shutil
 from pathlib import Path
 import re
 import subprocess
@@ -145,6 +147,11 @@ class NativeCoreIntegratedR7(unittest.TestCase):
         cls.emulator = cls.build / "xgba-mgba-headless"
         if not cls.emulator.is_file():
             raise AssertionError("BLOCKED: actual extended mGBA executable missing")
+        artifact_path = os.environ.get("XGBA_R7_ARTIFACT")
+        if artifact_path:
+            artifact = Path(artifact_path)
+            artifact.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(cls.emulator, artifact)
         payload = r6.PAYLOAD
         cls.payload = payload
         cls.external = root / "external.bin"
