@@ -23,7 +23,8 @@ MAX_GUEST_RESOURCE = 16 * 1024
 
 
 def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
-           probe_address=0, disabled=False, screenshot=None, scene_dir=None):
+           probe_address=0, disabled=False, screenshot=None, scene_dir=None,
+           second_resource_id=None, r10_dir=None):
     rom = Path(rom).resolve(strict=True)
     if not rom.is_file() or rom.stat().st_size > MAX_ROM:
         raise ValueError("ROM must be a real GBA file of at most 32 MiB")
@@ -64,6 +65,19 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
         if not capture.is_dir():
             raise ValueError("R9 frame destination directory must already exist")
         cmd.extend(["--scene-dir", str(capture)])
+    if second_resource_id is not None:
+        second = manifest.get_resource(second_resource_id)
+        if not 0 < second.length <= MAX_GUEST_RESOURCE:
+            raise ValueError("R10 second asset exceeds bounded EWRAM")
+        if second.offset <= MAX_ROM:
+            raise ValueError("R10 second asset must begin after 32 MiB")
+        cmd.extend(["--second-resource", second.id,
+                    str(second.offset), str(second.length), second.sha256])
+    if r10_dir is not None:
+        target = Path(r10_dir).resolve()
+        if not target.is_dir():
+            raise ValueError("R10 real-map frame directory must already exist")
+        cmd.extend(["--r10-dir", str(target)])
     if disabled:
         cmd.append("--disabled")
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
@@ -86,11 +100,15 @@ def main():
     p.add_argument("--disabled", action="store_true")
     p.add_argument("--screenshot", help="Write an actual mGBA-rendered 240x160 PNG")
     p.add_argument("--scene-dir", help="Record 16 genuine emulator frames while injecting D-pad inputs")
+    p.add_argument("--second-resource-id", help="Additional ID in same sidecar for in-session switching")
+    p.add_argument("--r10-dir", help="Record the actual FireRed map before/after Select in one session")
     args = p.parse_args()
     out = launch(args.rom, args.manifest, args.resource_id,
                  emulator=args.emulator, frames=args.frames,
                  probe_address=args.probe_address, disabled=args.disabled,
-                 screenshot=args.screenshot, scene_dir=args.scene_dir)
+                 screenshot=args.screenshot, scene_dir=args.scene_dir,
+                 second_resource_id=args.second_resource_id,
+                 r10_dir=args.r10_dir)
     print(out.stdout, end="")
     if out.stderr:
         print(out.stderr, file=sys.stderr, end="")
