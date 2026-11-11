@@ -91,13 +91,27 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         if cls.resource_bytes>16384:
             raise AssertionError("Emerald original full tileset exceeds one synchronous 16 KiB XGBA read; must implement chunking, never drop assets")
         if r19:
+            resources=[
+                Resource("emerald_littleroot_pack",len(cls.pack)),
+                Resource("emerald_route101_pack",len(cls.route_pack))]
+            phases=[Phase("original_emerald_connected_maps",
+                          ("emerald_littleroot_pack","emerald_route101_pack"),
+                          transient_heap_bytes=12288)]
+            if r19_battle:
+                # Critical: battle reuses (does not add to) the EWRAM
+                # working set previously occupied by connected maps.
+                # Reserve actual fixed-size 8 KiB scratch slots, rather than
+                # only the compressed asset lengths, and fail on overflow.
+                resources += [
+                    Resource("emerald_battle_enemy_front_slot0",8192),
+                    Resource("emerald_battle_enemy_front_slot1",8192)]
+                phases.append(Phase(
+                    "original_emerald_double_battle",
+                    ("emerald_battle_enemy_front_slot0",
+                     "emerald_battle_enemy_front_slot1"),
+                    transient_heap_bytes=12288))
             budget=plan_residency(
-                [Resource("emerald_littleroot_pack",len(cls.pack)),
-                 Resource("emerald_route101_pack",len(cls.route_pack))],
-                [Phase("original_emerald_connected_maps",
-                       ("emerald_littleroot_pack","emerald_route101_pack"),
-                       transient_heap_bytes=12288)],
-                symbol_prefix="gXgbaR17")
+                resources,phases,symbol_prefix="gXgbaR17")
         else:
             budget=plan_residency(
                 [Resource("emerald_littleroot_pack",len(cls.pack))],
