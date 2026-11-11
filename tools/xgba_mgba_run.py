@@ -24,7 +24,8 @@ MAX_GUEST_RESOURCE = 16 * 1024
 
 def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
            probe_address=0, disabled=False, screenshot=None, scene_dir=None,
-           second_resource_id=None, r10_dir=None, r11_perf=None):
+           second_resource_id=None, r10_dir=None, r11_perf=None,
+           r12_dir=None):
     rom = Path(rom).resolve(strict=True)
     if not rom.is_file() or rom.stat().st_size > MAX_ROM:
         raise ValueError("ROM must be a real GBA file of at most 32 MiB")
@@ -83,6 +84,11 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
         if not result_path.parent.is_dir():
             raise ValueError("R11 benchmark output directory must exist")
         cmd.extend(["--r11-perf", str(result_path)])
+    if r12_dir is not None:
+        folder = Path(r12_dir).resolve()
+        if not folder.is_dir() or second_resource_id is None:
+            raise ValueError("R12 requires an existing directory and two resources")
+        cmd.extend(["--r12-dir", str(folder)])
     if disabled:
         cmd.append("--disabled")
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
@@ -108,13 +114,15 @@ def main():
     p.add_argument("--second-resource-id", help="Additional ID in same sidecar for in-session switching")
     p.add_argument("--r10-dir", help="Record the actual FireRed map before/after Select in one session")
     p.add_argument("--r11-perf", help="Write native Pallet Town CPU performance metrics as JSON")
+    p.add_argument("--r12-dir", help="Execute actual FireRed mGBA savestate recovery proof")
     args = p.parse_args()
     out = launch(args.rom, args.manifest, args.resource_id,
                  emulator=args.emulator, frames=args.frames,
                  probe_address=args.probe_address, disabled=args.disabled,
                  screenshot=args.screenshot, scene_dir=args.scene_dir,
                  second_resource_id=args.second_resource_id,
-                 r10_dir=args.r10_dir, r11_perf=args.r11_perf)
+                 r10_dir=args.r10_dir, r11_perf=args.r11_perf,
+                 r12_dir=args.r12_dir)
     print(out.stdout, end="")
     if out.stderr:
         print(out.stderr, file=sys.stderr, end="")

@@ -1,0 +1,78 @@
+name: XGBA R12 native FireRed savestate rollback
+on:
+  push:
+    branches:
+      - 'phase2/r12-firered-savestate-recovery-20261111'
+    paths:
+      - 'integration/**'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r12_savestate_recovery.py'
+      - '.github/workflows/xgba-r12-savestate-recovery.yml'
+  pull_request:
+    paths:
+      - 'integration/**'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r12_savestate_recovery.py'
+      - '.github/workflows/xgba-r12-savestate-recovery.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r12-snapshot-validation
+  cancel-in-progress: false
+jobs:
+  actual-firered-state-rollback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned native mGBA and ARM build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev build-essential cmake python3-pil
+          command -v arm-none-eabi-gcc
+      - name: Fetch exact upstream FireRed and mGBA source pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Execute real FireRed savestate rollback in enabled and disabled modes
+        shell: bash
+        env:
+          XGBA_R12_EVIDENCE_DIR: dist/xgba-r12-savestate
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tests/test_xgba_r12_savestate_recovery.py tools/xgba_mgba_run.py
+          python3 -m unittest discover -s tests -p 'test_xgba_r12_savestate_recovery.py' -v \
+            2>&1 | tee xgba-r12-tests.log
+          test -s dist/xgba-r12-savestate/summary.json
+          test -s dist/xgba-r12-savestate/enabled/proof.json
+          test -s dist/xgba-r12-savestate/disabled/proof.json
+          test "$(find dist/xgba-r12-savestate -name '*.png' | wc -l)" -eq 8
+          if find dist/xgba-r12-savestate -type f \( -name '*.gba' -o -name '*.elf' -o -name '*.tmp' \) | grep -q .; then
+            echo 'FAIL: proprietary ROM or raw mGBA savestate in artifacts'
+            exit 1
+          fi
+          if grep -Eq 'skipped=|expected failures=' xgba-r12-tests.log; then
+            echo 'FAIL: functional proof may not be skipped'
+            exit 1
+          fi
+          echo 'PASS_R12_ACTUAL_FIRERED_SAVESTATE_ROLLBACK'
+      - name: Publish eight genuine native LCD frames plus JSON only
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r12-native-firered-savestate-recovery
+          path: dist/xgba-r12-savestate/
+          if-no-files-found: error
+          retention-days: 90

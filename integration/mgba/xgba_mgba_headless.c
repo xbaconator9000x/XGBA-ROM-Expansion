@@ -337,6 +337,7 @@ static void run_r10_real_firered_live_swap(struct mCore *core, uint32_t probe,
 }
 
 #include "xgba_r11_benchmark.h"
+#include "xgba_r12_savestate.h"
 
 static void save_actual_game_frame(struct mCore *core, const char *path, int enabled)
 {
@@ -370,12 +371,13 @@ static void save_actual_game_frame(struct mCore *core, const char *path, int ena
 
 int main(int argc, char **argv)
 {
-    if (argc < 11 || argc > 24)
-        fail("usage: ROM DATA SOURCE_ID SOURCE_SHA RESOURCE_ID OFFSET LENGTH RESOURCE_SHA FRAMES PROBE_ADDR [--screenshot path] [--scene-dir path] [--r10-dir path] [--r11-perf path] [--second-resource ID OFFSET LENGTH SHA] [--disabled]");
+    if (argc < 11 || argc > 26)
+        fail("usage: ROM DATA SOURCE_ID SOURCE_SHA RESOURCE_ID OFFSET LENGTH RESOURCE_SHA FRAMES PROBE_ADDR [--screenshot path] [--scene-dir path] [--r10-dir path] [--r11-perf path] [--r12-dir path] [--second-resource ID OFFSET LENGTH SHA] [--disabled]");
     const char *screenshot = NULL;
     const char *scene_dir = NULL;
     const char *r10_dir = NULL;
     const char *r11_perf = NULL;
+    const char *r12_dir = NULL;
     const char *second_id = NULL;
     uint64_t second_offset = 0, second_length = 0;
     uint8_t second_sha[32] = {0};
@@ -391,6 +393,8 @@ int main(int argc, char **argv)
             r10_dir = argv[i];
         else if (!strcmp(argv[i], "--r11-perf") && ++i < argc && !r11_perf)
             r11_perf = argv[i];
+        else if (!strcmp(argv[i], "--r12-dir") && ++i < argc && !r12_dir)
+            r12_dir = argv[i];
         else if (!strcmp(argv[i], "--second-resource") && i+4 < argc &&
                  !second_id) {
             second_id = argv[++i];
@@ -449,9 +453,9 @@ int main(int argc, char **argv)
     struct mCore *core = GBACoreCreate();
     if (!core || !core->init(core))
         fail("mGBA core initialization failed");
-    mColor *video = (screenshot || scene_dir || r10_dir || r11_perf)
+    mColor *video = (screenshot || scene_dir || r10_dir || r11_perf || r12_dir)
                    ? calloc(240u*160u, sizeof(mColor)) : NULL;
-    if ((screenshot || scene_dir || r10_dir || r11_perf) && !video)
+    if ((screenshot || scene_dir || r10_dir || r11_perf || r12_dir) && !video)
         fail("cannot allocate GBA framebuffer");
     if (video)
         core->setVideoBuffer(core, video, 240);
@@ -468,8 +472,8 @@ int main(int argc, char **argv)
         if (probe && core->busRead32(core, (uint32_t)probe+4) == 3u)
             break;
     }
-    if (r10_dir && r11_perf)
-        fail("R11 uncapped frame profiling cannot record PNG frames");
+    if ((r10_dir && (r11_perf || r12_dir)) || (r11_perf && r12_dir))
+        fail("R10/R11/R12 execution modes are mutually exclusive");
     if (r10_dir) {
         if (!enabled)
             fail("R10 live swap requires extension enabled");
@@ -479,6 +483,11 @@ int main(int argc, char **argv)
         if (!second_id)
             fail("R11 requires both post-32MiB resources");
         xgba_r11_run(core, (uint32_t)probe, r11_perf,
+                     &device, &resource, enabled);
+    } else if (r12_dir) {
+        if (!second_id)
+            fail("R12 requires both post-32MiB resources");
+        xgba_r12_run(core, (uint32_t)probe, r12_dir,
                      &device, &resource, enabled);
     } else if (!scene_dir) {
         verify_game_copy(core, (uint32_t)probe, &device, &resource, enabled);
