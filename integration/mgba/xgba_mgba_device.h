@@ -70,6 +70,15 @@ struct XgbaGbaDevice {
     uint32_t actual_length;
     uint32_t successful_reads;
     uint32_t failed_reads;
+    /* R24 diagnostic counters: distinguish guest bounds/ID errors from
+     * provider truncation, missing IDs and verified SHA-256 mismatch.
+     * Append-only host struct; the existing v1 guest MMIO ABI is unchanged. */
+    uint32_t rejected_ranges;
+    uint32_t rejected_ids;
+    uint32_t provider_too_large;
+    uint32_t provider_bad_sha256;
+    uint32_t provider_not_found;
+    uint32_t provider_other_failures;
 };
 
 /* Returns 0 on successful opt-in / opt-out, nonzero on ABI or identity error. */
