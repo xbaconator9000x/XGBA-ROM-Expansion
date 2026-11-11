@@ -31,8 +31,8 @@ class NativeEmeraldArenaReentry(unittest.TestCase):
         # R19's exact source-backed ROM, external map + compressed mon fixtures,
         # verified physical EWRAM linker, and original native mGBA build.
         r17.ActualEmeraldLittlerootExternalMap.setUpClass.__func__(cls)
-        output = cls.native_root / "r20-ewram-evidence"
-        output.mkdir()
+        output = Path(os.environ.get("XGBA_R20_EVIDENCE_DIR", cls.native_root / "r20-ewram-evidence"))
+        output.mkdir(parents=True,exist_ok=True)
         cls.output = output
         names = ("emerald.battle.poochyena.front",
                  "emerald.battle.zigzagoon.front")
@@ -76,7 +76,8 @@ class NativeEmeraldArenaReentry(unittest.TestCase):
             folder=Path(dest)
             folder.mkdir(parents=True,exist_ok=True)
             for png in output.glob("*.png"):
-                shutil.copy2(png,folder/png.name)
+                if png.resolve() != (folder/png.name).resolve():
+                    shutil.copy2(png,folder/png.name)
             (folder/"proof.json").write_text(json.dumps(cls.report,indent=2,sort_keys=True)+"\n")
 
     def test_native_original_emerald_completed_two_phase_changes(self):
