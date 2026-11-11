@@ -20,6 +20,13 @@ REPO="xbaconator9000x/XGBA-ROM-Expansion"
 ROOT=Path(__file__).resolve().parents[1]
 BASE=ROOT/"evidence"/"verified"
 SOURCES={
+ "r22":(43026113878,13856624718,"3f3be04358ceb921a91cfc774aa3c80bcb6c2c4e",73,
+  ("01-original-littleroot-two-maps-loaded.png "
+   "02-real-route101-external-crossing.png "
+   "03-return-littleroot-live-packs.png "
+   "r22-crossings-002-stable-externally-backed-field.png "
+   "r22-crossings-052-stable-externally-backed-field.png "
+   "r22-crossings-100-stable-externally-backed-field.png proof.json").split()),
  "r21":(43023656373,13855614154,"83f0159018b0fc6e710d1b72de8cd359d94175fe",71,
   ("01-native-emerald-before-mixed-battle.png "
    "02-original-emerald-local-plus-two-external-opponents.png "
@@ -138,6 +145,34 @@ def gallery():
        "No executable ROMs, sidecars, save files or raw proprietary game assets are archived.",
        "Screenshots contain game imagery belonging to its rights holders and are shown",
        "only as limited, noncommercial engineering documentation.","",
+       "## R22 — 102 original Emerald D-pad connected-map crossings","",
+       "R22 passed 7/7 native tests with original Emerald game and pinned mGBA.",
+       "The game crossed Littleroot Town and Route 101 boundaries 102 times,",
+       "with 103 independent source-backed map/BG VRAM verification points.",
+       "Both external packs stayed simultaneously resident without unwanted",
+       "reloads, EWRAM arena generation changes or provider failures.",
+       "This is two-map RETENTION / CHURN, not a forced eviction test.",
+       "",
+       row(["Initial external Littleroot","Route 101 original camera crossing","Returned to Littleroot"]),
+       row(["---","---","---"]),
+       row([thumb("r22","01-original-littleroot-two-maps-loaded.png","Original Littleroot external map"),
+            thumb("r22","02-real-route101-external-crossing.png","Route 101 native D-pad"),
+            thumb("r22","03-return-littleroot-live-packs.png","Original return")]),
+       "",
+       row(["2 extra crossings","52 extra crossings","100 extra crossings"]),
+       row(["---","---","---"]),
+       row([thumb("r22","r22-crossings-002-stable-externally-backed-field.png","First additional original round trip"),
+            thumb("r22","r22-crossings-052-stable-externally-backed-field.png","Midway original game"),
+            thumb("r22","r22-crossings-100-stable-externally-backed-field.png","Last original game round trip")]),
+       "",
+       "[R22 passing exact-head native CI 7/7](https://github.com/"+REPO+"/actions/runs/43026113878) · "
+       "[SHA provenance](verified/r22/provenance.json) · [proof](verified/r22/proof.json) · "
+       "[source PR #73](https://github.com/"+REPO+"/pull/73)",
+       "",
+       "**Limits:** two original simultaneous map packs, not 3+ map",
+       "evictions, full allocator leak certification, DMA races, hardware",
+       "or unmodified emulator compatibility.",
+       "",
        "## R21 — actual Emerald allocator pressure across two original battles","",
        "R21 passed 10/10 exact-head native tests against original source-built",
        "Emerald and native mGBA. The guest's real MemBlock allocator performs",
@@ -364,7 +399,7 @@ def main():
     if os.getenv("GITHUB_REPOSITORY",REPO)!=REPO:raise ValueError("Unexpected repository")
     count=0
     for name,info in SOURCES.items():count+=archive_one(name,info,token)
-    if count<79:raise ValueError("Incomplete R9–R21 evidence collection")
+    if count<86:raise ValueError("Incomplete R9–R22 evidence collection")
     (ROOT/"evidence"/"README.md").write_text(gallery())
     readme=ROOT/"README.md"
     text=readme.read_text()

@@ -7,6 +7,29 @@ No executable ROMs, sidecars, save files or raw proprietary game assets are arch
 Screenshots contain game imagery belonging to its rights holders and are shown
 only as limited, noncommercial engineering documentation.
 
+## R22 — 102 original Emerald D-pad connected-map crossings
+
+R22 passed 7/7 native tests with original Emerald game and pinned mGBA.
+The game crossed Littleroot Town and Route 101 boundaries 102 times,
+with 103 independent source-backed map/BG VRAM verification points.
+Both external packs stayed simultaneously resident without unwanted
+reloads, EWRAM arena generation changes or provider failures.
+This is two-map RETENTION / CHURN, not a forced eviction test.
+
+| Initial external Littleroot | Route 101 original camera crossing | Returned to Littleroot |
+| --- | --- | --- |
+| [![Original Littleroot external map](verified/r22/01-original-littleroot-two-maps-loaded.png)](verified/r22/01-original-littleroot-two-maps-loaded.png) | [![Route 101 native D-pad](verified/r22/02-real-route101-external-crossing.png)](verified/r22/02-real-route101-external-crossing.png) | [![Original return](verified/r22/03-return-littleroot-live-packs.png)](verified/r22/03-return-littleroot-live-packs.png) |
+
+| 2 extra crossings | 52 extra crossings | 100 extra crossings |
+| --- | --- | --- |
+| [![First additional original round trip](verified/r22/r22-crossings-002-stable-externally-backed-field.png)](verified/r22/r22-crossings-002-stable-externally-backed-field.png) | [![Midway original game](verified/r22/r22-crossings-052-stable-externally-backed-field.png)](verified/r22/r22-crossings-052-stable-externally-backed-field.png) | [![Last original game round trip](verified/r22/r22-crossings-100-stable-externally-backed-field.png)](verified/r22/r22-crossings-100-stable-externally-backed-field.png) |
+
+[R22 passing exact-head native CI 7/7](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43026113878) · [SHA provenance](verified/r22/provenance.json) · [proof](verified/r22/proof.json) · [source PR #73](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/73)
+
+**Limits:** two original simultaneous map packs, not 3+ map
+evictions, full allocator leak certification, DMA races, hardware
+or unmodified emulator compatibility.
+
 ## R21 — actual Emerald allocator pressure across two original battles
 
 R21 passed 10/10 exact-head native tests against original source-built
