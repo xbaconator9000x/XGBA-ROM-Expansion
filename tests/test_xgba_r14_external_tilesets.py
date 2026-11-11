@@ -28,8 +28,10 @@ import apply_core_patch
 def sha(b): return hashlib.sha256(b).hexdigest()
 def symbols(elf):
     out=r7.run(["arm-none-eabi-nm","-S","--defined-only",elf]).stdout
-    return {m[3]:(int(m[1],16),int(m[2],16)) for m in re.finditer(
-        r"^([0-9a-fA-F]+)\s+([0-9a-fA-F]+)\s+[A-Za-z]\s+(\S+)$",out,re.M)}
+    # GNU nm -S omits the size column on assembler-defined layout labels.
+    # The address is still sufficient to inspect a MapLayout's ROM pointers.
+    return {m[3]:(int(m[1],16),int(m[2],16) if m[2] else 0) for m in re.finditer(
+        r"^([0-9a-fA-F]+)(?:\s+([0-9a-fA-F]+))?\s+[A-Za-z]\s+(\S+)$",out,re.M)}
 
 def tileset_parts(rom,syms,name):
     parts=[]
