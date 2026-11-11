@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 from xgba_memory_plan import MemoryBudgetError
 
-def patch_emerald_heap_tail(emerald:Path,*,reserve_bytes:int,replace_once)->dict[Path,str]:
+def patch_emerald_heap_tail(emerald:Path,*,reserve_bytes:int,replace_once,r21_pressure:bool=False)->dict[Path,str]:
     if type(reserve_bytes) is not int or not (0<reserve_bytes<=16384) or reserve_bytes%4:
         raise MemoryBudgetError("Emerald heap-tail reserve must be 4-byte aligned <=16KiB")
     base=Path(emerald)
@@ -20,6 +20,15 @@ def patch_emerald_heap_tail(emerald:Path,*,reserve_bytes:int,replace_once)->dict
        f"    if (heapStart == gHeap && heapSize > HEAP_SIZE - {reserve_bytes}u)\n"
        f"        heapSize = HEAP_SIZE - {reserve_bytes}u;",
        "Emerald native heap reset policy")
+    if r21_pressure:
+        if reserve_bytes!=16384:
+            raise MemoryBudgetError("R21 original malloc regression requires the audited 16KiB arena")
+        inc=(Path(__file__).resolve().parents[1]/
+             "integration/emerald/xgba_r21_heap_pressure.inc").resolve()
+        if not inc.is_file():
+            raise MemoryBudgetError("R21 source instrumentation unavailable")
+        malloc+="\n/* R21 opt-in original Emerald allocator instrumentation. */\n"
+        malloc+=f'#include "{inc.as_posix()}"\n'
     save=replace_once(originals[files[1]],"void MoveSaveBlocks_ResetHeap(void)\n{",
        "void MoveSaveBlocks_ResetHeap(void)\n{\n"
        "    /* Emerald's trainer-ID-dependent relocation copies all three save"
