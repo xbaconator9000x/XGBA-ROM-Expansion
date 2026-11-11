@@ -40,7 +40,10 @@ static int ewram_range(uint32_t address, uint32_t size)
  *
  * Conservatively cover both the configured and current source positions.
  * The pinned mGBA GBADMARegister bits (7:8 src mode, 10 width, 15 enable)
- * and GBADMA source/count fields are read-only here. This guard uses real\n * 256 KiB EWRAM mirrored aliases, not only the first physical window.\n * There is no alteration\n * of DMA scheduling, register writes, emulator timing, or guest RAM size.
+ * and GBADMA source/count fields are read-only here. This guard uses real
+ * 256 KiB EWRAM mirrored aliases, not only the first physical window.
+ * There is no alteration of DMA scheduling, register writes, emulator
+ * timing, or guest RAM size.
  *
  * This protects host-initiated MMIO commits. It does NOT validate direct
  * original-game CPU writes or constitute a general guest DMA lease API. */
