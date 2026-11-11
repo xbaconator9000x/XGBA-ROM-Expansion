@@ -211,9 +211,10 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
                    "allocations=%u frees=%u oversized_rejected=%u "
                    "original_allocator_audits=%u verified_guard_bytes=%u "
                    "peak_live_bytes=%u minimum_largest_free=%u "
-                   "arena_reserved_bytes=%u original_battles=2 native_ewram=1\n",
+                   "arena_reserved_bytes=%u error_flags=%u "
+                   "original_battles=2 native_ewram=1\n",
                    h[1],h[7],h[9],h[8],h[13],h[14],h[10],
-                   h[11],h[6]);
+                   h[11],h[6],h[2]);
         }
         printf("PASS_R20_EWRAM_ARENA_REENTRY real_original_battles=2 "
                "external_sprite_fetches=%u ownership_epochs=%u "
