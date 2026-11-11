@@ -7,6 +7,29 @@ No executable ROMs, sidecars, save files or raw proprietary game assets are arch
 Screenshots contain game imagery belonging to its rights holders and are shown
 only as limited, noncommercial engineering documentation.
 
+## R20 — Emerald bounded EWRAM arena survives battle → map → battle
+
+Native 6/6 at exact implementation head 448bb54c. Original source-built
+Emerald executes two real double battles separated by a return to its
+externally backed overworld. Two source-stripped connected map packs are
+reacquired before the original BG renderer initializes; original external
+opponent sprites are fetched and decompressed again during the second battle.
+Evidence: four genuinely rendered 240×160 native Emerald LCD frames.
+
+| Original external-map overworld | First genuine mixed-source battle |
+| --- | --- |
+| [![Original Emerald before battle](verified/r20/01-native-emerald-before-mixed-battle.png)](verified/r20/01-native-emerald-before-mixed-battle.png) | [![First original mixed-source double battle](verified/r20/02-original-emerald-local-plus-two-external-opponents.png)](verified/r20/02-original-emerald-local-plus-two-external-opponents.png) |
+
+| Reacquired externally backed field | Second genuine mixed-source battle |
+| --- | --- |
+| [![Recovered field and BG VRAM](verified/r20/03-r20-original-emerald-map-after-battle.png)](verified/r20/03-r20-original-emerald-map-after-battle.png) | [![Original second battle](verified/r20/04-r20-second-native-mixed-source-battle.png)](verified/r20/04-r20-second-native-mixed-source-battle.png) |
+
+[R20 exact-head native CI 6/6](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43020066026) · [R19 battle regression](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43020065894) · [R19 map regression](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43020065937) · [provenance](verified/r20/provenance.json) · [source PR #69](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/69)
+
+**Scope:** two battle cycles and verified phase reuse; NOT exhaustive EWRAM
+fragmentation stress, canary/DMA coverage, user-facing error handling,
+general unlimited scene streaming, stock mGBA or original GBA hardware.
+
 ## R19 — original Emerald connected maps and mixed-storage Pokémon battles
 
 Both native integration suites passed 6/6 tests each at the same commit:

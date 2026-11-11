@@ -1,0 +1,40 @@
+{
+  "milestone": "R20",
+  "source_run": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43020066026",
+  "source_artifact": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43020066026/artifacts/13855101381",
+  "source_head_sha": "448bb54c3240fc9c344b1b6bbb1735365721d45d",
+  "implementation_pr": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/69",
+  "source_artifact_zip_sha256": "73c30e52c9b15fbf022cd68d314ed3f89ab623a9e81bcbb83058d428afcec7d1",
+  "files": {
+    "01-native-emerald-before-mixed-battle.png": {
+      "original_sha256": "2fb3229047a795001f340044906f2385a0696370f801e56a0d1e52535ded2b51",
+      "archived_sha256": "2fb3229047a795001f340044906f2385a0696370f801e56a0d1e52535ded2b51",
+      "unaltered": true,
+      "size": 7327
+    },
+    "02-original-emerald-local-plus-two-external-opponents.png": {
+      "original_sha256": "1b06c7c4b1c92da78c23530c06025eb5c58a4d3d5779356d7670148a50e08754",
+      "archived_sha256": "1b06c7c4b1c92da78c23530c06025eb5c58a4d3d5779356d7670148a50e08754",
+      "unaltered": true,
+      "size": 6058
+    },
+    "03-r20-original-emerald-map-after-battle.png": {
+      "original_sha256": "07c46921f967fdc0e4ae0f6db41cd66e1780db20db458a3676740fa522553342",
+      "archived_sha256": "07c46921f967fdc0e4ae0f6db41cd66e1780db20db458a3676740fa522553342",
+      "unaltered": true,
+      "size": 6250
+    },
+    "04-r20-second-native-mixed-source-battle.png": {
+      "original_sha256": "3d25d2ee3a4ce274bd8e71311a828d2869309197258e533cb354833ef7216020",
+      "archived_sha256": "3d25d2ee3a4ce274bd8e71311a828d2869309197258e533cb354833ef7216020",
+      "unaltered": true,
+      "size": 6712
+    },
+    "proof.json": {
+      "original_sha256": "ce01f250ec03baf308de460cb134efd20eb49ac0404e44af246524f83e01bafe",
+      "archived_sha256": "f802d71d6a9fa63e18a7b346c98808419acffafb26d9c5a442947df7f6e65437",
+      "unaltered": false,
+      "size": 1090
+    }
+  }
+}
