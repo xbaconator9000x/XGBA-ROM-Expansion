@@ -6,6 +6,9 @@
  *
  * This layer extends, never replaces, the R16 guest/mGBA resource ABI.
  */
+/* Hook is source-included before these original Emerald externs. */
+extern const struct MapLayout *const gMapLayouts[];
+extern const struct MapHeader *const *const gMapGroups[];
 #define XGBA_R19_GROUP 0u
 #define XGBA_R19_LITTLEROOT 9u
 #define XGBA_R19_ROUTE101 16u
