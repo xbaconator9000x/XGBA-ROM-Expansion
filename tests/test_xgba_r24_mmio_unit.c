@@ -183,6 +183,33 @@ int main(void)
     assert(device.provider_other_failures==1u);
     assert(device.failed_reads==8u);
 
+    /* Deterministic adversarial boundary sweep, using the real device's
+     * guest address/size checks without requiring the ARM build tools.
+     * After EVERY rejected command, verify the complete live destination
+     * and both canary bands remain unchanged. */
+    static const struct { uint32_t dst,cap; } invalids[]={
+        {0x0203fff0u,64u},
+        {0x03000000u,32u},
+        {0x01ffffffu,1u},
+        {0x02008000u,0u},
+        {0x02008000u,16385u},
+        {0x02008000u,UINT32_MAX},
+        {0xffffffffu,UINT32_MAX},
+        {0x00000000u,1u},
+    };
+    const size_t provider_calls_before=sMockLookups;
+    for(unsigned n=0;n<256u;++n) {
+        reset_destination(&gba);
+        const unsigned k=((n*73u)^(n>>3u))%(
+             sizeof(invalids)/sizeof(invalids[0]));
+        guest_request(&gba,"r24.maximum",invalids[k].dst,invalids[k].cap,
+                      XGBA_R7_BAD_RANGE,0u);
+        verify_unchanged(&gba);
+    }
+    assert(device.rejected_ranges==3u+256u);
+    assert(device.failed_reads==8u+256u);
+    assert(sMockLookups==provider_calls_before);
+
     /* Disabled mode: no request or guest buffer modification is possible. */
     struct XgbaGbaDevice disabled;
     assert(XgbaDeviceInit(&disabled,&host,0,"disabled",sha)==XGBA_MGBA_OK);
@@ -197,6 +224,7 @@ int main(void)
 
     puts("PASS_R24_PORTABLE_ORIGINAL_DEVICE_CONTRACT positive=2 rejected=8 "
          "range=3 invalid_id=1 oversized_source=1 bad_sha=1 missing=1 "
-         "empty_success_refused=1 guard_unchanged=1 disabled_zero_reads=1");
+         "empty_success_refused=1 guard_unchanged=1 "
+         "adversarial_boundary_rejections=256 disabled_zero_reads=1");
     return 0;
 }
