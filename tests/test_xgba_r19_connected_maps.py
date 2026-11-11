@@ -27,6 +27,7 @@ class NativeEmeraldConnectedExternalMaps(unittest.TestCase):
             emulator=cls.executable,frames=3100,
             probe_address=cls.r19_probe,
             second_resource_id="emerald.route101",
+            extra_resource_ids=(r17.BOOT,),
             r19_connected_dir=output,
             r19_route_offset=cls.route_offset,
             r19_route_length=len(cls.route_pack),
