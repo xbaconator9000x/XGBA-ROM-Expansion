@@ -250,3 +250,12 @@ enum XgbaMgbaProviderStatus xgba_mgba_provider_read(
     free(candidate);
     return XGBA_MGBA_OK;
 }
+
+
+/* R7 uses the same SHA-256 implementation for source-ROM identity checking. */
+void XgbaProviderSha256(const uint8_t *data, size_t size, uint8_t digest[32])
+{
+    if (!data || !digest)
+        return;
+    xgba_sha256(data, size, digest);
+}
