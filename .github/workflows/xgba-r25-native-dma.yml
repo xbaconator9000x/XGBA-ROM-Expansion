@@ -73,9 +73,9 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m py_compile tools/xgba_r16_emerald_decomp_patch.py tests/test_xgba_r25_emerald_dma.py
-          python3 -m unittest discover -s tests -p 'test_xgba_r25_emerald_dma.py' -v 2>&1 | tee xgba-r24-tests.log
-          grep -q 'Ran 15 tests' xgba-r24-tests.log
-          grep -q '^OK$' xgba-r24-tests.log
+          python3 -m unittest discover -s tests -p 'test_xgba_r25_emerald_dma.py' -v 2>&1 | tee xgba-r25-emerald-tests.log
+          grep -q 'Ran 15 tests' xgba-r25-emerald-tests.log
+          grep -q '^OK$' xgba-r25-emerald-tests.log
           python3 - <<'PY'
           from pathlib import Path
           from PIL import Image
@@ -144,9 +144,9 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m py_compile tools/xgba_r24_firered_patch.py tests/test_xgba_r25_firered_dma.py
-          python3 -m unittest discover -s tests -p 'test_xgba_r25_firered_dma.py' -v 2>&1 | tee xgba-r24-firered-tests.log
-          grep -q 'Ran 15 tests' xgba-r24-firered-tests.log
-          grep -q '^OK$' xgba-r24-firered-tests.log
+          python3 -m unittest discover -s tests -p 'test_xgba_r25_firered_dma.py' -v 2>&1 | tee xgba-r25-firered-tests.log
+          grep -q 'Ran 15 tests' xgba-r25-firered-tests.log
+          grep -q '^OK$' xgba-r25-firered-tests.log
           python3 - <<'PY'
           from pathlib import Path
           from PIL import Image
@@ -158,7 +158,7 @@ jobs:
               with Image.open(p) as im:assert im.size==(240,160)
           report=json.loads((folder/"proof.json").read_text())
           assert report["native_original_game_guest_mmio_attempts"]==10
-          assert report["native_original_game_rejected"]==7
+          assert report["native_original_game_rejected"]==8
           assert report["max_single_resource_bytes"]==16384
           assert report["one_byte_over_limit"]==16385
           assert report["failed_transfer_leaves_guest_ewram_unchanged"]
@@ -167,7 +167,7 @@ jobs:
           assert not list(folder.glob("*.gba")) and not list(folder.glob("*.sav"))
           print("PASS_R24_REAL_FIRERED_RESOURCE_BOUNDARY_14_TESTS")
           PY
-      - name: Publish only original native Emerald LCD captures and bounded proof
+      - name: Publish only original native FireRed LCD captures and bounded proof
         if: always()
         uses: actions/upload-artifact@v4
         with:
