@@ -342,6 +342,7 @@ static void run_r10_real_firered_live_swap(struct mCore *core, uint32_t probe,
 #include "xgba_r14_nav.h"
 #include "xgba_r15_save.h"
 #include "xgba_r16_emerald.h"
+#include "xgba_r17_emerald_map.h"
 
 static void save_actual_game_frame(struct mCore *core, const char *path, int enabled)
 {
@@ -386,6 +387,7 @@ int main(int argc, char **argv)
     const char *r14_dir = NULL;
     const char *r15_dir = NULL;
     const char *r16_dir = NULL;
+    const char *r17_dir = NULL;
     const char *r15_savefile = NULL;
     const char *r15_phase = NULL;
     uint64_t r15_save_probe = 0;
@@ -414,6 +416,8 @@ int main(int argc, char **argv)
             r15_dir = argv[i];
         else if (!strcmp(argv[i], "--r16-emerald-dir") && ++i < argc && !r16_dir)
             r16_dir = argv[i];
+        else if (!strcmp(argv[i], "--r17-emerald-map-dir") && ++i < argc && !r17_dir)
+            r17_dir = argv[i];
         else if (!strcmp(argv[i], "--r15-savefile") && ++i < argc && !r15_savefile)
             r15_savefile = argv[i];
         else if (!strcmp(argv[i], "--r15-phase") && ++i < argc && !r15_phase)
@@ -478,9 +482,9 @@ int main(int argc, char **argv)
     struct mCore *core = GBACoreCreate();
     if (!core || !core->init(core))
         fail("mGBA core initialization failed");
-    mColor *video = (screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir)
+    mColor *video = (screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r17_dir)
                    ? calloc(240u*160u, sizeof(mColor)) : NULL;
-    if ((screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir) && !video)
+    if ((screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r17_dir) && !video)
         fail("cannot allocate GBA framebuffer");
     if (video)
         core->setVideoBuffer(core, video, 240);
@@ -507,6 +511,9 @@ int main(int argc, char **argv)
             break;
         if (r15_phase && !strcmp(r15_phase,"corrupt") && probe &&
             core->busRead32(core,(uint32_t)probe+4)==0xE14u)
+            break;
+        if (r17_dir && probe &&
+            core->busRead32(core,(uint32_t)probe+4)==0xE17u)
             break;
     }
     if ((r10_dir && (r11_perf || r12_dir)) || (r11_perf && r12_dir))
@@ -535,6 +542,8 @@ int main(int argc, char **argv)
                      r15_dir,r15_phase,&device,&resource,enabled);
     } else if (r16_dir) {
         xgba_r16_emerald_run(core,(uint32_t)probe,r16_dir,&device,&resource,enabled);
+    } else if (r17_dir) {
+        xgba_r17_emerald_run(core,(uint32_t)probe,r17_dir,&device,&resource,enabled);
     } else if (!scene_dir) {
         verify_game_copy(core, (uint32_t)probe, &device, &resource, enabled);
     }
