@@ -22,6 +22,8 @@ struct XgbaR19MapProof {
     volatile u32 grid,stride,border,tiles,palette,metatiles,attributes;
     volatile u32 x,y,boot_ticks,route_visited,littleroot_revisited;
     volatile u32 errors,first_arena,second_arena,game_callback;
+    /* R20: appended only; original R19 native proof ABI is unchanged. */
+    volatile u32 arena_owner,arena_epoch,world_claims,battle_claims;
 };
 EWRAM_DATA volatile struct XgbaR19MapProof gXgbaR19MapProof = {0};
 EWRAM_DATA char gXgbaR19MapResourceId[32] = {0};
@@ -30,6 +32,43 @@ static EWRAM_DATA struct MapLayout sXgbaR19Layouts[2] = {0};
 static EWRAM_DATA struct Tileset sXgbaR19Tilesets[2] = {0};
 static EWRAM_DATA bool8 sXgbaR19Ready[2] = {FALSE,FALSE};
 static EWRAM_DATA u8 sXgbaR19LastMap = 0xFF;
+
+/* R20 tracks the OWNERSHIP of the shared protected 16 KiB region.
+ * A valid cache identity is tied to an owning phase, not just a boolean.
+ * Nothing here returns the tail to Emerald's allocator: that would require
+ * changing InitHeap's actual bounds, with an independently audited lifetime.
+ */
+#define XGBA_R20_ARENA_WORLD 1u
+#define XGBA_R20_ARENA_BATTLE 2u
+static EWRAM_DATA u32 sXgbaR20ArenaOwner;
+static EWRAM_DATA u32 sXgbaR20ArenaEpoch;
+static EWRAM_DATA u32 sXgbaR20WorldClaims;
+static EWRAM_DATA u32 sXgbaR20BattleClaims;
+
+static void XgbaR20ClaimWorldArena(void)
+{
+    if (sXgbaR20ArenaOwner == XGBA_R20_ARENA_WORLD)
+        return;
+    /* A previous battle left compressed sprite pointers into the arena.
+     * Each sprite accessor must revalidate ownership before trusting them. */
+    sXgbaR19Ready[0] = FALSE;
+    sXgbaR19Ready[1] = FALSE;
+    sXgbaR20ArenaOwner = XGBA_R20_ARENA_WORLD;
+    ++sXgbaR20ArenaEpoch;
+    ++sXgbaR20WorldClaims;
+}
+
+static void XgbaR20ClaimBattleArena(void)
+{
+    if (sXgbaR20ArenaOwner == XGBA_R20_ARENA_BATTLE)
+        return;
+    /* Maps must not be considered resident after sprites claim their bytes. */
+    sXgbaR19Ready[0] = FALSE;
+    sXgbaR19Ready[1] = FALSE;
+    sXgbaR20ArenaOwner = XGBA_R20_ARENA_BATTLE;
+    ++sXgbaR20ArenaEpoch;
+    ++sXgbaR20BattleClaims;
+}
 static void XgbaR19Reject(void)
 {
     gXgbaR19MapProof.magic=XGBA_R17_MAGIC;
@@ -54,6 +93,7 @@ static void XgbaR19Load(unsigned idx)
     u32 i;
     const struct MapHeader *source;
     if(idx>1)XgbaR19Reject();
+    XgbaR20ClaimWorldArena();
     if(sXgbaR19Ready[idx])return;
     arena=idx?XGBA_R19_ARENA1:XGBA_R19_ARENA0;
     length=idx?XGBA_R19_ROUTE_BYTES:XGBA_R19_LITTLEROOT_BYTES;
@@ -148,4 +188,8 @@ static void XgbaR19MapTick(void)
     gXgbaR19MapProof.first_arena=(u32)XGBA_R19_ARENA0;
     gXgbaR19MapProof.second_arena=(u32)XGBA_R19_ARENA1;
     gXgbaR19MapProof.game_callback=(u32)gMain.callback2;
+    gXgbaR19MapProof.arena_owner=sXgbaR20ArenaOwner;
+    gXgbaR19MapProof.arena_epoch=sXgbaR20ArenaEpoch;
+    gXgbaR19MapProof.world_claims=sXgbaR20WorldClaims;
+    gXgbaR19MapProof.battle_claims=sXgbaR20BattleClaims;
 }
