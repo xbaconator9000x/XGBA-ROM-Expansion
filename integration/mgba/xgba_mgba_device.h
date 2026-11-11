@@ -37,7 +37,9 @@ enum XgbaR7Status {
     XGBA_R7_BAD_COMMAND = 2,
     XGBA_R7_BAD_RANGE = 3,
     XGBA_R7_BAD_ID = 4,
-    XGBA_R7_RESOURCE_FAILURE = 5
+    XGBA_R7_RESOURCE_FAILURE = 5,
+    /* R25 backwards-compatible refusal: live DMA still consumes this EWRAM. */
+    XGBA_R7_DMA_BUSY = 6
 };
 
 /* Identical public ABI to the R5 C host-provider contract. */
@@ -79,6 +81,8 @@ struct XgbaGbaDevice {
     uint32_t provider_bad_sha256;
     uint32_t provider_not_found;
     uint32_t provider_other_failures;
+    /* R25: host refused a write into any pending DMA source footprint. */
+    uint32_t rejected_dma_aliases;
 };
 
 /* Returns 0 on successful opt-in / opt-out, nonzero on ABI or identity error. */
