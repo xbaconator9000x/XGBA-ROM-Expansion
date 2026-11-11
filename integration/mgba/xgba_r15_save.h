@@ -43,7 +43,15 @@ static void xgba_r15_run(struct mCore *c,uint32_t p,uint32_t save_probe,
         r14_verify(c,p,r,1,13,10);
         r15_png(c,dir,"01-house-before-save");
         r14_press(c,1u<<2,3); /* SELECT invokes actual TrySavingData(SAVE_NORMAL) */
-        r14_wait(c,60);
+        /* A real 128-KiB Flash write consists of tens of thousands of
+         * serial writes with mGBA sector timing. CPU emulation keeps running
+         * through many video frames while the save routine is still active.
+         * Wait for the game's result rather than assuming 60 frames suffices. */
+        for(unsigned frame=0;frame<3000u && r15_read(c,save_probe,4)==0u;++frame) {
+            c->setKeys(c,0u);
+            c->runFrame(c);
+        }
+        r14_wait(c,30);
         r15_proof(c,save_probe);
         fprintf(stderr,
                 "R15_SAVE_DIAG boot_status=%u boot_continue=%u requests=%u "
