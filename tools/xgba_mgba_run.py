@@ -23,7 +23,7 @@ MAX_GUEST_RESOURCE = 16 * 1024
 
 
 def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
-           probe_address=0, disabled=False, screenshot=None):
+           probe_address=0, disabled=False, screenshot=None, scene_dir=None):
     rom = Path(rom).resolve(strict=True)
     if not rom.is_file() or rom.stat().st_size > MAX_ROM:
         raise ValueError("ROM must be a real GBA file of at most 32 MiB")
@@ -59,6 +59,11 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
     ]
     if screenshot is not None:
         cmd.extend(["--screenshot", str(Path(screenshot).resolve())])
+    if scene_dir is not None:
+        capture = Path(scene_dir).resolve()
+        if not capture.is_dir():
+            raise ValueError("R9 frame destination directory must already exist")
+        cmd.extend(["--scene-dir", str(capture)])
     if disabled:
         cmd.append("--disabled")
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
@@ -80,11 +85,12 @@ def main():
     p.add_argument("--probe-address", type=lambda s: int(s, 0), default=0)
     p.add_argument("--disabled", action="store_true")
     p.add_argument("--screenshot", help="Write an actual mGBA-rendered 240x160 PNG")
+    p.add_argument("--scene-dir", help="Record 16 genuine emulator frames while injecting D-pad inputs")
     args = p.parse_args()
     out = launch(args.rom, args.manifest, args.resource_id,
                  emulator=args.emulator, frames=args.frames,
                  probe_address=args.probe_address, disabled=args.disabled,
-                 screenshot=args.screenshot)
+                 screenshot=args.screenshot, scene_dir=args.scene_dir)
     print(out.stdout, end="")
     if out.stderr:
         print(out.stderr, file=sys.stderr, end="")
