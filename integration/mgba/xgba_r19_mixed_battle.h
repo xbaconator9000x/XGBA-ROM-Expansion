@@ -321,6 +321,29 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
                r19_bword(core,battle,18)!=4u ||
                device->successful_reads!=17u || device->failed_reads)
                 fail("R23 bounded phase eviction or original Emerald heap integrity failed");
+            /* R26 only: the *actual source-built original Emerald game*
+             * exercised BUSY refusals in map and compressed battle-source
+             * borrows. Historical R23 fixtures leave the new append-only
+             * guest counters zero, preserving their baseline assertions. */
+            if (r19_word(core,map,28u) || r19_bword(core,battle,21u)) {
+                if (r19_word(core,map,28u)!=8u ||
+                    r19_word(core,map,29u)!=8u ||
+                    r19_word(core,map,31u)!=0u ||
+                    r19_word(core,map,32u)!=0u ||
+                    r19_bword(core,battle,21u)!=8u ||
+                    r19_bword(core,battle,22u)!=8u ||
+                    r19_bword(core,battle,23u)!=8u ||
+                    r19_bword(core,battle,24u)!=0u ||
+                    r19_bword(core,battle,25u)!=0u)
+                    fail("R26 original Emerald guest lease proof differs from 8 real pack transitions");
+                printf("PASS_R26_ORIGINAL_EMERALD_LEASE_LIFETIMES "
+                       "map_busy=%u map_borrows=%u battle_busy=%u "
+                       "battle_borrows=%u arena_epoch=%u remaining_pins=%u "
+                       "original_battles=4 native_ewram=1\n",
+                       r19_word(core,map,28u),r19_word(core,map,29u),
+                       r19_bword(core,battle,21u),r19_bword(core,battle,22u),
+                       r19_bword(core,battle,23u),r19_bword(core,battle,24u));
+            }
             printf("PASS_R23_REAL_EMERALD_FORCED_PHASE_EVICTION "
                    "original_battles=4 world_reacquisitions=3 "
                    "external_map_fetches=%u external_sprite_fetches=%u "

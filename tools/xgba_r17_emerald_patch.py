@@ -12,7 +12,7 @@ import xgba_r16_emerald_decomp_patch as r16
 
 ROOT=Path(__file__).resolve().parents[1]
 
-def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=False,r19_connected:bool=False,r19_battle:bool=False)->dict[Path,str]:
+def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=False,r19_connected:bool=False,r19_battle:bool=False,r26_leases:bool=False)->dict[Path,str]:
     e=Path(emerald)
     originals=r16.make_emerald_boot_sources(e)
     world=e/"src/overworld.c"
@@ -20,7 +20,11 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
     original_world=world.read_text()
     original_newgame=newgame.read_text()
     originals.update({world:original_world,newgame:original_newgame})
+    if r26_leases and not (r19_connected and r19_battle):
+        raise r16.AdapterDrift("R26 phase lease proof requires real map and battle integration")
     hook=(ROOT/"integration/emerald/xgba_r17_external_littleroot.inc").read_text()
+    if r26_leases:
+        hook="#define XGBA_R26_LEASE_PROOF 1\n"+hook
     hook=hook.replace("__XGBA_GUEST_HEADER__",
                       (ROOT/"integration/fire_red/xgba_guest.h").resolve().as_posix())
     hook=hook.replace("__XGBA_R17_CONFIG__",str(Path(config).resolve()))

@@ -64,6 +64,7 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         cls.resource_bytes=len(cls.pack)
         r19=bool(getattr(cls,"R19_CONNECTED",False))
         r19_battle=bool(getattr(cls,"R19_BATTLE",False))
+        r26_leases=bool(getattr(cls,"R26_LEASE_TEST",False))
         if r19_battle and not r19:
             raise AssertionError("Real mixed-source battle must preserve connected map residency")
         if r19:
@@ -152,7 +153,7 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         # without overwriting or re-implementing its maps or tileset renderer.
         originals={}
         try:
-            originals=patch.patch_emerald_littleroot_sources(EMERALD,config,r18_save=r18,r19_connected=r19,r19_battle=r19_battle)
+            originals=patch.patch_emerald_littleroot_sources(EMERALD,config,r18_save=r18,r19_connected=r19,r19_battle=r19_battle,r26_leases=r26_leases)
             originals.update(patch_emerald_heap_tail(EMERALD,
                 reserve_bytes=budget.reserve_bytes,replace_once=e16.one,
                 r21_pressure=r21))
