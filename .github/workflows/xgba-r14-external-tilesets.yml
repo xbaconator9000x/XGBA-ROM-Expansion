@@ -1,0 +1,76 @@
+name: XGBA R14 native FireRed physical navigation and external tilesets
+on:
+  push:
+    branches:
+      - 'phase2/r14-external-tilesets-navigation-20261111'
+    paths:
+      - 'integration/**'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r14_external_tilesets.py'
+      - '.github/workflows/xgba-r14-external-tilesets.yml'
+  pull_request:
+    paths:
+      - 'integration/**'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r14_external_tilesets.py'
+      - '.github/workflows/xgba-r14-external-tilesets.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r14-external-tilesets-validation
+  cancel-in-progress: false
+jobs:
+  actual-firered-navigation-tilesets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned native mGBA and ARM build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev build-essential cmake python3-pil
+          command -v arm-none-eabi-gcc
+      - name: Fetch exact upstream FireRed and mGBA source pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Execute real FireRed physical door and connected Route1 with external tilesets
+        shell: bash
+        env:
+          XGBA_R14_EVIDENCE_DIR: dist/xgba-r14-external-tilesets
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tests/test_xgba_r14_external_tilesets.py tools/xgba_mgba_run.py
+          python3 -m unittest discover -s tests -p 'test_xgba_r14_external_tilesets.py' -v \
+            2>&1 | tee xgba-r14-tests.log
+          test -s dist/xgba-r14-external-tilesets/proof.json
+          test "$(find dist/xgba-r14-external-tilesets -name '*.png' | wc -l)" -eq 4
+          if find dist/xgba-r14-external-tilesets -type f \( -name '*.gba' -o -name '*.elf' -o -name '*.tmp' \) | grep -q .; then
+            echo 'FAIL: proprietary ROM or raw mGBA savestate in artifacts'
+            exit 1
+          fi
+          if grep -Eq 'skipped=|expected failures=' xgba-r14-tests.log; then
+            echo 'FAIL: functional proof may not be skipped'
+            exit 1
+          fi
+          echo 'PASS_R14_ACTUAL_FIRERED_EXTERNAL_TILESETS'
+      - name: Publish four genuine native LCD frames plus JSON only
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r14-native-external-tilesets
+          path: dist/xgba-r14-external-tilesets/
+          if-no-files-found: error
+          retention-days: 90
