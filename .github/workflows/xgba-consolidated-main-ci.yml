@@ -70,23 +70,26 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - name: Install source-built GBA and native mGBA test tools
+      - name: Install pinned GNU ARM cross-compiler without Ubuntu package mirrors
+        uses: carlosperate/arm-none-eabi-gcc-action@49f4db4520f840e77ab1e99b24cfac2c540a21b1
+        with:
+          release: '13.2.Rel1'
+      - name: Check preinstalled native build requirements and install Pillow via Python packages
         shell: bash
         run: |
           set -euo pipefail
-          # Avoid GitHub-hosted Azure-specific apt mirror DNS failures.
-          # Security mirror remains official Ubuntu; never disable TLS/signatures.
-          for sources in /etc/apt/apt-mirrors.txt \
-              /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list; do
-            if test -f "$sources"; then
-              sudo sed -i 's/azure.archive.ubuntu.com/archive.ubuntu.com/g' "$sources"
-            fi
-          done
-          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=25 update -qq
-          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=25 \
-            install -y --no-install-recommends \
-            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
-            libpng-dev build-essential cmake python3-pil
+          arm-none-eabi-gcc --version
+          arm-none-eabi-nm --version | head -n 1
+          cmake --version | head -n 1
+          cc --version | head -n 1
+          if ! pkg-config --exists libpng; then
+            echo "::error::Runner missing libpng development headers; cannot use apt mirror"
+            exit 1
+          fi
+          if ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
+            python3 -m pip install --user --break-system-packages --disable-pip-version-check 'Pillow==11.3.0'
+          fi
+          python3 -c 'from PIL import Image; print("Pillow:", Image.__version__)'
       - name: Fetch exact upstream FireRed and mGBA source pins
         shell: bash
         run: |
@@ -140,23 +143,26 @@ jobs:
     timeout-minutes: 55
     steps:
       - uses: actions/checkout@v4
-      - name: Install exact original Emerald and mGBA source build dependencies
+      - name: Install pinned GNU ARM cross-compiler without Ubuntu package mirrors
+        uses: carlosperate/arm-none-eabi-gcc-action@49f4db4520f840e77ab1e99b24cfac2c540a21b1
+        with:
+          release: '13.2.Rel1'
+      - name: Check preinstalled native build requirements and install Pillow via Python packages
         shell: bash
         run: |
           set -euo pipefail
-          # Avoid GitHub-hosted Azure-specific apt mirror DNS failures.
-          # Security mirror remains official Ubuntu; never disable TLS/signatures.
-          for sources in /etc/apt/apt-mirrors.txt \
-              /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list; do
-            if test -f "$sources"; then
-              sudo sed -i 's/azure.archive.ubuntu.com/archive.ubuntu.com/g' "$sources"
-            fi
-          done
-          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=25 update -qq
-          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=25 \
-            install -y --no-install-recommends \
-            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
-            libpng-dev build-essential cmake python3-pil
+          arm-none-eabi-gcc --version
+          arm-none-eabi-nm --version | head -n 1
+          cmake --version | head -n 1
+          cc --version | head -n 1
+          if ! pkg-config --exists libpng; then
+            echo "::error::Runner missing libpng development headers; cannot use apt mirror"
+            exit 1
+          fi
+          if ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
+            python3 -m pip install --user --break-system-packages --disable-pip-version-check 'Pillow==11.3.0'
+          fi
+          python3 -c 'from PIL import Image; print("Pillow:", Image.__version__)'
       - name: Checkout immutable Emerald game and original mGBA core pins
         shell: bash
         run: |
