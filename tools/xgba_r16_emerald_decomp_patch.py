@@ -25,7 +25,7 @@ def one(s:str,needle:str,after:str,description:str)->str:
         raise AdapterDrift(f"pinned Emerald {description} drift: expected one anchor, got {count}")
     return s.replace(needle,after,1)
 
-def make_emerald_boot_sources(emerald:Path)->dict[Path,str]:
+def make_emerald_boot_sources(emerald:Path,*,r24_boundary:bool=False)->dict[Path,str]:
     root=Path(emerald)
     if not (root/"src/main.c").is_file():
         raise AdapterDrift("pinned Emerald decomp source is absent")
@@ -38,6 +38,11 @@ def make_emerald_boot_sources(emerald:Path)->dict[Path,str]:
                     (ROOT/"integration/fire_red/xgba_guest.h").resolve().as_posix())
     if "__XGBA_" in inc:
         raise AdapterDrift("unresolved guest header path")
+    if r24_boundary:
+        boundary=(ROOT/"integration/emerald/xgba_r24_boundary.inc").read_text()
+        if "__XGBA_" in boundary:
+            raise AdapterDrift("unresolved R24 original Emerald boundary hooks")
+        inc+="\n"+boundary
     # Emerald defines struct Main in main.h, which is included later
     # than global.h; inject only after the complete native header block.
     after=one(before,'#include "constants/rgb.h"',
@@ -46,7 +51,9 @@ def make_emerald_boot_sources(emerald:Path)->dict[Path,str]:
               "    InitHeap(gHeap, HEAP_SIZE);\n\n    gSoftResetDisabled = FALSE;",
               "    InitHeap(gHeap, HEAP_SIZE);\n"
               "    /* Native XGBA test adapter: original Emerald game continues. */\n"
-              "    XgbaEmeraldProbeRun();\n\n    gSoftResetDisabled = FALSE;",
+              "    XgbaEmeraldProbeRun();\n"+
+              ("    XgbaR24Run();\n" if r24_boundary else "")+
+              "\n    gSoftResetDisabled = FALSE;",
               "source-level post-heap boot callback")
     after=one(after,
               "    for (;;)\n    {\n        ReadKeys();",
