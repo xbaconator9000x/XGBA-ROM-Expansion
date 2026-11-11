@@ -7,6 +7,23 @@ No executable ROMs, sidecars, save files or raw proprietary game assets are arch
 Screenshots contain game imagery belonging to its rights holders and are shown
 only as limited, noncommercial engineering documentation.
 
+## R15 — original FireRed Flash save, cold reboot, and reloaded external house
+
+These are four genuine 240×160 screenshots from two separate native mGBA processes.
+FireRed wrote its own Flash sectors, mGBA exited, and a fresh process loaded the saved game.
+A third independent process proved corruption refusal without modifying the valid save.
+
+| House before save | After original Flash write | Identical house after cold restart | Return to Pallet |
+| --- | --- | --- | --- |
+| [![Before saving](verified/r15/01-house-before-save.png)](verified/r15/01-house-before-save.png) | [![Saved in FireRed](verified/r15/02-house-after-flash-save.png)](verified/r15/02-house-after-flash-save.png) | [![Cold boot identical house](verified/r15/03-cold-boot-house-reloaded.png)](verified/r15/03-cold-boot-house-reloaded.png) | [![Returned to Pallet](verified/r15/04-after-cold-boot-pallet.png)](verified/r15/04-after-cold-boot-pallet.png) |
+
+**The original house-before-save and cold-boot screenshots have identical SHA-256 pixel-file bytes.**
+[Passing R15 native CI, 4/4](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42987149871) · [R15 exact-head source PR #60](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/60) · [Provenance](verified/r15/provenance.json) · [Compact proof](verified/r15/proof.json)
+
+Scope: this is the original FireRed Flash engine and cold-game-continue routine,
+not the visual Start → Save menu. The deliberately corrupted pack fails closed
+inside the bounded test fixture; a user-facing recovery screen remains future work.
+
 ## R14 — external tilesets, actual house door and connected Route 1
 
 | Pallet Town | Player's house | House exit | Route 1 |
