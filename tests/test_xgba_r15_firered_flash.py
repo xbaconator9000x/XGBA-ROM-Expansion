@@ -47,7 +47,10 @@ class NativeFlashPersistence(unittest.TestCase):
         if "PASS_R15_REAL_FIRERED_FLASH_WRITE" not in cls.write_log:
             raise AssertionError("Actual FireRed Flash write never completed")
         if not savefile.exists() or savefile.stat().st_size!=131072:
-            raise AssertionError("Real FireRed 128KiB Flash save absent")
+            raise AssertionError("Real FireRed Flash write returned success but "
+                "backing file size is %s at %s; native log: %s"%(
+                    savefile.stat().st_size if savefile.exists() else "missing",
+                    savefile,cls.write_log[-1000:]))
         cls.save_sha=hashlib.sha256(savefile.read_bytes()).hexdigest()
         # The previous invocation has returned: its mGBA process and all
         # CPU/EWRAM/VRAM state are now gone, not a restore/loadstate API.
