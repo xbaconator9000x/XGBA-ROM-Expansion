@@ -413,6 +413,7 @@ int main(int argc, char **argv)
     const char *r16_dir = NULL;
     const char *r24_dir = NULL;
     uint64_t r24_probe = 0;
+    int r24_firered = 0;
     const char *r17_dir = NULL;
     const char *r18_dir = NULL;
     const char *r19_dir = NULL;
@@ -457,6 +458,8 @@ int main(int argc, char **argv)
             r14_dir = argv[i];
         else if (!strcmp(argv[i], "--r15-dir") && ++i < argc && !r15_dir)
             r15_dir = argv[i];
+        else if (!strcmp(argv[i], "--r24-firered"))
+            r24_firered = 1;
         else if (!strcmp(argv[i], "--r24-boundary-dir") && ++i < argc && !r24_dir)
             r24_dir = argv[i];
         else if (!strcmp(argv[i], "--r24-boundary-probe") && ++i < argc && !r24_probe)
@@ -632,6 +635,8 @@ int main(int argc, char **argv)
             core->busRead32(core,(uint32_t)probe+4)==0xE19u)
             break;
     }
+    if (r24_firered && !r24_dir)
+        fail("R24 FireRed mode needs genuine original game boundary proof");
     if (r24_dir && (!r24_probe || r24_probe>UINT32_MAX ||
          r16_dir || r17_dir || r19_dir || r19_battle_dir))
         fail("R24 requires bounded original Emerald ELF proof and exclusive mode");
@@ -660,7 +665,7 @@ int main(int argc, char **argv)
         xgba_r15_run(core,(uint32_t)probe,(uint32_t)r15_save_probe,
                      r15_dir,r15_phase,&device,&resource,enabled);
     } else if (r24_dir) {
-        xgba_r24_boundary_run(core,(uint32_t)probe,(uint32_t)r24_probe,
+        xgba_r24_boundary_run(core,r24_firered?0u:(uint32_t)probe,(uint32_t)r24_probe,
                               r24_dir,&device,&resource,enabled);
     } else if (r16_dir) {
         xgba_r16_emerald_run(core,(uint32_t)probe,r16_dir,&device,&resource,enabled);
