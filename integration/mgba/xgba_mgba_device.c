@@ -119,7 +119,7 @@ static void execute_request(struct GBA *gba, struct XgbaGbaDevice *device)
         return;
     }
     uint8_t *mem = (uint8_t *)gba->memory.wram;
-    memcpy(mem + device->dst_addr - EWRAM_START, candidate, length);
+    memcpy(mem + (device->dst_addr - EWRAM_START), candidate, length);
     free(candidate);
     device->status = XGBA_R7_SUCCESS;
     device->actual_length = (uint32_t)length;
