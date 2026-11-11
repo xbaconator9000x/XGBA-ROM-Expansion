@@ -132,15 +132,22 @@ static void xgba_r14_run(struct mCore *c,uint32_t p,const char *dir,
     if(!enabled||!p||!dir||!r->second_id)fail("R14 requires both external packs and enabled core");
     r14_wait(c,110);r14_expect(c,p,3,0);
     r14_verify(c,p,r,0,0,0);r14_png(c,dir,"01-pallet-external-tiles");
+    uint32_t arena=r14_u32(c,p,11);
+    if(r14_u32(c,p,5)!=1)fail("R14 initial outdoor pack read count");
     r14_press(c,1u<<6,18);r14_wait(c,180);
     r14_expect(c,p,4,0);r14_verify(c,p,r,1,13,10);r14_png(c,dir,"02-house-door-external");
+    if(r14_u32(c,p,11)!=arena||r14_u32(c,p,5)!=2)
+        fail("R14 indoor pack must replace outdoor pack in shared arena");
     r14_press(c,1u<<7,18);r14_wait(c,180);
     r14_expect(c,p,3,0);r14_verify(c,p,r,0,0,0);r14_png(c,dir,"03-pallet-door-return");
+    if(r14_u32(c,p,11)!=arena||r14_u32(c,p,5)!=3)
+        fail("R14 outdoor pack must be freshly acquired on return");
     r14_walk_north(c,p);
     r14_expect(c,p,3,18);r14_wait(c,45);
     r14_verify(c,p,r,0,24,40);r14_png(c,dir,"04-route1-connected-external");
-    if(d->successful_reads!=2||d->failed_reads||r->reads!=2||r->lookups!=2||
-        r14_u32(c,p,5)!=2)fail("R14 external resource acquisition lifecycle");
-    printf("PASS_R14_REAL_DOOR_AND_CONNECTED_ROUTE_EXTERNAL_TILESETS reads=2 physical_dpad=1 native_map_grid=1 native_bg_vram=1\n");
+    if(d->successful_reads!=3||d->failed_reads||r->reads!=3||r->lookups!=3||
+        r14_u32(c,p,5)!=3||r14_u32(c,p,11)!=arena)
+        fail("R14 external resource acquisition lifecycle");
+    printf("PASS_R14_REAL_DOOR_AND_CONNECTED_ROUTE_EXTERNAL_TILESETS reads=3 shared_arena=1 physical_dpad=1 native_map_grid=1 native_bg_vram=1\n");
 }
 #endif

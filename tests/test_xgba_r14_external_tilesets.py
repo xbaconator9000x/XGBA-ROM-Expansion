@@ -109,6 +109,10 @@ class NativeNavigation(unittest.TestCase):
             patch.INJECT=inj
             patch.restore_firered_sources(originals)
         finalsyms=symbols(elf)
+        arena_addr,arena_size=finalsyms["gXgbaR14Arena"]
+        if arena_size!=max(len(route[4]),len(house[4])) or not (
+                0x02000000<=arena_addr and arena_addr+arena_size<=0x02040000):
+            raise AssertionError("R14 shared arena does not fit exact EWRAM bounds")
         binary=bytearray(rom.read_bytes())
         # Strip exact compiled ROM symbol ranges after linking. No stock layout
         # or secondary tile bytes can satisfy the subsequent guest accesses.
@@ -165,6 +169,9 @@ class NativeNavigation(unittest.TestCase):
         cls.report={"milestone":"R14_PHYSICAL_NAV_EXTERNAL_SECONDARY_TILESETS",
             "rom_sha256":cls.rom_sha,"rom_size":len(binary),"resources":resources,
             "stripped_compiled_ranges":removed,"native_log":cls.log,
+            "shared_arena":{"address":arena_addr,"bytes":arena_size,
+                "pack_bytes":[len(route[4]),len(house[4])],
+                "stock_heap_size":0x1C000,"expected_reads":3},
             "firered_pin":r6.FIRERED_PIN,"mgba_pin":r6.MGBA_PIN,
             "scope":"Real D-pad input; native door warp and seamless Route1 connection. Entire indoor/outdoor secondary tileset (LZ graphics, palettes, metatiles, attributes) externally staged. Primary tilesets, map events/scripts/metadata remain ROM-resident. Post-Oak starting fixture. No raw game assets exported."}
         target=os.getenv("XGBA_R14_EVIDENCE_DIR")
@@ -177,7 +184,9 @@ class NativeNavigation(unittest.TestCase):
     def test_actual_native_grid_and_bg_vram(self):
         self.assertIn("native_map_grid=1 native_bg_vram=1",self.log)
     def test_external_resource_integrity_and_rom_removal(self):
-        self.assertIn("reads=2",self.log)
+        self.assertIn("reads=3 shared_arena=1",self.log)
+        self.assertEqual(self.report["shared_arena"]["bytes"],
+                         max(self.report["shared_arena"]["pack_bytes"]))
         self.assertEqual(len(self.report["stripped_compiled_ranges"]),10)
         self.assertTrue(all(r["offset"]>32*1024*1024 for r in self.report["resources"]))
     def test_real_lcd_screenshots(self):
