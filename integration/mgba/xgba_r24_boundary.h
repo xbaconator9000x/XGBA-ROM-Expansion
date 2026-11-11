@@ -109,8 +109,7 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
           enabled?"enabled":"disabled") >= (int)sizeof(name))
         fail("R24 native LCD evidence path overflow");
     save_native_frame(core,name);
-    printf("PASS_R24_ORIGINAL_%s_BOUNDARY enabled=%u ",
-           boot?"EMERALD":"FIRERED",
+    printf("PASS_R24_ORIGINAL_%s_BOUNDARY enabled=%u "
            "successful_provider_reads=%u rejected_provider_reads=%u "
            "max_bytes=%u short_cap=%u over_cap=%u "
            "guest_attempts=%u accepted=%u rejected=%u "
@@ -119,6 +118,7 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
            "native_ewram=1 range_rejections=%u id_rejections=%u "
            "provider_size_rejections=%u integrity_rejections=%u "
            "missing_id_rejections=%u other_failures=%u\n",
+           boot?"EMERALD":"FIRERED",
            (unsigned)enabled,device->successful_reads,device->failed_reads,
            r24_word(core,proof,8),r24_word(core,proof,9),
            r24_word(core,proof,10),r24_word(core,proof,4),
