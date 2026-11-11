@@ -69,7 +69,8 @@ static void r14_verify(struct mCore *c,uint32_t p,const struct ResourceFile *r,
     r14_tiles_vram(c,expected+h[4],h[5]-h[4]);
     if(map_width){
         uint32_t grid=r14_u32(c,p,8),stride=r14_u32(c,p,9),border=r14_u32(c,p,10);
-        if(stride!=map_width+14||border!=address+h[3])fail("R14 native layout pointers");
+        /* Pinned FireRed MAP_OFFSET_W = 7 * 2 + 1, not 14. */
+        if(stride!=map_width+15||border!=address+h[3])fail("R14 native layout pointers");
         for(unsigned y=0;y<map_height;++y)
             for(unsigned x=0;x<map_width*2;++x)
                 if((uint8_t)c->busRead8(c,grid+((y+7)*stride+7)*2+x)!=expected[h[2]+y*map_width*2+x])
@@ -143,7 +144,8 @@ static void xgba_r14_run(struct mCore *c,uint32_t p,const char *dir,
     if(r14_u32(c,p,11)!=arena||r14_u32(c,p,5)!=3)
         fail("R14 outdoor pack must be freshly acquired on return");
     r14_walk_north(c,p);
-    r14_expect(c,p,3,18);r14_wait(c,45);
+    /* Pinned map_groups.json: Route1 is TownsAndRoutes index 19. */
+    r14_expect(c,p,3,19);r14_wait(c,45);
     r14_verify(c,p,r,0,24,40);r14_png(c,dir,"04-route1-connected-external");
     if(d->successful_reads!=3||d->failed_reads||r->reads!=3||r->lookups!=3||
         r14_u32(c,p,5)!=3||r14_u32(c,p,11)!=arena)
