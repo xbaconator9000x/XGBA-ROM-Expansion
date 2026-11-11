@@ -1,0 +1,19 @@
+{
+  "compiled_rom_sha256": "89848953545b3fce331a74ee9aa2c4f3273af43e3a004d8ff4983a92f8c1477f",
+  "emulator_source_commit": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "expected_external_sprite_fetches": 4,
+  "game": "source-built pret/pokeemerald MODERN=1",
+  "game_source_commit": "731ad5bfd6e6f265508d0efcca0ba42f9dcf5881",
+  "guest_arena_address": "0x2032134",
+  "guest_physical_ewram_bytes": 262144,
+  "heap_reservation_returned_to_allocator": false,
+  "map_reacquisition_between_battles": true,
+  "milestone": "R20_ACTUAL_EMERALD_HEAP_TAIL_OWNERSHIP_REENTRY",
+  "native_log_note": "Full native emulator console log in linked CI run",
+  "native_log_sha256": "ba1fac4c92a7259716493157c8afb35792558ccee4b8c27a54eacd0a75b0f57f",
+  "original_engine_battle_count": 2,
+  "protected_arena_bytes": 16384,
+  "scope": "Actual Emerald two-battle/overworld phase ownership, original sprites, native EWRAM, and map reuse; not yet heap-fragmentation, DMA-queue, user interface, FireRed, or 100+ transitions.",
+  "status": "native_accepted",
+  "test_only_entry": "R button while overworld active"
+}
