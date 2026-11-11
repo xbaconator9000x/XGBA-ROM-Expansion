@@ -1,18 +1,36 @@
 # XGBA — Expanding What a Game Boy Advance Game Can Access
 
-**Executed expansion proof: R6–R12 verified · 11 November 2026**
+**Executed expansion proof: R6–R13 verified · 11 November 2026**
 
 > **A real, source-built Pokémon FireRed executable running in the native mGBA core successfully used graphics bytes stored _beyond the conventional 32 MiB GBA ROM window_.** The game received a validated external resource through an opt-in host bridge, used FireRed's own sprite-sheet loading routine, and copied the expected bytes into emulated GBA object VRAM.
 >
 > **R6 integration milestone: 32/32 tests passed**, including the positive executable-game test and five executed fallback/failure cases. [Passing push CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42940797581) · [Passing pull-request CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42940805793) · [Experimental implementation, PR #40](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/40).
 
-**The milestones are real; the expansion platform is not yet a finished product.** R6 used a temporary test host; R7–R11 progressed to game-initiated requests in a patched native mGBA core, actual LCD screenshots, resource-pack comparisons, real FireRed Pallet Town integration, and native CPU-frame benchmarking. These results do **not** establish a stock-emulator release, Android or GUI frame-rate performance, unrestricted CPU-addressable ROM, or original GBA hardware compatibility.
+**The milestones are real; the expansion platform is not yet a finished product.** R6 used a temporary test host; R7–R13 progressed to game-initiated requests in a patched native mGBA core, actual LCD screenshots, live FireRed Pallet Town graphics swaps, native CPU-frame benchmarking, save-state rollback and a real map layout loaded from outside the ROM. These results do **not** establish a stock-emulator release, Android or GUI frame-rate performance, unrestricted CPU-addressable ROM, or original GBA hardware compatibility.
 
-## Latest functional integration milestones
+## Latest verified milestone — R13: real FireRed map geometry outside the ROM
 
-**R12 — verified native FireRed save-state recovery.** [Draft PR #53](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/53), exact head `864804eebcc90a90fb07a81ddc449440b2725827`. [Native CI, 4/4 passed](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42964008063) · [eight native LCD PNGs and JSON evidence](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42964008063/artifacts/13830302814). Crystal → Magma → native mGBA save-state restore to Crystal → Magma again; exact OBJ VRAM SHA-256 checks and real provider read counts 1 → 2 → 2 → 3. Disabled control performed zero host reads. This verifies an emulator state rollback, not ordinary in-game save files.
+**11 November 2026 · Draft [PR #54](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/54) · exact head `f3ae6846e5971c0617674d5cef98be5331b91b2d` · 4/4 focused native tests passed on both push and PR CI.**
 
-**R13 — implemented; native CI pending at publication external map layout.** [Draft PR #54](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/54) · [native CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42966044589). The actual Player's House 1F 13×10 metatile grid (260 bytes) and 2×2 border (8 bytes) are replaced by zero placeholders in the ROM build; the original 268-byte payload is held at 33,562,624 (32 MiB + 8 KiB) in a sidecar. The acceptance test uses FireRed's own warp/transition and map-grid loader, verifies all staged native map and border bytes by SHA-256, returns to ROM-resident Pallet Town, evicts the external layout, and reloads it on re-entry. Disabled mode must safely refuse entry without host I/O. SELECT invokes the genuine DoWarp path in the test fixture; physical door navigation, external tilesets/scripts/events and arbitrary map sizes remain future work. Only renderer PNGs and JSON evidence are exported. No copyrighted map/ROM binaries are distributed.
+The actual **Player's House 1F** layout was removed from the compiled FireRed ROM: its original 13×10 metatile grid (260 bytes) and 2×2 border (8 bytes) were replaced by zero placeholders before compilation. The test verified that the original full 260-byte map sequence was absent from the ROM, which remained within 32 MiB. The original **268-byte layout payload** was stored at sidecar offset **33,562,624 (32 MiB + 8 KiB)**.
+
+The source-built FireRed game requests the external layout through XGBA, stages it in EWRAM and enters the house using the genuine FireRed `DoWarp` / `WarpIntoMap` / `CB2_LoadMap` path. Native map-grid and border contents are checked against the original bytes and SHA-256. The game then returns to ROM-resident Pallet Town, evicts the external layout and re-enters the house, requiring a fresh provider read.
+
+| Native acceptance case | Executed result |
+| --- | --- |
+| External layout entry → Pallet Town → re-entry | 3 transitions, 2 host reads, native grid SHA verified |
+| Extension disabled | 0 transitions, 0 host reads; external entry safely refused |
+| Original map data | Full original metatile sequence absent from ROM; payload beyond 32 MiB |
+| Native renderer | 4 enabled + 2 disabled original 240×160 LCD PNGs; enabled scene changes verified |
+
+**Evidence:** [passing R13 push CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42966044589) · [push screenshots and proof.json](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42966044589/artifacts/13831536868) · [passing exact-head PR CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42966059991) · [PR screenshots and proof.json](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42966059991/artifacts/13830909294). All six R7–R12 regression workflows passed at the R13 head. The four R13 tests check disabled refusal, original map absence and external offset, real entry/return/re-entry, and native LCD frames. No ROM or raw map binaries are distributed.
+
+**Scope:** R13 proves external **map geometry and border**, not a completely external map bundle. Native layout metadata, tilesets, events and scripts remain ROM-resident. SELECT triggers the native warp in the test fixture; walking through a physical door and arbitrary-size map support are not yet proven. This is an important functional advance: XGBA now supplies actual data used by the real map engine, not just an overlay sprite.
+
+## R12: verified native FireRed save-state recovery
+
+**R12 — verified native FireRed save-state recovery.** [Draft PR #53](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/53), exact head `864804eebcc90a90fb07a81ddc449440b2725827`. [Native CI, 4/4 passed](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42964008063) · [eight native LCD PNGs and JSON evidence](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42964008063/artifacts/13830302814). Crystal → Magma → native mGBA save-state restore to Crystal → Magma again; exact OBJ VRAM SHA-256 checks and real provider read counts 1 → 2 → 2 → 3. Disabled control performed zero host reads. [Matching PR CI, 4/4 passed](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42964060978) · [PR evidence artifact](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42964060978/artifacts/13829574576). All R7–R11 regressions passed at the R12 head. This verifies same-ROM, same-core, same-mounted-pack emulator state rollback and fresh resource acquisition; it does not establish ordinary in-game SRAM saves, arbitrary pack-mismatch restoration or general save-state extension serialization.
+
 
 **Current priority:** functional map loading and navigation, ordinary game-save persistence, cache/integrity lifecycle, and graphical emulator/audio/VSync validation. Repeated endurance testing is deferred unless a specific regression warrants it.
 
@@ -20,7 +38,7 @@
 
 **11 November 2026 · Draft [PR #52](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/52) · exact head `168d9137cb6b1576b53b6b0455d8c56a39bd943b` · 5/5 focused tests on each exact-head CI run.**
 
-R10 ([draft PR #51](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/51), commit `2ede1b8470cbf71318e44873497a8b8d2ab51526`) moved the experiment into the **actual FireRed Pallet Town map/overworld engine**, with a SELECT-triggered live external graphics swap. R11 measured the runtime cost using a **real pinned FireRed ROM and patched native mGBA CPU**, not GIF playback timing. The earlier R10 GIF held source frames for **165 ms each**, approximately **10×** a real **16.74 ms** GBA frame; its apparent sluggishness was an encoding/playback artifact, not evidence of a tenfold game slowdown.
+R10 ([draft PR #51](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/51), commit `2ede1b8470cbf71318e44873497a8b8d2ab51526`) moved the experiment into the **actual FireRed Pallet Town map/overworld engine**, with a SELECT-triggered live external graphics swap. [R10 push CI, 5/5 passed](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42955838562) · [native GIF/PNG evidence](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42955838562/artifacts/13827221467) · [matching PR CI, 5/5 passed](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42955844195). R11 measured the runtime cost using a **real pinned FireRed ROM and patched native mGBA CPU**, not GIF playback timing. The earlier R10 GIF held source frames for **165 ms each**, approximately **10×** a real **16.74 ms** GBA frame; its apparent sluggishness was an encoding/playback artifact, not evidence of a tenfold game slowdown.
 
 R11 executed **six paired same-ROM trials** (three XGBA-enabled, three disabled), each with **120 warmup frames + 360 pre-swap frames + 3 SELECT frames + 360 post-swap frames**. Timing used `CLOCK_MONOTONIC` around `mCore.runFrame` and excluded PNG/GIF encoding. Results are **unthrottled native emulation throughput**, not real GUI, vsync, audio, Android or hardware frame rates.
 
@@ -67,8 +85,10 @@ The executed test observed the player moving **(24, 92) → (38, 102)** in each 
 - **R9:** two independently selected external 4bpp graphics packs visibly changed a **controllable game-side scene**, with unchanged ROM identity and recorded mGBA GIFs.
 - **R10:** actual FireRed Pallet Town overworld engine performed a live SELECT-triggered external graphics swap.
 - **R11:** six paired native mGBA trials measured unthrottled CPU-frame throughput and resource-ready latency, correcting misleading GIF playback pacing.
+- **R12:** real native mGBA save-state rollback restored the earlier graphics and game state, then a fresh guest request re-acquired the second asset.
+- **R13:** actual FireRed house map grid and border lived outside the ROM; native map transitions, eviction and re-entry loaded them from the sidecar.
 
-**Next work:** harden the existing Pallet Town integration; stress-test repeated swaps and larger resource libraries; establish lifecycle/save-state compatibility; measure real graphical-emulator playback with audio/vsync; and package accessible ROM-hacking tooling. Total external content can grow separately from the addressable cartridge window, but CPU/GBA memory limits still apply.
+**Next work:** expand real map integration to normal door navigation and further asset types; validate ordinary in-game save persistence and broader cache/pack identity; measure real graphical-emulator playback with audio/vsync; and package accessible ROM-hacking tooling. Larger resource-library tests remain valuable, but redundant endurance tests are deferred. Total external content can grow separately from the addressable cartridge window, but CPU/GBA memory limits still apply.
 
 ## Why this matters for GBA ROM hacking
 
@@ -165,10 +185,10 @@ For the focused experiment, run `python3 tools/xgba_resource_integration_smoke.p
 
 ## What comes next
 
-The R6 milestone answers a crucial feasibility question for **emulator-assisted external assets**. The next task is to turn a tightly controlled proof into a reproducible, supportable workflow:
+The R6–R13 milestones answer increasingly practical feasibility questions for **emulator-assisted external assets**. The next task is to turn these executed, source-instrumented proofs into a reproducible, supportable workflow:
 
-1. **Production integration:** move the host/resource handshake out of the test harness into an explicitly enabled, maintainable mGBA extension and a normal FireRed-side resource API.
-2. **Engine support:** expand from one fixed-size static sprite source to additional asset types while handling decompression, allocation, ownership, resource lifetimes, DMA, audio and save-state identity correctly.
+1. **Production integration:** harden the existing game-initiated native mGBA resource device and FireRed-side integration into an explicitly enabled, maintainable extension and reusable resource API.
+2. **Engine support:** extend the verified sprite and map-grid integration to ordinary navigation, tilesets, palettes, other assets, and safe decompression, allocation, ownership, resource lifetimes, DMA, audio and save-state identity.
 3. **Hacking tools and compatibility:** integrate resource IDs and packaging with editors/build systems; test fingerprinted game versions and modified ROMs instead of assuming universal compatibility.
 4. **Release and regression:** provide runnable builds, clear setup instructions, measurable load times, fail-closed recovery and honest emulator/hardware support claims.
 
