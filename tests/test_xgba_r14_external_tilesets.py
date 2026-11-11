@@ -24,6 +24,7 @@ import xgba_resource_sidecar as sidecar
 import xgba_r10_firered_patch as patch
 import xgba_mgba_run as launcher
 import apply_core_patch
+from xgba_memory_plan import Resource, Phase, plan_residency, patch_firered_heap_tail
 
 def sha(b): return hashlib.sha256(b).hexdigest()
 def symbols(elf):
@@ -85,7 +86,15 @@ class NativeNavigation(unittest.TestCase):
             definitions.append((name,grid,border,parts,pack((grid,border),parts)))
         route,house=definitions
         config=root/"r14-config.h"
-        reserve=(max(len(route[4]),len(house[4]))+3)&~3
+        # Centralised XGBA phase-aware residency planning: these two packs
+        # never coexist in guest memory; the house reuses the outdoor arena.
+        plan=plan_residency(
+            [Resource("outdoor_pack",len(route[4])),
+             Resource("indoor_pack",len(house[4]))],
+            [Phase("outdoor_map",("outdoor_pack",),transient_heap_bytes=12288),
+             Phase("indoor_map",("indoor_pack",),transient_heap_bytes=12288)],
+            symbol_prefix="gXgbaR14")
+        reserve=plan.reserve_bytes
         config.write_text("#define R14_ROUTE_SIZE %du\n#define R14_HOUSE_SIZE %du\n#define R14_ARENA_RESERVE %du\n"%(len(route[4]),len(house[4]),reserve))
         inj=patch.INJECT
         patch.INJECT=(ROOT/"integration/fire_red/xgba_r14_nav.inc").read_text().replace(
@@ -105,49 +114,21 @@ class NativeNavigation(unittest.TestCase):
                 "    FlagSet(FLAG_HIDE_OAK_IN_PALLET_TOWN);\n"
                 "    VarSet(VAR_MAP_SCENE_PALLET_TOWN_OAK, 1);","R14 natural door approach and post-Oak fixture")
             world.write_text(s)
-            # Reserve the tail of the existing heap, including on map reset.
-            malloc=fr/"src/malloc.c"
-            originals[malloc]=malloc.read_text()
-            ms=originals[malloc]
-            ms=patch.replace_once(ms,'#include "global.h"','#include "global.h"\n#include "malloc.h"\n#include "'+config.as_posix()+'"',"R14 reserve header")
-            ms=patch.replace_once(ms,"void InitHeap(void *heapStart, u32 heapSize)\n{",
-                "void InitHeap(void *heapStart, u32 heapSize)\n{\n"
-                "    if (heapStart == gHeap && heapSize == HEAP_SIZE)\n"
-                "        heapSize -= R14_ARENA_RESERVE;","R14 bound original heap")
-            malloc.write_text(ms)
-            save=fr/"src/load_save.c"
-            originals[save]=save.read_text()
-            ss=originals[save]
-            ss=patch.replace_once(ss,"void MoveSaveBlocks_ResetHeap(void)\n{",
-                "void MoveSaveBlocks_ResetHeap(void)\n{\n"
-                "    _Static_assert(sizeof(struct SaveBlock2) + sizeof(struct SaveBlock1) + sizeof(struct PokemonStorage) <= HEAP_SIZE - "+str(reserve)+", \"R14 save scratch overlaps arena\");","R14 save scratch bounds")
-            save.write_text(ss)
-            # gHeap is a linker-defined address, not a sized C object.
-            # Expose the existing heap boundary and reserved tail as symbols
-            # without allocating any extra EWRAM.
-            ld=fr/"ld_script_modern.ld"
-            originals[ld]=ld.read_text()
-            ls=patch.replace_once(originals[ld],"        . = 0x1C000;",
-                "        . = 0x1C000;\n"
-                "        gXgbaR14HeapEnd = .;\n"
-                "        gXgbaR14ArenaStart = . - "+str(reserve)+";",
-                "R14 linker-verified heap bounds")
-            ld.write_text(ls)
+            # Shared guard applies to all future InitHeap reset callers,
+            # including FireRed's real save-copy and map transitions.
+            originals.update(patch_firered_heap_tail(
+                fr,reserve_bytes=reserve,symbol_prefix="gXgbaR14",
+                source_config_header=config,replace_once=patch.replace_once))
             build()
         finally:
             patch.INJECT=inj
             patch.restore_firered_sources(originals)
         finalsyms=symbols(elf)
+        arena_addr,heap_end=plan.verify_linker(
+            {key:value[0] for key,value in finalsyms.items()})
         heap_addr=finalsyms["gHeap"][0]
-        heap_end=finalsyms["gXgbaR14HeapEnd"][0]
         heap_bytes=heap_end-heap_addr
-        arena_addr=finalsyms["gXgbaR14ArenaStart"][0]
         arena_size=max(len(route[4]),len(house[4]))
-        if not (heap_bytes==0x1C000 and
-                0x02000000<=heap_addr<arena_addr<heap_end<=0x02040000 and
-                arena_addr==heap_end-reserve and arena_addr+arena_size<=heap_end and
-                arena_addr%4==0):
-            raise AssertionError("R14 shared arena does not fit exact linker-verified EWRAM bounds")
         binary=bytearray(rom.read_bytes())
         # Strip exact compiled ROM symbol ranges after linking. No stock layout
         # or secondary tile bytes can satisfy the subsequent guest accesses.
