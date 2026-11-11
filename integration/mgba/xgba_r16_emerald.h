@@ -39,8 +39,14 @@ static void xgba_r16_emerald_run(struct mCore *core, uint32_t probe,
         if(core->busRead8(core,dest+i)!=expected[i])
             fail("R16 actual decompiled Emerald EWRAM differs from source bytes");
     /* The original game keeps executing its own unmodified main loop. */
-    for(unsigned i=0;i<180u;++i)
+    for(unsigned i=0;i<900u;++i)
         core->runFrame(core);
+    unsigned ticks=core->busRead32(core,probe+24u);
+    unsigned callback=core->busRead32(core,probe+28u);
+    unsigned flash=core->busRead32(core,probe+32u);
+    fprintf(stderr,"R16_EMERALD_DIAG real_main_iterations=%u callback2=0x%08x flash_present=%u frames=900\\n",ticks,callback,flash);
+    if(ticks<100)
+        fail("R16 Emerald native main loop did not continue after external fetch");
     char path[1024];
     if(snprintf(path,sizeof(path),"%s/emerald-boot-%s.png",
                 directory,enabled?"enabled":"disabled") >= (int)sizeof(path))
@@ -48,7 +54,7 @@ static void xgba_r16_emerald_run(struct mCore *core, uint32_t probe,
     save_native_frame(core,path);
     printf("PASS_R16_SOURCE_BUILT_POKEEMERALD_XGBA_MMIO enabled=%d "
            "requests=%u bytes=%u zero_disabled_reads=%d "
-           "original_emerald_main_frames=180 image=%s\n",
+           "original_emerald_main_frames=900 image=%s\n",
            enabled,device->successful_reads,received,
            !enabled?resource->reads==0:1,path);
 }
