@@ -7,6 +7,30 @@ No executable ROMs, sidecars, save files or raw proprietary game assets are arch
 Screenshots contain game imagery belonging to its rights holders and are shown
 only as limited, noncommercial engineering documentation.
 
+## R21 — actual Emerald allocator pressure across two original battles
+
+R21 passed 10/10 exact-head native tests against original source-built
+Emerald and native mGBA. The guest's real MemBlock allocator performs
+two 12 KiB fragmentation pressure cycles using Alloc/Free/CheckHeap,
+checks 12,288 adjacent live guard bytes and rejects two impossible
+oversized allocations. Peak observed live heap allocation: 24,896 bytes.
+The linker-audited 16 KiB external-resource tail remains outside the
+original allocator throughout two source-backed battle encounters.
+
+| Before heap pressure and first battle | First source-backed battle |
+| --- | --- |
+| [![Original Emerald field](verified/r21/01-native-emerald-before-mixed-battle.png)](verified/r21/01-native-emerald-before-mixed-battle.png) | [![First original battle](verified/r21/02-original-emerald-local-plus-two-external-opponents.png)](verified/r21/02-original-emerald-local-plus-two-external-opponents.png) |
+
+| Recovered external overworld | Second battle after heap pressure |
+| --- | --- |
+| [![Reacquired external map](verified/r21/03-r20-original-emerald-map-after-battle.png)](verified/r21/03-r20-original-emerald-map-after-battle.png) | [![Second original battle](verified/r21/04-r20-second-native-mixed-source-battle.png)](verified/r21/04-r20-second-native-mixed-source-battle.png) |
+
+[R21 exact-head native CI 10/10](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43023656373) · [R20 reentry regression](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43023656014) · [R19 connected map regression](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43023656317) · [provenance](verified/r21/provenance.json) · [source PR #71](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/71)
+
+**Limits:** small reproducible allocator pressure, not arbitrary heap
+exhaustion, DMA hazards, hundreds of transitions, dynamic reserved
+tail release, stock emulator support or original GBA hardware.
+
 ## R20 — Emerald bounded EWRAM arena survives battle → map → battle
 
 Native 6/6 at exact implementation head 448bb54c. Original source-built
