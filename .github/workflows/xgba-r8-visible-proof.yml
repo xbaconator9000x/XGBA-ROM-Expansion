@@ -1,0 +1,79 @@
+name: XGBA R8 rendered external graphics proof
+on:
+  push:
+    branches:
+      - 'phase2/r8-visible-external-sprite-proof-20261111'
+    paths:
+      - 'integration/**'
+      - 'tools/xgba_mgba_run.py'
+      - 'tools/xgba_r8_emblem.py'
+      - 'tests/test_xgba_r8_visible_sprite.py'
+      - '.github/workflows/xgba-r8-visible-proof.yml'
+  pull_request:
+    paths:
+      - 'integration/**'
+      - 'tools/xgba_mgba_run.py'
+      - 'tools/xgba_r8_emblem.py'
+      - 'tests/test_xgba_r8_visible_sprite.py'
+      - '.github/workflows/xgba-r8-visible-proof.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xgba-r8-visible-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  actual-mgba-lcd-render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native GBA, mGBA and PNG build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev build-essential cmake
+          command -v arm-none-eabi-gcc
+          command -v cmake
+      - name: Pin untouched FireRed and native mGBA upstream Git trees
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Execute real FireRed and record genuine mGBA-rendered PNG proof
+        env:
+          XGBA_R8_ARTIFACT_DIR: dist/xgba-r8-real-mgba-screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r8_emblem.py tests/test_xgba_r8_visible_sprite.py
+          python3 -m unittest discover -s tests -p 'test_xgba_r8_visible_sprite.py' -v \
+            2>&1 | tee "${RUNNER_TEMP}/xgba-r8-tests.log"
+          test -s dist/xgba-r8-real-mgba-screenshots/external-enabled.png
+          test -s dist/xgba-r8-real-mgba-screenshots/original-fallback.png
+          test -s dist/xgba-r8-real-mgba-screenshots/proof.json
+          if grep -Eq 'skipped=|expected failures=' "${RUNNER_TEMP}/xgba-r8-tests.log"; then
+            echo "FAIL: R8 real game render proof cannot skip emulator tests"
+            exit 1
+          fi
+          echo "PASS_R8_NATIVE_MGBA_REAL_LCD_SCREENSHOTS"
+      - name: Upload REAL emulator screenshots and source-hash evidence, never ROMs
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r8-real-fire-red-screen-images
+          path: dist/xgba-r8-real-mgba-screenshots/
+          if-no-files-found: error
+          retention-days: 90
