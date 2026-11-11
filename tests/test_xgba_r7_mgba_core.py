@@ -44,7 +44,8 @@ struct XgbaR7Probe {
 };
 EWRAM_DATA volatile struct XgbaR7Probe gXgbaR7Probe = {0};
 EWRAM_DATA u8 gXgbaR7Tiles[64] ALIGNED(4) = {0};
-EWRAM_DATA char gXgbaR7ResourceId[32] = "graphic.smoke";
+EWRAM_DATA char gXgbaR7ResourceId[32] = {0};
+static const char sXgbaR7ResourceName[] = "graphic.smoke";
 static const u8 sXgbaR7OriginalTiles[64] ALIGNED(4) = {
     0x11, 0x22, 0x33, 0x44
 };
@@ -55,6 +56,9 @@ static void XgbaR7GameRun(void)
     bool8 used = FALSE;
     gXgbaR7Probe.magic = 0x58474241;
     gXgbaR7Probe.state = 1;
+    /* FireRed EWRAM_DATA is not ROM-initialised: populate at runtime. */
+    for (u32 i = 0; i < sizeof(sXgbaR7ResourceName); ++i)
+        gXgbaR7ResourceId[i] = sXgbaR7ResourceName[i];
     u32 received = XgbaGuestFetch(gXgbaR7ResourceId, gXgbaR7Tiles, 64);
     gXgbaR7Probe.verified = received == 64;
     staged.abiVersion = 1;
