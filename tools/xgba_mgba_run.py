@@ -33,7 +33,8 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
            r19_battle_dir=None, r19_battle_probe=0,
            r19_battle0_offset=0, r19_battle0_length=0,
            r19_battle1_offset=0, r19_battle1_length=0,
-           r20_reentry=False, r21_heap_probe=0, r22_round_trips=0):
+           r20_reentry=False, r21_heap_probe=0, r22_round_trips=0,
+           r23_battles=0):
     rom = Path(rom).resolve(strict=True)
     if not rom.is_file() or rom.stat().st_size > MAX_ROM:
         raise ValueError("ROM must be a real GBA file of at most 32 MiB")
@@ -183,6 +184,12 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
         cmd.extend(["--r19-connected-dir",str(directory),
                     "--r19-route-offset",str(r19_route_offset),
                     "--r19-route-length",str(r19_route_length)])
+    if r23_battles:
+        if (type(r23_battles) is not int or r23_battles!=4 or
+            not r20_reentry or not r21_heap_probe or
+            r19_battle_dir is None or r19_connected_dir is not None):
+            raise ValueError("R23 requires four original battles and native R21 heap proof")
+        cmd.extend(["--r23-battles",str(r23_battles)])
     if r21_heap_probe:
         if not r20_reentry or not (0x02000000<=r21_heap_probe<=0x02040000-68):
             raise ValueError("R21 requires a physical original Emerald EWRAM malloc proof and two battles")
