@@ -1,0 +1,189 @@
+name: XGBA consolidated main source and native integration gate
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'integration/**'
+      - 'tools/**'
+      - 'tests/**'
+      - '.github/workflows/xgba-consolidated-main-ci.yml'
+      - '.github/workflows/xgba-r15-flash-cold-continue.yml'
+      - '.github/workflows/xgba-r23-emerald-forced-phase-eviction.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'integration/**'
+      - 'tools/**'
+      - 'tests/**'
+      - '.github/workflows/xgba-consolidated-main-ci.yml'
+      - '.github/workflows/xgba-r15-flash-cold-continue.yml'
+      - '.github/workflows/xgba-r23-emerald-forced-phase-eviction.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-consolidated-main-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-and-memory-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require source-backed R6 through R23 and permanent evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s tools/xgba_resource_bridge.py
+          test -s tools/xgba_mgba_run.py
+          test -s tools/xgba_memory_plan.py
+          test -s tools/xgba_r17_emerald_patch.py
+          test -s integration/mgba/xgba_mgba_headless.c
+          test -s integration/emerald/xgba_r19_connected_maps.inc
+          test -s integration/emerald/xgba_r19_battle_assets.inc
+          test -s integration/emerald/xgba_r21_heap_pressure.inc
+          test -s integration/fire_red/xgba_r15_save.inc
+          test -s tests/test_xgba_r23_emerald_forced_phase_eviction.py
+          test -s tests/test_xgba_r15_firered_flash.py
+          test -s evidence/verified/r23/provenance.json
+          test -s evidence/verified/r23/proof.json
+          grep -q 'R6–R23 verified' README.md
+          if git ls-files | grep -Ei '\.(gba|nds|sav|elf|rom)$'; then
+            echo 'FAIL: committed playable ROM, save or built binary'
+            exit 1
+          fi
+          python3 -m compileall -q tools tests
+      - name: Enforce 26 deterministic fail-closed memory budget assertions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_xgba_memory_plan.py' -v 2>&1 | tee memory-contract.log
+          grep -q 'Ran 26 tests' memory-contract.log
+          grep -q '^OK$' memory-contract.log
+          if grep -Eq 'skipped=|expected failures=' memory-contract.log; then
+            echo 'FAIL: skipped memory assertions'
+            exit 1
+          fi
+  # Independently execute the pinned REAL FireRed cold Flash save test.
+  consolidated-firered-flash-cold-restart:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install source-built GBA and native mGBA test tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev build-essential cmake python3-pil
+      - name: Fetch exact upstream FireRed and mGBA source pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Verify unmodified FireRed Flash save and native cold restart
+        shell: bash
+        env:
+          XGBA_R15_EVIDENCE_DIR: ${{ github.workspace }}/r15-evidence
+        run: |
+          set -euo pipefail
+          mkdir -p r15-evidence
+          python3 -m unittest discover -s tests -p 'test_xgba_r15_firered_flash.py' -v 2>&1 | tee xgba-r15-native.log
+          grep -q 'Ran 4 tests' xgba-r15-native.log
+          grep -q '^OK$' xgba-r15-native.log
+          grep -q 'PASS_R15' xgba-r15-native.log || test -s r15-evidence/proof.json
+          python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          import json
+          folder=Path("r15-evidence")
+          files=list(folder.glob("*.png"))
+          assert len(files)==4,files
+          for img in files:
+              with Image.open(img) as im:assert im.size==(240,160)
+          report=json.loads((folder/"proof.json").read_text())
+          assert report["native_mgba_subprocesses"]==3
+          assert report["saved_flash_size"]==131072
+          assert report["flash_unchanged_after_resume_and_corrupt_pack"]
+          assert not list(folder.glob("*.gba")) and not list(folder.glob("*.sav"))
+          print("PASS_R15_NATIVE_FLASH_COLD_RESTART_4_TESTS")
+          PY
+      - name: Publish only original LCD screenshots and non-ROM proof JSON
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-consolidated-firered-flash-evidence
+          path: |
+            r15-evidence/*.png
+            r15-evidence/proof.json
+          retention-days: 90
+  # Independently execute the pinned REAL Emerald arena-eviction and heap stress test.
+  consolidated-emerald-four-battle-eviction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install exact original Emerald and mGBA source build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev build-essential cmake python3-pil
+      - name: Checkout immutable Emerald game and original mGBA core pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokeemerald.git upstream/pokeemerald
+          git -C upstream/pokeemerald checkout --quiet --detach 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokeemerald rev-parse HEAD)" = 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Execute four original Emerald battles with three forced map/sprite arena phase evictions
+        shell: bash
+        env:
+          XGBA_R23_EVIDENCE_DIR: ${{ github.workspace }}/r23-phase-evidence
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tests/test_xgba_r23_emerald_forced_phase_eviction.py
+          python3 -m unittest discover -s tests -p 'test_xgba_r23_emerald_forced_phase_eviction.py' -v 2>&1 | tee xgba-r23-phase.log
+          grep -q 'Ran 12 tests' xgba-r23-phase.log
+          grep -q '^OK$' xgba-r23-phase.log
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          root=Path('r23-phase-evidence')
+          shots=sorted(root.glob('*.png'))
+          assert len(shots)==8,shots
+          for shot in shots:
+              with Image.open(shot) as im:assert im.size==(240,160)
+          report=json.loads((root/'proof.json').read_text())
+          assert report["actual_original_battles"] == 4
+          assert report["independent_original_compressed_front_fetches"] == 8
+          assert report["independently_verified_field_returns"] == 3
+          assert report["native_probe"]["guest_pressure_cycles"] == 4
+          assert report["native_probe"]["external_map_fetches"] == 8
+          assert report["guest_live_guard_bytes_verified"] == 24576
+          assert not list(root.glob('*.gba')) and not list(root.glob('*.sav'))
+          print('PASS_R23_NATIVE_EMERALD_FORCED_PHASE_EVICTION_12_TESTS')
+          PY
+      - name: Publish genuine native LCD evidence and failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-consolidated-emerald-phase-evidence
+          path: r23-phase-evidence/
+          retention-days: 90
+          if-no-files-found: warn
