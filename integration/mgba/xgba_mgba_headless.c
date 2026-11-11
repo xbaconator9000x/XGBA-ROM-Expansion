@@ -343,6 +343,7 @@ static void run_r10_real_firered_live_swap(struct mCore *core, uint32_t probe,
 #include "xgba_r15_save.h"
 #include "xgba_r16_emerald.h"
 #include "xgba_r17_emerald_map.h"
+#include "xgba_r18_emerald_flash.h"
 
 static void save_actual_game_frame(struct mCore *core, const char *path, int enabled)
 {
@@ -388,6 +389,10 @@ int main(int argc, char **argv)
     const char *r15_dir = NULL;
     const char *r16_dir = NULL;
     const char *r17_dir = NULL;
+    const char *r18_dir = NULL;
+    const char *r18_savefile = NULL;
+    const char *r18_phase = NULL;
+    uint64_t r18_save_probe = 0;
     const char *r15_savefile = NULL;
     const char *r15_phase = NULL;
     uint64_t r15_save_probe = 0;
@@ -418,6 +423,14 @@ int main(int argc, char **argv)
             r16_dir = argv[i];
         else if (!strcmp(argv[i], "--r17-emerald-map-dir") && ++i < argc && !r17_dir)
             r17_dir = argv[i];
+        else if (!strcmp(argv[i], "--r18-dir") && ++i < argc && !r18_dir)
+            r18_dir = argv[i];
+        else if (!strcmp(argv[i], "--r18-savefile") && ++i < argc && !r18_savefile)
+            r18_savefile = argv[i];
+        else if (!strcmp(argv[i], "--r18-phase") && ++i < argc && !r18_phase)
+            r18_phase = argv[i];
+        else if (!strcmp(argv[i], "--r18-save-probe") && ++i < argc && !r18_save_probe)
+            r18_save_probe = parse_number(argv[i]);
         else if (!strcmp(argv[i], "--r15-savefile") && ++i < argc && !r15_savefile)
             r15_savefile = argv[i];
         else if (!strcmp(argv[i], "--r15-phase") && ++i < argc && !r15_phase)
@@ -482,9 +495,9 @@ int main(int argc, char **argv)
     struct mCore *core = GBACoreCreate();
     if (!core || !core->init(core))
         fail("mGBA core initialization failed");
-    mColor *video = (screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r17_dir)
+    mColor *video = (screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r17_dir || r18_dir)
                    ? calloc(240u*160u, sizeof(mColor)) : NULL;
-    if ((screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r17_dir) && !video)
+    if ((screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r17_dir || r18_dir) && !video)
         fail("cannot allocate GBA framebuffer");
     if (video)
         core->setVideoBuffer(core, video, 240);
@@ -501,6 +514,13 @@ int main(int argc, char **argv)
         if (!mCoreLoadSaveFile(core,r15_savefile,false))
             fail("R15 could not attach real mGBA Flash save file");
     }
+    if (r18_dir) {
+        if (!r18_phase || !r18_savefile || !r18_save_probe ||
+            r18_save_probe > UINT32_MAX)
+            fail("R18 requires a genuine Emerald Flash .sav, phase and actual guest ELF proof");
+        if (!mCoreLoadSaveFile(core,r18_savefile,false))
+            fail("R18 could not attach durable native mGBA Flash save file");
+    }
     core->reset(core);
     struct GBA *gba = (struct GBA *)core->board;
     if (!gba) fail("mGBA GBA board inaccessible");
@@ -512,7 +532,7 @@ int main(int argc, char **argv)
         if (r15_phase && !strcmp(r15_phase,"corrupt") && probe &&
             core->busRead32(core,(uint32_t)probe+4)==0xE14u)
             break;
-        if (r17_dir && probe &&
+        if ((r17_dir || r18_dir) && probe &&
             core->busRead32(core,(uint32_t)probe+4)==0xE17u)
             break;
     }
@@ -544,6 +564,9 @@ int main(int argc, char **argv)
         xgba_r16_emerald_run(core,(uint32_t)probe,r16_dir,&device,&resource,enabled);
     } else if (r17_dir) {
         xgba_r17_emerald_run(core,(uint32_t)probe,r17_dir,&device,&resource,enabled);
+    } else if (r18_dir) {
+        xgba_r18_emerald_run(core,(uint32_t)probe,(uint32_t)r18_save_probe,
+                            r18_dir,r18_phase,&device,&resource,enabled);
     } else if (!scene_dir) {
         verify_game_copy(core, (uint32_t)probe, &device, &resource, enabled);
     }
