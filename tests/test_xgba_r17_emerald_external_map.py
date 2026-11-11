@@ -130,6 +130,11 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                 "\n#define XGBA_R19_BATTLE_TEST 1\n"
                 f"#define XGBA_R19_POOCHYENA_FRONT_BYTES {len(cls.battle_original_compressed['Poochyena'])}u\n"
                 f"#define XGBA_R19_ZIGZAGOON_FRONT_BYTES {len(cls.battle_original_compressed['Zigzagoon'])}u\n")
+        r21=bool(getattr(cls,"R21_HEAP_PRESSURE_TEST",False))
+        if r21 and not r19_battle:
+            raise AssertionError("R21 allocator pressure requires original R19 battle engine")
+        if r21:
+            config.write_text(config.read_text()+"\n#define XGBA_R21_PRESSURE_TEST 1\n")
         if getattr(cls,"R20_LIFECYCLE_TEST",False):
             if not r19_battle:
                 raise AssertionError("R20 re-entry fixture requires R19 original mixed battle")
@@ -149,7 +154,8 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         try:
             originals=patch.patch_emerald_littleroot_sources(EMERALD,config,r18_save=r18,r19_connected=r19,r19_battle=r19_battle)
             originals.update(patch_emerald_heap_tail(EMERALD,
-                reserve_bytes=budget.reserve_bytes,replace_once=e16.one))
+                reserve_bytes=budget.reserve_bytes,replace_once=e16.one,
+                r21_pressure=r21))
             build()
         finally:
             e16.restore_sources(originals)
@@ -284,6 +290,10 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             cls.real_arena=real_arena
             if r19_battle:
                 cls.battle_probe=syms["gXgbaR19BattleProof"][0]
+                if r21:
+                    cls.heap_probe=syms["gXgbaR21HeapProof"][0]
+                    if not 0x02000000<=cls.heap_probe<0x02040000:
+                        raise AssertionError("R21 original malloc proof not in native EWRAM")
                 # R19 battle uses the phase-shared, linker-audited heap tail;
                 # there is intentionally NO extra 16 KiB EWRAM global symbol.
                 cls.battle_front_buffer=real_arena
