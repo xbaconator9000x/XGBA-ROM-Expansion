@@ -12,7 +12,7 @@ ROOT=Path(__file__).resolve().parents[1]
 class FireRedR24AdapterDrift(RuntimeError):
     pass
 
-def patch_firered_r24(firered:Path)->dict[Path,str]:
+def patch_firered_r24(firered:Path,*,r25_dma:bool=False)->dict[Path,str]:
     root=Path(firered)
     main=root/"src/main.c"
     before=main.read_text(encoding="utf-8")
@@ -20,6 +20,8 @@ def patch_firered_r24(firered:Path)->dict[Path,str]:
         raise FireRedR24AdapterDrift("Refusing doubly instrumented FireRed source")
     include=(ROOT/"integration/emerald/xgba_r24_boundary.inc").read_text(encoding="utf-8")
     include=include.replace("emerald.r24.","firered.r24.")
+    if r25_dma:
+        include="#define XGBA_R25_DMA_TEST 1\n"+include
     # Original FireRed main.c doesn't include malloc.h itself; original
     # InitHeap is already called at the point where the guest fixture runs.
     injected=(
