@@ -25,7 +25,8 @@ MAX_GUEST_RESOURCE = 16 * 1024
 def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
            probe_address=0, disabled=False, screenshot=None, scene_dir=None,
            second_resource_id=None, r10_dir=None, r11_perf=None,
-           r12_dir=None, r13_dir=None, r14_dir=None):
+           r12_dir=None, r13_dir=None, r14_dir=None,
+           r15_dir=None, r15_savefile=None, r15_phase=None, r15_save_probe=0):
     rom = Path(rom).resolve(strict=True)
     if not rom.is_file() or rom.stat().st_size > MAX_ROM:
         raise ValueError("ROM must be a real GBA file of at most 32 MiB")
@@ -99,6 +100,20 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
         if not folder.is_dir() or second_resource_id is None:
             raise ValueError("R14 requires an existing directory and two map/tileset packs")
         cmd.extend(["--r14-dir", str(folder)])
+    if r15_dir is not None:
+        folder=Path(r15_dir).resolve()
+        if not folder.is_dir() or second_resource_id is None:
+            raise ValueError("R15 requires existing evidence directory and two packs")
+        if r15_phase not in ("write","continue","corrupt") or not r15_savefile or not (
+                0x02000000<=r15_save_probe<0x02040000):
+            raise ValueError("R15 requires valid phase, durable Flash path and guest probe")
+        save_path=Path(r15_savefile).resolve()
+        if not save_path.parent.is_dir():
+            raise ValueError("R15 native Flash save parent missing")
+        cmd.extend(["--r15-dir",str(folder),
+                    "--r15-savefile",str(save_path),
+                    "--r15-phase",r15_phase,
+                    "--r15-save-probe",hex(r15_save_probe)])
     if disabled:
         cmd.append("--disabled")
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
@@ -127,6 +142,10 @@ def main():
     p.add_argument("--r12-dir", help="Execute actual FireRed mGBA savestate recovery proof")
     p.add_argument("--r13-dir", help="Execute native external map transition proof")
     p.add_argument("--r14-dir", help="Execute physical door and connected external map/tileset proof")
+    p.add_argument("--r15-dir", help="Store real FireRed Flash save/continue LCD evidence")
+    p.add_argument("--r15-savefile", help="Private real mGBA Flash file, never publish")
+    p.add_argument("--r15-phase", choices=["write","continue","corrupt"])
+    p.add_argument("--r15-save-probe", type=lambda s:int(s,0), default=0)
     args = p.parse_args()
     out = launch(args.rom, args.manifest, args.resource_id,
                  emulator=args.emulator, frames=args.frames,
@@ -134,7 +153,9 @@ def main():
                  screenshot=args.screenshot, scene_dir=args.scene_dir,
                  second_resource_id=args.second_resource_id,
                  r10_dir=args.r10_dir, r11_perf=args.r11_perf,
-                 r12_dir=args.r12_dir, r13_dir=args.r13_dir, r14_dir=args.r14_dir)
+                 r12_dir=args.r12_dir, r13_dir=args.r13_dir, r14_dir=args.r14_dir,
+                 r15_dir=args.r15_dir, r15_savefile=args.r15_savefile,
+                 r15_phase=args.r15_phase, r15_save_probe=args.r15_save_probe)
     print(out.stdout, end="")
     if out.stderr:
         print(out.stderr, file=sys.stderr, end="")
