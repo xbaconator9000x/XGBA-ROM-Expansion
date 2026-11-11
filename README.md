@@ -1,22 +1,32 @@
 # XGBA — Expanding What a Game Boy Advance Game Can Access
 
-**Executed expansion proof: R6–R13 verified · 11 November 2026**
+**Executed expansion proof: R6–R14 verified · 11 November 2026**
 
 > **A real, source-built Pokémon FireRed executable running in the native mGBA core successfully used graphics bytes stored _beyond the conventional 32 MiB GBA ROM window_.** The game received a validated external resource through an opt-in host bridge, used FireRed's own sprite-sheet loading routine, and copied the expected bytes into emulated GBA object VRAM.
 >
 > **R6 integration milestone: 32/32 tests passed**, including the positive executable-game test and five executed fallback/failure cases. [Passing push CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42940797581) · [Passing pull-request CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42940805793) · [Experimental implementation, PR #40](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/40).
 
-**The milestones are real; the expansion platform is not yet a finished product.** R6 used a temporary test host; R7–R13 progressed to game-initiated requests in a patched native mGBA core, actual LCD screenshots, live FireRed Pallet Town graphics swaps, native CPU-frame benchmarking, save-state rollback and a real map layout loaded from outside the ROM. These results do **not** establish a stock-emulator release, Android or GUI frame-rate performance, unrestricted CPU-addressable ROM, or original GBA hardware compatibility.
+**The milestones are real; the expansion platform is not yet a finished product.** R6 used a temporary test host; R7–R14 progressed to game-initiated requests in a patched native mGBA core, actual LCD screenshots, live FireRed Pallet Town graphics swaps, native CPU-frame benchmarking, save-state rollback, real map layouts loaded from outside the ROM, and physical navigation with external secondary tilesets. These results do **not** establish a stock-emulator release, Android or GUI frame-rate performance, unrestricted CPU-addressable ROM, or original GBA hardware compatibility.
 
-## In progress — R14: normal door navigation and external secondary tilesets
+## Latest verified milestone — R14: normal door navigation and external secondary tilesets
 
-**Draft [PR #56](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/56) · 11 November 2026 · not yet a verified milestone.**
+**11 November 2026 · Draft [PR #56](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/56) · exact head `3a1988e99da9285e8d194e9b1bbf9b3d936b6d3e` · 4/4 focused native tests passed; all seven R7–R13 regressions passed.**
 
-R14 extends the R13 fixture toward actual D-pad house entry/exit and the seamless Pallet Town–Route 1 connection, with external map grids, borders, and complete indoor/outdoor secondary tilesets (compressed graphics, palettes, metatiles and attributes). The initial [exact-head R14 CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42969906090) failed **before runtime**: the linker reported **266,986 bytes of EWRAM used versus 262,144 available**, an overflow of **4,842 bytes**. No R14 tests executed or screenshots were published on that run; all seven R7–R13 regression workflows passed.
+The actual pinned FireRed game uses physical GBA D-pad inputs to enter the player's house, leave it, and follow the native collision grid across the seamless Pallet Town–Route 1 connection. Both external maps (House 1F, 13×10; Route 1, 24×40), their borders and their complete indoor/outdoor secondary tilesets (compressed tile graphics, palettes, metatiles and attributes) are stripped from the compiled ROM and supplied through two resource packs at offsets above 32 MiB. Pallet Town and Route 1 share the outdoor secondary tileset.
 
-The [R14 memory-lifecycle fix](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/commit/861f13d013e98e0339cb71cbb6c30bccb2e35292) replaces two permanently resident packs with a single linker-bounded arena sized to the larger pack, preserves FireRed's stock heap, and requires a fresh outdoor resource read after leaving the house. The updated native acceptance checks require the same arena address across transitions, exactly three provider reads (outdoor → indoor → outdoor), actual map/VRAM contents, and four genuine LCD screenshots. [Exact-head push validation](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42974021409) is pending; these are acceptance requirements, **not passed results**. R13 remains the latest verified milestone.
+| Native acceptance case | Executed result |
+| --- | --- |
+| Physical D-pad house entry, exit and seamless Route 1 connection | Passed |
+| External map geometry and complete secondary tilesets | Exact staged pack SHA-256, native map grid/border and native decompressed BG VRAM verified |
+| Working-memory lifecycle | One linker-bounded heap-tail arena, three external reads (outdoor → indoor → outdoor), same arena address throughout |
+| Original resources absent from ROM | Compiled map and tileset ranges stripped; both packs beyond 32 MiB |
+| Native rendering | Four genuine 240×160 LCD PNGs; enabled scene changes verified |
 
-## Latest verified milestone — R13: real FireRed map geometry outside the ROM
+**Evidence:** [passing R14 exact-head PR CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42977112057) · [four native screenshots and proof.json](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42977112057/artifacts/13835737289). The job log records all four tests passing and `PASS_R14_ACTUAL_FIRERED_EXTERNAL_TILESETS`. No ROMs or raw proprietary resources are distributed.
+
+**Engineering lesson:** The initial two-pack static allocation exceeded the physical 256 KiB EWRAM limit; even a single static arena overflowed. The final implementation reserves the tail of FireRed's existing heap and bounds every heap initialization, protecting the pack through native transitions and checking save-copy scratch bounds. The actual guest arena address is independently checked against the linker boundaries. Earlier failures and their corrections remain visible in PR #56 and its CI history. **Scope:** primary tilesets, NPC/event definitions, encounter tables and scripts remain ROM-resident; this is a bounded enabled-core proof using a post-Oak fixture, not stock-emulator compatibility, arbitrary-size maps or a released platform.
+
+## R13: real FireRed map geometry outside the ROM
 
 **11 November 2026 · Draft [PR #54](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/54) · exact head `f3ae6846e5971c0617674d5cef98be5331b91b2d` · 4/4 focused native tests passed on both push and PR CI.**
 
@@ -193,7 +203,7 @@ For the focused experiment, run `python3 tools/xgba_resource_integration_smoke.p
 
 ## What comes next
 
-The R6–R13 milestones answer increasingly practical feasibility questions for **emulator-assisted external assets**. The next task is to turn these executed, source-instrumented proofs into a reproducible, supportable workflow:
+The R6–R14 milestones answer increasingly practical feasibility questions for **emulator-assisted external assets**. The next task is to turn these executed, source-instrumented proofs into a reproducible, supportable workflow:
 
 1. **Production integration:** harden the existing game-initiated native mGBA resource device and FireRed-side integration into an explicitly enabled, maintainable extension and reusable resource API.
 2. **Engine support:** extend the verified sprite and map-grid integration to ordinary navigation, tilesets, palettes, other assets, and safe decompression, allocation, ownership, resource lifetimes, DMA, audio and save-state identity.
