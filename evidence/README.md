@@ -7,6 +7,30 @@ No executable ROMs, sidecars, save files or raw proprietary game assets are arch
 Screenshots contain game imagery belonging to its rights holders and are shown
 only as limited, noncommercial engineering documentation.
 
+## R24 — original FireRed AND Emerald exact 16 KiB MMIO boundaries
+
+**Both original games independently pass 14/14 native tests.** Pinned
+source-built FireRed and Emerald perform nine game-issued XGBA MMIO
+transactions: two successful full 16 KiB external resource loads,
+seven distinct malformed requests rejected without writing any guest
+destination byte, redzone guard validation and a successful recovery.
+Source bytes and SHA-256 were independently verified. Disabled runs
+use identical ROMs and produce zero external-resource provider reads.
+An additional unit suite exercises 256 malformed memory ranges.
+
+| FireRed original-game resource enabled | FireRed identical-ROM XGBA disabled |
+| --- | --- |
+| [![Native original FireRed enabled](verified/r24-firered/firered-boundary-enabled.png)](verified/r24-firered/firered-boundary-enabled.png) | [![Native original FireRed disabled](verified/r24-firered/firered-boundary-disabled.png)](verified/r24-firered/firered-boundary-disabled.png) |
+
+| Emerald original-game resource enabled | Emerald identical-ROM XGBA disabled |
+| --- | --- |
+| [![Native original Emerald enabled](verified/r24-emerald/emerald-boundary-enabled.png)](verified/r24-emerald/emerald-boundary-enabled.png) | [![Native original Emerald disabled](verified/r24-emerald/emerald-boundary-disabled.png)](verified/r24-emerald/emerald-boundary-disabled.png) |
+
+[Original FireRed native 14/14](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43051443138) · [FireRed SHA provenance](verified/r24-firered/provenance.json) · [FireRed proof](verified/r24-firered/proof.json) · [Original Emerald native 14/14](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43051443181) · [Emerald SHA provenance](verified/r24-emerald/provenance.json) · [Emerald proof](verified/r24-emerald/proof.json) · [R24 merged source PR #78](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/78)
+
+**Limits:** No in-flight DMA buffer-lifetime proof, three-connected-map
+eviction, stock emulator or original GBA hardware.
+
 ## R23 — four original Emerald battles and forced EWRAM phase eviction
 
 R23 passed 12/12 exact-head native original Emerald tests. Overworld
