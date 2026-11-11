@@ -291,6 +291,9 @@ def make_firered_real_overworld_sources(firered:Path):
         opening+"\n    XgbaR10MarkBoot(0x201);",
         "NewGameInitData entry")
     markers=[
+        ("    StringCopy(rivalName, gSaveBlock1Ptr->rivalName);",0x210),
+        ("    gSaveBlock2Ptr->encryptionKey = 0;",0x211),
+        ("    ClearBattleTower();",0x212),
         ("    ClearSav1();",0x202),
         ("    InitEventData();",0x203),
         ("    ResetPokemonStorageSystem();",0x204),
