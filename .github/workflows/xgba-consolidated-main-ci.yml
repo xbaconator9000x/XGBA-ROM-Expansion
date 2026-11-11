@@ -26,7 +26,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   source-and-memory-contract:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -66,18 +66,27 @@ jobs:
           fi
   # Independently execute the pinned REAL FireRed cold Flash save test.
   consolidated-firered-flash-cold-restart:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - name: Install source-built GBA and native mGBA test tools
+      - name: Install pinned GNU ARM cross-compiler without Ubuntu package mirrors
+        uses: carlosperate/arm-none-eabi-gcc-action@49f4db4520f840e77ab1e99b24cfac2c540a21b1
+        with:
+          release: '13.2.Rel1'
+      - name: Check preinstalled native build requirements and install Pillow via Python packages
         shell: bash
         run: |
           set -euo pipefail
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends \
-            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
-            libpng-dev build-essential cmake python3-pil
+          arm-none-eabi-gcc --version
+          arm-none-eabi-nm --version | head -n 1
+          cmake --version | head -n 1
+          cc --version | head -n 1
+          bash tools/xgba_ci_png_prereqs.sh
+          if ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
+            python3 -m pip install --user --break-system-packages --disable-pip-version-check 'Pillow==11.3.0'
+          fi
+          python3 -c 'from PIL import Image; print("Pillow:", Image.__version__)'
       - name: Fetch exact upstream FireRed and mGBA source pins
         shell: bash
         run: |
@@ -127,18 +136,27 @@ jobs:
           retention-days: 90
   # Independently execute the pinned REAL Emerald arena-eviction and heap stress test.
   consolidated-emerald-four-battle-eviction:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 55
     steps:
       - uses: actions/checkout@v4
-      - name: Install exact original Emerald and mGBA source build dependencies
+      - name: Install pinned GNU ARM cross-compiler without Ubuntu package mirrors
+        uses: carlosperate/arm-none-eabi-gcc-action@49f4db4520f840e77ab1e99b24cfac2c540a21b1
+        with:
+          release: '13.2.Rel1'
+      - name: Check preinstalled native build requirements and install Pillow via Python packages
         shell: bash
         run: |
           set -euo pipefail
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends \
-            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
-            libpng-dev build-essential cmake python3-pil
+          arm-none-eabi-gcc --version
+          arm-none-eabi-nm --version | head -n 1
+          cmake --version | head -n 1
+          cc --version | head -n 1
+          bash tools/xgba_ci_png_prereqs.sh
+          if ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
+            python3 -m pip install --user --break-system-packages --disable-pip-version-check 'Pillow==11.3.0'
+          fi
+          python3 -c 'from PIL import Image; print("Pillow:", Image.__version__)'
       - name: Checkout immutable Emerald game and original mGBA core pins
         shell: bash
         run: |

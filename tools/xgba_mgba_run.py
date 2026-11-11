@@ -34,7 +34,8 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
            r19_battle0_offset=0, r19_battle0_length=0,
            r19_battle1_offset=0, r19_battle1_length=0,
            r20_reentry=False, r21_heap_probe=0, r22_round_trips=0,
-           r23_battles=0):
+           r23_battles=0, r24_boundary_dir=None, r24_boundary_probe=0,
+           r24_firered=False):
     rom = Path(rom).resolve(strict=True)
     if not rom.is_file() or rom.stat().st_size > MAX_ROM:
         raise ValueError("ROM must be a real GBA file of at most 32 MiB")
@@ -138,6 +139,18 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
                     "--r15-savefile",str(save_path),
                     "--r15-phase",r15_phase,
                     "--r15-save-probe",hex(r15_save_probe)])
+    if r24_firered and r24_boundary_dir is None:
+        raise ValueError("R24 FireRed proof needs original native boundary mode")
+    if r24_boundary_dir is not None:
+        directory=Path(r24_boundary_dir).resolve()
+        if not directory.is_dir() or not (0x02000000<=r24_boundary_probe<=0x02040000-68):
+            raise ValueError("R24 needs real game EWRAM ELF proof and native LCD directory")
+        if r16_emerald_dir is not None or r19_battle_dir is not None or r17_emerald_map_dir is not None:
+            raise ValueError("R24 boundary is exclusive original Emerald test mode")
+        if r24_firered:
+            cmd.append("--r24-firered")
+        cmd.extend(["--r24-boundary-dir",str(directory),
+                    "--r24-boundary-probe",hex(r24_boundary_probe)])
     if r16_emerald_dir is not None:
         directory=Path(r16_emerald_dir).resolve()
         if not directory.is_dir():

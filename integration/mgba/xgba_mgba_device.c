@@ -85,6 +85,12 @@ void XgbaDeviceReset(struct XgbaGbaDevice *device)
     device->actual_length = 0;
     device->successful_reads = 0;
     device->failed_reads = 0;
+    device->rejected_ranges = 0;
+    device->rejected_ids = 0;
+    device->provider_too_large = 0;
+    device->provider_bad_sha256 = 0;
+    device->provider_not_found = 0;
+    device->provider_other_failures = 0;
 }
 
 static void execute_request(struct GBA *gba, struct XgbaGbaDevice *device)
@@ -93,12 +99,14 @@ static void execute_request(struct GBA *gba, struct XgbaGbaDevice *device)
     if (!device->capacity || device->capacity > XGBA_R7_MAX_GUEST_BYTES ||
         !ewram_range(device->dst_addr, device->capacity)) {
         device->status = XGBA_R7_BAD_RANGE;
+        ++device->rejected_ranges;
         ++device->failed_reads;
         return;
     }
     char id[XGBA_R7_MAX_RESOURCE_ID + 1u] = {0};
     if (!guest_id(gba, device->id_addr, id)) {
         device->status = XGBA_R7_BAD_ID;
+        ++device->rejected_ids;
         ++device->failed_reads;
         return;
     }
@@ -111,9 +119,19 @@ static void execute_request(struct GBA *gba, struct XgbaGbaDevice *device)
     size_t length = 0;
     enum XgbaMgbaProviderStatus status = xgba_mgba_provider_read(
         &device->provider, id, candidate, device->capacity, &length);
-    if (status != XGBA_MGBA_OK || length > device->capacity ||
+    /* Never report a zero-byte provider response as successful guest load.
+     * A partial or refused read must leave the guest buffer unchanged. */
+    if (status != XGBA_MGBA_OK || !length || length > device->capacity ||
         !ewram_range(device->dst_addr, (uint32_t)length)) {
         device->status = XGBA_R7_RESOURCE_FAILURE;
+        if (status == XGBA_MGBA_LIMIT_EXCEEDED)
+            ++device->provider_too_large;
+        else if (status == XGBA_MGBA_INTEGRITY_ERROR)
+            ++device->provider_bad_sha256;
+        else if (status == XGBA_MGBA_NOT_FOUND)
+            ++device->provider_not_found;
+        else
+            ++device->provider_other_failures;
         ++device->failed_reads;
         free(candidate);
         return;

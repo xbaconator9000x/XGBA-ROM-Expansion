@@ -366,6 +366,7 @@ static void run_r10_real_firered_live_swap(struct mCore *core, uint32_t probe,
 #include "xgba_r18_emerald_flash.h"
 #include "xgba_r19_connected_maps.h"
 #include "xgba_r19_mixed_battle.h"
+#include "xgba_r24_boundary.h"
 
 static void save_actual_game_frame(struct mCore *core, const char *path, int enabled)
 {
@@ -410,6 +411,9 @@ int main(int argc, char **argv)
     const char *r14_dir = NULL;
     const char *r15_dir = NULL;
     const char *r16_dir = NULL;
+    const char *r24_dir = NULL;
+    uint64_t r24_probe = 0;
+    int r24_firered = 0;
     const char *r17_dir = NULL;
     const char *r18_dir = NULL;
     const char *r19_dir = NULL;
@@ -454,6 +458,12 @@ int main(int argc, char **argv)
             r14_dir = argv[i];
         else if (!strcmp(argv[i], "--r15-dir") && ++i < argc && !r15_dir)
             r15_dir = argv[i];
+        else if (!strcmp(argv[i], "--r24-firered"))
+            r24_firered = 1;
+        else if (!strcmp(argv[i], "--r24-boundary-dir") && ++i < argc && !r24_dir)
+            r24_dir = argv[i];
+        else if (!strcmp(argv[i], "--r24-boundary-probe") && ++i < argc && !r24_probe)
+            r24_probe = parse_number(argv[i]);
         else if (!strcmp(argv[i], "--r16-emerald-dir") && ++i < argc && !r16_dir)
             r16_dir = argv[i];
         else if (!strcmp(argv[i], "--r17-emerald-map-dir") && ++i < argc && !r17_dir)
@@ -581,9 +591,9 @@ int main(int argc, char **argv)
     struct mCore *core = GBACoreCreate();
     if (!core || !core->init(core))
         fail("mGBA core initialization failed");
-    mColor *video = (screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir)
+    mColor *video = (screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir)
                    ? calloc(240u*160u, sizeof(mColor)) : NULL;
-    if ((screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir) && !video)
+    if ((screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir) && !video)
         fail("cannot allocate GBA framebuffer");
     if (video)
         core->setVideoBuffer(core, video, 240);
@@ -625,6 +635,11 @@ int main(int argc, char **argv)
             core->busRead32(core,(uint32_t)probe+4)==0xE19u)
             break;
     }
+    if (r24_firered && !r24_dir)
+        fail("R24 FireRed mode needs genuine original game boundary proof");
+    if (r24_dir && (!r24_probe || r24_probe>UINT32_MAX ||
+         r16_dir || r17_dir || r19_dir || r19_battle_dir))
+        fail("R24 requires bounded original Emerald ELF proof and exclusive mode");
     if ((r10_dir && (r11_perf || r12_dir)) || (r11_perf && r12_dir))
         fail("R10/R11/R12 execution modes are mutually exclusive");
     if (r10_dir) {
@@ -649,6 +664,9 @@ int main(int argc, char **argv)
     } else if (r15_dir) {
         xgba_r15_run(core,(uint32_t)probe,(uint32_t)r15_save_probe,
                      r15_dir,r15_phase,&device,&resource,enabled);
+    } else if (r24_dir) {
+        xgba_r24_boundary_run(core,r24_firered?0u:(uint32_t)probe,(uint32_t)r24_probe,
+                              r24_dir,&device,&resource,enabled);
     } else if (r16_dir) {
         xgba_r16_emerald_run(core,(uint32_t)probe,r16_dir,&device,&resource,enabled);
     } else if (r17_dir) {
