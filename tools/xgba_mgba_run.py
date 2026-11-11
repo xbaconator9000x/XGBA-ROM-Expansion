@@ -59,7 +59,13 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
     ]
     if disabled:
         cmd.append("--disabled")
-    return subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=300)
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+    if result.returncode:
+        raise RuntimeError(
+            f"XGBA native emulator failed (exit {result.returncode}):\\n"
+            f"{result.stdout[-4000:]}\\n{result.stderr[-4000:]}"
+        )
+    return result
 
 
 def main():
