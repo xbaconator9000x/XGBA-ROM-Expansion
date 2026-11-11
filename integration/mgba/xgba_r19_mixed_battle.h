@@ -180,6 +180,10 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
             fail("R20 second native Emerald battle reused stale sprite bytes or missed phase reacquisition");
         r19_verify_enemy_battle_sprite(core,battle,resource,0,sprite0Offset,sprite0Len);
         r19_verify_enemy_battle_sprite(core,battle,resource,1,sprite1Offset,sprite1Len);
+        /* Source loading is proven before the battle's visual fade finishes.
+         * Capture the actual fully rendered native LCD, not a black transition.
+         * R19 already waits 45 original game frames for this same reason. */
+        r14_wait(core,90);
         r17_frame(core,dir,"04-r20-second-native-mixed-source-battle");
         printf("PASS_R20_EWRAM_ARENA_REENTRY real_original_battles=2 "
                "external_sprite_fetches=%u ownership_epochs=%u "
