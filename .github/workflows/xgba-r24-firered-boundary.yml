@@ -1,0 +1,98 @@
+name: XGBA R24 original FireRed adversarial 16KiB resource boundary
+on:
+  push:
+    branches:
+      - main
+      - 'phase3/r24-native-resource-boundary-20261112'
+    paths:
+      - 'tools/xgba_r24_firered_patch.py'
+      - 'integration/emerald/xgba_r24_boundary.inc'
+      - 'integration/mgba/xgba_mgba_device.c'
+      - 'integration/mgba/xgba_mgba_device.h'
+      - 'integration/mgba/xgba_r24_boundary.h'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r24_firered_boundary.py'
+      - '.github/workflows/xgba-r24-firered-boundary.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/xgba_r24_firered_patch.py'
+      - 'integration/emerald/xgba_r24_boundary.inc'
+      - 'integration/mgba/xgba_mgba_device.c'
+      - 'integration/mgba/xgba_mgba_device.h'
+      - 'tools/xgba_r24_firered_patch.py'
+      - 'integration/mgba/xgba_r24_boundary.h'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r24_firered_boundary.py'
+      - '.github/workflows/xgba-r24-firered-boundary.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r24-native-original-firered-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native-original-firered-mmio-adversarial-bounds:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native GBA compiler, source build and mGBA libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev build-essential cmake python3-pil
+      - name: Retrieve immutable original FireRed decomp and existing mGBA core
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Execute nine original FireRed MMIO transactions, bad SHA refusal and disabled baseline
+        shell: bash
+        env:
+          XGBA_R24_FIRERED_EVIDENCE_DIR: ${{ github.workspace }}/r24-firered-evidence
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r24_firered_patch.py tests/test_xgba_r24_firered_boundary.py
+          python3 -m unittest discover -s tests -p 'test_xgba_r24_firered_boundary.py' -v 2>&1 | tee xgba-r24-firered-tests.log
+          grep -q 'Ran 14 tests' xgba-r24-firered-tests.log
+          grep -q '^OK$' xgba-r24-firered-tests.log
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import json
+          folder=Path("r24-firered-evidence")
+          pngs=sorted(folder.glob("*.png"))
+          assert len(pngs)==2,pngs
+          for p in pngs:
+              with Image.open(p) as im:assert im.size==(240,160)
+          report=json.loads((folder/"proof.json").read_text())
+          assert report["native_original_game_guest_mmio_attempts"]==9
+          assert report["native_original_game_rejected"]==7
+          assert report["max_single_resource_bytes"]==16384
+          assert report["one_byte_over_limit"]==16385
+          assert report["failed_transfer_leaves_guest_ewram_unchanged"]
+          assert "PASS_R24_ORIGINAL_FIRERED_BOUNDARY enabled=1" in report["native_enabled_log"]
+          assert "PASS_R24_ORIGINAL_FIRERED_BOUNDARY enabled=0" in report["native_disabled_log"]
+          assert not list(folder.glob("*.gba")) and not list(folder.glob("*.sav"))
+          print("PASS_R24_REAL_FIRERED_RESOURCE_BOUNDARY_14_TESTS")
+          PY
+      - name: Publish only original native Emerald LCD captures and bounded proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r24-original-firered-16kb-fail-closed-boundary
+          path: r24-firered-evidence/
+          retention-days: 90
+          if-no-files-found: warn
