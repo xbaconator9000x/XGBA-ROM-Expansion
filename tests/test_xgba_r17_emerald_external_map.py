@@ -73,12 +73,15 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         config.write_text(
             f"#define XGBA_R17_PACK_SIZE {len(cls.pack)}u\n"
             f"#define XGBA_R17_RESERVE {budget.reserve_bytes}u\n")
+        r18=bool(getattr(cls,"R18_SAVE_TEST",False))
+        if r18:
+            config.write_text(config.read_text()+"\n#define XGBA_R18_SAVE_TEST 1\n")
 
         # Instrument original decomp and patch engine resets/actual linker
         # without overwriting or re-implementing its maps or tileset renderer.
         originals={}
         try:
-            originals=patch.patch_emerald_littleroot_sources(EMERALD,config)
+            originals=patch.patch_emerald_littleroot_sources(EMERALD,config,r18_save=r18)
             originals.update(patch_emerald_heap_tail(EMERALD,
                 reserve_bytes=budget.reserve_bytes,replace_once=e16.one))
             build()
@@ -142,7 +145,15 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                 {"id":BOOT,"offset":boot_offset,"length":64,"sha256":sha(r6.PAYLOAD)}
             ]
         }))
+        cls.rom=rom;cls.elf=elf;cls.executable=exe
+        cls.manifest_path=manifest
+        cls.native_root=root
         cls.output=root/"littleroot-lcd";cls.output.mkdir()
+        if r18:
+            cls.save_probe=syms["gXgbaR18Proof"][0]
+            if not 0x02000000<=cls.save_probe<0x02040000:
+                raise AssertionError("R18 native game Flash proof not in EWRAM")
+            return
         result=launcher.launch(rom,manifest,RID,
             emulator=exe,frames=2700,probe_address=cls.probe,
             second_resource_id=BOOT,r17_emerald_map_dir=cls.output)
