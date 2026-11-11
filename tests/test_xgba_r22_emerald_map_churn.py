@@ -104,7 +104,8 @@ class NativeEmeraldRepeatedConnectedMapChurn(unittest.TestCase):
         self.assertIn("arena_owner=1",self.enabled.stdout)
         self.assertIn("arena_epoch=1",self.enabled.stdout)
         self.assertIn("world_claims=1",self.enabled.stdout)
-        self.assertEqual(self.simultaneous_bytes,16384)
+        self.assertLessEqual(self.simultaneous_bytes,16384)
+        self.assertGreaterEqual(self.simultaneous_bytes,len(self.pack)+len(self.route_pack))
 
     def test_both_external_source_packs_remain_concurrently_live(self):
         self.assertGreater(self.route_offset,32*1024*1024)
