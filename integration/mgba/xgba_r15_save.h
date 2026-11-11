@@ -45,6 +45,15 @@ static void xgba_r15_run(struct mCore *c,uint32_t p,uint32_t save_probe,
         r14_press(c,1u<<2,3); /* SELECT invokes actual TrySavingData(SAVE_NORMAL) */
         r14_wait(c,60);
         r15_proof(c,save_probe);
+        fprintf(stderr,
+                "R15_SAVE_DIAG boot_status=%u boot_continue=%u requests=%u "
+                "save_result=%u map=%u:%u position=%u,%u "
+                "host_success=%u host_fail=%u lookups=%u reads=%u\\n",
+                r15_read(c,save_probe,1),r15_read(c,save_probe,2),
+                r15_read(c,save_probe,3),r15_read(c,save_probe,4),
+                r15_read(c,save_probe,5),r15_read(c,save_probe,6),
+                r15_read(c,save_probe,7),r15_read(c,save_probe,8),
+                d->successful_reads,d->failed_reads,r->lookups,r->reads);
         if(r15_read(c,save_probe,3)!=1u||
            r15_read(c,save_probe,4)!=R15_SAVE_OK||
            r15_read(c,save_probe,5)!=4u||
