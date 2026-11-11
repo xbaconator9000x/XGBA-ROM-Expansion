@@ -63,6 +63,9 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         cls.pack=r14.pack((grid,border),parts)
         cls.resource_bytes=len(cls.pack)
         r19=bool(getattr(cls,"R19_CONNECTED",False))
+        r19_battle=bool(getattr(cls,"R19_BATTLE",False))
+        if r19_battle and not r19:
+            raise AssertionError("Real mixed-source battle must preserve connected map residency")
         if r19:
             route_layout=EMERALD/"data/layouts/Route101"
             cls.route_grid=(route_layout/"map.bin").read_bytes()
@@ -73,6 +76,18 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             cls.route_pack_offset=(cls.resource_bytes+3)&~3
             if cls.route_pack_offset+len(cls.route_pack)>16384:
                 raise AssertionError("Two simultaneous full maps exceed current Emerald 16KiB live arena")
+        if r19_battle:
+            cls.battle_original_compressed={}
+            for species_name in ("Poochyena","Zigzagoon"):
+                sym="gMonFrontPic_"+species_name
+                if sym not in native_symbols:
+                    raise AssertionError("Actual original compiled Emerald sprite symbol missing "+sym)
+                address,length=native_symbols[sym]
+                begin=address-0x08000000
+                blob=orig_rom[begin:begin+length]
+                if not 16<=len(blob)<=2048 or blob[0]!=0x10:
+                    raise AssertionError("Original Emerald front battle graphic is not valid bounded LZ77: "+sym)
+                cls.battle_original_compressed[species_name]=blob
         if cls.resource_bytes>16384:
             raise AssertionError("Emerald original full tileset exceeds one synchronous 16 KiB XGBA read; must implement chunking, never drop assets")
         if r19:
@@ -96,6 +111,11 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         r18=bool(getattr(cls,"R18_SAVE_TEST",False))
         if r18:
             config.write_text(config.read_text()+"\n#define XGBA_R18_SAVE_TEST 1\n")
+        if r19_battle:
+            config.write_text(config.read_text()+
+                "\n#define XGBA_R19_BATTLE_TEST 1\n"
+                f"#define XGBA_R19_POOCHYENA_FRONT_BYTES {len(cls.battle_original_compressed['Poochyena'])}u\n"
+                f"#define XGBA_R19_ZIGZAGOON_FRONT_BYTES {len(cls.battle_original_compressed['Zigzagoon'])}u\n")
         if r19:
             config.write_text(config.read_text()+
                 "\n#define XGBA_R19_CONNECTED_MAPS 1\n"
@@ -108,7 +128,7 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         # without overwriting or re-implementing its maps or tileset renderer.
         originals={}
         try:
-            originals=patch.patch_emerald_littleroot_sources(EMERALD,config,r18_save=r18,r19_connected=r19)
+            originals=patch.patch_emerald_littleroot_sources(EMERALD,config,r18_save=r18,r19_connected=r19,r19_battle=r19_battle)
             originals.update(patch_emerald_heap_tail(EMERALD,
                 reserve_bytes=budget.reserve_bytes,replace_once=e16.one))
             build()
@@ -162,6 +182,28 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                 raise AssertionError("Compiled original Emerald tileset symbol drift "+symbol)
             stripped[off:off+size]=bytes(size)
             removed.append({"asset":symbol,"bytes":size,"offset":off,"sha256":sha(blob)})
+        if r19_battle:
+            # A Pokemon front sprite entry still has its original table
+            # pointer; changing the battle loader is mandatory because the
+            # genuine game ROM bytes are deliberately zeroed here.
+            cls.battle_sprite_blobs={}
+            for species_name,baseline_blob in cls.battle_original_compressed.items():
+                sym="gMonFrontPic_"+species_name
+                address,length=syms[sym]
+                start=address-0x08000000
+                blob=bytes(stripped[start:start+length])
+                if blob!=baseline_blob:
+                    raise AssertionError("Rebuilt Emerald front sprite no longer matches unmodified source "+sym)
+                stripped[start:start+length]=bytes(length)
+                cls.battle_sprite_blobs[species_name]=blob
+                removed.append({"asset":sym,"bytes":length,"offset":start,"sha256":sha(blob)})
+            # Treecko remains ROM-resident and will use the vanilla back
+            # sprite and normal battle engine palette/animation tables.
+            tree_addr,tree_len=syms["gMonBackPic_Treecko"]
+            tree_start=tree_addr-0x08000000
+            cls.local_treecko_sha=sha(stripped[tree_start:tree_start+tree_len])
+            if tree_len<16 or stripped[tree_start]!=0x10:
+                raise AssertionError("Vanilla Treecko sprite missing from local ROM")
         if len(stripped)>32*1024*1024 or grid in stripped or (r19 and cls.route_grid in stripped):
             raise AssertionError("Original Emerald map still embedded or ROM window exceeded")
         rom.write_bytes(stripped)
@@ -184,6 +226,13 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             if r19:
                 cls.route_offset=32*1024*1024+65536
                 fp.seek(cls.route_offset);fp.write(cls.route_pack)
+            if r19_battle:
+                cls.battle_offsets={
+                    "Poochyena":32*1024*1024+131072,
+                    "Zigzagoon":32*1024*1024+1048576,
+                }
+                for species_name,blob in cls.battle_sprite_blobs.items():
+                    fp.seek(cls.battle_offsets[species_name]);fp.write(blob)
         manifest=root/"manifest.json"
         manifest.write_text(json.dumps({
             "format":sidecar.FORMAT,"version":sidecar.VERSION,
@@ -193,7 +242,11 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                 {"id":RID,"offset":cls.offset,"length":len(cls.pack),"sha256":sha(cls.pack)},
                 {"id":BOOT,"offset":boot_offset,"length":64,"sha256":sha(r6.PAYLOAD)}
             ]+([{"id":"emerald.route101","offset":cls.route_offset,
-                 "length":len(cls.route_pack),"sha256":sha(cls.route_pack)}] if r19 else [])
+                 "length":len(cls.route_pack),"sha256":sha(cls.route_pack)}] if r19 else [])+
+            ([{"id":"emerald.battle."+species.lower()+".front",
+               "offset":cls.battle_offsets[species],
+               "length":len(blob),"sha256":sha(blob)}
+              for species,blob in cls.battle_sprite_blobs.items()] if r19_battle else [])
         }))
         cls.rom=rom;cls.elf=elf;cls.executable=exe
         cls.manifest_path=manifest
@@ -210,6 +263,13 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                 raise AssertionError("R19 actual connected-map proof not in Emerald EWRAM")
             cls.simultaneous_bytes=budget.reserve_bytes
             cls.real_arena=real_arena
+            if r19_battle:
+                cls.battle_probe=syms["gXgbaR19BattleProof"][0]
+                cls.battle_front_buffer=syms["gXgbaR19FrontCompressed"][0]
+                if not 0x02000000<=cls.battle_probe<0x02040000 or not (
+                        0x02000000<=cls.battle_front_buffer<
+                        cls.battle_front_buffer+4096<=0x02040000):
+                    raise AssertionError("R19 mixed battle proof/sprite buffers exceed real 256KiB EWRAM")
             return
         result=launcher.launch(rom,manifest,RID,
             emulator=exe,frames=2700,probe_address=cls.probe,
