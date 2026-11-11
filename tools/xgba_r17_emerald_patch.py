@@ -12,7 +12,7 @@ import xgba_r16_emerald_decomp_patch as r16
 
 ROOT=Path(__file__).resolve().parents[1]
 
-def patch_emerald_littleroot_sources(emerald:Path,config:Path)->dict[Path,str]:
+def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=False)->dict[Path,str]:
     e=Path(emerald)
     originals=r16.make_emerald_boot_sources(e)
     world=e/"src/overworld.c"
@@ -24,6 +24,8 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path)->dict[Path,str]:
     hook=hook.replace("__XGBA_GUEST_HEADER__",
                       (ROOT/"integration/fire_red/xgba_guest.h").resolve().as_posix())
     hook=hook.replace("__XGBA_R17_CONFIG__",str(Path(config).resolve()))
+    hook=hook.replace("__XGBA_R18_SAVE__",
+                      (ROOT/"integration/emerald/xgba_r18_save.inc").resolve().as_posix())
     if "__XGBA_" in hook:
         raise r16.AdapterDrift("unresolved Emerald R17 native resource header")
     try:
@@ -38,6 +40,23 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path)->dict[Path,str]:
           "    gSaveBlock2Ptr->playerName[0] = 0xFF;\n"
           "    SetMainCallback2(CB2_NewGame);\n\n    gSoftResetDisabled = FALSE;",
           "actual Emerald direct new-game fixture")
+        if r18_save:
+            s=r16.one(s,
+                "    SetSaveBlocksPointers(0);\n"
+                "    gSaveBlock2Ptr->playerName[0] = 0xFF;\n"
+                "    SetMainCallback2(CB2_NewGame);",
+                "    SetSaveBlocksPointers(0);\n"
+                "    if (XgbaR18TryContinue())\n"
+                "        SetMainCallback2(CB2_ContinueSavedGame);\n"
+                "    else {\n"
+                "        gSaveBlock2Ptr->playerName[0] = 0xFF;\n"
+                "        SetMainCallback2(CB2_NewGame);\n"
+                "    }",
+                "original Emerald save/continue boot selection")
+            s=r16.one(s,"void AgbMain(void)\n{",
+                "extern bool8 XgbaR18TryContinue(void);\n"
+                "void AgbMain(void)\n{",
+                "original Emerald Flash loading declaration")
         main.write_text(s)
         s=r16.one(original_newgame,
           "    SetWarpDestination(MAP_GROUP(MAP_INSIDE_OF_TRUCK), MAP_NUM(MAP_INSIDE_OF_TRUCK), WARP_ID_NONE, -1, -1);",
