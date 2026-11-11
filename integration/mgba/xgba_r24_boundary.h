@@ -49,7 +49,13 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
             r24_word(core,proof,11)!=r24_word(core,proof,12) ||
             device->successful_reads!=3u ||
             device->failed_reads!=7u ||
-            device->actual_length!=16384u)
+            device->actual_length!=16384u ||
+            device->rejected_ranges!=3u ||
+            device->rejected_ids!=1u ||
+            device->provider_too_large!=1u ||
+            device->provider_bad_sha256!=1u ||
+            device->provider_not_found!=1u ||
+            device->provider_other_failures!=0u)
             fail("R24 16KiB positive and seven unchanged-buffer refusals violated");
         const struct ExtraResourceFile *largest=NULL;
         for(unsigned k=0;k<resource->extra_count;++k)
@@ -92,12 +98,16 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
            "guest_attempts=%u accepted=%u rejected=%u "
            "unmodified_16k_checks=%u guest_guard_errors=%u "
            "source_hash_verified=%u original_loop_frames=900 "
-           "native_ewram=1\n",
+           "native_ewram=1 range_rejections=%u id_rejections=%u "
+           "provider_size_rejections=%u integrity_rejections=%u "
+           "missing_id_rejections=%u other_failures=%u\n",
            (unsigned)enabled,device->successful_reads,device->failed_reads,
            r24_word(core,proof,8),r24_word(core,proof,9),
            r24_word(core,proof,10),r24_word(core,proof,4),
            r24_word(core,proof,5),r24_word(core,proof,6),
            r24_word(core,proof,7),r24_word(core,proof,13),
-           enabled?1u:0u);
+           enabled?1u:0u,device->rejected_ranges,device->rejected_ids,
+           device->provider_too_large,device->provider_bad_sha256,
+           device->provider_not_found,device->provider_other_failures);
 }
 #endif
