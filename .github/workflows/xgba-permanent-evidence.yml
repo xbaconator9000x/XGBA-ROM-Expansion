@@ -1,0 +1,73 @@
+name: Preserve XGBA verified native evidence
+on:
+  push:
+    branches:
+      - 'docs/xgba-permanent-evidence-archive-20261111'
+    paths:
+      - 'tools/xgba_evidence_archive.py'
+      - '.github/workflows/xgba-permanent-evidence.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: xgba-permanent-evidence-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  preserve-authentic-evidence:
+    if: github.repository == 'xbaconator9000x/XGBA-ROM-Expansion'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+      - name: Fetch original R9-R14 evidence and independently verify exact-head native CI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_evidence_archive.py
+          python3 tools/xgba_evidence_archive.py
+      - name: Reject ROMs, sidecars and missing native screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s evidence/README.md
+          test "$(find evidence/verified/r14 -name '*.png' | wc -l)" -eq 4
+          test "$(find evidence/verified/r13 -name '*.png' | wc -l)" -eq 6
+          test "$(find evidence/verified/r12 -name '*.png' | wc -l)" -eq 8
+          test "$(find evidence/verified/r9 -name '*.gif' | wc -l)" -eq 3
+          test "$(find evidence/verified/r10 -name '*.gif' | wc -l)" -eq 1
+          if find evidence -type f \( -name '*.gba' -o -name '*.sav' -o -name '*.elf' -o -name '*.nds' -o -name '*.bin' -o -name '*.zip' -o -name '*.pak' \) | grep -q .; then
+            echo 'FAIL: executable ROM, raw asset or user save in archive'
+            exit 1
+          fi
+          python3 - <<'PY'
+          import hashlib, json, pathlib
+          root=pathlib.Path('evidence/verified')
+          for folder in sorted(root.iterdir()):
+              if not folder.is_dir(): continue
+              provenance=json.loads((folder/'provenance.json').read_text())
+              for file,meta in provenance['files'].items():
+                  data=(folder/file).read_bytes()
+                  assert hashlib.sha256(data).hexdigest()==meta['archived_sha256'], file
+                  if file.endswith(('.png','.gif')):
+                      assert meta['unaltered'] and meta['original_sha256']==meta['archived_sha256'],file
+              print('PASS_EVIDENCE_INTEGRITY',folder.name,len(provenance['files']))
+          PY
+      - name: Persist curated native screenshots, GIFs and checksums on documentation branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md evidence/
+          if git diff --cached --quiet; then
+            echo 'Archive is already current.'
+          else
+            git commit -m 'docs: permanently archive original R9–R14 native evidence with verified provenance'
+            git push origin HEAD:docs/xgba-permanent-evidence-archive-20261111
+          fi
