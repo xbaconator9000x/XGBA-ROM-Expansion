@@ -187,3 +187,240 @@ def patch_firered_heap_tail(firered:Path, *, reserve_bytes:int,
     save.write_text(ss)
     linker.write_text(ld)
     return originals
+
+
+# Virtual storage addresses, graphics residency, and reset-safe transitions.
+#
+# Source offsets are 64-bit *storage addresses*, not CPU or PPU pointers.
+# A very large logical offset may resolve to a compact host-pack file: it
+# never implies a 67-TB sparse file, or 67 TB of GBA EWRAM/VRAM.
+#
+# R15 budget modelling is not yet an extended EWRAM bus, a PPU change, or a
+# working general multi-pack runtime. That requires separate native proofs.
+
+MAX_U64=(1<<64)-1
+MAX_POSIX_FILE_OFFSET=(1<<63)-1
+ROM_WINDOW_BYTES=32*1024*1024
+PHYSICAL_POOLS={
+    "bg_vram":64*1024,  # GBA tile modes 0–2
+    "obj_vram":32*1024, # GBA tile modes 0–2
+    "bg_palette":512,
+    "obj_palette":512,
+    "oam":1024,
+}
+GPU_POOLS=frozenset(PHYSICAL_POOLS)
+RESIDENCY_POOLS=frozenset(("rom","ewram",*GPU_POOLS))
+
+
+@dataclass(frozen=True)
+class StorageRef:
+    """Source identity is independent of guest memory residency.
+
+    virtual_offset addresses the *logical external collection*.
+    host_offset is a per-file signed seek; pack_id can select another file,
+    segment, or future remote cache. No file is allocated by planning.
+    """
+    kind:str
+    virtual_offset:int
+    stored_bytes:int
+    resource_id:str=""
+    pack_id:str=""
+    host_offset:int|None=None
+
+    def __post_init__(self):
+        if self.kind not in ("rom","external"):
+            raise MemoryBudgetError("unknown storage backing")
+        for n,label in ((self.virtual_offset,"logical offset"),(self.stored_bytes,"stored length")):
+            if type(n) is not int or n<0 or n>MAX_U64:
+                raise MemoryBudgetError(label+" outside unsigned 64-bit range")
+        if self.stored_bytes==0 or self.virtual_offset>MAX_U64-self.stored_bytes:
+            raise MemoryBudgetError("virtual resource range exceeds uint64")
+        if self.kind=="rom":
+            if self.virtual_offset+self.stored_bytes>ROM_WINDOW_BYTES:
+                raise MemoryBudgetError("ROM backing exceeds 32 MiB")
+            if self.resource_id or self.pack_id or self.host_offset is not None:
+                raise MemoryBudgetError("ROM source cannot contain external file mapping")
+        else:
+            if not self.resource_id or not self.pack_id:
+                raise MemoryBudgetError("external source needs pack and resource IDs")
+            for name in (self.pack_id,self.resource_id):
+                if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}",name):
+                    raise MemoryBudgetError("invalid external source ID")
+            if self.host_offset is not None:
+                if (type(self.host_offset) is not int or
+                    self.host_offset<0 or
+                    self.host_offset>MAX_POSIX_FILE_OFFSET-self.stored_bytes):
+                    raise MemoryBudgetError("host signed-64-bit file offset exceeded")
+
+    def host_file_range(self)->tuple[str,int,int]:
+        if self.kind!="external" or self.host_offset is None:
+            raise MemoryBudgetError("source has no resolved host-file mapping")
+        return (self.pack_id,self.host_offset,self.stored_bytes)
+
+
+@dataclass(frozen=True)
+class SceneAsset:
+    name:str
+    storage:StorageRef
+    target:str
+    resident_bytes:int
+    alignment:int=4
+    staging_bytes:int=0
+
+    def __post_init__(self):
+        if not re.fullmatch(r"[A-Za-z][A-Za-z0-9._-]{0,63}",self.name):
+            raise MemoryBudgetError("invalid scene asset ID")
+        if self.target not in RESIDENCY_POOLS:
+            raise MemoryBudgetError("invalid guest memory target")
+        if self.target=="rom" and self.storage.kind!="rom":
+            raise MemoryBudgetError("external storage is not CPU-addressable ROM")
+        if type(self.resident_bytes) is not int or self.resident_bytes<=0:
+            raise MemoryBudgetError("invalid decompressed resident size")
+        align_up(self.resident_bytes,self.alignment)
+        if (type(self.staging_bytes) is not int or
+            self.staging_bytes<0 or self.staging_bytes>GUEST_FETCH_MAX):
+            raise MemoryBudgetError("invalid synchronous staging size")
+        if self.storage.kind=="rom" and self.staging_bytes:
+            raise MemoryBudgetError("local ROM data requires no external staging")
+        if (self.storage.kind=="external" and self.target in GPU_POOLS and
+            not self.staging_bytes):
+            raise MemoryBudgetError("external GPU assets need explicit EWRAM transfer staging")
+
+
+@dataclass(frozen=True)
+class ScenePhase:
+    name:str
+    assets:tuple[str,...]
+    transient_heap_bytes:int=0
+    concurrent_fetches:int=1
+
+    def __post_init__(self):
+        if not isinstance(self.name,str) or not self.name:
+            raise MemoryBudgetError("invalid scene phase name")
+        if not self.assets or len(self.assets)!=len(set(self.assets)):
+            raise MemoryBudgetError("scene phase needs unique live assets")
+        if type(self.transient_heap_bytes) is not int or self.transient_heap_bytes<0:
+            raise MemoryBudgetError("invalid transient heap load")
+        if type(self.concurrent_fetches) is not int or self.concurrent_fetches<1:
+            raise MemoryBudgetError("invalid number of simultaneous fetches")
+
+
+@dataclass(frozen=True)
+class SceneBudget:
+    """Budget-only plan. No runtime EWRAM/VRAM extension is claimed."""
+    arena_bytes:int
+    remaining_heap_bytes:int
+    physical_pool_limits:dict[str,int]
+    physical_pool_usage:dict[str,dict[str,int]]
+    phase_slots:dict[str,dict[str,tuple[str,int,int]]]
+    phase_staging_bytes:dict[str,int]
+    resource_sources:dict[str,StorageRef]
+
+    def transition(self,old:str,new:str,*,hardware_reset:bool=False)->dict[str,tuple[str,...]]:
+        """Explicit retain/release/load/relocate; don't trust stale VRAM pointers."""
+        if old not in self.phase_slots or new not in self.phase_slots:
+            raise MemoryBudgetError("unknown transition endpoint")
+        before=self.phase_slots[old]
+        after=self.phase_slots[new]
+        release=tuple(x for x in before if x not in after)
+        load=tuple(x for x in after if x not in before)
+        keep=[]
+        relocate=[]
+        rebuild=[]
+        for name in before.keys()&after.keys():
+            prior,current=before[name],after[name]
+            if hardware_reset:
+                # CPU ROM bytes survive; all RAM/VRAM/palette residency does not.
+                if current[0]=="rom":
+                    keep.append(name)
+                else:
+                    rebuild.append(name)
+            elif prior!=current:
+                relocate.append(name)
+            else:
+                keep.append(name)
+        return {
+            "retain":tuple(sorted(keep)),
+            "evict":tuple(sorted(release)),
+            "load":tuple(sorted(load)),
+            "relocate":tuple(sorted(relocate)),
+            "rebuild_after_reset":tuple(sorted(rebuild)),
+        }
+
+
+def plan_scene_assets(assets:Iterable[SceneAsset],phases:Iterable[ScenePhase],*,
+                      pool_reserved:dict[str,int]|None=None,
+                      heap_bytes:int=FIRERED_HEAP_BYTES,
+                      engine_heap_floor:int=DEFAULT_HEAP_FLOOR,
+                      save_copy_scratch_bytes:int=0)->SceneBudget:
+    """Check all simultaneous GBA memory pools; reuse storage between scenes.
+
+    For GPU pools, explicit audited base-engine reservations are MANDATORY.
+    GPU bytes are placements relative to the free pool, not native addresses.
+    Peak temporary EWRAM staging is the sum of the largest N concurrent
+    fetches in that phase, independent of multi-terabyte host offsets.
+    """
+    items=list(assets)
+    live_phases=list(phases)
+    if not items or len(items)!=len({x.name for x in items}):
+        raise MemoryBudgetError("missing or duplicated scene assets")
+    if not live_phases or len(live_phases)!=len({p.name for p in live_phases}):
+        raise MemoryBudgetError("missing or duplicated scene phases")
+    if type(heap_bytes) is not int or not 0<heap_bytes<=EWRAM_BYTES:
+        raise MemoryBudgetError("invalid physical EWRAM heap size")
+    if (type(engine_heap_floor) is not int or engine_heap_floor<0 or
+        type(save_copy_scratch_bytes) is not int or save_copy_scratch_bytes<0):
+        raise MemoryBudgetError("invalid engine/saving heap requirements")
+    by_name={a.name:a for a in items}
+    referenced=set()
+    pool_reserved={} if pool_reserved is None else dict(pool_reserved)
+    if any(k not in GPU_POOLS for k in pool_reserved):
+        raise MemoryBudgetError("unrecognised GBA graphics memory pool")
+    physical_limits={}
+    for name,total in PHYSICAL_POOLS.items():
+        if name in pool_reserved:
+            amount=pool_reserved[name]
+            if type(amount) is not int or not 0<=amount<=total:
+                raise MemoryBudgetError("invalid existing engine VRAM/palette allocation")
+            physical_limits[name]=total-amount
+    slots={}
+    usage={}
+    staging={}
+    peak=0
+    for phase in live_phases:
+        phase_slots={}
+        offset={k:0 for k in ("ewram",*GPU_POOLS)}
+        sources=[]
+        for name in phase.assets:
+            if name not in by_name:
+                raise MemoryBudgetError("unregistered live asset "+name)
+            referenced.add(name)
+            asset=by_name[name]
+            if asset.target=="rom":
+                phase_slots[name]=("rom",asset.storage.virtual_offset,asset.resident_bytes)
+                continue
+            if asset.target in GPU_POOLS and asset.target not in physical_limits:
+                raise MemoryBudgetError("native GPU pool requires audited engine reservation: "+asset.target)
+            cursor=align_up(offset[asset.target],asset.alignment)
+            offset[asset.target]=cursor+asset.resident_bytes
+            phase_slots[name]=(asset.target,cursor,asset.resident_bytes)
+            if asset.storage.kind=="external":
+                sources.append(asset.staging_bytes)
+        for pool,total in PHYSICAL_POOLS.items():
+            if offset[pool]>physical_limits.get(pool,total):
+                raise MemoryBudgetError(f"{phase.name} exceeds real {pool}: "+str(offset[pool]))
+        sizes=sorted(sources,reverse=True)
+        temp=sum(sizes[:phase.concurrent_fetches])
+        ewr=offset["ewram"]+temp
+        needed=max(engine_heap_floor+phase.transient_heap_bytes,
+                   save_copy_scratch_bytes)
+        if align_up(ewr,4)+needed>heap_bytes:
+            raise MemoryBudgetError(f"{phase.name} exceeds real EWRAM working-memory budget")
+        peak=max(peak,align_up(ewr,4))
+        staging[phase.name]=temp
+        usage[phase.name]=offset
+        slots[phase.name]=phase_slots
+    if referenced!=set(by_name):
+        raise MemoryBudgetError("declared assets not assigned to any phase")
+    return SceneBudget(peak,heap_bytes-peak,physical_limits,usage,slots,staging,
+                       {a.name:a.storage for a in items})
