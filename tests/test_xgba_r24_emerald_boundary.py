@@ -178,17 +178,23 @@ class NativeEmeraldResourceBoundaries(unittest.TestCase):
         self.assertIn("source_hash_verified=1",self.good_log)
     def test_one_byte_short_capacity_fails_without_guest_memory_write(self):
         self.assertIn("short_cap=16383",self.good_log)
+        self.assertIn("provider_size_rejections=1",self.good_log)
         self.assertIn("unmodified_16k_checks=7",self.good_log)
     def test_one_byte_over_native_limit_fails_before_external_copy(self):
         self.assertIn("over_cap=16385",self.good_log)
+        self.assertIn("range_rejections=3",self.good_log)
         self.assertIn("rejected_provider_reads=7",self.good_log)
     def test_real_ewram_end_crossing_and_zero_capacity_rejected(self):
         self.assertIn("guest_attempts=9",self.good_log)
         self.assertIn("guest_guard_errors=0",self.good_log)
     def test_invalid_and_unknown_ids_rejected_in_real_guest(self):
         self.assertIn("rejected=7",self.good_log)
+        self.assertIn("id_rejections=1",self.good_log)
+        self.assertIn("missing_id_rejections=1",self.good_log)
     def test_corrupt_sha256_provider_does_not_write_guest_memory(self):
         self.assertIn("unmodified_16k_checks=7",self.good_log)
+        self.assertIn("integrity_rejections=1",self.good_log)
+        self.assertIn("other_failures=0",self.good_log)
         self.assertTrue(self.report["bad_sha256_provider_rejected_without_guest_commit"])
     def test_original_emerald_recovers_after_seven_rejections(self):
         self.assertIn("accepted=2",self.good_log)
