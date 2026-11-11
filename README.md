@@ -10,8 +10,6 @@
 
 ## Verified evidence — screenshots, animations and executable results
 
-**[Browse the permanent evidence gallery: original FireRed screenshots, GIFs and SHA-256 manifests](evidence/README.md)**
-
 **[Browse the permanent evidence gallery: original FireRed and Emerald LCD screenshots, GIFs and SHA-256 manifests](evidence/README.md)**
 
 **Start here:** these are evidence from the *actual source-built game running in native mGBA*, not AI mockups or manually assembled gameplay animations. Each result links to the executed GitHub Actions run and, where available, its downloadable evidence archive. Implementation PRs remain separate from this documentation; none of these results establishes stock-mGBA, original GBA hardware or Android compatibility.
@@ -366,7 +364,7 @@ For the focused experiment, run `python3 tools/xgba_resource_integration_smoke.p
 
 ## What comes next
 
-The R6–R19 milestones answer increasingly practical feasibility questions for **emulator-assisted external assets**. The next task is to turn these executed, source-instrumented proofs into a reproducible, supportable workflow:
+The R6–R20 milestones answer increasingly practical feasibility questions for **emulator-assisted external assets**. The next task is to turn these executed, source-instrumented proofs into a reproducible, supportable workflow:
 
 1. **Production integration:** harden the existing game-initiated native mGBA resource device and FireRed-side integration into an explicitly enabled, maintainable extension and reusable resource API.
 2. **Engine support:** extend the verified sprite and map-grid integration to ordinary navigation, tilesets, palettes, other assets, and safe decompression, allocation, ownership, resource lifetimes, DMA, audio and save-state identity.
