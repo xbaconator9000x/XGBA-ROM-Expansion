@@ -8,6 +8,14 @@
 
 **The milestones are real; the expansion platform is not yet a finished product.** R6 used a temporary test host; R7–R13 progressed to game-initiated requests in a patched native mGBA core, actual LCD screenshots, live FireRed Pallet Town graphics swaps, native CPU-frame benchmarking, save-state rollback and a real map layout loaded from outside the ROM. These results do **not** establish a stock-emulator release, Android or GUI frame-rate performance, unrestricted CPU-addressable ROM, or original GBA hardware compatibility.
 
+## In progress — R14: normal door navigation and external secondary tilesets
+
+**Draft [PR #56](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/56) · 11 November 2026 · not yet a verified milestone.**
+
+R14 extends the R13 fixture toward actual D-pad house entry/exit and the seamless Pallet Town–Route 1 connection, with external map grids, borders, and complete indoor/outdoor secondary tilesets (compressed graphics, palettes, metatiles and attributes). The initial [exact-head R14 CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42969906090) failed **before runtime**: the linker reported **266,986 bytes of EWRAM used versus 262,144 available**, an overflow of **4,842 bytes**. No R14 tests executed or screenshots were published on that run; all seven R7–R13 regression workflows passed.
+
+The [R14 memory-lifecycle fix](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/commit/861f13d013e98e0339cb71cbb6c30bccb2e35292) replaces two permanently resident packs with a single linker-bounded arena sized to the larger pack, preserves FireRed's stock heap, and requires a fresh outdoor resource read after leaving the house. The updated native acceptance checks require the same arena address across transitions, exactly three provider reads (outdoor → indoor → outdoor), actual map/VRAM contents, and four genuine LCD screenshots. [Exact-head push validation](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42974021409) is pending; these are acceptance requirements, **not passed results**. R13 remains the latest verified milestone.
+
 ## Latest verified milestone — R13: real FireRed map geometry outside the ROM
 
 **11 November 2026 · Draft [PR #54](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/54) · exact head `f3ae6846e5971c0617674d5cef98be5331b91b2d` · 4/4 focused native tests passed on both push and PR CI.**
