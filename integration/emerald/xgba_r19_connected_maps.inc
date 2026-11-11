@@ -127,6 +127,21 @@ static void XgbaR19Load(unsigned idx)
     sXgbaR19Ready[idx]=TRUE;
     ++gXgbaR19MapProof.loads;
 }
+/* Returning from battle bypasses a full map warp: the old map descriptors
+ * can still point into an arena overwritten by compressed battle sprites.
+ * Reacquire BOTH connected packs BEFORE Emerald's ReturnToFieldLocal calls
+ * ResetScreenForMapLoad / ResumeMap / InitMapView, not after CB2_Overworld.
+ */
+static void XgbaR20PrepareReturnToField(void)
+{
+    if (!gSaveBlock1Ptr)
+        return;
+    if (XgbaR19Index(gSaveBlock1Ptr->location.mapGroup,
+                      gSaveBlock1Ptr->location.mapNum) < 0)
+        return;
+    XgbaR19Load(0);
+    XgbaR19Load(1);
+}
 static const struct MapHeader *XgbaR19HeaderFor(u16 group,u16 map)
 {
     s32 idx=XgbaR19Index(group,map);
