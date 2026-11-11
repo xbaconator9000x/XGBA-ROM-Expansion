@@ -275,6 +275,11 @@ static void run_r10_real_firered_live_swap(struct mCore *core, uint32_t probe,
         core->busRead32(core, probe+28) != 0u)
         fail("R10 FireRed did not load first external resource as crystal");
     char filename[1024];
+    core->setKeys(core, 0u);
+    /* Let FireRed's native field fade, NPC creation and map rendering settle
+     * before recording either side of the same-session resource switch. */
+    for (unsigned warmup=0; warmup<70; ++warmup)
+        core->runFrame(core);
     unsigned early_tick = core->busRead32(core, probe+32);
     /* Record actual Pallet Town frames with the first resource displayed. */
     for (unsigned i=0; i<12; ++i) {
