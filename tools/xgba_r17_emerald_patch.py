@@ -12,7 +12,7 @@ import xgba_r16_emerald_decomp_patch as r16
 
 ROOT=Path(__file__).resolve().parents[1]
 
-def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=False)->dict[Path,str]:
+def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=False,r19_connected:bool=False)->dict[Path,str]:
     e=Path(emerald)
     originals=r16.make_emerald_boot_sources(e)
     world=e/"src/overworld.c"
@@ -26,6 +26,8 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
     hook=hook.replace("__XGBA_R17_CONFIG__",str(Path(config).resolve()))
     hook=hook.replace("__XGBA_R18_SAVE__",
                       (ROOT/"integration/emerald/xgba_r18_save.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R19_MAPS__",
+                      (ROOT/"integration/emerald/xgba_r19_connected_maps.inc").resolve().as_posix())
     if "__XGBA_" in hook:
         raise r16.AdapterDrift("unresolved Emerald R17 native resource header")
     try:
@@ -62,15 +64,33 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
           "    SetWarpDestination(MAP_GROUP(MAP_INSIDE_OF_TRUCK), MAP_NUM(MAP_INSIDE_OF_TRUCK), WARP_ID_NONE, -1, -1);",
           "    SetWarpDestination(MAP_GROUP(MAP_LITTLEROOT_TOWN), MAP_NUM(MAP_LITTLEROOT_TOWN), WARP_ID_NONE, 10, 10);",
           "original Emerald new game destination")
+        if r19_connected:
+            # Start directly near the original north connection in this
+            # *test fixture*. Ordinary Emerald camera, map boundaries and
+            # direction input are not mocked or changed.
+            s=r16.one(s,
+                "WARP_ID_NONE, 10, 10);",
+                "WARP_ID_NONE, 10, 1);",
+                "start close to original Littleroot-Route101 boundary")
         newgame.write_text(s)
         s=r16.one(original_world,
           "#define PLAYER_LINK_STATE_IDLE 0x80",
           hook+"\n#define PLAYER_LINK_STATE_IDLE 0x80",
           "source-level native overworld hook")
-        s=r16.one(s,
-          "        return gMapLayouts[mapLayoutId - 1];",
-          "        return XgbaR17Resolve(gMapLayouts[mapLayoutId - 1]);",
-          "native Emerald map layout resolver")
+        if r19_connected:
+            s=r16.one(s,
+              "        return gMapLayouts[mapLayoutId - 1];",
+              "        return XgbaR19CurrentLayout(gMapLayouts[mapLayoutId - 1]);",
+              "native Emerald dual-map layout resolver")
+            s=r16.one(s,
+              "    return gMapGroups[mapGroup][mapNum];",
+              "    return XgbaR19HeaderFor(mapGroup,mapNum);",
+              "connected-map header lookup used by original field camera")
+        else:
+            s=r16.one(s,
+              "        return gMapLayouts[mapLayoutId - 1];",
+              "        return XgbaR17Resolve(gMapLayouts[mapLayoutId - 1]);",
+              "native Emerald map layout resolver")
         s=r16.one(s,
           "    OverworldBasic();\n    if (fading)\n        SetFieldVBlankCallback();",
           "    OverworldBasic();\n    XgbaR17Tick();\n    if (fading)\n        SetFieldVBlankCallback();",
