@@ -62,7 +62,7 @@ class RealFireRedMgbaIntegrationTests(unittest.TestCase):
     def test_missing_asset_refused_in_actual_execution(self):
         negative = self.result["cases"]["missing"]
         self.assertIn("PASS_R6_FIRE_RED_EXECUTED mode=missing", negative)
-        self.assertIn("copied=0")
+        self.assertIn("copied=0", negative)
 
 
 if __name__ == "__main__":
