@@ -4,16 +4,24 @@ on:
     branches:
       - 'phase2/r14-external-tilesets-navigation-20261111'
     paths:
-      - 'integration/**'
+      - 'integration/fire_red/xgba_r14_nav.inc'
+      - 'integration/mgba/xgba_r14_nav.h'
+      - 'integration/mgba/xgba_mgba_headless.c'
       - 'tools/xgba_mgba_run.py'
       - 'tests/test_xgba_r14_external_tilesets.py'
       - '.github/workflows/xgba-r14-external-tilesets.yml'
   pull_request:
+    branches: [main]
     paths:
-      - 'integration/**'
+      - 'integration/fire_red/xgba_r14_nav.inc'
+      - 'integration/mgba/xgba_r14_nav.h'
+      - 'integration/mgba/xgba_mgba_headless.c'
       - 'tools/xgba_mgba_run.py'
       - 'tests/test_xgba_r14_external_tilesets.py'
       - '.github/workflows/xgba-r14-external-tilesets.yml'
+  # Historical full-regression sample: once a month on default branch.
+  schedule:
+    - cron: '17 3 1 * *'
   workflow_dispatch:
 permissions:
   contents: read

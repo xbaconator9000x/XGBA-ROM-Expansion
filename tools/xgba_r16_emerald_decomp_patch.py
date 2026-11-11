@@ -25,7 +25,7 @@ def one(s:str,needle:str,after:str,description:str)->str:
         raise AdapterDrift(f"pinned Emerald {description} drift: expected one anchor, got {count}")
     return s.replace(needle,after,1)
 
-def make_emerald_boot_sources(emerald:Path,*,r24_boundary:bool=False)->dict[Path,str]:
+def make_emerald_boot_sources(emerald:Path,*,r24_boundary:bool=False,r25_dma:bool=False)->dict[Path,str]:
     root=Path(emerald)
     if not (root/"src/main.c").is_file():
         raise AdapterDrift("pinned Emerald decomp source is absent")
@@ -38,8 +38,12 @@ def make_emerald_boot_sources(emerald:Path,*,r24_boundary:bool=False)->dict[Path
                     (ROOT/"integration/fire_red/xgba_guest.h").resolve().as_posix())
     if "__XGBA_" in inc:
         raise AdapterDrift("unresolved guest header path")
+    if r25_dma and not r24_boundary:
+        raise AdapterDrift("R25 DMA proof needs the original R24 guest resource fixture")
     if r24_boundary:
         boundary=(ROOT/"integration/emerald/xgba_r24_boundary.inc").read_text()
+        if r25_dma:
+            boundary="#define XGBA_R25_DMA_TEST 1\n"+boundary
         if "__XGBA_" in boundary:
             raise AdapterDrift("unresolved R24 original Emerald boundary hooks")
         inc+="\n"+boundary

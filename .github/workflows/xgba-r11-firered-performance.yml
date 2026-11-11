@@ -4,16 +4,22 @@ on:
     branches:
       - 'phase2/r11-firered-live-performance-benchmark-20261111'
     paths:
-      - 'integration/**'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'integration/mgba/xgba_r11_benchmark.h'
       - 'tools/xgba_mgba_run.py'
       - 'tests/test_xgba_r11_firered_performance.py'
       - '.github/workflows/xgba-r11-firered-performance.yml'
   pull_request:
+    branches: [main]
     paths:
-      - 'integration/**'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'integration/mgba/xgba_r11_benchmark.h'
       - 'tools/xgba_mgba_run.py'
       - 'tests/test_xgba_r11_firered_performance.py'
       - '.github/workflows/xgba-r11-firered-performance.yml'
+  # Historical full-regression sample: once a month on default branch.
+  schedule:
+    - cron: '17 3 1 * *'
   workflow_dispatch:
 
 permissions:

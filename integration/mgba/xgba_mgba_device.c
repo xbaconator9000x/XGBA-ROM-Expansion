@@ -34,6 +34,85 @@ static int ewram_range(uint32_t address, uint32_t size)
            address - EWRAM_START <= EWRAM_SIZE - size;
 }
 
+/* R25: a provider write must never overwrite EWRAM still referenced by an
+ * enabled mGBA DMA channel. An armed VBlank/HBlank/repeating transfer is live
+ * even before its first beat; activeDMA also covers a transfer being serviced.
+ *
+ * Conservatively cover both the configured and current source positions.
+ * The pinned mGBA GBADMARegister bits (7:8 src mode, 10 width, 15 enable)
+ * and GBADMA source/count fields are read-only here. This guard uses real
+ * 256 KiB EWRAM mirrored aliases, not only the first physical window.
+ * There is no alteration of DMA scheduling, register writes, emulator
+ * timing, or guest RAM size.
+ *
+ * This protects host-initiated MMIO commits. It does NOT validate direct
+ * original-game CPU writes or constitute a general guest DMA lease API. */
+static int xgba_r25_dma_source_alias(uint32_t source, uint32_t count,
+                                     uint16_t reg, uint32_t dest,
+                                     uint32_t bytes)
+{
+    const uint64_t width = (reg & 0x0400u) ? 4u : 2u;
+    const uint32_t mode = (reg >> 7u) & 3u;
+    uint64_t low = source, high = (uint64_t)source + width;
+    if (!count)
+        return 1; /* Unknown active transfer footprint: fail closed. */
+    if (mode == 0u || mode == 3u) {
+        high = (uint64_t)source + (uint64_t)count * width;
+    } else if (mode == 1u) {
+        const uint64_t retreat = ((uint64_t)count - 1u) * width;
+        low = retreat > source ? 0u : (uint64_t)source - retreat;
+    }
+
+    /* Real pinned mGBA mirrors the 256 KiB EWRAM backing throughout the
+     * 0x02xxxxxx region (address & 0x3ffff). Comparing only CPU addresses
+     * would MISS armed DMA sources using 0x02040000+ aliases, or a transfer
+     * crossing the 256 KiB physical boundary. Clip the source footprint to
+     * the EWRAM address region and compare its physical modulo intervals. */
+    const uint64_t physical_start = EWRAM_START;
+    const uint64_t region_end = 0x03000000u;
+    if (low < physical_start)
+        low = physical_start;
+    if (high > region_end)
+        high = region_end;
+    if (low >= high)
+        return 0;
+
+    const uint64_t span = high - low;
+    if (span >= EWRAM_SIZE)
+        return 1; /* A full physical wrap necessarily touches destination. */
+    const uint32_t physical_offset =
+        (uint32_t)((low - physical_start) % EWRAM_SIZE);
+    const uint32_t physical_dest = dest - EWRAM_START;
+    const uint32_t physical_end = physical_offset + (uint32_t)span;
+    if (physical_end <= EWRAM_SIZE)
+        return physical_offset < physical_dest + bytes &&
+               physical_dest < physical_end;
+    return physical_offset < physical_dest + bytes ||
+           physical_dest < physical_end - EWRAM_SIZE;
+}
+
+static int xgba_r25_pending_dma_alias(const struct GBA *gba,
+                                      uint32_t dest, uint32_t bytes)
+{
+    for (unsigned channel = 0; channel < 4u; ++channel) {
+        const struct GBADMA *dma = &gba->memory.dma[channel];
+        if (!(dma->reg & 0x8000u) &&
+            !(gba->memory.activeDMA == (int)channel && dma->nextCount > 0))
+            continue;
+        const uint32_t count = dma->nextCount > 0
+            ? (uint32_t)dma->nextCount : dma->count > 0
+            ? (uint32_t)dma->count : channel == 3u ? 65536u : 16384u;
+        /* nextSource advances during a transfer or between repeated bursts;
+         * source is the original programmed start, which we also protect. */
+        if (xgba_r25_dma_source_alias(dma->source, count, dma->reg,
+                                     dest, bytes) ||
+            xgba_r25_dma_source_alias(dma->nextSource, count, dma->reg,
+                                     dest, bytes))
+            return 1;
+    }
+    return 0;
+}
+
 static int guest_id(struct GBA *gba, uint32_t address,
                     char output[XGBA_R7_MAX_RESOURCE_ID + 1u])
 {
@@ -91,6 +170,7 @@ void XgbaDeviceReset(struct XgbaGbaDevice *device)
     device->provider_bad_sha256 = 0;
     device->provider_not_found = 0;
     device->provider_other_failures = 0;
+    device->rejected_dma_aliases = 0;
 }
 
 static void execute_request(struct GBA *gba, struct XgbaGbaDevice *device)
@@ -100,6 +180,14 @@ static void execute_request(struct GBA *gba, struct XgbaGbaDevice *device)
         !ewram_range(device->dst_addr, device->capacity)) {
         device->status = XGBA_R7_BAD_RANGE;
         ++device->rejected_ranges;
+        ++device->failed_reads;
+        return;
+    }
+    /* Reject before host I/O, preserving every destination byte when a
+     * deferred/active DMA still consumes the proposed staging region. */
+    if (xgba_r25_pending_dma_alias(gba, device->dst_addr, device->capacity)) {
+        device->status = XGBA_R7_DMA_BUSY;
+        ++device->rejected_dma_aliases;
         ++device->failed_reads;
         return;
     }
@@ -132,6 +220,16 @@ static void execute_request(struct GBA *gba, struct XgbaGbaDevice *device)
             ++device->provider_not_found;
         else
             ++device->provider_other_failures;
+        ++device->failed_reads;
+        free(candidate);
+        return;
+    }
+    /* Recheck at commit: a future asynchronous host provider may run while
+     * emulation progresses. Current provider is synchronous, but it must
+     * still be impossible for a late DMA lease to race the final memcpy. */
+    if (xgba_r25_pending_dma_alias(gba, device->dst_addr, (uint32_t)length)) {
+        device->status = XGBA_R7_DMA_BUSY;
+        ++device->rejected_dma_aliases;
         ++device->failed_reads;
         free(candidate);
         return;

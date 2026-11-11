@@ -4,18 +4,22 @@ on:
     branches:
       - 'phase2/r8-visible-external-sprite-proof-20261111'
     paths:
-      - 'integration/**'
+      - 'integration/mgba/xgba_mgba_headless.c'
       - 'tools/xgba_mgba_run.py'
       - 'tools/xgba_r8_emblem.py'
       - 'tests/test_xgba_r8_visible_sprite.py'
       - '.github/workflows/xgba-r8-visible-proof.yml'
   pull_request:
+    branches: [main]
     paths:
-      - 'integration/**'
+      - 'integration/mgba/xgba_mgba_headless.c'
       - 'tools/xgba_mgba_run.py'
       - 'tools/xgba_r8_emblem.py'
       - 'tests/test_xgba_r8_visible_sprite.py'
       - '.github/workflows/xgba-r8-visible-proof.yml'
+  # Historical full-regression sample: once a month on default branch.
+  schedule:
+    - cron: '17 3 1 * *'
   workflow_dispatch:
 
 permissions:

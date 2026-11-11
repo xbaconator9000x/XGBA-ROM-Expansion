@@ -47,7 +47,11 @@ jobs:
           test -s tests/test_xgba_r15_firered_flash.py
           test -s evidence/verified/r23/provenance.json
           test -s evidence/verified/r23/proof.json
-          grep -q 'R6–R23 verified' README.md
+          # Guard the evidence headline structure without hard-coding the LAST
+          # milestone; R24 and future verified milestones must not break CI.
+          grep -Fq '**Executed expansion proof: R6–R' README.md
+          grep -Eq 'R6–R[0-9]+ verified' README.md
+          grep -q 'R24' README.md
           if git ls-files | grep -Ei '\.(gba|nds|sav|elf|rom)$'; then
             echo 'FAIL: committed playable ROM, save or built binary'
             exit 1

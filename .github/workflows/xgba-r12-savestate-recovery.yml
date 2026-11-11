@@ -4,16 +4,22 @@ on:
     branches:
       - 'phase2/r12-firered-savestate-recovery-20261111'
     paths:
-      - 'integration/**'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'integration/mgba/xgba_r12_savestate.h'
       - 'tools/xgba_mgba_run.py'
       - 'tests/test_xgba_r12_savestate_recovery.py'
       - '.github/workflows/xgba-r12-savestate-recovery.yml'
   pull_request:
+    branches: [main]
     paths:
-      - 'integration/**'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'integration/mgba/xgba_r12_savestate.h'
       - 'tools/xgba_mgba_run.py'
       - 'tests/test_xgba_r12_savestate_recovery.py'
       - '.github/workflows/xgba-r12-savestate-recovery.yml'
+  # Historical full-regression sample: once a month on default branch.
+  schedule:
+    - cron: '17 3 1 * *'
   workflow_dispatch:
 permissions:
   contents: read

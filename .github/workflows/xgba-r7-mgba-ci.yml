@@ -4,18 +4,24 @@ on:
     branches:
       - 'phase2/r7-mgba-native-resource-extension-20261111'
     paths:
-      - 'integration/**'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'integration/mgba/xgba_mgba_device.h'
       - 'tools/xgba_resource_mgba_adapter.c'
       - 'tools/xgba_mgba_run.py'
       - 'tests/test_xgba_r7_mgba_core.py'
       - '.github/workflows/xgba-r7-mgba-ci.yml'
   pull_request:
+    branches: [main]
     paths:
-      - 'integration/**'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'integration/mgba/xgba_mgba_device.h'
       - 'tools/xgba_resource_mgba_adapter.c'
       - 'tools/xgba_mgba_run.py'
       - 'tests/test_xgba_r7_mgba_core.py'
       - '.github/workflows/xgba-r7-mgba-ci.yml'
+  # Historical full-regression sample: once a month on default branch.
+  schedule:
+    - cron: '17 3 1 * *'
   workflow_dispatch:
 
 permissions:

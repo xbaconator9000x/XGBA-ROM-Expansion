@@ -4,18 +4,22 @@ on:
     branches:
       - 'phase2/r9-two-pack-playable-scene-20261111'
     paths:
-      - 'integration/**'
+      - 'integration/mgba/xgba_mgba_headless.c'
       - 'tools/xgba_mgba_run.py'
       - 'tools/xgba_r9_packs.py'
       - 'tests/test_xgba_r9_two_pack_overworld.py'
       - '.github/workflows/xgba-r9-two-pack-gifs.yml'
   pull_request:
+    branches: [main]
     paths:
-      - 'integration/**'
+      - 'integration/mgba/xgba_mgba_headless.c'
       - 'tools/xgba_mgba_run.py'
       - 'tools/xgba_r9_packs.py'
       - 'tests/test_xgba_r9_two_pack_overworld.py'
       - '.github/workflows/xgba-r9-two-pack-gifs.yml'
+  # Historical full-regression sample: once a month on default branch.
+  schedule:
+    - cron: '17 3 1 * *'
   workflow_dispatch:
 
 permissions:

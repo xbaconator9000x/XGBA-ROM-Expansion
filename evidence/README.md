@@ -7,6 +7,27 @@ No executable ROMs, sidecars, save files or raw proprietary game assets are arch
 Screenshots contain game imagery belonging to its rights holders and are shown
 only as limited, noncommercial engineering documentation.
 
+## R25 — verified original FireRed AND Emerald game-armed DMA3 lifetime protection
+
+Both original ARM games independently passed **15/15 native tests** (2026-11-12)
+at source head `5d729f9af4ab338e44dbae1834643befba692186`.
+The original guest arms a deferred VBlank DMA3 reader of an external-resource
+EWRAM buffer, receives explicit **DMA_BUSY=6** when requesting an overlapping
+external write, verifies unchanged buffer/guard bytes, disarms DMA and
+successfully reloads the resource. This is not a claim of mid-beat DMA
+interruption. The production device separately passed 19 portable DMA
+footprint/mirroring cases. The native R24 FireRed and Emerald suites and
+three-job consolidated memory/Flash/battle regressions also passed.
+
+- [Native FireRed 15/15, Emerald 15/15 and original 240×160 LCD evidence](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43067407151)
+- [Original FireRed R25 PNGs and proof.json, artifact #13876512589](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43067407151/artifacts/13876512589)
+- [Original Emerald R25 PNGs and proof.json, artifact #13876851400](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43067407151/artifacts/13876851400)
+- [Production device 19-case suite](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43067407140) · [R25 source PR #80](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/80)
+
+The linked R25 ZIP artifacts are time-limited GitHub Actions evidence. They
+have **not yet** been archived under `evidence/verified/r25-*`; do not
+mistake these CI links for permanent file-by-file SHA-256 provenance.
+
 ## R24 — original FireRed AND Emerald exact 16 KiB MMIO boundaries
 
 **Both original games independently pass 14/14 native tests.** Pinned

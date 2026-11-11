@@ -4,18 +4,24 @@ on:
     branches:
       - 'phase2/r10-firered-pallet-live-swap-20261111'
     paths:
-      - 'integration/**'
+      - 'integration/fire_red/xgba_guest.h'
+      - 'integration/mgba/xgba_mgba_headless.c'
       - 'tools/xgba_r10_firered_patch.py'
       - 'tools/xgba_mgba_run.py'
       - 'tests/test_xgba_r10_pallet_town_live_swap.py'
       - '.github/workflows/xgba-r10-pallet-live.yml'
   pull_request:
+    branches: [main]
     paths:
-      - 'integration/**'
+      - 'integration/fire_red/xgba_guest.h'
+      - 'integration/mgba/xgba_mgba_headless.c'
       - 'tools/xgba_r10_firered_patch.py'
       - 'tools/xgba_mgba_run.py'
       - 'tests/test_xgba_r10_pallet_town_live_swap.py'
       - '.github/workflows/xgba-r10-pallet-live.yml'
+  # Historical full-regression sample: once a month on default branch.
+  schedule:
+    - cron: '17 3 1 * *'
   workflow_dispatch:
 
 permissions:

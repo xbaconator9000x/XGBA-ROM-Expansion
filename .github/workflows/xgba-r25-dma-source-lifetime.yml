@@ -1,0 +1,51 @@
+name: XGBA R25 production MMIO DMA source lifetime safety
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'integration/mgba/xgba_mgba_device.c'
+      - 'integration/mgba/xgba_mgba_device.h'
+      - 'tests/r24_stub/**'
+      - 'tests/test_xgba_r24_mmio_unit.c'
+      - 'tests/test_xgba_r25_dma_lifetime.c'
+      - '.github/workflows/xgba-r25-dma-source-lifetime.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'integration/mgba/xgba_mgba_device.c'
+      - 'integration/mgba/xgba_mgba_device.h'
+      - 'tests/r24_stub/**'
+      - 'tests/test_xgba_r24_mmio_unit.c'
+      - 'tests/test_xgba_r25_dma_lifetime.c'
+      - '.github/workflows/xgba-r25-dma-source-lifetime.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r25-dma-source-lifetime-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  production-device-dma-lifetime:
+    name: Portable actual MMIO C implementation adversarial DMA lease checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run original R24 invariants, new R25 all-channel DMA safety and no-copy recovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/r25
+          cc -std=c11 -O2 -Wall -Wextra -Werror -Itests/r24_stub \
+             tests/test_xgba_r25_dma_lifetime.c -o build/r25/dma-lifetime
+          build/r25/dma-lifetime | tee build/r25/dma-lifetime.log
+          grep -q '^PASS_R24_PORTABLE_ORIGINAL_DEVICE_CONTRACT ' build/r25/dma-lifetime.log
+          grep -q '^PASS_R25_DMA_SOURCE_LIFETIME portable_cases=19 ' build/r25/dma-lifetime.log
+          grep -q 'pending_dma_no_commit=1 recovery_after_disarm=1' build/r25/dma-lifetime.log
+          cc -std=c11 -fsyntax-only -Wall -Wextra -Werror \
+             -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast \
+             tests/test_xgba_r24_guest_syntax.c
+          cc -std=c11 -fsyntax-only -Wall -Wextra -Werror -Wformat=2 \
+             tests/test_xgba_r24_native_header_syntax.c
+          echo 'R25 portable proof only: no assertion of original-game DMA-in-flight timing'
