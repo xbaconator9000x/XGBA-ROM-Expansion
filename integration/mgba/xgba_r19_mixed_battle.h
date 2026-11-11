@@ -151,6 +151,7 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
                 r19_word(core,map,5),r19_word(core,map,25),
                 r19_word(core,map,24),r19_word(core,map,26),
                 r19_word(core,map,27),device->successful_reads);
+        r17_frame(core,dir,"03-r20-original-emerald-map-after-battle");
         r19_verify(core,map,resource,routeOffset,routeLen,9);
         if (r19_word(core,map,5)<4u ||
             r19_word(core,map,26)<2u ||
@@ -158,7 +159,6 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
             r19_bword(core,battle,17)!=1u ||
             r19_bword(core,battle,18)!=2u)
             fail("R20 first battle-to-overworld ownership / map reacquisition failed");
-        r17_frame(core,dir,"03-r20-original-emerald-map-after-battle");
         /* Second real R-button encounter: old READY sprite descriptors MUST
          * be rejected after map packs rewrote their former EWRAM bytes. */
         r14_press(core,1u<<8,3);
