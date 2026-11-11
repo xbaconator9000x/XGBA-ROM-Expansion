@@ -340,6 +340,7 @@ static void run_r10_real_firered_live_swap(struct mCore *core, uint32_t probe,
 #include "xgba_r12_savestate.h"
 #include "xgba_r13_map.h"
 #include "xgba_r14_nav.h"
+#include "xgba_r15_save.h"
 
 static void save_actual_game_frame(struct mCore *core, const char *path, int enabled)
 {
@@ -373,7 +374,7 @@ static void save_actual_game_frame(struct mCore *core, const char *path, int ena
 
 int main(int argc, char **argv)
 {
-    if (argc < 11 || argc > 30)
+    if (argc < 11 || argc > 40)
         fail("usage: ROM DATA SOURCE_ID SOURCE_SHA RESOURCE_ID OFFSET LENGTH RESOURCE_SHA FRAMES PROBE_ADDR [--screenshot path] [--scene-dir path] [--r10-dir path] [--r11-perf path] [--r12-dir path] [--r13-dir path] [--r14-dir path] [--second-resource ID OFFSET LENGTH SHA] [--disabled]");
     const char *screenshot = NULL;
     const char *scene_dir = NULL;
@@ -382,6 +383,10 @@ int main(int argc, char **argv)
     const char *r12_dir = NULL;
     const char *r13_dir = NULL;
     const char *r14_dir = NULL;
+    const char *r15_dir = NULL;
+    const char *r15_savefile = NULL;
+    const char *r15_phase = NULL;
+    uint64_t r15_save_probe = 0;
     const char *second_id = NULL;
     uint64_t second_offset = 0, second_length = 0;
     uint8_t second_sha[32] = {0};
@@ -403,6 +408,14 @@ int main(int argc, char **argv)
             r13_dir = argv[i];
         else if (!strcmp(argv[i], "--r14-dir") && ++i < argc && !r14_dir)
             r14_dir = argv[i];
+        else if (!strcmp(argv[i], "--r15-dir") && ++i < argc && !r15_dir)
+            r15_dir = argv[i];
+        else if (!strcmp(argv[i], "--r15-savefile") && ++i < argc && !r15_savefile)
+            r15_savefile = argv[i];
+        else if (!strcmp(argv[i], "--r15-phase") && ++i < argc && !r15_phase)
+            r15_phase = argv[i];
+        else if (!strcmp(argv[i], "--r15-save-probe") && ++i < argc && !r15_save_probe)
+            r15_save_probe = parse_number(argv[i]);
         else if (!strcmp(argv[i], "--second-resource") && i+4 < argc &&
                  !second_id) {
             second_id = argv[++i];
@@ -461,9 +474,9 @@ int main(int argc, char **argv)
     struct mCore *core = GBACoreCreate();
     if (!core || !core->init(core))
         fail("mGBA core initialization failed");
-    mColor *video = (screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir)
+    mColor *video = (screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir)
                    ? calloc(240u*160u, sizeof(mColor)) : NULL;
-    if ((screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir) && !video)
+    if ((screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir) && !video)
         fail("cannot allocate GBA framebuffer");
     if (video)
         core->setVideoBuffer(core, video, 240);
@@ -471,6 +484,15 @@ int main(int argc, char **argv)
     struct VFile *vf = VFileFromConstMemory(rom, rom_size);
     if (!vf || !core->loadROM(core, vf))
         fail("mGBA could not load source-built FireRed ROM");
+    /* R15 uses a real on-disk Flash save, not a native emulator savestate.
+     * File persists between separate emulator subprocesses, never exported. */
+    if (r15_dir) {
+        if (!r15_phase || !r15_savefile || !r15_save_probe ||
+            r15_save_probe > UINT32_MAX)
+            fail("R15 requires phase, Flash save file and guest proof");
+        if (!mCoreLoadSaveFile(core,r15_savefile,false))
+            fail("R15 could not attach real mGBA Flash save file");
+    }
     core->reset(core);
     struct GBA *gba = (struct GBA *)core->board;
     if (!gba) fail("mGBA GBA board inaccessible");
@@ -478,6 +500,9 @@ int main(int argc, char **argv)
     for (uint64_t frame=0; frame<frames; ++frame) {
         core->runFrame(core);
         if (probe && core->busRead32(core, (uint32_t)probe+4) == 3u)
+            break;
+        if (r15_phase && !strcmp(r15_phase,"corrupt") && probe &&
+            core->busRead32(core,(uint32_t)probe+4)==0xE14u)
             break;
     }
     if ((r10_dir && (r11_perf || r12_dir)) || (r11_perf && r12_dir))
@@ -501,6 +526,9 @@ int main(int argc, char **argv)
         xgba_r13_run(core, (uint32_t)probe, r13_dir, &device, &resource, enabled);
     } else if (r14_dir) {
         xgba_r14_run(core, (uint32_t)probe, r14_dir, &device, &resource, enabled);
+    } else if (r15_dir) {
+        xgba_r15_run(core,(uint32_t)probe,(uint32_t)r15_save_probe,
+                     r15_dir,r15_phase,&device,&resource,enabled);
     } else if (!scene_dir) {
         verify_game_copy(core, (uint32_t)probe, &device, &resource, enabled);
     }
