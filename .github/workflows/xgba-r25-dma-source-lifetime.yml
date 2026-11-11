@@ -42,7 +42,7 @@ jobs:
              tests/test_xgba_r25_dma_lifetime.c -o build/r25/dma-lifetime
           build/r25/dma-lifetime | tee build/r25/dma-lifetime.log
           grep -q '^PASS_R24_PORTABLE_ORIGINAL_DEVICE_CONTRACT ' build/r25/dma-lifetime.log
-          grep -q '^PASS_R25_DMA_SOURCE_LIFETIME portable_cases=14 ' build/r25/dma-lifetime.log
+          grep -q '^PASS_R25_DMA_SOURCE_LIFETIME portable_cases=19 ' build/r25/dma-lifetime.log
           grep -q 'pending_dma_no_commit=1 recovery_after_disarm=1' build/r25/dma-lifetime.log
           cc -std=c11 -fsyntax-only -Wall -Wextra -Werror \
              -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast \
