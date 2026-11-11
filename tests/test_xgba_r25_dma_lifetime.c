@@ -146,10 +146,47 @@ int main(void)
     d[0].reg = 0;
     require_available(&gba, &device);
 
+    /* GBA EWRAM is physically 256 KiB mirrored throughout 0x02xxxxxx.
+     * A check against unmasked DMA CPU addresses would miss all these. */
+    d[0].reg = R25_ENABLE;
+    d[0].source = R25_DEST + 0x40000u + 0x10u;
+    d[0].nextSource = d[0].source;
+    d[0].count = 4;
+    require_dma_busy(&gba, &device); /* source uses a mirror */
+    d[0].reg = 0;
+
+    d[0].reg = R25_ENABLE;
+    d[0].source = 0x02047ff0u;
+    d[0].nextSource = d[0].source;
+    d[0].count = 32;
+    require_dma_busy(&gba, &device); /* crosses into destination */
+    d[0].reg = 0;
+
+    d[2].reg = R25_ENABLE | (1u << 7u);
+    d[2].source = 0x02048004u;
+    d[2].nextSource = d[2].source;
+    d[2].count = 8;
+    require_dma_busy(&gba, &device); /* mirrored decrement */
+    d[2].reg = 0;
+
+    d[3].reg = R25_ENABLE | R25_WIDTH32;
+    d[3].source = 0x02088000u;
+    d[3].nextSource = d[3].source;
+    d[3].count = 65536;
+    require_dma_busy(&gba, &device); /* entire 256KiB physical span */
+    d[3].reg = 0;
+
+    d[1].reg = R25_ENABLE;
+    d[1].source = 0x02050000u;
+    d[1].nextSource = d[1].source;
+    d[1].count = 8;
+    require_available(&gba, &device); /* mirrored but genuinely disjoint */
+    d[1].reg = 0;
+
     /* The old seven R24 negative paths and 256 edge probes were exercised
      * first by xgba_r24_base_contract_main(), without any altered statuses. */
-    assert(sR25Cases == 14u);
-    puts("PASS_R25_DMA_SOURCE_LIFETIME portable_cases=14 "
+    assert(sR25Cases == 19u);
+    puts("PASS_R25_DMA_SOURCE_LIFETIME portable_cases=19 "
          "pending_dma_no_commit=1 recovery_after_disarm=1 "
          "r24_baseline_preserved=1 native_game_dma_not_yet_proven=1");
     return 0;
