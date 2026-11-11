@@ -15,6 +15,9 @@ struct XgbaEmeraldProbe {
     volatile u32 received;       /* +12 */
     volatile u32 resource_data;  /* +16: EWRAM destination address */
     volatile u32 engine_marker;  /* +20: 0x454D5244 = Emerald */
+    volatile u32 original_main_ticks; /* +24: actual Emerald main loop iterations */
+    volatile u32 game_callback2;      /* +28: Emerald-selected callback pointer */
+    volatile u32 flash_present;       /* +32: original Emerald flash detection */
 };
 EWRAM_DATA volatile struct XgbaEmeraldProbe gXgbaEmeraldProbe = {0};
 EWRAM_DATA ALIGNED(4) u8 gXgbaEmeraldResource[XGBA_EMERALD_RESOURCE_SIZE] = {0};
@@ -41,6 +44,15 @@ static void XgbaEmeraldProbeRun(void)
     gXgbaEmeraldProbe.received = result;
     gXgbaEmeraldProbe.resource_data = (u32)gXgbaEmeraldResource;
     gXgbaEmeraldProbe.engine_marker = 0x454D5244u; /* "EMRD" */
+    gXgbaEmeraldProbe.original_main_ticks = 0;
+    gXgbaEmeraldProbe.game_callback2 = (u32)gMain.callback2;
+    gXgbaEmeraldProbe.flash_present = gFlashMemoryPresent;
     gXgbaEmeraldProbe.state = 3u;
     /* Continue to standard Emerald game entry / title callbacks. */
+}
+
+static void XgbaEmeraldMainLoopTick(void)
+{
+    ++gXgbaEmeraldProbe.original_main_ticks;
+    gXgbaEmeraldProbe.game_callback2 = (u32)gMain.callback2;
 }
