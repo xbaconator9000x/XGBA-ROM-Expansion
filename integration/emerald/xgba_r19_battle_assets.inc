@@ -20,7 +20,14 @@ struct XgbaR19BattleProof {
     volatile u32 overworld_map,game_battle_flags,original_player_species;
 };
 EWRAM_DATA volatile struct XgbaR19BattleProof gXgbaR19BattleProof = {0};
-EWRAM_DATA ALIGNED(4) u8 gXgbaR19FrontCompressed[2][XGBA_R19_BATTLE_BUFFER_CAP]={0};
+/* Phase-aware memory reuse: a battle's compressed fronts take ownership
+ * of the SAME already linker-protected 16 KiB arena as overworld maps.
+ * No separate 16 KiB EWRAM global is permitted. Both sources are bounded
+ * and source-verified before the original Emerald LZ decompressor reads them. */
+#define gXgbaR19FrontCompressed \
+    ((u8 (*)[XGBA_R19_BATTLE_BUFFER_CAP])XGBA_R19_AREA)
+_Static_assert(2u * XGBA_R19_BATTLE_BUFFER_CAP <= XGBA_R19_RESERVE,
+               "Battle compressed sprites exceed protected Emerald phase arena");
 EWRAM_DATA char gXgbaR19BattleId[2][40]={{0}};
 static EWRAM_DATA struct CompressedSpriteSheet sXgbaR19FrontSheet[2]={{0}};
 static EWRAM_DATA bool8 sXgbaR19FrontReady[2]={FALSE,FALSE};
@@ -105,6 +112,11 @@ static void XgbaR19BattleTrigger(void)
     gXgbaR19BattleProof.magic=XGBA_R19_BATTLE_MAGIC;
     gXgbaR19BattleProof.requested=1u;
     gXgbaR19BattleProof.overworld_map=gSaveBlock1Ptr->location.mapNum;
+    /* Battle replaces map-resident bytes. Invalidate both cache identities
+     * so original Emerald will fetch the proper map/secondary tilesets again
+     * before rendering overworld after the battle callback returns. */
+    sXgbaR19Ready[0]=FALSE;
+    sXgbaR19Ready[1]=FALSE;
     BattleSetup_StartWildBattle();
     /* Normal wild battle resets flags inside DoStandardWildBattle. Enable
      * the original game's 4-battler renderer AFTER that reset. */
