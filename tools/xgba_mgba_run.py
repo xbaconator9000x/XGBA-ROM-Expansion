@@ -25,7 +25,7 @@ MAX_GUEST_RESOURCE = 16 * 1024
 def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
            probe_address=0, disabled=False, screenshot=None, scene_dir=None,
            second_resource_id=None, r10_dir=None, r11_perf=None,
-           r12_dir=None):
+           r12_dir=None, r13_dir=None):
     rom = Path(rom).resolve(strict=True)
     if not rom.is_file() or rom.stat().st_size > MAX_ROM:
         raise ValueError("ROM must be a real GBA file of at most 32 MiB")
@@ -89,6 +89,11 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
         if not folder.is_dir() or second_resource_id is None:
             raise ValueError("R12 requires an existing directory and two resources")
         cmd.extend(["--r12-dir", str(folder)])
+    if r13_dir is not None:
+        folder = Path(r13_dir).resolve()
+        if not folder.is_dir():
+            raise ValueError("R13 requires an existing evidence directory")
+        cmd.extend(["--r13-dir", str(folder)])
     if disabled:
         cmd.append("--disabled")
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
@@ -115,6 +120,7 @@ def main():
     p.add_argument("--r10-dir", help="Record the actual FireRed map before/after Select in one session")
     p.add_argument("--r11-perf", help="Write native Pallet Town CPU performance metrics as JSON")
     p.add_argument("--r12-dir", help="Execute actual FireRed mGBA savestate recovery proof")
+    p.add_argument("--r13-dir", help="Execute native external map transition proof")
     args = p.parse_args()
     out = launch(args.rom, args.manifest, args.resource_id,
                  emulator=args.emulator, frames=args.frames,
@@ -122,7 +128,7 @@ def main():
                  screenshot=args.screenshot, scene_dir=args.scene_dir,
                  second_resource_id=args.second_resource_id,
                  r10_dir=args.r10_dir, r11_perf=args.r11_perf,
-                 r12_dir=args.r12_dir)
+                 r12_dir=args.r12_dir, r13_dir=args.r13_dir)
     print(out.stdout, end="")
     if out.stderr:
         print(out.stderr, file=sys.stderr, end="")
