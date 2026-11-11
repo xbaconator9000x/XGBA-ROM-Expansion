@@ -21,6 +21,8 @@ struct XgbaR19BattleProof {
     volatile u32 overworld_map,game_battle_flags,original_player_species;
     /* R20 phase ownership counters appended after the R19 proof layout. */
     volatile u32 phase_claims,front_reloads,last_arena_epoch;
+    /* R26 append-only guest lease rejection and borrow evidence. */
+    volatile u32 r26_busy_refusals,r26_battle_borrows,r26_epoch,r26_live,r26_errors;
 };
 EWRAM_DATA volatile struct XgbaR19BattleProof gXgbaR19BattleProof = {0};
 /* Phase-aware memory reuse: a battle's compressed fronts take ownership
@@ -47,6 +49,7 @@ const struct CompressedSpriteSheet *XgbaR19BattleFrontSheet(
     s32 slot=-1;
     u32 bytes;
     u32 i;
+    struct XgbaLeaseToken lease;
     const char *name;
     if(species==SPECIES_POOCHYENA)slot=0;
     if(species==SPECIES_ZIGZAGOON)slot=1;
@@ -64,6 +67,13 @@ const struct CompressedSpriteSheet *XgbaR19BattleFrontSheet(
     if(bytes<16u || bytes>XGBA_R19_BATTLE_BUFFER_CAP)
         XgbaR19BattleReject();
     if(!sXgbaR19FrontReady[slot]) {
+        if(XgbaLeaseBorrow(&sXgbaR26ArenaLease,XGBA_R20_ARENA_BATTLE,&lease)
+           != XGBA_LEASE_OK) XgbaR19BattleReject();
+#ifdef XGBA_R26_LEASE_PROOF
+        if(XgbaLeaseSwitch(&sXgbaR26ArenaLease,XGBA_R20_ARENA_WORLD)
+           != XGBA_LEASE_BUSY) XgbaR19BattleReject();
+        ++gXgbaR19BattleProof.r26_busy_refusals;
+#endif
         for(i=0;i<40u;i++)gXgbaR19BattleId[slot][i]=0;
         for(i=0;name[i] && i<39u;i++)
             gXgbaR19BattleId[slot][i]=name[i];
@@ -74,6 +84,14 @@ const struct CompressedSpriteSheet *XgbaR19BattleFrontSheet(
             XgbaR19BattleReject();
         sXgbaR19FrontSheet[slot]=*original;
         sXgbaR19FrontSheet[slot].data=(const u32 *)gXgbaR19FrontCompressed[slot];
+        if(XgbaLeaseValidate(&sXgbaR26ArenaLease,&lease)!=XGBA_LEASE_OK ||
+           XgbaLeaseRelease(&sXgbaR26ArenaLease,&lease)!=XGBA_LEASE_OK)
+            XgbaR19BattleReject();
+#ifdef XGBA_R26_LEASE_PROOF
+        ++gXgbaR19BattleProof.r26_battle_borrows;
+        gXgbaR19BattleProof.r26_epoch=sXgbaR26ArenaLease.generation;
+        gXgbaR19BattleProof.r26_live=sXgbaR26ArenaLease.borrowed;
+#endif
         sXgbaR19FrontReady[slot]=TRUE;
         ++gXgbaR19BattleProof.external_reads;
         ++gXgbaR19BattleProof.front_reloads;

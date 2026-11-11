@@ -1,0 +1,106 @@
+name: XGBA R26 original Emerald guest EWRAM borrow and generation safety
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'integration/common/xgba_ewram_lease.h'
+      - 'integration/emerald/xgba_r19_connected_maps.inc'
+      - 'integration/emerald/xgba_r19_battle_assets.inc'
+      - 'integration/mgba/xgba_r19_mixed_battle.h'
+      - 'tests/test_xgba_r26_ewram_lease.c'
+      - 'tests/test_xgba_r26_emerald_lease.py'
+      - '.github/workflows/xgba-r26-ewram-leases.yml'
+  pull_request:
+    branches: [main, 'phase3/r25-dma-source-lifetime-guard-20261112']
+    paths:
+      - 'integration/common/xgba_ewram_lease.h'
+      - 'integration/emerald/xgba_r19_connected_maps.inc'
+      - 'integration/emerald/xgba_r19_battle_assets.inc'
+      - 'integration/mgba/xgba_r19_mixed_battle.h'
+      - 'tools/xgba_r17_emerald_patch.py'
+      - 'tests/test_xgba_r17_emerald_external_map.py'
+      - 'tests/test_xgba_r26_ewram_lease.c'
+      - 'tests/test_xgba_r26_emerald_lease.py'
+      - '.github/workflows/xgba-r26-ewram-leases.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r26-lease-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  portable-guest-lease-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile actual guest lease header with strict warnings and execute adversarial borrow/release
+        run: |
+          set -euo pipefail
+          mkdir -p build/r26
+          cc -std=c11 -O2 -Wall -Wextra -Werror tests/test_xgba_r26_ewram_lease.c -o build/r26/lease-unit
+          build/r26/lease-unit | tee build/r26/lease-unit.log
+          grep -q '^PASS_R26_PORTABLE_EWRAM_LEASE ' build/r26/lease-unit.log
+          python3 -m py_compile tests/test_xgba_r26_emerald_lease.py tools/xgba_r17_emerald_patch.py
+  native-original-emerald-r26-leases:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install exact original Emerald and mGBA source build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev build-essential cmake python3-pil
+      - name: Checkout immutable Emerald game and original mGBA core pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokeemerald.git upstream/pokeemerald
+          git -C upstream/pokeemerald checkout --quiet --detach 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokeemerald rev-parse HEAD)" = 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Execute four original Emerald battles with three forced map/sprite arena phase evictions
+        shell: bash
+        env:
+          XGBA_R26_EVIDENCE_DIR: ${{ github.workspace }}/r26-lease-evidence
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tests/test_xgba_r26_emerald_lease.py
+          python3 -m unittest discover -s tests -p 'test_xgba_r26_emerald_lease.py' -v 2>&1 | tee xgba-r26-lease.log
+          grep -q 'PASS_R26_ORIGINAL_EMERALD_LEASE_LIFETIMES' r26-lease.log || test -s r26-lease-evidence/proof.json
+          grep -q 'Ran 17 tests' xgba-r26-lease.log
+          grep -q '^OK$' xgba-r26-lease.log
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          root=Path('r26-lease-evidence')
+          shots=sorted(root.glob('*.png'))
+          assert len(shots)==8,shots
+          for shot in shots:
+              with Image.open(shot) as im:assert im.size==(240,160)
+          report=json.loads((root/'proof.json').read_text())
+          assert report["actual_original_battles"] == 4
+          assert report["independent_original_compressed_front_fetches"] == 8
+          assert report["independently_verified_field_returns"] == 3
+          assert report["native_probe"]["guest_pressure_cycles"] == 4
+          assert report["native_probe"]["external_map_fetches"] == 8
+          assert report["guest_live_guard_bytes_verified"] == 24576
+          assert not list(root.glob('*.gba')) and not list(root.glob('*.sav'))
+          print('PASS_R23_NATIVE_EMERALD_FORCED_PHASE_EVICTION_12_TESTS')
+          PY
+      - name: Publish genuine native LCD evidence and failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r26-original-emerald-four-battle-eviction
+          path: r26-lease-evidence/
+          retention-days: 90
+          if-no-files-found: warn

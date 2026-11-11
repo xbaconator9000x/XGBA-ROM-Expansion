@@ -46,6 +46,18 @@
 
 **Artifact retention:** GitHub Actions evidence ZIPs are time-limited. Selected original R9–R18 screenshots, GIFs, compact proofs and file-by-file SHA-256 manifests have been [committed to the repository](evidence/README.md); their Git history no longer depends on Actions artifact expiry. The original source execution and full logs remain linked for independent verification. No ROMs, raw resource packs or game saves are archived.
 
+## R26 — guest-side EWRAM generation leases (in development)
+
+R26 adds owner/generation-checked `borrow/pin/release` semantics to the
+existing **same physical 16 KiB** Emerald map/battle resource arena,
+while preserving original R20–R23 proof offsets. It refuses a phase switch
+while compressed sprite or external map loaders hold source leases. A portable
+lease contract and a source-built original Emerald **four real battles** suite
+are included, but **do not consider R26 verified before its exact-head CI
+passes**. This is scoped loader lifetime protection, not a claim of
+three-map eviction, asynchronous renderer lifetime, or original hardware.
+[Implementation and evidence gates](docs/R26_EWRAM_LEASES.md).
+
 ## R25 — original FireRed and Emerald game-armed DMA source protection
 
 **12 November 2026 · [PR #80](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/80) · native-tested implementation head `5d729f9af4ab338e44dbae1834643befba692186`.**

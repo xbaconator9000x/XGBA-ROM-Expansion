@@ -10,6 +10,7 @@
 extern const struct MapLayout *const gMapLayouts[];
 extern const struct MapHeader *const *const gMapGroups[];
 #include "constants/vars.h"
+#include "../common/xgba_ewram_lease.h"
 #define XGBA_R19_GROUP 0u
 #define XGBA_R19_LITTLEROOT 9u
 #define XGBA_R19_ROUTE101 16u
@@ -24,6 +25,8 @@ struct XgbaR19MapProof {
     volatile u32 errors,first_arena,second_arena,game_callback;
     /* R20: appended only; original R19 native proof ABI is unchanged. */
     volatile u32 arena_owner,arena_epoch,world_claims,battle_claims;
+    /* R26 appended, all historical probe offsets retained. */
+    volatile u32 r26_busy_refusals,r26_map_borrows,r26_epoch,r26_live,r26_errors;
 };
 EWRAM_DATA volatile struct XgbaR19MapProof gXgbaR19MapProof = {0};
 EWRAM_DATA char gXgbaR19MapResourceId[32] = {0};
@@ -44,9 +47,14 @@ static EWRAM_DATA u32 sXgbaR20ArenaOwner;
 static EWRAM_DATA u32 sXgbaR20ArenaEpoch;
 static EWRAM_DATA u32 sXgbaR20WorldClaims;
 static EWRAM_DATA u32 sXgbaR20BattleClaims;
+static EWRAM_DATA struct XgbaArenaLease sXgbaR26ArenaLease;
+static void XgbaR19Reject(void);
 
 static void XgbaR20ClaimWorldArena(void)
 {
+    if (XgbaLeaseSwitch(&sXgbaR26ArenaLease,XGBA_R20_ARENA_WORLD)
+        != XGBA_LEASE_OK)
+        XgbaR19Reject();
     if (sXgbaR20ArenaOwner == XGBA_R20_ARENA_WORLD)
         return;
     /* A previous battle left compressed sprite pointers into the arena.
@@ -54,19 +62,22 @@ static void XgbaR20ClaimWorldArena(void)
     sXgbaR19Ready[0] = FALSE;
     sXgbaR19Ready[1] = FALSE;
     sXgbaR20ArenaOwner = XGBA_R20_ARENA_WORLD;
-    ++sXgbaR20ArenaEpoch;
+    sXgbaR20ArenaEpoch = sXgbaR26ArenaLease.generation;
     ++sXgbaR20WorldClaims;
 }
 
 static void XgbaR20ClaimBattleArena(void)
 {
+    if (XgbaLeaseSwitch(&sXgbaR26ArenaLease,XGBA_R20_ARENA_BATTLE)
+        != XGBA_LEASE_OK)
+        XgbaR19Reject();
     if (sXgbaR20ArenaOwner == XGBA_R20_ARENA_BATTLE)
         return;
     /* Maps must not be considered resident after sprites claim their bytes. */
     sXgbaR19Ready[0] = FALSE;
     sXgbaR19Ready[1] = FALSE;
     sXgbaR20ArenaOwner = XGBA_R20_ARENA_BATTLE;
-    ++sXgbaR20ArenaEpoch;
+    sXgbaR20ArenaEpoch = sXgbaR26ArenaLease.generation;
     ++sXgbaR20BattleClaims;
 }
 static void XgbaR19Reject(void)
@@ -92,9 +103,19 @@ static void XgbaR19Load(unsigned idx)
     const char *name=idx?"emerald.route101":"emerald.littleroot";
     u32 i;
     const struct MapHeader *source;
+    struct XgbaLeaseToken lease;
     if(idx>1)XgbaR19Reject();
     XgbaR20ClaimWorldArena();
     if(sXgbaR19Ready[idx])return;
+    if(XgbaLeaseBorrow(&sXgbaR26ArenaLease,XGBA_R20_ARENA_WORLD,&lease)
+       != XGBA_LEASE_OK) XgbaR19Reject();
+#ifdef XGBA_R26_LEASE_PROOF
+    /* Actual original-game asset load attempts a forbidden phase switch
+     * while its source bytes are borrowed; ownership/epoch cannot change. */
+    if(XgbaLeaseSwitch(&sXgbaR26ArenaLease,XGBA_R20_ARENA_BATTLE)
+       != XGBA_LEASE_BUSY) XgbaR19Reject();
+    ++gXgbaR19MapProof.r26_busy_refusals;
+#endif
     arena=idx?XGBA_R19_ARENA1:XGBA_R19_ARENA0;
     length=idx?XGBA_R19_ROUTE_BYTES:XGBA_R19_LITTLEROOT_BYTES;
     for(i=0;i<32;i++)gXgbaR19MapResourceId[i]=0;
@@ -124,6 +145,14 @@ static void XgbaR19Load(unsigned idx)
     sXgbaR19Tilesets[idx].metatileAttributes=(const u16 *)(arena+off[7]);
     sXgbaR19Layouts[idx].secondaryTileset=&sXgbaR19Tilesets[idx];
     sXgbaR19Headers[idx].mapLayout=&sXgbaR19Layouts[idx];
+    if(XgbaLeaseValidate(&sXgbaR26ArenaLease,&lease)!=XGBA_LEASE_OK ||
+       XgbaLeaseRelease(&sXgbaR26ArenaLease,&lease)!=XGBA_LEASE_OK)
+        XgbaR19Reject();
+#ifdef XGBA_R26_LEASE_PROOF
+    ++gXgbaR19MapProof.r26_map_borrows;
+    gXgbaR19MapProof.r26_epoch=sXgbaR26ArenaLease.generation;
+    gXgbaR19MapProof.r26_live=sXgbaR26ArenaLease.borrowed;
+#endif
     sXgbaR19Ready[idx]=TRUE;
     ++gXgbaR19MapProof.loads;
 }
