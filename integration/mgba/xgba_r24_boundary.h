@@ -22,7 +22,7 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
     uint32_t proof,const char *directory,const struct XgbaGbaDevice *device,
     const struct ResourceFile *resource,int enabled)
 {
-    if (!directory || !proof || !boot || !resource ||
+    if (!directory || !proof || !resource ||
         proof<0x02000000u || proof>0x02040000u-68u)
         fail("R24 requires genuine ELF guest MMIO/EWRAM proof symbols");
     if (r24_word(core,proof,0)!=XGBA_R24_NATIVE_MAGIC ||
@@ -32,9 +32,9 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
         r24_word(core,proof,9)!=16383u ||
         r24_word(core,proof,10)!=16385u)
         fail("R24 source-built Emerald rejected a capacity/bounds scenario");
-    if (r24_word(core,boot,0)!=XGBA_R7_MMIO_MAGIC ||
+    if (boot && (r24_word(core,boot,0)!=XGBA_R7_MMIO_MAGIC ||
         r24_word(core,boot,1)!=3u ||
-        r24_word(core,boot,5)!=0x454D5244u)
+        r24_word(core,boot,5)!=0x454D5244u))
         fail("R24 original Emerald bridge did not reach guest CPU proof");
     if (enabled) {
         if (r24_word(core,proof,3)!=0u ||
@@ -47,7 +47,7 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
             r24_word(core,proof,14)<0x02000000u ||
             r24_word(core,proof,14)>0x02040000u-16384u ||
             r24_word(core,proof,11)!=r24_word(core,proof,12) ||
-            device->successful_reads!=3u ||
+            device->successful_reads!=(boot?3u:2u) ||
             device->failed_reads!=7u ||
             device->actual_length!=16384u ||
             device->rejected_ranges!=3u ||
@@ -85,14 +85,17 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
      * requests, proving the transaction failures didn't poison its loop. */
     for(unsigned i=0;i<900u;++i)
         core->runFrame(core);
-    if(r24_word(core,boot,6)<100u)
-        fail("R24 original Emerald gameplay loop did not continue");
+    if(boot ? r24_word(core,boot,6)<100u :
+              r24_word(core,proof,15)<100u)
+        fail("R24 original source-built GBA game loop did not continue");
     char name[1024];
-    if(snprintf(name,sizeof(name),"%s/emerald-boundary-%s.png",
-          directory,enabled?"enabled":"disabled") >= (int)sizeof(name))
+    if(snprintf(name,sizeof(name),"%s/%s-boundary-%s.png",
+          directory,boot?"emerald":"firered",
+          enabled?"enabled":"disabled") >= (int)sizeof(name))
         fail("R24 native LCD evidence path overflow");
     save_native_frame(core,name);
-    printf("PASS_R24_ORIGINAL_EMERALD_BOUNDARY enabled=%u "
+    printf("PASS_R24_ORIGINAL_%s_BOUNDARY enabled=%u ",
+           boot?"EMERALD":"FIRERED",
            "successful_provider_reads=%u rejected_provider_reads=%u "
            "max_bytes=%u short_cap=%u over_cap=%u "
            "guest_attempts=%u accepted=%u rejected=%u "
