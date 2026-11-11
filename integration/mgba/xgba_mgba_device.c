@@ -111,7 +111,9 @@ static void execute_request(struct GBA *gba, struct XgbaGbaDevice *device)
     size_t length = 0;
     enum XgbaMgbaProviderStatus status = xgba_mgba_provider_read(
         &device->provider, id, candidate, device->capacity, &length);
-    if (status != XGBA_MGBA_OK || length > device->capacity ||
+    /* Never report a zero-byte provider response as successful guest load.
+     * A partial or refused read must leave the guest buffer unchanged. */
+    if (status != XGBA_MGBA_OK || !length || length > device->capacity ||
         !ewram_range(device->dst_addr, (uint32_t)length)) {
         device->status = XGBA_R7_RESOURCE_FAILURE;
         ++device->failed_reads;
