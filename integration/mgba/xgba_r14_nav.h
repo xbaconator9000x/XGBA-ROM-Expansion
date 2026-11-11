@@ -148,6 +148,6 @@ static void xgba_r14_run(struct mCore *c,uint32_t p,const char *dir,
     if(d->successful_reads!=3||d->failed_reads||r->reads!=3||r->lookups!=3||
         r14_u32(c,p,5)!=3||r14_u32(c,p,11)!=arena)
         fail("R14 external resource acquisition lifecycle");
-    printf("PASS_R14_REAL_DOOR_AND_CONNECTED_ROUTE_EXTERNAL_TILESETS reads=3 shared_arena=1 physical_dpad=1 native_map_grid=1 native_bg_vram=1\n");
+    printf("PASS_R14_REAL_DOOR_AND_CONNECTED_ROUTE_EXTERNAL_TILESETS reads=3 shared_arena=1 physical_dpad=1 native_map_grid=1 native_bg_vram=1 arena=0x%08x\n",(unsigned)arena);
 }
 #endif

@@ -122,15 +122,32 @@ class NativeNavigation(unittest.TestCase):
                 "void MoveSaveBlocks_ResetHeap(void)\n{\n"
                 "    _Static_assert(sizeof(struct SaveBlock2) + sizeof(struct SaveBlock1) + sizeof(struct PokemonStorage) <= HEAP_SIZE - "+str(reserve)+", \"R14 save scratch overlaps arena\");","R14 save scratch bounds")
             save.write_text(ss)
+            # gHeap is a linker-defined address, not a sized C object.
+            # Expose the existing heap boundary and reserved tail as symbols
+            # without allocating any extra EWRAM.
+            ld=fr/"ld_script_modern.ld"
+            originals[ld]=ld.read_text()
+            ls=patch.replace_once(originals[ld],"        . = 0x1C000;",
+                "        . = 0x1C000;\n"
+                "        gXgbaR14HeapEnd = .;\n"
+                "        gXgbaR14ArenaStart = . - "+str(reserve)+";",
+                "R14 linker-verified heap bounds")
+            ld.write_text(ls)
             build()
         finally:
             patch.INJECT=inj
             patch.restore_firered_sources(originals)
         finalsyms=symbols(elf)
-        arena_addr,arena_size=finalsyms["gXgbaR14Arena"]
-        if arena_size!=max(len(route[4]),len(house[4])) or not (
-                0x02000000<=arena_addr and arena_addr+arena_size<=0x02040000):
-            raise AssertionError("R14 shared arena does not fit exact EWRAM bounds")
+        heap_addr=finalsyms["gHeap"][0]
+        heap_end=finalsyms["gXgbaR14HeapEnd"][0]
+        heap_bytes=heap_end-heap_addr
+        arena_addr=finalsyms["gXgbaR14ArenaStart"][0]
+        arena_size=max(len(route[4]),len(house[4]))
+        if not (heap_bytes==0x1C000 and
+                0x02000000<=heap_addr<arena_addr<heap_end<=0x02040000 and
+                arena_addr==heap_end-reserve and arena_addr+arena_size<=heap_end and
+                arena_addr%4==0):
+            raise AssertionError("R14 shared arena does not fit exact linker-verified EWRAM bounds")
         binary=bytearray(rom.read_bytes())
         # Strip exact compiled ROM symbol ranges after linking. No stock layout
         # or secondary tile bytes can satisfy the subsequent guest accesses.
@@ -159,10 +176,6 @@ class NativeNavigation(unittest.TestCase):
         if len(binary)>32*1024*1024:raise AssertionError("ROM too large")
         rom.write_bytes(binary)
         cls.rom_sha=sha(binary)
-        if "gHeap" not in finalsyms:raise AssertionError("Missing actual FireRed heap symbol")
-        heap_addr,heap_bytes=finalsyms["gHeap"]
-        if heap_bytes!=0x1C000 or heap_addr<0x02000000 or heap_addr+heap_bytes>0x02040000:
-            raise AssertionError("Invalid physical FireRed heap allocation")
         cls.probe=finalsyms["gXgbaR14Proof"][0]
         if not 0x02000000<=cls.probe<0x02040000:raise AssertionError("Invalid guest proof")
         apply_core_patch.apply(r7.MGBA)
@@ -188,6 +201,8 @@ class NativeNavigation(unittest.TestCase):
         cls.log=result.stdout
         if "PASS_R14_REAL_DOOR_AND_CONNECTED_ROUTE_EXTERNAL_TILESETS" not in cls.log:
             raise AssertionError("Native R14 proof absent")
+        if f"arena=0x{arena_addr:08x}" not in cls.log:
+            raise AssertionError("Native guest arena differs from linker-verified heap tail")
         cls.report={"milestone":"R14_PHYSICAL_NAV_EXTERNAL_SECONDARY_TILESETS",
             "rom_sha256":cls.rom_sha,"rom_size":len(binary),"resources":resources,
             "stripped_compiled_ranges":removed,"native_log":cls.log,
