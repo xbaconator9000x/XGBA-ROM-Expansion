@@ -86,10 +86,7 @@ jobs:
           arm-none-eabi-nm --version | head -n 1
           cmake --version | head -n 1
           cc --version | head -n 1
-          if ! pkg-config --exists libpng; then
-            echo "::error::Runner missing libpng development headers; cannot use apt mirror"
-            exit 1
-          fi
+          bash tools/xgba_ci_png_prereqs.sh
           if ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
             python3 -m pip install --user --break-system-packages --disable-pip-version-check 'Pillow==11.3.0'
           fi
