@@ -27,7 +27,8 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
            second_resource_id=None, r10_dir=None, r11_perf=None,
            r12_dir=None, r13_dir=None, r14_dir=None,
            r15_dir=None, r15_savefile=None, r15_phase=None, r15_save_probe=0,
-           r16_emerald_dir=None, r17_emerald_map_dir=None):
+           r16_emerald_dir=None, r17_emerald_map_dir=None,
+           r18_dir=None, r18_savefile=None, r18_phase=None, r18_save_probe=0):
     rom = Path(rom).resolve(strict=True)
     if not rom.is_file() or rom.stat().st_size > MAX_ROM:
         raise ValueError("ROM must be a real GBA file of at most 32 MiB")
@@ -129,6 +130,21 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
         if r16_emerald_dir is not None or r15_dir is not None:
             raise ValueError("R17 may not overlap earlier game proof modes")
         cmd.extend(["--r17-emerald-map-dir",str(destination)])
+    if r18_dir is not None:
+        directory=Path(r18_dir).resolve()
+        if not directory.is_dir() or second_resource_id is None:
+            raise ValueError("R18 requires actual LCD directory and both original Emerald resources")
+        if r18_phase not in ("write","continue","corrupt") or not r18_savefile or not (
+                0x02000000<=r18_save_probe<0x02040000):
+            raise ValueError("R18 requires phase, genuine mGBA Flash file and native guest ELF proof")
+        flash=Path(r18_savefile).resolve()
+        if not flash.parent.is_dir():
+            raise ValueError("R18 Flash save parent absent")
+        if r15_dir is not None or r17_emerald_map_dir is not None:
+            raise ValueError("R18 native emulator mode must be exclusive")
+        cmd.extend(["--r18-dir",str(directory),
+                    "--r18-savefile",str(flash),"--r18-phase",r18_phase,
+                    "--r18-save-probe",hex(r18_save_probe)])
     if disabled:
         cmd.append("--disabled")
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
@@ -160,6 +176,10 @@ def main():
     p.add_argument("--r15-dir", help="Store real FireRed Flash save/continue LCD evidence")
     p.add_argument("--r16-emerald-dir", help="Execute source-built Emerald MMIO proof and capture native LCD")
     p.add_argument("--r17-emerald-map-dir", help="Execute Emerald native external map/tileset and D-pad proof")
+    p.add_argument("--r18-dir", help="Execute genuine Emerald Flash save/cold continuation")
+    p.add_argument("--r18-savefile", help="Private native 128 KiB Emerald Flash save file")
+    p.add_argument("--r18-phase", choices=["write","continue","corrupt"])
+    p.add_argument("--r18-save-probe", type=lambda s:int(s,0), default=0)
     p.add_argument("--r15-savefile", help="Private real mGBA Flash file, never publish")
     p.add_argument("--r15-phase", choices=["write","continue","corrupt"])
     p.add_argument("--r15-save-probe", type=lambda s:int(s,0), default=0)
@@ -174,7 +194,9 @@ def main():
                  r15_dir=args.r15_dir, r15_savefile=args.r15_savefile,
                  r15_phase=args.r15_phase, r15_save_probe=args.r15_save_probe,
                  r16_emerald_dir=args.r16_emerald_dir,
-                 r17_emerald_map_dir=args.r17_emerald_map_dir)
+                 r17_emerald_map_dir=args.r17_emerald_map_dir,
+                 r18_dir=args.r18_dir, r18_savefile=args.r18_savefile,
+                 r18_phase=args.r18_phase, r18_save_probe=args.r18_save_probe)
     print(out.stdout, end="")
     if out.stderr:
         print(out.stderr, file=sys.stderr, end="")
