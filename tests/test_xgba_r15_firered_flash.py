@@ -46,11 +46,14 @@ class NativeFlashPersistence(unittest.TestCase):
         cls.write_log=written.stdout
         if "PASS_R15_REAL_FIRERED_FLASH_WRITE" not in cls.write_log:
             raise AssertionError("Actual FireRed Flash write never completed")
-        if not savefile.exists() or savefile.stat().st_size!=131072:
+        cls.save_disk_bytes=savefile.stat().st_size if savefile.exists() else 0
+        # mGBA's on-disk Flash can include 16 bytes of emulator metadata.
+        # The real Flash payload remains exactly 128 KiB; neither version
+        # may be mistaken for an extracted ROM or native save-state.
+        if cls.save_disk_bytes not in (131072,131088):
             raise AssertionError("Real FireRed Flash write returned success but "
-                "backing file size is %s at %s; native log: %s"%(
-                    savefile.stat().st_size if savefile.exists() else "missing",
-                    savefile,cls.write_log[-1000:]))
+                "backing length is %s at %s; native log: %s"%(
+                    cls.save_disk_bytes,savefile,cls.write_log[-1000:]))
         cls.save_sha=hashlib.sha256(savefile.read_bytes()).hexdigest()
         # The previous invocation has returned: its mGBA process and all
         # CPU/EWRAM/VRAM state are now gone, not a restore/loadstate API.
@@ -86,6 +89,8 @@ class NativeFlashPersistence(unittest.TestCase):
             "native_original_flash_sector_save":True,
             "native_mgba_subprocesses":3,
             "saved_flash_size":131072,
+            "emulator_save_file_size":cls.save_disk_bytes,
+            "emulator_metadata_footer_bytes":cls.save_disk_bytes-131072,
             "flash_sha256":cls.save_sha,
             "flash_unchanged_after_resume_and_corrupt_pack":True,
             "separate_mgba_process_restart":True,
