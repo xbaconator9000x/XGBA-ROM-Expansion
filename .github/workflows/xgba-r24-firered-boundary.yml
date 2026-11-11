@@ -55,6 +55,7 @@ jobs:
              tests/test_xgba_r24_mmio_unit.c -o build/r24/mmio-unit
           build/r24/mmio-unit | tee build/r24/unit.log
           grep -q 'PASS_R24_PORTABLE_ORIGINAL_DEVICE_CONTRACT' build/r24/unit.log
+          grep -q 'adversarial_boundary_rejections=256' build/r24/unit.log
           cc -std=c11 -fsyntax-only -Wall -Wextra -Werror \
             -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast \
             tests/test_xgba_r24_guest_syntax.c
