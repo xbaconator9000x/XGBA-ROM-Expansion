@@ -60,7 +60,7 @@ class NativeEmeraldFourBattleForcedEviction(unittest.TestCase):
         if not match:
             raise AssertionError("Genuine four-battle forced eviction native proof missing")
         cls.values={key:int(value) for key,value in
-            re.findall(r"(\\w+)=(\\d+)",match.group(1))}
+            re.findall(r"(\w+)=(\d+)",match.group(1))}
         cls.report={
             "milestone":"R23_ORIGINAL_EMERALD_FORCED_MAP_BATTLE_PHASE_EVICTIONS",
             "status":"native_accepted",
@@ -99,7 +99,7 @@ class NativeEmeraldFourBattleForcedEviction(unittest.TestCase):
         }
         if os.environ.get("XGBA_R23_EVIDENCE_DIR"):
             (cls.output/"proof.json").write_text(
-                json.dumps(cls.report,indent=2,sort_keys=True)+"\\n")
+                json.dumps(cls.report,indent=2,sort_keys=True)+"\n")
 
     def test_original_four_double_battle_encounters(self):
         self.assertEqual(self.values["original_battles"],4)
