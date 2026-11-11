@@ -123,7 +123,7 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
          * Only original GBA keypad input is used; no host RAM patch or warp. */
         const uint32_t first_tick=r19_word(core,map,17);
         unsigned exit_frames=0;
-        for (;exit_frames<12000u;++exit_frames) {
+        for (;exit_frames<6500u;++exit_frames) {
             /* A selects Fight, an original first move and first target. */
             core->setKeys(core,((exit_frames%26u)<3u)?1u:0u);
             core->runFrame(core);
@@ -132,12 +132,15 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
                 r19_word(core,map,27)>=1u)
                 break;
         }
-        if (exit_frames>=12000u) {
-            fprintf(stderr,"R20_RETURN_DIAG frames=%u ticks=%u owner=%u epoch=%u "
-                    "map_claims=%u battle_claims=%u\n",exit_frames,
+        if (exit_frames>=6500u) {
+            fprintf(stderr,"R20_RETURN_DIAG frames=%u ticks=%u last_world_owner=%u "
+                    "last_world_epoch=%u map_claims=%u battle_claims=%u "
+                    "sprite_epoch=%u sprite_claims=%u sprite_reads=%u\n",exit_frames,
                     r19_word(core,map,17),r19_word(core,map,24),
                     r19_word(core,map,25),r19_word(core,map,26),
-                    r19_word(core,map,27));
+                    r19_word(core,map,27),r19_bword(core,battle,19),
+                    r19_bword(core,battle,17),r19_bword(core,battle,2));
+            r17_frame(core,dir,"03-r20-diagnostic-original-battle-not-returned");
             fail("R20 original Emerald did not return to a map-owned arena");
         }
         core->setKeys(core,0);
