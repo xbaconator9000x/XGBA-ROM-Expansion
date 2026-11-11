@@ -35,6 +35,8 @@ SOURCES={
    "enabled/04-house-reloaded.png disabled/01-pallet.png disabled/02-entry-refused.png proof.json").split()),
  "r14":(42977112057,13835737289,"3a1988e99da9285e8d194e9b1bbf9b3d936b6d3e",56,
   "01-pallet-external-tiles.png 02-house-door-external.png 03-pallet-door-return.png 04-route1-connected-external.png proof.json".split()),
+ "r15":(42987149871,13840560384,"f5ea62128463272089d66cd2ca13e807b14095ad",60,
+  "01-house-before-save.png 02-house-after-flash-save.png 03-cold-boot-house-reloaded.png 04-after-cold-boot-pallet.png proof.json".split()),
 }
 def sha(b): return hashlib.sha256(b).hexdigest()
 def fetch(url,token,maxlen):
@@ -59,7 +61,8 @@ def check_media(name,b):
 def compact_json(b):
     obj=json.loads(b)
     if isinstance(obj,dict):
-        for k in ("native_log","native_logs","native_execution_log","emulator_logs"):
+        for k in ("native_log","native_logs","native_execution_log","emulator_logs",
+                  "native_write_log","native_resume_log","native_corrupt_log"):
             if k in obj:
                 log=json.dumps(obj.pop(k),sort_keys=True,separators=(",",":")).encode()
                 obj[k+"_sha256"]=sha(log)
@@ -115,6 +118,28 @@ def gallery():
        "No executable ROMs, sidecars, save files or raw proprietary game assets are archived.",
        "Screenshots contain game imagery belonging to its rights holders and are shown",
        "only as limited, noncommercial engineering documentation.","",
+       "## R15 — original FireRed Flash save, cold reboot, and reloaded external house","",
+       "These are four genuine 240×160 screenshots from two separate native mGBA processes.",
+       "FireRed wrote its own Flash sectors, mGBA exited, and a fresh process loaded the saved game.",
+       "A third independent process proved corruption refusal without modifying the valid save.",
+       "",
+       row(["House before save","After original Flash write","Identical house after cold restart","Return to Pallet"]),
+       row(["---"]*4),
+       row([thumb("r15",f,n) for f,n in [
+         ("01-house-before-save.png","Before saving"),
+         ("02-house-after-flash-save.png","Saved in FireRed"),
+         ("03-cold-boot-house-reloaded.png","Cold boot identical house"),
+         ("04-after-cold-boot-pallet.png","Returned to Pallet")]]),
+       "",
+       "**The original house-before-save and cold-boot screenshots have identical SHA-256 pixel-file bytes.**",
+       "[Passing R15 native CI, 4/4](https://github.com/"+REPO+"/actions/runs/42987149871) · "
+       "[R15 exact-head source PR #60](https://github.com/"+REPO+"/pull/60) · "
+       "[Provenance](verified/r15/provenance.json) · [Compact proof](verified/r15/proof.json)",
+       "",
+       "Scope: this is the original FireRed Flash engine and cold-game-continue routine,",
+       "not the visual Start → Save menu. The deliberately corrupted pack fails closed",
+       "inside the bounded test fixture; a user-facing recovery screen remains future work.",
+       "",
        "## R14 — external tilesets, actual house door and connected Route 1","",
        row(["Pallet Town","Player's house","House exit","Route 1"]),
        row(["---"]*4),
@@ -175,7 +200,7 @@ def main():
     if os.getenv("GITHUB_REPOSITORY",REPO)!=REPO:raise ValueError("Unexpected repository")
     count=0
     for name,info in SOURCES.items():count+=archive_one(name,info,token)
-    if count<40:raise ValueError("Incomplete evidence collection")
+    if count<50:raise ValueError("Incomplete R9–R15 evidence collection")
     (ROOT/"evidence"/"README.md").write_text(gallery())
     readme=ROOT/"README.md"
     text=readme.read_text()
