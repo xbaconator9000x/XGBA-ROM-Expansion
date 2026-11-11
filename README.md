@@ -1,14 +1,37 @@
 # XGBA — Expanding What a Game Boy Advance Game Can Access
 
-**Executed expansion proof: R6–R9 verified · 11 November 2026**
+**Executed expansion proof: R6–R11 verified · 11 November 2026**
 
 > **A real, source-built Pokémon FireRed executable running in the native mGBA core successfully used graphics bytes stored _beyond the conventional 32 MiB GBA ROM window_.** The game received a validated external resource through an opt-in host bridge, used FireRed's own sprite-sheet loading routine, and copied the expected bytes into emulated GBA object VRAM.
 >
 > **R6 integration milestone: 32/32 tests passed**, including the positive executable-game test and five executed fallback/failure cases. [Passing push CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42940797581) · [Passing pull-request CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42940805793) · [Experimental implementation, PR #40](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/40).
 
-**The milestone is real; the expansion platform is not yet a finished product.** The successful demonstration uses a temporarily instrumented FireRed build and an external test harness linked to mGBA. It is **not** an off-the-shelf emulator patch, a downloadable expanded FireRed game, unrestricted CPU-addressable ROM, or proof of compatibility with original GBA hardware.
+**The milestones are real; the expansion platform is not yet a finished product.** R6 used a temporary test host; R7–R11 progressed to game-initiated requests in a patched native mGBA core, actual LCD screenshots, resource-pack comparisons, real FireRed Pallet Town integration, and native CPU-frame benchmarking. These results do **not** establish a stock-emulator release, Android or GUI frame-rate performance, unrestricted CPU-addressable ROM, or original GBA hardware compatibility.
 
-## Latest verified milestone — R9: same ROM, different external graphics packs
+## Latest verified milestone — R11: real FireRed Pallet Town CPU-frame benchmark
+
+**11 November 2026 · Draft [PR #52](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/52) · exact head `168d9137cb6b1576b53b6b0455d8c56a39bd943b` · 5/5 focused tests on each exact-head CI run.**
+
+R10 ([draft PR #51](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/51), commit `2ede1b8470cbf71318e44873497a8b8d2ab51526`) moved the experiment into the **actual FireRed Pallet Town map/overworld engine**, with a SELECT-triggered live external graphics swap. R11 measured the runtime cost using a **real pinned FireRed ROM and patched native mGBA CPU**, not GIF playback timing. The earlier R10 GIF held source frames for **165 ms each**, approximately **10×** a real **16.74 ms** GBA frame; its apparent sluggishness was an encoding/playback artifact, not evidence of a tenfold game slowdown.
+
+R11 executed **six paired same-ROM trials** (three XGBA-enabled, three disabled), each with **120 warmup frames + 360 pre-swap frames + 3 SELECT frames + 360 post-swap frames**. Timing used `CLOCK_MONOTONIC` around `mCore.runFrame` and excluded PNG/GIF encoding. Results are **unthrottled native emulation throughput**, not real GUI, vsync, audio, Android or hardware frame rates.
+
+| Measurement | PR CI runner | Separate push runner |
+| --- | ---: | ---: |
+| Disabled, before SELECT (median) | 1865.083 FPS | 1119.142 FPS |
+| Enabled, before SELECT (median) | 1865.589 FPS | 1130.095 FPS |
+| Disabled, after SELECT (median) | 1870.672 FPS | 1146.004 FPS |
+| Enabled, after SELECT (median) | 1875.427 FPS | 1133.968 FPS |
+| SELECT → second asset ready (median) | 0.635484 ms | 1.034608 ms |
+| SELECT → second asset ready (emulated frames) | 1 | 1 |
+
+**Interpretation:** Compare enabled/disabled **within** a runner; absolute throughput differs between shared CI hosts. The faster PR runner observed no measured frame exceeding **16.74 ms** during its trials. This does **not** prove frame-limited 59.7 FPS graphical playback or eliminate future streaming, cache, save-state or device-specific bottlenecks.
+
+**Evidence:** [R11 exact-head PR CI, successful](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42959825105) · [PR benchmark report artifact](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42959825105/artifacts/13828577188) · [R11 exact-head push CI, successful](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42959790780) · [push runner report artifact](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42959790780/artifacts/13828024036). R7–R10 regression checks remained green at R11. GitHub Actions artifacts are retention-limited.
+
+**Next executable tests:** more than 100 live resource swaps; asset integrity, cache lifecycle and save-state/reload consistency; many-resource / beyond-32-MiB sidecar stress and memory profiling; and installed graphical mGBA with audio, vsync and frame limiting on target desktop/Android platforms. **R7–R11 work remains experimental on draft branches; do not mistake this README update for merging or releasing it.**
+
+## Earlier verified milestone — R9: same ROM, different external graphics packs
 
 **11 November 2026 · Real compiled FireRed + native patched mGBA · 5/5 R9 tests passed**
 
@@ -34,8 +57,10 @@ The executed test observed the player moving **(24, 92) → (38, 102)** in each 
 - **R7:** FireRed issued its **own resource request** to the opt-in patched native mGBA core; exact OBJ VRAM bytes and disabled fallback verified.
 - **R8:** a real compiled FireRed executable **displayed an externally loaded graphic on mGBA's actual 240×160 LCD output**. [R8 PNG proof](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42947434354).
 - **R9:** two independently selected external 4bpp graphics packs visibly changed a **controllable game-side scene**, with unchanged ROM identity and recorded mGBA GIFs.
+- **R10:** actual FireRed Pallet Town overworld engine performed a live SELECT-triggered external graphics swap.
+- **R11:** six paired native mGBA trials measured unthrottled CPU-frame throughput and resource-ready latency, correcting misleading GIF playback pacing.
 
-**Next work:** integrate into normal FireRed maps and sprites, test bigger/many resource packs, establish lifecycle/save-state compatibility, and package an accessible ROM-hacking workflow. Total external content can grow separately from the addressable cartridge window, but CPU/GBA memory limits still apply.
+**Next work:** harden the existing Pallet Town integration; stress-test repeated swaps and larger resource libraries; establish lifecycle/save-state compatibility; measure real graphical-emulator playback with audio/vsync; and package accessible ROM-hacking tooling. Total external content can grow separately from the addressable cartridge window, but CPU/GBA memory limits still apply.
 
 ## Why this matters for GBA ROM hacking
 
