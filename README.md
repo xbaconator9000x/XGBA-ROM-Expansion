@@ -10,8 +10,6 @@
 
 ## Verified evidence — screenshots, animations and executable results
 
-**[Browse the permanent evidence gallery: original FireRed screenshots, GIFs and SHA-256 manifests](evidence/README.md)**
-
 **[Browse the permanent evidence gallery: original FireRed and Emerald LCD screenshots, GIFs and SHA-256 manifests](evidence/README.md)**
 
 **Start here:** these are evidence from the *actual source-built game running in native mGBA*, not AI mockups or manually assembled gameplay animations. Each result links to the executed GitHub Actions run and, where available, its downloadable evidence archive. Implementation PRs remain separate from this documentation; none of these results establishes stock-mGBA, original GBA hardware or Android compatibility.
