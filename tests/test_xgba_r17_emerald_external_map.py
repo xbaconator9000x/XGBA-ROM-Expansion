@@ -130,6 +130,10 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                 "\n#define XGBA_R19_BATTLE_TEST 1\n"
                 f"#define XGBA_R19_POOCHYENA_FRONT_BYTES {len(cls.battle_original_compressed['Poochyena'])}u\n"
                 f"#define XGBA_R19_ZIGZAGOON_FRONT_BYTES {len(cls.battle_original_compressed['Zigzagoon'])}u\n")
+        if getattr(cls,"R20_LIFECYCLE_TEST",False):
+            if not r19_battle:
+                raise AssertionError("R20 re-entry fixture requires R19 original mixed battle")
+            config.write_text(config.read_text()+"\n#define XGBA_R20_LIFECYCLE_TEST 1\n")
         if r19:
             config.write_text(config.read_text()+
                 "\n#define XGBA_R19_CONNECTED_MAPS 1\n"
