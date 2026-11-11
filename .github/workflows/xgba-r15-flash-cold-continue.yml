@@ -38,12 +38,20 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo apt-get install -y -qq gcc-arm-none-eabi binutils-arm-none-eabi cmake ninja-build pkg-config libpng-dev python3-pil
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev build-essential cmake python3-pil
       - name: Fetch exact upstream FireRed and mGBA source pins
         shell: bash
         run: |
           set -euo pipefail
-          python3 tools/xgba_r7_fetch_pinned.py
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
       - name: Verify unmodified FireRed Flash save and native cold restart
         shell: bash
         env:
