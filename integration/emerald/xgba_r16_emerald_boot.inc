@@ -5,6 +5,9 @@
  * The emulator/provider is exactly the same opt-in mGBA R7–R15 bridge.
  */
 #include "__XGBA_SHARED_GUEST__"
+/* This include is injected before Emerald main.c defines these globals. */
+extern struct Main gMain;
+extern bool32 gFlashMemoryPresent;
 #define XGBA_EMERALD_PROBE_MAGIC 0x58474241u
 #define XGBA_EMERALD_RESOURCE_SIZE 64u
 
