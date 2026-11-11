@@ -108,10 +108,17 @@ void XgbaR19BattleLocalRendered(u16 species,const void *destination)
             (u32)gMonBackPicTable[species].data;
     }
 }
+#ifdef XGBA_R21_PRESSURE_TEST
+extern void XgbaR21PressureCycle(void);
+#endif
 static void XgbaR19BattleTrigger(void)
 {
     if(!(gMain.newKeys & R_BUTTON))
         return;
+#ifdef XGBA_R21_PRESSURE_TEST
+    /* R21 allocator stress executes in actual Emerald before EACH battle. */
+    XgbaR21PressureCycle();
+#endif
     /* Test-only entry retains Emerald's actual wild battle transition,
      * controller callbacks and battle sprite decompression routines. */
     ZeroPlayerPartyMons();
