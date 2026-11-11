@@ -5,6 +5,7 @@
 #ifndef XGBA_R24_EMERALD_BOUNDARY_H
 #define XGBA_R24_EMERALD_BOUNDARY_H
 #define XGBA_R24_NATIVE_MAGIC 0x52323442u
+#define XGBA_R25_NATIVE_MAGIC 0x52323544u
 static uint32_t r24_word(struct mCore *c,uint32_t p,unsigned n)
 {
     return c->busRead32(c,p+4u*n);
@@ -23,7 +24,7 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
     const struct ResourceFile *resource,int enabled)
 {
     if (!directory || !proof || !resource ||
-        proof<0x02000000u || proof>0x02040000u-68u)
+        proof<0x02000000u || proof>0x02040000u-84u)
         fail("R24 requires genuine ELF guest MMIO/EWRAM proof symbols");
     /* The original Emerald boot path takes longer than FireRed to reach
      * and finish its guest-side 16 KiB memory scan. Host sampling at an
@@ -42,6 +43,9 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
             additional_frames,r24_word(core,proof,1),
             r24_word(core,proof,4),r24_word(core,proof,5),
             r24_word(core,proof,6));
+    /* Append-only original guest flag: standard R24 retains nine requests.
+     * Opt-in R25 performs a tenth, game-initiated DMA3 contention request. */
+    const int r25_dma = r24_word(core,proof,17u)==XGBA_R25_NATIVE_MAGIC;
     if (r24_word(core,proof,0)!=XGBA_R24_NATIVE_MAGIC ||
         r24_word(core,proof,1)!=3u ||
         r24_word(core,proof,2)!=0u ||
@@ -69,17 +73,21 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
         fail("R24 original Emerald bridge did not reach guest CPU proof");
     if (enabled) {
         if (r24_word(core,proof,3)!=0u ||
-            r24_word(core,proof,4)!=9u ||
+            r24_word(core,proof,4)!=(r25_dma?10u:9u) ||
             r24_word(core,proof,5)!=2u ||
-            r24_word(core,proof,6)!=7u ||
-            r24_word(core,proof,7)!=7u ||
+            r24_word(core,proof,6)!=(r25_dma?8u:7u) ||
+            r24_word(core,proof,7)!=(r25_dma?8u:7u) ||
             r24_word(core,proof,13)!=0u ||
             !r24_word(core,proof,14) ||
             r24_word(core,proof,14)<0x02000000u ||
             r24_word(core,proof,14)>0x02040000u-16384u ||
             r24_word(core,proof,11)!=r24_word(core,proof,12) ||
             device->successful_reads!=(boot?3u:2u) ||
-            device->failed_reads!=7u ||
+            device->failed_reads!=(r25_dma?8u:7u) ||
+            device->rejected_dma_aliases!=(r25_dma?1u:0u) ||
+            (r25_dma && (r24_word(core,proof,18u)!=XGBA_R7_DMA_BUSY ||
+                         r24_word(core,proof,19u)!=r24_word(core,proof,14u) ||
+                         r24_word(core,proof,20u)!=0u)) ||
             device->actual_length!=16384u ||
             device->rejected_ranges!=3u ||
             device->rejected_ids!=1u ||
@@ -172,5 +180,16 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
            enabled?1u:0u,device->rejected_ranges,device->rejected_ids,
            device->provider_too_large,device->provider_bad_sha256,
            device->provider_not_found,device->provider_other_failures);
+    if (r25_dma)
+        printf("PASS_R25_ORIGINAL_%s_DMA_ARMED_SOURCE_REFUSAL enabled=%u "
+               "guest_dma_source=%08x guest_dma_status=%u "
+               "dma_busy_rejections=%u guest_attempts=%u "
+               "unchanged_16k_checks=%u guest_guard_errors=%u "
+               "original_loop_frames=900\n",
+               boot?"EMERALD":"FIRERED",(unsigned)enabled,
+               r24_word(core,proof,19u),r24_word(core,proof,18u),
+               device->rejected_dma_aliases,r24_word(core,proof,4),
+               r24_word(core,proof,7),r24_word(core,proof,13));
+
 }
 #endif
