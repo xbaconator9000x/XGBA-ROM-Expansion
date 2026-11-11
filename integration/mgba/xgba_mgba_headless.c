@@ -39,6 +39,10 @@ struct ResourceFile {
     uint8_t digest[32];
     uint32_t lookups;
     uint32_t reads;
+    const char *second_id;
+    uint64_t second_offset;
+    uint64_t second_length;
+    uint8_t second_digest[32];
 };
 
 static void fail(const char *message)
@@ -78,11 +82,17 @@ static int file_lookup(void *context, const char *id,
 {
     struct ResourceFile *f = context;
     ++f->lookups;
-    if (strcmp(id, f->id))
-        return 1;
-    *length = f->length;
-    memcpy(hash, f->digest, 32);
-    return 0;
+    if (!strcmp(id, f->id)) {
+        *length = f->length;
+        memcpy(hash, f->digest, 32);
+        return 0;
+    }
+    if (f->second_id && !strcmp(id, f->second_id)) {
+        *length = f->second_length;
+        memcpy(hash, f->second_digest, 32);
+        return 0;
+    }
+    return 1;
 }
 
 static int file_read(void *context, const char *id, uint8_t *dst,
@@ -90,14 +100,24 @@ static int file_read(void *context, const char *id, uint8_t *dst,
 {
     struct ResourceFile *f = context;
     ++f->reads;
-    if (strcmp(id, f->id) || f->length > cap || f->offset > INT64_MAX)
+    uint64_t offset, length;
+    if (!strcmp(id, f->id)) {
+        offset = f->offset;
+        length = f->length;
+    } else if (f->second_id && !strcmp(id, f->second_id)) {
+        offset = f->second_offset;
+        length = f->second_length;
+    } else {
+        return 1;
+    }
+    if (length > cap || offset > INT64_MAX)
         return 1;
     FILE *fp = fopen(f->path, "rb");
     if (!fp)
         return 1;
-    int bad = fseeko(fp, (off_t)f->offset, SEEK_SET);
+    int bad = fseeko(fp, (off_t)offset, SEEK_SET);
     if (!bad)
-        *actual = fread(dst, 1, (size_t)f->length, fp);
+        *actual = fread(dst, 1, (size_t)length, fp);
     bad |= ferror(fp);
     fclose(fp);
     return bad ? 1 : 0;
@@ -234,6 +254,69 @@ static void run_r9_movement_scene(struct mCore *core, uint32_t probe,
            enabled, start_x, finish_x, start_y, finish_y, updates);
 }
 
+static void run_r10_real_firered_live_swap(struct mCore *core, uint32_t probe,
+                                           const char *directory,
+                                           const struct XgbaGbaDevice *device,
+                                           const struct ResourceFile *resource)
+{
+    if (!probe || !directory || !resource->second_id)
+        fail("R10 real FireRed map needs probe, directory and two resources");
+    /* gXgbaR10Proof: magic,ready,verified,used,tile,requests,switches,pack,
+     * live native overworld ticks, map group, map num, sprite ID. */
+    if (core->busRead32(core, probe) != XGBA_R7_MMIO_MAGIC ||
+        core->busRead32(core, probe+4) != 3u)
+        fail("R10 never entered FireRed's real native overworld");
+    if (core->busRead32(core, probe+36) != 3u ||
+        core->busRead32(core, probe+40) != 0u)
+        fail("R10 game not running actual MAP_PALLET_TOWN group3 map0");
+    if (core->busRead32(core, probe+44) >= 64u)
+        fail("R10 FireRed sprite engine did not create live OBJ sprite");
+    if (core->busRead32(core, probe+20) != 1u ||
+        core->busRead32(core, probe+28) != 0u)
+        fail("R10 FireRed did not load first external resource as crystal");
+    char filename[1024];
+    unsigned early_tick = core->busRead32(core, probe+32);
+    /* Record actual Pallet Town frames with the first resource displayed. */
+    for (unsigned i=0; i<12; ++i) {
+        core->setKeys(core, 0u);
+        core->runFrame(core);
+        if (snprintf(filename,sizeof(filename),"%s/before-%02u.png",directory,i)
+            >= (int)sizeof(filename))
+            fail("R10 before capture path overflow");
+        save_native_frame(core,filename);
+    }
+    unsigned before_count = core->busRead32(core, probe+32);
+    if (before_count <= early_tick)
+        fail("R10 FireRed map callback did not advance before swap");
+
+    /* Real GBA SELECT button (bit 2), not a host-side game RAM edit. */
+    core->setKeys(core, 1u<<2);
+    for (unsigned i=0; i<3; ++i)
+        core->runFrame(core);
+    core->setKeys(core, 0u);
+    for (unsigned i=0; i<16; ++i) {
+        core->runFrame(core);
+        if (snprintf(filename,sizeof(filename),"%s/after-%02u.png",directory,i)
+            >= (int)sizeof(filename))
+            fail("R10 after capture path overflow");
+        save_native_frame(core,filename);
+    }
+    unsigned after_count=core->busRead32(core,probe+32);
+    if (after_count <= before_count ||
+        core->busRead32(core,probe+24) != 1u ||
+        core->busRead32(core,probe+28) != 1u ||
+        core->busRead32(core,probe+20) != 2u ||
+        device->successful_reads != 2u || device->failed_reads ||
+        resource->lookups != 2u || resource->reads != 2u)
+        fail("R10 genuine SELECT did not request and display second resource");
+    if (core->busRead32(core,probe+36) != 3u ||
+        core->busRead32(core,probe+40) != 0u)
+        fail("R10 exited real Pallet Town instead of swapping live");
+    puts("PASS_R10_FIRERED_REAL_PALLET_TOWN_LIVE_MMIO_SWITCH: same-game "
+         "group3 map0 2_external_fetches 1_Select 1_continuous_session "
+         "28_genuine_mGBA_LCDC_frames");
+}
+
 static void save_actual_game_frame(struct mCore *core, const char *path, int enabled)
 {
     if (!path)
@@ -266,10 +349,14 @@ static void save_actual_game_frame(struct mCore *core, const char *path, int ena
 
 int main(int argc, char **argv)
 {
-    if (argc < 11 || argc > 16)
-        fail("usage: ROM DATA SOURCE_ID SOURCE_SHA RESOURCE_ID OFFSET LENGTH RESOURCE_SHA FRAMES PROBE_ADDR [--screenshot path] [--scene-dir path] [--disabled]");
+    if (argc < 11 || argc > 22)
+        fail("usage: ROM DATA SOURCE_ID SOURCE_SHA RESOURCE_ID OFFSET LENGTH RESOURCE_SHA FRAMES PROBE_ADDR [--screenshot path] [--scene-dir path] [--r10-dir path] [--second-resource ID OFFSET LENGTH SHA] [--disabled]");
     const char *screenshot = NULL;
     const char *scene_dir = NULL;
+    const char *r10_dir = NULL;
+    const char *second_id = NULL;
+    uint64_t second_offset = 0, second_length = 0;
+    uint8_t second_sha[32] = {0};
     int enabled = 1;
     for (int i=11; i<argc; ++i) {
         if (!strcmp(argv[i], "--disabled"))
@@ -278,7 +365,15 @@ int main(int argc, char **argv)
             screenshot = argv[i];
         else if (!strcmp(argv[i], "--scene-dir") && ++i < argc && !scene_dir)
             scene_dir = argv[i];
-        else
+        else if (!strcmp(argv[i], "--r10-dir") && ++i < argc && !r10_dir)
+            r10_dir = argv[i];
+        else if (!strcmp(argv[i], "--second-resource") && i+4 < argc &&
+                 !second_id) {
+            second_id = argv[++i];
+            second_offset = parse_number(argv[++i]);
+            second_length = parse_number(argv[++i]);
+            parse_sha(argv[++i], second_sha);
+        } else
             fail("unknown or malformed option");
     }
     uint64_t offset = parse_number(argv[6]), length = parse_number(argv[7]);
@@ -289,6 +384,12 @@ int main(int argc, char **argv)
         offset > INT64_MAX || offset > UINT64_MAX-length ||
         frames == 0 || frames > 36000 || probe > UINT32_MAX)
         fail("resource range or frame budget invalid");
+    if (second_id &&
+        (strlen(second_id) > 128u || !*second_id ||
+         second_offset <= 32u*1024u*1024u ||
+         second_offset > INT64_MAX ||
+         !second_length || second_length > XGBA_R7_MAX_GUEST_BYTES))
+        fail("R10 second resource outside bounded sidecar contract");
     size_t rom_size = 0;
     uint8_t *rom = read_rom(argv[1], &rom_size);
     uint8_t actual_rom_digest[32], supplied_rom_digest[32];
@@ -301,6 +402,10 @@ int main(int argc, char **argv)
         .path = argv[2], .id = argv[5], .offset = offset, .length = length
     };
     parse_sha(argv[8], resource.digest);
+    resource.second_id = second_id;
+    resource.second_offset = second_offset;
+    resource.second_length = second_length;
+    memcpy(resource.second_digest, second_sha, 32);
     struct XgbaMgbaProviderV1 host = {
         .abi_version = 1u,
         .struct_size = sizeof(host),
@@ -320,8 +425,9 @@ int main(int argc, char **argv)
     struct mCore *core = GBACoreCreate();
     if (!core || !core->init(core))
         fail("mGBA core initialization failed");
-    mColor *video = (screenshot || scene_dir) ? calloc(240u*160u, sizeof(mColor)) : NULL;
-    if ((screenshot || scene_dir) && !video)
+    mColor *video = (screenshot || scene_dir || r10_dir)
+                   ? calloc(240u*160u, sizeof(mColor)) : NULL;
+    if ((screenshot || scene_dir || r10_dir) && !video)
         fail("cannot allocate GBA framebuffer");
     if (video)
         core->setVideoBuffer(core, video, 240);
@@ -338,7 +444,14 @@ int main(int argc, char **argv)
         if (probe && core->busRead32(core, (uint32_t)probe+4) == 3u)
             break;
     }
-    verify_game_copy(core, (uint32_t)probe, &device, &resource, enabled);
+    if (r10_dir) {
+        if (!enabled)
+            fail("R10 live swap requires extension enabled");
+        run_r10_real_firered_live_swap(core, (uint32_t)probe, r10_dir,
+                                      &device, &resource);
+    } else if (!scene_dir) {
+        verify_game_copy(core, (uint32_t)probe, &device, &resource, enabled);
+    }
     if (scene_dir)
         run_r9_movement_scene(core, (uint32_t)probe, scene_dir, &device, enabled);
     if (screenshot) {
