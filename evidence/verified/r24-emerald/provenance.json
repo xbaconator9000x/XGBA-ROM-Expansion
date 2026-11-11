@@ -1,0 +1,28 @@
+{
+  "milestone": "R24-EMERALD",
+  "source_run": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43051443181",
+  "source_artifact": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43051443181/artifacts/13870725219",
+  "source_head_sha": "f5256cad704f5648f518a1438f2a5a5841036ac8",
+  "implementation_pr": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/78",
+  "source_artifact_zip_sha256": "892723facf046f4d8721e98b3b66bdc355ad3f1b496d89088372929d522fc45e",
+  "files": {
+    "emerald-boundary-enabled.png": {
+      "original_sha256": "12f363102d8c691b6853455cdaa0112158992e9e2fc6fc2cd19915776fae9ed7",
+      "archived_sha256": "12f363102d8c691b6853455cdaa0112158992e9e2fc6fc2cd19915776fae9ed7",
+      "unaltered": true,
+      "size": 13091
+    },
+    "emerald-boundary-disabled.png": {
+      "original_sha256": "12f363102d8c691b6853455cdaa0112158992e9e2fc6fc2cd19915776fae9ed7",
+      "archived_sha256": "12f363102d8c691b6853455cdaa0112158992e9e2fc6fc2cd19915776fae9ed7",
+      "unaltered": true,
+      "size": 13091
+    },
+    "proof.json": {
+      "original_sha256": "8b08bbb233c1965da025449e9ddf24fc850221b5f2f5a6d779026512d75f4e6f",
+      "archived_sha256": "8b08bbb233c1965da025449e9ddf24fc850221b5f2f5a6d779026512d75f4e6f",
+      "unaltered": true,
+      "size": 855923
+    }
+  }
+}

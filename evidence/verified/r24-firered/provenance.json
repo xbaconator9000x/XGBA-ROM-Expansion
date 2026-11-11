@@ -1,0 +1,28 @@
+{
+  "milestone": "R24-FIRERED",
+  "source_run": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43051443138",
+  "source_artifact": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43051443138/artifacts/13870395510",
+  "source_head_sha": "f5256cad704f5648f518a1438f2a5a5841036ac8",
+  "implementation_pr": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/78",
+  "source_artifact_zip_sha256": "afcec7fa87b7e3083dda3df7f6ccedfa205dfa5fce99c23eab41ea4e98180c26",
+  "files": {
+    "firered-boundary-enabled.png": {
+      "original_sha256": "95da877db5e5c9905fae9787605efd206c43b129d0de7040694bcc12d9fba99f",
+      "archived_sha256": "95da877db5e5c9905fae9787605efd206c43b129d0de7040694bcc12d9fba99f",
+      "unaltered": true,
+      "size": 7202
+    },
+    "firered-boundary-disabled.png": {
+      "original_sha256": "94823d344859e42fa81c7c8498a7c289c97572e435224522b6fc3e2e09e936ef",
+      "archived_sha256": "94823d344859e42fa81c7c8498a7c289c97572e435224522b6fc3e2e09e936ef",
+      "unaltered": true,
+      "size": 7097
+    },
+    "proof.json": {
+      "original_sha256": "13cbb285c15a4ca0fe497abd0b8626997001fc3b1e1bec853c56da1aeb455f92",
+      "archived_sha256": "13cbb285c15a4ca0fe497abd0b8626997001fc3b1e1bec853c56da1aeb455f92",
+      "unaltered": true,
+      "size": 330590
+    }
+  }
+}

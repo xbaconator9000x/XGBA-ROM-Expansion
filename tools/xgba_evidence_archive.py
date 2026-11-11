@@ -20,6 +20,10 @@ REPO="xbaconator9000x/XGBA-ROM-Expansion"
 ROOT=Path(__file__).resolve().parents[1]
 BASE=ROOT/"evidence"/"verified"
 SOURCES={
+ "r24-firered":(43051443138,13870395510,"f5256cad704f5648f518a1438f2a5a5841036ac8",78,
+  "firered-boundary-enabled.png firered-boundary-disabled.png proof.json".split()),
+ "r24-emerald":(43051443181,13870725219,"f5256cad704f5648f518a1438f2a5a5841036ac8",78,
+  "emerald-boundary-enabled.png emerald-boundary-disabled.png proof.json".split()),
  "r23":(43028611280,13860021282,"d28f34b02b0cdc5d52342460a79dcc99a4ae0700",75,
   ("01-native-emerald-before-mixed-battle.png "
    "02-original-emerald-local-plus-two-external-opponents.png "
@@ -154,6 +158,37 @@ def gallery():
        "No executable ROMs, sidecars, save files or raw proprietary game assets are archived.",
        "Screenshots contain game imagery belonging to its rights holders and are shown",
        "only as limited, noncommercial engineering documentation.","",
+       "## R24 — original FireRed AND Emerald exact 16 KiB MMIO boundaries","",
+       "**Both original games independently pass 14/14 native tests.** Pinned",
+       "source-built FireRed and Emerald perform nine game-issued XGBA MMIO",
+       "transactions: two successful full 16 KiB external resource loads,",
+       "seven distinct malformed requests rejected without writing any guest",
+       "destination byte, redzone guard validation and a successful recovery.",
+       "Source bytes and SHA-256 were independently verified. Disabled runs",
+       "use identical ROMs and produce zero external-resource provider reads.",
+       "An additional unit suite exercises 256 malformed memory ranges.",
+       "",
+       row(["FireRed original-game resource enabled","FireRed identical-ROM XGBA disabled"]),
+       row(["---","---"]),
+       row([thumb("r24-firered","firered-boundary-enabled.png","Native original FireRed enabled"),
+            thumb("r24-firered","firered-boundary-disabled.png","Native original FireRed disabled")]),
+       "",
+       row(["Emerald original-game resource enabled","Emerald identical-ROM XGBA disabled"]),
+       row(["---","---"]),
+       row([thumb("r24-emerald","emerald-boundary-enabled.png","Native original Emerald enabled"),
+            thumb("r24-emerald","emerald-boundary-disabled.png","Native original Emerald disabled")]),
+       "",
+       "[Original FireRed native 14/14](https://github.com/"+REPO+"/actions/runs/43051443138) · "
+       "[FireRed SHA provenance](verified/r24-firered/provenance.json) · "
+       "[FireRed proof](verified/r24-firered/proof.json) · "
+       "[Original Emerald native 14/14](https://github.com/"+REPO+"/actions/runs/43051443181) · "
+       "[Emerald SHA provenance](verified/r24-emerald/provenance.json) · "
+       "[Emerald proof](verified/r24-emerald/proof.json) · "
+       "[R24 merged source PR #78](https://github.com/"+REPO+"/pull/78)",
+       "",
+       "**Limits:** No in-flight DMA buffer-lifetime proof, three-connected-map",
+       "eviction, stock emulator or original GBA hardware.",
+       "",
        "## R23 — four original Emerald battles and forced EWRAM phase eviction","",
        "R23 passed 12/12 exact-head native original Emerald tests. Overworld",
        "Littleroot and Route 101 map packs and two original compressed enemy",
@@ -446,7 +481,7 @@ def main():
     if os.getenv("GITHUB_REPOSITORY",REPO)!=REPO:raise ValueError("Unexpected repository")
     count=0
     for name,info in SOURCES.items():count+=archive_one(name,info,token)
-    if count<95:raise ValueError("Incomplete R9–R23 evidence collection")
+    if count<101:raise ValueError("Incomplete R9–R24 evidence collection")
     (ROOT/"evidence"/"README.md").write_text(gallery())
     readme=ROOT/"README.md"
     text=readme.read_text()
