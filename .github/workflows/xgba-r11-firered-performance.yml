@@ -1,0 +1,81 @@
+name: XGBA R11 real FireRed CPU-frame benchmark
+on:
+  push:
+    branches:
+      - 'phase2/r11-firered-live-performance-benchmark-20261111'
+    paths:
+      - 'integration/**'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r11_firered_performance.py'
+      - '.github/workflows/xgba-r11-firered-performance.yml'
+  pull_request:
+    paths:
+      - 'integration/**'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r11_firered_performance.py'
+      - '.github/workflows/xgba-r11-firered-performance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xgba-r11-performance-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  native-executed-real-firered-timing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install real ARM/Thumb, native mGBA and graphics tooling
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev build-essential cmake python3-pil
+          command -v arm-none-eabi-gcc
+          command -v cmake
+          python3 -c 'from PIL import Image; print("native verification dependencies found")'
+      - name: Checkout pinned real FireRed and native mGBA upstream sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Benchmark native FireRed Pallet Town, XGBA disabled vs enabled x3
+        shell: bash
+        env:
+          XGBA_R11_PERF_DIR: dist/xgba-r11-pallet-town-perf
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tests/test_xgba_r11_firered_performance.py \
+            tools/xgba_mgba_run.py
+          python3 -m unittest discover -s tests -p 'test_xgba_r11_firered_performance.py' -v \
+            2>&1 | tee "${RUNNER_TEMP}/xgba-r11-tests.log"
+          test -s dist/xgba-r11-pallet-town-perf/r11-summary.json
+          test -s dist/xgba-r11-pallet-town-perf/r11-frame-timings.csv
+          test -s dist/xgba-r11-pallet-town-perf/README.txt
+          test "$(find dist/xgba-r11-pallet-town-perf -name '*-enabled.json' | wc -l)" -eq 3
+          test "$(find dist/xgba-r11-pallet-town-perf -name '*-disabled.json' | wc -l)" -eq 3
+          if grep -Eq 'skipped=|expected failures=' "${RUNNER_TEMP}/xgba-r11-tests.log"; then
+            echo 'FAIL: native performance metrics cannot be skipped or simulated'
+            exit 1
+          fi
+          echo 'PASS_R11_REAL_PALLET_CPU_FRAME_PERFORMANCE_MEASURED'
+      - name: Upload reproducible benchmark JSON and CSV (no proprietary ROMs)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r11-real-firered-pallet-benchmark
+          path: dist/xgba-r11-pallet-town-perf/
+          if-no-files-found: error
+          retention-days: 90
