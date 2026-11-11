@@ -1,0 +1,64 @@
+{
+  "milestone": "R11",
+  "source_run": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42959825105",
+  "source_artifact": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42959825105/artifacts/13828577188",
+  "source_head_sha": "168d9137cb6b1576b53b6b0455d8c56a39bd943b",
+  "implementation_pr": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/52",
+  "source_artifact_zip_sha256": "2e11ad4d8c27d042501f438760e16b3e35bad7bf6e9c97ff456f9cd64191bab6",
+  "files": {
+    "r11-summary.json": {
+      "original_sha256": "981442f734d2b31335e7712e16ba5c97578563995745da21b6c9aae423dcc5bf",
+      "archived_sha256": "981442f734d2b31335e7712e16ba5c97578563995745da21b6c9aae423dcc5bf",
+      "unaltered": true,
+      "size": 11474
+    },
+    "r11-frame-timings.csv": {
+      "original_sha256": "3ae38b048e279bcbfd05b0edf4de761a646b68136aa3954079bb09b529edac50",
+      "archived_sha256": "3ae38b048e279bcbfd05b0edf4de761a646b68136aa3954079bb09b529edac50",
+      "unaltered": true,
+      "size": 840
+    },
+    "01-disabled.json": {
+      "original_sha256": "9e2d3f2813f92531cab8ae73c495a777fd1cb1e4e4b23f4ee9aa97c527267339",
+      "archived_sha256": "9e2d3f2813f92531cab8ae73c495a777fd1cb1e4e4b23f4ee9aa97c527267339",
+      "unaltered": true,
+      "size": 1039
+    },
+    "02-enabled.json": {
+      "original_sha256": "120359e7e867fc83e6b2525cc12effd9f68adba022246893746784b7b9c40702",
+      "archived_sha256": "120359e7e867fc83e6b2525cc12effd9f68adba022246893746784b7b9c40702",
+      "unaltered": true,
+      "size": 1038
+    },
+    "03-enabled.json": {
+      "original_sha256": "16e410773578d7e2a3887ec41bc0bf51b9ec6310199031385a00c2010ecb8cfe",
+      "archived_sha256": "16e410773578d7e2a3887ec41bc0bf51b9ec6310199031385a00c2010ecb8cfe",
+      "unaltered": true,
+      "size": 1038
+    },
+    "04-disabled.json": {
+      "original_sha256": "dc9ee87bfe5012aa999a6ed0aca3632b14114e41f43969e6c194a4f979b89369",
+      "archived_sha256": "dc9ee87bfe5012aa999a6ed0aca3632b14114e41f43969e6c194a4f979b89369",
+      "unaltered": true,
+      "size": 1039
+    },
+    "05-disabled.json": {
+      "original_sha256": "266c73c514899ddd43cfd8a6309ce3adf37de0d278334fb2815bd010d4c2df25",
+      "archived_sha256": "266c73c514899ddd43cfd8a6309ce3adf37de0d278334fb2815bd010d4c2df25",
+      "unaltered": true,
+      "size": 1039
+    },
+    "06-enabled.json": {
+      "original_sha256": "41f538e82234a0ca373c329b85c55a48fa73b780e9887dcc01f6f6939d3aace7",
+      "archived_sha256": "41f538e82234a0ca373c329b85c55a48fa73b780e9887dcc01f6f6939d3aace7",
+      "unaltered": true,
+      "size": 1038
+    },
+    "README.txt": {
+      "original_sha256": "389fd0366009ddad82043b1b8196fbadced391a81bc689f1530b4cb0911c595d",
+      "archived_sha256": "389fd0366009ddad82043b1b8196fbadced391a81bc689f1530b4cb0911c595d",
+      "unaltered": true,
+      "size": 661
+    }
+  }
+}

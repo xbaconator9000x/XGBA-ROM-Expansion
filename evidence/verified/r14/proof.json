@@ -1,0 +1,97 @@
+{
+  "arena_reserve_bytes": 5344,
+  "firered_pin": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+  "mgba_pin": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "milestone": "R14_PHYSICAL_NAV_EXTERNAL_SECONDARY_TILESETS",
+  "native_heap_after_reservation": 109344,
+  "native_log_note": "Full native emulator console log in linked CI run",
+  "native_log_sha256": "8a46ac2ef13a0c17d74c87a41df2210597ef4f53be4ca1abf160bb2de10058a8",
+  "original_heap_bytes": 114688,
+  "resources": [
+    {
+      "id": "map.route1.tiles",
+      "length": 5344,
+      "offset": 33562624,
+      "sha256": "d63719fca941bcb0da348e3e2aefd029648ea0b9c4e5837093968e334da8818d"
+    },
+    {
+      "id": "map.house.tiles",
+      "length": 2208,
+      "offset": 33587200,
+      "sha256": "23e9b6c6b2f7974eef19939a5b32d0dc6a2a491ff51a9c0d75018aff9b26de3f"
+    }
+  ],
+  "rom_sha256": "a9facc57fe06795aeef78a95cf3df0eb382e660be33b8cc7e6945d511a4e9be2",
+  "rom_size": 16777216,
+  "scope": "Real D-pad input; native door warp and seamless Route1 connection. Entire indoor/outdoor secondary tileset (LZ graphics, palettes, metatiles, attributes) externally staged. Primary tilesets, map events/scripts/metadata remain ROM-resident. Post-Oak starting fixture. No raw game assets exported.",
+  "shared_arena": {
+    "address": 33663776,
+    "bytes": 5344,
+    "expected_reads": 3,
+    "pack_bytes": [
+      5344,
+      2208
+    ],
+    "stock_heap_size": 114688
+  },
+  "stripped_compiled_ranges": [
+    {
+      "border_offset": 6134116,
+      "grid_offset": 6134124,
+      "map": "Route1"
+    },
+    {
+      "bytes": 1092,
+      "rom_offset": 5425380,
+      "sha256": "7845a81e2f77edfbac73241f63c7f52e1f86130787036245cca6b3a9c338110c",
+      "symbol": "gTilesetTiles_PalletTown"
+    },
+    {
+      "bytes": 512,
+      "rom_offset": 5426472,
+      "sha256": "84bddb18b472a44dada964908f497d69d80b662ebab65f2018b2511b66a8b2e8",
+      "symbol": "gTilesetPalettes_PalletTown"
+    },
+    {
+      "bytes": 1424,
+      "rom_offset": 5643824,
+      "sha256": "3b7ba7f75fd5d750413fc252519569a9f98fac586d87f62066bdf1e3edf35ca2",
+      "symbol": "gMetatiles_PalletTown"
+    },
+    {
+      "bytes": 356,
+      "rom_offset": 5645248,
+      "sha256": "8af5fbc8c32e5d0de4fe66735603d46ecd3506c42fcbe8b6cac744496a25203a",
+      "symbol": "gMetatileAttributes_PalletTown"
+    },
+    {
+      "border_offset": 6069268,
+      "grid_offset": 6069276,
+      "map": "PalletTown_PlayersHouse_1F"
+    },
+    {
+      "bytes": 916,
+      "rom_offset": 4488044,
+      "sha256": "8067f1f760811d07f88da6d01457ea82ec7bfe0fd804e86497f67dc7effeb957",
+      "symbol": "gTilesetTiles_GenericBuilding1"
+    },
+    {
+      "bytes": 512,
+      "rom_offset": 4487532,
+      "sha256": "619c9f2783e151cd138838d68b800b688e4d43e56109022a1b65321905997b9d",
+      "symbol": "gTilesetPalettes_GenericBuilding1"
+    },
+    {
+      "bytes": 384,
+      "rom_offset": 5718964,
+      "sha256": "f73d826f0ea271ecc32785c45b04697fb507b061259e9f0ce3dbd665fc928990",
+      "symbol": "gMetatiles_GenericBuilding1"
+    },
+    {
+      "bytes": 96,
+      "rom_offset": 5719348,
+      "sha256": "f3eeab19d3b86637c293fd535a3a3de6c22238c7efd126e79c74a0ada34ac637",
+      "symbol": "gMetatileAttributes_GenericBuilding1"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "milestone": "R10",
+  "source_run": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42955838562",
+  "source_artifact": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42955838562/artifacts/13827221467",
+  "source_head_sha": "2ede1b8470cbf71318e44873497a8b8d2ab51526",
+  "implementation_pr": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/51",
+  "source_artifact_zip_sha256": "31491c91351fd85e39752aa0021aebc9f48037db106b25e711ba424548b8d159",
+  "files": {
+    "pallet-town-live-select-swap.gif": {
+      "original_sha256": "74022e12035fe2bfbafd33ef8b4e36c6be37a76b4ea3e9c9e7161953645d7605",
+      "archived_sha256": "74022e12035fe2bfbafd33ef8b4e36c6be37a76b4ea3e9c9e7161953645d7605",
+      "unaltered": true,
+      "size": 62061
+    },
+    "pallet-town-crystal-before.png": {
+      "original_sha256": "b2ed135f93c6e8a30293b89a0cc7e53f5a7fcbc9b796091761563e0dfa5479ce",
+      "archived_sha256": "b2ed135f93c6e8a30293b89a0cc7e53f5a7fcbc9b796091761563e0dfa5479ce",
+      "unaltered": true,
+      "size": 7558
+    },
+    "pallet-town-magma-after.png": {
+      "original_sha256": "23b87a9440a07f40c2924ea6f1394d1fe8c33d1fc2749d5910a2ead0744f339e",
+      "archived_sha256": "23b87a9440a07f40c2924ea6f1394d1fe8c33d1fc2749d5910a2ead0744f339e",
+      "unaltered": true,
+      "size": 5610
+    },
+    "pallet-town-real-engine-comparison.png": {
+      "original_sha256": "8aaa158a7186f7f9483f7ab9412cfd1dbd353719f3e3e9c92791346f657f1e19",
+      "archived_sha256": "8aaa158a7186f7f9483f7ab9412cfd1dbd353719f3e3e9c92791346f657f1e19",
+      "unaltered": true,
+      "size": 19546
+    },
+    "proof.json": {
+      "original_sha256": "98237a2ffcce98c4c5360283d8d06409ef0f3e1ac06ca4c0b26e9a10f309d046",
+      "archived_sha256": "2945b335ba5b72c0396b19dd6f1852bf0584a8ee6889e0dcf8b0b6276054a1db",
+      "unaltered": false,
+      "size": 3450
+    },
+    "README.txt": {
+      "original_sha256": "d8ef6f2b9026aa9f5f6d935a994b0d2bad7e75c4fd411aa0c2fd315203061883",
+      "archived_sha256": "d8ef6f2b9026aa9f5f6d935a994b0d2bad7e75c4fd411aa0c2fd315203061883",
+      "unaltered": true,
+      "size": 734
+    }
+  }
+}

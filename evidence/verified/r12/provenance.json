@@ -1,0 +1,76 @@
+{
+  "milestone": "R12",
+  "source_run": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42964008063",
+  "source_artifact": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42964008063/artifacts/13830302814",
+  "source_head_sha": "864804eebcc90a90fb07a81ddc449440b2725827",
+  "implementation_pr": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/53",
+  "source_artifact_zip_sha256": "ca5b052b07e7846d29d335e67447cee95fc8479bffd2a0b6c0491e409f6d45fe",
+  "files": {
+    "enabled/01-initial.png": {
+      "original_sha256": "67a760e549367f1c807f90ed7508c3d7c9aeb13bd7294c91770c421c13d493e3",
+      "archived_sha256": "67a760e549367f1c807f90ed7508c3d7c9aeb13bd7294c91770c421c13d493e3",
+      "unaltered": true,
+      "size": 7290
+    },
+    "enabled/02-after-select.png": {
+      "original_sha256": "23b87a9440a07f40c2924ea6f1394d1fe8c33d1fc2749d5910a2ead0744f339e",
+      "archived_sha256": "23b87a9440a07f40c2924ea6f1394d1fe8c33d1fc2749d5910a2ead0744f339e",
+      "unaltered": true,
+      "size": 5610
+    },
+    "enabled/03-restored.png": {
+      "original_sha256": "b2ed135f93c6e8a30293b89a0cc7e53f5a7fcbc9b796091761563e0dfa5479ce",
+      "archived_sha256": "b2ed135f93c6e8a30293b89a0cc7e53f5a7fcbc9b796091761563e0dfa5479ce",
+      "unaltered": true,
+      "size": 7558
+    },
+    "enabled/04-replayed.png": {
+      "original_sha256": "23b87a9440a07f40c2924ea6f1394d1fe8c33d1fc2749d5910a2ead0744f339e",
+      "archived_sha256": "23b87a9440a07f40c2924ea6f1394d1fe8c33d1fc2749d5910a2ead0744f339e",
+      "unaltered": true,
+      "size": 5610
+    },
+    "disabled/01-initial.png": {
+      "original_sha256": "0c2d70461dd4c52fb7f640c9a8d8b1f7c720f76a83b0064bf38de2eecf3b0ce8",
+      "archived_sha256": "0c2d70461dd4c52fb7f640c9a8d8b1f7c720f76a83b0064bf38de2eecf3b0ce8",
+      "unaltered": true,
+      "size": 6977
+    },
+    "disabled/02-after-select.png": {
+      "original_sha256": "627528623b9e8888c4e773ac72135464187bab2c4f929b0579461ca26ff67376",
+      "archived_sha256": "627528623b9e8888c4e773ac72135464187bab2c4f929b0579461ca26ff67376",
+      "unaltered": true,
+      "size": 5335
+    },
+    "disabled/03-restored.png": {
+      "original_sha256": "98d9c57f34c20968ceab5092aee67958fbf3be81ffed94815c93562351d384ad",
+      "archived_sha256": "98d9c57f34c20968ceab5092aee67958fbf3be81ffed94815c93562351d384ad",
+      "unaltered": true,
+      "size": 7130
+    },
+    "disabled/04-replayed.png": {
+      "original_sha256": "627528623b9e8888c4e773ac72135464187bab2c4f929b0579461ca26ff67376",
+      "archived_sha256": "627528623b9e8888c4e773ac72135464187bab2c4f929b0579461ca26ff67376",
+      "unaltered": true,
+      "size": 5335
+    },
+    "enabled/proof.json": {
+      "original_sha256": "6c989f51c7fd453a07721231fa3503fba37ac3e10c9f728f66555a59b2253b2b",
+      "archived_sha256": "6c989f51c7fd453a07721231fa3503fba37ac3e10c9f728f66555a59b2253b2b",
+      "unaltered": true,
+      "size": 678
+    },
+    "disabled/proof.json": {
+      "original_sha256": "66843cd51bd088e727ad81b5b28b18f6443a79e5b35e043d31d2d84a11614a9f",
+      "archived_sha256": "66843cd51bd088e727ad81b5b28b18f6443a79e5b35e043d31d2d84a11614a9f",
+      "unaltered": true,
+      "size": 679
+    },
+    "summary.json": {
+      "original_sha256": "b4f423b662302a0eee755fdf51c1b5efb6ad282a92ae31ba491fcbdf79dc2d89",
+      "archived_sha256": "b4f423b662302a0eee755fdf51c1b5efb6ad282a92ae31ba491fcbdf79dc2d89",
+      "unaltered": true,
+      "size": 2012
+    }
+  }
+}

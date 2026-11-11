@@ -1,0 +1,21 @@
+{
+  "border_height": 2,
+  "border_sha256": "e0d28e51c7e052913771ad123ea4ae85d601f22af3040d698e9b1f6a6ecb5196",
+  "border_width": 2,
+  "external_offset": 33562624,
+  "firered_pin": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+  "height": 10,
+  "layout": "MAP_PALLET_TOWN_PLAYERS_HOUSE_1F",
+  "map_sha256": "f485f064e2464ebc81bb525960529e4222c2613c55addf8be5b8f8a06891d93c",
+  "mgba_pin": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "milestone": "R13_REAL_EXTERNAL_MAP",
+  "native_logs_note": "Full native emulator console log in linked CI run",
+  "native_logs_sha256": "b408e4d99fabf0b7f4ec3f7356e1c55a08de211e6114181ec1c5530c789e478a",
+  "original_full_map_absent_from_rom": true,
+  "payload_bytes": 268,
+  "payload_sha256": "03e250beed5ee9ce125d8e1f781e9ebbb163d1a31aaa6a6233dfb4716c469c83",
+  "rom_sha256": "8cb2fe0337c9432294d78ffa7ea66239e66c10e9d6b7bc8b25f9868391e023ec",
+  "rom_size": 16777216,
+  "scope": "Full metatile grid and border external; native layout metadata, tilesets, events and scripts remain in ROM. SELECT invokes standard DoWarp; not a physical door-input test. No ROM or source map bytes exported.",
+  "width": 13
+}
