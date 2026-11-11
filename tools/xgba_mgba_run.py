@@ -32,7 +32,8 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
            r19_connected_dir=None, r19_route_offset=0, r19_route_length=0,
            r19_battle_dir=None, r19_battle_probe=0,
            r19_battle0_offset=0, r19_battle0_length=0,
-           r19_battle1_offset=0, r19_battle1_length=0):
+           r19_battle1_offset=0, r19_battle1_length=0,
+           r20_reentry=False):
     rom = Path(rom).resolve(strict=True)
     if not rom.is_file() or rom.stat().st_size > MAX_ROM:
         raise ValueError("ROM must be a real GBA file of at most 32 MiB")
@@ -176,6 +177,10 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
         cmd.extend(["--r19-connected-dir",str(directory),
                     "--r19-route-offset",str(r19_route_offset),
                     "--r19-route-length",str(r19_route_length)])
+    if r20_reentry and r19_battle_dir is None:
+        raise ValueError("R20 re-entry requires native R19 mixed-battle setup")
+    if r20_reentry:
+        cmd.append("--r20-reentry")
     if r19_battle_dir is not None:
         dest=Path(r19_battle_dir).resolve()
         if not dest.is_dir() or not (0x02000000<=r19_battle_probe<0x02040000):
