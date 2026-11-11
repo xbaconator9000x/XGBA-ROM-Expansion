@@ -43,6 +43,10 @@ SOURCES={
   "01-littleroot-real-external-map.png 02-littleroot-after-real-dpad.png proof.json".split()),
  "r18":(42995836013,13844226288,"261442f961c9121752f944b0c9fedbfb2999bd7a",65,
   "01-original-emerald-before-flash.png 02-original-emerald-after-flash-write.png 03-cold-emerald-reacquired-littleroot.png proof.json".split()),
+ "r19-maps":(43006516293,13848312867,"4e34eb6ea02819e77b5ace2b6113ac2a8fc7360a",67,
+  "01-original-littleroot-two-maps-loaded.png 02-real-route101-external-crossing.png 03-return-littleroot-live-packs.png proof.json".split()),
+ "r19-battle":(43006516094,13847903781,"4e34eb6ea02819e77b5ace2b6113ac2a8fc7360a",67,
+  "01-native-emerald-before-mixed-battle.png 02-original-emerald-local-plus-two-external-opponents.png proof.json".split()),
 }
 def sha(b): return hashlib.sha256(b).hexdigest()
 def fetch(url,token,maxlen):
@@ -124,6 +128,38 @@ def gallery():
        "No executable ROMs, sidecars, save files or raw proprietary game assets are archived.",
        "Screenshots contain game imagery belonging to its rights holders and are shown",
        "only as limited, noncommercial engineering documentation.","",
+       "## R19 — original Emerald connected maps and mixed-storage Pokémon battles","",
+       "Both native integration suites passed 6/6 tests each at the same commit:",
+       "two complete original Emerald maps and secondary tilesets physically traversed,",
+       "and a genuine double wild battle using vanilla-ROM Treecko/Torchic plus",
+       "Poochyena/Zigzagoon front sprites from different external addresses.",
+       "The source-built game, not the host, executed the graphics decompression.",
+       "All five original Emerald LCD frames below preserve their CI bytes.",
+       "",
+       "### Real connected maps: Littleroot Town ↔ Route 101","",
+       row(["Littleroot native external","Route 101 native external","Returned to Littleroot"]),
+       row(["---"]*3),
+       row([thumb("r19-maps","01-original-littleroot-two-maps-loaded.png","Littleroot with both packs resident"),
+            thumb("r19-maps","02-real-route101-external-crossing.png","Route 101 via D-pad"),
+            thumb("r19-maps","03-return-littleroot-live-packs.png","Returned with live packs")]),
+       "",
+       "[R19 maps exact-head native CI 6/6](https://github.com/"+REPO+"/actions/runs/43006516293) · "
+       "[SHA provenance](verified/r19-maps/provenance.json) · [proof](verified/r19-maps/proof.json)",
+       "",
+       "### Real mixed-source Emerald double wild battle","",
+       row(["Original external-map overworld","Original Emerald battle with ROM + external sprites"]),
+       row(["---","---"]),
+       row([thumb("r19-battle","01-native-emerald-before-mixed-battle.png","Before battle"),
+            thumb("r19-battle","02-original-emerald-local-plus-two-external-opponents.png","ROM player and external opponents")]),
+       "",
+       "[R19 battle exact-head native CI 6/6](https://github.com/"+REPO+"/actions/runs/43006516094) · "
+       "[SHA provenance](verified/r19-battle/provenance.json) · [proof](verified/r19-battle/proof.json) · "
+       "[implementation draft PR #67](https://github.com/"+REPO+"/pull/67)",
+       "",
+       "**Limits:** battle graphics are original front/back sprites: external move",
+       "animations, arbitrary multi-file sidecars, trillion-byte logical storage",
+       "offsets, production UI and original hardware are not yet verified.",
+       "",
        "## R18 — original Emerald Flash save, cold continuation and reloaded external map","",
        "The pinned source-built original Emerald saved to genuine Flash, exited mGBA,",
        "and a fresh process continued from the real save in externally backed Littleroot.",
@@ -263,12 +299,12 @@ def main():
     if os.getenv("GITHUB_REPOSITORY",REPO)!=REPO:raise ValueError("Unexpected repository")
     count=0
     for name,info in SOURCES.items():count+=archive_one(name,info,token)
-    if count<62:raise ValueError("Incomplete R9–R18 evidence collection")
+    if count<69:raise ValueError("Incomplete R9–R19 evidence collection")
     (ROOT/"evidence"/"README.md").write_text(gallery())
     readme=ROOT/"README.md"
     text=readme.read_text()
     anchor="## Verified evidence — screenshots, animations and executable results\n"
-    addition="\n**[Browse the permanent evidence gallery: original FireRed screenshots, GIFs and SHA-256 manifests](evidence/README.md)**\n"
+    addition="\n**[Browse the permanent evidence gallery: original FireRed and Emerald LCD screenshots, GIFs and SHA-256 manifests](evidence/README.md)**\n"
     if text.count(anchor)!=1:raise ValueError("README anchor changed")
     if addition not in text:text=text.replace(anchor,anchor+addition,1)
     readme.write_text(text)

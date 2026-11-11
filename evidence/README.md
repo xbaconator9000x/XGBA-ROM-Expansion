@@ -7,6 +7,35 @@ No executable ROMs, sidecars, save files or raw proprietary game assets are arch
 Screenshots contain game imagery belonging to its rights holders and are shown
 only as limited, noncommercial engineering documentation.
 
+## R19 — original Emerald connected maps and mixed-storage Pokémon battles
+
+Both native integration suites passed 6/6 tests each at the same commit:
+two complete original Emerald maps and secondary tilesets physically traversed,
+and a genuine double wild battle using vanilla-ROM Treecko/Torchic plus
+Poochyena/Zigzagoon front sprites from different external addresses.
+The source-built game, not the host, executed the graphics decompression.
+All five original Emerald LCD frames below preserve their CI bytes.
+
+### Real connected maps: Littleroot Town ↔ Route 101
+
+| Littleroot native external | Route 101 native external | Returned to Littleroot |
+| --- | --- | --- |
+| [![Littleroot with both packs resident](verified/r19-maps/01-original-littleroot-two-maps-loaded.png)](verified/r19-maps/01-original-littleroot-two-maps-loaded.png) | [![Route 101 via D-pad](verified/r19-maps/02-real-route101-external-crossing.png)](verified/r19-maps/02-real-route101-external-crossing.png) | [![Returned with live packs](verified/r19-maps/03-return-littleroot-live-packs.png)](verified/r19-maps/03-return-littleroot-live-packs.png) |
+
+[R19 maps exact-head native CI 6/6](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43006516293) · [SHA provenance](verified/r19-maps/provenance.json) · [proof](verified/r19-maps/proof.json)
+
+### Real mixed-source Emerald double wild battle
+
+| Original external-map overworld | Original Emerald battle with ROM + external sprites |
+| --- | --- |
+| [![Before battle](verified/r19-battle/01-native-emerald-before-mixed-battle.png)](verified/r19-battle/01-native-emerald-before-mixed-battle.png) | [![ROM player and external opponents](verified/r19-battle/02-original-emerald-local-plus-two-external-opponents.png)](verified/r19-battle/02-original-emerald-local-plus-two-external-opponents.png) |
+
+[R19 battle exact-head native CI 6/6](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43006516094) · [SHA provenance](verified/r19-battle/provenance.json) · [proof](verified/r19-battle/proof.json) · [implementation draft PR #67](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/67)
+
+**Limits:** battle graphics are original front/back sprites: external move
+animations, arbitrary multi-file sidecars, trillion-byte logical storage
+offsets, production UI and original hardware are not yet verified.
+
 ## R18 — original Emerald Flash save, cold continuation and reloaded external map
 
 The pinned source-built original Emerald saved to genuine Flash, exited mGBA,
