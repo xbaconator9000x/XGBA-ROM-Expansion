@@ -33,7 +33,7 @@ channel), or an actively serviced channel, is a **live reader**. The proposed
 MMIO write is refused if its destination overlaps either the configured or
 current DMA source footprint. Width (16/32 bit), increment, decrement and
 fixed-source modes, and channel 3's 65,536-element maximum count are
-considered using 64-bit endpoint arithmetic.
+considered using 64-bit endpoint arithmetic. **Mirrored EWRAM** is explicitly handled: pinned native mGBA aliases the 256 KiB backing store throughout CPU region `0x02xxxxxx`, and DMA ranges that wrap the physical buffer are compared modulo 256 KiB.
 
 This is deliberately conservative: a wider source footprint may defer an
 otherwise legal write, but an overlapping live DMA source must never silently
@@ -57,6 +57,8 @@ No host-injected DMA or graphics is substituted for original game execution.
 | Non-overlapping DMA in IWRAM / disjoint EWRAM remains permitted | Implemented | Not yet run |
 | Original R24 7 refusals + 256 adversarial cases intact | Compiled and run in R25 portable harness | R24 regressions must be green |
 | Reuse after DMA disarmed / finished | Implemented | Not yet run |
+
+The 19-case portable matrix also checks mirrored-source increment, decrement, wrap, full physical coverage and truly disjoint mirrored sources.
 
 New workflow: [`.github/workflows/xgba-r25-dma-source-lifetime.yml`](../.github/workflows/xgba-r25-dma-source-lifetime.yml).
 It compiles **the real production device C source** with an isolated GBA memory
