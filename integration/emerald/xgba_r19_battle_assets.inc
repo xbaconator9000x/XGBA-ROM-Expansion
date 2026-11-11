@@ -10,6 +10,7 @@
 #include "pokemon.h"
 #include "data.h"
 #include "constants/species.h"
+#include "constants/moves.h"
 
 #define XGBA_R19_BATTLE_MAGIC 0x52313942u
 #define XGBA_R19_BATTLE_BUFFER_CAP 8192u
@@ -115,8 +116,18 @@ static void XgbaR19BattleTrigger(void)
      * controller callbacks and battle sprite decompression routines. */
     ZeroPlayerPartyMons();
     ZeroEnemyPartyMons();
+#ifdef XGBA_R20_LIFECYCLE_TEST
+    /* Genuine original battle mechanics, but Lv100 allies with a damaging
+     * first move avoid an endless scripted fight/Leer selection in CI.
+     * No host-injected battle results, CPU writes, or fake map callbacks. */
+    CreateMon(&gPlayerParty[0],SPECIES_TREECKO,100,0,FALSE,0,OT_ID_PLAYER_ID,0);
+    CreateMon(&gPlayerParty[1],SPECIES_TORCHIC,100,0,FALSE,0,OT_ID_PLAYER_ID,0);
+    SetMonMoveSlot(&gPlayerParty[0],MOVE_POUND,0);
+    SetMonMoveSlot(&gPlayerParty[1],MOVE_SCRATCH,0);
+#else
     CreateMon(&gPlayerParty[0],SPECIES_TREECKO,18,0,FALSE,0,OT_ID_PLAYER_ID,0);
     CreateMon(&gPlayerParty[1],SPECIES_TORCHIC,18,0,FALSE,0,OT_ID_PLAYER_ID,0);
+#endif
     CreateMon(&gEnemyParty[0],SPECIES_POOCHYENA,5,0,FALSE,0,OT_ID_RANDOM_NO_SHINY,0);
     CreateMon(&gEnemyParty[1],SPECIES_ZIGZAGOON,5,0,FALSE,0,OT_ID_RANDOM_NO_SHINY,0);
     gPlayerPartyCount=2;
