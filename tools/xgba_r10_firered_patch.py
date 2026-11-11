@@ -181,8 +181,10 @@ def replace_once(source: str, before: str, after: str, name: str) -> str:
 def make_firered_real_overworld_sources(firered:Path):
     main=firered/"src/main.c"
     overworld=firered/"src/overworld.c"
+    newgame=firered/"src/new_game.c"
     original_main=main.read_text(encoding="utf-8")
     original_world=overworld.read_text(encoding="utf-8")
+    original_newgame=newgame.read_text(encoding="utf-8")
     if "gXgbaR10Proof" in original_world or "XgbaR10" in original_main:
         raise RuntimeError("Refusing already-instrumented source")
     main_new=replace_once(
@@ -275,9 +277,41 @@ def make_firered_real_overworld_sources(firered:Path):
         "    if (fading)\n        SetFieldVBlankCallback();\n}",
         "native CB2_Overworld callback",
     )
+    # Trace exact normal FireRed NewGameInitData stage; do not replace it
+    # with a simplified imitation of save, map or event setup.
+    opening = "void NewGameInitData(void)\n{"
+    closing = "\nstatic void ResetMiniGamesResults(void)"
+    start=original_newgame.find(opening)
+    end=original_newgame.find(closing, start)
+    if start < 0 or end < 0:
+        raise RuntimeError("Pinned NewGameInitData boundaries changed")
+    body=original_newgame[start:end]
+    body=replace_once(
+        body, opening,
+        opening+"\n    XgbaR10MarkBoot(0x201);",
+        "NewGameInitData entry")
+    markers=[
+        ("    ClearSav1();",0x202),
+        ("    InitEventData();",0x203),
+        ("    ResetPokemonStorageSystem();",0x204),
+        ("    WarpToPlayersRoom();",0x205),
+        ("    RunScriptImmediately(EventScript_ResetAllMapFlags);",0x206),
+    ]
+    for line,stage in markers:
+        body=replace_once(
+            body,line,line+"\n    XgbaR10MarkBoot("+hex(stage)+");",
+            "NewGameInitData "+line)
+    newgame_new=original_newgame[:start]+body+original_newgame[end:]
+    newgame_new=replace_once(
+        newgame_new,
+        "#include \"global.h\"",
+        "#include \"global.h\"\nextern void XgbaR10MarkBoot(u32 stage);",
+        "new game helper declaration",
+    )
     main.write_text(main_new,encoding="utf-8")
     overworld.write_text(world_new,encoding="utf-8")
-    return {main:original_main,overworld:original_world}
+    newgame.write_text(newgame_new,encoding="utf-8")
+    return {main:original_main,overworld:original_world,newgame:original_newgame}
 
 
 def restore_firered_sources(originals):
