@@ -21,6 +21,7 @@
 
 #include <errno.h>
 #include <inttypes.h>
+#include <mgba-util/image.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -154,29 +155,78 @@ static void verify_game_copy(struct mCore *core, uint32_t probe,
         fail("disabled emulator unexpectedly accessed host resources");
     if (tile > 1022)
         fail("native OBJ sprite tile index out of range");
-    uint8_t expected[64] = {0x11, 0x22, 0x33, 0x44};
+    if (resource->length > XGBA_R7_MAX_GUEST_BYTES ||
+        (uint64_t)tile*32u + resource->length > 0x8000u)
+        fail("sprite graphics allocation exceeds OBJ VRAM");
+    uint8_t *expected = calloc((size_t)resource->length, 1);
+    if (!expected)
+        fail("sprite verification allocation failed");
+    expected[0] = 0x11;
+    if (resource->length > 3) {
+        expected[1] = 0x22;
+        expected[2] = 0x33;
+        expected[3] = 0x44;
+    }
     if (enabled) {
         FILE *fp = fopen(resource->path, "rb");
         if (!fp || fseeko(fp, (off_t)resource->offset, SEEK_SET) ||
-            fread(expected, 1, sizeof(expected), fp) != sizeof(expected))
+            fread(expected, 1, (size_t)resource->length, fp) != resource->length)
             fail("positive proof resource read");
         fclose(fp);
     }
     const uint32_t vram = 0x06010000u + tile*32u;
-    for (unsigned i=0; i<sizeof(expected); i++) {
+    for (uint64_t i=0; i<resource->length; i++) {
         if ((uint8_t)core->busRead8(core, vram+i) != expected[i])
             fail("real FireRed native OBJ VRAM differs from external source");
     }
+    free(expected);
     puts("PASS_R7_NATIVE_FIRERED_MMIO_LOAD_TO_OBJ_VRAM");
+}
+
+static void save_actual_game_frame(struct mCore *core, const char *path, int enabled)
+{
+    if (!path)
+        return;
+    const void *pixels = NULL;
+    size_t stride = 0;
+    core->getPixels(core, &pixels, &stride);
+    if (!pixels || stride < 240)
+        fail("mGBA did not produce a native framebuffer");
+    const mColor *frame = (const mColor*)pixels;
+    mColor backdrop = frame[16*stride+16];
+    unsigned visual_pixels = 0;
+    for (unsigned y=48; y<112; ++y)
+        for (unsigned x=88; x<152; ++x)
+            visual_pixels += frame[y*stride+x] != backdrop;
+    if (enabled && visual_pixels < 160)
+        fail("R8 external 64x64 sprite is not visible in real mGBA framebuffer");
+    if (!enabled && visual_pixels > 80)
+        fail("R8 fallback unexpectedly rendered external sprite");
+    struct VFile *image = VFileOpen(path, O_CREAT | O_TRUNC | O_WRONLY);
+    if (!image)
+        fail("cannot create real mGBA screenshot file");
+    int saved = mCoreTakeScreenshotVF(core, image);
+    image->close(image);
+    if (!saved)
+        fail("mGBA native framebuffer PNG encoding failed");
+    printf("PASS_R8_REAL_MGBA_RENDERED_PNG enabled=%d center_pixels=%u output=%s\\n",
+           enabled, visual_pixels, path);
 }
 
 int main(int argc, char **argv)
 {
-    if (argc != 11 && argc != 12)
-        fail("usage: ROM DATA SOURCE_ID SOURCE_SHA RESOURCE_ID OFFSET LENGTH RESOURCE_SHA FRAMES PROBE_ADDR [--disabled]");
-    if (argc == 12 && strcmp(argv[11], "--disabled"))
-        fail("unknown mode");
-    const int enabled = argc == 11;
+    if (argc < 11 || argc > 14)
+        fail("usage: ROM DATA SOURCE_ID SOURCE_SHA RESOURCE_ID OFFSET LENGTH RESOURCE_SHA FRAMES PROBE_ADDR [--screenshot path] [--disabled]");
+    const char *screenshot = NULL;
+    int enabled = 1;
+    for (int i=11; i<argc; ++i) {
+        if (!strcmp(argv[i], "--disabled"))
+            enabled = 0;
+        else if (!strcmp(argv[i], "--screenshot") && ++i < argc && !screenshot)
+            screenshot = argv[i];
+        else
+            fail("unknown or malformed option");
+    }
     uint64_t offset = parse_number(argv[6]), length = parse_number(argv[7]);
     uint64_t frames = parse_number(argv[9]);
     uint64_t probe = parse_number(argv[10]);
@@ -216,6 +266,11 @@ int main(int argc, char **argv)
     struct mCore *core = GBACoreCreate();
     if (!core || !core->init(core))
         fail("mGBA core initialization failed");
+    mColor *video = screenshot ? calloc(240u*160u, sizeof(mColor)) : NULL;
+    if (screenshot && !video)
+        fail("cannot allocate GBA framebuffer");
+    if (video)
+        core->setVideoBuffer(core, video, 240);
     mCoreInitConfig(core, NULL);
     struct VFile *vf = VFileFromConstMemory(rom, rom_size);
     if (!vf || !core->loadROM(core, vf))
@@ -230,12 +285,20 @@ int main(int argc, char **argv)
             break;
     }
     verify_game_copy(core, (uint32_t)probe, &device, &resource, enabled);
+    if (screenshot) {
+        /* Present multiple actual LCD frames after the GBA game sets OAM and
+         * registers. No host graphics manipulation is permitted. */
+        for (int frame=0; frame<4; ++frame)
+            core->runFrame(core);
+        save_actual_game_frame(core, screenshot, enabled);
+    }
     printf("PASS_R7_XGBA_MGBA_BUILD enabled=%u requests=%u failures=%u host_lookups=%u bytes=%u\n",
            (unsigned)enabled, device.successful_reads, device.failed_reads,
            resource.lookups, device.actual_length);
     gba->xgbaDevice = NULL;
     mCoreConfigDeinit(&core->config);
     core->deinit(core);
+    free(video);
     free(rom);
     return 0;
 }
