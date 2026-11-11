@@ -1,6 +1,6 @@
 # XGBA R25 — DMA source lifetime protection and cross-engine regression policy
 
-**Status:** R25 portable and source-built original FireRed/Emerald armed-VBlank-DMA3 tests verified at head `5d729f9af4ab338e44dbae1834643befba692186`; PR #80 awaits merge. Native mid-transfer DMA remains untested.  
+**Status:** R25 portable and source-built original FireRed/Emerald armed-VBlank-DMA3 tests verified at head `5d729f9af4ab338e44dbae1834643befba692186`; [PR #80](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/80) records the integration and merge state. Native mid-transfer DMA remains untested.  
 **Base:** R24 verified in `main` (FireRed 14/14, Emerald 14/14).  
 **Scope:** patched native mGBA production MMIO device, independent of FireRed/Emerald guest source.
 
