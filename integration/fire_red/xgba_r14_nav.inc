@@ -1,5 +1,6 @@
 /* R14: native connected maps + externally backed secondary tilesets. */
 #include "fieldmap.h"
+#include "malloc.h"
 #include "constants/flags.h"
 #include "constants/vars.h"
 #include "__XGBA_GUEST__"
@@ -12,7 +13,9 @@
 #define R14_ACTIVE_NONE 0
 #define R14_ACTIVE_OUTDOOR 1
 #define R14_ACTIVE_HOUSE 2
-EWRAM_DATA ALIGNED(4) u8 gXgbaR14Arena[R14_ARENA_SIZE] = {0};
+/* Reserve the high end of the original engine heap; InitHeap is capped
+ * below this range on every reset. No additional static EWRAM allocation. */
+#define gXgbaR14Arena (gHeap + HEAP_SIZE - R14_ARENA_RESERVE)
 EWRAM_DATA char gXgbaR14Id[24] = {0};
 static EWRAM_DATA struct MapLayout sR14PalletLayout = {0};
 static EWRAM_DATA struct MapLayout sR14RouteLayout = {0};

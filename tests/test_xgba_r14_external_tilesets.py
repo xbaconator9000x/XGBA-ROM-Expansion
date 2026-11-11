@@ -85,7 +85,8 @@ class NativeNavigation(unittest.TestCase):
             definitions.append((name,grid,border,parts,pack((grid,border),parts)))
         route,house=definitions
         config=root/"r14-config.h"
-        config.write_text("#define R14_ROUTE_SIZE %du\n#define R14_HOUSE_SIZE %du\n"%(len(route[4]),len(house[4])))
+        reserve=(max(len(route[4]),len(house[4]))+3)&~3
+        config.write_text("#define R14_ROUTE_SIZE %du\n#define R14_HOUSE_SIZE %du\n#define R14_ARENA_RESERVE %du\n"%(len(route[4]),len(house[4]),reserve))
         inj=patch.INJECT
         patch.INJECT=(ROOT/"integration/fire_red/xgba_r14_nav.inc").read_text().replace(
             "__R14_CONFIG__",config.as_posix())
@@ -104,6 +105,23 @@ class NativeNavigation(unittest.TestCase):
                 "    FlagSet(FLAG_HIDE_OAK_IN_PALLET_TOWN);\n"
                 "    VarSet(VAR_MAP_SCENE_PALLET_TOWN_OAK, 1);","R14 natural door approach and post-Oak fixture")
             world.write_text(s)
+            # Reserve the tail of the existing heap, including on map reset.
+            malloc=fr/"src/malloc.c"
+            originals[malloc]=malloc.read_text()
+            ms=originals[malloc]
+            ms=patch.replace_once(ms,'#include "global.h"','#include "global.h"\n#include "malloc.h"\n#include "'+config.as_posix()+'"',"R14 reserve header")
+            ms=patch.replace_once(ms,"void InitHeap(void *heapStart, u32 heapSize)\n{",
+                "void InitHeap(void *heapStart, u32 heapSize)\n{\n"
+                "    if (heapStart == gHeap && heapSize == HEAP_SIZE)\n"
+                "        heapSize -= R14_ARENA_RESERVE;","R14 bound original heap")
+            malloc.write_text(ms)
+            save=fr/"src/load_save.c"
+            originals[save]=save.read_text()
+            ss=originals[save]
+            ss=patch.replace_once(ss,"void MoveSaveBlocks_ResetHeap(void)\n{",
+                "void MoveSaveBlocks_ResetHeap(void)\n{\n"
+                "    _Static_assert(sizeof(struct SaveBlock2) + sizeof(struct SaveBlock1) + sizeof(struct PokemonStorage) <= HEAP_SIZE - "+str(reserve)+", \"R14 save scratch overlaps arena\");","R14 save scratch bounds")
+            save.write_text(ss)
             build()
         finally:
             patch.INJECT=inj
@@ -141,6 +159,10 @@ class NativeNavigation(unittest.TestCase):
         if len(binary)>32*1024*1024:raise AssertionError("ROM too large")
         rom.write_bytes(binary)
         cls.rom_sha=sha(binary)
+        if "gHeap" not in finalsyms:raise AssertionError("Missing actual FireRed heap symbol")
+        heap_addr,heap_bytes=finalsyms["gHeap"]
+        if heap_bytes!=0x1C000 or heap_addr<0x02000000 or heap_addr+heap_bytes>0x02040000:
+            raise AssertionError("Invalid physical FireRed heap allocation")
         cls.probe=finalsyms["gXgbaR14Proof"][0]
         if not 0x02000000<=cls.probe<0x02040000:raise AssertionError("Invalid guest proof")
         apply_core_patch.apply(r7.MGBA)
@@ -169,6 +191,8 @@ class NativeNavigation(unittest.TestCase):
         cls.report={"milestone":"R14_PHYSICAL_NAV_EXTERNAL_SECONDARY_TILESETS",
             "rom_sha256":cls.rom_sha,"rom_size":len(binary),"resources":resources,
             "stripped_compiled_ranges":removed,"native_log":cls.log,
+            "arena_reserve_bytes":reserve,"original_heap_bytes":heap_bytes,
+            "native_heap_after_reservation":heap_bytes-reserve,
             "shared_arena":{"address":arena_addr,"bytes":arena_size,
                 "pack_bytes":[len(route[4]),len(house[4])],
                 "stock_heap_size":0x1C000,"expected_reads":3},
