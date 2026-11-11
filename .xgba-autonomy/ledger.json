@@ -3,7 +3,8 @@
     "baseline": "75567257f1d2a0b7d4741e5be4d8ca0b379200aa",
     "created_at": "2026-11-11T00:56:00.026695+00:00",
     "id": "R6_FIRERED_MGBA_SMOKE",
-    "status": "DISPATCHED",
+    "reason": "Task finished with no new PR commit",
+    "status": "BLOCKED",
     "task_id": "2d165a18-1449-4654-9914-e36ddb983761"
   },
   "daily_dispatches": {
