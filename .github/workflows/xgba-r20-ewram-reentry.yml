@@ -82,11 +82,11 @@ jobs:
           assert not list(root.glob('*.gba')) and not list(root.glob('*.sav'))
           print('PASS_R20_NATIVE_EMERALD_PHASE_REENTRY_6_TESTS')
           PY
-      - name: Publish real Emerald battle LCD and non-ROM source verification metadata
-        if: success()
+      - name: Publish genuine native LCD evidence and failure diagnostics
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: xgba-r20-ewram-original-emerald-reentry
           path: r20-ewram-evidence/
           retention-days: 90
-          if-no-files-found: error
+          if-no-files-found: warn
