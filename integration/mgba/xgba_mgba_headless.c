@@ -415,6 +415,7 @@ int main(int argc, char **argv)
     const char *r19_dir = NULL;
     const char *r19_battle_dir = NULL;
     uint64_t r19_battle_probe = 0;
+    uint64_t r21_heap_probe = 0;
     int r20_reentry = 0;
     uint64_t r19_battle0_offset = 0, r19_battle0_length = 0;
     uint64_t r19_battle1_offset = 0, r19_battle1_length = 0;
@@ -461,6 +462,8 @@ int main(int argc, char **argv)
             r19_dir = argv[i];
         else if (!strcmp(argv[i], "--r19-battle-dir") && ++i < argc && !r19_battle_dir)
             r19_battle_dir = argv[i];
+        else if (!strcmp(argv[i], "--r21-heap-probe") && ++i < argc && !r21_heap_probe)
+            r21_heap_probe=parse_number(argv[i]);
         else if (!strcmp(argv[i], "--r20-reentry"))
             r20_reentry = 1;
         else if (!strcmp(argv[i], "--r19-battle-probe") && ++i < argc && !r19_battle_probe)
@@ -660,11 +663,16 @@ int main(int argc, char **argv)
            !r19_battle1_offset || !r19_battle1_length ||
            r19_battle0_length>8192u || r19_battle1_length>8192u)
             fail("R19 requires two bounded external sprites and an original Emerald ELF battle proof");
+        if (r21_heap_probe &&
+            (!r20_reentry || r21_heap_probe<0x02000000u ||
+             r21_heap_probe+17u*4u>0x02040000u))
+            fail("R21 needs bounded original malloc proof and R20 two-battle context");
         xgba_r19_mixed_battle_run(core,(uint32_t)probe,(uint32_t)r19_battle_probe,
                   r19_battle_dir,&device,&resource,
                   r19_route_offset,(uint32_t)r19_route_length,
                   r19_battle0_offset,(uint32_t)r19_battle0_length,
-                  r19_battle1_offset,(uint32_t)r19_battle1_length,enabled,r20_reentry);
+                  r19_battle1_offset,(uint32_t)r19_battle1_length,enabled,r20_reentry,
+                  (uint32_t)r21_heap_probe);
     } else if (!scene_dir) {
         verify_game_copy(core, (uint32_t)probe, &device, &resource, enabled);
     }
