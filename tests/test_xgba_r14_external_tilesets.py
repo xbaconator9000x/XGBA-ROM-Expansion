@@ -96,12 +96,32 @@ class NativeNavigation(unittest.TestCase):
             symbol_prefix="gXgbaR14")
         reserve=plan.reserve_bytes
         config.write_text("#define R14_ROUTE_SIZE %du\n#define R14_HOUSE_SIZE %du\n#define R14_ARENA_RESERVE %du\n"%(len(route[4]),len(house[4]),reserve))
+        r15_mode=bool(getattr(cls,"R15_SAVE_TEST",False))
+        if r15_mode:
+            config.write_text(config.read_text()+"\n#define XGBA_R15_SAVE_TEST 1\n")
         inj=patch.INJECT
         patch.INJECT=(ROOT/"integration/fire_red/xgba_r14_nav.inc").read_text().replace(
-            "__R14_CONFIG__",config.as_posix())
+            "__R14_CONFIG__",config.as_posix()).replace(
+            "__XGBA_R15_SAVE__",(ROOT/"integration/fire_red/xgba_r15_save.inc").as_posix())
         originals={}
         try:
             originals=patch.make_firered_real_overworld_sources(fr)
+            if r15_mode:
+                main=fr/"src/main.c"
+                patched=main.read_text()
+                patched=patch.replace_once(patched,
+                    "extern void XgbaR10MarkBoot(u32 stage);",
+                    "extern void XgbaR10MarkBoot(u32 stage);\n"
+                    "extern bool8 XgbaR15StartWithSavedGame(void);",
+                    "R15 native boot declaration")
+                patched=patch.replace_once(patched,
+                    "    SetMainCallback2(CB2_NewGame);",
+                    "    if (XgbaR15StartWithSavedGame())\n"
+                    "        SetMainCallback2(CB2_ContinueSavedGame);\n"
+                    "    else\n"
+                    "        SetMainCallback2(CB2_NewGame);",
+                    "R15 native FireRed fresh game vs real Flash continue")
+                main.write_text(patched)
             world=fr/"src/overworld.c"
             s=world.read_text()
             s=patch.replace_once(s,"        return gMapLayouts[mapLayoutId - 1];",
@@ -158,6 +178,10 @@ class NativeNavigation(unittest.TestCase):
         rom.write_bytes(binary)
         cls.rom_sha=sha(binary)
         cls.probe=finalsyms["gXgbaR14Proof"][0]
+        if r15_mode:
+            cls.save_probe=finalsyms["gXgbaR15SaveProof"][0]
+            if not 0x02000000<=cls.save_probe<0x02040000:
+                raise AssertionError("R15 actual FireRed save evidence EWRAM invalid")
         if not 0x02000000<=cls.probe<0x02040000:raise AssertionError("Invalid guest proof")
         apply_core_patch.apply(r7.MGBA)
         native=root/"build"
