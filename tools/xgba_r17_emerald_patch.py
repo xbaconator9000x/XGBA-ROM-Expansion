@@ -81,6 +81,17 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
           "source-level native overworld hook")
         if r19_connected:
             s=r16.one(s,
+              "        ResetMirageTowerAndSaveBlockPtrs();\n"
+              "        ResetScreenForMapLoad();\n"
+              "        ResumeMap(FALSE);",
+              "        ResetMirageTowerAndSaveBlockPtrs();\n"
+              "        /* R20: stale external map sources must be restored before\n"
+              "         * the original game's field graphics use their pointers. */\n"
+              "        XgbaR20PrepareReturnToField();\n"
+              "        ResetScreenForMapLoad();\n"
+              "        ResumeMap(FALSE);",
+              "original Emerald battle-to-field early external map recovery")
+            s=r16.one(s,
               "        return gMapLayouts[mapLayoutId - 1];",
               "        return XgbaR19CurrentLayout(gMapLayouts[mapLayoutId - 1]);",
               "native Emerald dual-map layout resolver")
