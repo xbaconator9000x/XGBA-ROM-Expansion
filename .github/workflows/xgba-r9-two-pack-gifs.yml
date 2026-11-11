@@ -1,0 +1,86 @@
+name: XGBA R9 real two-pack overworld GIF proof
+on:
+  push:
+    branches:
+      - 'phase2/r9-two-pack-playable-scene-20261111'
+    paths:
+      - 'integration/**'
+      - 'tools/xgba_mgba_run.py'
+      - 'tools/xgba_r9_packs.py'
+      - 'tests/test_xgba_r9_two_pack_overworld.py'
+      - '.github/workflows/xgba-r9-two-pack-gifs.yml'
+  pull_request:
+    paths:
+      - 'integration/**'
+      - 'tools/xgba_mgba_run.py'
+      - 'tools/xgba_r9_packs.py'
+      - 'tests/test_xgba_r9_two_pack_overworld.py'
+      - '.github/workflows/xgba-r9-two-pack-gifs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xgba-r9-proof-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  compiled-firered-two-packs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install real FireRed ARM, mGBA native and GIF dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev build-essential cmake python3-pil
+          command -v arm-none-eabi-gcc
+          python3 -c 'from PIL import Image; print("Pillow native GIF encoder available")'
+      - name: Pin upstream FireRed and mGBA source with exact revisions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Build real FireRed and modified mGBA, walk scene, capture GIFs
+        env:
+          XGBA_R9_EVIDENCE_DIR: dist/xgba-r9-two-pack-genuine-emulator-evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r9_packs.py tests/test_xgba_r9_two_pack_overworld.py
+          python3 -m unittest discover -s tests -p 'test_xgba_r9_two_pack_overworld.py' -v \
+            2>&1 | tee "${RUNNER_TEMP}/xgba-r9-run.log"
+          test -s dist/xgba-r9-two-pack-genuine-emulator-evidence/crystal-real-mgba.gif
+          test -s dist/xgba-r9-two-pack-genuine-emulator-evidence/magma-real-mgba.gif
+          test -s dist/xgba-r9-two-pack-genuine-emulator-evidence/fallback-real-mgba.gif
+          test -s dist/xgba-r9-two-pack-genuine-emulator-evidence/r9-three-runs-comparison.png
+          test -s dist/xgba-r9-two-pack-genuine-emulator-evidence/proof.json
+          for kind in crystal magma fallback; do
+            count="$(find dist/xgba-r9-two-pack-genuine-emulator-evidence/"$kind" \
+                         -name 'frame-*.png' -type f | wc -l)"
+            test "$count" -eq 16
+          done
+          if grep -Eq 'skipped=|expected failures=' "${RUNNER_TEMP}/xgba-r9-run.log"; then
+            echo 'BLOCKED: real R9 execution cannot be skipped'
+            exit 1
+          fi
+          echo 'PASS_R9_NATIVE_FIRERED_TWO_EXTERNAL_PACKS_GIF_EVIDENCE'
+      - name: Upload authentic emulator GIFs, screenshots and SHA proof
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r9-real-firered-two-pack-overworld-gifs
+          path: dist/xgba-r9-two-pack-genuine-emulator-evidence/
+          if-no-files-found: error
+          retention-days: 90
