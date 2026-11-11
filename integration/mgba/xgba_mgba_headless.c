@@ -31,6 +31,13 @@
 
 extern void XgbaProviderSha256(const uint8_t *, size_t, uint8_t[32]);
 
+#define XGBA_MAX_EXTRA_RESOURCES 16u
+struct ExtraResourceFile {
+    char id[129];
+    uint64_t offset;
+    uint64_t length;
+    uint8_t digest[32];
+};
 struct ResourceFile {
     const char *path;
     const char *id;
@@ -43,6 +50,8 @@ struct ResourceFile {
     uint64_t second_offset;
     uint64_t second_length;
     uint8_t second_digest[32];
+    struct ExtraResourceFile extra[XGBA_MAX_EXTRA_RESOURCES];
+    unsigned extra_count;
 };
 
 static void fail(const char *message)
@@ -92,6 +101,12 @@ static int file_lookup(void *context, const char *id,
         memcpy(hash, f->second_digest, 32);
         return 0;
     }
+    for(unsigned i=0;i<f->extra_count;++i)
+        if(!strcmp(id,f->extra[i].id)){
+            *length=f->extra[i].length;
+            memcpy(hash,f->extra[i].digest,32);
+            return 0;
+        }
     return 1;
 }
 
@@ -108,7 +123,12 @@ static int file_read(void *context, const char *id, uint8_t *dst,
         offset = f->second_offset;
         length = f->second_length;
     } else {
-        return 1;
+        unsigned i;
+        for(i=0;i<f->extra_count;++i)
+            if(!strcmp(id,f->extra[i].id))break;
+        if(i==f->extra_count)return 1;
+        offset=f->extra[i].offset;
+        length=f->extra[i].length;
     }
     if (length > cap || offset > INT64_MAX)
         return 1;
@@ -378,7 +398,7 @@ static void save_actual_game_frame(struct mCore *core, const char *path, int ena
 
 int main(int argc, char **argv)
 {
-    if (argc < 11 || argc > 40)
+    if (argc < 11 || argc > 128)
         fail("usage: ROM DATA SOURCE_ID SOURCE_SHA RESOURCE_ID OFFSET LENGTH RESOURCE_SHA FRAMES PROBE_ADDR [--screenshot path] [--scene-dir path] [--r10-dir path] [--r11-perf path] [--r12-dir path] [--r13-dir path] [--r14-dir path] [--second-resource ID OFFSET LENGTH SHA] [--disabled]");
     const char *screenshot = NULL;
     const char *scene_dir = NULL;
@@ -403,6 +423,8 @@ int main(int argc, char **argv)
     const char *second_id = NULL;
     uint64_t second_offset = 0, second_length = 0;
     uint8_t second_sha[32] = {0};
+    struct ExtraResourceFile extras[XGBA_MAX_EXTRA_RESOURCES] = {{0}};
+    unsigned extra_count=0;
     int enabled = 1;
     for (int i=11; i<argc; ++i) {
         if (!strcmp(argv[i], "--disabled"))
@@ -447,6 +469,18 @@ int main(int argc, char **argv)
             r15_phase = argv[i];
         else if (!strcmp(argv[i], "--r15-save-probe") && ++i < argc && !r15_save_probe)
             r15_save_probe = parse_number(argv[i]);
+        else if (!strcmp(argv[i], "--extra-resource") && i+4 < argc) {
+            if(extra_count>=XGBA_MAX_EXTRA_RESOURCES)
+                fail("extra XGBA resource index exceeded bounded capacity");
+            struct ExtraResourceFile *extra=&extras[extra_count++];
+            const char *id=argv[++i];
+            if(!*id || strlen(id)>128)
+                fail("extra resource identifier invalid");
+            strcpy(extra->id,id);
+            extra->offset=parse_number(argv[++i]);
+            extra->length=parse_number(argv[++i]);
+            parse_sha(argv[++i],extra->digest);
+        }
         else if (!strcmp(argv[i], "--second-resource") && i+4 < argc &&
                  !second_id) {
             second_id = argv[++i];
@@ -470,6 +504,17 @@ int main(int argc, char **argv)
          second_offset > INT64_MAX ||
          !second_length || second_length > XGBA_R7_MAX_GUEST_BYTES))
         fail("R10 second resource outside bounded sidecar contract");
+    for(unsigned i=0;i<extra_count;++i) {
+        const struct ExtraResourceFile *e=&extras[i];
+        if(e->offset<=32u*1024u*1024u || e->offset>INT64_MAX ||
+           !e->length || e->length>XGBA_R7_MAX_GUEST_BYTES ||
+           e->offset>UINT64_MAX-e->length ||
+           !strcmp(e->id,argv[5]) || (second_id && !strcmp(e->id,second_id)))
+            fail("extra resource outside bounded manifest or ID duplicates existing resources");
+        for(unsigned j=0;j<i;++j)
+            if(!strcmp(e->id,extras[j].id))
+                fail("duplicate external resource identifiers");
+    }
     size_t rom_size = 0;
     uint8_t *rom = read_rom(argv[1], &rom_size);
     uint8_t actual_rom_digest[32], supplied_rom_digest[32];
@@ -486,6 +531,8 @@ int main(int argc, char **argv)
     resource.second_offset = second_offset;
     resource.second_length = second_length;
     memcpy(resource.second_digest, second_sha, 32);
+    resource.extra_count=extra_count;
+    memcpy(resource.extra,extras,sizeof(extras));
     struct XgbaMgbaProviderV1 host = {
         .abi_version = 1u,
         .struct_size = sizeof(host),
