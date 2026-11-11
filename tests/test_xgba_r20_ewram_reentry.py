@@ -24,6 +24,7 @@ import xgba_mgba_run as launcher
 class NativeEmeraldArenaReentry(unittest.TestCase):
     R19_CONNECTED = True
     R19_BATTLE = True
+    R20_LIFECYCLE_TEST = True
 
     @classmethod
     def setUpClass(cls):
