@@ -46,6 +46,11 @@ struct XgbaR10Proof {
     volatile u32 object_id;        /* sprite engine CreateSprite result */
 };
 EWRAM_DATA volatile struct XgbaR10Proof gXgbaR10Proof = {0};
+void XgbaR10MarkBoot(u32 stage)
+{
+    gXgbaR10Proof.magic = XGBA_R10_MAGIC;
+    gXgbaR10Proof.state = stage;
+}
 static EWRAM_DATA bool8 sXgbaR10Ready = FALSE;
 static EWRAM_DATA u8 sXgbaR10SpriteId = MAX_SPRITES;
 static EWRAM_DATA u16 sXgbaR10SpriteTiles = 0xFFFF;
@@ -185,8 +190,14 @@ def make_firered_real_overworld_sources(firered:Path):
         "    gLinkTransferringData = FALSE;\n\n    for (;;)",
         "    gLinkTransferringData = FALSE;\n"
         "    /* R10: boot straight into FireRed's OWN map engine. */\n"
-        "    SetMainCallback2(CB2_NewGame);\n\n    for (;;)",
+        "    SetMainCallback2(CB2_NewGame);\n"
+        "    XgbaR10MarkBoot(0x01);\n\n    for (;;)",
         "AgbMain startup",
+    )
+    main_new=replace_once(
+        main_new, "void AgbMain()\n{",
+        "extern void XgbaR10MarkBoot(u32 stage);\n\nvoid AgbMain()\n{",
+        "AgbMain declaration",
     )
     marker='#define PLAYER_LINK_STATE_IDLE 0x80'
     world_new=replace_once(
@@ -200,16 +211,37 @@ def make_firered_real_overworld_sources(firered:Path):
     )
     world_new=replace_once(
         world_new,
+        "void CB2_NewGame(void)\n{\n    FieldClearVBlankHBlankCallbacks();",
+        "void CB2_NewGame(void)\n{\n"
+        "    XgbaR10MarkBoot(0x11);\n"
+        "    FieldClearVBlankHBlankCallbacks();",
+        "CB2_NewGame entry",
+    )
+    world_new=replace_once(
+        world_new,
         "    NewGameInitData();\n    ResetInitialPlayerAvatarState();",
         "    NewGameInitData();\n"
-        "    gXgbaR10Proof.magic = XGBA_R10_MAGIC;\n"
-        "    gXgbaR10Proof.state = 0x10;\n"
+        "    XgbaR10MarkBoot(0x12);\n"
         "    /* Native real Pallet Town map assets, events and overworld loop. */\n"
         "    SetWarpDestination(MAP_GROUP(MAP_PALLET_TOWN),\n"
         "                       MAP_NUM(MAP_PALLET_TOWN), -1, 10, 13);\n"
         "    WarpIntoMap();\n"
+        "    XgbaR10MarkBoot(0x13);\n"
         "    ResetInitialPlayerAvatarState();",
         "CB2_NewGame map warp",
+    )
+    world_new=replace_once(
+        world_new,
+        "    DoMapLoadLoop(&gMain.state);\n"
+        "    SetFieldVBlankCallback();\n"
+        "    SetMainCallback1(CB1_Overworld);\n"
+        "    SetMainCallback2(CB2_Overworld);",
+        "    DoMapLoadLoop(&gMain.state);\n"
+        "    XgbaR10MarkBoot(0x14);\n"
+        "    SetFieldVBlankCallback();\n"
+        "    SetMainCallback1(CB1_Overworld);\n"
+        "    SetMainCallback2(CB2_Overworld);",
+        "CB2_NewGame after map load",
     )
     world_new=replace_once(
         world_new,
