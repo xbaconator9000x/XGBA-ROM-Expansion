@@ -1,0 +1,74 @@
+name: XGBA R7 native mGBA core opt-in integration
+on:
+  push:
+    branches:
+      - 'phase2/r7-mgba-native-resource-extension-20261111'
+    paths:
+      - 'integration/**'
+      - 'tools/xgba_resource_mgba_adapter.c'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r7_mgba_core.py'
+      - '.github/workflows/xgba-r7-mgba-ci.yml'
+  pull_request:
+    paths:
+      - 'integration/**'
+      - 'tools/xgba_resource_mgba_adapter.c'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r7_mgba_core.py'
+      - '.github/workflows/xgba-r7-mgba-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xgba-r7-native-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  native-integrated-emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native and ARM/Thumb compilation tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev build-essential cmake
+          command -v arm-none-eabi-gcc
+          command -v arm-none-eabi-nm
+          command -v cmake
+      - name: Pin untouched upstream FireRed and mGBA sources
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Build actual extended mGBA and execute real FireRed guest requests
+        env:
+          XGBA_R7_ARTIFACT: dist/xgba-mgba-headless-linux-x86_64
+        run: |
+          set -euo pipefail
+          python3 -m py_compile integration/mgba/apply_core_patch.py tools/xgba_mgba_run.py tests/test_xgba_r7_mgba_core.py
+          python3 -m unittest discover -s tests -p 'test_xgba_r7_mgba_core.py' -v 2>&1 | tee "${RUNNER_TEMP}/xgba-r7-tests.log"
+          if grep -Eq 'skipped=|expected failures=' "${RUNNER_TEMP}/xgba-r7-tests.log"; then
+            echo 'FAIL: executed integration tests cannot be skipped'
+            exit 1
+          fi
+          test -s dist/xgba-mgba-headless-linux-x86_64
+          echo 'R7_NATIVE_EMULATOR_BUILD_AND_FIRE_RED_GUEST_INTEGRATION_PASS'
+      - name: Upload extended headless mGBA executable only (no ROM binaries)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r7-native-mgba-headless-linux-x86_64
+          path: dist/xgba-mgba-headless-linux-x86_64
+          if-no-files-found: error
+          retention-days: 30

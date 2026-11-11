@@ -1,0 +1,100 @@
+name: XGBA R23 original Emerald forced phase eviction and extended allocator pressure
+on:
+  push:
+    branches:
+      - 'phase2/r23-emerald-forced-phase-eviction-20261111'
+    paths:
+      - 'integration/emerald/xgba_r21_heap_pressure.inc'
+      - 'integration/emerald/xgba_r19_connected_maps.inc'
+      - 'integration/emerald/xgba_r19_battle_assets.inc'
+      - 'integration/emerald/xgba_r17_external_littleroot.inc'
+      - 'integration/mgba/xgba_r19_mixed_battle.h'
+      - 'tests/test_xgba_r20_ewram_reentry.py'
+      - 'tests/test_xgba_r21_emerald_heap_pressure.py'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'tools/xgba_r17_emerald_heap.py'
+      - 'tools/xgba_r17_emerald_patch.py'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r17_emerald_external_map.py'
+      - 'tests/test_xgba_r19_mixed_battle.py'
+      - 'tests/test_xgba_r23_emerald_forced_phase_eviction.py'
+      - '.github/workflows/xgba-r23-emerald-forced-phase-eviction.yml'
+  pull_request:
+    paths:
+      - 'integration/emerald/xgba_r19_battle_assets.inc'
+      - 'integration/mgba/xgba_r19_mixed_battle.h'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'tools/xgba_r17_emerald_patch.py'
+      - 'integration/emerald/xgba_r21_heap_pressure.inc'
+      - 'tools/xgba_r17_emerald_heap.py'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r23_emerald_forced_phase_eviction.py'
+      - '.github/workflows/xgba-r23-emerald-forced-phase-eviction.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r23-phase-eviction-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native-original-emerald-four-battle-map-sprite-eviction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install exact original Emerald and mGBA source build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev build-essential cmake python3-pil
+      - name: Checkout immutable Emerald game and original mGBA core pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokeemerald.git upstream/pokeemerald
+          git -C upstream/pokeemerald checkout --quiet --detach 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokeemerald rev-parse HEAD)" = 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Execute four original Emerald battles with three forced map/sprite arena phase evictions
+        shell: bash
+        env:
+          XGBA_R23_EVIDENCE_DIR: ${{ github.workspace }}/r23-phase-evidence
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tests/test_xgba_r23_emerald_forced_phase_eviction.py
+          python3 -m unittest discover -s tests -p 'test_xgba_r23_emerald_forced_phase_eviction.py' -v 2>&1 | tee xgba-r23-phase.log
+          grep -q 'Ran 12 tests' xgba-r23-phase.log
+          grep -q '^OK$' xgba-r23-phase.log
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          root=Path('r23-phase-evidence')
+          shots=sorted(root.glob('*.png'))
+          assert len(shots)==8,shots
+          for shot in shots:
+              with Image.open(shot) as im:assert im.size==(240,160)
+          report=json.loads((root/'proof.json').read_text())
+          assert report["actual_original_battles"] == 4
+          assert report["independent_original_compressed_front_fetches"] == 8
+          assert report["independently_verified_field_returns"] == 3
+          assert report["native_probe"]["guest_pressure_cycles"] == 4
+          assert report["native_probe"]["external_map_fetches"] == 8
+          assert report["guest_live_guard_bytes_verified"] == 24576
+          assert not list(root.glob('*.gba')) and not list(root.glob('*.sav'))
+          print('PASS_R23_NATIVE_EMERALD_FORCED_PHASE_EVICTION_12_TESTS')
+          PY
+      - name: Publish genuine native LCD evidence and failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r23-original-emerald-four-battle-eviction
+          path: r23-phase-evidence/
+          retention-days: 90
+          if-no-files-found: warn

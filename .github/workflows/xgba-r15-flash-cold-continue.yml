@@ -1,0 +1,90 @@
+name: XGBA R15 native FireRed Flash save, cold restart and external tilesets
+on:
+  push:
+    branches:
+      - 'phase2/r15-firered-native-save-memory-policy-20261111'
+    paths:
+      - 'tests/test_xgba_r15_firered_flash.py'
+      - 'integration/fire_red/xgba_r15_save.inc'
+      - 'integration/fire_red/xgba_r14_nav.inc'
+      - 'integration/mgba/xgba_r15_save.h'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r14_external_tilesets.py'
+      - '.github/workflows/xgba-r15-flash-cold-continue.yml'
+  pull_request:
+    paths:
+      - 'tests/test_xgba_r15_firered_flash.py'
+      - 'integration/fire_red/xgba_r15_save.inc'
+      - 'integration/mgba/xgba_r15_save.h'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r14_external_tilesets.py'
+      - '.github/workflows/xgba-r15-flash-cold-continue.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r15-native-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  real-flash-cold-restart:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install source-built GBA and native mGBA test tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev build-essential cmake python3-pil
+      - name: Fetch exact upstream FireRed and mGBA source pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Verify unmodified FireRed Flash save and native cold restart
+        shell: bash
+        env:
+          XGBA_R15_EVIDENCE_DIR: ${{ github.workspace }}/r15-evidence
+        run: |
+          set -euo pipefail
+          mkdir -p r15-evidence
+          python3 -m unittest discover -s tests -p 'test_xgba_r15_firered_flash.py' -v 2>&1 | tee xgba-r15-native.log
+          grep -q 'Ran 4 tests' xgba-r15-native.log
+          grep -q '^OK$' xgba-r15-native.log
+          grep -q 'PASS_R15' xgba-r15-native.log || test -s r15-evidence/proof.json
+          python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          import json
+          folder=Path("r15-evidence")
+          files=list(folder.glob("*.png"))
+          assert len(files)==4,files
+          for img in files:
+              with Image.open(img) as im:assert im.size==(240,160)
+          report=json.loads((folder/"proof.json").read_text())
+          assert report["native_mgba_subprocesses"]==3
+          assert report["saved_flash_size"]==131072
+          assert report["flash_unchanged_after_resume_and_corrupt_pack"]
+          assert not list(folder.glob("*.gba")) and not list(folder.glob("*.sav"))
+          print("PASS_R15_NATIVE_FLASH_COLD_RESTART_4_TESTS")
+          PY
+      - name: Publish only original LCD screenshots and non-ROM proof JSON
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r15-original-firered-flash-evidence
+          path: |
+            r15-evidence/*.png
+            r15-evidence/proof.json
+          retention-days: 90

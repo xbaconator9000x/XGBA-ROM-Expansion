@@ -1,0 +1,88 @@
+name: XGBA R19 genuine Emerald mixed-ROM and external Pokémon battle
+on:
+  push:
+    branches:
+      - 'phase2/r19-emerald-connected-maps-mixed-battle-20261111'
+    paths:
+      - 'integration/emerald/xgba_r19_battle_assets.inc'
+      - 'integration/emerald/xgba_r17_external_littleroot.inc'
+      - 'integration/mgba/xgba_r19_mixed_battle.h'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'tools/xgba_r17_emerald_patch.py'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r17_emerald_external_map.py'
+      - 'tests/test_xgba_r19_mixed_battle.py'
+      - '.github/workflows/xgba-r19-emerald-battle.yml'
+  pull_request:
+    paths:
+      - 'integration/emerald/xgba_r19_battle_assets.inc'
+      - 'integration/mgba/xgba_r19_mixed_battle.h'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'tools/xgba_r17_emerald_patch.py'
+      - 'tests/test_xgba_r19_mixed_battle.py'
+      - '.github/workflows/xgba-r19-emerald-battle.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r19-original-battle-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native-emerald-double-battle-mixed-assets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install exact original Emerald and mGBA source build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev build-essential cmake python3-pil
+      - name: Checkout immutable Emerald game and original mGBA core pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokeemerald.git upstream/pokeemerald
+          git -C upstream/pokeemerald checkout --quiet --detach 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokeemerald rev-parse HEAD)" = 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Execute real four-battler Emerald renderer with ROM plus two distant XGBA sprites
+        shell: bash
+        env:
+          XGBA_R19_BATTLE_EVIDENCE_DIR: ${{ github.workspace }}/r19-battle-evidence
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tests/test_xgba_r19_mixed_battle.py
+          python3 -m unittest discover -s tests -p 'test_xgba_r19_mixed_battle.py' -v 2>&1 | tee xgba-r19-battle.log
+          grep -q 'Ran 6 tests' xgba-r19-battle.log
+          grep -q '^OK$' xgba-r19-battle.log
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          root=Path('r19-battle-evidence')
+          shots=sorted(root.glob('*.png'))
+          assert len(shots)==2,shots
+          for shot in shots:
+              with Image.open(shot) as im:assert im.size==(240,160)
+          report=json.loads((root/'proof.json').read_text())
+          assert report["actual_original_sprite_decompression_verified"]
+          assert report["original_native_emerald_double_wild_battle"]
+          assert report["vanilla_player_sprite_rom_read_path"]
+          assert not list(root.glob('*.gba')) and not list(root.glob('*.sav'))
+          print('PASS_R19_ORIGINAL_EMERALD_LOCAL_PLUS_TWO_EXTERNAL_BATTLE_6_TESTS')
+          PY
+      - name: Publish real Emerald battle LCD and non-ROM source verification metadata
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r19-original-emerald-mixed-source-battle
+          path: r19-battle-evidence/
+          retention-days: 90
+          if-no-files-found: error
