@@ -415,6 +415,7 @@ int main(int argc, char **argv)
     const char *r19_dir = NULL;
     const char *r19_battle_dir = NULL;
     uint64_t r19_battle_probe = 0;
+    int r20_reentry = 0;
     uint64_t r19_battle0_offset = 0, r19_battle0_length = 0;
     uint64_t r19_battle1_offset = 0, r19_battle1_length = 0;
     uint64_t r19_route_offset = 0;
@@ -460,6 +461,8 @@ int main(int argc, char **argv)
             r19_dir = argv[i];
         else if (!strcmp(argv[i], "--r19-battle-dir") && ++i < argc && !r19_battle_dir)
             r19_battle_dir = argv[i];
+        else if (!strcmp(argv[i], "--r20-reentry"))
+            r20_reentry = 1;
         else if (!strcmp(argv[i], "--r19-battle-probe") && ++i < argc && !r19_battle_probe)
             r19_battle_probe = parse_number(argv[i]);
         else if (!strcmp(argv[i], "--r19-battle0-offset") && ++i < argc && !r19_battle0_offset)
@@ -661,7 +664,7 @@ int main(int argc, char **argv)
                   r19_battle_dir,&device,&resource,
                   r19_route_offset,(uint32_t)r19_route_length,
                   r19_battle0_offset,(uint32_t)r19_battle0_length,
-                  r19_battle1_offset,(uint32_t)r19_battle1_length,enabled);
+                  r19_battle1_offset,(uint32_t)r19_battle1_length,enabled,r20_reentry);
     } else if (!scene_dir) {
         verify_game_copy(core, (uint32_t)probe, &device, &resource, enabled);
     }
