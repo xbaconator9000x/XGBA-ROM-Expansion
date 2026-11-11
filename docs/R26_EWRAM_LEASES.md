@@ -1,7 +1,6 @@
 # R26 — generation-checked EWRAM borrow, pin and release
 
-**Stage:** implementation submitted, awaiting exact-head R26 CI; never label
-native evidence as passing until both portable and original Emerald jobs pass.
+**Status: MERGED and VERIFIED.** Original source-built Emerald **17/17 native** and portable source lease contract **PASS** at tested head `93aa67d9e75792cc5a2100379f2668e9bbc1f3e2`, merged main [`77e418f`](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/commit/77e418ffa10eb4052822817212935d5a769aecb1). [Native CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43072910123) · [Eight original LCD PNGs and JSON proof](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43072910123/artifacts/13880215862).
 
 ## Problem
 
@@ -53,3 +52,11 @@ DMA/decompressor callbacks and a real third-map eviction/reacquisition test.
 * Record the complete native CI SHA, run, 8 genuine LCD captures and proof
   before marking R26 verified. Never cite portable unit tests as native
   emulator proof.
+
+## Executed results
+
+- Original-game source pins: Emerald `731ad5bfd6e6f265508d0efcca0ba42f9dcf5881`, patched native mGBA `fd9dc5c2cbf234365068855851107e762fc6211b`.
+- [Exact-head 17/17 original Emerald native R26 + portable lease C tests](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43072910123); 8 map borrows, 8 opponent borrows, 16 attempted phase switches rejected, 8 arena generations and no remaining pins.
+- [Eight original 240×160 LCD PNGs and `proof.json`](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43072910123/artifacts/13880215862); GitHub Actions ZIP has finite retention, not yet permanently committed as media.
+- [R23 four-battle regression](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43072910132), [R24 Emerald boundary regression](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43072910184) and [consolidated source/Flash/battle gate](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43072911064) all pass at the same tested head; R17–R22 also pass.
+- Not tested by R26: persistent renderer DMA leases, third simultaneous map cache/eviction, savestate rollback during in-flight transfer, stock emulator or physical GBA.

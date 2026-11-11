@@ -7,6 +7,14 @@ No executable ROMs, sidecars, save files or raw proprietary game assets are arch
 Screenshots contain game imagery belonging to its rights holders and are shown
 only as limited, noncommercial engineering documentation.
 
+## R26 — verified original Emerald scoped arena leases (Actions evidence)
+
+[Exact-head native R26 CI #43072910123](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43072910123) passed **17/17 original Emerald tests** at `93aa67d9e75792cc5a2100379f2668e9bbc1f3e2`. The original game performed four battles, three field restorations and scoped borrows across eight external maps and eight external opponent sources. Sixteen attempted unsafe phase switches were refused; no borrowed pins remained.
+
+[Eight genuine original LCD screenshots and machine-readable proof (Actions ZIP)](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43072910123/artifacts/13880215862) · [Merged PR #81](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/81) · [Detailed R26 technical evidence](../docs/R26_EWRAM_LEASES.md).
+
+**Retention:** R26's ZIP is time-limited and its PNGs have **not** been committed into this permanent gallery; this link is the actual CI artifact, not a substituted mockup. R26 does not establish the lifetime of arbitrary renderer DMA or three-map eviction.
+
 ## R25 — verified original FireRed AND Emerald game-armed DMA3 lifetime protection
 
 Both original ARM games independently passed **15/15 native tests** (2026-11-12)
