@@ -133,7 +133,9 @@ class NativeFlashPersistence(unittest.TestCase):
             with Image.open(frame) as im:
                 self.assertEqual(im.size,(240,160))
                 im.verify()
-        self.assertNotEqual(frames[0].read_bytes(),frames[2].read_bytes())
+        # The saved house after cold boot should reproduce the *identical*
+        # native LCD capture, not merely a different or vaguely similar scene.
+        self.assertEqual(frames[0].read_bytes(),frames[2].read_bytes())
         self.assertNotEqual(frames[1].read_bytes(),frames[3].read_bytes())
 
 if __name__=="__main__":unittest.main()
