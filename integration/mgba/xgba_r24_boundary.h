@@ -30,8 +30,22 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
         r24_word(core,proof,2)!=0u ||
         r24_word(core,proof,8)!=16384u ||
         r24_word(core,proof,9)!=16383u ||
-        r24_word(core,proof,10)!=16385u)
-        fail("R24 source-built Emerald rejected a capacity/bounds scenario");
+        r24_word(core,proof,10)!=16385u) {
+        fprintf(stderr,"R24_NATIVE_GUEST_DIAG phase=header enabled=%d "
+                "boot=%08x proof=%08x\n",enabled,boot,proof);
+        for(unsigned k=0;k<17u;++k)
+            fprintf(stderr,"R24_NATIVE_GUEST_WORD field=%u value=%08x\n",
+                    k,r24_word(core,proof,k));
+        fprintf(stderr,"R24_NATIVE_DEVICE_DIAG success=%u fail=%u "
+                "range=%u id=%u too_large=%u bad_sha=%u missing=%u "
+                "other=%u provider_reads=%u lookups=%u\n",
+                device->successful_reads,device->failed_reads,
+                device->rejected_ranges,device->rejected_ids,
+                device->provider_too_large,device->provider_bad_sha256,
+                device->provider_not_found,device->provider_other_failures,
+                resource->reads,resource->lookups);
+        fail("R24 source-built game rejected a capacity/bounds scenario");
+    }
     if (boot && (r24_word(core,boot,0)!=XGBA_R7_MMIO_MAGIC ||
         r24_word(core,boot,1)!=3u ||
         r24_word(core,boot,5)!=0x454D5244u))
@@ -55,8 +69,22 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
             device->provider_too_large!=1u ||
             device->provider_bad_sha256!=1u ||
             device->provider_not_found!=1u ||
-            device->provider_other_failures!=0u)
-            fail("R24 16KiB positive and seven unchanged-buffer refusals violated");
+            device->provider_other_failures!=0u) {
+            fprintf(stderr,"R24_NATIVE_GUEST_DIAG phase=transactions "
+                    "boot=%08x proof=%08x\n",boot,proof);
+            for(unsigned k=0;k<17u;++k)
+                fprintf(stderr,"R24_NATIVE_GUEST_WORD field=%u value=%08x\n",
+                        k,r24_word(core,proof,k));
+            fprintf(stderr,"R24_NATIVE_DEVICE_DIAG success=%u fail=%u "
+                    "range=%u id=%u too_large=%u bad_sha=%u missing=%u "
+                    "other=%u provider_reads=%u lookups=%u\n",
+                    device->successful_reads,device->failed_reads,
+                    device->rejected_ranges,device->rejected_ids,
+                    device->provider_too_large,device->provider_bad_sha256,
+                    device->provider_not_found,device->provider_other_failures,
+                    resource->reads,resource->lookups);
+            fail("R24 source-built game transfer/guard contract mismatch");
+        }
         const char *maximum_id=boot?"emerald.r24.maximum":"firered.r24.maximum";
         uint64_t source_offset=0u,source_length=0u;
         const uint8_t *source_digest=NULL;
