@@ -71,7 +71,8 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
     uint32_t battle,const char *dir,const struct XgbaGbaDevice *device,
     const struct ResourceFile *resource,uint64_t routeOffset,uint32_t routeLen,
     uint64_t sprite0Offset,uint32_t sprite0Len,
-    uint64_t sprite1Offset,uint32_t sprite1Len,int enabled,int r20_reentry)
+    uint64_t sprite1Offset,uint32_t sprite1Len,int enabled,int r20_reentry,
+    uint32_t r21_heap_probe)
 {
     if(!map || !battle || !dir || !resource->second_id)
         fail("R19 battle requires actual Emerald map plus independent opponent sprite sources");
@@ -185,6 +186,35 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
          * R19 already waits 45 original game frames for this same reason. */
         r14_wait(core,90);
         r17_frame(core,dir,"04-r20-second-native-mixed-source-battle");
+        if (r21_heap_probe) {
+            /* Read-only native mGBA bus observations of the ORIGINAL
+             * pokeemerald src/malloc.c linked-list and pressure proof. */
+            uint32_t h[17];
+            for (unsigned k=0;k<17u;++k)
+                h[k]=core->busRead32(core,r21_heap_probe+4u*k);
+            fprintf(stderr,"R21_NATIVE_HEAP_DIAG magic=%08x cycles=%u "
+                    "error_flags=%u heap=%08x bytes=%u arena=%08x "
+                    "reserve=%u successes=%u rejected=%u frees=%u "
+                    "peak_live=%u min_largest_free=%u min_total_free=%u "
+                    "audits=%u patterns=%u blocks=%u max_blocks=%u\n",
+                    h[0],h[1],h[2],h[3],h[4],h[5],h[6],h[7],
+                    h[8],h[9],h[10],h[11],h[12],h[13],h[14],h[15],h[16]);
+            if (h[0]!=0x52323148u || h[1]!=2u || h[2]!=0u ||
+                h[3]<0x02000000u || h[4]<0x10000u ||
+                h[3]+h[4]!=h[5] || h[5]+h[6]>0x02040000u ||
+                h[6]!=16384u || h[7]!=8u || h[8]!=2u ||
+                h[9]!=8u || h[10]<12288u || h[11]==0u ||
+                h[12]==0u || h[13]<6u || h[14]!=12288u ||
+                h[15]<1u || h[16]<3u || device->failed_reads)
+                fail("R21 native Emerald original-allocator pressure, fragmentation, or arena bounds violated");
+            printf("PASS_R21_ORIGINAL_EMERALD_HEAP_PRESSURE cycles=%u "
+                   "allocations=%u frees=%u oversized_rejected=%u "
+                   "original_allocator_audits=%u verified_guard_bytes=%u "
+                   "peak_live_bytes=%u minimum_largest_free=%u "
+                   "arena_reserved_bytes=%u original_battles=2 native_ewram=1\n",
+                   h[1],h[7],h[9],h[8],h[13],h[14],h[10],
+                   h[11],h[6]);
+        }
         printf("PASS_R20_EWRAM_ARENA_REENTRY real_original_battles=2 "
                "external_sprite_fetches=%u ownership_epochs=%u "
                "map_loads=%u battle_cache_reloads=%u provider_reads=%u "
