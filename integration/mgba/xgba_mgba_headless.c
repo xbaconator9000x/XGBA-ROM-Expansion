@@ -416,6 +416,7 @@ int main(int argc, char **argv)
     const char *r19_battle_dir = NULL;
     uint64_t r19_battle_probe = 0;
     uint64_t r21_heap_probe = 0;
+    uint64_t r22_round_trips = 0;
     int r20_reentry = 0;
     uint64_t r19_battle0_offset = 0, r19_battle0_length = 0;
     uint64_t r19_battle1_offset = 0, r19_battle1_length = 0;
@@ -462,6 +463,8 @@ int main(int argc, char **argv)
             r19_dir = argv[i];
         else if (!strcmp(argv[i], "--r19-battle-dir") && ++i < argc && !r19_battle_dir)
             r19_battle_dir = argv[i];
+        else if (!strcmp(argv[i], "--r22-round-trips") && ++i < argc && !r22_round_trips)
+            r22_round_trips=parse_number(argv[i]);
         else if (!strcmp(argv[i], "--r21-heap-probe") && ++i < argc && !r21_heap_probe)
             r21_heap_probe=parse_number(argv[i]);
         else if (!strcmp(argv[i], "--r20-reentry"))
@@ -653,9 +656,12 @@ int main(int argc, char **argv)
     } else if (r19_dir) {
         if(!r19_route_offset || !r19_route_length || r19_route_length>16384u)
             fail("R19 requires a bounded and exact original Emerald Route101 source span");
+        if(r22_round_trips>64u)
+            fail("R22 native bounded map-churn request exceeds 64 round trips");
         xgba_r19_connected_run(core,(uint32_t)probe,r19_dir,
                                &device,&resource,r19_route_offset,
-                               (uint32_t)r19_route_length,enabled);
+                               (uint32_t)r19_route_length,enabled,
+                               (unsigned)r22_round_trips);
     } else if (r19_battle_dir) {
         if(!r19_route_offset || !r19_route_length || r19_route_length>16384u ||
            r19_battle_probe<0x02000000u || r19_battle_probe>=0x02040000u ||
