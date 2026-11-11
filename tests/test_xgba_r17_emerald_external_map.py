@@ -280,8 +280,10 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             cls.real_arena=real_arena
             if r19_battle:
                 cls.battle_probe=syms["gXgbaR19BattleProof"][0]
-                cls.battle_front_buffer=syms["gXgbaR19FrontCompressed"][0]
-                if not 0x02000000<=cls.battle_probe<0x02040000 or not (
+                # R19 battle uses the phase-shared, linker-audited heap tail;
+                # there is intentionally NO extra 16 KiB EWRAM global symbol.
+                cls.battle_front_buffer=real_arena
+                if budget.reserve_bytes!=16384 or not 0x02000000<=cls.battle_probe<0x02040000 or not (
                         0x02000000<=cls.battle_front_buffer<
                         cls.battle_front_buffer+16384<=0x02040000):
                     raise AssertionError("R19 mixed battle proof/sprite buffers exceed real 256KiB EWRAM")
