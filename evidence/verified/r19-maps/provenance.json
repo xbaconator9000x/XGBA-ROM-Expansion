@@ -1,0 +1,34 @@
+{
+  "milestone": "R19-MAPS",
+  "source_run": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43006516293",
+  "source_artifact": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43006516293/artifacts/13848312867",
+  "source_head_sha": "4e34eb6ea02819e77b5ace2b6113ac2a8fc7360a",
+  "implementation_pr": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/67",
+  "source_artifact_zip_sha256": "6a92d200b679f6e652083c30eb0e115c0e54906ab5a0db8e01fd94d61a0cd1cb",
+  "files": {
+    "01-original-littleroot-two-maps-loaded.png": {
+      "original_sha256": "2fb3229047a795001f340044906f2385a0696370f801e56a0d1e52535ded2b51",
+      "archived_sha256": "2fb3229047a795001f340044906f2385a0696370f801e56a0d1e52535ded2b51",
+      "unaltered": true,
+      "size": 7327
+    },
+    "02-real-route101-external-crossing.png": {
+      "original_sha256": "f0bc5f161ad67d7909e4a563cc27ec6a325c4566e4d58e86b7153092e0247dfa",
+      "archived_sha256": "f0bc5f161ad67d7909e4a563cc27ec6a325c4566e4d58e86b7153092e0247dfa",
+      "unaltered": true,
+      "size": 6315
+    },
+    "03-return-littleroot-live-packs.png": {
+      "original_sha256": "c5fe9109b815c6edd847dab516fede983a8a90fbc52235a6efe5eea12a83874e",
+      "archived_sha256": "c5fe9109b815c6edd847dab516fede983a8a90fbc52235a6efe5eea12a83874e",
+      "unaltered": true,
+      "size": 6374
+    },
+    "proof.json": {
+      "original_sha256": "d9ca341c2f3fe315efb99a1c6031543041bbbf058e0989fcbe1cd8ed9bca0117",
+      "archived_sha256": "d9ca341c2f3fe315efb99a1c6031543041bbbf058e0989fcbe1cd8ed9bca0117",
+      "unaltered": true,
+      "size": 148725
+    }
+  }
+}
