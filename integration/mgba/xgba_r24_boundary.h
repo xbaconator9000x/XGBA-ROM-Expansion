@@ -57,21 +57,36 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
             device->provider_not_found!=1u ||
             device->provider_other_failures!=0u)
             fail("R24 16KiB positive and seven unchanged-buffer refusals violated");
-        const struct ExtraResourceFile *largest=NULL;
-        for(unsigned k=0;k<resource->extra_count;++k)
-            if(!strcmp(resource->extra[k].id,"emerald.r24.maximum"))
-                largest=&resource->extra[k];
-        if(!largest || largest->length!=16384u ||
-            largest->offset<=32u*1024u*1024u)
-            fail("R24 exact maximum 16KiB source was not a real external resource");
+        const char *maximum_id=boot?"emerald.r24.maximum":"firered.r24.maximum";
+        uint64_t source_offset=0u,source_length=0u;
+        const uint8_t *source_digest=NULL;
+        if(!strcmp(resource->id,maximum_id)) {
+            source_offset=resource->offset;
+            source_length=resource->length;
+            source_digest=resource->digest;
+        } else if(resource->second_id &&
+                  !strcmp(resource->second_id,maximum_id)) {
+            source_offset=resource->second_offset;
+            source_length=resource->second_length;
+            source_digest=resource->second_digest;
+        } else for(unsigned k=0;k<resource->extra_count;++k)
+            if(!strcmp(resource->extra[k].id,maximum_id)) {
+                source_offset=resource->extra[k].offset;
+                source_length=resource->extra[k].length;
+                source_digest=resource->extra[k].digest;
+                break;
+            }
+        if(!source_digest || source_length!=16384u ||
+           source_offset<=32u*1024u*1024u)
+            fail("R24 source-built game exact 16KiB external resource absent");
         uint8_t expected[16384u],digest[32];
         FILE *fp=fopen(resource->path,"rb");
-        if(!fp || fseeko(fp,(off_t)largest->offset,SEEK_SET) ||
+        if(!fp || fseeko(fp,(off_t)source_offset,SEEK_SET) ||
             fread(expected,1,sizeof(expected),fp)!=sizeof(expected))
-            fail("R24 original maximum resource bytes missing");
+            fail("R24 original maximum resource source bytes missing");
         fclose(fp);
         XgbaProviderSha256(expected,sizeof(expected),digest);
-        if(memcmp(digest,largest->digest,32) ||
+        if(memcmp(digest,source_digest,32) ||
             r24_fnv1a(expected,sizeof(expected))!=r24_word(core,proof,11))
             fail("R24 original source bytes do not equal original guest CPU hash");
     } else if (!r24_word(core,proof,3) ||
