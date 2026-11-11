@@ -25,6 +25,23 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
     if (!directory || !proof || !resource ||
         proof<0x02000000u || proof>0x02040000u-68u)
         fail("R24 requires genuine ELF guest MMIO/EWRAM proof symbols");
+    /* The original Emerald boot path takes longer than FireRed to reach
+     * and finish its guest-side 16 KiB memory scan. Host sampling at an
+     * arbitrary frame count must not label in-progress ARM code a failure.
+     * Advance real native emulation only; no guest-memory writes or
+     * success-forcing. Still reject a stuck or errored original game. */
+    unsigned additional_frames=0;
+    while (additional_frames<8000u &&
+           r24_word(core,proof,1)!=3u &&
+           r24_word(core,proof,1)!=0xE24u) {
+        core->runFrame(core);
+        ++additional_frames;
+    }
+    fprintf(stderr,"R24_ORIGINAL_GUEST_COMPLETION frames=%u "
+            "state=%08x attempts=%u accepted=%u rejected=%u\n",
+            additional_frames,r24_word(core,proof,1),
+            r24_word(core,proof,4),r24_word(core,proof,5),
+            r24_word(core,proof,6));
     if (r24_word(core,proof,0)!=XGBA_R24_NATIVE_MAGIC ||
         r24_word(core,proof,1)!=3u ||
         r24_word(core,proof,2)!=0u ||
