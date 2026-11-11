@@ -5,17 +5,17 @@
 #ifndef XGBA_R18_EMERALD_FLASH_H
 #define XGBA_R18_EMERALD_FLASH_H
 #define R18_MAGIC 0x52313845u
-static u32 r18_read(struct mCore *c,u32 p,unsigned field)
+static uint32_t r18_read(struct mCore *c,uint32_t p,unsigned field)
 {
     return c->busRead32(c,p+4u*field);
 }
-static void r18_check(struct mCore *c,u32 save)
+static void r18_check(struct mCore *c,uint32_t save)
 {
     if(save<0x02000000u || save+44u>0x02040000u ||
        r18_read(c,save,0)!=R18_MAGIC)
         fail("R18 real source-built Emerald Flash save-state evidence missing");
 }
-static void xgba_r18_emerald_run(struct mCore *core,u32 map,u32 save,
+static void xgba_r18_emerald_run(struct mCore *core,uint32_t map,uint32_t save,
                                  const char *folder,const char *phase,
                                  const struct XgbaGbaDevice *device,
                                  const struct ResourceFile *resource,int enabled)
