@@ -1,0 +1,177 @@
+name: XGBA R25 original FireRed and Emerald armed DMA3 source lifetime proof
+on:
+  push:
+    branches:
+      - main
+      - 'phase3/r25-dma-source-lifetime-guard-20261112'
+    paths:
+      - 'integration/emerald/xgba_r24_boundary.inc'
+      - 'integration/mgba/xgba_r24_boundary.h'
+      - 'integration/mgba/xgba_mgba_device.c'
+      - 'integration/mgba/xgba_mgba_device.h'
+      - 'tools/xgba_r16_emerald_decomp_patch.py'
+      - 'tools/xgba_r24_firered_patch.py'
+      - 'tests/test_xgba_r25_emerald_dma.py'
+      - 'tests/test_xgba_r25_firered_dma.py'
+      - '.github/workflows/xgba-r25-native-dma.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'integration/emerald/xgba_r24_boundary.inc'
+      - 'integration/mgba/xgba_r24_boundary.h'
+      - 'integration/mgba/xgba_mgba_device.c'
+      - 'integration/mgba/xgba_mgba_device.h'
+      - 'tools/xgba_r16_emerald_decomp_patch.py'
+      - 'tools/xgba_r24_firered_patch.py'
+      - 'tests/test_xgba_r25_emerald_dma.py'
+      - 'tests/test_xgba_r25_firered_dma.py'
+      - '.github/workflows/xgba-r25-native-dma.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r25-original-dma-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native-original-emerald-r25-armed-dma:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned GNU ARM cross-compiler without Ubuntu package mirrors
+        uses: carlosperate/arm-none-eabi-gcc-action@49f4db4520f840e77ab1e99b24cfac2c540a21b1
+        with:
+          release: '13.2.Rel1'
+      - name: Check preinstalled native build requirements and install Pillow via Python packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          arm-none-eabi-gcc --version
+          arm-none-eabi-nm --version | head -n 1
+          cmake --version | head -n 1
+          cc --version | head -n 1
+          bash tools/xgba_ci_png_prereqs.sh
+          if ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
+            python3 -m pip install --user --break-system-packages --disable-pip-version-check 'Pillow==11.3.0'
+          fi
+          python3 -c 'from PIL import Image; print("Pillow:", Image.__version__)'
+      - name: Retrieve immutable original Emerald decomp and existing mGBA core
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokeemerald.git upstream/pokeemerald
+          git -C upstream/pokeemerald checkout --quiet --detach 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokeemerald rev-parse HEAD)" = 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Verify original Emerald ARM-armed VBlank DMA3 busy rejection, disarm recovery and original LCD
+        shell: bash
+        env:
+          XGBA_R25_EMERALD_DMA_EVIDENCE_DIR: ${{ github.workspace }}/r25-emerald-evidence
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r16_emerald_decomp_patch.py tests/test_xgba_r25_emerald_dma.py
+          python3 -m unittest discover -s tests -p 'test_xgba_r25_emerald_dma.py' -v 2>&1 | tee xgba-r24-tests.log
+          grep -q 'Ran 15 tests' xgba-r24-tests.log
+          grep -q '^OK$' xgba-r24-tests.log
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import json
+          folder=Path("r25-emerald-evidence")
+          pngs=sorted(folder.glob("*.png"))
+          assert len(pngs)==2,pngs
+          for p in pngs:
+              with Image.open(p) as im:assert im.size==(240,160)
+          report=json.loads((folder/"proof.json").read_text())
+          assert report["original_game_MMIO_attempts"]==10
+          assert report["original_game_failed_requests"]==8
+          assert report["minimum_guest_valid_capacity"]==16384
+          assert report["rejected_guest_capacity"]==16385
+          assert report["read_only_guest_MMIO_status_and_memory_verified"]
+          assert "PASS_R25_ORIGINAL_EMERALD_DMA_ARMED_SOURCE_REFUSAL enabled=1" in report["native_enabled_output"]
+          assert "PASS_R25_ORIGINAL_EMERALD_DMA_ARMED_SOURCE_REFUSAL enabled=0" in report["native_disabled_output"]
+          assert not list(folder.glob("*.gba")) and not list(folder.glob("*.sav"))
+          print("PASS_R24_REAL_EMERALD_RESOURCE_BOUNDARY_14_TESTS")
+          PY
+      - name: Publish only original native Emerald LCD captures and bounded proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r25-original-emerald-armed-vblank-dma
+          path: r25-emerald-evidence/
+          retention-days: 90
+          if-no-files-found: warn
+  native-original-firered-r25-armed-dma:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned GNU ARM cross-compiler without Ubuntu package mirrors
+        uses: carlosperate/arm-none-eabi-gcc-action@49f4db4520f840e77ab1e99b24cfac2c540a21b1
+        with:
+          release: '13.2.Rel1'
+      - name: Check preinstalled native build requirements and install Pillow via Python packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          arm-none-eabi-gcc --version
+          arm-none-eabi-nm --version | head -n 1
+          cmake --version | head -n 1
+          cc --version | head -n 1
+          bash tools/xgba_ci_png_prereqs.sh
+          if ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
+            python3 -m pip install --user --break-system-packages --disable-pip-version-check 'Pillow==11.3.0'
+          fi
+          python3 -c 'from PIL import Image; print("Pillow:", Image.__version__)'
+      - name: Retrieve immutable original FireRed decomp and existing mGBA core
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Verify original FireRed ARM-armed VBlank DMA3 busy rejection and disarm recovery
+        shell: bash
+        env:
+          XGBA_R25_FIRERED_DMA_EVIDENCE_DIR: ${{ github.workspace }}/r25-firered-evidence
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r24_firered_patch.py tests/test_xgba_r25_firered_dma.py
+          python3 -m unittest discover -s tests -p 'test_xgba_r25_firered_dma.py' -v 2>&1 | tee xgba-r24-firered-tests.log
+          grep -q 'Ran 15 tests' xgba-r24-firered-tests.log
+          grep -q '^OK$' xgba-r24-firered-tests.log
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import json
+          folder=Path("r25-firered-evidence")
+          pngs=sorted(folder.glob("*.png"))
+          assert len(pngs)==2,pngs
+          for p in pngs:
+              with Image.open(p) as im:assert im.size==(240,160)
+          report=json.loads((folder/"proof.json").read_text())
+          assert report["native_original_game_guest_mmio_attempts"]==10
+          assert report["native_original_game_rejected"]==7
+          assert report["max_single_resource_bytes"]==16384
+          assert report["one_byte_over_limit"]==16385
+          assert report["failed_transfer_leaves_guest_ewram_unchanged"]
+          assert "PASS_R25_ORIGINAL_FIRERED_DMA_ARMED_SOURCE_REFUSAL enabled=1" in report["native_enabled_log"]
+          assert "PASS_R25_ORIGINAL_FIRERED_DMA_ARMED_SOURCE_REFUSAL enabled=0" in report["native_disabled_log"]
+          assert not list(folder.glob("*.gba")) and not list(folder.glob("*.sav"))
+          print("PASS_R24_REAL_FIRERED_RESOURCE_BOUNDARY_14_TESTS")
+          PY
+      - name: Publish only original native Emerald LCD captures and bounded proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r25-original-firered-armed-vblank-dma
+          path: r25-firered-evidence/
+          retention-days: 90
+          if-no-files-found: warn
