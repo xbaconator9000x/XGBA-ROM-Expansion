@@ -15,6 +15,7 @@ on:
       - 'tests/test_xgba_r24_firered_boundary.py'
       - 'tests/test_xgba_r24_mmio_unit.c'
       - 'tests/test_xgba_r24_guest_syntax.c'
+      - 'tests/test_xgba_r24_native_header_syntax.c'
       - 'tests/r24_stub/**'
       - '.github/workflows/xgba-r24-firered-boundary.yml'
   pull_request:
@@ -31,6 +32,7 @@ on:
       - 'tests/test_xgba_r24_firered_boundary.py'
       - 'tests/test_xgba_r24_mmio_unit.c'
       - 'tests/test_xgba_r24_guest_syntax.c'
+      - 'tests/test_xgba_r24_native_header_syntax.c'
       - 'tests/r24_stub/**'
       - '.github/workflows/xgba-r24-firered-boundary.yml'
   workflow_dispatch:
@@ -59,6 +61,8 @@ jobs:
           cc -std=c11 -fsyntax-only -Wall -Wextra -Werror \
             -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast \
             tests/test_xgba_r24_guest_syntax.c
+          cc -std=c11 -fsyntax-only -Wall -Wextra -Werror -Wformat=2 \
+            tests/test_xgba_r24_native_header_syntax.c
           python3 -m py_compile tools/xgba_r24_firered_patch.py \
             tools/xgba_r16_emerald_decomp_patch.py \
             tests/test_xgba_r24_firered_boundary.py \
