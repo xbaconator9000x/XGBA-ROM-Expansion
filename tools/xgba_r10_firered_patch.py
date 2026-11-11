@@ -219,6 +219,23 @@ def make_firered_real_overworld_sources(firered:Path):
     )
     world_new=replace_once(
         world_new,
+        "    StopMapMusic();\n"
+        "    ResetSafariZoneFlag_();\n"
+        "    NewGameInitData();",
+        "    StopMapMusic();\n"
+        "    XgbaR10MarkBoot(0x112);\n"
+        "    ResetSafariZoneFlag_();\n"
+        "    XgbaR10MarkBoot(0x113);\n"
+        "    /* The title/new-game intro normally initialises the script "
+        "engine before CB2_NewGame. R10 skips the intro only; restore this "
+        "required setup instead of bypassing the real map loader. */\n"
+        "    ScriptContext_Init();\n"
+        "    XgbaR10MarkBoot(0x114);\n"
+        "    NewGameInitData();",
+        "CB2_NewGame pre-intro script context",
+    )
+    world_new=replace_once(
+        world_new,
         "    NewGameInitData();\n    ResetInitialPlayerAvatarState();",
         "    NewGameInitData();\n"
         "    XgbaR10MarkBoot(0x12);\n"
