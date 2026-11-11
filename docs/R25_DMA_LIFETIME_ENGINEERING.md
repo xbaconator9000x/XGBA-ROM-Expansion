@@ -1,6 +1,6 @@
 # XGBA R25 — DMA source lifetime protection and cross-engine regression policy
 
-**Status:** implementation under review; do not label verified until exact-head CI is green.  
+**Status:** R25 portable and source-built original FireRed/Emerald armed-VBlank-DMA3 tests verified at head `5d729f9af4ab338e44dbae1834643befba692186`; PR #80 awaits merge. Native mid-transfer DMA remains untested.  
 **Base:** R24 verified in `main` (FireRed 14/14, Emerald 14/14).  
 **Scope:** patched native mGBA production MMIO device, independent of FireRed/Emerald guest source.
 
@@ -45,28 +45,27 @@ commits, while provider reads and guest EWRAM bytes must stay unchanged.
 
 No host-injected DMA or graphics is substituted for original game execution.
 
-## Validation matrix (status does not auto-promote)
+## Executed exact-head verification (12 November 2026)
 
-| Scenario | New R25 portable test | Original-game native DMA proof |
+| Test classification | Game or implementation | Result and permanent run link |
 | --- | --- | --- |
-| DMA0 immediate increment source overlaps requested buffer | Implemented | Not yet run |
-| DMA1 repeat fixed-source HBlank, source pinned before first beat | Implemented | Not yet run |
-| DMA2 VBlank decrement source footprint | Implemented | Not yet run |
-| DMA3 repeated/current source differs from original source | Implemented | Not yet run |
-| Active DMA transfer despite control register being cleared | Implemented | Not yet run |
-| Non-overlapping DMA in IWRAM / disjoint EWRAM remains permitted | Implemented | Not yet run |
-| Original R24 7 refusals + 256 adversarial cases intact | Compiled and run in R25 portable harness | R24 regressions must be green |
-| Reuse after DMA disarmed / finished | Implemented | Not yet run |
+| Genuine ARM-source-built native game | FireRed, original DMA3 VBlank armed, conflicting external resource request, refused without guest EWRAM mutation, disarm and recovery | **15/15 passed**, [native run #43067407151](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43067407151), [two LCD PNGs + machine proof artifact #13876512589](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43067407151/artifacts/13876512589) |
+| Genuine ARM-source-built native game | Emerald, same DMA3 VBlank sequence, independent guest and pinned engine build | **15/15 passed**, [same native run](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43067407151), [two LCD PNGs + machine proof artifact #13876851400](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43067407151/artifacts/13876851400) |
+| Production mGBA MMIO C compiled with lightweight portable host shape | All four channels; fixed/increment/decrement, deferred/active, source physical mirroring, disjoint allowed and recovery | **19/19 cases passed**, plus original R24 unit contract and 256 adversarial malformed ranges; [run #43067407140](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43067407140) |
+| Real original engine regressions | FireRed and Emerald R24 complete 16 KiB source/rejection suites | **14/14 each**, [FireRed](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43067407094), [Emerald](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43067407279) |
+| Real original engine and source guard regressions | FireRed Flash cold restart, Emerald four-battle resource arena eviction and source/memory contract | **3/3 jobs passed**, [consolidated run #43067407092](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43067407092) |
 
-The 19-case portable matrix also checks mirrored-source increment, decrement, wrap, full physical coverage and truly disjoint mirrored sources.
+All these runs executed code at source head `5d729f9af4ab338e44dbae1834643befba692186` or an unchanged implementation predecessor. Documentation-only changes made after this head must not be mistaken for re-executed native testing at the new documentation commit.
 
-New workflow: [`.github/workflows/xgba-r25-dma-source-lifetime.yml`](../.github/workflows/xgba-r25-dma-source-lifetime.yml).
-It compiles **the real production device C source** with an isolated GBA memory
-shape. This is **not native mGBA DMA emulation** and cannot replace real original
-FireRed/Emerald runs. The existing R24 native workflows are required as
-regressions when the production MMIO device changes. Capture exact head,
-passing job IDs, test counts and actual artifacts before upgrading this
-status.
+### What original-game R25 actually proves
+
+- Original FireRed and Emerald code directly programs DMA3 VBlank control, 32-bit source and destination registers: the guest, not the host, arms the DMA.
+- A validated game-initiated MMIO transfer targeting the source EWRAM is refused as `XGBA_R7_DMA_BUSY=6` while the deferred DMA3 channel remains armed.
+- The entire requested 16,384-byte EWRAM destination and external guard bands survive the refusal; no provider read is performed for that conflicting request.
+- After disabling DMA3, the original game can complete the valid 16 KiB resource fetch, and both engines continue their original main loops.
+- The native tests use source-pinned mGBA and original compiled FireRed/Emerald, not stubbed CPU or host-injected DMA state.
+
+**Not covered by that proof:** an actively executing DMA transfer interrupted between its beats; concurrent CPU overwrites; active LZ77 decompression; HBlank/repeat/fixed/decrement in original ARM games (those mode checks are presently portable only); high-contention savestate rollback; third-map working-set eviction.
 
 ## Architectural follow-through (NOT implemented by the R25 DMA device guard)
 
@@ -76,11 +75,7 @@ status.
    prove that guest-side map-to-battle arena ownership is safe during DMA.
    Implement explicit guest-side `borrow/pin/release` semantics for those
    buffers, with forced eviction refused until all consumers retire.
-2. **Native in-flight DMA integration:** use pinned real source-built Emerald
-   and FireRed to arm DMA from an external-resource staging address and request
-   a conflicting resource before completion. Verify guest MMIO busy status,
-   exact source bytes, DMA destination bytes, completion/disarm recovery and
-   unchanged redzones. Keep game-initiated DMA separate from host test state.
+2. **Truly in-flight DMA integration:** the original-game **armed, deferred VBlank** case has now passed in both engines. Next schedule a source lease while a transfer is already making forward progress (multiple beats), and prove actual DMA destination bytes and source stability across a commit attempt. Do not equate an armed yet-unscheduled channel with a mid-beat transfer.
 3. **Repeated and aliasing DMA:** exercise HBlank/VBlank, audio FIFO and
    decrement/fixed-source configurations, including savestate rollback mid-DMA.
 4. **Three-map cache eviction:** exercise 3+ simultaneous map packs, valid
@@ -93,12 +88,9 @@ status.
 
 ## Acceptance rules
 
-- Never claim R25 native in-flight DMA is verified based on portable unit
-  testing or R24 game runs without DMA contention.
+- The R25 original-game **armed, deferred VBlank** DMA refusal is verified. Never claim this is equivalent to true **mid-beat** DMA protection, general guest-side allocation leases or CPU-write safety.
 - Never modify a previous milestone's historical proof to relabel later code
   as already tested; preserve original run SHA, source pin and test class.
 - Record any failure's proof-state, requested address/capacity, DMA source
   range/control/count and whether provider I/O or EWRAM mutation occurred.
-- Advance only after exact-head R25 portable CI **and** native FireRed/Emerald
-  R24 regression gates pass. Native DMA contention requires its own genuine
-  acceptance run before it may be reported as proven.
+- Original R25 native game-initiated contention and R24 regression gates all passed at the documented exact source head. Preserve run IDs/SHAs and require fresh native acceptance whenever these code paths change. Further lifecycle claims require separate tests.
