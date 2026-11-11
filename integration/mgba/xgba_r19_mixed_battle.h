@@ -71,7 +71,7 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
     uint32_t battle,const char *dir,const struct XgbaGbaDevice *device,
     const struct ResourceFile *resource,uint64_t routeOffset,uint32_t routeLen,
     uint64_t sprite0Offset,uint32_t sprite0Len,
-    uint64_t sprite1Offset,uint32_t sprite1Len,int enabled)
+    uint64_t sprite1Offset,uint32_t sprite1Len,int enabled,int r20_reentry)
 {
     if(!map || !battle || !dir || !resource->second_id)
         fail("R19 battle requires actual Emerald map plus independent opponent sprite sources");
@@ -118,6 +118,68 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
     r19_verify_enemy_battle_sprite(core,battle,resource,1,sprite1Offset,sprite1Len);
     r14_wait(core,45);
     r17_frame(core,dir,"02-original-emerald-local-plus-two-external-opponents");
+    if (r20_reentry) {
+        /* Continue genuine source-built Emerald from its first native battle.
+         * Only original GBA keypad input is used; no host RAM patch or warp. */
+        const uint32_t first_tick=r19_word(core,map,17);
+        unsigned exit_frames=0;
+        for (;exit_frames<12000u;++exit_frames) {
+            /* A selects Fight, an original first move and first target. */
+            core->setKeys(core,((exit_frames%26u)<3u)?1u:0u);
+            core->runFrame(core);
+            if (r19_word(core,map,17)>first_tick+20u &&
+                r19_word(core,map,24)==1u &&
+                r19_word(core,map,27)>=1u)
+                break;
+        }
+        if (exit_frames>=12000u) {
+            fprintf(stderr,"R20_RETURN_DIAG frames=%u ticks=%u owner=%u epoch=%u "
+                    "map_claims=%u battle_claims=%u\n",exit_frames,
+                    r19_word(core,map,17),r19_word(core,map,24),
+                    r19_word(core,map,25),r19_word(core,map,26),
+                    r19_word(core,map,27));
+            fail("R20 original Emerald did not return to a map-owned arena");
+        }
+        core->setKeys(core,0);
+        r14_wait(core,70);
+        r19_verify(core,map,resource,routeOffset,routeLen,9);
+        if (r19_word(core,map,5)<4u ||
+            r19_word(core,map,26)<2u ||
+            r19_word(core,map,25)<3u ||
+            r19_bword(core,battle,17)!=1u ||
+            r19_bword(core,battle,18)!=2u)
+            fail("R20 first battle-to-overworld ownership / map reacquisition failed");
+        r17_frame(core,dir,"03-r20-original-emerald-map-after-battle");
+        /* Second real R-button encounter: old READY sprite descriptors MUST
+         * be rejected after map packs rewrote their former EWRAM bytes. */
+        r14_press(core,1u<<8,3);
+        unsigned second_frames=0;
+        for (;second_frames<4500u;++second_frames) {
+            unsigned a=((second_frames>80u && (second_frames%100u)<3u)?1u:0u);
+            core->setKeys(core,a);
+            core->runFrame(core);
+            if (r19_bword(core,battle,1)==2u &&
+                r19_bword(core,battle,2)==4u &&
+                r19_bword(core,battle,17)==2u &&
+                r19_bword(core,battle,18)==4u &&
+                r19_bword(core,battle,10)==1u)
+                break;
+        }
+        if (second_frames>=4500u || r19_bword(core,battle,11)!=0u ||
+            device->failed_reads ||
+            r19_bword(core,battle,19)<4u)
+            fail("R20 second native Emerald battle reused stale sprite bytes or missed phase reacquisition");
+        r19_verify_enemy_battle_sprite(core,battle,resource,0,sprite0Offset,sprite0Len);
+        r19_verify_enemy_battle_sprite(core,battle,resource,1,sprite1Offset,sprite1Len);
+        r17_frame(core,dir,"04-r20-second-native-mixed-source-battle");
+        printf("PASS_R20_EWRAM_ARENA_REENTRY real_original_battles=2 "
+               "external_sprite_fetches=%u ownership_epochs=%u "
+               "map_loads=%u battle_cache_reloads=%u provider_reads=%u "
+               "return_frames=%u second_frames=%u native_ewram=1\n",
+               r19_bword(core,battle,2),r19_bword(core,battle,19),
+               r19_word(core,map,5),r19_bword(core,battle,18),
+               device->successful_reads,exit_frames,second_frames);
+    }
     printf("PASS_R19_REAL_EMERALD_MIXED_SOURCE_BATTLE player_original_rom=1 "
            "enemy_external_poochyena=1 enemy_external_zigzagoon=1 "
            "original_battle_double=1 decompress_verified=2 "
