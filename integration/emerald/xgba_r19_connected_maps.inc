@@ -116,6 +116,14 @@ static void XgbaR19MapTick(void)
         if(sXgbaR19LastMap!=0xFF)++gXgbaR19MapProof.transitions;
         sXgbaR19LastMap=(u8)idx;
     }
+#ifdef XGBA_R19_NATIVE_TEST_OPEN_ROUTE
+    /* The vanilla new-game story triggers Professor Birch's rescue when
+     * returning south through Route 101. R19 tests actual field camera/
+     * collision transitions, not the mandatory introductory cutscene.
+     * This conditional test-only flag is NOT part of production XGBA. */
+    if(idx && !gXgbaR19MapProof.route_visited)
+        VarSet(VAR_ROUTE101_STATE,3);
+#endif
     if(idx)gXgbaR19MapProof.route_visited=1;
     if(!idx && gXgbaR19MapProof.route_visited)
         gXgbaR19MapProof.littleroot_revisited=1;
