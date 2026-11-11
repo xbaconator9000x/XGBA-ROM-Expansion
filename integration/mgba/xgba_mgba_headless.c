@@ -135,8 +135,18 @@ static void verify_game_copy(struct mCore *core, uint32_t probe,
     uint32_t verified = core->busRead32(core, probe+8);
     uint32_t used = core->busRead32(core, probe+12);
     uint32_t tile = core->busRead32(core, probe+16);
-    if (!!verified != !!enabled || !!used != !!enabled)
+    if (!!verified != !!enabled || !!used != !!enabled) {
+        fprintf(stderr,
+                "XGBA_R7_DIAG: enabled=%d guest_verified=%u guest_used=%u "
+                "native_successes=%u native_failures=%u host_lookups=%u "
+                "host_reads=%u native_status=%u native_length=%u tile=%u "
+                "guest_magic=%08x\\n",
+                enabled, verified, used, device->successful_reads,
+                device->failed_reads, resource->lookups, resource->reads,
+                device->status, device->actual_length, tile,
+                core->busRead32(core, XGBA_R7_REG_MAGIC));
         fail("wrong original/external backing chosen by actual game");
+    }
     if (enabled && (device->successful_reads != 1 || device->failed_reads))
         fail("game did not issue exactly one validated guest request");
     if (!enabled && (device->successful_reads || device->failed_reads ||
