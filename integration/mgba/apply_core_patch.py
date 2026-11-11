@@ -37,8 +37,8 @@ def apply(checkout: Path):
         header,
         "struct GBA {\n\tstruct mCPUComponent d;",
         "struct XgbaGbaDevice;\n\nstruct GBA {\n"
-        "\tstruct XgbaGbaDevice* xgbaDevice; /* null when disabled */\n"
-        "\tstruct mCPUComponent d;",
+        "\tstruct mCPUComponent d;\n"
+        "\tstruct XgbaGbaDevice* xgbaDevice; /* null when disabled */",
     )
     source = checkout / "src/gba/gba.c"
     patch_once(
