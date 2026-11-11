@@ -29,6 +29,14 @@ bool8 XgbaR15StartWithSavedGame(void)
     gXgbaR15SaveProof.magic=XGBA_R15_SAVE_MAGIC;
     gXgbaR15SaveProof.boot_loaded=status;
     gXgbaR15SaveProof.boot_continue=(status==SAVE_STATUS_OK);
+    if(status!=SAVE_STATUS_OK) {
+        /* Original R10 new-game fixture deliberately skips Oak's title
+         * scene. Reestablish 0xFF GBA string terminators AFTER the real
+         * LoadGameSave call changes/moves the save-block pointers. Otherwise
+         * NewGameInitData's StringCopy hangs on zero-filled EWRAM. */
+        gSaveBlock1Ptr->rivalName[0]=0xFF;
+        gSaveBlock2Ptr->playerName[0]=0xFF;
+    }
     return status==SAVE_STATUS_OK;
 }
 
