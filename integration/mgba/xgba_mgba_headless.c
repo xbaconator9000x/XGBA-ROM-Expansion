@@ -264,8 +264,22 @@ static void run_r10_real_firered_live_swap(struct mCore *core, uint32_t probe,
     /* gXgbaR10Proof: magic,ready,verified,used,tile,requests,switches,pack,
      * live native overworld ticks, map group, map num, sprite ID. */
     if (core->busRead32(core, probe) != XGBA_R7_MMIO_MAGIC ||
-        core->busRead32(core, probe+4) != 3u)
+        core->busRead32(core, probe+4) != 3u) {
+        fprintf(stderr,
+                "R10_BOOT_DIAGNOSTIC magic=%08x stage=%08x validated=%u "
+                "sprite_used=%u tile=%u host_success=%u host_fail=%u "
+                "host_lookups=%u host_reads=%u map=%u:%u\\n",
+                core->busRead32(core,probe),
+                core->busRead32(core,probe+4),
+                core->busRead32(core,probe+8),
+                core->busRead32(core,probe+12),
+                core->busRead32(core,probe+16),
+                device->successful_reads,device->failed_reads,
+                resource->lookups,resource->reads,
+                core->busRead32(core,probe+36),
+                core->busRead32(core,probe+40));
         fail("R10 never entered FireRed's real native overworld");
+    }
     if (core->busRead32(core, probe+36) != 3u ||
         core->busRead32(core, probe+40) != 0u)
         fail("R10 game not running actual MAP_PALLET_TOWN group3 map0");
