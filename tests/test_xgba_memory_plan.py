@@ -1,7 +1,9 @@
 """Memory budget regressions, including simultaneous asset requirements."""
 import tempfile
 import unittest
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 from xgba_memory_plan import (Resource, Phase, MemoryBudgetError,
                               plan_residency, align_up, patch_firered_heap_tail,
                               FIRERED_HEAP_BYTES, EWRAM_START, EWRAM_END)
