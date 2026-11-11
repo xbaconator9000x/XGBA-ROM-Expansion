@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - 'phase3/r25-dma-source-lifetime-guard-20261112'
     paths:
       - 'integration/mgba/xgba_mgba_device.c'
       - 'integration/mgba/xgba_mgba_device.h'

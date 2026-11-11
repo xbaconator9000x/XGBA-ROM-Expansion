@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - 'phase3/r25-dma-source-lifetime-guard-20261112'
     paths:
       - 'integration/emerald/xgba_r24_boundary.inc'
       - 'integration/mgba/xgba_r24_boundary.h'

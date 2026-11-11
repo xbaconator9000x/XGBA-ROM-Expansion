@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - 'phase3/r24-native-resource-boundary-20261112'
     paths:
       - 'tools/xgba_r16_emerald_decomp_patch.py'
       - 'integration/emerald/xgba_r24_boundary.inc'
