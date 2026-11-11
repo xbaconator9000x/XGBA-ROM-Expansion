@@ -29,7 +29,10 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
            r15_dir=None, r15_savefile=None, r15_phase=None, r15_save_probe=0,
            r16_emerald_dir=None, r17_emerald_map_dir=None,
            r18_dir=None, r18_savefile=None, r18_phase=None, r18_save_probe=0,
-           r19_connected_dir=None, r19_route_offset=0, r19_route_length=0):
+           r19_connected_dir=None, r19_route_offset=0, r19_route_length=0,
+           r19_battle_dir=None, r19_battle_probe=0,
+           r19_battle0_offset=0, r19_battle0_length=0,
+           r19_battle1_offset=0, r19_battle1_length=0):
     rom = Path(rom).resolve(strict=True)
     if not rom.is_file() or rom.stat().st_size > MAX_ROM:
         raise ValueError("ROM must be a real GBA file of at most 32 MiB")
@@ -173,6 +176,25 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
         cmd.extend(["--r19-connected-dir",str(directory),
                     "--r19-route-offset",str(r19_route_offset),
                     "--r19-route-length",str(r19_route_length)])
+    if r19_battle_dir is not None:
+        dest=Path(r19_battle_dir).resolve()
+        if not dest.is_dir() or not (0x02000000<=r19_battle_probe<0x02040000):
+            raise ValueError("R19 actual Emerald battle proof or native LCD directory missing")
+        if r19_connected_dir is not None:
+            raise ValueError("R19 separate battle and overworld functional modes")
+        if not 0<r19_route_length<=16384 or r19_route_offset<=MAX_ROM:
+            raise ValueError("R19 battle requires previously validated two-map resource set")
+        if (r19_battle0_offset<=MAX_ROM or r19_battle1_offset<=MAX_ROM or
+            not 0<r19_battle0_length<=8192 or not 0<r19_battle1_length<=8192):
+            raise ValueError("R19 source-backed Emerald battle sprites must fit native EWRAM slots")
+        cmd.extend(["--r19-battle-dir",str(dest),
+                    "--r19-battle-probe",hex(r19_battle_probe),
+                    "--r19-route-offset",str(r19_route_offset),
+                    "--r19-route-length",str(r19_route_length),
+                    "--r19-battle0-offset",str(r19_battle0_offset),
+                    "--r19-battle0-length",str(r19_battle0_length),
+                    "--r19-battle1-offset",str(r19_battle1_offset),
+                    "--r19-battle1-length",str(r19_battle1_length)])
     if disabled:
         cmd.append("--disabled")
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
@@ -212,6 +234,12 @@ def main():
     p.add_argument("--r19-connected-dir", help="Run original Emerald multi-map D-pad and native tileset proof")
     p.add_argument("--r19-route-offset", type=lambda s:int(s,0), default=0)
     p.add_argument("--r19-route-length", type=lambda s:int(s,0), default=0)
+    p.add_argument("--r19-battle-dir", help="Actual Emerald double battle using local ROM and two external sprites")
+    p.add_argument("--r19-battle-probe", type=lambda s:int(s,0), default=0)
+    p.add_argument("--r19-battle0-offset", type=lambda s:int(s,0), default=0)
+    p.add_argument("--r19-battle0-length", type=lambda s:int(s,0), default=0)
+    p.add_argument("--r19-battle1-offset", type=lambda s:int(s,0), default=0)
+    p.add_argument("--r19-battle1-length", type=lambda s:int(s,0), default=0)
     p.add_argument("--r15-savefile", help="Private real mGBA Flash file, never publish")
     p.add_argument("--r15-phase", choices=["write","continue","corrupt"])
     p.add_argument("--r15-save-probe", type=lambda s:int(s,0), default=0)
@@ -232,7 +260,13 @@ def main():
                  r18_phase=args.r18_phase, r18_save_probe=args.r18_save_probe,
                  r19_connected_dir=args.r19_connected_dir,
                  r19_route_offset=args.r19_route_offset,
-                 r19_route_length=args.r19_route_length)
+                 r19_route_length=args.r19_route_length,
+                 r19_battle_dir=args.r19_battle_dir,
+                 r19_battle_probe=args.r19_battle_probe,
+                 r19_battle0_offset=args.r19_battle0_offset,
+                 r19_battle0_length=args.r19_battle0_length,
+                 r19_battle1_offset=args.r19_battle1_offset,
+                 r19_battle1_length=args.r19_battle1_length)
     print(out.stdout, end="")
     if out.stderr:
         print(out.stderr, file=sys.stderr, end="")
