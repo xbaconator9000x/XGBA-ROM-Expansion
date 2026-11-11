@@ -26,7 +26,8 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
            probe_address=0, disabled=False, screenshot=None, scene_dir=None,
            second_resource_id=None, r10_dir=None, r11_perf=None,
            r12_dir=None, r13_dir=None, r14_dir=None,
-           r15_dir=None, r15_savefile=None, r15_phase=None, r15_save_probe=0):
+           r15_dir=None, r15_savefile=None, r15_phase=None, r15_save_probe=0,
+           r16_emerald_dir=None):
     rom = Path(rom).resolve(strict=True)
     if not rom.is_file() or rom.stat().st_size > MAX_ROM:
         raise ValueError("ROM must be a real GBA file of at most 32 MiB")
@@ -114,6 +115,13 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
                     "--r15-savefile",str(save_path),
                     "--r15-phase",r15_phase,
                     "--r15-save-probe",hex(r15_save_probe)])
+    if r16_emerald_dir is not None:
+        directory=Path(r16_emerald_dir).resolve()
+        if not directory.is_dir():
+            raise ValueError("R16 native evidence destination must exist")
+        if r15_dir is not None:
+            raise ValueError("R15 and R16 execution modes are exclusive")
+        cmd.extend(["--r16-emerald-dir",str(directory)])
     if disabled:
         cmd.append("--disabled")
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
@@ -143,6 +151,7 @@ def main():
     p.add_argument("--r13-dir", help="Execute native external map transition proof")
     p.add_argument("--r14-dir", help="Execute physical door and connected external map/tileset proof")
     p.add_argument("--r15-dir", help="Store real FireRed Flash save/continue LCD evidence")
+    p.add_argument("--r16-emerald-dir", help="Execute source-built Emerald MMIO proof and capture native LCD")
     p.add_argument("--r15-savefile", help="Private real mGBA Flash file, never publish")
     p.add_argument("--r15-phase", choices=["write","continue","corrupt"])
     p.add_argument("--r15-save-probe", type=lambda s:int(s,0), default=0)
@@ -155,7 +164,8 @@ def main():
                  r10_dir=args.r10_dir, r11_perf=args.r11_perf,
                  r12_dir=args.r12_dir, r13_dir=args.r13_dir, r14_dir=args.r14_dir,
                  r15_dir=args.r15_dir, r15_savefile=args.r15_savefile,
-                 r15_phase=args.r15_phase, r15_save_probe=args.r15_save_probe)
+                 r15_phase=args.r15_phase, r15_save_probe=args.r15_save_probe,
+                 r16_emerald_dir=args.r16_emerald_dir)
     print(out.stdout, end="")
     if out.stderr:
         print(out.stderr, file=sys.stderr, end="")
