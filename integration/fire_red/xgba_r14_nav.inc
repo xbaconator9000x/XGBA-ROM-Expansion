@@ -112,6 +112,9 @@ static const struct MapHeader *R14Header(const struct MapHeader *base,u16 group,
     }
     return base;
 }
+#ifdef XGBA_R15_SAVE_TEST
+#include "__XGBA_R15_SAVE__"
+#endif
 static void XgbaR10TickRealOverworld(void)
 {
     u16 group=gSaveBlock1Ptr->location.mapGroup;
@@ -132,4 +135,7 @@ static void XgbaR10TickRealOverworld(void)
     gXgbaR14Proof.palette=(u32)ts->palettes;
     gXgbaR14Proof.metatiles=(u32)ts->metatiles;
     gXgbaR14Proof.attributes=(u32)ts->metatileAttributes;
+#ifdef XGBA_R15_SAVE_TEST
+    XgbaR15TickSave();
+#endif
 }
