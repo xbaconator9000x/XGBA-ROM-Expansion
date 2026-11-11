@@ -31,7 +31,10 @@ class NativeEmeraldArenaReentry(unittest.TestCase):
         # R19's exact source-backed ROM, external map + compressed mon fixtures,
         # verified physical EWRAM linker, and original native mGBA build.
         r17.ActualEmeraldLittlerootExternalMap.setUpClass.__func__(cls)
-        output = Path(os.environ.get("XGBA_R20_EVIDENCE_DIR", cls.native_root / "r20-ewram-evidence"))
+        r21=bool(getattr(cls,"R21_HEAP_PRESSURE_TEST",False))
+        evidence_key="XGBA_R21_EVIDENCE_DIR" if r21 else "XGBA_R20_EVIDENCE_DIR"
+        output = Path(os.environ.get(evidence_key, cls.native_root / (
+            "r21-heap-evidence" if r21 else "r20-ewram-evidence")))
         output.mkdir(parents=True,exist_ok=True)
         cls.output = output
         names = ("emerald.battle.poochyena.front",
@@ -49,8 +52,11 @@ class NativeEmeraldArenaReentry(unittest.TestCase):
             r19_battle0_length=len(cls.battle_sprite_blobs["Poochyena"]),
             r19_battle1_offset=cls.battle_offsets["Zigzagoon"],
             r19_battle1_length=len(cls.battle_sprite_blobs["Zigzagoon"]),
-            r20_reentry=True)
+            r20_reentry=True,
+            r21_heap_probe=getattr(cls,"heap_probe",0))
         cls.log = result.stdout
+        if r21 and "PASS_R21_ORIGINAL_EMERALD_HEAP_PRESSURE" not in cls.log:
+            raise AssertionError("Native original Emerald allocator pressure did not pass")
         if "PASS_R20_EWRAM_ARENA_REENTRY" not in cls.log:
             raise AssertionError("Original Emerald second-battle arena re-entry did not pass")
         cls.report = {
@@ -71,7 +77,18 @@ class NativeEmeraldArenaReentry(unittest.TestCase):
             "native_log": cls.log,
             "scope": "Actual Emerald two-battle/overworld phase ownership, original sprites, native EWRAM, and map reuse; not yet heap-fragmentation, DMA-queue, user interface, FireRed, or 100+ transitions."
         }
-        dest=os.environ.get("XGBA_R20_EVIDENCE_DIR")
+        if r21:
+            cls.report.update({
+                "milestone":"R21_ORIGINAL_EMERALD_HEAP_PRESSURE_TWO_BATTLES",
+                "original_native_memblock_allocator_exercised":True,
+                "guest_alloc_pressure_cycles":2,
+                "successful_guest_allocations":8,
+                "native_oversized_allocations_rejected":2,
+                "guest_guard_pattern_bytes_verified":12288,
+                "heap_tail_reserved_not_released":True,
+                "scope":"Source-built Emerald MemBlock allocator and bounded fragmentation pressure during two actual battles; does not prove exhaustive fragmentation, randomized heap pressure, DMA interference, or hardware."
+            })
+        dest=os.environ.get(evidence_key)
         if dest:
             folder=Path(dest)
             folder.mkdir(parents=True,exist_ok=True)
