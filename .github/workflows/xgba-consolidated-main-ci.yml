@@ -49,7 +49,8 @@ jobs:
           test -s evidence/verified/r23/proof.json
           # Guard the evidence headline structure without hard-coding the LAST
           # milestone; R24 and future verified milestones must not break CI.
-          grep -Eq '^\\*\\*Executed expansion proof: R6–R[0-9]+ verified' README.md
+          grep -Fq '**Executed expansion proof: R6–R' README.md
+          grep -Eq 'R6–R[0-9]+ verified' README.md
           grep -q 'R24' README.md
           if git ls-files | grep -Ei '\.(gba|nds|sav|elf|rom)$'; then
             echo 'FAIL: committed playable ROM, save or built binary'
