@@ -37,6 +37,8 @@ SOURCES={
   "01-pallet-external-tiles.png 02-house-door-external.png 03-pallet-door-return.png 04-route1-connected-external.png proof.json".split()),
  "r15":(42987149871,13840560384,"f5ea62128463272089d66cd2ca13e807b14095ad",60,
   "01-house-before-save.png 02-house-after-flash-save.png 03-cold-boot-house-reloaded.png 04-after-cold-boot-pallet.png proof.json".split()),
+ "r16":(42990445836,13840644779,"b182dfa07a45673630c13d234b64a0e3d8e26a66",62,
+  "emerald-boot-enabled.png emerald-boot-disabled.png proof.json".split()),
 }
 def sha(b): return hashlib.sha256(b).hexdigest()
 def fetch(url,token,maxlen):
@@ -118,6 +120,22 @@ def gallery():
        "No executable ROMs, sidecars, save files or raw proprietary game assets are archived.",
        "Screenshots contain game imagery belonging to its rights holders and are shown",
        "only as limited, noncommercial engineering documentation.","",
+       "## R16 — original Pokémon Emerald decomp executes XGBA's existing native provider","",
+       "Pinned source-built pokeemerald (MODERN=1) issues the same XGBA MMIO resource request",
+       "used by FireRed, receives and verifies bytes in the physical GBA's EWRAM, and",
+       "continues executing its original game loop. Disabled mode made zero external reads.",
+       "This proves engine/guest-ABI portability, **not** Emerald external map, save or battle support.",
+       "",
+       row(["Emerald with sidecar enabled","Same Emerald ROM, extension disabled"]),
+       row(["---"]*2),
+       row([thumb("r16","emerald-boot-enabled.png","Emerald guest XGBA enabled"),
+            thumb("r16","emerald-boot-disabled.png","Emerald guest XGBA disabled")]),
+       "",
+       "[R16 exact-head native CI 5/5](https://github.com/"+REPO+"/actions/runs/42990445836) · "
+       "[R16 source PR #62](https://github.com/"+REPO+"/pull/62) · "
+       "[Provenance](verified/r16/provenance.json) · "
+       "[Compact proof](verified/r16/proof.json)",
+       "",
        "## R15 — original FireRed Flash save, cold reboot, and reloaded external house","",
        "These are four genuine 240×160 screenshots from two separate native mGBA processes.",
        "FireRed wrote its own Flash sectors, mGBA exited, and a fresh process loaded the saved game.",
@@ -200,7 +218,7 @@ def main():
     if os.getenv("GITHUB_REPOSITORY",REPO)!=REPO:raise ValueError("Unexpected repository")
     count=0
     for name,info in SOURCES.items():count+=archive_one(name,info,token)
-    if count<50:raise ValueError("Incomplete R9–R15 evidence collection")
+    if count<55:raise ValueError("Incomplete R9–R16 evidence collection")
     (ROOT/"evidence"/"README.md").write_text(gallery())
     readme=ROOT/"README.md"
     text=readme.read_text()
