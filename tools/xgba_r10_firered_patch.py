@@ -192,6 +192,11 @@ def make_firered_real_overworld_sources(firered:Path):
         "    gLinkTransferringData = FALSE;\n\n    for (;;)",
         "    gLinkTransferringData = FALSE;\n"
         "    /* R10: boot straight into FireRed's OWN map engine. */\n"
+        "    /* Oak's skipped intro normally supplies 0xFF-terminated GBA "
+        "character strings; zero-filled EWRAM is NOT a terminator for "
+        "StringCopy. Without these, NewGameInitData loops forever. */\n"
+        "    gSaveBlock1Ptr->rivalName[0] = 0xFF;\n"
+        "    gSaveBlock2Ptr->playerName[0] = 0xFF;\n"
         "    SetMainCallback2(CB2_NewGame);\n"
         "    XgbaR10MarkBoot(0x01);\n\n    for (;;)",
         "AgbMain startup",
