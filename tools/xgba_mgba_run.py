@@ -33,7 +33,7 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
            r19_battle_dir=None, r19_battle_probe=0,
            r19_battle0_offset=0, r19_battle0_length=0,
            r19_battle1_offset=0, r19_battle1_length=0,
-           r20_reentry=False, r21_heap_probe=0):
+           r20_reentry=False, r21_heap_probe=0, r22_round_trips=0):
     rom = Path(rom).resolve(strict=True)
     if not rom.is_file() or rom.stat().st_size > MAX_ROM:
         raise ValueError("ROM must be a real GBA file of at most 32 MiB")
@@ -166,6 +166,12 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
         cmd.extend(["--r18-dir",str(directory),
                     "--r18-savefile",str(flash),"--r18-phase",r18_phase,
                     "--r18-save-probe",hex(r18_save_probe)])
+    if r22_round_trips:
+        if (type(r22_round_trips) is not int or
+            not 1<=r22_round_trips<=64 or r19_connected_dir is None or
+            r19_battle_dir is not None):
+            raise ValueError("R22 needs native original connected maps and 1..64 bounded round trips")
+        cmd.extend(["--r22-round-trips",str(r22_round_trips)])
     if r19_connected_dir is not None:
         directory=Path(r19_connected_dir).resolve()
         if not directory.is_dir() or second_resource_id is None:
