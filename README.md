@@ -1,6 +1,6 @@
 # XGBA — Expanding What a Game Boy Advance Game Can Access
 
-**Executed expansion proof: R6–R11 verified · 11 November 2026**
+**Executed expansion proof: R6–R12 verified · 11 November 2026**
 
 > **A real, source-built Pokémon FireRed executable running in the native mGBA core successfully used graphics bytes stored _beyond the conventional 32 MiB GBA ROM window_.** The game received a validated external resource through an opt-in host bridge, used FireRed's own sprite-sheet loading routine, and copied the expected bytes into emulated GBA object VRAM.
 >
@@ -8,7 +8,15 @@
 
 **The milestones are real; the expansion platform is not yet a finished product.** R6 used a temporary test host; R7–R11 progressed to game-initiated requests in a patched native mGBA core, actual LCD screenshots, resource-pack comparisons, real FireRed Pallet Town integration, and native CPU-frame benchmarking. These results do **not** establish a stock-emulator release, Android or GUI frame-rate performance, unrestricted CPU-addressable ROM, or original GBA hardware compatibility.
 
-## Latest verified milestone — R11: real FireRed Pallet Town CPU-frame benchmark
+## Latest functional integration milestones
+
+**R12 — verified native FireRed save-state recovery.** [Draft PR #53](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/53), exact head `864804eebcc90a90fb07a81ddc449440b2725827`. [Native CI, 4/4 passed](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42964008063) · [eight native LCD PNGs and JSON evidence](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42964008063/artifacts/13830302814). Crystal → Magma → native mGBA save-state restore to Crystal → Magma again; exact OBJ VRAM SHA-256 checks and real provider read counts 1 → 2 → 2 → 3. Disabled control performed zero host reads. This verifies an emulator state rollback, not ordinary in-game save files.
+
+**R13 — implemented; native CI pending at publication external map layout.** [Draft PR #54](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/54) · [native CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42966044589). The actual Player's House 1F 13×10 metatile grid (260 bytes) and 2×2 border (8 bytes) are replaced by zero placeholders in the ROM build; the original 268-byte payload is held at 33,562,624 (32 MiB + 8 KiB) in a sidecar. The acceptance test uses FireRed's own warp/transition and map-grid loader, verifies all staged native map and border bytes by SHA-256, returns to ROM-resident Pallet Town, evicts the external layout, and reloads it on re-entry. Disabled mode must safely refuse entry without host I/O. SELECT invokes the genuine DoWarp path in the test fixture; physical door navigation, external tilesets/scripts/events and arbitrary map sizes remain future work. Only renderer PNGs and JSON evidence are exported. No copyrighted map/ROM binaries are distributed.
+
+**Current priority:** functional map loading and navigation, ordinary game-save persistence, cache/integrity lifecycle, and graphical emulator/audio/VSync validation. Repeated endurance testing is deferred unless a specific regression warrants it.
+
+## R11: real FireRed Pallet Town CPU-frame benchmark
 
 **11 November 2026 · Draft [PR #52](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/52) · exact head `168d9137cb6b1576b53b6b0455d8c56a39bd943b` · 5/5 focused tests on each exact-head CI run.**
 
@@ -29,7 +37,7 @@ R11 executed **six paired same-ROM trials** (three XGBA-enabled, three disabled)
 
 **Evidence:** [R11 exact-head PR CI, successful](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42959825105) · [PR benchmark report artifact](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42959825105/artifacts/13828577188) · [R11 exact-head push CI, successful](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42959790780) · [push runner report artifact](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42959790780/artifacts/13828024036). R7–R10 regression checks remained green at R11. GitHub Actions artifacts are retention-limited.
 
-**Next executable tests:** more than 100 live resource swaps; asset integrity, cache lifecycle and save-state/reload consistency; many-resource / beyond-32-MiB sidecar stress and memory profiling; and installed graphical mGBA with audio, vsync and frame limiting on target desktop/Android platforms. **R7–R11 work remains experimental on draft branches; do not mistake this README update for merging or releasing it.**
+**Functional integration continuation:** see R12–R13 above. Repeated stress testing is deferred; all native implementation milestones remain experimental on draft branches, not released products.
 
 ## Earlier verified milestone — R9: same ROM, different external graphics packs
 
