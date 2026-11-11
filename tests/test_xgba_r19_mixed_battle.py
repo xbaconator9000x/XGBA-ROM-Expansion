@@ -89,7 +89,7 @@ class NativeEmeraldOriginalMixedBattle(unittest.TestCase):
         self.assertGreater(self.battle_offsets["Poochyena"],32*1024*1024)
         self.assertGreater(self.battle_offsets["Zigzagoon"],
                            self.battle_offsets["Poochyena"])
-        self.assertRegex(self.log,r"provider_reads=[5-9](?:\\s|$)")
+        self.assertTrue(any(f"provider_reads={count}" in self.log for count in range(5,10)))
     def test_genuine_emerald_battle_and_overworld_lcd_screenshots(self):
         shots=sorted(self.output.glob("*.png"))
         self.assertEqual(len(shots),2)
