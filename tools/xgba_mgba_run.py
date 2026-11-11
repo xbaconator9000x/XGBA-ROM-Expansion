@@ -24,7 +24,7 @@ MAX_GUEST_RESOURCE = 16 * 1024
 
 def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
            probe_address=0, disabled=False, screenshot=None, scene_dir=None,
-           second_resource_id=None, r10_dir=None, r11_perf=None,
+           second_resource_id=None, extra_resource_ids=(), r10_dir=None, r11_perf=None,
            r12_dir=None, r13_dir=None, r14_dir=None,
            r15_dir=None, r15_savefile=None, r15_phase=None, r15_save_probe=0,
            r16_emerald_dir=None, r17_emerald_map_dir=None,
@@ -78,6 +78,22 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
             raise ValueError("R10 second asset must begin after 32 MiB")
         cmd.extend(["--second-resource", second.id,
                     str(second.offset), str(second.length), second.sha256])
+    # R19 resource manifest has any number of independently verified source
+    # references. Preserve legacy two-resource CLI as-is for R7–R18.
+    if not isinstance(extra_resource_ids,(tuple,list)) or len(extra_resource_ids)>16:
+        raise ValueError("The bounded XGBA provider permits at most 16 additional assets")
+    used={resource_id}
+    if second_resource_id is not None:
+        used.add(second_resource_id)
+    for extra_id in extra_resource_ids:
+        if extra_id in used:
+            raise ValueError("Duplicate simultaneous XGBA resource ID")
+        used.add(extra_id)
+        extra=manifest.get_resource(extra_id)
+        if not 0<extra.length<=MAX_GUEST_RESOURCE or extra.offset<=MAX_ROM:
+            raise ValueError("Extra resource violates actual 16KiB guest boundary")
+        cmd.extend(["--extra-resource",extra.id,str(extra.offset),
+                    str(extra.length),extra.sha256])
     if r10_dir is not None:
         target = Path(r10_dir).resolve()
         if not target.is_dir():
@@ -180,6 +196,7 @@ def main():
     p.add_argument("--screenshot", help="Write an actual mGBA-rendered 240x160 PNG")
     p.add_argument("--scene-dir", help="Record 16 genuine emulator frames while injecting D-pad inputs")
     p.add_argument("--second-resource-id", help="Additional ID in same sidecar for in-session switching")
+    p.add_argument("--extra-resource-id", action="append", default=[], help="Additional verified resources in same sidecar for simultaneous original game use")
     p.add_argument("--r10-dir", help="Record the actual FireRed map before/after Select in one session")
     p.add_argument("--r11-perf", help="Write native Pallet Town CPU performance metrics as JSON")
     p.add_argument("--r12-dir", help="Execute actual FireRed mGBA savestate recovery proof")
@@ -204,6 +221,7 @@ def main():
                  probe_address=args.probe_address, disabled=args.disabled,
                  screenshot=args.screenshot, scene_dir=args.scene_dir,
                  second_resource_id=args.second_resource_id,
+                 extra_resource_ids=args.extra_resource_id,
                  r10_dir=args.r10_dir, r11_perf=args.r11_perf,
                  r12_dir=args.r12_dir, r13_dir=args.r13_dir, r14_dir=args.r14_dir,
                  r15_dir=args.r15_dir, r15_savefile=args.r15_savefile,
