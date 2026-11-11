@@ -126,7 +126,7 @@ class NativeEmeraldDecompBridge(unittest.TestCase):
 
     def test_actual_emerald_guest_reads_real_external_bytes(self):
         self.assertIn("enabled=1 requests=1 bytes=64",self.enabled.stdout)
-        self.assertIn("original_emerald_main_frames=180",self.enabled.stdout)
+        self.assertIn("original_emerald_main_frames=900",self.enabled.stdout)
 
     def test_same_emerald_rom_disabled_performs_zero_external_reads(self):
         self.assertIn("enabled=0 requests=0 bytes=0",self.disabled.stdout)
