@@ -1,0 +1,64 @@
+{
+  "milestone": "R9",
+  "source_run": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42950960274",
+  "source_artifact": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42950960274/artifacts/13824972843",
+  "source_head_sha": "83f50c9d65ed949e0b06e633efaae1f7eaf207dd",
+  "implementation_pr": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/49",
+  "source_artifact_zip_sha256": "640ab6c77a1f1e4296b1661b07bb5fb31a2fac2e3e8bac99cb359df5d31ce13a",
+  "files": {
+    "crystal-real-mgba.gif": {
+      "original_sha256": "ddccf9f59fe9ab44acd6de459af23f7c6c471a29e46f52f188265b690050d01a",
+      "archived_sha256": "ddccf9f59fe9ab44acd6de459af23f7c6c471a29e46f52f188265b690050d01a",
+      "unaltered": true,
+      "size": 30967
+    },
+    "magma-real-mgba.gif": {
+      "original_sha256": "2e896e2127552b36408592873764daae04048ddd2fd38a3cb8ee43c7071e61de",
+      "archived_sha256": "2e896e2127552b36408592873764daae04048ddd2fd38a3cb8ee43c7071e61de",
+      "unaltered": true,
+      "size": 29869
+    },
+    "fallback-real-mgba.gif": {
+      "original_sha256": "7cad53cda7b8bd7b52e150f3d9f481f0276d8d1f1eaebb91b4dde2b184d4b045",
+      "archived_sha256": "7cad53cda7b8bd7b52e150f3d9f481f0276d8d1f1eaebb91b4dde2b184d4b045",
+      "unaltered": true,
+      "size": 22758
+    },
+    "crystal-screenshot.png": {
+      "original_sha256": "7c58bcf20acb5f9c79d42576c28f5d223355f45e207a35b117003a034523d77c",
+      "archived_sha256": "7c58bcf20acb5f9c79d42576c28f5d223355f45e207a35b117003a034523d77c",
+      "unaltered": true,
+      "size": 2601
+    },
+    "magma-screenshot.png": {
+      "original_sha256": "f9fd4345146d8f6394508c345c5159c268bce28fbc5a36745c86dc9caaa45038",
+      "archived_sha256": "f9fd4345146d8f6394508c345c5159c268bce28fbc5a36745c86dc9caaa45038",
+      "unaltered": true,
+      "size": 2482
+    },
+    "fallback-screenshot.png": {
+      "original_sha256": "b29af38100689aecca979431fc0d7650d89168e9031cda60d586e913a743d36c",
+      "archived_sha256": "b29af38100689aecca979431fc0d7650d89168e9031cda60d586e913a743d36c",
+      "unaltered": true,
+      "size": 1652
+    },
+    "r9-three-runs-comparison.png": {
+      "original_sha256": "6e5ecff3a3ea2acc9aad8ca9e57a5939f4e568505da1725cc023f019d5880c26",
+      "archived_sha256": "6e5ecff3a3ea2acc9aad8ca9e57a5939f4e568505da1725cc023f019d5880c26",
+      "unaltered": true,
+      "size": 13173
+    },
+    "proof.json": {
+      "original_sha256": "fc111c29007dfe30fcc7a41fe0d05feea7baf7ab986fe26fbae6ffb6d738fd75",
+      "archived_sha256": "fc111c29007dfe30fcc7a41fe0d05feea7baf7ab986fe26fbae6ffb6d738fd75",
+      "unaltered": true,
+      "size": 41321
+    },
+    "README.txt": {
+      "original_sha256": "ec813214e200f8584888c860b542fd0b3b68fc32d8a6a2c4718a7d712ceccbab",
+      "archived_sha256": "ec813214e200f8584888c860b542fd0b3b68fc32d8a6a2c4718a7d712ceccbab",
+      "unaltered": true,
+      "size": 422
+    }
+  }
+}

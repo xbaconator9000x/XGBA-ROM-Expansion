@@ -1,0 +1,61 @@
+{
+  "button": "GBA SELECT",
+  "external_bytes_each": 2048,
+  "first_resource": {
+    "id": "graphic.crystal",
+    "offset": 33562624,
+    "sha256": "4a041dbf8238c5ecd2d583cd303824a13372407945906fb58549141506fc1c91"
+  },
+  "game_issues_first_and_second_resource_requests": true,
+  "game_map": "MAP_PALLET_TOWN",
+  "map_group": 3,
+  "map_num": 0,
+  "milestone": "R10_REAL_FIRE_RED_PALLET_TOWN_LIVE_ASSET_SWAP",
+  "native_execution_log_note": "Full native emulator console log in linked CI run",
+  "native_execution_log_sha256": "2e1f135ffce8e22ad377811b593d2687a9245f0126045e0e7bc1b3474862fa2a",
+  "non_overlay_map_region_unique_colours": 42,
+  "pixel_changes_inside_actual_overworld_OBJ": 950,
+  "real_png_sha256_after": [
+    "c35cd26be490425f615d222d79497e1be843699727c1c89e343cf7e62976963e",
+    "93ad413db838aadbc412d8e4a7dfc1ec9ee68b6e29717034a1b8c5c65475bb86",
+    "991d5252b3051fd96b8b4d6a3814384fae60a446ef987b6e9ed138e28521e378",
+    "991d5252b3051fd96b8b4d6a3814384fae60a446ef987b6e9ed138e28521e378",
+    "991d5252b3051fd96b8b4d6a3814384fae60a446ef987b6e9ed138e28521e378",
+    "991d5252b3051fd96b8b4d6a3814384fae60a446ef987b6e9ed138e28521e378",
+    "991d5252b3051fd96b8b4d6a3814384fae60a446ef987b6e9ed138e28521e378",
+    "991d5252b3051fd96b8b4d6a3814384fae60a446ef987b6e9ed138e28521e378",
+    "991d5252b3051fd96b8b4d6a3814384fae60a446ef987b6e9ed138e28521e378",
+    "991d5252b3051fd96b8b4d6a3814384fae60a446ef987b6e9ed138e28521e378",
+    "b00f908ef7b54f52446c3ea9a95ad1704318723467d4d7b45b176f794c2c4555",
+    "ec86e53b379886fa7a6d4eb5caa24156db403a4ab27cdb1792d30214d5ebe41f",
+    "23b87a9440a07f40c2924ea6f1394d1fe8c33d1fc2749d5910a2ead0744f339e",
+    "23b87a9440a07f40c2924ea6f1394d1fe8c33d1fc2749d5910a2ead0744f339e",
+    "23b87a9440a07f40c2924ea6f1394d1fe8c33d1fc2749d5910a2ead0744f339e",
+    "23b87a9440a07f40c2924ea6f1394d1fe8c33d1fc2749d5910a2ead0744f339e"
+  ],
+  "real_png_sha256_before": [
+    "67a760e549367f1c807f90ed7508c3d7c9aeb13bd7294c91770c421c13d493e3",
+    "67a760e549367f1c807f90ed7508c3d7c9aeb13bd7294c91770c421c13d493e3",
+    "67a760e549367f1c807f90ed7508c3d7c9aeb13bd7294c91770c421c13d493e3",
+    "67a760e549367f1c807f90ed7508c3d7c9aeb13bd7294c91770c421c13d493e3",
+    "67a760e549367f1c807f90ed7508c3d7c9aeb13bd7294c91770c421c13d493e3",
+    "67a760e549367f1c807f90ed7508c3d7c9aeb13bd7294c91770c421c13d493e3",
+    "67a760e549367f1c807f90ed7508c3d7c9aeb13bd7294c91770c421c13d493e3",
+    "67a760e549367f1c807f90ed7508c3d7c9aeb13bd7294c91770c421c13d493e3",
+    "67a760e549367f1c807f90ed7508c3d7c9aeb13bd7294c91770c421c13d493e3",
+    "67a760e549367f1c807f90ed7508c3d7c9aeb13bd7294c91770c421c13d493e3",
+    "3f3139f34da834b712e86cd62b5f66ce7856c21e7161df2b68418c092a329e45",
+    "b2ed135f93c6e8a30293b89a0cc7e53f5a7fcbc9b796091761563e0dfa5479ce"
+  ],
+  "rom_reloaded_during_swap": false,
+  "rom_sha256": "5346f65b86f669fca55f4aa26aafc92a03e6c9b44c7e9f227130ee7ee6203eb5",
+  "same_native_mgba_core_entire_test": true,
+  "scope": "Genuine Pallet Town map events, player, tilemaps and game CB2_Overworld; custom XGBA static sprite overlay injected at source for integration proof. Not stock mGBA or drop-in unpatched ROM compatibility.",
+  "second_resource": {
+    "id": "graphic.magma",
+    "offset": 33566720,
+    "sha256": "d52346e364b1e1dbc884f7c6ea576c3502114e30774cdd3198dea191f4a7e384"
+  },
+  "upstream_firered": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+  "upstream_mgba": "fd9dc5c2cbf234365068855851107e762fc6211b"
+}

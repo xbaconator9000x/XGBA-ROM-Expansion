@@ -1,0 +1,360 @@
+{
+  "disabled": {
+    "after": {
+      "frames_above_16_74ms_total": 0,
+      "median_frame_p50_ms": 0.573517,
+      "median_frame_p95_ms": 0.610187,
+      "median_mean_ms": 0.534567,
+      "median_unthrottled_fps": 1870.672,
+      "repetitions": 3,
+      "worst_frame_ms": 0.665929
+    },
+    "before": {
+      "frames_above_16_74ms_total": 0,
+      "median_frame_p50_ms": 0.57221,
+      "median_frame_p95_ms": 0.610898,
+      "median_mean_ms": 0.536169,
+      "median_unthrottled_fps": 1865.083,
+      "repetitions": 3,
+      "worst_frame_ms": 0.69285
+    }
+  },
+  "enabled": {
+    "after": {
+      "frames_above_16_74ms_total": 0,
+      "median_frame_p50_ms": 0.570538,
+      "median_frame_p95_ms": 0.607372,
+      "median_mean_ms": 0.533212,
+      "median_unthrottled_fps": 1875.427,
+      "repetitions": 3,
+      "worst_frame_ms": 0.860739
+    },
+    "before": {
+      "frames_above_16_74ms_total": 0,
+      "median_frame_p50_ms": 0.571544,
+      "median_frame_p95_ms": 0.607763,
+      "median_mean_ms": 0.536024,
+      "median_unthrottled_fps": 1865.589,
+      "repetitions": 3,
+      "worst_frame_ms": 0.662604
+    },
+    "select_first_frame_ms_median": 0.635484,
+    "select_frames_to_ready": [
+      1,
+      1,
+      1
+    ],
+    "select_to_ready_wall_ms_median": 0.635484
+  },
+  "enabled_to_disabled_frame_cost_ratio": {
+    "after": 0.99747,
+    "before": 0.99973
+  },
+  "full_native_runs": {
+    "disabled": [
+      {
+        "after": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.563243,
+          "median_ms": 0.607152,
+          "p95_ms": 0.641393,
+          "unthrottled_fps": 1775.434,
+          "worst_ms": 0.665929
+        },
+        "before": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.550685,
+          "median_ms": 0.57904,
+          "p95_ms": 0.628253,
+          "unthrottled_fps": 1815.92,
+          "worst_ms": 0.659069
+        },
+        "emulation_mode": "unthrottled native mGBA core, no PNG or GIF writing during measurements",
+        "external_reads": 0,
+        "game_map_group": 3,
+        "game_map_num": 0,
+        "game_overworld_ticks": 723,
+        "host_clock": "CLOCK_MONOTONIC",
+        "map": "Pallet Town",
+        "mode": "disabled",
+        "nominal_gba_hz": 59.727500569606,
+        "provider_lookups": 0,
+        "schema": 1,
+        "select": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.619697,
+          "median_ms": 0.621433,
+          "p95_ms": 0.621433,
+          "unthrottled_fps": 1613.691,
+          "worst_ms": 0.637437
+        },
+        "select_first_frame_ms": 0.637437,
+        "select_frames": 3,
+        "select_frames_until_external_ready": 0,
+        "select_to_ready_wall_ms": 0.0,
+        "selected_pack_after": 0,
+        "steady_frames_after": 360,
+        "steady_frames_before": 360,
+        "warmup_frames": 120
+      },
+      {
+        "after": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.531254,
+          "median_ms": 0.571394,
+          "p95_ms": 0.60574,
+          "unthrottled_fps": 1882.338,
+          "worst_ms": 0.626631
+        },
+        "before": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.533781,
+          "median_ms": 0.569766,
+          "p95_ms": 0.606551,
+          "unthrottled_fps": 1873.427,
+          "worst_ms": 0.622315
+        },
+        "emulation_mode": "unthrottled native mGBA core, no PNG or GIF writing during measurements",
+        "external_reads": 0,
+        "game_map_group": 3,
+        "game_map_num": 0,
+        "game_overworld_ticks": 723,
+        "host_clock": "CLOCK_MONOTONIC",
+        "map": "Pallet Town",
+        "mode": "disabled",
+        "nominal_gba_hz": 59.727500569606,
+        "provider_lookups": 0,
+        "schema": 1,
+        "select": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.582502,
+          "median_ms": 0.581664,
+          "p95_ms": 0.581664,
+          "unthrottled_fps": 1716.732,
+          "worst_ms": 0.593131
+        },
+        "select_first_frame_ms": 0.593131,
+        "select_frames": 3,
+        "select_frames_until_external_ready": 0,
+        "select_to_ready_wall_ms": 0.0,
+        "selected_pack_after": 0,
+        "steady_frames_after": 360,
+        "steady_frames_before": 360,
+        "warmup_frames": 120
+      },
+      {
+        "after": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.534567,
+          "median_ms": 0.573517,
+          "p95_ms": 0.610187,
+          "unthrottled_fps": 1870.672,
+          "worst_ms": 0.642565
+        },
+        "before": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.536169,
+          "median_ms": 0.57221,
+          "p95_ms": 0.610898,
+          "unthrottled_fps": 1865.083,
+          "worst_ms": 0.69285
+        },
+        "emulation_mode": "unthrottled native mGBA core, no PNG or GIF writing during measurements",
+        "external_reads": 0,
+        "game_map_group": 3,
+        "game_map_num": 0,
+        "game_overworld_ticks": 723,
+        "host_clock": "CLOCK_MONOTONIC",
+        "map": "Pallet Town",
+        "mode": "disabled",
+        "nominal_gba_hz": 59.727500569606,
+        "provider_lookups": 0,
+        "schema": 1,
+        "select": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.601313,
+          "median_ms": 0.602154,
+          "p95_ms": 0.602154,
+          "unthrottled_fps": 1663.027,
+          "worst_ms": 0.617337
+        },
+        "select_first_frame_ms": 0.617337,
+        "select_frames": 3,
+        "select_frames_until_external_ready": 0,
+        "select_to_ready_wall_ms": 0.0,
+        "selected_pack_after": 0,
+        "steady_frames_after": 360,
+        "steady_frames_before": 360,
+        "warmup_frames": 120
+      }
+    ],
+    "enabled": [
+      {
+        "after": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.535205,
+          "median_ms": 0.573872,
+          "p95_ms": 0.607372,
+          "unthrottled_fps": 1868.442,
+          "worst_ms": 0.621153
+        },
+        "before": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.544357,
+          "median_ms": 0.574969,
+          "p95_ms": 0.636315,
+          "unthrottled_fps": 1837.031,
+          "worst_ms": 0.662604
+        },
+        "emulation_mode": "unthrottled native mGBA core, no PNG or GIF writing during measurements",
+        "external_reads": 2,
+        "game_map_group": 3,
+        "game_map_num": 0,
+        "game_overworld_ticks": 723,
+        "host_clock": "CLOCK_MONOTONIC",
+        "map": "Pallet Town",
+        "mode": "enabled",
+        "nominal_gba_hz": 59.727500569606,
+        "provider_lookups": 2,
+        "schema": 1,
+        "select": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.602996,
+          "median_ms": 0.589996,
+          "p95_ms": 0.589996,
+          "unthrottled_fps": 1658.387,
+          "worst_ms": 0.637007
+        },
+        "select_first_frame_ms": 0.637007,
+        "select_frames": 3,
+        "select_frames_until_external_ready": 1,
+        "select_to_ready_wall_ms": 0.637007,
+        "selected_pack_after": 1,
+        "steady_frames_after": 360,
+        "steady_frames_before": 360,
+        "warmup_frames": 120
+      },
+      {
+        "after": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.527557,
+          "median_ms": 0.568284,
+          "p95_ms": 0.59935,
+          "unthrottled_fps": 1895.53,
+          "worst_ms": 0.62586
+        },
+        "before": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.533565,
+          "median_ms": 0.571544,
+          "p95_ms": 0.604378,
+          "unthrottled_fps": 1874.187,
+          "worst_ms": 0.62555
+        },
+        "emulation_mode": "unthrottled native mGBA core, no PNG or GIF writing during measurements",
+        "external_reads": 2,
+        "game_map_group": 3,
+        "game_map_num": 0,
+        "game_overworld_ticks": 723,
+        "host_clock": "CLOCK_MONOTONIC",
+        "map": "Pallet Town",
+        "mode": "enabled",
+        "nominal_gba_hz": 59.727500569606,
+        "provider_lookups": 2,
+        "schema": 1,
+        "select": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.601944,
+          "median_ms": 0.589496,
+          "p95_ms": 0.589496,
+          "unthrottled_fps": 1661.283,
+          "worst_ms": 0.629475
+        },
+        "select_first_frame_ms": 0.629475,
+        "select_frames": 3,
+        "select_frames_until_external_ready": 1,
+        "select_to_ready_wall_ms": 0.629475,
+        "selected_pack_after": 1,
+        "steady_frames_after": 360,
+        "steady_frames_before": 360,
+        "warmup_frames": 120
+      },
+      {
+        "after": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.533212,
+          "median_ms": 0.570538,
+          "p95_ms": 0.607422,
+          "unthrottled_fps": 1875.427,
+          "worst_ms": 0.860739
+        },
+        "before": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.536024,
+          "median_ms": 0.569446,
+          "p95_ms": 0.607763,
+          "unthrottled_fps": 1865.589,
+          "worst_ms": 0.655444
+        },
+        "emulation_mode": "unthrottled native mGBA core, no PNG or GIF writing during measurements",
+        "external_reads": 2,
+        "game_map_group": 3,
+        "game_map_num": 0,
+        "game_overworld_ticks": 723,
+        "host_clock": "CLOCK_MONOTONIC",
+        "map": "Pallet Town",
+        "mode": "enabled",
+        "nominal_gba_hz": 59.727500569606,
+        "provider_lookups": 2,
+        "schema": 1,
+        "select": {
+          "frames_over_16_74ms": 0,
+          "mean_ms": 0.599548,
+          "median_ms": 0.586121,
+          "p95_ms": 0.586121,
+          "unthrottled_fps": 1667.924,
+          "worst_ms": 0.635484
+        },
+        "select_first_frame_ms": 0.635484,
+        "select_frames": 3,
+        "select_frames_until_external_ready": 1,
+        "select_to_ready_wall_ms": 0.635484,
+        "selected_pack_after": 1,
+        "steady_frames_after": 360,
+        "steady_frames_before": 360,
+        "warmup_frames": 120
+      }
+    ]
+  },
+  "host": {
+    "cpu_count": 4,
+    "machine": "x86_64",
+    "processor": "unreported",
+    "runner_arch": "X64",
+    "runner_name": "GitHub Actions 1000021499",
+    "system": "Linux"
+  },
+  "identical_rom_sha256": "bfe8f970c41f37d9d183bc332fe3a496677dbc4b6908e22d739688ce7b6c0371",
+  "measured_after_frames_per_run": 360,
+  "measured_before_frames_per_run": 360,
+  "milestone": "R11_PALLET_TOWN_NATIVE_FRAME_BENCHMARK",
+  "nominal_gba_frame_ms": 16.74270629882808,
+  "performance_interpretation": {
+    "important": "R11 FPS is unthrottled native core PROCESSING THROUGHPUT on a shared GitHub-hosted Linux runner, not actual on-screen playback speed. Video playback timing is excluded.",
+    "thresholds": "CI fails for >2x sustained regression plus >=2ms/frame overhead, or if enabled mean exceeds the 16.74ms budget while disabled mean stays within it. Actual results reported even when passing; this test cannot guarantee Android FPS."
+  },
+  "run_order": [
+    "disabled",
+    "enabled",
+    "enabled",
+    "disabled",
+    "disabled",
+    "enabled"
+  ],
+  "scope": "Actual FireRed Pallet Town, pinned native mGBA; unthrottled CPU frame processing ONLY. Not actual GUI/vsync/Android realtime FPS.",
+  "select_frames_per_run": 3,
+  "sidecar_sha256": "b08374c26c04e6344c5f3b9c134e6b4c127beda0f926fb2153abee70c58b6650",
+  "upstream_firered": "ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+  "upstream_mgba": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "warmup_frames_per_run": 120
+}

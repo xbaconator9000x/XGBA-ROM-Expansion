@@ -1,0 +1,52 @@
+{
+  "milestone": "R13",
+  "source_run": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42966044589",
+  "source_artifact": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42966044589/artifacts/13831536868",
+  "source_head_sha": "f3ae6846e5971c0617674d5cef98be5331b91b2d",
+  "implementation_pr": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/54",
+  "source_artifact_zip_sha256": "dc9597b2adde6b6cd9bd742628ae6f9e138a3e0a8bd13659e15359120294fd1e",
+  "files": {
+    "enabled/01-pallet.png": {
+      "original_sha256": "da0e4b53657d2f44280be1f1be82d4803c8fa3841c75841811a4662084ea1898",
+      "archived_sha256": "da0e4b53657d2f44280be1f1be82d4803c8fa3841c75841811a4662084ea1898",
+      "unaltered": true,
+      "size": 6975
+    },
+    "enabled/02-house-external.png": {
+      "original_sha256": "af85b14aa16ab454ddcd314f5afb25130c383c5a258d3781f8b89ace48cb93f3",
+      "archived_sha256": "af85b14aa16ab454ddcd314f5afb25130c383c5a258d3781f8b89ace48cb93f3",
+      "unaltered": true,
+      "size": 3820
+    },
+    "enabled/03-pallet-return.png": {
+      "original_sha256": "bd7d74014ac6e11c94fb36c9f5ac0eb711d0f2ac094b4c2aa574ce11db044658",
+      "archived_sha256": "bd7d74014ac6e11c94fb36c9f5ac0eb711d0f2ac094b4c2aa574ce11db044658",
+      "unaltered": true,
+      "size": 8448
+    },
+    "enabled/04-house-reloaded.png": {
+      "original_sha256": "af85b14aa16ab454ddcd314f5afb25130c383c5a258d3781f8b89ace48cb93f3",
+      "archived_sha256": "af85b14aa16ab454ddcd314f5afb25130c383c5a258d3781f8b89ace48cb93f3",
+      "unaltered": true,
+      "size": 3820
+    },
+    "disabled/01-pallet.png": {
+      "original_sha256": "da0e4b53657d2f44280be1f1be82d4803c8fa3841c75841811a4662084ea1898",
+      "archived_sha256": "da0e4b53657d2f44280be1f1be82d4803c8fa3841c75841811a4662084ea1898",
+      "unaltered": true,
+      "size": 6975
+    },
+    "disabled/02-entry-refused.png": {
+      "original_sha256": "054ea8a7c2fc16fd50657c01eac92c693173abccd7d1f02d3bd6814ac1a9de22",
+      "archived_sha256": "054ea8a7c2fc16fd50657c01eac92c693173abccd7d1f02d3bd6814ac1a9de22",
+      "unaltered": true,
+      "size": 5680
+    },
+    "proof.json": {
+      "original_sha256": "6cb5b0d156ee7a8f2bc0b81c88b1bd9267c4c2da9317f5466c485c5862a954bb",
+      "archived_sha256": "33f94e3c41c5c6a10a5f13759afc0fabd32d1ab124f6b939aa0fd5b1ef990d6a",
+      "unaltered": false,
+      "size": 1141
+    }
+  }
+}
