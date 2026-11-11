@@ -365,6 +365,7 @@ static void run_r10_real_firered_live_swap(struct mCore *core, uint32_t probe,
 #include "xgba_r17_emerald_map.h"
 #include "xgba_r18_emerald_flash.h"
 #include "xgba_r19_connected_maps.h"
+#include "xgba_r19_mixed_battle.h"
 
 static void save_actual_game_frame(struct mCore *core, const char *path, int enabled)
 {
@@ -412,6 +413,10 @@ int main(int argc, char **argv)
     const char *r17_dir = NULL;
     const char *r18_dir = NULL;
     const char *r19_dir = NULL;
+    const char *r19_battle_dir = NULL;
+    uint64_t r19_battle_probe = 0;
+    uint64_t r19_battle0_offset = 0, r19_battle0_length = 0;
+    uint64_t r19_battle1_offset = 0, r19_battle1_length = 0;
     uint64_t r19_route_offset = 0;
     uint64_t r19_route_length = 0;
     const char *r18_savefile = NULL;
@@ -453,6 +458,18 @@ int main(int argc, char **argv)
             r18_dir = argv[i];
         else if (!strcmp(argv[i], "--r19-connected-dir") && ++i < argc && !r19_dir)
             r19_dir = argv[i];
+        else if (!strcmp(argv[i], "--r19-battle-dir") && ++i < argc && !r19_battle_dir)
+            r19_battle_dir = argv[i];
+        else if (!strcmp(argv[i], "--r19-battle-probe") && ++i < argc && !r19_battle_probe)
+            r19_battle_probe = parse_number(argv[i]);
+        else if (!strcmp(argv[i], "--r19-battle0-offset") && ++i < argc && !r19_battle0_offset)
+            r19_battle0_offset = parse_number(argv[i]);
+        else if (!strcmp(argv[i], "--r19-battle0-length") && ++i < argc && !r19_battle0_length)
+            r19_battle0_length = parse_number(argv[i]);
+        else if (!strcmp(argv[i], "--r19-battle1-offset") && ++i < argc && !r19_battle1_offset)
+            r19_battle1_offset = parse_number(argv[i]);
+        else if (!strcmp(argv[i], "--r19-battle1-length") && ++i < argc && !r19_battle1_length)
+            r19_battle1_length = parse_number(argv[i]);
         else if (!strcmp(argv[i], "--r19-route-offset") && ++i < argc && !r19_route_offset)
             r19_route_offset = parse_number(argv[i]);
         else if (!strcmp(argv[i], "--r19-route-length") && ++i < argc && !r19_route_length)
@@ -552,9 +569,9 @@ int main(int argc, char **argv)
     struct mCore *core = GBACoreCreate();
     if (!core || !core->init(core))
         fail("mGBA core initialization failed");
-    mColor *video = (screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r17_dir || r18_dir || r19_dir)
+    mColor *video = (screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir)
                    ? calloc(240u*160u, sizeof(mColor)) : NULL;
-    if ((screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r17_dir || r18_dir || r19_dir) && !video)
+    if ((screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir) && !video)
         fail("cannot allocate GBA framebuffer");
     if (video)
         core->setVideoBuffer(core, video, 240);
@@ -633,6 +650,18 @@ int main(int argc, char **argv)
         xgba_r19_connected_run(core,(uint32_t)probe,r19_dir,
                                &device,&resource,r19_route_offset,
                                (uint32_t)r19_route_length,enabled);
+    } else if (r19_battle_dir) {
+        if(!r19_route_offset || !r19_route_length || r19_route_length>16384u ||
+           r19_battle_probe<0x02000000u || r19_battle_probe>=0x02040000u ||
+           !r19_battle0_offset || !r19_battle0_length ||
+           !r19_battle1_offset || !r19_battle1_length ||
+           r19_battle0_length>8192u || r19_battle1_length>8192u)
+            fail("R19 requires two bounded external sprites and an original Emerald ELF battle proof");
+        xgba_r19_mixed_battle_run(core,(uint32_t)probe,(uint32_t)r19_battle_probe,
+                  r19_battle_dir,&device,&resource,
+                  r19_route_offset,(uint32_t)r19_route_length,
+                  r19_battle0_offset,(uint32_t)r19_battle0_length,
+                  r19_battle1_offset,(uint32_t)r19_battle1_length,enabled);
     } else if (!scene_dir) {
         verify_game_copy(core, (uint32_t)probe, &device, &resource, enabled);
     }
