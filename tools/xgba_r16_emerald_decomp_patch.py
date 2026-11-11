@@ -46,6 +46,10 @@ def make_emerald_boot_sources(emerald:Path)->dict[Path,str]:
               "    /* Native XGBA test adapter: original Emerald game continues. */\n"
               "    XgbaEmeraldProbeRun();\n\n    gSoftResetDisabled = FALSE;",
               "source-level post-heap boot callback")
+    after=one(after,
+              "    for (;;)\n    {\n        ReadKeys();",
+              "    for (;;)\n    {\n        XgbaEmeraldMainLoopTick();\n        ReadKeys();",
+              "original Emerald main loop iteration instrumentation")
     main.write_text(after,encoding="utf-8")
     return {main:before}
 
