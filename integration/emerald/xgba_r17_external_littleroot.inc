@@ -64,6 +64,9 @@ static const struct MapLayout *XgbaR17Resolve(const struct MapLayout *base)
     }
     return &sXgbaR17Layout;
 }
+#ifdef XGBA_R18_SAVE_TEST
+#include "__XGBA_R18_SAVE__"
+#endif
 static void XgbaR17Tick(void)
 {
     const struct Tileset *ts;
@@ -86,4 +89,7 @@ static void XgbaR17Tick(void)
     gXgbaR17Proof.metatiles=(u32)ts->metatiles;
     gXgbaR17Proof.attributes=(u32)ts->metatileAttributes;
     gXgbaR17Proof.callback=(u32)gMain.callback2;
+#ifdef XGBA_R18_SAVE_TEST
+    XgbaR18Tick();
+#endif
 }
