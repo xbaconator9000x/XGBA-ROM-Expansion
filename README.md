@@ -8,6 +8,27 @@
 
 **The milestones are real; the expansion platform is not yet a finished product.** R6 used a temporary test host; R7–R14 progressed to game-initiated requests in a patched native mGBA core, actual LCD screenshots, live FireRed Pallet Town graphics swaps, native CPU-frame benchmarking, save-state rollback, real map layouts loaded from outside the ROM, and physical navigation with external secondary tilesets. These results do **not** establish a stock-emulator release, Android or GUI frame-rate performance, unrestricted CPU-addressable ROM, or original GBA hardware compatibility.
 
+## Verified evidence — screenshots, animations and executable results
+
+**Start here:** these are evidence from the *actual source-built game running in native mGBA*, not AI mockups or manually assembled gameplay animations. Each result links to the executed GitHub Actions run and, where available, its downloadable evidence archive. Implementation PRs remain separate from this documentation; none of these results establishes stock-mGBA, original GBA hardware or Android compatibility.
+
+| Milestone | What was independently demonstrated | Executed CI | Visual / machine-readable evidence |
+| --- | --- | --- | --- |
+| **[R14](#latest-verified-milestone--r14-normal-door-navigation-and-external-secondary-tilesets)** | **Natural D-pad door entry/exit and Pallet Town → Route 1 connected travel; actual map layouts, secondary tilesets and BG VRAM from outside 32 MiB. 4/4 passed.** | [Exact-head native CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42977112057) | **[Four original FireRed LCD PNGs + proof.json](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42977112057/artifacts/13835737289)** |
+| **[R13](#r13-real-firered-map-geometry-outside-the-rom)** | Original house layout and border absent from ROM, real native warp/re-entry and disabled control. 4/4 passed. | [Native CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42966044589) | [Six original LCD PNGs + proof.json](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42966044589/artifacts/13831536868) |
+| **[R12](#r12-verified-native-firered-save-state-recovery)** | Real save-state rollback, graphics restoration and subsequent provider re-fetch. 4/4 passed. | [Native CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42964008063) | [Eight LCD PNGs + JSON proof](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42964008063/artifacts/13830302814) |
+| **[R11](#r11-real-firered-pallet-town-cpu-frame-benchmark)** | Actual FireRed CPU-frame benchmark under enabled and disabled native mGBA, not GIF timing. | [Exact-head CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42959825105) | [Measured benchmark report](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42959825105/artifacts/13828577188) |
+| **R10** | Live external graphics swapped inside FireRed's original Pallet Town overworld. | [Native CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42955838562) | [Genuine native GIF/PNG captures](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42955838562/artifacts/13827221467) |
+| **[R9](#earlier-verified-milestone--r9-same-rom-different-external-graphics-packs)** | Same executable ROM, different externally stored graphics packs and native-rendered controllable scene. | [Native CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42950960274) | [Three GIFs, original PNG frames and proof.json](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42950960274/artifacts/13824972843) |
+| **R8** | Native mGBA LCD displays externally supplied pixels in a source-built FireRed program. | [Executed CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42947434354) | [See run and PNG proof](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42947434354) |
+| **R6** | FireRed integration and host-controlled external resource delivery; 32/32 tests. | [Executed CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42940797581) | [Implementation and reproducible tests, PR #40](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/40) |
+
+**How to check a claim:** open its CI run, inspect the test step and the reported head commit, then open the artifact link. For R14, the proof archive has four original **240×160 PNG screenshots** and a JSON verification report. Compare the commit with [R14 PR #56](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/56); runs and their uploaded artifacts document the *tested* revision, which can differ from a later branch head.
+
+**Evidence publication rule for every future milestone:** promote a claim to *verified* only after exact-head execution succeeds; link **the passing run, evidence archive (PNG/GIF/log/JSON as appropriate), source PR/commit, and precise tested scope** in this table and the milestone section. Record actual test counts and explicitly distinguish native executable output from mockups, benchmarks and unexecuted builds. If an evidence type was not captured, mark it unavailable rather than substituting fabricated screenshots.
+
+**Artifact retention:** GitHub Actions evidence files are time-limited (for example, R14's artifact was uploaded with a 90-day retention setting). These links may eventually expire even while the CI job log and reproducible source code remain. Future preservation should use a rights-reviewed, durable evidence location rather than treating short-lived Actions downloads as permanent archives.
+
 ## Latest verified milestone — R14: normal door navigation and external secondary tilesets
 
 **11 November 2026 · Draft [PR #56](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/56) · exact head `3a1988e99da9285e8d194e9b1bbf9b3d936b6d3e` · 4/4 focused native tests passed; all seven R7–R13 regressions passed.**
@@ -50,7 +71,7 @@ The source-built FireRed game requests the external layout through XGBA, stages 
 **R12 — verified native FireRed save-state recovery.** [Draft PR #53](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/53), exact head `864804eebcc90a90fb07a81ddc449440b2725827`. [Native CI, 4/4 passed](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42964008063) · [eight native LCD PNGs and JSON evidence](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42964008063/artifacts/13830302814). Crystal → Magma → native mGBA save-state restore to Crystal → Magma again; exact OBJ VRAM SHA-256 checks and real provider read counts 1 → 2 → 2 → 3. Disabled control performed zero host reads. [Matching PR CI, 4/4 passed](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42964060978) · [PR evidence artifact](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42964060978/artifacts/13829574576). All R7–R11 regressions passed at the R12 head. This verifies same-ROM, same-core, same-mounted-pack emulator state rollback and fresh resource acquisition; it does not establish ordinary in-game SRAM saves, arbitrary pack-mismatch restoration or general save-state extension serialization.
 
 
-**Current priority:** functional map loading and navigation, ordinary game-save persistence, cache/integrity lifecycle, and graphical emulator/audio/VSync validation. Repeated endurance testing is deferred unless a specific regression warrants it.
+**Current priority after R14:** validate ordinary in-game SRAM save persistence, external resource cache and pack-identity lifecycle, additional map and asset classes, and graphical emulator/audio/VSync performance. Natural door navigation and Pallet Town → Route 1 connectivity have now been verified within the R14 fixture. Repeated endurance testing remains deferred unless a specific regression warrants it.
 
 ## R11: real FireRed Pallet Town CPU-frame benchmark
 
@@ -73,7 +94,7 @@ R11 executed **six paired same-ROM trials** (three XGBA-enabled, three disabled)
 
 **Evidence:** [R11 exact-head PR CI, successful](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42959825105) · [PR benchmark report artifact](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42959825105/artifacts/13828577188) · [R11 exact-head push CI, successful](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42959790780) · [push runner report artifact](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42959790780/artifacts/13828024036). R7–R10 regression checks remained green at R11. GitHub Actions artifacts are retention-limited.
 
-**Functional integration continuation:** see R12–R13 above. Repeated stress testing is deferred; all native implementation milestones remain experimental on draft branches, not released products.
+**Functional integration continuation:** see R12–R14 above. Repeated stress testing is deferred; all native implementation milestones remain experimental on draft branches, not released products.
 
 ## Earlier verified milestone — R9: same ROM, different external graphics packs
 
@@ -105,8 +126,9 @@ The executed test observed the player moving **(24, 92) → (38, 102)** in each 
 - **R11:** six paired native mGBA trials measured unthrottled CPU-frame throughput and resource-ready latency, correcting misleading GIF playback pacing.
 - **R12:** real native mGBA save-state rollback restored the earlier graphics and game state, then a fresh guest request re-acquired the second asset.
 - **R13:** actual FireRed house map grid and border lived outside the ROM; native map transitions, eviction and re-entry loaded them from the sidecar.
+- **R14:** real D-pad-driven house entry/exit and connected Route 1 navigation used full external secondary tileset packs, with source ROM assets removed and native GBA BG VRAM verified.
 
-**Next work:** expand real map integration to normal door navigation and further asset types; validate ordinary in-game save persistence and broader cache/pack identity; measure real graphical-emulator playback with audio/vsync; and package accessible ROM-hacking tooling. Larger resource-library tests remain valuable, but redundant endurance tests are deferred. Total external content can grow separately from the addressable cartridge window, but CPU/GBA memory limits still apply.
+**Next work:** extend the now-verified natural navigation/secondary-tileset fixture into broader map and asset classes; validate ordinary in-game save persistence and broader cache/pack identity; measure real graphical-emulator playback with audio/vsync; and package accessible ROM-hacking tooling. Larger resource-library tests remain valuable, but redundant endurance tests are deferred. Total external content can grow separately from the addressable cartridge window, but CPU/GBA memory limits still apply.
 
 ## Why this matters for GBA ROM hacking
 
