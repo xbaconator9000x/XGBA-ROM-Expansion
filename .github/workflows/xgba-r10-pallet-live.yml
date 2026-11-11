@@ -1,0 +1,86 @@
+name: XGBA R10 real FireRed Pallet Town live Select resource swap
+on:
+  push:
+    branches:
+      - 'phase2/r10-firered-pallet-live-swap-20261111'
+    paths:
+      - 'integration/**'
+      - 'tools/xgba_r10_firered_patch.py'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r10_pallet_town_live_swap.py'
+      - '.github/workflows/xgba-r10-pallet-live.yml'
+  pull_request:
+    paths:
+      - 'integration/**'
+      - 'tools/xgba_r10_firered_patch.py'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r10_pallet_town_live_swap.py'
+      - '.github/workflows/xgba-r10-pallet-live.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xgba-r10-live-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  actual-firered-overworld-live-swap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install real FireRed ARM toolchain, pinned mGBA and GIF dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev build-essential cmake python3-pil
+          command -v arm-none-eabi-gcc
+          python3 -c 'from PIL import Image; print("Pillow GIF encoder available")'
+      - name: Clone actual FireRed overworld and pinned native mGBA sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokefirered.git upstream/pokefirered
+          git -C upstream/pokefirered checkout --quiet --detach ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokefirered rev-parse HEAD)" = ce6406d8c2eaf46d543c8a2606de0c3cb1951982
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Run actual Pallet Town engine and real Select-triggered live MMIO switch
+        shell: bash
+        env:
+          XGBA_R10_EVIDENCE_DIR: dist/xgba-r10-native-firered-pallet-town
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r10_firered_patch.py \
+            tools/xgba_mgba_run.py tests/test_xgba_r10_pallet_town_live_swap.py
+          python3 -m unittest discover -s tests -p 'test_xgba_r10_pallet_town_live_swap.py' -v \
+            2>&1 | tee "${RUNNER_TEMP}/xgba-r10-tests.log"
+          for file in \
+            pallet-town-crystal-before.png \
+            pallet-town-magma-after.png \
+            pallet-town-real-engine-comparison.png \
+            pallet-town-live-select-swap.gif proof.json; do
+            test -s "dist/xgba-r10-native-firered-pallet-town/$file"
+          done
+          test "$(find dist/xgba-r10-native-firered-pallet-town/before -name '*.png' | wc -l)" -eq 12
+          test "$(find dist/xgba-r10-native-firered-pallet-town/after -name '*.png' | wc -l)" -eq 16
+          if grep -Eq 'skipped=|expected failures=' "${RUNNER_TEMP}/xgba-r10-tests.log"; then
+            echo "BLOCKED R10 no simulated or skipped hardware proof"
+            exit 1
+          fi
+          echo 'PASS_R10_REAL_FIRERED_PALLET_LIVE_NO_RESET_EXTERNAL_SWAP'
+      - name: Upload actual FireRed overworld rendered GIF, PNG frames and hashes
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r10-real-firered-pallet-town-live-select-proof
+          path: dist/xgba-r10-native-firered-pallet-town/
+          if-no-files-found: error
+          retention-days: 90
