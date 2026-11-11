@@ -86,7 +86,7 @@ static void r19_verify(struct mCore *c,uint32_t p,
 static void xgba_r19_connected_run(struct mCore *core,uint32_t p,
     const char *dir,const struct XgbaGbaDevice *device,
     const struct ResourceFile *resource,uint64_t routeOffset,
-    uint32_t routeLen,int enabled)
+    uint32_t routeLen,int enabled,unsigned r22_round_trips)
 {
     if(!p || !dir || !resource->second_id || !routeLen)
         fail("R19 original Emerald connection requires two real external map packs");
@@ -125,6 +125,66 @@ static void xgba_r19_connected_run(struct mCore *core,uint32_t p,
     if(r19_word(core,p,4)<2u || !r19_word(core,p,19) ||
        device->successful_reads!=3u || device->failed_reads)
         fail("R19 return crossing or simultaneous pack retention failed");
+    if (r22_round_trips) {
+        if (r22_round_trips>64u || r19_word(core,p,5)!=2u ||
+            r19_word(core,p,24)!=1u || r19_word(core,p,25)!=1u ||
+            r19_word(core,p,26)!=1u || r19_word(core,p,27)!=0u)
+            fail("R22 requires original Emerald's two simultaneously resident external maps");
+        const uint32_t original_arena0=r19_word(core,p,21);
+        const uint32_t original_arena1=r19_word(core,p,22);
+        const uint32_t initial_epoch=r19_word(core,p,25);
+        const uint32_t first_world_claims=r19_word(core,p,26);
+        const uint32_t initial_reads=device->successful_reads;
+        const uint32_t initial_transitions=r19_word(core,p,4);
+        for (unsigned cycle=0;cycle<r22_round_trips;++cycle) {
+            /* Original GBA D-pad only; never host warp, inject a camera
+             * pointer, or rewrite native guest memory. */
+            for(unsigned n=0;n<22u && r19_word(core,p,3)!=16u;++n) {
+                r14_press(core,1u<<6,16);
+                r14_wait(core,8);
+            }
+            r19_wait(core,p,16u,160u);
+            r19_verify(core,p,resource,routeOffset,routeLen,16u);
+            if (r19_word(core,p,4)!=initial_transitions+2u*cycle+1u)
+                fail("R22 genuine north crossing count drift or duplicate map phase");
+            for(unsigned n=0;n<23u && r19_word(core,p,3)!=9u;++n) {
+                r14_press(core,1u<<7,16);
+                r14_wait(core,8);
+            }
+            r19_wait(core,p,9u,160u);
+            r19_verify(core,p,resource,routeOffset,routeLen,9u);
+            if (r19_word(core,p,4)!=initial_transitions+2u*(cycle+1u))
+                fail("R22 south return transition count mismatch");
+            if (r19_word(core,p,21)!=original_arena0 ||
+                r19_word(core,p,22)!=original_arena1 ||
+                r19_word(core,p,24)!=1u ||
+                r19_word(core,p,25)!=initial_epoch ||
+                r19_word(core,p,26)!=first_world_claims ||
+                r19_word(core,p,27)!=0u ||
+                r19_word(core,p,5)!=2u ||
+                device->successful_reads!=initial_reads ||
+                device->failed_reads)
+                fail("R22 memory-owner epoch, arena base, or live cache drift");
+            if (cycle==0u || cycle==r22_round_trips/2u ||
+                cycle==r22_round_trips-1u) {
+                char image_name[96];
+                snprintf(image_name,sizeof(image_name),
+                         "r22-crossings-%03u-stable-externally-backed-field",
+                         2u*(cycle+1u));
+                r17_frame(core,dir,image_name);
+            }
+        }
+        printf("PASS_R22_REAL_EMERALD_CONNECTED_MAP_CHURN "
+               "extra_round_trips=%u total_transitions=%u "
+               "arena_owner=%u arena_epoch=%u world_claims=%u "
+               "external_map_loads=%u provider_reads=%u "
+               "native_map_and_bg_vram_checks=%u "
+               "native_ewram=1 original_dpad_only=1\n",
+               r22_round_trips,r19_word(core,p,4),r19_word(core,p,24),
+               r19_word(core,p,25),r19_word(core,p,26),
+               r19_word(core,p,5),device->successful_reads,
+               2u*r22_round_trips+3u);
+    }
     printf("PASS_R19_REAL_EMERALD_CONNECTED_DPAD world=original_emerald "
            "map_sequence=9,16,9 transitions=%u player_x=%u player_y=%u "
            "route_arrival_y=%u concurrent_packs=2 provider_reads=%u "
