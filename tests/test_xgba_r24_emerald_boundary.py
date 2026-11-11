@@ -66,7 +66,7 @@ class NativeEmeraldResourceBoundaries(unittest.TestCase):
         nm=r7.run(["arm-none-eabi-nm","-g",elf]).stdout
         symbols={}
         for name in ("gXgbaEmeraldProbe","gXgbaR24Proof"):
-            hits=re.findall(r"^([0-9a-fA-F]{8})\\s+[A-Za-z]\\s+"+name+r"$",nm,re.M)
+            hits=re.findall(r"^([0-9a-fA-F]{8})\s+[A-Za-z]\s+"+name+r"$",nm,re.M)
             if len(hits)!=1:
                 raise AssertionError(f"Missing original ARM ELF symbol: {name}")
             symbols[name]=int(hits[0],16)
@@ -100,7 +100,7 @@ class NativeEmeraldResourceBoundaries(unittest.TestCase):
             fp.seek(max_offset)
             fp.write(cls.payload+b"\\0")  # adjacent +1-byte boundary fixture
             fp.seek(bad_offset)
-            fp.write(b"R24 external corrupted digest!!!!") # 32 bytes
+            fp.write(b"R24 external corrupted digest!!!") # 32 bytes
         manifest_data={
             "format":sidecar.FORMAT,
             "version":sidecar.VERSION,
@@ -114,7 +114,7 @@ class NativeEmeraldResourceBoundaries(unittest.TestCase):
                 {"id":BADSHA,"offset":bad_offset,"length":32,
                  "sha256":"0"*64},
                 {"id":PLUSONE,"offset":max_offset,"length":MAX_BYTES+1,
-                 "sha256":hashlib.sha256(cls.payload+b"\\0").hexdigest()},
+                 "sha256":hashlib.sha256(cls.payload+b"\0").hexdigest()},
             ]
         }
         cls.manifest=folder/"manifest.json"
@@ -167,7 +167,7 @@ class NativeEmeraldResourceBoundaries(unittest.TestCase):
             dest.mkdir(parents=True,exist_ok=True)
             for pic in cls.out.glob("*.png"):
                 shutil.copy2(pic,dest/pic.name)
-            (dest/"proof.json").write_text(json.dumps(cls.report,indent=2,sort_keys=True)+"\\n")
+            (dest/"proof.json").write_text(json.dumps(cls.report,indent=2,sort_keys=True)+"\n")
 
     def test_original_emerald_source_and_real_arm_ewram_proof(self):
         self.assertEqual(self.source_contract["heap_bytes"],0x1C000)
