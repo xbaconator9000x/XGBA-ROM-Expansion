@@ -311,9 +311,14 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
                r19_word(core,map,5)!=8u ||
                r19_bword(core,battle,2)!=8u ||
                r19_bword(core,battle,19)!=8u ||
-               r19_word(core,map,25)!=8u ||
+               /* Map proof is sampled by the OVERWORLD callback only:
+                * after fourth battle it still reports the prior world
+                * epoch (7). Battle proof records the current generation. */
+               r19_word(core,map,25)!=7u ||
                r19_word(core,map,26)!=4u ||
-               r19_word(core,map,27)!=4u ||
+               r19_word(core,map,27)!=3u ||
+               r19_bword(core,battle,20)!=8u ||
+               r19_bword(core,battle,18)!=4u ||
                device->successful_reads!=17u || device->failed_reads)
                 fail("R23 bounded phase eviction or original Emerald heap integrity failed");
             printf("PASS_R23_REAL_EMERALD_FORCED_PHASE_EVICTION "
@@ -326,8 +331,8 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
                    "provider_reads=%u native_ewram=1 "
                    "native_bg_vram=1 source_byte_verified=1\n",
                    r19_word(core,map,5),r19_bword(core,battle,2),
-                   r19_word(core,map,25),r19_word(core,map,26),
-                   r19_word(core,map,27),h[1],h[7],h[9],h[8],
+                   r19_bword(core,battle,20),r19_word(core,map,26),
+                   r19_bword(core,battle,18),h[1],h[7],h[9],h[8],
                    h[14],h[13],device->successful_reads);
         }
         printf("PASS_R20_EWRAM_ARENA_REENTRY real_original_battles=2 "
