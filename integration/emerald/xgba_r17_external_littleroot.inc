@@ -70,6 +70,9 @@ static const struct MapLayout *XgbaR17Resolve(const struct MapLayout *base)
 #ifdef XGBA_R19_CONNECTED_MAPS
 #include "__XGBA_R19_MAPS__"
 #endif
+#ifdef XGBA_R19_BATTLE_TEST
+#include "__XGBA_R19_BATTLE__"
+#endif
 static void XgbaR17Tick(void)
 {
     const struct Tileset *ts;
@@ -97,5 +100,8 @@ static void XgbaR17Tick(void)
 #endif
 #ifdef XGBA_R19_CONNECTED_MAPS
     XgbaR19MapTick();
+#endif
+#ifdef XGBA_R19_BATTLE_TEST
+    XgbaR19BattleTrigger();
 #endif
 }
