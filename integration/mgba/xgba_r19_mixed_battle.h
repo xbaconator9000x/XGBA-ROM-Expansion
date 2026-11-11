@@ -138,8 +138,8 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
                     "sprite_epoch=%u sprite_claims=%u sprite_reads=%u\n",exit_frames,
                     r19_word(core,map,17),r19_word(core,map,24),
                     r19_word(core,map,25),r19_word(core,map,26),
-                    r19_word(core,map,27),r19_bword(core,battle,19),
-                    r19_bword(core,battle,17),r19_bword(core,battle,2));
+                    r19_word(core,map,27),r19_bword(core,battle,20),
+                    r19_bword(core,battle,18),r19_bword(core,battle,2));
             r17_frame(core,dir,"03-r20-diagnostic-original-battle-not-returned");
             fail("R20 original Emerald did not return to a map-owned arena");
         }
@@ -156,8 +156,8 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
         if (r19_word(core,map,5)<4u ||
             r19_word(core,map,26)<2u ||
             r19_word(core,map,25)<3u ||
-            r19_bword(core,battle,17)!=1u ||
-            r19_bword(core,battle,18)!=2u)
+            r19_bword(core,battle,18)!=1u ||
+            r19_bword(core,battle,19)!=2u)
             fail("R20 first battle-to-overworld ownership / map reacquisition failed");
         /* Second real R-button encounter: old READY sprite descriptors MUST
          * be rejected after map packs rewrote their former EWRAM bytes. */
@@ -169,14 +169,14 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
             core->runFrame(core);
             if (r19_bword(core,battle,1)==2u &&
                 r19_bword(core,battle,2)==4u &&
-                r19_bword(core,battle,17)==2u &&
-                r19_bword(core,battle,18)==4u &&
+                r19_bword(core,battle,18)==2u &&
+                r19_bword(core,battle,19)==4u &&
                 r19_bword(core,battle,10)==1u)
                 break;
         }
         if (second_frames>=4500u || r19_bword(core,battle,11)!=0u ||
             device->failed_reads ||
-            r19_bword(core,battle,19)<4u)
+            r19_bword(core,battle,20)<4u)
             fail("R20 second native Emerald battle reused stale sprite bytes or missed phase reacquisition");
         r19_verify_enemy_battle_sprite(core,battle,resource,0,sprite0Offset,sprite0Len);
         r19_verify_enemy_battle_sprite(core,battle,resource,1,sprite1Offset,sprite1Len);
@@ -185,8 +185,8 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
                "external_sprite_fetches=%u ownership_epochs=%u "
                "map_loads=%u battle_cache_reloads=%u provider_reads=%u "
                "return_frames=%u second_frames=%u native_ewram=1\n",
-               r19_bword(core,battle,2),r19_bword(core,battle,19),
-               r19_word(core,map,5),r19_bword(core,battle,18),
+               r19_bword(core,battle,2),r19_bword(core,battle,20),
+               r19_word(core,map,5),r19_bword(core,battle,19),
                device->successful_reads,exit_frames,second_frames);
     }
     printf("PASS_R19_REAL_EMERALD_MIXED_SOURCE_BATTLE player_original_rom=1 "
