@@ -1,8 +1,8 @@
-name: Preserve XGBA R9–R22 verified native evidence
+name: Preserve XGBA R9–R23 verified native evidence
 on:
   push:
     branches:
-      - 'docs/xgba-r22-original-emerald-map-churn-evidence-20261111'
+      - 'docs/xgba-r23-forced-phase-eviction-native-evidence-20261111'
     paths:
       - 'tools/xgba_evidence_archive.py'
       - '.github/workflows/xgba-permanent-evidence.yml'
@@ -23,7 +23,7 @@ jobs:
         with:
           persist-credentials: true
           fetch-depth: 1
-      - name: Fetch original R9-R22 evidence and independently verify exact-head native CI
+      - name: Fetch original R9-R23 evidence and independently verify exact-head native CI
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
@@ -48,6 +48,7 @@ jobs:
           test "$(find evidence/verified/r20 -name '*.png' | wc -l)" -eq 4
           test "$(find evidence/verified/r21 -name '*.png' | wc -l)" -eq 4
           test "$(find evidence/verified/r22 -name '*.png' | wc -l)" -eq 6
+          test "$(find evidence/verified/r23 -name '*.png' | wc -l)" -eq 8
           if find evidence -type f \( -name '*.gba' -o -name '*.sav' -o -name '*.elf' -o -name '*.nds' -o -name '*.bin' -o -name '*.zip' -o -name '*.pak' \) | grep -q .; then
             echo 'FAIL: executable ROM, raw asset or user save in archive'
             exit 1
@@ -75,6 +76,6 @@ jobs:
           if git diff --cached --quiet; then
             echo 'Archive is already current.'
           else
-            git commit -m 'docs: permanently archive original R9–R22 native evidence with verified provenance'
-            git push origin HEAD:docs/xgba-r22-original-emerald-map-churn-evidence-20261111
+            git commit -m 'docs: permanently archive original R9–R23 native evidence with verified provenance'
+            git push origin HEAD:docs/xgba-r23-forced-phase-eviction-native-evidence-20261111
           fi
