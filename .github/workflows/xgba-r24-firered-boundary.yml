@@ -13,6 +13,8 @@ on:
       - 'integration/mgba/xgba_mgba_headless.c'
       - 'tools/xgba_mgba_run.py'
       - 'tests/test_xgba_r24_firered_boundary.py'
+      - 'tests/test_xgba_r24_mmio_unit.c'
+      - 'tests/r24_stub/**'
       - '.github/workflows/xgba-r24-firered-boundary.yml'
   pull_request:
     branches: [main]
@@ -26,6 +28,8 @@ on:
       - 'integration/mgba/xgba_mgba_headless.c'
       - 'tools/xgba_mgba_run.py'
       - 'tests/test_xgba_r24_firered_boundary.py'
+      - 'tests/test_xgba_r24_mmio_unit.c'
+      - 'tests/r24_stub/**'
       - '.github/workflows/xgba-r24-firered-boundary.yml'
   workflow_dispatch:
 permissions:
@@ -34,6 +38,22 @@ concurrency:
   group: xgba-r24-native-original-firered-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  portable-mmio-no-download:
+    name: Portable C MMIO transaction contract (not game emulation)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and execute ORIGINAL XGBA mGBA MMIO device with isolated memory shim
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/r24
+          cc -std=c11 -O2 -Wall -Wextra -Werror -Itests/r24_stub \
+             tests/test_xgba_r24_mmio_unit.c -o build/r24/mmio-unit
+          build/r24/mmio-unit | tee build/r24/unit.log
+          grep -q 'PASS_R24_PORTABLE_ORIGINAL_DEVICE_CONTRACT' build/r24/unit.log
+          echo "R24 portable preflight only: FireRed and Emerald native game suites still mandatory"
   native-original-firered-mmio-adversarial-bounds:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
