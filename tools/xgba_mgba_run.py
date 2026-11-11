@@ -28,7 +28,8 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
            r12_dir=None, r13_dir=None, r14_dir=None,
            r15_dir=None, r15_savefile=None, r15_phase=None, r15_save_probe=0,
            r16_emerald_dir=None, r17_emerald_map_dir=None,
-           r18_dir=None, r18_savefile=None, r18_phase=None, r18_save_probe=0):
+           r18_dir=None, r18_savefile=None, r18_phase=None, r18_save_probe=0,
+           r19_connected_dir=None, r19_route_offset=0, r19_route_length=0):
     rom = Path(rom).resolve(strict=True)
     if not rom.is_file() or rom.stat().st_size > MAX_ROM:
         raise ValueError("ROM must be a real GBA file of at most 32 MiB")
@@ -145,6 +146,17 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
         cmd.extend(["--r18-dir",str(directory),
                     "--r18-savefile",str(flash),"--r18-phase",r18_phase,
                     "--r18-save-probe",hex(r18_save_probe)])
+    if r19_connected_dir is not None:
+        directory=Path(r19_connected_dir).resolve()
+        if not directory.is_dir() or second_resource_id is None:
+            raise ValueError("R19 requires native original LCD evidence directory and Route101 ID")
+        if r19_route_offset<=32*1024*1024 or not 0<r19_route_length<=16384:
+            raise ValueError("R19 requires exact external original Route101 source range")
+        if r18_dir is not None or r17_emerald_map_dir is not None:
+            raise ValueError("R19 is a distinct Emerald map integration mode")
+        cmd.extend(["--r19-connected-dir",str(directory),
+                    "--r19-route-offset",str(r19_route_offset),
+                    "--r19-route-length",str(r19_route_length)])
     if disabled:
         cmd.append("--disabled")
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
@@ -180,6 +192,9 @@ def main():
     p.add_argument("--r18-savefile", help="Private native 128 KiB Emerald Flash save file")
     p.add_argument("--r18-phase", choices=["write","continue","corrupt"])
     p.add_argument("--r18-save-probe", type=lambda s:int(s,0), default=0)
+    p.add_argument("--r19-connected-dir", help="Run original Emerald multi-map D-pad and native tileset proof")
+    p.add_argument("--r19-route-offset", type=lambda s:int(s,0), default=0)
+    p.add_argument("--r19-route-length", type=lambda s:int(s,0), default=0)
     p.add_argument("--r15-savefile", help="Private real mGBA Flash file, never publish")
     p.add_argument("--r15-phase", choices=["write","continue","corrupt"])
     p.add_argument("--r15-save-probe", type=lambda s:int(s,0), default=0)
@@ -196,7 +211,10 @@ def main():
                  r16_emerald_dir=args.r16_emerald_dir,
                  r17_emerald_map_dir=args.r17_emerald_map_dir,
                  r18_dir=args.r18_dir, r18_savefile=args.r18_savefile,
-                 r18_phase=args.r18_phase, r18_save_probe=args.r18_save_probe)
+                 r18_phase=args.r18_phase, r18_save_probe=args.r18_save_probe,
+                 r19_connected_dir=args.r19_connected_dir,
+                 r19_route_offset=args.r19_route_offset,
+                 r19_route_length=args.r19_route_length)
     print(out.stdout, end="")
     if out.stderr:
         print(out.stderr, file=sys.stderr, end="")
