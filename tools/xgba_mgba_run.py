@@ -23,7 +23,7 @@ MAX_GUEST_RESOURCE = 16 * 1024
 
 
 def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
-           probe_address=0, disabled=False):
+           probe_address=0, disabled=False, screenshot=None):
     rom = Path(rom).resolve(strict=True)
     if not rom.is_file() or rom.stat().st_size > MAX_ROM:
         raise ValueError("ROM must be a real GBA file of at most 32 MiB")
@@ -57,6 +57,8 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
         str(frames),
         hex(probe_address),
     ]
+    if screenshot is not None:
+        cmd.extend(["--screenshot", str(Path(screenshot).resolve())])
     if disabled:
         cmd.append("--disabled")
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
@@ -77,10 +79,12 @@ def main():
     p.add_argument("--frames", type=int, default=600)
     p.add_argument("--probe-address", type=lambda s: int(s, 0), default=0)
     p.add_argument("--disabled", action="store_true")
+    p.add_argument("--screenshot", help="Write an actual mGBA-rendered 240x160 PNG")
     args = p.parse_args()
     out = launch(args.rom, args.manifest, args.resource_id,
                  emulator=args.emulator, frames=args.frames,
-                 probe_address=args.probe_address, disabled=args.disabled)
+                 probe_address=args.probe_address, disabled=args.disabled,
+                 screenshot=args.screenshot)
     print(out.stdout, end="")
     if out.stderr:
         print(out.stderr, file=sys.stderr, end="")
