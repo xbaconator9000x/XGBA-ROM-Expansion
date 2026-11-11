@@ -88,6 +88,8 @@ static void XgbaR10InstallOnRealField(void)
     struct XgbaStagedSprite stage;
     bool8 used = FALSE;
     u32 received;
+    gXgbaR10Proof.magic = XGBA_R10_MAGIC;
+    gXgbaR10Proof.state = 0x21;
 
     XgbaR10CopyGuestId(gXgbaR10CrystalId, sXgbaR10CrystalName,
                        sizeof(gXgbaR10CrystalId));
@@ -102,12 +104,18 @@ static void XgbaR10InstallOnRealField(void)
     stage.validatedByProvider = received == XGBA_R10_BYTES;
     sXgbaR10SpriteTiles = XgbaLoadStagedSpriteSheet(
         &original, XGBA_R10_TAG_TILE, &stage, &used);
+    gXgbaR10Proof.tile = sXgbaR10SpriteTiles;
+    gXgbaR10Proof.state = 0x22;
     LoadSpritePalette(&pal);
-    if (sXgbaR10SpriteTiles == 0xFFFF)
+    if (sXgbaR10SpriteTiles == 0xFFFF) {
+        gXgbaR10Proof.state = 0xE1;
         return;
+    }
     sXgbaR10SpriteId = CreateSprite(&sXgbaR10Template, 120, 78, 0);
-    if (sXgbaR10SpriteId == MAX_SPRITES)
+    if (sXgbaR10SpriteId == MAX_SPRITES) {
+        gXgbaR10Proof.state = 0xE2;
         return;
+    }
     gSprites[sXgbaR10SpriteId].oam.priority = 0;
     gXgbaR10Proof.magic = XGBA_R10_MAGIC;
     gXgbaR10Proof.verified = received == XGBA_R10_BYTES;
@@ -127,6 +135,8 @@ static void XgbaR10InstallOnRealField(void)
 static void XgbaR10TickRealOverworld(void)
 {
     if (!sXgbaR10Ready) {
+        gXgbaR10Proof.magic = XGBA_R10_MAGIC;
+        gXgbaR10Proof.state = 0x20;
         XgbaR10InstallOnRealField();
         return;
     }
@@ -192,6 +202,8 @@ def make_firered_real_overworld_sources(firered:Path):
         world_new,
         "    NewGameInitData();\n    ResetInitialPlayerAvatarState();",
         "    NewGameInitData();\n"
+        "    gXgbaR10Proof.magic = XGBA_R10_MAGIC;\n"
+        "    gXgbaR10Proof.state = 0x10;\n"
         "    /* Native real Pallet Town map assets, events and overworld loop. */\n"
         "    SetWarpDestination(MAP_GROUP(MAP_PALLET_TOWN),\n"
         "                       MAP_NUM(MAP_PALLET_TOWN), -1, 10, 13);\n"
