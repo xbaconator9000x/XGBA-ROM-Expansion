@@ -98,7 +98,7 @@ class NativeEmeraldResourceBoundaries(unittest.TestCase):
             fp.seek(base)
             fp.write(r6.PAYLOAD)
             fp.seek(max_offset)
-            fp.write(cls.payload+b"\\0")  # adjacent +1-byte boundary fixture
+            fp.write(cls.payload+b"\0")  # adjacent +1-byte boundary fixture
             fp.seek(bad_offset)
             fp.write(b"R24 external corrupted digest!!!") # 32 bytes
         manifest_data={
