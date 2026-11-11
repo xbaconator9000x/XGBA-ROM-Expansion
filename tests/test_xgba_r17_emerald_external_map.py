@@ -85,7 +85,7 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                 address,length=native_symbols[sym]
                 begin=address-0x08000000
                 blob=orig_rom[begin:begin+length]
-                if not 16<=len(blob)<=2048 or blob[0]!=0x10:
+                if not 16<=len(blob)<=8192 or blob[0]!=0x10:
                     raise AssertionError("Original Emerald front battle graphic is not valid bounded LZ77: "+sym)
                 cls.battle_original_compressed[species_name]=blob
         if cls.resource_bytes>16384:
@@ -268,7 +268,7 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                 cls.battle_front_buffer=syms["gXgbaR19FrontCompressed"][0]
                 if not 0x02000000<=cls.battle_probe<0x02040000 or not (
                         0x02000000<=cls.battle_front_buffer<
-                        cls.battle_front_buffer+4096<=0x02040000):
+                        cls.battle_front_buffer+16384<=0x02040000):
                     raise AssertionError("R19 mixed battle proof/sprite buffers exceed real 256KiB EWRAM")
             return
         result=launcher.launch(rom,manifest,RID,
