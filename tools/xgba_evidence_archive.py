@@ -39,6 +39,10 @@ SOURCES={
   "01-house-before-save.png 02-house-after-flash-save.png 03-cold-boot-house-reloaded.png 04-after-cold-boot-pallet.png proof.json".split()),
  "r16":(42990445836,13840644779,"b182dfa07a45673630c13d234b64a0e3d8e26a66",62,
   "emerald-boot-enabled.png emerald-boot-disabled.png proof.json".split()),
+ "r17":(42993487976,13842542465,"1dcb7427edec36110cc894097ea745802b516f72",64,
+  "01-littleroot-real-external-map.png 02-littleroot-after-real-dpad.png proof.json".split()),
+ "r18":(42995836013,13844226288,"261442f961c9121752f944b0c9fedbfb2999bd7a",65,
+  "01-original-emerald-before-flash.png 02-original-emerald-after-flash-write.png 03-cold-emerald-reacquired-littleroot.png proof.json".split()),
 }
 def sha(b): return hashlib.sha256(b).hexdigest()
 def fetch(url,token,maxlen):
@@ -120,6 +124,47 @@ def gallery():
        "No executable ROMs, sidecars, save files or raw proprietary game assets are archived.",
        "Screenshots contain game imagery belonging to its rights holders and are shown",
        "only as limited, noncommercial engineering documentation.","",
+       "## R18 — original Emerald Flash save, cold continuation and reloaded external map","",
+       "The pinned source-built original Emerald saved to genuine Flash, exited mGBA,",
+       "and a fresh process continued from the real save in externally backed Littleroot.",
+       "A third process verified corrupt-resource refusal without altering the good save.",
+       "Five exact-head native tests passed, including original CPU/EWRAM/BG VRAM checks.",
+       "",
+       row(["Original Emerald before Flash save","After Flash sector write","Cold-reloaded Littleroot"]),
+       row(["---","---","---"]),
+       row([thumb("r18","01-original-emerald-before-flash.png","Before original Flash save"),
+            thumb("r18","02-original-emerald-after-flash-write.png","After Flash write"),
+            thumb("r18","03-cold-emerald-reacquired-littleroot.png","Cold resumed Littleroot Town")]),
+       "",
+       "[R18 native CI 5/5](https://github.com/"+REPO+"/actions/runs/42995836013) · "
+       "[source PR #65](https://github.com/"+REPO+"/pull/65) · "
+       "[SHA-verified provenance](verified/r18/provenance.json) · [proof](verified/r18/proof.json)",
+       "",
+       "**Limits:** actual Emerald Flash was invoked by a test-only SELECT shortcut; this",
+       "does not yet demonstrate the graphical Start→Save menu, arbitrary maps,",
+       "battle assets, stock mGBA or a production-friendly pack-mismatch UI.",
+       "",
+       "## R17 — real Emerald Littleroot map and complete secondary tileset from external storage","",
+       "The actual source-built Emerald game had its native Littleroot map grid and border,",
+       "Petalburg secondary graphics/palettes/metatiles/attributes stripped from the ROM.",
+       "The engine fetched the original bytes from beyond 32 MiB, verified its map grid",
+       "and native background VRAM, and moved the player by physical D-pad input.",
+       "Six genuine native acceptance tests passed at exact head, also independently in PR CI.",
+       "",
+       row(["Original Emerald with external Littleroot map","Same native game after real D-pad"]),
+       row(["---","---"]),
+       row([thumb("r17","01-littleroot-real-external-map.png","Littleroot using external map"),
+            thumb("r17","02-littleroot-after-real-dpad.png","After physical player movement")]),
+       "",
+       "[Passing R17 native push CI 6/6](https://github.com/"+REPO+"/actions/runs/42993487976) · "
+       "[matching exact-head PR CI](https://github.com/"+REPO+"/actions/runs/42993559059) · "
+       "[source PR #64](https://github.com/"+REPO+"/pull/64) · "
+       "[SHA-verified provenance](verified/r17/provenance.json) · [proof](verified/r17/proof.json)",
+       "",
+       "**Limits:** this is one original Emerald external town map and its secondary tileset,",
+       "with test-only title/truck-sequence bypass. General map transitions and Emerald",
+       "Flash save/cold restart are not part of R17.",
+       "",
        "## R16 — original Pokémon Emerald decomp executes XGBA's existing native provider","",
        "Pinned source-built pokeemerald (MODERN=1) issues the same XGBA MMIO resource request",
        "used by FireRed, receives and verifies bytes in the physical GBA's EWRAM, and",
@@ -218,7 +263,7 @@ def main():
     if os.getenv("GITHUB_REPOSITORY",REPO)!=REPO:raise ValueError("Unexpected repository")
     count=0
     for name,info in SOURCES.items():count+=archive_one(name,info,token)
-    if count<55:raise ValueError("Incomplete R9–R16 evidence collection")
+    if count<62:raise ValueError("Incomplete R9–R18 evidence collection")
     (ROOT/"evidence"/"README.md").write_text(gallery())
     readme=ROOT/"README.md"
     text=readme.read_text()

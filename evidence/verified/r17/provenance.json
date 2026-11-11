@@ -1,0 +1,28 @@
+{
+  "milestone": "R17",
+  "source_run": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42993487976",
+  "source_artifact": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42993487976/artifacts/13842542465",
+  "source_head_sha": "1dcb7427edec36110cc894097ea745802b516f72",
+  "implementation_pr": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/64",
+  "source_artifact_zip_sha256": "3ff37cd23dbea053d670e7b3434522dbd51b32b497d6010fe52431af1e5dedee",
+  "files": {
+    "01-littleroot-real-external-map.png": {
+      "original_sha256": "9c48835984f206b9392fa590f1f72629954dffd54e6addf0eddd5a674e197161",
+      "archived_sha256": "9c48835984f206b9392fa590f1f72629954dffd54e6addf0eddd5a674e197161",
+      "unaltered": true,
+      "size": 5989
+    },
+    "02-littleroot-after-real-dpad.png": {
+      "original_sha256": "a7f11f99364d7737c93e1a1353c24c1a90a7505c8eb228fac033ab2587d079ff",
+      "archived_sha256": "a7f11f99364d7737c93e1a1353c24c1a90a7505c8eb228fac033ab2587d079ff",
+      "unaltered": true,
+      "size": 5913
+    },
+    "proof.json": {
+      "original_sha256": "6bb09c58e367cf69a4f8fd6ffa7d10b868cf233d6362e937c116ee9989018760",
+      "archived_sha256": "c4c5632bd9850ec27611690ae59c824ea0ee8f8092f37a4269a5970d5fda81f7",
+      "unaltered": false,
+      "size": 147423
+    }
+  }
+}

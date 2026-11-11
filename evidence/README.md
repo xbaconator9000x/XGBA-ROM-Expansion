@@ -7,6 +7,41 @@ No executable ROMs, sidecars, save files or raw proprietary game assets are arch
 Screenshots contain game imagery belonging to its rights holders and are shown
 only as limited, noncommercial engineering documentation.
 
+## R18 — original Emerald Flash save, cold continuation and reloaded external map
+
+The pinned source-built original Emerald saved to genuine Flash, exited mGBA,
+and a fresh process continued from the real save in externally backed Littleroot.
+A third process verified corrupt-resource refusal without altering the good save.
+Five exact-head native tests passed, including original CPU/EWRAM/BG VRAM checks.
+
+| Original Emerald before Flash save | After Flash sector write | Cold-reloaded Littleroot |
+| --- | --- | --- |
+| [![Before original Flash save](verified/r18/01-original-emerald-before-flash.png)](verified/r18/01-original-emerald-before-flash.png) | [![After Flash write](verified/r18/02-original-emerald-after-flash-write.png)](verified/r18/02-original-emerald-after-flash-write.png) | [![Cold resumed Littleroot Town](verified/r18/03-cold-emerald-reacquired-littleroot.png)](verified/r18/03-cold-emerald-reacquired-littleroot.png) |
+
+[R18 native CI 5/5](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42995836013) · [source PR #65](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/65) · [SHA-verified provenance](verified/r18/provenance.json) · [proof](verified/r18/proof.json)
+
+**Limits:** actual Emerald Flash was invoked by a test-only SELECT shortcut; this
+does not yet demonstrate the graphical Start→Save menu, arbitrary maps,
+battle assets, stock mGBA or a production-friendly pack-mismatch UI.
+
+## R17 — real Emerald Littleroot map and complete secondary tileset from external storage
+
+The actual source-built Emerald game had its native Littleroot map grid and border,
+Petalburg secondary graphics/palettes/metatiles/attributes stripped from the ROM.
+The engine fetched the original bytes from beyond 32 MiB, verified its map grid
+and native background VRAM, and moved the player by physical D-pad input.
+Six genuine native acceptance tests passed at exact head, also independently in PR CI.
+
+| Original Emerald with external Littleroot map | Same native game after real D-pad |
+| --- | --- |
+| [![Littleroot using external map](verified/r17/01-littleroot-real-external-map.png)](verified/r17/01-littleroot-real-external-map.png) | [![After physical player movement](verified/r17/02-littleroot-after-real-dpad.png)](verified/r17/02-littleroot-after-real-dpad.png) |
+
+[Passing R17 native push CI 6/6](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42993487976) · [matching exact-head PR CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42993559059) · [source PR #64](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/64) · [SHA-verified provenance](verified/r17/provenance.json) · [proof](verified/r17/proof.json)
+
+**Limits:** this is one original Emerald external town map and its secondary tileset,
+with test-only title/truck-sequence bypass. General map transitions and Emerald
+Flash save/cold restart are not part of R17.
+
 ## R16 — original Pokémon Emerald decomp executes XGBA's existing native provider
 
 Pinned source-built pokeemerald (MODERN=1) issues the same XGBA MMIO resource request

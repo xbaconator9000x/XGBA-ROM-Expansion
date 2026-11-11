@@ -1,0 +1,34 @@
+{
+  "milestone": "R18",
+  "source_run": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42995836013",
+  "source_artifact": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42995836013/artifacts/13844226288",
+  "source_head_sha": "261442f961c9121752f944b0c9fedbfb2999bd7a",
+  "implementation_pr": "https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/65",
+  "source_artifact_zip_sha256": "6e1d18da03588772a4b2cb38f004d0c5e752fb79f7fa94041d45408014be3173",
+  "files": {
+    "01-original-emerald-before-flash.png": {
+      "original_sha256": "82bdb41333f5820a27aadbe5f2e4d5d50199d707148fb427c4f44ef1be838041",
+      "archived_sha256": "82bdb41333f5820a27aadbe5f2e4d5d50199d707148fb427c4f44ef1be838041",
+      "unaltered": true,
+      "size": 6508
+    },
+    "02-original-emerald-after-flash-write.png": {
+      "original_sha256": "25010e79921b8a9fe47c511f2ec7717e6f32de69e1b8181e88220f04dc1aab42",
+      "archived_sha256": "25010e79921b8a9fe47c511f2ec7717e6f32de69e1b8181e88220f04dc1aab42",
+      "unaltered": true,
+      "size": 5266
+    },
+    "03-cold-emerald-reacquired-littleroot.png": {
+      "original_sha256": "6344d9148c57dcba31e57c5092adaa2716b02fd8c4836d71420ecc0f421c8680",
+      "archived_sha256": "6344d9148c57dcba31e57c5092adaa2716b02fd8c4836d71420ecc0f421c8680",
+      "unaltered": true,
+      "size": 5948
+    },
+    "proof.json": {
+      "original_sha256": "de02a6d31234d306b2a3e0eda45bcbc726e7a45a69aa854d6fafce83b7872d48",
+      "archived_sha256": "de02a6d31234d306b2a3e0eda45bcbc726e7a45a69aa854d6fafce83b7872d48",
+      "unaltered": true,
+      "size": 299598
+    }
+  }
+}
