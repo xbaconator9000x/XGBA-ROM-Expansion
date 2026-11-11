@@ -119,6 +119,7 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         if r19:
             config.write_text(config.read_text()+
                 "\n#define XGBA_R19_CONNECTED_MAPS 1\n"
+                "#define XGBA_R19_NATIVE_TEST_OPEN_ROUTE 1\n"
                 f"#define XGBA_R19_LITTLEROOT_BYTES {len(cls.pack)}u\n"
                 f"#define XGBA_R19_ROUTE_BYTES {len(cls.route_pack)}u\n"
                 f"#define XGBA_R19_ROUTE_OFFSET {cls.route_pack_offset}u\n"
