@@ -13,6 +13,8 @@
 #define XGBA_R24_STATUS_BAD_RANGE 3u
 #define XGBA_R24_STATUS_BAD_ID 4u
 #define XGBA_R24_STATUS_RESOURCE_FAILURE 5u
+#define XGBA_R25_DMA_BUSY 6u
+#define XGBA_R25_MAGIC 0x52323544u /* R25D */
 
 struct XgbaR24Proof {
     volatile u32 magic, state, errors, disabled;
@@ -20,6 +22,8 @@ struct XgbaR24Proof {
     volatile u32 limit, short_capacity, plus_one_capacity;
     volatile u32 accepted_hash, final_hash, guard_errors;
     volatile u32 final_buffer, ewram_heap_start, main_ticks_at_end;
+    /* R25 append-only opt-in proof; first 17 R24 words unchanged. */
+    volatile u32 r25_magic, r25_busy_status, r25_dma_source, r25_errors;
 };
 EWRAM_DATA volatile struct XgbaR24Proof gXgbaR24Proof = {0};
 EWRAM_DATA char gXgbaR24Id[40] = {0};
@@ -84,6 +88,9 @@ static void XgbaR24Run(void)
     u8 *region,*data;
     u32 i;
     gXgbaR24Proof.magic=XGBA_R24_MAGIC;
+#ifdef XGBA_R25_DMA_TEST
+    gXgbaR24Proof.r25_magic=XGBA_R25_MAGIC;
+#endif
     gXgbaR24Proof.state=1u;
     gXgbaR24Proof.limit=XGBA_R24_LIMIT;
     gXgbaR24Proof.short_capacity=XGBA_R24_LIMIT-1u;
@@ -156,18 +163,55 @@ static void XgbaR24Run(void)
     XgbaR24CheckUnchanged(data);
     XgbaR24CheckGuards(region);
 
-    /* Recovery must still work after all seven failures. */
+#ifdef XGBA_R25_DMA_TEST
+    /* A genuine original ARM DMA3 register write arms deferred repeating
+     * VBlank DMA from the same external-resource destination. No host
+     * mutates CPU memory or fakes channel state. Host provider must refuse
+     * the conflicting write; disarm before the normal recovery fetch. */
+    {
+        volatile u32 *const dmaSrc=(volatile u32 *)0x040000D4u;
+        volatile u32 *const dmaDst=(volatile u32 *)0x040000D8u;
+        volatile u16 *const dmaLen=(volatile u16 *)0x040000DCu;
+        volatile u16 *const dmaCtrl=(volatile u16 *)0x040000DEu;
+        u32 dmaSink[4]={0u,0u,0u,0u};
+        *dmaCtrl=0u;
+        *dmaSrc=(u32)data;
+        *dmaDst=(u32)dmaSink;
+        *dmaLen=4u;
+        *dmaCtrl=0x9600u; /* enable + repeat + VBlank + 32-bit */
+        gXgbaR24Proof.r25_dma_source=(u32)data;
+        gXgbaR24Proof.r25_busy_status=
+            XgbaR24Fetch("emerald.r24.maximum",data,XGBA_R24_LIMIT,
+                         XGBA_R25_DMA_BUSY,0u);
+        XgbaR24CheckUnchanged(data);
+        XgbaR24CheckGuards(region);
+        *dmaCtrl=0u;
+        if(gXgbaR24Proof.r25_busy_status!=XGBA_R25_DMA_BUSY)
+            ++gXgbaR24Proof.r25_errors;
+    }
+#endif
+
+    /* Recovery must still work after all refused requests. */
     XgbaR24Fetch("emerald.r24.maximum",data,XGBA_R24_LIMIT,
                   XGBA_R24_STATUS_SUCCESS,XGBA_R24_LIMIT);
     gXgbaR24Proof.final_hash=XgbaR24Hash(data,XGBA_R24_LIMIT);
     XgbaR24CheckGuards(region);
     if(gXgbaR24Proof.final_hash!=gXgbaR24Proof.accepted_hash ||
-       gXgbaR24Proof.attempts!=9u ||
-       gXgbaR24Proof.accepted!=2u ||
-       gXgbaR24Proof.rejected!=7u ||
-       gXgbaR24Proof.unchanged_checks!=7u ||
-       gXgbaR24Proof.guard_errors)
+       gXgbaR24Proof.accepted!=2u || gXgbaR24Proof.guard_errors)
         ++gXgbaR24Proof.errors;
+#ifdef XGBA_R25_DMA_TEST
+    if(gXgbaR24Proof.attempts!=10u ||
+       gXgbaR24Proof.rejected!=8u ||
+       gXgbaR24Proof.unchanged_checks!=8u ||
+       gXgbaR24Proof.r25_busy_status!=XGBA_R25_DMA_BUSY ||
+       gXgbaR24Proof.r25_errors)
+        ++gXgbaR24Proof.errors;
+#else
+    if(gXgbaR24Proof.attempts!=9u ||
+       gXgbaR24Proof.rejected!=7u ||
+       gXgbaR24Proof.unchanged_checks!=7u)
+        ++gXgbaR24Proof.errors;
+#endif
     Free(region);
     gXgbaR24Proof.state=(gXgbaR24Proof.errors?0xE24u:3u);
 }
