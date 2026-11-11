@@ -7,6 +7,19 @@ No executable ROMs, sidecars, save files or raw proprietary game assets are arch
 Screenshots contain game imagery belonging to its rights holders and are shown
 only as limited, noncommercial engineering documentation.
 
+## R16 — original Pokémon Emerald decomp executes XGBA's existing native provider
+
+Pinned source-built pokeemerald (MODERN=1) issues the same XGBA MMIO resource request
+used by FireRed, receives and verifies bytes in the physical GBA's EWRAM, and
+continues executing its original game loop. Disabled mode made zero external reads.
+This proves engine/guest-ABI portability, **not** Emerald external map, save or battle support.
+
+| Emerald with sidecar enabled | Same Emerald ROM, extension disabled |
+| --- | --- |
+| [![Emerald guest XGBA enabled](verified/r16/emerald-boot-enabled.png)](verified/r16/emerald-boot-enabled.png) | [![Emerald guest XGBA disabled](verified/r16/emerald-boot-disabled.png)](verified/r16/emerald-boot-disabled.png) |
+
+[R16 exact-head native CI 5/5](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42990445836) · [R16 source PR #62](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/62) · [Provenance](verified/r16/provenance.json) · [Compact proof](verified/r16/proof.json)
+
 ## R15 — original FireRed Flash save, cold reboot, and reloaded external house
 
 These are four genuine 240×160 screenshots from two separate native mGBA processes.
