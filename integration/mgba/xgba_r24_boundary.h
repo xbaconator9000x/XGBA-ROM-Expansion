@@ -101,7 +101,7 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
     for(unsigned i=0;i<900u;++i)
         core->runFrame(core);
     if(boot ? r24_word(core,boot,6)<100u :
-              r24_word(core,proof,15)<100u)
+              r24_word(core,proof,16)<100u)
         fail("R24 original source-built GBA game loop did not continue");
     char name[1024];
     if(snprintf(name,sizeof(name),"%s/%s-boundary-%s.png",
