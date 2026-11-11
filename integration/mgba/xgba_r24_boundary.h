@@ -157,8 +157,9 @@ static void xgba_r24_boundary_run(struct mCore *core,uint32_t boot,
               r24_word(core,proof,16)<100u)
         fail("R24 original source-built GBA game loop did not continue");
     char name[1024];
-    if(snprintf(name,sizeof(name),"%s/%s-boundary-%s.png",
+    if(snprintf(name,sizeof(name),"%s/%s-%s-%s.png",
           directory,boot?"emerald":"firered",
+          r25_dma?"dma-armed":"boundary",
           enabled?"enabled":"disabled") >= (int)sizeof(name))
         fail("R24 native LCD evidence path overflow");
     save_native_frame(core,name);
