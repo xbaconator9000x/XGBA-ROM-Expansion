@@ -12,7 +12,7 @@ import xgba_r16_emerald_decomp_patch as r16
 
 ROOT=Path(__file__).resolve().parents[1]
 
-def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=False,r19_connected:bool=False)->dict[Path,str]:
+def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=False,r19_connected:bool=False,r19_battle:bool=False)->dict[Path,str]:
     e=Path(emerald)
     originals=r16.make_emerald_boot_sources(e)
     world=e/"src/overworld.c"
@@ -28,6 +28,8 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                       (ROOT/"integration/emerald/xgba_r18_save.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_MAPS__",
                       (ROOT/"integration/emerald/xgba_r19_connected_maps.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R19_BATTLE__",
+                      (ROOT/"integration/emerald/xgba_r19_battle_assets.inc").resolve().as_posix())
     if "__XGBA_" in hook:
         raise r16.AdapterDrift("unresolved Emerald R17 native resource header")
     try:
@@ -106,6 +108,44 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
           "    gFieldCallback = FieldCB_DefaultWarpExit;",
           "normal native field loading rather than truck introduction")
         world.write_text(s)
+        if r19_battle:
+            # Instrument original Emerald battle sprite decompression, NOT a
+            # hand-drawn host sprite or ad-hoc memcpy into emulator VRAM.
+            battle=e/"src/battle_gfx_sfx_util.c"
+            original_battle=battle.read_text()
+            originals[battle]=original_battle
+            b=r16.one(original_battle,
+                '#include "constants/battle_palace.h"',
+                '#include "constants/battle_palace.h"\n'
+                'extern const struct CompressedSpriteSheet *XgbaR19BattleFrontSheet('
+                'u16 species,const struct CompressedSpriteSheet *original);\n'
+                'extern void XgbaR19BattleOpponentRendered(u16 species,const void *destination);\n'
+                'extern void XgbaR19BattleLocalRendered(u16 species,const void *destination);',
+                "R19 original Emerald battle source insertion")
+            b=r16.one(b,
+                'HandleLoadSpecialPokePic_DontHandleDeoxys(&gMonFrontPicTable[species],',
+                'HandleLoadSpecialPokePic_DontHandleDeoxys('
+                'XgbaR19BattleFrontSheet(species,&gMonFrontPicTable[species]),',
+                "R19 original opponent battle sprite source selection")
+            b=r16.one(b,
+                "                                              species, currentPersonality);\n\n"
+                "    paletteOffset = OBJ_PLTT_ID(battler);",
+                "                                              species, currentPersonality);\n"
+                "    XgbaR19BattleOpponentRendered(species,"
+                " gMonSpritesGfxPtr->sprites.ptr[position]);\n\n"
+                "    paletteOffset = OBJ_PLTT_ID(battler);",
+                "R19 actual opponent sprite decompressed by Emerald game")
+            mark="void BattleLoadPlayerMonSpriteGfx(struct Pokemon *mon, u8 battler)\n{"
+            if b.count(mark)!=1:raise r16.AdapterDrift("Original player battle graphic loader drift")
+            before,after=b.split(mark,1)
+            after=r16.one(after,
+                "    }\n\n    paletteOffset = OBJ_PLTT_ID(battler);",
+                "    }\n"
+                "    XgbaR19BattleLocalRendered(species,"
+                " gMonSpritesGfxPtr->sprites.ptr[position]);\n\n"
+                "    paletteOffset = OBJ_PLTT_ID(battler);",
+                "R19 original-ROM player sprite decompression")
+            battle.write_text(before+mark+after)
         return originals
     except:
         r16.restore_sources(originals)
