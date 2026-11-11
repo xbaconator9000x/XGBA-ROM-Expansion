@@ -304,7 +304,7 @@ def main():
     readme=ROOT/"README.md"
     text=readme.read_text()
     anchor="## Verified evidence — screenshots, animations and executable results\n"
-    addition="\n**[Browse the permanent evidence gallery: original FireRed screenshots, GIFs and SHA-256 manifests](evidence/README.md)**\n"
+    addition="\n**[Browse the permanent evidence gallery: original FireRed and Emerald LCD screenshots, GIFs and SHA-256 manifests](evidence/README.md)**\n"
     if text.count(anchor)!=1:raise ValueError("README anchor changed")
     if addition not in text:text=text.replace(anchor,anchor+addition,1)
     readme.write_text(text)
