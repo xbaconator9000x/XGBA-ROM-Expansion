@@ -72,7 +72,7 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
     const struct ResourceFile *resource,uint64_t routeOffset,uint32_t routeLen,
     uint64_t sprite0Offset,uint32_t sprite0Len,
     uint64_t sprite1Offset,uint32_t sprite1Len,int enabled,int r20_reentry,
-    uint32_t r21_heap_probe)
+    uint32_t r21_heap_probe,unsigned r23_battles)
 {
     if(!map || !battle || !dir || !resource->second_id)
         fail("R19 battle requires actual Emerald map plus independent opponent sprite sources");
@@ -215,6 +215,120 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
                    "original_battles=2 native_ewram=1\n",
                    h[1],h[7],h[9],h[8],h[13],h[14],h[10],
                    h[11],h[6],h[2]);
+        }
+        if (r23_battles) {
+            /* R23 deliberately forces repeated eviction of BOTH overworld
+             * packs by original Emerald battle LZ77 fronts, then original
+             * field reloads both sets before the next renderer callback.
+             * This goes beyond two connected maps (R22 keeps both resident).
+             * R23 is four REAL battles with original keypad/controller input,
+             * not a host RAM patch or another artificially staged visual. */
+            if(r23_battles!=4u || !r21_heap_probe)
+                fail("R23 requires four bounded real battles and original malloc proof");
+            const uint32_t arena0=r19_word(core,map,21);
+            const uint32_t arena1=r19_word(core,map,22);
+            for(unsigned encounter=3u;encounter<=r23_battles;++encounter) {
+                const uint32_t tick=r19_word(core,map,17);
+                unsigned return_frames=0;
+                for(;return_frames<6500u;++return_frames) {
+                    core->setKeys(core,(return_frames%26u)<3u?1u:0u);
+                    core->runFrame(core);
+                    if(r19_word(core,map,17)>tick+20u &&
+                       r19_word(core,map,24)==1u &&
+                       r19_word(core,map,26)>=encounter)
+                        break;
+                }
+                if(return_frames>=6500u) {
+                    fprintf(stderr,"R23_RETURN_FAIL encounter=%u tick=%u "
+                            "owner=%u epoch=%u loads=%u world_claims=%u\n",
+                            encounter,r19_word(core,map,17),
+                            r19_word(core,map,24),r19_word(core,map,25),
+                            r19_word(core,map,5),r19_word(core,map,26));
+                    fail("R23 original battle never returned to externally restored overworld");
+                }
+                core->setKeys(core,0);
+                r14_wait(core,70u);
+                r19_verify(core,map,resource,routeOffset,routeLen,9u);
+                if(r19_word(core,map,5)!=2u*encounter ||
+                   r19_word(core,map,24)!=1u ||
+                   r19_word(core,map,25)!=2u*encounter-1u ||
+                   r19_word(core,map,26)!=encounter ||
+                   r19_word(core,map,27)!=encounter-1u ||
+                   r19_word(core,map,21)!=arena0 ||
+                   r19_word(core,map,22)!=arena1 ||
+                   r19_word(core,map,20)!=0u ||
+                   device->successful_reads!=4u*encounter-1u ||
+                   device->failed_reads)
+                    fail("R23 source-backed map reacquisition, arena ownership or external reads drift");
+                char frame_name[100];
+                snprintf(frame_name,sizeof(frame_name),
+                    "r23-%02u-original-emerald-fully-recovered-external-field",
+                    2u*encounter-1u);
+                r17_frame(core,dir,frame_name);
+                /* Start another wild battle through the ORIGINAL field's
+                 * test-only R-button trigger (not a direct host callback). */
+                r14_press(core,1u<<8,3);
+                unsigned battle_frames=0;
+                for(;battle_frames<4500u;++battle_frames) {
+                    const unsigned a=(battle_frames>80u &&
+                         (battle_frames%100u)<3u)?1u:0u;
+                    core->setKeys(core,a);
+                    core->runFrame(core);
+                    if(r19_bword(core,battle,1)==encounter &&
+                       r19_bword(core,battle,2)==2u*encounter &&
+                       r19_bword(core,battle,18)==encounter &&
+                       r19_bword(core,battle,19)==2u*encounter &&
+                       r19_bword(core,battle,10)==1u)
+                        break;
+                }
+                if(battle_frames>=4500u ||
+                   r19_bword(core,battle,11)!=0u ||
+                   r19_word(core,map,20)!=0u ||
+                   device->failed_reads ||
+                   device->successful_reads!=4u*encounter+1u)
+                    fail("R23 source-backed battle failed to invalidate and reacquire opponent fronts");
+                r19_verify_enemy_battle_sprite(core,battle,resource,0,sprite0Offset,sprite0Len);
+                r19_verify_enemy_battle_sprite(core,battle,resource,1,sprite1Offset,sprite1Len);
+                r14_wait(core,90u);
+                snprintf(frame_name,sizeof(frame_name),
+                    "r23-%02u-original-emerald-two-reacquired-external-opponents",
+                    2u*encounter);
+                r17_frame(core,dir,frame_name);
+                if (r19_bword(core,battle,20)!=2u*encounter ||
+                    r19_word(core,map,24)!=1u || /* last field tick is stale in battle */
+                    r19_bword(core,battle,11)!=0u)
+                    fail("R23 opponent sprite lifecycle or original game proof drift");
+            }
+            uint32_t h[17];
+            for(unsigned k=0;k<17u;++k)
+                h[k]=core->busRead32(core,r21_heap_probe+4u*k);
+            if(h[0]!=0x52323148u || h[1]!=4u || h[2]!=0u ||
+               h[5]!=arena0 || h[6]!=16384u ||
+               h[7]!=16u || h[8]!=4u || h[9]!=16u ||
+               h[10]<12288u || h[11]==0u || h[12]==0u ||
+               h[13]<12u || h[14]!=24576u || h[15]==0u ||
+               h[16]<3u ||
+               r19_word(core,map,5)!=8u ||
+               r19_bword(core,battle,2)!=8u ||
+               r19_bword(core,battle,19)!=8u ||
+               r19_word(core,map,25)!=8u ||
+               r19_word(core,map,26)!=4u ||
+               r19_word(core,map,27)!=4u ||
+               device->successful_reads!=17u || device->failed_reads)
+                fail("R23 bounded phase eviction or original Emerald heap integrity failed");
+            printf("PASS_R23_REAL_EMERALD_FORCED_PHASE_EVICTION "
+                   "original_battles=4 world_reacquisitions=3 "
+                   "external_map_fetches=%u external_sprite_fetches=%u "
+                   "arena_epoch=%u world_claims=%u battle_claims=%u "
+                   "guest_pressure_cycles=%u original_allocations=%u "
+                   "original_frees=%u oversize_rejections=%u "
+                   "guard_bytes_verified=%u original_heap_audits=%u "
+                   "provider_reads=%u native_ewram=1 "
+                   "native_bg_vram=1 source_byte_verified=1\n",
+                   r19_word(core,map,5),r19_bword(core,battle,2),
+                   r19_word(core,map,25),r19_word(core,map,26),
+                   r19_word(core,map,27),h[1],h[7],h[9],h[8],
+                   h[14],h[13],device->successful_reads);
         }
         printf("PASS_R20_EWRAM_ARENA_REENTRY real_original_battles=2 "
                "external_sprite_fetches=%u ownership_epochs=%u "
