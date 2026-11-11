@@ -1,0 +1,59 @@
+{
+  "DMA_in_flight_aliasing_tested": false,
+  "actual_original_battles": 4,
+  "arena_owner_epoch": 8,
+  "compiled_source_rom_sha256": "1122c29afb45c5a1342b9b224c387207115a3cba81e4c3838086d8330c35951e",
+  "distinct_simultaneously_resident_map_regions": 2,
+  "external_map_pack_fetches": 8,
+  "full_arena_heap_reclamation_tested": false,
+  "guest_live_guard_bytes_verified": 24576,
+  "independent_original_compressed_front_fetches": 8,
+  "independently_verified_field_returns": 3,
+  "linker_arena_start": "0x2032134",
+  "linker_reserved_guest_arena_bytes": 16384,
+  "milestone": "R23_ORIGINAL_EMERALD_FORCED_MAP_BATTLE_PHASE_EVICTIONS",
+  "native_guest_ewram_bytes": 262144,
+  "native_mgba_source_sha": "fd9dc5c2cbf234365068855851107e762fc6211b",
+  "native_probe": {
+    "arena_epoch": 8,
+    "battle_claims": 4,
+    "external_map_fetches": 8,
+    "external_sprite_fetches": 8,
+    "guard_bytes_verified": 24576,
+    "guest_pressure_cycles": 4,
+    "native_bg_vram": 1,
+    "native_ewram": 1,
+    "original_allocations": 16,
+    "original_battles": 4,
+    "original_frees": 16,
+    "original_heap_audits": 12,
+    "oversize_rejections": 4,
+    "provider_reads": 17,
+    "source_byte_verified": 1,
+    "world_claims": 4,
+    "world_reacquisitions": 3
+  },
+  "original_allocations_and_frees_each": 16,
+  "original_game_source_sha": "731ad5bfd6e6f265508d0efcca0ba42f9dcf5881",
+  "original_memblock_allocator_cycles": 4,
+  "oversized_guest_malloc_refusals": 4,
+  "scope": "Original Emerald four real battles and three original field returns; repeated overwriting the same arena by two connected map packs vs two compressed opponent sprites, with byte-level EWRAM/BG VRAM verification and original MemBlock pressure. Not third-map eviction, arbitrary pack sizes, DMA queues or stock hardware.",
+  "source_blobs_sha256": {
+    "littleroot": "b8a39692e3a2fafc0e2011ddc0f0f12a0a78d6fed705cf2ea7562811aa951b02",
+    "poochyena": "4e796c20b44be797c9c2514d790b348a5717ea17b8ed0f5b93df016878211384",
+    "route101": "f1d3fd342b5166e926fa3d0a2cabddf64175bb9c45f57485c218e9c7cc42b3cc",
+    "zigzagoon": "384b823a453078115b1a5daea03f4fe66d0442b09a7ccc4f23be5a2f0a3435aa"
+  },
+  "status": "native_accepted",
+  "tested_resource_sets": {
+    "battle": [
+      "emerald.battle.poochyena.front",
+      "emerald.battle.zigzagoon.front"
+    ],
+    "overworld": [
+      "emerald.littleroot",
+      "emerald.route101"
+    ]
+  },
+  "third_connected_map_eviction_tested": false
+}
