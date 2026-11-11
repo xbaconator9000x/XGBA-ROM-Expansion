@@ -183,6 +183,57 @@ static void verify_game_copy(struct mCore *core, uint32_t probe,
     puts("PASS_R7_NATIVE_FIRERED_MMIO_LOAD_TO_OBJ_VRAM");
 }
 
+static void save_native_frame(struct mCore *core, const char *path)
+{
+    struct VFile *vf = VFileOpen(path, O_CREAT | O_TRUNC | O_WRONLY);
+    if (!vf)
+        fail("R9 cannot create mGBA render frame");
+    int ok = mCoreTakeScreenshotVF(core, vf);
+    vf->close(vf);
+    if (!ok)
+        fail("R9 native mGBA screenshot encoder failed");
+}
+
+static void run_r9_movement_scene(struct mCore *core, uint32_t probe,
+                                   const char *directory,
+                                   const struct XgbaGbaDevice *device,
+                                   int enabled)
+{
+    if (!probe || !directory)
+        fail("R9 scene requires probe symbol and frame directory");
+    if (core->busRead32(core, probe+4) != 3u)
+        fail("R9 game scene never announced readiness");
+    uint32_t start_x = core->busRead32(core, probe+20);
+    uint32_t start_y = core->busRead32(core, probe+24);
+    char filename[1024];
+    for (unsigned i=0; i<16; ++i) {
+        /* GBA KEYINPUT bit 4=Right, bit 7=Down.
+         * These are real controller input events, not host memory writes. */
+        unsigned buttons = (i>=3 && i<10) ? (1u<<4) :
+                           (i>=10 && i<15) ? (1u<<7) : 0u;
+        core->setKeys(core, buttons);
+        core->runFrame(core);
+        if (snprintf(filename, sizeof(filename), "%s/frame-%02u.png",
+                     directory, i) >= (int)sizeof(filename))
+            fail("R9 screenshot filename too long");
+        save_native_frame(core, filename);
+    }
+    core->setKeys(core, 0u);
+    uint32_t finish_x = core->busRead32(core, probe+20);
+    uint32_t finish_y = core->busRead32(core, probe+24);
+    uint32_t updates = core->busRead32(core, probe+28);
+    if (finish_x <= start_x || finish_y <= start_y ||
+        finish_x-start_x > 50 || finish_y-start_y > 50 || updates < 8)
+        fail("R9 did not observe genuine game-controlled directional movement");
+    if (enabled && (device->successful_reads != 1 || device->failed_reads))
+        fail("R9 enabled pack not fetched exactly once by FireRed");
+    if (!enabled && (device->successful_reads || device->failed_reads))
+        fail("R9 disabled emulator unexpectedly fetched external assets");
+    printf("PASS_R9_REAL_GBA_KEY_INPUT_MOVEMENT enabled=%d x=%u->%u y=%u->%u "
+           "updates=%u 16_native_mgba_frames=1\\n",
+           enabled, start_x, finish_x, start_y, finish_y, updates);
+}
+
 static void save_actual_game_frame(struct mCore *core, const char *path, int enabled)
 {
     if (!path)
@@ -215,15 +266,18 @@ static void save_actual_game_frame(struct mCore *core, const char *path, int ena
 
 int main(int argc, char **argv)
 {
-    if (argc < 11 || argc > 14)
-        fail("usage: ROM DATA SOURCE_ID SOURCE_SHA RESOURCE_ID OFFSET LENGTH RESOURCE_SHA FRAMES PROBE_ADDR [--screenshot path] [--disabled]");
+    if (argc < 11 || argc > 16)
+        fail("usage: ROM DATA SOURCE_ID SOURCE_SHA RESOURCE_ID OFFSET LENGTH RESOURCE_SHA FRAMES PROBE_ADDR [--screenshot path] [--scene-dir path] [--disabled]");
     const char *screenshot = NULL;
+    const char *scene_dir = NULL;
     int enabled = 1;
     for (int i=11; i<argc; ++i) {
         if (!strcmp(argv[i], "--disabled"))
             enabled = 0;
         else if (!strcmp(argv[i], "--screenshot") && ++i < argc && !screenshot)
             screenshot = argv[i];
+        else if (!strcmp(argv[i], "--scene-dir") && ++i < argc && !scene_dir)
+            scene_dir = argv[i];
         else
             fail("unknown or malformed option");
     }
@@ -266,8 +320,8 @@ int main(int argc, char **argv)
     struct mCore *core = GBACoreCreate();
     if (!core || !core->init(core))
         fail("mGBA core initialization failed");
-    mColor *video = screenshot ? calloc(240u*160u, sizeof(mColor)) : NULL;
-    if (screenshot && !video)
+    mColor *video = (screenshot || scene_dir) ? calloc(240u*160u, sizeof(mColor)) : NULL;
+    if ((screenshot || scene_dir) && !video)
         fail("cannot allocate GBA framebuffer");
     if (video)
         core->setVideoBuffer(core, video, 240);
@@ -285,6 +339,8 @@ int main(int argc, char **argv)
             break;
     }
     verify_game_copy(core, (uint32_t)probe, &device, &resource, enabled);
+    if (scene_dir)
+        run_r9_movement_scene(core, (uint32_t)probe, scene_dir, &device, enabled);
     if (screenshot) {
         /* Present multiple actual LCD frames after the GBA game sets OAM and
          * registers. No host graphics manipulation is permitted. */
