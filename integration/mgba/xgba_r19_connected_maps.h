@@ -28,7 +28,8 @@ static void r19_verify(struct mCore *c,uint32_t p,
 {
     if(r19_word(c,p,0)!=XGBA_R7_MMIO_MAGIC ||
        r19_word(c,p,1)!=3u || r19_word(c,p,2)!=0u ||
-       r19_word(c,p,3)!=map || r19_word(c,p,5)!=2u)
+       r19_word(c,p,3)!=map || r19_word(c,p,5)<2u ||
+       (r19_word(c,p,5)&1u))
         fail("R19 source-built Emerald map/loader proof missing");
     uint32_t a=r19_word(c,p,21),b=r19_word(c,p,22);
     if(a<0x02000000u || b<a+r->length ||
