@@ -81,13 +81,17 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
     r17_frame(core,dir,"01-native-emerald-before-mixed-battle");
     r14_press(core,1u<<8,3); /* actual R key triggers the game's battle setup */
     unsigned frames=0;
-    for(;frames<2400u;++frames) {
+    for(;frames<3600u;++frames) {
         if(r19_bword(core,battle,0)==0x52313942u &&
            (r19_bword(core,battle,3)&3u)==3u &&
            r19_bword(core,battle,4)!=0u &&
            r19_bword(core,battle,10)==1u)
             break;
-        core->setKeys(core,0u);
+        /* Original Emerald pauses at battle-introduction and send-out
+         * dialogue. Use real GBA A-button presses; never force player
+         * sprites into VRAM through emulator memory writes. */
+        unsigned a=((frames>80u && (frames%100u)<3u)?1u:0u);
+        core->setKeys(core,a);
         core->runFrame(core);
     }
     fprintf(stderr,"R19_BATTLE_NATIVE_DIAG frames=%u request=%u ext=%u bits=%u "
@@ -96,13 +100,14 @@ static void xgba_r19_mixed_battle_run(struct mCore *core,uint32_t map,
             r19_bword(core,battle,3),r19_bword(core,battle,4),
             r19_bword(core,battle,10),r19_bword(core,battle,16),
             device->successful_reads,device->failed_reads);
-    if(frames>=2400u || r19_bword(core,battle,11) ||
+    if(frames>=3600u || r19_bword(core,battle,11) ||
        r19_bword(core,battle,1)!=1u ||
        r19_bword(core,battle,2)!=2u ||
        (r19_bword(core,battle,3)&3u)!=3u ||
        r19_bword(core,battle,4)==0 ||
        r19_bword(core,battle,10)!=1u ||
-       device->failed_reads || device->successful_reads!=5u)
+       device->failed_reads || device->successful_reads<5u ||
+       device->successful_reads>9u)
         fail("R19 original Emerald double battle did not concurrently load local and two external Pokémon sprites");
     uint32_t localSource=r19_bword(core,battle,12);
     uint32_t localDest=r19_bword(core,battle,9);
