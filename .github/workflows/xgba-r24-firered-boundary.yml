@@ -14,6 +14,7 @@ on:
       - 'tools/xgba_mgba_run.py'
       - 'tests/test_xgba_r24_firered_boundary.py'
       - 'tests/test_xgba_r24_mmio_unit.c'
+      - 'tests/test_xgba_r24_guest_syntax.c'
       - 'tests/r24_stub/**'
       - '.github/workflows/xgba-r24-firered-boundary.yml'
   pull_request:
@@ -29,6 +30,7 @@ on:
       - 'tools/xgba_mgba_run.py'
       - 'tests/test_xgba_r24_firered_boundary.py'
       - 'tests/test_xgba_r24_mmio_unit.c'
+      - 'tests/test_xgba_r24_guest_syntax.c'
       - 'tests/r24_stub/**'
       - '.github/workflows/xgba-r24-firered-boundary.yml'
   workflow_dispatch:
@@ -53,6 +55,14 @@ jobs:
              tests/test_xgba_r24_mmio_unit.c -o build/r24/mmio-unit
           build/r24/mmio-unit | tee build/r24/unit.log
           grep -q 'PASS_R24_PORTABLE_ORIGINAL_DEVICE_CONTRACT' build/r24/unit.log
+          cc -std=c11 -fsyntax-only -Wall -Wextra -Werror \
+            -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast \
+            tests/test_xgba_r24_guest_syntax.c
+          python3 -m py_compile tools/xgba_r24_firered_patch.py \
+            tools/xgba_r16_emerald_decomp_patch.py \
+            tests/test_xgba_r24_firered_boundary.py \
+            tests/test_xgba_r24_emerald_boundary.py
+          echo "PASS_R24_STATIC_GUEST_AND_HOST_SYNTAX"
           echo "R24 portable preflight only: FireRed and Emerald native game suites still mandatory"
   native-original-firered-mmio-adversarial-bounds:
     runs-on: ubuntu-24.04
