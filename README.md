@@ -1,12 +1,41 @@
 # XGBA — Expanding What a Game Boy Advance Game Can Access
 
-**Experimental proof of concept achieved · 11 November 2026**
+**Executed expansion proof: R6–R9 verified · 11 November 2026**
 
 > **A real, source-built Pokémon FireRed executable running in the native mGBA core successfully used graphics bytes stored _beyond the conventional 32 MiB GBA ROM window_.** The game received a validated external resource through an opt-in host bridge, used FireRed's own sprite-sheet loading routine, and copied the expected bytes into emulated GBA object VRAM.
 >
 > **R6 integration milestone: 32/32 tests passed**, including the positive executable-game test and five executed fallback/failure cases. [Passing push CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42940797581) · [Passing pull-request CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42940805793) · [Experimental implementation, PR #40](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/40).
 
 **The milestone is real; the expansion platform is not yet a finished product.** The successful demonstration uses a temporarily instrumented FireRed build and an external test harness linked to mGBA. It is **not** an off-the-shelf emulator patch, a downloadable expanded FireRed game, unrestricted CPU-addressable ROM, or proof of compatibility with original GBA hardware.
+
+## Latest verified milestone — R9: same ROM, different external graphics packs
+
+**11 November 2026 · Real compiled FireRed + native patched mGBA · 5/5 R9 tests passed**
+
+**We have now visibly demonstrated resource-pack swapping while a controllable GBA scene runs.** The *same, byte-identical FireRed ROM* booted in the native modified mGBA core with two separate graphics resource packs held **past the 32 MiB cartridge ROM window**:
+
+| Run | External resource | Observed screen behavior |
+| --- | --- | --- |
+| **Pack A: Crystal** | Cyan/blue native 64×64 4bpp GBA sprite, 2,048 bytes | Real game-loaded crystal emblem over tiled scene |
+| **Pack B: Magma** | Red/orange/gold native GBA sprite, same ID/size/offset, different SHA-256 | Visibly different emblem without rebuilding the ROM |
+| **Extension disabled** | No external reads | Controlled scene and original graphics fallback remain operational |
+
+The source-built FireRed ARM/Thumb program sets up GBA BG0 tilemap and OAM, receives an external resource through the **game-initiated R7 mGBA MMIO interface**, and polls actual **GBA KEYINPUT** to move a player sprite. During each run the native mGBA software renderer captured **16 original 240×160 screenshots**; those captured images—not synthetic or AI-generated gameplay—were encoded into three GIF animations.
+
+The executed test observed the player moving **(24, 92) → (38, 102)** in each run; **891 pixels** differed between the crystal and magma emblems in the central comparison region, and the disabled run performed **zero host resource lookups**. The game ROM's SHA-256 was **identical in all three runs**.
+
+**See the actual executable evidence:** [passing R9 run and artifact](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42950960274) · [GIFs, original PNG frames, three-way comparison and proof.json](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42950960274/artifacts/13824972843) · [R9 implementation PR #49](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/49). The R9 PR CI also passed, and prior R7/R8 native regression CI remained green at the exact R9 commit.
+
+**Important scope boundary:** R9 uses a **custom controllable tile-based proof scene inside a compiled FireRed executable**, *not* the canonical FireRed overworld map/event engine. It is not yet a standalone GUI emulator release, a drop-in arbitrary ROM patcher, or original-cartridge support. The R7–R9 implementations remain in **open draft PRs #47–#49**, preserving the previously validated baseline. The GitHub Actions GIF artifact is retention-limited; its underlying code and test procedure remain in the repository.
+
+### The engineering progression
+
+- **R6:** a source-built FireRed game consumed bytes beyond 32 MiB with a test host bridge.
+- **R7:** FireRed issued its **own resource request** to the opt-in patched native mGBA core; exact OBJ VRAM bytes and disabled fallback verified.
+- **R8:** a real compiled FireRed executable **displayed an externally loaded graphic on mGBA's actual 240×160 LCD output**. [R8 PNG proof](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42947434354).
+- **R9:** two independently selected external 4bpp graphics packs visibly changed a **controllable game-side scene**, with unchanged ROM identity and recorded mGBA GIFs.
+
+**Next work:** integrate into normal FireRed maps and sprites, test bigger/many resource packs, establish lifecycle/save-state compatibility, and package an accessible ROM-hacking workflow. Total external content can grow separately from the addressable cartridge window, but CPU/GBA memory limits still apply.
 
 ## Why this matters for GBA ROM hacking
 
