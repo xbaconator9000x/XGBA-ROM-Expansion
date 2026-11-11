@@ -38,8 +38,10 @@ def make_emerald_boot_sources(emerald:Path)->dict[Path,str]:
                     (ROOT/"integration/fire_red/xgba_guest.h").resolve().as_posix())
     if "__XGBA_" in inc:
         raise AdapterDrift("unresolved guest header path")
-    after=one(before,'#include "global.h"',
-              '#include "global.h"\n'+inc,"global game ABI include")
+    # Emerald defines struct Main in main.h, which is included later
+    # than global.h; inject only after the complete native header block.
+    after=one(before,'#include "constants/rgb.h"',
+              '#include "constants/rgb.h"\n'+inc,"complete game ABI include")
     after=one(after,
               "    InitHeap(gHeap, HEAP_SIZE);\n\n    gSoftResetDisabled = FALSE;",
               "    InitHeap(gHeap, HEAP_SIZE);\n"
