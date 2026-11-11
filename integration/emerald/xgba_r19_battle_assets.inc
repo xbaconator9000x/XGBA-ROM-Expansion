@@ -12,7 +12,7 @@
 #include "constants/species.h"
 
 #define XGBA_R19_BATTLE_MAGIC 0x52313942u
-#define XGBA_R19_BATTLE_BUFFER_CAP 2048u
+#define XGBA_R19_BATTLE_BUFFER_CAP 8192u
 struct XgbaR19BattleProof {
     volatile u32 magic,requested,external_reads,external_species_bits,local_species_bits;
     volatile u32 foe_species0,foe_species1,foe_gfx0,foe_gfx1,local_back_gfx;
