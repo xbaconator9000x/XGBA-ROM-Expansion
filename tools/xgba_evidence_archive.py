@@ -20,6 +20,11 @@ REPO="xbaconator9000x/XGBA-ROM-Expansion"
 ROOT=Path(__file__).resolve().parents[1]
 BASE=ROOT/"evidence"/"verified"
 SOURCES={
+ "r21":(43023656373,13855614154,"83f0159018b0fc6e710d1b72de8cd359d94175fe",71,
+  ("01-native-emerald-before-mixed-battle.png "
+   "02-original-emerald-local-plus-two-external-opponents.png "
+   "03-r20-original-emerald-map-after-battle.png "
+   "04-r20-second-native-mixed-source-battle.png proof.json").split()),
  "r20":(43020066026,13855101381,"448bb54c3240fc9c344b1b6bbb1735365721d45d",69,
   ("01-native-emerald-before-mixed-battle.png "
    "02-original-emerald-local-plus-two-external-opponents.png "
@@ -133,6 +138,34 @@ def gallery():
        "No executable ROMs, sidecars, save files or raw proprietary game assets are archived.",
        "Screenshots contain game imagery belonging to its rights holders and are shown",
        "only as limited, noncommercial engineering documentation.","",
+       "## R21 — actual Emerald allocator pressure across two original battles","",
+       "R21 passed 10/10 exact-head native tests against original source-built",
+       "Emerald and native mGBA. The guest's real MemBlock allocator performs",
+       "two 12 KiB fragmentation pressure cycles using Alloc/Free/CheckHeap,",
+       "checks 12,288 adjacent live guard bytes and rejects two impossible",
+       "oversized allocations. Peak observed live heap allocation: 24,896 bytes.",
+       "The linker-audited 16 KiB external-resource tail remains outside the",
+       "original allocator throughout two source-backed battle encounters.",
+       "",
+       row(["Before heap pressure and first battle","First source-backed battle"]),
+       row(["---","---"]),
+       row([thumb("r21","01-native-emerald-before-mixed-battle.png","Original Emerald field"),
+            thumb("r21","02-original-emerald-local-plus-two-external-opponents.png","First original battle")]),
+       "",
+       row(["Recovered external overworld","Second battle after heap pressure"]),
+       row(["---","---"]),
+       row([thumb("r21","03-r20-original-emerald-map-after-battle.png","Reacquired external map"),
+            thumb("r21","04-r20-second-native-mixed-source-battle.png","Second original battle")]),
+       "",
+       "[R21 exact-head native CI 10/10](https://github.com/"+REPO+"/actions/runs/43023656373) · "
+       "[R20 reentry regression](https://github.com/"+REPO+"/actions/runs/43023656014) · "
+       "[R19 connected map regression](https://github.com/"+REPO+"/actions/runs/43023656317) · "
+       "[provenance](verified/r21/provenance.json) · [source PR #71](https://github.com/"+REPO+"/pull/71)",
+       "",
+       "**Limits:** small reproducible allocator pressure, not arbitrary heap",
+       "exhaustion, DMA hazards, hundreds of transitions, dynamic reserved",
+       "tail release, stock emulator support or original GBA hardware.",
+       "",
        "## R20 — Emerald bounded EWRAM arena survives battle → map → battle","",
        "Native 6/6 at exact implementation head 448bb54c. Original source-built",
        "Emerald executes two real double battles separated by a return to its",
@@ -331,7 +364,7 @@ def main():
     if os.getenv("GITHUB_REPOSITORY",REPO)!=REPO:raise ValueError("Unexpected repository")
     count=0
     for name,info in SOURCES.items():count+=archive_one(name,info,token)
-    if count<74:raise ValueError("Incomplete R9–R20 evidence collection")
+    if count<79:raise ValueError("Incomplete R9–R21 evidence collection")
     (ROOT/"evidence"/"README.md").write_text(gallery())
     readme=ROOT/"README.md"
     text=readme.read_text()
