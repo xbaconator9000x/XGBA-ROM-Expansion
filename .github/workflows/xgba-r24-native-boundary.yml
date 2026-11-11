@@ -2,6 +2,7 @@ name: XGBA R24 original Emerald adversarial 16KiB resource boundary
 on:
   push:
     branches:
+      - main
       - 'phase3/r24-native-resource-boundary-20261112'
     paths:
       - 'tools/xgba_r16_emerald_decomp_patch.py'
@@ -14,6 +15,7 @@ on:
       - 'tests/test_xgba_r24_emerald_boundary.py'
       - '.github/workflows/xgba-r24-native-boundary.yml'
   pull_request:
+    branches: [main]
     paths:
       - 'tools/xgba_r16_emerald_decomp_patch.py'
       - 'integration/emerald/**'
