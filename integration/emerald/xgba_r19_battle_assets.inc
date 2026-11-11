@@ -18,6 +18,8 @@ struct XgbaR19BattleProof {
     volatile u32 foe_species0,foe_species1,foe_gfx0,foe_gfx1,local_back_gfx;
     volatile u32 double_battle,errors,original_rom_front,external_front0,external_front1;
     volatile u32 overworld_map,game_battle_flags,original_player_species;
+    /* R20 phase ownership counters appended after the R19 proof layout. */
+    volatile u32 phase_claims,front_reloads,last_arena_epoch;
 };
 EWRAM_DATA volatile struct XgbaR19BattleProof gXgbaR19BattleProof = {0};
 /* Phase-aware memory reuse: a battle's compressed fronts take ownership
@@ -48,6 +50,14 @@ const struct CompressedSpriteSheet *XgbaR19BattleFrontSheet(
     if(species==SPECIES_POOCHYENA)slot=0;
     if(species==SPECIES_ZIGZAGOON)slot=1;
     if(slot<0)return original; /* original ROM-resident Pokémon remain untouched */
+    if (sXgbaR20ArenaOwner != XGBA_R20_ARENA_BATTLE) {
+        /* Even when old booleans say READY, a world reload may already
+         * have overwritten their compressed sprite bytes. Never reuse. */
+        XgbaR20ClaimBattleArena();
+        sXgbaR19FrontReady[0]=FALSE;
+        sXgbaR19FrontReady[1]=FALSE;
+        ++gXgbaR19BattleProof.phase_claims;
+    }
     bytes=slot?XGBA_R19_ZIGZAGOON_FRONT_BYTES:XGBA_R19_POOCHYENA_FRONT_BYTES;
     name=slot?"emerald.battle.zigzagoon.front":"emerald.battle.poochyena.front";
     if(bytes<16u || bytes>XGBA_R19_BATTLE_BUFFER_CAP)
@@ -65,6 +75,8 @@ const struct CompressedSpriteSheet *XgbaR19BattleFrontSheet(
         sXgbaR19FrontSheet[slot].data=(const u32 *)gXgbaR19FrontCompressed[slot];
         sXgbaR19FrontReady[slot]=TRUE;
         ++gXgbaR19BattleProof.external_reads;
+        ++gXgbaR19BattleProof.front_reloads;
+        gXgbaR19BattleProof.last_arena_epoch=sXgbaR20ArenaEpoch;
         gXgbaR19BattleProof.external_species_bits|=1u<<slot;
         if(!slot)gXgbaR19BattleProof.external_front0=(u32)gXgbaR19FrontCompressed[slot];
         else gXgbaR19BattleProof.external_front1=(u32)gXgbaR19FrontCompressed[slot];
@@ -97,7 +109,7 @@ void XgbaR19BattleLocalRendered(u16 species,const void *destination)
 }
 static void XgbaR19BattleTrigger(void)
 {
-    if(gXgbaR19BattleProof.requested || !(gMain.newKeys & R_BUTTON))
+    if(!(gMain.newKeys & R_BUTTON))
         return;
     /* Test-only entry retains Emerald's actual wild battle transition,
      * controller callbacks and battle sprite decompression routines. */
@@ -110,13 +122,11 @@ static void XgbaR19BattleTrigger(void)
     gPlayerPartyCount=2;
     gEnemyPartyCount=2;
     gXgbaR19BattleProof.magic=XGBA_R19_BATTLE_MAGIC;
-    gXgbaR19BattleProof.requested=1u;
+    ++gXgbaR19BattleProof.requested;
     gXgbaR19BattleProof.overworld_map=gSaveBlock1Ptr->location.mapNum;
-    /* Battle replaces map-resident bytes. Invalidate both cache identities
-     * so original Emerald will fetch the proper map/secondary tilesets again
-     * before rendering overworld after the battle callback returns. */
-    sXgbaR19Ready[0]=FALSE;
-    sXgbaR19Ready[1]=FALSE;
+    /* Do not invalidate or overwrite the connected-map cache during the
+     * field-to-battle fade. The FIRST external sprite load claims ownership
+     * and invalidates it, after the field is no longer its consumer. */
     BattleSetup_StartWildBattle();
     /* Normal wild battle resets flags inside DoStandardWildBattle. Enable
      * the original game's 4-battler renderer AFTER that reset. */
