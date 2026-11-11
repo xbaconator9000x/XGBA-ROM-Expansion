@@ -40,8 +40,7 @@ static int ewram_range(uint32_t address, uint32_t size)
  *
  * Conservatively cover both the configured and current source positions.
  * The pinned mGBA GBADMARegister bits (7:8 src mode, 10 width, 15 enable)
- * and GBADMA source/count fields are read-only here. There is no alteration
- * of DMA scheduling, register writes, emulator timing, or guest RAM size.
+ * and GBADMA source/count fields are read-only here. This guard uses real\n * 256 KiB EWRAM mirrored aliases, not only the first physical window.\n * There is no alteration\n * of DMA scheduling, register writes, emulator timing, or guest RAM size.
  *
  * This protects host-initiated MMIO commits. It does NOT validate direct
  * original-game CPU writes or constitute a general guest DMA lease API. */
@@ -60,7 +59,33 @@ static int xgba_r25_dma_source_alias(uint32_t source, uint32_t count,
         const uint64_t retreat = ((uint64_t)count - 1u) * width;
         low = retreat > source ? 0u : (uint64_t)source - retreat;
     }
-    return low < (uint64_t)dest + bytes && (uint64_t)dest < high;
+
+    /* Real pinned mGBA mirrors the 256 KiB EWRAM backing throughout the
+     * 0x02xxxxxx region (address & 0x3ffff). Comparing only CPU addresses
+     * would MISS armed DMA sources using 0x02040000+ aliases, or a transfer
+     * crossing the 256 KiB physical boundary. Clip the source footprint to
+     * the EWRAM address region and compare its physical modulo intervals. */
+    const uint64_t physical_start = EWRAM_START;
+    const uint64_t region_end = 0x03000000u;
+    if (low < physical_start)
+        low = physical_start;
+    if (high > region_end)
+        high = region_end;
+    if (low >= high)
+        return 0;
+
+    const uint64_t span = high - low;
+    if (span >= EWRAM_SIZE)
+        return 1; /* A full physical wrap necessarily touches destination. */
+    const uint32_t physical_offset =
+        (uint32_t)((low - physical_start) % EWRAM_SIZE);
+    const uint32_t physical_dest = dest - EWRAM_START;
+    const uint32_t physical_end = physical_offset + (uint32_t)span;
+    if (physical_end <= EWRAM_SIZE)
+        return physical_offset < physical_dest + bytes &&
+               physical_dest < physical_end;
+    return physical_offset < physical_dest + bytes ||
+           physical_dest < physical_end - EWRAM_SIZE;
 }
 
 static int xgba_r25_pending_dma_alias(const struct GBA *gba,
