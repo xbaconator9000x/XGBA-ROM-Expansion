@@ -1,12 +1,5 @@
 {
-  "current": {
-    "baseline": "75567257f1d2a0b7d4741e5be4d8ca0b379200aa",
-    "created_at": "2026-11-11T00:56:00.026695+00:00",
-    "id": "R6_FIRERED_MGBA_SMOKE",
-    "reason": "Task finished with no new PR commit",
-    "status": "BLOCKED",
-    "task_id": "2d165a18-1449-4654-9914-e36ddb983761"
-  },
+  "current": null,
   "daily_dispatches": {
     "2026-11-09": 2,
     "2026-11-10": 3,
@@ -51,10 +44,20 @@
       "review_approved": false,
       "status": "DELIVERED_AWAITING_INDEPENDENT_REVIEW",
       "task_id": "ed12463e-fcf8-49ff-9f72-654a8785b8af"
+    },
+    {
+      "package": "R6_FIRERED_MGBA_SMOKE",
+      "task_id": "2d165a18-1449-4654-9914-e36ddb983761",
+      "head": "b9632c5ae9c562bb764047657deb12d7b0ffe891",
+      "status": "DELIVERED_AWAITING_INDEPENDENT_REVIEW",
+      "review_approved": false,
+      "delivery_origin": "MANUAL_RECOVERY_NOT_COPILOT",
+      "original_copilot_task_outcome": "COMPLETED_WITHOUT_PR_COMMIT",
+      "recovery_evidence": "Pinned pret FireRed MODERN=1 ROM built and executed by pinned native mGBA core; experimental source opt-in request retrieved sidecar graphics asset after 32MiB via R5 provider; game-side R4 SpriteSheet path copied exact resource to GBA OBJ VRAM; 5 fail-closed/legacy emulated negative cases; full exact-head push CI 42940797581 and PR CI 42940805793 32/32. Reusable emulator product integration and user-facing release are not yet implemented."
     }
   ],
   "independent_semantic_approvals": 0,
-  "next": 5,
+  "next": 6,
   "repository": "xbaconator9000x/XGBA-ROM-Expansion",
   "schema": 1,
   "target_pr": 40
