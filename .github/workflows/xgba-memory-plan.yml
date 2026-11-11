@@ -21,21 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Execute reusable residency, overlap, alignment, and EWRAM failure tests
+      - name: Execute shared residency, 64-bit logical offsets, VRAM, reset, and EWRAM checks
         shell: bash
         run: |
           set -euo pipefail
           python3 -m py_compile tools/xgba_memory_plan.py tests/test_xgba_memory_plan.py
           python3 -m unittest discover -s tests -p 'test_xgba_memory_plan.py' -v 2>&1 | tee xgba-memory-plan.log
-          test "$(grep -c ' ... ok
+          test "$(grep -c ' ... ok$' xgba-memory-plan.log)" -eq 26
           if grep -q 'skipped=' xgba-memory-plan.log; then
             echo 'Memory checks may not be skipped'
             exit 1
           fi
           echo PASS_XGBA_SHARED_MEMORY_BUDGET_26_TESTS
- xgba-memory-plan.log)" -eq 26
-          if grep -q 'skipped=' xgba-memory-plan.log; then
-            echo 'Memory checks may not be skipped'
-            exit 1
-          fi
-          echo PASS_XGBA_SHARED_MEMORY_BUDGET_12_TESTS
