@@ -1,0 +1,86 @@
+name: XGBA R16 native Emerald decomp resource bridge
+on:
+  push:
+    branches:
+      - 'phase2/r16-emerald-decomp-native-bridge-20261111'
+    paths:
+      - 'tools/xgba_r16_emerald_decomp_patch.py'
+      - 'integration/emerald/**'
+      - 'integration/mgba/xgba_r16_emerald.h'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r16_emerald_decomp.py'
+      - '.github/workflows/xgba-r16-emerald-decomp.yml'
+  pull_request:
+    paths:
+      - 'tools/xgba_r16_emerald_decomp_patch.py'
+      - 'integration/emerald/**'
+      - 'integration/mgba/xgba_r16_emerald.h'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r16_emerald_decomp.py'
+      - '.github/workflows/xgba-r16-emerald-decomp.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r16-native-emerald-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native-emerald-source-build-and-original-lcd:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native GBA compiler, source build and mGBA libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev build-essential cmake python3-pil
+      - name: Retrieve immutable original Emerald decomp and existing mGBA core
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokeemerald.git upstream/pokeemerald
+          git -C upstream/pokeemerald checkout --quiet --detach 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokeemerald rev-parse HEAD)" = 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Compile real source-built Emerald; execute enabled and disabled XGBA in native mGBA
+        shell: bash
+        env:
+          XGBA_R16_EVIDENCE_DIR: ${{ github.workspace }}/r16-evidence
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r16_emerald_decomp_patch.py tests/test_xgba_r16_emerald_decomp.py
+          python3 -m unittest discover -s tests -p 'test_xgba_r16_emerald_decomp.py' -v 2>&1 | tee xgba-r16-tests.log
+          grep -q 'Ran 5 tests' xgba-r16-tests.log
+          grep -q '^OK$' xgba-r16-tests.log
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import json
+          folder=Path("r16-evidence")
+          pngs=sorted(folder.glob("*.png"))
+          assert len(pngs)==2,pngs
+          for p in pngs:
+              with Image.open(p) as im:assert im.size==(240,160)
+          report=json.loads((folder/"proof.json").read_text())
+          assert report["actual_game"]=="pret/pokeemerald MODERN=1"
+          assert report["native_ci_enabled"] and report["native_ci_disabled"]
+          assert not list(folder.glob("*.gba")) and not list(folder.glob("*.sav"))
+          print("PASS_R16_REAL_POKEEMERALD_SHARED_MGBA_ABI_5_TESTS")
+          PY
+      - name: Publish only original native Emerald LCD captures and bounded proof
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r16-original-emerald-decomp-native-boot
+          path: r16-evidence/
+          retention-days: 90
+          if-no-files-found: error
