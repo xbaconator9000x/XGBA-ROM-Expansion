@@ -1,0 +1,108 @@
+name: XGBA R40 native Emerald external script, genuine Flash and cold boot
+on:
+  push:
+    branches: [main, 'phase3/r40-native-emerald-event-flash-20261112']
+    paths:
+      - 'integration/emerald/xgba_r40_external_script.inc'
+      - 'integration/emerald/xgba_r18_save.inc'
+      - 'integration/emerald/xgba_r17_external_littleroot.inc'
+      - 'integration/mgba/xgba_r18_emerald_flash.h'
+      - 'tools/xgba_r40_native_event.py'
+      - 'tools/xgba_r17_emerald_patch.py'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r40_native_script.py'
+      - 'tests/test_xgba_r18_emerald_flash.py'
+      - 'tests/test_xgba_r17_emerald_external_map.py'
+      - '.github/workflows/xgba-r40-native-emerald-script.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'integration/emerald/**'
+      - 'integration/mgba/xgba_r18_emerald_flash.h'
+      - 'tools/xgba_r40_native_event.py'
+      - 'tools/xgba_r17_emerald_patch.py'
+      - 'tools/xgba_mgba_run.py'
+      - 'tests/test_xgba_r40_native_script.py'
+      - 'tests/test_xgba_r18_emerald_flash.py'
+      - 'tests/test_xgba_r17_emerald_external_map.py'
+      - '.github/workflows/xgba-r40-native-emerald-script.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r40-native-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  original-emerald-native-event-script-flash:
+    name: Real Emerald external script interpreter, Flash save, cold restore and bad-script refusal
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned GNU ARM cross-compiler
+        uses: carlosperate/arm-none-eabi-gcc-action@49f4db4520f840e77ab1e99b24cfac2c540a21b1
+        with:
+          release: '13.2.Rel1'
+      - name: Verify toolchain and native PNG dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          arm-none-eabi-gcc --version
+          cmake --version | head -n 1
+          bash tools/xgba_ci_png_prereqs.sh
+          if ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
+            python3 -m pip install --user --break-system-packages --disable-pip-version-check 'Pillow==11.3.0'
+          fi
+      - name: Fetch exact original Emerald and native mGBA source pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokeemerald.git upstream/pokeemerald
+          git -C upstream/pokeemerald checkout --quiet --detach 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokeemerald rev-parse HEAD)" = 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Run genuine original Emerald script events and Flash cold recovery
+        shell: bash
+        env:
+          XGBA_R40_EVIDENCE_DIR: ${{ github.workspace }}/r40-evidence
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r40_native_event.py tools/xgba_r17_emerald_patch.py tools/xgba_mgba_run.py tests/test_xgba_r40_native_script.py
+          PYTHONPATH=tools:tests:integration/mgba python3 -m unittest test_xgba_r40_native_script.NativeEmeraldExternalScriptFlash -v 2>&1 | tee r40-native.log
+          grep -q 'Ran 10 tests' r40-native.log
+          grep -q '^OK$' r40-native.log
+          grep -q 'PASS_R40_NATIVE_EMERALD_SCRIPT_FLASH_WRITE' r40-native.log || test -s r40-evidence/proof.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          p=Path('r40-evidence')
+          report=json.loads((p/'proof.json').read_text())
+          assert report["native_guest"]=="real RunScriptImmediately / original gScriptCmdTable"
+          assert report["actual_gba_flash_written"]
+          assert report["cold_continue_without_script_reexecution"]
+          assert report["malformed_external_script_rejected_before_dispatch"]
+          assert report["flash_unchanged_after_rejected_script"]
+          assert not report["real_team_rocket_script_runtime_test"]
+          assert not report["heart_and_soul_runtime_test"]
+          assert not report["common_multi_rom_game_save"]
+          shots=list(p.glob('*.png'))
+          assert len(shots)==3,shots
+          for path in shots:
+              with Image.open(path) as im: assert im.size==(240,160)
+          assert not list(p.glob('*.gba')) and not list(p.glob('*.sav')) and not list(p.glob('*.bin'))
+          print('PASS_R40_NATIVE_EMERALD_EXTERNAL_SCRIPT_AND_FLASH_COLD_BOOT')
+          PY
+      - name: Publish genuine LCD screenshots and non-ROM proof metadata only
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r40-genuine-emerald-external-script-flash
+          path: |
+            r40-evidence/*.png
+            r40-evidence/proof.json
+          retention-days: 90
+          if-no-files-found: error
