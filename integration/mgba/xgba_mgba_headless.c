@@ -366,6 +366,7 @@ static void run_r10_real_firered_live_swap(struct mCore *core, uint32_t probe,
 #include "xgba_r18_emerald_flash.h"
 #include "xgba_r19_connected_maps.h"
 #include "xgba_r28_three_maps.h"
+#include "xgba_r30_four_maps.h"
 #include "xgba_r19_mixed_battle.h"
 #include "xgba_r24_boundary.h"
 
@@ -419,6 +420,8 @@ int main(int argc, char **argv)
     const char *r18_dir = NULL;
     const char *r19_dir = NULL;
     const char *r28_dir = NULL;
+    const char *r30_dir = NULL;
+    uint64_t r30_route102_offset = 0, r30_route102_length = 0;
     uint64_t r28_oldale_offset = 0;
     uint64_t r28_oldale_length = 0;
     const char *r19_battle_dir = NULL;
@@ -478,6 +481,12 @@ int main(int argc, char **argv)
             r19_dir = argv[i];
         else if (!strcmp(argv[i], "--r28-three-map-dir") && ++i < argc && !r28_dir)
             r28_dir = argv[i];
+        else if (!strcmp(argv[i], "--r30-four-map-dir") && ++i < argc && !r30_dir)
+            r30_dir = argv[i];
+        else if (!strcmp(argv[i], "--r30-route102-offset") && ++i < argc && !r30_route102_offset)
+            r30_route102_offset = parse_number(argv[i]);
+        else if (!strcmp(argv[i], "--r30-route102-length") && ++i < argc && !r30_route102_length)
+            r30_route102_length = parse_number(argv[i]);
         else if (!strcmp(argv[i], "--r28-oldale-offset") && ++i < argc && !r28_oldale_offset)
             r28_oldale_offset = parse_number(argv[i]);
         else if (!strcmp(argv[i], "--r28-oldale-length") && ++i < argc && !r28_oldale_length)
@@ -601,9 +610,9 @@ int main(int argc, char **argv)
     struct mCore *core = GBACoreCreate();
     if (!core || !core->init(core))
         fail("mGBA core initialization failed");
-    mColor *video = (screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir)
+    mColor *video = (screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir || r30_dir)
                    ? calloc(240u*160u, sizeof(mColor)) : NULL;
-    if ((screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir) && !video)
+    if ((screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir || r30_dir) && !video)
         fail("cannot allocate GBA framebuffer");
     if (video)
         core->setVideoBuffer(core, video, 240);
@@ -641,7 +650,7 @@ int main(int argc, char **argv)
         if ((r17_dir || r18_dir) && probe &&
             core->busRead32(core,(uint32_t)probe+4)==0xE17u)
             break;
-        if ((r19_dir || r28_dir) && probe &&
+        if ((r19_dir || r28_dir || r30_dir) && probe &&
             core->busRead32(core,(uint32_t)probe+4)==0xE19u)
             break;
     }
@@ -684,6 +693,17 @@ int main(int argc, char **argv)
     } else if (r18_dir) {
         xgba_r18_emerald_run(core,(uint32_t)probe,(uint32_t)r18_save_probe,
                             r18_dir,r18_phase,&device,&resource,enabled);
+    } else if (r30_dir) {
+        if(!r19_route_offset || !r19_route_length || r19_route_length>8192u ||
+           !r28_oldale_offset || !r28_oldale_length || r28_oldale_length>8192u ||
+           !r30_route102_offset || !r30_route102_length || r30_route102_length>8192u ||
+           r28_dir || r19_dir || r19_battle_dir || r17_dir || r18_dir || r24_dir)
+            fail("R30 source-built original Emerald four-map fixture invalid");
+        uint64_t off[4]={resource.offset,r19_route_offset,r28_oldale_offset,r30_route102_offset};
+        uint32_t len[4]={(uint32_t)resource.length,(uint32_t)r19_route_length,
+                         (uint32_t)r28_oldale_length,(uint32_t)r30_route102_length};
+        xgba_r30_four_map_run(core,(uint32_t)probe,r30_dir,&device,
+                               &resource,off,len,enabled);
     } else if (r28_dir) {
         if(!r19_route_offset || !r19_route_length ||
            r19_route_length>16384u ||

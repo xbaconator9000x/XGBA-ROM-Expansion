@@ -12,10 +12,16 @@ extern const struct MapHeader *const *const gMapGroups[];
 #include "constants/vars.h"
 #include "../common/xgba_ewram_lease.h"
 #ifdef XGBA_R28_THREE_MAPS
-/* R28 game fixture still exposes exactly three original source maps. */
+/* R30 adds one original game map under the same two physical slots. */
+#ifdef XGBA_R30_FOUR_MAPS
+#define XGBA_MAP_CACHE_KEYS 4u
+#define XGBA_R19_MAP_COUNT 4u
+#define XGBA_R30_ROUTE102 17u
+#else
 #define XGBA_MAP_CACHE_KEYS 3u
-#include "../common/xgba_map_cache.h"
 #define XGBA_R19_MAP_COUNT 3u
+#endif
+#include "../common/xgba_map_cache.h"
 #define XGBA_R28_OLDALE 10u
 /* Test-only: physical connected-map traversal must not be interrupted by
  * random wild battle while no starter/party is set up in the native fixture. */
@@ -82,6 +88,9 @@ static void XgbaR20ClaimWorldArena(void)
     sXgbaR19Ready[1] = FALSE;
 #ifdef XGBA_R28_THREE_MAPS
     sXgbaR19Ready[2] = FALSE;
+#ifdef XGBA_R30_FOUR_MAPS
+    sXgbaR19Ready[3] = FALSE;
+#endif
     if(XgbaCacheInvalidate(&sXgbaR28MapCache)!=XGBA_CACHE_HIT)
         XgbaR19Reject();
 #endif
@@ -102,6 +111,9 @@ static void XgbaR20ClaimBattleArena(void)
     sXgbaR19Ready[1] = FALSE;
 #ifdef XGBA_R28_THREE_MAPS
     sXgbaR19Ready[2] = FALSE;
+#ifdef XGBA_R30_FOUR_MAPS
+    sXgbaR19Ready[3] = FALSE;
+#endif
     if(XgbaCacheInvalidate(&sXgbaR28MapCache)!=XGBA_CACHE_HIT)
         XgbaR19Reject();
 #endif
@@ -124,6 +136,9 @@ static s32 XgbaR19Index(u16 group,u16 map)
     if(map==XGBA_R19_ROUTE101)return 1;
 #ifdef XGBA_R28_THREE_MAPS
     if(map==XGBA_R28_OLDALE)return 2;
+#ifdef XGBA_R30_FOUR_MAPS
+    if(map==XGBA_R30_ROUTE102)return 3;
+#endif
 #endif
     return -1;
 }
@@ -165,6 +180,9 @@ static void XgbaR19Load(unsigned idx)
         sXgbaR19Layouts[evicted].border=0;
     }
     if(idx==2)name="emerald.oldale";
+#ifdef XGBA_R30_FOUR_MAPS
+    if(idx==3)name="emerald.route102";
+#endif
 #else
     if(sXgbaR19Ready[idx])return;
 #endif
@@ -181,6 +199,9 @@ static void XgbaR19Load(unsigned idx)
     length=idx?XGBA_R19_ROUTE_BYTES:XGBA_R19_LITTLEROOT_BYTES;
 #ifdef XGBA_R28_THREE_MAPS
     if(idx==2)length=XGBA_R28_OLDALE_BYTES;
+#ifdef XGBA_R30_FOUR_MAPS
+    if(idx==3)length=XGBA_R30_ROUTE102_BYTES;
+#endif
     if(length>(slot?XGBA_R19_RESERVE-XGBA_R19_ROUTE_OFFSET:
                          XGBA_R19_ROUTE_OFFSET))XgbaR19Reject();
 #endif
@@ -195,13 +216,21 @@ static void XgbaR19Load(unsigned idx)
     for(i=2;i<8;i++)
         if(off[i]<32 || off[i]>=length || (off[i]&3u))
             XgbaR19Reject();
-    if(off[2]+800u>off[3] || off[3]+8u>off[4] ||
+    if(off[2]+(
+#ifdef XGBA_R30_FOUR_MAPS
+        idx==3?2000u:
+#endif
+        800u)>off[3] || off[3]+8u>off[4] ||
        off[4]>=off[5] || off[5]+512u>off[6] ||
        off[6]>=off[7] || off[7]>=length)
         XgbaR19Reject();
 #ifdef XGBA_R28_THREE_MAPS
-    source=gMapGroups[XGBA_R19_GROUP][idx==2?XGBA_R28_OLDALE:
-           (idx==1?XGBA_R19_ROUTE101:XGBA_R19_LITTLEROOT)];
+    source=gMapGroups[XGBA_R19_GROUP][
+#ifdef XGBA_R30_FOUR_MAPS
+        idx==3?XGBA_R30_ROUTE102:
+#endif
+        idx==2?XGBA_R28_OLDALE:
+        (idx==1?XGBA_R19_ROUTE101:XGBA_R19_LITTLEROOT)];
 #else
     source=gMapGroups[XGBA_R19_GROUP][idx?XGBA_R19_ROUTE101:XGBA_R19_LITTLEROOT];
 #endif
@@ -247,6 +276,10 @@ static void XgbaR20PrepareReturnToField(void)
     {
         s32 index=XgbaR19Index(gSaveBlock1Ptr->location.mapGroup,
                                gSaveBlock1Ptr->location.mapNum);
+#ifdef XGBA_R30_FOUR_MAPS
+        if(index==3) { XgbaR19Load(2); XgbaR19Load(3); }
+        else
+#endif
         if(index==2) { XgbaR19Load(1); XgbaR19Load(2); }
         else { XgbaR19Load(0); XgbaR19Load(1); }
     }
@@ -265,6 +298,9 @@ static const struct MapHeader *XgbaR19HeaderFor(u16 group,u16 map)
     /* Original connected-map camera owns and copies neighbour data. Keep
      * the current source protected, while fetching the requested neighbour. */
     if(idx==0) { XgbaR19Load(0); XgbaR19Load(1); }
+#ifdef XGBA_R30_FOUR_MAPS
+    else if(idx==3) { XgbaR19Load(2); XgbaR19Load(3); }
+#endif
     else if(idx==2) { XgbaR19Load(1); XgbaR19Load(2); }
     else XgbaR19Load(1);
 #else
@@ -305,6 +341,10 @@ static void XgbaR19MapTick(void)
      * This conditional test-only flag is NOT part of production XGBA. */
     if(idx==1 && !gXgbaR19MapProof.route_visited)
         VarSet(VAR_ROUTE101_STATE,3);
+#endif
+#ifdef XGBA_R30_FOUR_MAPS
+    /* Original Oldale west gate only unlocked for native source test. */
+    if(idx==2)VarSet(VAR_OLDALE_TOWN_STATE,1);
 #endif
     if(idx==1)gXgbaR19MapProof.route_visited=1;
     if(!idx && gXgbaR19MapProof.route_visited)

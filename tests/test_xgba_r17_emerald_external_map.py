@@ -80,7 +80,8 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         cls.resource_bytes=len(cls.pack)
         r19=bool(getattr(cls,"R19_CONNECTED",False))
         r19_battle=bool(getattr(cls,"R19_BATTLE",False))
-        r28=bool(getattr(cls,"R28_THREE_MAPS",False))
+        r30=bool(getattr(cls,"R30_FOUR_MAPS",False))
+        r28=bool(getattr(cls,"R28_THREE_MAPS",False)) or r30
         r26_leases=bool(getattr(cls,"R26_LEASE_TEST",False))
         if r28 and (not r19 or r19_battle or stress):
             raise AssertionError("R28 three-map native fixture is distinct from R27 and battle test modes")
@@ -115,6 +116,15 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                     cls.route_pack_offset+len(cls.oldale_pack)>16384 or
                     len(cls.pack)+len(cls.route_pack)+len(cls.oldale_pack)<=16384):
                     raise AssertionError("R28 requires 2 fitting packs but 3 over budget")
+                if r30:
+                    route102_layout=EMERALD/"data/layouts/Route102"
+                    cls.route102_grid=(route102_layout/"map.bin").read_bytes()
+                    cls.route102_border=(route102_layout/"border.bin").read_bytes()
+                    if len(cls.route102_grid)!=50*20*2 or len(cls.route102_border)!=8:
+                        raise AssertionError("Pinned original Emerald Route102 geometry drift")
+                    cls.route102_pack=r14.pack((cls.route102_grid,cls.route102_border),parts)
+                    if len(cls.route102_pack)>8192:
+                        raise AssertionError("R30 original Route102 plus full Petalburg tileset exceeds 8KiB")
         if r19_battle:
             cls.battle_original_compressed={}
             for species_name in ("Poochyena","Zigzagoon"):
@@ -186,6 +196,10 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             config.write_text(config.read_text()+
                 "\n#define XGBA_R28_THREE_MAPS 1\n"+
                 f"#define XGBA_R28_OLDALE_BYTES {len(cls.oldale_pack)}u\n")
+        if r30:
+            config.write_text(config.read_text()+
+                "\n#define XGBA_R30_FOUR_MAPS 1\n"+
+                f"#define XGBA_R30_ROUTE102_BYTES {len(cls.route102_pack)}u\n")
         if r19:
             config.write_text(config.read_text()+
                 "\n#define XGBA_R19_CONNECTED_MAPS 1\n"
@@ -265,6 +279,24 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                 stripped[ob:ob+8]=bytes(8)
                 removed.append({"asset":"OldaleTown.border","bytes":8,
                                 "offset":ob,"sha256":sha(cls.oldale_border)})
+                if r30:
+                    matches=[m.start() for m in re.finditer(
+                        re.escape(cls.route102_grid),stripped)]
+                    if len(matches)!=1:
+                        raise AssertionError("Original compiled Route102 grid not unique")
+                    where=matches[0]
+                    stripped[where:where+len(cls.route102_grid)]=bytes(len(cls.route102_grid))
+                    removed.append({"asset":"Route102.map","bytes":len(cls.route102_grid),
+                                    "offset":where,"sha256":sha(cls.route102_grid)})
+                    layout_addr,_=syms["Route102_Layout"]
+                    border_address=struct.unpack_from("<I",stripped,
+                        layout_addr-0x08000000+8)[0]
+                    where=border_address-0x08000000
+                    if stripped[where:where+8]!=cls.route102_border:
+                        raise AssertionError("Original Route102 border pointer drift")
+                    stripped[where:where+8]=bytes(8)
+                    removed.append({"asset":"Route102.border","bytes":8,
+                                    "offset":where,"sha256":sha(cls.route102_border)})
         for symbol,blob in parts:
             address,size=syms[symbol]
             off=address-0x08000000
@@ -296,7 +328,8 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                 raise AssertionError("Vanilla Treecko sprite missing from local ROM")
         if (len(stripped)>32*1024*1024 or grid in stripped or
             (r19 and cls.route_grid in stripped) or
-            (r28 and cls.oldale_grid in stripped)):
+            (r28 and cls.oldale_grid in stripped) or
+            (r30 and cls.route102_grid in stripped)):
             raise AssertionError("Original Emerald map still embedded or ROM window exceeded")
         rom.write_bytes(stripped)
         cls.rom_sha=sha(stripped)
@@ -321,6 +354,9 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                 if r28:
                     cls.oldale_offset=32*1024*1024+131072
                     fp.seek(cls.oldale_offset);fp.write(cls.oldale_pack)
+                    if r30:
+                        cls.route102_offset=32*1024*1024+262144
+                        fp.seek(cls.route102_offset);fp.write(cls.route102_pack)
             if r19_battle:
                 cls.battle_offsets={
                     "Poochyena":32*1024*1024+131072,
@@ -341,6 +377,9 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             ([{"id":"emerald.oldale","offset":cls.oldale_offset,
                "length":len(cls.oldale_pack),"sha256":sha(cls.oldale_pack)}]
              if r28 else [])+
+            ([{"id":"emerald.route102","offset":cls.route102_offset,
+               "length":len(cls.route102_pack),"sha256":sha(cls.route102_pack)}]
+             if r30 else [])+
             ([{"id":"emerald.battle."+species.lower()+".front",
                "offset":cls.battle_offsets[species],
                "length":len(blob),"sha256":sha(blob)}
