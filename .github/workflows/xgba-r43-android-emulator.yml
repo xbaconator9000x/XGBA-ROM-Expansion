@@ -64,27 +64,6 @@ jobs:
           git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
           git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
           python3 integration/mgba/apply_core_patch.py upstream/mgba
-      - name: Configure local native CLI for real GBA sidecar fetch proof
-        shell: bash
-        run: |
-          set -euo pipefail
-          bash tools/xgba_ci_png_prereqs.sh
-          cmake -S integration/mgba -B build/r43-native -DCMAKE_BUILD_TYPE=Release \
-            -DXGBA_MGBA_CHECKOUT="$PWD/upstream/mgba"
-          cmake --build build/r43-native --target xgba-mgba-headless --parallel 2
-          PYTHONPATH=tools python3 tools/xgba_mgba_run.py \
-            --rom build/r43-probe/game.gba \
-            --manifest build/r43-probe/manifest.json \
-            --resource-id emerald.world \
-            --extra-resource-id rocket.world \
-            --extra-resource-id heart_soul.world \
-            --emulator build/r43-native/xgba-mgba-headless \
-            --frames 600 \
-            --r43-probe "$PWD/build/r43-probe/native-xgba-probe.png" \
-            2>&1 | tee build/r43-probe/native-xgba-probe.log
-          grep -q 'PASS_R43_GENUINE_ARM7_EXTERNAL_SOURCE_MMIO_AND_LCD' build/r43-probe/native-xgba-probe.log
-          test -s build/r43-probe/native-xgba-probe.png
-          echo PASS_R43_REAL_GBA_ARM_CPU_REQUESTED_EXTERNAL_SOURCE_BYTES
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -110,6 +89,27 @@ jobs:
           test -s "$APK"
           jarsigner -verify "$APK" >/dev/null
           echo PASS_R43_ANDROID_APK_COMPILED_AND_DEBUG_SIGNED
+      - name: Configure local native CLI for real GBA sidecar fetch proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/xgba_ci_png_prereqs.sh
+          cmake -S integration/mgba -B build/r43-native -DCMAKE_BUILD_TYPE=Release \
+            -DXGBA_MGBA_CHECKOUT="$PWD/upstream/mgba"
+          cmake --build build/r43-native --target xgba-mgba-headless --parallel 2
+          PYTHONPATH=tools python3 tools/xgba_mgba_run.py \
+            --rom build/r43-probe/game.gba \
+            --manifest build/r43-probe/manifest.json \
+            --resource-id emerald.world \
+            --extra-resource-id rocket.world \
+            --extra-resource-id heart_soul.world \
+            --emulator build/r43-native/xgba-mgba-headless \
+            --frames 600 \
+            --r43-probe "$PWD/build/r43-probe/native-xgba-probe.png" \
+            2>&1 | tee build/r43-probe/native-xgba-probe.log
+          grep -q 'PASS_R43_GENUINE_ARM7_EXTERNAL_SOURCE_MMIO_AND_LCD' build/r43-probe/native-xgba-probe.log
+          test -s build/r43-probe/native-xgba-probe.png
+          echo PASS_R43_REAL_GBA_ARM_CPU_REQUESTED_EXTERNAL_SOURCE_BYTES
       - name: Publish actual installable APK, standalone homebrew XGBA test ZIP and original LCD screenshot
         if: success()
         uses: actions/upload-artifact@v4
