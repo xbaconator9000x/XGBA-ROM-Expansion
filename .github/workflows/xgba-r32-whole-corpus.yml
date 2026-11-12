@@ -1,0 +1,84 @@
+name: XGBA R32 complete source pool and sharded-pack stress
+on:
+  push:
+    branches: [main, 'phase3/r32-whole-corpus-sharded-import-20261112']
+    paths:
+      - 'tools/xgba_whole_corpus.py'
+      - 'tools/xgba_resource_sidecar.py'
+      - 'tests/test_xgba_whole_corpus.py'
+      - '.github/workflows/xgba-r32-whole-corpus.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/xgba_whole_corpus.py'
+      - 'tools/xgba_resource_sidecar.py'
+      - 'tests/test_xgba_whole_corpus.py'
+      - '.github/workflows/xgba-r32-whole-corpus.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r32-whole-corpus-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  synthetic-three-source-corpus:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run three-world roundtrip, tamper, collision and 12000-resource stress
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_whole_corpus.py tests/test_xgba_whole_corpus.py
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_whole_corpus.WholeCorpus -v 2>&1 | tee /tmp/r32-synthetic.log
+          grep -q 'Ran 13 tests' /tmp/r32-synthetic.log
+          grep -q '^OK$' /tmp/r32-synthetic.log
+          echo PASS_R32_SYNTHETIC_FULL_CORPUS 13/13
+  original-emerald-complete-corpus:
+    name: Genuine original Emerald complete decomp inventory and sharded bytes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch exact original Emerald source
+        run: |
+          set -euo pipefail
+          git clone --quiet --filter=blob:none https://github.com/pret/pokeemerald.git upstream/pokeemerald
+          git -C upstream/pokeemerald checkout --quiet --detach 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          test "$(git -C upstream/pokeemerald rev-parse HEAD)" = 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+      - name: Pack ALL tracked original source files into local-only sharded sidecars
+        run: |
+          set -euo pipefail
+          python3 tools/xgba_whole_corpus.py --source emerald=upstream/pokeemerald --pack             --output "$RUNNER_TEMP/r32-emerald" --summary-output "$RUNNER_TEMP/r32-summary.json"
+          python3 - <<'PY'
+          import json,os,sys
+          from pathlib import Path
+          sys.path.insert(0,"tools")
+          import xgba_resource_sidecar as sidecar
+          root=Path(os.environ["RUNNER_TEMP"])/"r32-emerald"
+          doc=json.loads((root/"xgba-whole-corpus-index.json").read_text())
+          s=doc["summary"]
+          assert s["source_count"]==1 and s["catalogued_files"]>9000,s
+          assert s["original_map_count"]>300,s
+          assert s["runtime_compatible_resources"]==0
+          assert len(doc["shards"])>20
+          resource_ids=set()
+          for shard in doc["shards"]:
+              m=sidecar.load_manifest(root/shard["manifest"])
+              assert len(m.resources)==shard["resources"]
+              resource_ids.update(m.resources)
+          resources=doc["source_reports"][0]["resources"]
+          assert len(resources)==s["catalogued_files"]
+          assert len(resource_ids)==sum(x["bytes"]>0 for x in resources)
+          assert all(e["storage_status"] in ("verified_sidecar","verified_empty_source") for e in resources)
+          assert doc["guarantees"]["original_map_ids_renumbered"] is False
+          print("PASS_R32_ORIGINAL_EMERALD_COMPLETE_CORPUS",s["catalogued_files"],"files",len(doc["shards"]),"sidecars")
+          PY
+      - name: Preserve aggregate metrics ONLY, no source files or asset packs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r32-real-emerald-aggregate-counts-only
+          path: ${{ runner.temp }}/r32-summary.json
+          retention-days: 90
+          if-no-files-found: warn
