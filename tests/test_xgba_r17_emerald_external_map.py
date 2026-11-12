@@ -238,6 +238,24 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             stripped[rb:rb+8]=bytes(8)
             removed.append({"asset":"Route101.border","bytes":8,"offset":rb,
                             "sha256":sha(cls.route_border)})
+            if r28:
+                oldale_matches=[m.start() for m in re.finditer(
+                    re.escape(cls.oldale_grid),stripped)]
+                if len(oldale_matches)!=1:
+                    raise AssertionError("Original compiled Oldale grid not uniquely identifiable")
+                om=oldale_matches[0]
+                stripped[om:om+len(cls.oldale_grid)]=bytes(len(cls.oldale_grid))
+                removed.append({"asset":"OldaleTown.map","bytes":len(cls.oldale_grid),
+                                "offset":om,"sha256":sha(cls.oldale_grid)})
+                oldale_address,_=syms["OldaleTown_Layout"]
+                oldale_border_addr=struct.unpack_from(
+                    "<I",stripped,oldale_address-0x08000000+8)[0]
+                ob=oldale_border_addr-0x08000000
+                if stripped[ob:ob+8]!=cls.oldale_border:
+                    raise AssertionError("Original compiled Oldale border pointer drift")
+                stripped[ob:ob+8]=bytes(8)
+                removed.append({"asset":"OldaleTown.border","bytes":8,
+                                "offset":ob,"sha256":sha(cls.oldale_border)})
         for symbol,blob in parts:
             address,size=syms[symbol]
             off=address-0x08000000
@@ -267,7 +285,9 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             cls.local_treecko_sha=sha(stripped[tree_start:tree_start+tree_len])
             if tree_len<16 or stripped[tree_start]!=0x10:
                 raise AssertionError("Vanilla Treecko sprite missing from local ROM")
-        if len(stripped)>32*1024*1024 or grid in stripped or (r19 and cls.route_grid in stripped):
+        if (len(stripped)>32*1024*1024 or grid in stripped or
+            (r19 and cls.route_grid in stripped) or
+            (r28 and cls.oldale_grid in stripped)):
             raise AssertionError("Original Emerald map still embedded or ROM window exceeded")
         rom.write_bytes(stripped)
         cls.rom_sha=sha(stripped)
@@ -289,6 +309,9 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             if r19:
                 cls.route_offset=32*1024*1024+65536
                 fp.seek(cls.route_offset);fp.write(cls.route_pack)
+                if r28:
+                    cls.oldale_offset=32*1024*1024+131072
+                    fp.seek(cls.oldale_offset);fp.write(cls.oldale_pack)
             if r19_battle:
                 cls.battle_offsets={
                     "Poochyena":32*1024*1024+131072,
@@ -306,6 +329,9 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                 {"id":BOOT,"offset":boot_offset,"length":64,"sha256":sha(r6.PAYLOAD)}
             ]+([{"id":"emerald.route101","offset":cls.route_offset,
                  "length":len(cls.route_pack),"sha256":sha(cls.route_pack)}] if r19 else [])+
+            ([{"id":"emerald.oldale","offset":cls.oldale_offset,
+               "length":len(cls.oldale_pack),"sha256":sha(cls.oldale_pack)}]
+             if r28 else [])+
             ([{"id":"emerald.battle."+species.lower()+".front",
                "offset":cls.battle_offsets[species],
                "length":len(blob),"sha256":sha(blob)}
