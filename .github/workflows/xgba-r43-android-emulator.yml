@@ -68,13 +68,23 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - name: Install Android SDK, native NDK and CMake
+      - name: Use preinstalled official GitHub Android SDK (avoid deprecated sdkmanager tools package)
         shell: bash
         run: |
           set -euo pipefail
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          test -d "$SDK"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          echo "$SDK/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "Android SDK location: $SDK"
+      - name: Install Android platform, NDK and CMake from working command-line tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v sdkmanager
           yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platforms;android-35" "build-tools;35.0.0" \
+          sdkmanager --install "platforms;android-35" "build-tools;35.0.0" \
              "ndk;27.2.12479018" "cmake;3.22.1"
       - uses: gradle/actions/setup-gradle@v4
         with:
