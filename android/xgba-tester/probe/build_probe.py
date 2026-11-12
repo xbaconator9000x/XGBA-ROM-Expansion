@@ -57,7 +57,7 @@ def make_rom(arm,output):
         raise ValueError("Expected authored freestanding ARM7 program under 2 MiB")
     header=bytearray(192)
     # ARM branch from 0x08000000 to 0x080000C0 (PC+0xB8)
-    struct.pack_into("<I",header,0,0xEA00002Eu)
+    struct.pack_into("<I",header,0,0xEA00002E)
     header[4:160]=GBA_BOOT_SIGNATURE
     header[0xA0:0xAC]=b"XGBA PROBE  "
     header[0xAC:0xB0]=GAME_CODE
