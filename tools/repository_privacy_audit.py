@@ -38,6 +38,18 @@ FORBIDDEN_FILE = re.compile(
     r".+\.(?:p12|pfx|pem|key|keystore|kdbx)|.+\.(?:chat|transcript|jsonl))$"
 )
 SAFE_EMAIL_SUFFIXES = ("@users.noreply.github.com", "@noreply.github.com")
+# Retired dispatchers must not be reintroduced by an old automated branch.
+# Game-side resource loaders and native CI are intentionally NOT on this list.
+RETIRED_DISPATCH_FILES = frozenset({
+    ".github/workflows/phase1-copilot-chain.yml",
+    ".github/workflows/phase1-agent-task-pilot.yml",
+    ".github/workflows/xgba-autonomous-product.yml",
+    "tools/phase1_agent_task_pilot.py",
+    "tools/xgba_autonomous_product.py",
+    "tests/test_phase1_agent_task_pilot.py",
+    "tests/test_xgba_autonomous_product.py",
+})
+
 TEXT_SUFFIXES = {
     ".py", ".md", ".txt", ".json", ".jsonl", ".csv", ".yaml", ".yml",
     ".c", ".h", ".inc", ".sh", ".toml", ".ini", ".cmake", ".gitignore",
@@ -104,6 +116,8 @@ def audit_repository(root: Path) -> tuple[int, list[tuple[str, int, str]]]:
             continue
         rel = path.relative_to(root).as_posix()
         count += 1
+        if rel in RETIRED_DISPATCH_FILES:
+            violations.append((rel, 0, "retired-dispatcher-reintroduced"))
         # Forbid credential/archive paths regardless of whether they are text.
         if FORBIDDEN_FILE.search(rel):
             violations.append((rel, 0, "sensitive-file-name"))

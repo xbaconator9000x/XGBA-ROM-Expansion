@@ -39,14 +39,15 @@ API tokens/private-key blocks, or private contact details were detected in the
 scanned **current tracked worktree**. This is a bounded automated check,
 **not a guarantee of zero private data in every possible format**.
 
-**Intentional functional exception:** the project still has historical
-GitHub Copilot Agent Tasks integration code in
-`tools/xgba_autonomous_product.py` and
-`tools/phase1_agent_task_pilot.py`. These contain task-generation instructions
-and an API `prompt` field as part of the program's public implementation;
-they are **not recovered ChatGPT conversations or private user messages**.
-Deleting them outright would change established automation behaviour.
-Do not represent the repository as having *no* prompt-generating code.
+**Legacy Copilot retirement:** the previously public R1–R6 agent queue,
+single-task Porymap pilot, and manual Porymap prompt dispatcher are now removed
+from the active source tree along with their task-specific tests and workflows.
+The earlier task definitions were development automation instructions, not
+personal ChatGPT transcripts. Their historical commits and execution artifacts
+remain public until separately addressed.
+
+The independent production game/emulator tests, historical signed evidence and
+project AI disclosure have been preserved.
 
 ## Limitations: GitHub history is not the current checkout
 
