@@ -223,7 +223,7 @@ class ScriptSandbox(unittest.TestCase):
         self.assertEqual(b.world("emerald").flags,set())
 
     def test_variable_backed_trainer_ids_resolved_from_own_world(self):
-        code=b"\\x16"+h(0x4020)+h(700)+b"\\x61"+h(0x4020)+b"\\x60"+h(0x4020)+\\
+        code=(b"\\x16"+h(0x4020)+h(700)+b"\\x61"+h(0x4020)+b"\\x60"+h(0x4020)+
              b"\\x06\\x01"+ptr(96)+b"\\x02"
         target=b"\\x62"+h(0x4020)+b"\\x02"
         b,_,_=self.run_code(code,target=target)
