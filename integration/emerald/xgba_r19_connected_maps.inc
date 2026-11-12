@@ -12,6 +12,8 @@ extern const struct MapHeader *const *const gMapGroups[];
 #include "constants/vars.h"
 #include "../common/xgba_ewram_lease.h"
 #ifdef XGBA_R28_THREE_MAPS
+/* R28 game fixture still exposes exactly three original source maps. */
+#define XGBA_MAP_CACHE_KEYS 3u
 #include "../common/xgba_map_cache.h"
 #define XGBA_R19_MAP_COUNT 3u
 #define XGBA_R28_OLDALE 10u

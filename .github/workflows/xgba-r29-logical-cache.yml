@@ -1,0 +1,39 @@
+name: XGBA R29 many logical resource IDs in bounded physical cache
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'integration/common/xgba_map_cache.h'
+      - 'integration/emerald/xgba_r19_connected_maps.inc'
+      - 'tests/test_xgba_r28_map_cache.c'
+      - 'tests/test_xgba_r29_logical_cache.c'
+      - '.github/workflows/xgba-r29-logical-cache.yml'
+  push:
+    branches: [main, 'phase3/r29-logical-resource-keyspace-20261112']
+    paths:
+      - 'integration/common/xgba_map_cache.h'
+      - 'integration/emerald/xgba_r19_connected_maps.inc'
+      - 'tests/test_xgba_r28_map_cache.c'
+      - 'tests/test_xgba_r29_logical_cache.c'
+      - '.github/workflows/xgba-r29-logical-cache.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  portable-r29-keyspace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preserve R28 three-key contract and verify portable many-key core
+        shell: bash
+        run: |
+          set -euo pipefail
+          cc -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
+            -o /tmp/xgba-r28-cache tests/test_xgba_r28_map_cache.c
+          /tmp/xgba-r28-cache | grep 'PASS_R28_PORTABLE_CACHE_CONTRACT 16/16'
+          cc -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
+            -o /tmp/xgba-r29-cache tests/test_xgba_r29_logical_cache.c
+          /tmp/xgba-r29-cache | tee /tmp/r29-portable.log
+          grep -q 'PASS_R29_PORTABLE_LOGICAL_KEYSPACE' /tmp/r29-portable.log
+          echo 'PASS_R29_PORTABLE_ONLY no_claim_of_native_fourth_map_or_unmodified_emulator'

@@ -1,4 +1,4 @@
-/* XGBA R28: exact two-slot / three-resource EWRAM cache residency contract.
+/* XGBA: bounded physical two-slot EWRAM cache with independent logical resource IDs.
  *
  * This header is portable across original GBA source and host C tests. It
  * supplies deterministic LRU eviction and generation/serial guarded source
@@ -11,7 +11,15 @@
 #include <limits.h>
 
 #define XGBA_MAP_CACHE_SLOTS 2u
-#define XGBA_MAP_CACHE_KEYS 3u
+/* The core has no per-key array: logical source identifiers need not be
+ * limited by available physical slots. UINT32_MAX is reserved as NONE.
+ * The R28 original Emerald fixture explicitly restricts itself to 3 keys. */
+#ifndef XGBA_MAP_CACHE_KEYS
+#define XGBA_MAP_CACHE_KEYS UINT32_MAX
+#endif
+#if XGBA_MAP_CACHE_KEYS == 0
+#error "XGBA map cache must permit at least one logical resource"
+#endif
 #define XGBA_MAP_CACHE_PINS 8u
 #define XGBA_MAP_CACHE_NONE UINT32_MAX
 #define XGBA_MAP_CACHE_EMPTY 0u

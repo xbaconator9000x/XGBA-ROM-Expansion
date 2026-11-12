@@ -1,4 +1,6 @@
 /* Real portable R28 cache implementation tests, not a native Emerald result. */
+/* Preserve R28's original exact three-key negative cases. */
+#define XGBA_MAP_CACHE_KEYS 3u
 #include "../integration/common/xgba_map_cache.h"
 #include <assert.h>
 #include <stdio.h>
