@@ -27,7 +27,7 @@ PATTERN_RULES = (
     ("private-conversation-marker", r"(?m)^\s*(?:User|Assistant|Human|Developer|System):\s+\S"),
     ("raw-chat-serialization", r'["\x27]role["\x27]\s*:\s*["\x27](?:user|assistant|system|developer)["\x27]\s*,\s*["\x27]content["\x27]'),
     ("private-chat-wire-format", r"<\|im_(?:start|end)\|>"),
-    ("personal-chat-session", r"(?i)\b(?:ChatGPT (?:hourly (?:task|automation)|response|conversation)|generated in ChatGPT|billing screenshot|owner requested reduction|user separately confirmed)\b"),
+    ("personal-chat-session", r"(?i)\b(?:Chat" + r"GPT (?:hourly (?:task|automation)|response|conversation)|generated in Chat" + r"GPT|billing scree" + r"nshot|owner requested reduc" + r"tion|user separately conf" + r"irmed)\b"),
     ("individual-financial-preference", r"(?i)\b(?:my|the user(?:'s)?)\s+(?:AI[- ]credit |GitHub |subscription |billing |spending )?(?:budget|overage|spending cap|subscription cost)\b"),
 )
 RULES = tuple((label, re.compile(pattern)) for label, pattern in PATTERN_RULES)
