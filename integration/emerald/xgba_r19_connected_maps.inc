@@ -222,6 +222,10 @@ static void XgbaR19Load(unsigned idx)
     if(idx==3)length=XGBA_R30_ROUTE102_BYTES;
 #endif
 #endif
+#endif
+    /* Two physical slots are always 8192 bytes each, irrespective of how
+     * many original map identities the generated ROM catalogue contains. */
+#ifdef XGBA_R28_THREE_MAPS
     if(length>(slot?XGBA_R19_RESERVE-XGBA_R19_ROUTE_OFFSET:
                          XGBA_R19_ROUTE_OFFSET))XgbaR19Reject();
 #endif
