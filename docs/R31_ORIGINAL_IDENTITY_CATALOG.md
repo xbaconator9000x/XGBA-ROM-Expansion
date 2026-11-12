@@ -1,6 +1,13 @@
 # R31 — source-derived original map identity catalogue (implementation and acceptance)
 
-**Implementation branch:** `phase3/r31-original-identity-catalog-20261112`.
+**VERIFIED / MERGED · 12 November 2026.** Exact-head R31 source commit
+`8b0ffeeb0a1d347033ee2db63a7cf05e91094318`; **12/12 native
+original-Emerald cases passed**, including all seven original LCD frames;
+**14/14 exact-head CI runs passed**, across 13 distinct workflow names.
+[Native R31 workflow #43177324647](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43177324647) ·
+[Original LCD frames and proof artifact #13924936820](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43177324647/artifacts/13924936820) ·
+[Merged PR #90](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/90) ·
+[main commit `e98825c`](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/commit/e98825c455c76b96c1d79c936c116f51bf386c60).
 
 ## Invariant: never renumber the ROM's maps
 
@@ -33,9 +40,10 @@ actual LCD PNGs, and disabled-provider zero-source-read witness.
 Emerald adapter, not automatic discovery of unknown binary ROM hacks.
 Universal already-modified ROM patching, arbitrarily large simultaneous
 neighbour sets, arbitrary tiled resources, stock emulators and physical
-hardware are not established. The number of external catalogue entries is
-independent of the two fixed physical cache slots but the existing RAM
-and map-engine geometry restrictions still apply.
+hardware are not established. The number of external catalogue entries is independent of the two fixed
+physical cache slots **and the two physical map header/layout/tileset descriptor
+positions**. No per-map EWRAM descriptor table is required in the new R31
+integration. The existing RAM and map-engine geometry restrictions still apply.
 
 ## Source and executable checks
 
@@ -47,5 +55,19 @@ and map-engine geometry restrictions still apply.
 - [Original source-built Emerald twelve-case acceptance](../tests/test_xgba_r31_emerald_catalog.py)
 - [Native CI workflow](../.github/workflows/xgba-r31-original-identity-catalog.yml)
 
-Native proof status and exact-head CI links must be added only after
-successful execution; the presence of this code alone is **not** acceptance.
+## Verified original-game result
+
+The pinned original Pokémon Emerald and patched pinned mGBA executed genuine
+D-pad traversal **Littleroot (0,9) → Route101 (0,16) → Oldale (0,10) →
+Route102 (0,17) → Oldale → Route101 → Littleroot**, using externally sourced
+original map data and full secondary tilesets. Original guest source, backup
+grids, source pack byte ranges, BG VRAM, map identity and native LCD contents
+were independently checked against the SHA-256 validated sidecar assets.
+Original map IDs and connections were obtained from the game's own metadata,
+not rewritten to fit XGBA. The disabled provider fails closed.
+
+This is not yet an arbitrary-file original GBA ROM patcher, an automatic
+binary-ROM-hack decompiler, original hardware support or proof that three
+simultaneously live source buffers fit into 16 KiB EWRAM. R31 specifically
+removes fixture-specific map IDs and **descriptor-count growth with catalogue
+size**, not the remaining emulator/engine/asset-size limitations.
