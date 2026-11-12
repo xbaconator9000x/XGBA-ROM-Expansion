@@ -1,0 +1,124 @@
+name: XGBA R43 installable Android native mGBA and authentic >32MiB homebrew probe
+on:
+  push:
+    branches: [main, 'delivery/r43-android-real-xgba-emulator-20261113']
+    paths:
+      - 'android/xgba-tester/**'
+      - '.github/workflows/xgba-r43-android-emulator.yml'
+      - 'integration/mgba/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'android/xgba-tester/**'
+      - '.github/workflows/xgba-r43-android-emulator.yml'
+      - 'integration/mgba/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r43-android-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build-probe-and-android-apk:
+    name: Build original ARM GBA probe, patched arm64 mGBA Android APK and native MMIO evidence
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned original ARM cross compiler
+        uses: carlosperate/arm-none-eabi-gcc-action@49f4db4520f840e77ab1e99b24cfac2c540a21b1
+        with:
+          release: '13.2.Rel1'
+      - name: Generate ONLY authored GBA game and opt-in SHA-checked >32MiB sidecar
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/r43-probe android/xgba-tester/app/src/main/assets
+          arm-none-eabi-gcc -mcpu=arm7tdmi -marm -Os -ffreestanding -fno-builtin \
+            -nostdlib -nodefaultlibs -ffunction-sections -fdata-sections \
+            -Wl,-Ttext=0x080000C0 -Wl,-e,_start -Wl,--gc-sections -Wl,--build-id=none \
+            -o build/r43-probe/probe.elf android/xgba-tester/probe/xgba_probe.c
+          arm-none-eabi-objcopy -O binary build/r43-probe/probe.elf build/r43-probe/arm.bin
+          python3 android/xgba-tester/probe/build_probe.py \
+            --arm-binary build/r43-probe/arm.bin --out build/r43-probe/xgba-probe.zip
+          cp build/r43-probe/xgba-probe.zip android/xgba-tester/app/src/main/assets/xgba-probe.zip
+          python3 - <<'PY'
+          import json,hashlib,zipfile
+          from pathlib import Path
+          p=Path('build/r43-probe')
+          with zipfile.ZipFile(p/'xgba-probe.zip') as z:
+              assert set(z.namelist())=={'game.gba','manifest.json','sidecar.bin'}
+              rom=z.read('game.gba')
+              meta=json.loads(z.read('manifest.json'))
+          assert len(rom)>192 and rom[0xAC:0xB0]==b'XGBP'
+          assert hashlib.sha256(rom).hexdigest()==meta['source_identity']['sha256']
+          assert {r['id'] for r in meta['resources']}=={'emerald.world','rocket.world','heart_soul.world'}
+          assert all(r['offset']>=32*1024*1024 and r['length']==64 for r in meta['resources'])
+          print('PASS_R43_PROBE_GAME_AND_SIDECAR source_SHA=1 guest_resources=3 all_beyond_32MiB=1')
+          PY
+      - name: Fetch immutable original mGBA and apply the same R7 device patch as native CI
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          python3 integration/mgba/apply_core_patch.py upstream/mgba
+      - name: Configure local native CLI for real GBA sidecar fetch proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/xgba_ci_png_prereqs.sh
+          cmake -S integration/mgba -B build/r43-native -DCMAKE_BUILD_TYPE=Release \
+            -DXGBA_MGBA_CHECKOUT="$PWD/upstream/mgba"
+          cmake --build build/r43-native --target xgba-mgba-headless --parallel 2
+          PYTHONPATH=tools python3 tools/xgba_mgba_run.py \
+            --rom build/r43-probe/game.gba \
+            --manifest build/r43-probe/manifest.json \
+            --resource-id emerald.world \
+            --extra-resource-id rocket.world \
+            --extra-resource-id heart_soul.world \
+            --emulator build/r43-native/xgba-mgba-headless \
+            --frames 600 \
+            --probe-address 0x0203F900 \
+            --screenshot "$PWD/build/r43-probe/native-xgba-probe.png" \
+            2>&1 | tee build/r43-probe/native-xgba-probe.log
+          grep -q 'PASS_R7_XGBA_MGBA_BUILD enabled=1 requests=1 failures=0' build/r43-probe/native-xgba-probe.log
+          test -s build/r43-probe/native-xgba-probe.png
+          echo PASS_R43_REAL_GBA_ARM_CPU_REQUESTED_EXTERNAL_SOURCE_BYTES
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK, native NDK and CMake
+        shell: bash
+        run: |
+          set -euo pipefail
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-35" "build-tools;35.0.0" \
+             "ndk;27.2.12479018" "cmake;3.22.1"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Compile and sign arm64 debug Android XGBA mGBA application
+        shell: bash
+        run: |
+          set -euo pipefail
+          gradle --no-daemon -p android/xgba-tester :app:assembleDebug \
+            --stacktrace 2>&1 | tee build/r43-probe/gradle-android.log
+          APK=android/xgba-tester/app/build/outputs/apk/debug/app-debug.apk
+          test -s "$APK"
+          jarsigner -verify "$APK" >/dev/null
+          echo PASS_R43_ANDROID_APK_COMPILED_AND_DEBUG_SIGNED
+      - name: Publish actual installable APK, standalone homebrew XGBA test ZIP and original LCD screenshot
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r43-android-arm64-real-patched-mgba-and-probe
+          path: |
+            android/xgba-tester/app/build/outputs/apk/debug/app-debug.apk
+            build/r43-probe/xgba-probe.zip
+            build/r43-probe/native-xgba-probe.png
+          retention-days: 90
+          if-no-files-found: error
