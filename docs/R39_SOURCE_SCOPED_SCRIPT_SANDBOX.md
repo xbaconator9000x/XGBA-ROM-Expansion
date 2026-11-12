@@ -1,6 +1,6 @@
 # R39 — Source-scoped event-script sandbox (NOT live ROM-hack execution)
 
-**Implementation in progress. Acceptance is the exact-head GitHub Actions suite**, not optimistic status text. This layer directly follows verified R38's three complete 32 MiB independently mounted source ROMs. It addresses semantic isolation, not ROM storage capacity.
+**VERIFIED / MERGED · 12 November 2026.** [PR #106](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/106) merged as [`0423c98`](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/commit/0423c98b450778841c1b276401f2c1a570ab27b7). **27/27 focused host script tests, 60/60 previous R34–R37 parser regressions, the 96 MiB three-ROM source-mounted script test, pinned Emerald command-profile verification, native FireRed Flash cold restart, native Emerald four-battle arena eviction, and repository privacy scan all passed on the exact PR head.** [R39 CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43219151164) · [native regression](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43219151212) · [privacy audit](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43219151300). This layer directly follows verified R38's three complete 32 MiB independently mounted source ROMs. It addresses semantic isolation, not ROM storage capacity.
 
 ## Implemented scope
 
