@@ -7,6 +7,16 @@ No executable ROMs, sidecars, save files or raw proprietary game assets are arch
 Screenshots contain game imagery belonging to its rights holders and are shown
 only as limited, noncommercial engineering documentation.
 
+## R30 — verified original Emerald four-map streaming (Actions evidence)
+
+Original source-built Emerald physically crossed **Littleroot → Route101 → Oldale → Route102 → Oldale → Route101 → Littleroot**, independently retrieving **four original SHA-verified external map/tileset packs** into two fixed **8 KiB** guest EWRAM slots. Original full 50×20 Route102 geometry, 7 guest backup-grid comparisons, secondary tilesets and source bytes, plus seven 240×160 actual original LCD images. **9/9 native acceptance and 27/27 exact-head CI workflows** passed. [Run #43162597194](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43162597194) · [Seven original LCD PNGs and JSON proof](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43162597194/artifacts/13918726949) · [Merged PR #88](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/88) · [Bounded native technical scope](../docs/R30_FOUR_ORIGINAL_EMERALD_MAPS.md).
+
+**Retention:** artifact ZIP is time-limited, so these screenshots are linked rather than falsely described as permanently archived. No ROM, save or raw copyrighted resource packs are published. A fourth real map does not imply unbounded adjacent-map residency or stock-emulator compatibility.
+
+## R28 — verified original Emerald three-map streaming (Actions evidence)
+
+Native original Emerald used a 16 KiB reserved EWRAM arena as two fixed 8 KiB physical map slots for **Littleroot → Route101 → Oldale → Route101 → Littleroot**, with **8/8 native**, 16/16 portable and 25/25 exact-head CI workflows green. [Actual five LCD screenshots and proof](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43159185521/artifacts/13916609021) · [Source and limits](../docs/R28_THREE_MAP_CACHE_EVICTION.md). This R28-only proof preceded the distinct verified R30 fourth map.
+
 ## R27 — verified original Emerald large-map geometry stress (Actions evidence)
 
 At pinned original-game native test head `3d31b5ba5115cab799da3cc3b30869c6afaadcb7`, real Pokémon Emerald rendered **64×64 and 128×32** synthetic source-tiled external map geometries with complete source-backed Petalburg secondary tileset, actual collision/backup grid, BG VRAM, and GBA D-pad input. Original game **7/7 native per shape**, portable capacity **7/7**. Each map uses **13,636 bytes** and has **4,096 independently verified source/backup-grid cells**.
