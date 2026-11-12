@@ -1,6 +1,6 @@
 # R38 — Three complete original-ROM sources: large read-only import stress
 
-**Implementation PR, acceptance pending CI.** This is intended as the first
+**VERIFIED / MERGED · 12 November 2026.** [PR #104](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/104) merged; [R38 all-source stress CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43212716551) passed **13/13 focused tests and 60/60 prior regressions**, including 96 MiB across three synthetic original-source ROMs, 6,144 pages and 90,000 source-bound random windows. [Exact-head consolidated native FireRed/Emerald regressions](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43212716540) and [privacy audit](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43212716538) passed. The private real Team Rocket ROM was not uploaded or executed in this public test. This is intended as the first
 massive three-ROM import/stress gate, not another small synthetic script test.
 It is a *host storage/provenance* milestone; source-built Emerald gameplay
 and cross-ROM script execution are NOT claimed here.
