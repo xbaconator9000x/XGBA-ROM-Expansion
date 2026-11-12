@@ -19,6 +19,9 @@ extern const struct MapHeader *const *const gMapGroups[];
 #include XGBA_R31_CATALOG_HEADER
 #define XGBA_MAP_CACHE_KEYS XGBA_R31_CATALOG_COUNT
 #define XGBA_R19_MAP_COUNT XGBA_R31_CATALOG_COUNT
+/* ROM-resident metadata can describe many external resources, but RAM
+ * descriptors always occupy the two physical slot positions. */
+#define XGBA_R19_DESCRIPTOR_COUNT XGBA_MAP_CACHE_SLOTS
 /* Legacy R30 acceptance remains an independent opt-in mode. */
 #elif defined(XGBA_R30_FOUR_MAPS)
 #define XGBA_MAP_CACHE_KEYS 4u
@@ -35,6 +38,9 @@ extern const struct MapHeader *const *const gMapGroups[];
 extern void DisableWildEncounters(bool8 disabled);
 #else
 #define XGBA_R19_MAP_COUNT 2u
+#endif
+#ifndef XGBA_R19_DESCRIPTOR_COUNT
+#define XGBA_R19_DESCRIPTOR_COUNT XGBA_R19_MAP_COUNT
 #endif
 #define XGBA_R19_GROUP 0u
 #define XGBA_R19_LITTLEROOT 9u
@@ -59,10 +65,10 @@ struct XgbaR19MapProof {
 };
 EWRAM_DATA volatile struct XgbaR19MapProof gXgbaR19MapProof = {0};
 EWRAM_DATA char gXgbaR19MapResourceId[32] = {0};
-static EWRAM_DATA struct MapHeader sXgbaR19Headers[XGBA_R19_MAP_COUNT] = {0};
-static EWRAM_DATA struct MapLayout sXgbaR19Layouts[XGBA_R19_MAP_COUNT] = {0};
-static EWRAM_DATA struct Tileset sXgbaR19Tilesets[XGBA_R19_MAP_COUNT] = {0};
-static EWRAM_DATA bool8 sXgbaR19Ready[XGBA_R19_MAP_COUNT] = {0};
+static EWRAM_DATA struct MapHeader sXgbaR19Headers[XGBA_R19_DESCRIPTOR_COUNT] = {0};
+static EWRAM_DATA struct MapLayout sXgbaR19Layouts[XGBA_R19_DESCRIPTOR_COUNT] = {0};
+static EWRAM_DATA struct Tileset sXgbaR19Tilesets[XGBA_R19_DESCRIPTOR_COUNT] = {0};
+static EWRAM_DATA bool8 sXgbaR19Ready[XGBA_R19_DESCRIPTOR_COUNT] = {0};
 #ifdef XGBA_R28_THREE_MAPS
 static EWRAM_DATA struct XgbaMapCache sXgbaR28MapCache;
 #endif
@@ -94,7 +100,7 @@ static void XgbaR20ClaimWorldArena(void)
     /* All externally-backed descriptors become stale on arena handoff. */
     {
         u32 i;
-        for(i=0;i<XGBA_R19_MAP_COUNT;++i)
+        for(i=0;i<XGBA_R19_DESCRIPTOR_COUNT;++i)
             sXgbaR19Ready[i]=FALSE;
     }
 #ifdef XGBA_R28_THREE_MAPS
@@ -117,7 +123,7 @@ static void XgbaR20ClaimBattleArena(void)
     /* All externally-backed descriptors become stale on arena handoff. */
     {
         u32 i;
-        for(i=0;i<XGBA_R19_MAP_COUNT;++i)
+        for(i=0;i<XGBA_R19_DESCRIPTOR_COUNT;++i)
             sXgbaR19Ready[i]=FALSE;
     }
 #ifdef XGBA_R28_THREE_MAPS
@@ -161,6 +167,7 @@ static void XgbaR19Load(unsigned idx)
     u32 length;
     const char *name=idx?"emerald.route101":"emerald.littleroot";
     u32 slot=idx;
+    u32 descriptor=idx;
 #ifdef XGBA_R28_THREE_MAPS
     u32 evicted=XGBA_MAP_CACHE_NONE;
     u32 protected_key=XGBA_MAP_CACHE_NONE;
@@ -179,17 +186,27 @@ static void XgbaR19Load(unsigned idx)
     if(active>=0)protected_key=(u32)active;
     choice=XgbaCacheBegin(&sXgbaR28MapCache,idx,protected_key,
                           &slot,&evicted);
+#ifdef XGBA_R31_AUTO_CATALOG
+    if(slot>=XGBA_R19_DESCRIPTOR_COUNT)XgbaR19Reject();
+    descriptor=slot;
+#endif
     if(choice==XGBA_CACHE_HIT) {
-        if(!sXgbaR19Ready[idx])XgbaR19Reject();
+        if(!sXgbaR19Ready[descriptor])XgbaR19Reject();
         return;
     }
     if(choice!=XGBA_CACHE_MISS)XgbaR19Reject();
     if(evicted!=XGBA_MAP_CACHE_NONE) {
         if(evicted>=XGBA_R19_MAP_COUNT)XgbaR19Reject();
+        /* In R31 the evicted logical key maps to a physical slot descriptor. */
+#ifdef XGBA_R31_AUTO_CATALOG
+        sXgbaR19Ready[descriptor]=FALSE;
+        sXgbaR19Layouts[descriptor].map=0;
+        sXgbaR19Layouts[descriptor].border=0;
+#else
         sXgbaR19Ready[evicted]=FALSE;
-        /* Source descriptors of evicted maps are stale. Never evict active. */
         sXgbaR19Layouts[evicted].map=0;
         sXgbaR19Layouts[evicted].border=0;
+#endif
     }
 #ifdef XGBA_R31_AUTO_CATALOG
     name=sXgbaR31Catalog[idx].resource_id;
@@ -266,22 +283,22 @@ static void XgbaR19Load(unsigned idx)
 #else
     source=gMapGroups[XGBA_R19_GROUP][idx?XGBA_R19_ROUTE101:XGBA_R19_LITTLEROOT];
 #endif
-    sXgbaR19Headers[idx]=*source;
-    sXgbaR19Layouts[idx]=*gMapLayouts[source->mapLayoutId-1];
+    sXgbaR19Headers[descriptor]=*source;
+    sXgbaR19Layouts[descriptor]=*gMapLayouts[source->mapLayoutId-1];
 #ifdef XGBA_R31_AUTO_CATALOG
-    if(sXgbaR19Layouts[idx].width!=sXgbaR31Catalog[idx].width ||
-       sXgbaR19Layouts[idx].height!=sXgbaR31Catalog[idx].height)
+    if(sXgbaR19Layouts[descriptor].width!=sXgbaR31Catalog[idx].width ||
+       sXgbaR19Layouts[descriptor].height!=sXgbaR31Catalog[idx].height)
         XgbaR19Reject();
 #endif
-    sXgbaR19Tilesets[idx]=*sXgbaR19Layouts[idx].secondaryTileset;
-    sXgbaR19Layouts[idx].map=(const u16 *)(arena+off[2]);
-    sXgbaR19Layouts[idx].border=(const u16 *)(arena+off[3]);
-    sXgbaR19Tilesets[idx].tiles=(const u32 *)(arena+off[4]);
-    sXgbaR19Tilesets[idx].palettes=(const u16 (*)[16])(arena+off[5]);
-    sXgbaR19Tilesets[idx].metatiles=(const u16 *)(arena+off[6]);
-    sXgbaR19Tilesets[idx].metatileAttributes=(const u16 *)(arena+off[7]);
-    sXgbaR19Layouts[idx].secondaryTileset=&sXgbaR19Tilesets[idx];
-    sXgbaR19Headers[idx].mapLayout=&sXgbaR19Layouts[idx];
+    sXgbaR19Tilesets[descriptor]=*sXgbaR19Layouts[descriptor].secondaryTileset;
+    sXgbaR19Layouts[descriptor].map=(const u16 *)(arena+off[2]);
+    sXgbaR19Layouts[descriptor].border=(const u16 *)(arena+off[3]);
+    sXgbaR19Tilesets[descriptor].tiles=(const u32 *)(arena+off[4]);
+    sXgbaR19Tilesets[descriptor].palettes=(const u16 (*)[16])(arena+off[5]);
+    sXgbaR19Tilesets[descriptor].metatiles=(const u16 *)(arena+off[6]);
+    sXgbaR19Tilesets[descriptor].metatileAttributes=(const u16 *)(arena+off[7]);
+    sXgbaR19Layouts[descriptor].secondaryTileset=&sXgbaR19Tilesets[descriptor];
+    sXgbaR19Headers[descriptor].mapLayout=&sXgbaR19Layouts[descriptor];
     if(XgbaLeaseValidate(&sXgbaR26ArenaLease,&lease)!=XGBA_LEASE_OK ||
        XgbaLeaseRelease(&sXgbaR26ArenaLease,&lease)!=XGBA_LEASE_OK)
         XgbaR19Reject();
@@ -294,7 +311,7 @@ static void XgbaR19Load(unsigned idx)
     if(XgbaCacheCommit(&sXgbaR28MapCache,slot,idx)!=XGBA_CACHE_HIT)
         XgbaR19Reject();
 #endif
-    sXgbaR19Ready[idx]=TRUE;
+    sXgbaR19Ready[descriptor]=TRUE;
     ++gXgbaR19MapProof.loads;
 }
 #ifdef XGBA_R31_AUTO_CATALOG
@@ -340,6 +357,17 @@ static void XgbaR20PrepareReturnToField(void)
     XgbaR19Load(1);
 #endif
 }
+static unsigned XgbaR19DescriptorFor(unsigned idx)
+{
+#ifdef XGBA_R31_AUTO_CATALOG
+    s32 slot=XgbaCacheFind(&sXgbaR28MapCache,idx);
+    if(slot<0 || slot>=XGBA_R19_DESCRIPTOR_COUNT ||
+       !sXgbaR19Ready[slot])XgbaR19Reject();
+    return (unsigned)slot;
+#else
+    return idx;
+#endif
+}
 static const struct MapHeader *XgbaR19HeaderFor(u16 group,u16 map)
 {
     s32 idx=XgbaR19Index(group,map);
@@ -369,7 +397,7 @@ static const struct MapHeader *XgbaR19HeaderFor(u16 group,u16 map)
     XgbaR19Load(0);
     XgbaR19Load(1);
 #endif
-    return &sXgbaR19Headers[idx];
+    return &sXgbaR19Headers[XgbaR19DescriptorFor((unsigned)idx)];
 }
 static const struct MapLayout *XgbaR19CurrentLayout(const struct MapLayout *fallback)
 {
@@ -377,7 +405,7 @@ static const struct MapLayout *XgbaR19CurrentLayout(const struct MapLayout *fall
                          gSaveBlock1Ptr->location.mapNum);
     if(idx<0)return fallback;
     XgbaR19Load((unsigned)idx);
-    return &sXgbaR19Layouts[idx];
+    return &sXgbaR19Layouts[XgbaR19DescriptorFor((unsigned)idx)];
 }
 static void XgbaR19MapTick(void)
 {
