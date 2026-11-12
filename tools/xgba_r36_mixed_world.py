@@ -15,6 +15,14 @@ class R36MixedWorldPool(mixed.MixedWorldPool):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._pages = {}
+        self._binary_index_by_source = {}
+
+    def mount_binary(self, index_path):
+        # R35 exposes no stored catalogue path. Retain the verified mount
+        # source ourselves, without modifying R35 internals or public ABI.
+        result = super().mount_binary(index_path)
+        self._binary_index_by_source[result.source_id] = Path(index_path).resolve(strict=True)
+        return result
 
     def mount_binary_pages(self, index_path):
         """Mount additional raw pages for an already verified binary map world.
@@ -32,7 +40,7 @@ class R36MixedWorldPool(mixed.MixedWorldPool):
             raise mixed.MixedPoolError("Raw page provider already mounted")
         if candidate.source_sha256!=existing.source_sha256:
             raise mixed.MixedPoolError("Raw pages and map segment source ROM identities disagree")
-        source_index=json.loads(Path(existing._index).read_text(encoding="utf8"))
+        source_index=json.loads(self._binary_index_by_source[source].read_text(encoding="utf8"))
         if tuple(source_index["group_map_counts"])!=candidate.original_group_map_counts or source_index["source_map_group_table_offset"]!=candidate.original_map_group_table_offset:
             raise mixed.MixedPoolError("Page metadata disagrees with original binary map group table")
         self._pages[source]=candidate
@@ -70,3 +78,4 @@ class R36MixedWorldPool(mixed.MixedWorldPool):
     def close(self):
         super().close()
         self._pages={}
+        self._binary_index_by_source={}
