@@ -22,11 +22,16 @@
 #define XGBA_R40_RESTORED 2u
 #define XGBA_R40_SCRIPT_REJECTED 0xE40u
 static EWRAM_DATA u8 sXgbaR40Script[XGBA_R40_SCRIPT_BYTES] = {0};
-static EWRAM_DATA char sXgbaR40Id[24] = "emerald.r40.script";
+static EWRAM_DATA char sXgbaR40Id[24] = {0};
 
 static void XgbaR40Tick(void)
 {
     u32 copied;
+    u32 i;
+    const char name[]="emerald.r40.script";
+    /* Original Emerald's EWRAM_DATA is not a guaranteed initialized ROM
+     * data image. Match the working R17 path: copy the resource ID into
+     * real guest EWRAM before making the MMIO request. */
     /* Native overworld is initialized, and original save blocks exist. */
     if(gXgbaR18Proof.r40_state != 0 || !gSaveBlock1Ptr ||
        !gMapHeader.mapLayout)
@@ -39,6 +44,8 @@ static void XgbaR40Tick(void)
         gXgbaR18Proof.r40_flag=FlagGet(XGBA_R40_FLAG);
         return;
     }
+    for(i=0;i<sizeof(name);++i)
+        sXgbaR40Id[i]=name[i];
     ++gXgbaR18Proof.r40_fetches;
     copied=XgbaGuestFetch(sXgbaR40Id,sXgbaR40Script,
                           XGBA_R40_SCRIPT_BYTES);
