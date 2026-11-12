@@ -133,7 +133,7 @@ jobs:
           assert source.read_bytes().startswith(b'P6\n240 160\n255\n')
           with Image.open(source) as original:
               assert original.size==(240,160)
-                  palette=set(original.convert('RGB').getdata())
+              palette=set(original.convert('RGB').getdata())
               print('R43 original homebrew LCD unique colours:',len(palette))
               assert len(palette)>=4, 'Original mGBA LCD was not meaningfully painted'
               original.save('build/r43-probe/native-xgba-probe.png')
