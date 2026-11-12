@@ -1,5 +1,8 @@
 # R37 — Static Team Rocket event-script dependency graph
 
+**VERIFIED / MERGED · 12 November 2026.** [PR #102](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/102) · [Merged source `2aca729`](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/commit/2aca7293c9b71944a85bba280234d13d9d0b119d). **4/4 exact-head workflows successful:** 20 new synthetic graph cases, R34–R36 parser/resource regression suite, immutable `pret/pokeemerald` original command table and critical macro widths, original FireRed Flash cold restart, original Emerald four-battle eviction, and repository privacy audit. [R37 exact-head tests](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43210338080) · [Full native non-regression](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43210337958). The user-owned Team Rocket ROM was only inspected in private; original ROM bytes and extracted code/assets were not published.
+
+
 ## Purpose and verified boundary
 
 The R36 page store captured every byte from the user-owned Team Rocket Edition
