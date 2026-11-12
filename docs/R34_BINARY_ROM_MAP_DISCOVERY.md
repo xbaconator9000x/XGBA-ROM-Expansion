@@ -1,5 +1,7 @@
 # R34 — Binary-only Emerald-family map discovery and complete structured map extraction
 
+**VERIFIED / MERGED · 12 November 2026.** [PR #96](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/96) · [merged code `781e42b`](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/commit/781e42b95e4f394acae8c6e8833164113248bf0b). **4/4 exact-head workflows successful**, including 13/13 original synthetic ROM tests, repository privacy audit, actual FireRed Flash cold restart and actual original Emerald four-battle regression. [Public synthetic-binary CI #43192543372](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43192543372). Real Team Rocket ROM data and derivative assets were inspected and exported **privately only**; they are not embedded in GitHub CI tests or artifacts.
+
 **Scope:** Begin importing source-game data directly from an existing
 modified binary GBA ROM, without requiring its decompilation sources or
 hardcoding its internal map table offset.
