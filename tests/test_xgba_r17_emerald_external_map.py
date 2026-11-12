@@ -93,7 +93,15 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             if len(cls.route_grid)!=800 or len(cls.route_border)!=8:
                 raise AssertionError("Pinned original Route 101 external geometry drift")
             cls.route_pack=r14.pack((cls.route_grid,cls.route_border),parts)
-            cls.route_pack_offset=(cls.resource_bytes+3)&~3
+            # R28 uses two fixed 8 KiB physical slots in the actual reserved
+            # 16 KiB heap tail, not merely the sum of the packed payloads.
+            # Keep R19's historical tightly packed layout unchanged.
+            if r28:
+                if cls.resource_bytes>8192 or len(cls.route_pack)>8192:
+                    raise AssertionError("R28 full source packs exceed their 8 KiB physical slots")
+                cls.route_pack_offset=8192
+            else:
+                cls.route_pack_offset=(cls.resource_bytes+3)&~3
             if cls.route_pack_offset+len(cls.route_pack)>16384:
                 raise AssertionError("Two simultaneous full maps exceed current Emerald 16KiB live arena")
             if r28:
@@ -103,7 +111,8 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                 if len(cls.oldale_grid)!=800 or len(cls.oldale_border)!=8:
                     raise AssertionError("Pinned original OldaleTown layout drift")
                 cls.oldale_pack=r14.pack((cls.oldale_grid,cls.oldale_border),parts)
-                if (cls.route_pack_offset+len(cls.oldale_pack)>16384 or
+                if (len(cls.oldale_pack)>8192 or
+                    cls.route_pack_offset+len(cls.oldale_pack)>16384 or
                     len(cls.pack)+len(cls.route_pack)+len(cls.oldale_pack)<=16384):
                     raise AssertionError("R28 requires 2 fitting packs but 3 over budget")
         if r19_battle:
@@ -122,8 +131,8 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             raise AssertionError("Emerald original full tileset exceeds one synchronous 16 KiB XGBA read; must implement chunking, never drop assets")
         if r19:
             resources=[
-                Resource("emerald_littleroot_pack",len(cls.pack)),
-                Resource("emerald_route101_pack",len(cls.route_pack))]
+                Resource("emerald_littleroot_pack",8192 if r28 else len(cls.pack)),
+                Resource("emerald_route101_pack",8192 if r28 else len(cls.route_pack))]
             phases=[Phase("original_emerald_connected_maps",
                           ("emerald_littleroot_pack","emerald_route101_pack"),
                           transient_heap_bytes=12288)]
