@@ -229,7 +229,7 @@ def main():
         f"- An active step over {STALE_JOB_MINUTES} minutes is flagged for review, not automatically cancelled.",
         "- Watchdog never reruns/cancels an audit, alters source code, or declares Phase 1 complete.",
         "- To inspect a red status, open its run link and inspect the failed step.",
-        "- GitHub Actions monitoring cannot refresh or revive a frozen ChatGPT response.",
+        "- GitHub Actions monitoring reports repository events only; it does not control external task sessions.",
         "",
         f"<!-- xgba-watchdog-fingerprint: {signature} -->",
         f"<!-- xgba-watchdog-lastcheck: {now.isoformat(timespec='seconds')} -->",
