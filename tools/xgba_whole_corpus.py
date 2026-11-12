@@ -124,7 +124,10 @@ def original_maps(source,root,paths):
                 by_constant[key]=(group,number)
                 m["original_constant"]=key
                 m["parse_status"]="original_metadata_parsed"
-                links=metadata.get("connections",[])
+                links=metadata.get("connections")
+                # Original pokeemerald explicitly uses JSON null on indoor maps.
+                # That is the source engine's valid "no connections" encoding.
+                if links is None:links=[]
                 if not isinstance(links,list):raise CorpusError("Invalid original map connections")
                 for c in links:
                     if not isinstance(c,dict) or not isinstance(c.get("map"),str):
