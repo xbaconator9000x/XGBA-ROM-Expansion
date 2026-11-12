@@ -31,6 +31,18 @@ struct XgbaR18Proof {
     volatile u32 r40_flag;
     volatile u32 r40_errors;
 #endif
+#ifdef XGBA_R42_EVENT_TEST
+    volatile u32 r42_state;      /* word 11 when R40 is disabled */
+    volatile u32 r42_fetches;    /* 12 */
+    volatile u32 r42_launches;   /* 13 */
+    volatile u32 r42_rocket_flag;/* 14 */
+    volatile u32 r42_johto_flag; /* 15 */
+    volatile u32 r42_rocket_var; /* 16 */
+    volatile u32 r42_johto_var;  /* 17 */
+    volatile u32 r42_nugget;     /* 18 */
+    volatile u32 r42_silk_scarf; /* 19 */
+    volatile u32 r42_errors;     /* 20 */
+#endif
 };
 EWRAM_DATA volatile struct XgbaR18Proof gXgbaR18Proof = {0};
 
