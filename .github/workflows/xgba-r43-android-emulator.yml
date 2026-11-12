@@ -129,7 +129,7 @@ jobs:
           from pathlib import Path
           from PIL import Image
           source=Path('build/r43-probe/native-xgba-probe.ppm')
-          assert source.read_bytes().startswith(b'P6\\n240 160\\n255\\n')
+          assert source.read_bytes().startswith(b'P6\n240 160\n255\n')
           with Image.open(source) as original:
               assert original.size==(240,160)
               assert len(set(original.convert('RGB').getdata()))>8
