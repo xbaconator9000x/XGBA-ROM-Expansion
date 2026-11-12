@@ -769,7 +769,32 @@ int main(int argc, char **argv)
         core->getPixels(core,&pixels,&stride);
         if(!pixels||stride<240u)
             fail("R43 original GBA video framebuffer was not produced");
-        save_native_frame(core,r43_probe);
+        /* Native mGBA's generic screenshot encoder refuses this tiny
+         * freestanding homebrew in some CI configurations, despite exposing
+         * the real 240x160 game LCD. Capture raw RGB PPM from the actual
+         * native pixel buffer; CI converts to PNG only after verifying bytes.
+         * No host-rendered or invented game graphics. */
+        FILE *image=fopen(r43_probe,"wb");
+        if(!image)fail("R43 cannot open original mGBA framebuffer proof");
+        if(fprintf(image,"P6\\n240 160\\n255\\n")<0)fail("R43 cannot write screenshot PPM header");
+        const mColor *frame=(const mColor *)pixels;
+        for(unsigned y=0;y<160u;y++) {
+            for(unsigned x=0;x<240u;x++) {
+                uint32_t color=(uint32_t)frame[y*stride+x];
+                uint8_t rgb[3];
+#ifdef COLOR_16_BIT
+                rgb[0]=(uint8_t)((color&31u)*255u/31u);
+                rgb[1]=(uint8_t)(((color>>5u)&31u)*255u/31u);
+                rgb[2]=(uint8_t)(((color>>10u)&31u)*255u/31u);
+#else
+                rgb[0]=(uint8_t)color;
+                rgb[1]=(uint8_t)(color>>8u);
+                rgb[2]=(uint8_t)(color>>16u);
+#endif
+                if(fwrite(rgb,1,3,image)!=3)fail("R43 original LCD framebuffer PPM payload truncated");
+            }
+        }
+        if(fclose(image)!=0)fail("R43 cannot flush original game LCD evidence");
         puts("PASS_R43_GENUINE_ARM7_EXTERNAL_SOURCE_MMIO_AND_LCD source=sidecar original_game_cpu=1");
     }
     if (screenshot) {
