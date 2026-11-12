@@ -2,3 +2,28 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+
+# Private local environment, credentials and signing material
+.env
+.env.*
+*.pem
+*.p12
+*.pfx
+*.keystore
+id_rsa
+id_ed25519
+credentials.json
+*.kdbx
+
+# Local session dumps, transcripts and generated debugging logs
+*.chat
+*.transcript
+*.jsonl
+*.log
+
+# Proprietary ROMs and personal game saves are never repository assets
+*.gba
+*.gbc
+*.nds
+*.sav
+*.srm
