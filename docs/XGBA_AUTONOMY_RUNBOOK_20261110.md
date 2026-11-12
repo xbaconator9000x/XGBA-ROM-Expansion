@@ -12,13 +12,13 @@
 ## Operational implementation
 
 - Target **existing draft PR #40** only, with its own experimental branch. No edits to legacy PR #27 or other work, and no direct writes to `main`.
-- The original three packages **R1 streaming sidecar**, **R2 deterministic pack builder**, and **R3 host staging bridge** are delivered, awaiting review. The user authorised a new finite **R4-R6 FireRed/mGBA native integration cycle** on 10 November 2026, appended in `tools/xgba_autonomous_product.py` without rewriting historical delivery receipts. See PR #40's design document for concrete acceptance criteria and expected filenames.
-- GitHub Actions runs every 30 minutes and on an authorised manual trigger. Concurrency group limits to one dispatcher. User-owned `XGBA_COPILOT_AGENT_PAT` makes the request to GitHub Agent Tasks API (Copilot Pro pilot tested successfully); `GITHUB_TOKEN` cannot call that API.
+- The original three packages **R1 streaming sidecar**, **R2 deterministic pack builder**, and **R3 host staging bridge** are delivered, awaiting review. The queue was expanded to a finite **R4-R6 FireRed/mGBA native integration cycle** on 10 November 2026, appended in `tools/xgba_autonomous_product.py` without rewriting historical delivery receipts. See PR #40's design document for concrete acceptance criteria and expected filenames.
+- GitHub Actions runs every 30 minutes and on an authorised manual trigger. Concurrency group limits to one dispatcher. An Actions-secret `XGBA_COPILOT_AGENT_PAT` makes the request to GitHub Agent Tasks API (Copilot Pro pilot tested successfully); `GITHUB_TOKEN` cannot call that API.
 - A dedicated GitHub branch `xgba-autonomous-product-state` stores an atomic compare-and-swap ledger. Reservation is persisted **before** the single task POST to prevent uncertain retries.
 - Refuse to dispatch when any other active Agent Task is reported in the repository, or if PR identity changes. No new tasks while a task is active.
 - When Copilot reports `completed`, compare the PR's exact new head to the dispatched baseline, require both expected source + test files actually changed and present, require exact-head **XGBA opt-in resource prototype CI** success, and prohibit unexpected changed paths. Only then record `DELIVERED_AWAITING_INDEPENDENT_REVIEW` and advance automatically.
 - A successful CI run **does not grant a semantic disposition**. Actual independent review remains separate. No merges, no source-pin changes or revisions of source-map gates.
-- At most **three new tasks per UTC day**, finite six-package queue (including the preserved completed first three). No unbounded credit consumption. The user separately confirmed their $0 AI-credit overage budget; this code cannot query or enforce GitHub account billing. It stops at the daily/queue limits even if that GitHub budget changes.
+- At most **three new tasks per UTC day**, finite six-package queue (including the preserved completed first three). The dispatcher cannot inspect account billing limits; it must stop on quota and enforce its explicit task/day limits.
 - Failed, cancelled, timed-out, unknown, mismatched, no-commit or unrelated-path work **blocks** automatic advancement and reports a specific reason; never counts as completed. A `RESERVED` outcome means manual reconciliation is required before another POST.
 - This is real persistent autonomy **within a specific validated queue**, not perpetual invention of unrelated tasks.
 
@@ -36,7 +36,7 @@
 `XGBA autonomous product dispatcher (bounded)`. It is the only service allowed
 to POST GitHub Copilot Agent Tasks and atomically maintain
 `xgba-autonomous-product-state:.xgba-autonomy/ledger.json`. The pre-existing
-hourly ChatGPT task `Continuous XGBA Phase 1` is **supervisory only**:
+external status monitors are **supervisory only**:
 it must read this same ledger/PR/CI, never independently POST another Agent Task,
 create a duplicate automation, restart the 14,834-file census, or override
 semantic approval counts.
@@ -49,10 +49,10 @@ The default-branch dispatcher separately re-reads PR #40 and requires the CI
 event's commit SHA to equal its latest head before accessing tasks or ledger.
 `workflow_run` never checks out or executes untrusted PR code, downloads PR
 artifacts, or evaluates PR-authored scripts. Existing single-run concurrency,
-task queue, CAS ledger, finite three-package cap and $0-overage requirement remain.
+task queue, CAS ledger and finite three-package dispatch cap remain.
 
 **Fallback:** GitHub cron `23,53 * * * *` is best-effort, not a guaranteed
-30-minute cadence. An hourly ChatGPT watchdog checks PR #40, current task,
+30-minute cadence. An external status monitor may check PR #40, current task,
 exact-head checks and the latest GitHub dispatcher runs; it reports genuine
 delays/failures and repairs bounded defects only under the pre-existing
 no-direct-main / no-duplicate-dispatch / no-false-approval constraints. A green
@@ -62,10 +62,10 @@ cleared just because a branch commit or green test appears.
 
 **Terminal behaviour:** At the original R3 checkpoint, GitHub recorded all R1/R2/R3 as
 `DELIVERED_AWAITING_INDEPENDENT_REVIEW`, `next=3`, `current=null`.
-The dispatcher returned `QUEUE_DONE_AWAITING_REVIEW` with no new paid-capable task. That previous state is preserved in history. The subsequent user request on 10 November 2026 explicitly prioritised integration and authorised appending R4-R6. The dispatcher now advances only into that separately defined finite scope, stops again at R6, and still never grants semantic approvals. Host-side prototype tests do not prove a
+The dispatcher returned `QUEUE_DONE_AWAITING_REVIEW` with no new paid-capable task. That previous state is preserved in history. The later scoped integration priority extended the queue through R4–R6. The dispatcher now advances only into that separately defined finite scope, stops again at R6, and still never grants semantic approvals. Host-side prototype tests do not prove a
 playable expanded ROM or ordinary GBA cartridge compatibility.
 
-## Revised priority and percentage estimate — approved 10 November 2026
+## Revised priority and historical estimate — 10 November 2026
 
 The full 14,834-file census and independent semantic mapping gate remain historical
 and must not be misrepresented as complete, but **they are no longer a prerequisite**
@@ -93,7 +93,7 @@ No unverifiable completion percentages or automatic increments based solely on
 a green workflow.
 
 Daily dispatch cap (3), CAS reservation, single dispatcher, automatic CI
-exact-head verification, old R1-R3 receipts, user $0 paid overages, and
+exact-head verification, old R1-R3 receipts, and
 independent semantic approval 0 all remain unchanged.
 
 ## Success criteria
@@ -106,4 +106,4 @@ independent semantic approval 0 all remain unchanged.
 
 ## Notes on expected costs
 
-Autonomous Agent Tasks may use included Copilot Pro credits. They are **not necessarily zero-credit**, and this workflow does not itself read the user's spending cap. A missing/expired token or exceeded GitHub quota blocks the workflow without creating a fallback paid service. No other projects are touched.
+Agent Tasks consume platform quota according to current service terms. The workflow cannot read billing permissions or balances. A missing/expired token or exceeded GitHub quota blocks the workflow without creating a fallback paid service.
