@@ -85,20 +85,24 @@ static void r30_verify(struct mCore *core,uint32_t proof,
  * Target x=0,y=10 is original west connection to Route102. Dynamic NPC
  * collision is discovered through genuine no-movement D-pad responses. */
 static unsigned r30_oldale_next(const uint16_t grid[400],
-    const uint8_t blocked[400],unsigned x,unsigned y)
+    const uint8_t blocked[400],unsigned x,unsigned y,unsigned destination)
 {
     static const int dx[4]={-1,0,0,1};
     static const int dy[4]={0,-1,1,0};
     static const unsigned keys[4]={1u<<5,1u<<6,1u<<7,1u<<4};
     int queue[400],parent[400],first[400],front=0,end=0,goal=-1;
-    if(x>=20u || y>=20u)fail("R30 original Oldale coords invalid");
-    if(x==0u && y==10u)return 1u<<5;
+    if(x>=20u || y>=20u || (destination!=17u && destination!=16u))
+        fail("R30 original Oldale target/coords invalid");
+    unsigned goal_x=destination==17u?0u:10u;
+    unsigned goal_y=destination==17u?10u:19u;
+    if(x==goal_x && y==goal_y)
+        return destination==17u?1u<<5:1u<<7;
     for(unsigned i=0;i<400u;++i)parent[i]=first[i]=-1;
     unsigned start=y*20u+x;
     parent[start]=(int)start;queue[end++]=(int)start;
     while(front<end) {
         int cur=queue[front++],cx=cur%20,cy=cur/20;
-        if(cx==0 && cy==10) {goal=cur;break;}
+        if(cx==(int)goal_x && cy==(int)goal_y) {goal=cur;break;}
         for(int d=0;d<4;++d) {
             int nx=cx+dx[d],ny=cy+dy[d];
             if(nx<0 || nx>=20 || ny<0 || ny>=20)continue;
@@ -112,14 +116,15 @@ static unsigned r30_oldale_next(const uint16_t grid[400],
         }
     }
     if(goal<0 || first[goal]<0) {
-        fprintf(stderr,"R30_OLDALE_PATH_STALL x=%u y=%u visited=%d tile=%04x\n",
-                x,y,end,grid[y*20u+x]);
-        fail("R30 original Oldale terrain has no legal westward connection");
+        fprintf(stderr,"R30_OLDALE_PATH_STALL dest=%u x=%u y=%u visited=%d tile=%04x\n",
+                destination,x,y,end,grid[y*20u+x]);
+        fail("R30 original Oldale terrain has no legal connected-map path");
     }
     return keys[first[goal]];
 }
 static void r30_walk_oldale(struct mCore *core,uint32_t proof,
-    const struct ResourceFile *res,uint64_t offset,uint32_t length)
+    const struct ResourceFile *res,uint64_t offset,uint32_t length,
+    unsigned destination)
 {
     FILE *fp=fopen(res->path,"rb");
     if(!fp || length>8192u || !length ||
@@ -139,7 +144,7 @@ static void r30_walk_oldale(struct mCore *core,uint32_t proof,
     unsigned old_x=UINT32_MAX,old_y=UINT32_MAX,prev_key=0u,stalls=0u;
     for(unsigned i=0;i<200u && r19_word(core,proof,3)==10u;++i) {
         unsigned x=r19_word(core,proof,15),y=r19_word(core,proof,16);
-        unsigned key=r30_oldale_next(cells,blocked,x,y);
+        unsigned key=r30_oldale_next(cells,blocked,x,y,destination);
         r14_press(core,key,16);r14_wait(core,8);
         if(r19_word(core,proof,1)==0xE19u)
             fail("R30 original guest refused external map/arena");
@@ -159,14 +164,14 @@ static void r30_walk_oldale(struct mCore *core,uint32_t proof,
         } else stalls=0u;
         prev_key=key;old_x=x;old_y=y;
     }
-    if(r19_word(core,proof,3)!=17u) {
-        fprintf(stderr,"R30_OLDALE_NAV_STALL map=%u x=%u y=%u loads=%u evictions=%u\n",
-                r19_word(core,proof,3),r19_word(core,proof,15),
+    if(r19_word(core,proof,3)!=destination) {
+        fprintf(stderr,"R30_OLDALE_NAV_STALL target=%u map=%u x=%u y=%u loads=%u evictions=%u\n",
+                destination,r19_word(core,proof,3),r19_word(core,proof,15),
                 r19_word(core,proof,16),r19_word(core,proof,37),
                 r19_word(core,proof,35));
-        fail("R30 original D-pad did not cross from Oldale into Route102");
+        fail("R30 genuine Oldale connected-map D-pad traversal incomplete");
     }
-    r19_wait(core,proof,17u,80u);
+    r19_wait(core,proof,destination,80u);
 }
 static void xgba_r30_four_map_run(struct mCore *core,uint32_t proof,
     const char *dir,const struct XgbaGbaDevice *device,
@@ -195,13 +200,15 @@ static void xgba_r30_four_map_run(struct mCore *core,uint32_t proof,
     r28_walk_route_connection(core,proof,res,off[1],len[1],10u);
     r30_verify(core,proof,res,off,len,route[2]);
     r17_frame(core,dir,"03-r30-oldale");
-    r30_walk_oldale(core,proof,res,off[2],len[2]);
+    r30_walk_oldale(core,proof,res,off[2],len[2],17u);
     r30_verify(core,proof,res,off,len,route[3]);
     r17_frame(core,dir,"04-r30-original-route102-fourth");
     r28_walk(core,proof,10u,1u<<4,32u);
     r30_verify(core,proof,res,off,len,route[4]);
     r17_frame(core,dir,"05-r30-oldale-reacquired");
-    r28_walk(core,proof,16u,1u<<7,35u);
+    /* Re-entered Oldale on its WEST edge: route by real collisions to the
+     * south exit instead of R28's straight-down shortcut from Route101. */
+    r30_walk_oldale(core,proof,res,off[2],len[2],16u);
     r30_verify(core,proof,res,off,len,route[5]);
     r17_frame(core,dir,"06-r30-route101-reacquired");
     r28_walk_route_connection(core,proof,res,off[1],len[1],9u);
