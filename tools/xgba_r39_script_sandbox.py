@@ -156,7 +156,7 @@ def compile_script(pool, source_id, root_offset, *, max_commands=MAX_COMPILED):
         if opcode in (68, 69, 70, 71):
             _value(a[0]); _value(a[1])
         if opcode in (96, 97, 98):
-            _int(a[0], 0, 65535, "source trainer ID")
+            _value(a[0])  # original Emerald uses VarGet for trainer ID operands
         if opcode in (6, 7):
             _int(a[0], 0, 5, "Emerald comparison condition")
         commands[pc] = (pc, opcode, a, length)
@@ -368,12 +368,13 @@ class SourceStateBank:
             elif opcode == 43:
                 cmp = 1 if args[0] in state.flags else 0
             elif opcode in (96, 97, 98):
+                trainer_id = get(args[0])  # original ScrCmd_*trainerflag uses VarGet
                 if opcode == 96:
-                    cmp = 1 if args[0] in state.trainers else 0
+                    cmp = 1 if trainer_id in state.trainers else 0
                 elif opcode == 97:
-                    state.trainers.add(args[0])
+                    state.trainers.add(trainer_id)
                 else:
-                    state.trainers.discard(args[0])
+                    state.trainers.discard(trainer_id)
             elif opcode in (68, 69, 70, 71):
                 if policy is None:
                     raise ScriptCompatibilityError("Bag operation requires an explicit source policy")
