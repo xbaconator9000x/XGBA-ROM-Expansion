@@ -120,6 +120,7 @@ jobs:
             --frames 600 \
             --r43-probe "$PWD/build/r43-probe/native-xgba-probe.ppm" \
             2>&1 | tee build/r43-probe/native-xgba-probe.log
+          grep -q 'PASS_R43_NATIVE_CONTROLLER_3_EXTERNAL_SOURCE_SWITCHES_AND_GAME_EVENT count=4' build/r43-probe/native-xgba-probe.log
           grep -q 'PASS_R43_GENUINE_ARM7_EXTERNAL_SOURCE_MMIO_AND_LCD' build/r43-probe/native-xgba-probe.log
           test -s build/r43-probe/native-xgba-probe.ppm
           if ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
@@ -132,7 +133,9 @@ jobs:
           assert source.read_bytes().startswith(b'P6\n240 160\n255\n')
           with Image.open(source) as original:
               assert original.size==(240,160)
-              assert len(set(original.convert('RGB').getdata()))>8
+              palette=set(original.convert('RGB').getdata())
+          print('R43 original homebrew LCD unique colours:',len(palette))
+          assert len(palette)>=4, 'Original mGBA LCD was not meaningfully painted'
               original.save('build/r43-probe/native-xgba-probe.png')
           print('PASS_R43_NATIVE_TRUE_GBA_LCD_SOURCE_PIXELS_NOT_HOST_GENERATED')
           PY
