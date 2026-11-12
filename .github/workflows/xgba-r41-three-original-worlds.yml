@@ -1,0 +1,89 @@
+name: XGBA R41 three-source original map identities and HnS sparse-slot integration
+on:
+  push:
+    branches: [main, 'phase3/r41-hns-sparse-maps-and-real-three-source-intake-20261113']
+    paths:
+      - 'tools/xgba_r34_binary_maps.py'
+      - 'tools/xgba_r41_three_rom_trial.py'
+      - 'tests/test_xgba_r34_binary_maps.py'
+      - 'tests/test_xgba_r41_sparse_hns_maps.py'
+      - 'tests/test_xgba_r41_three_rom_trial.py'
+      - '.github/workflows/xgba-r41-three-original-worlds.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/xgba_r34_binary_maps.py'
+      - 'tools/xgba_r41_three_rom_trial.py'
+      - 'tests/test_xgba_r34_binary_maps.py'
+      - 'tests/test_xgba_r41_sparse_hns_maps.py'
+      - 'tests/test_xgba_r41_three_rom_trial.py'
+      - '.github/workflows/xgba-r41-three-original-worlds.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r41-three-worlds-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  binary-full-map-contracts:
+    name: 13 old binary map + 10 sparse HnS + 12 three-source collision tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run source-aware structural tests and all normal-map regressions
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r34_binary_maps.py tools/xgba_r41_three_rom_trial.py tests/test_xgba_r41_sparse_hns_maps.py tests/test_xgba_r41_three_rom_trial.py
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r34_binary_maps test_xgba_r41_sparse_hns_maps test_xgba_r41_three_rom_trial -v 2>&1 | tee /tmp/r41-three-source.log
+          grep -q '^OK$' /tmp/r41-three-source.log
+          grep -q 'Ran 35 tests' /tmp/r41-three-source.log
+          echo 'PASS_R41_35_TESTS preserve_zero_slots=1 preserve_original_ids=1 no_bad_pointer_skipping=1'
+  historical-host-parser-regressions:
+    name: Preserve R35–R40 host-source graph and native source contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Strict synthetic source regression suites
+        run: |
+          set -euo pipefail
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r35_mixed_pool test_xgba_r36_binary_pages test_xgba_r37_script_graph test_xgba_r39_script_sandbox.ScriptSandbox -v 2>&1 | tee /tmp/r41-parser-regressions.log
+          grep -q '^OK$' /tmp/r41-parser-regressions.log
+  original-heartsoul-public-script-contract:
+    name: Verify authentic public HnS New Bark Town and Route29 event-source provenance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch only pinned source scripts/map JSON (no user HnS ROM)
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/hns-original
+          PIN=167aa6d537b109bb229c231ddce4616974c4da71
+          BASE=https://raw.githubusercontent.com/PokemonHnS-Development/pokehns-expansion/$PIN/data/maps
+          curl -fL --retry 3 --max-time 75 "$BASE/NewBarkTown_hns/scripts.inc" -o /tmp/hns-original/newbark.inc
+          curl -fL --retry 3 --max-time 75 "$BASE/Route29_hns/scripts.inc" -o /tmp/hns-original/route29.inc
+          curl -fL --retry 3 --max-time 75 "$BASE/NewBarkTown_hns/map.json" -o /tmp/hns-original/newbark.json
+          curl -fL --retry 3 --max-time 75 "$BASE/Route29_hns/map.json" -o /tmp/hns-original/route29.json
+          python3 - <<'PY'
+          import json,re
+          from pathlib import Path
+          root=Path('/tmp/hns-original')
+          new=(root/'newbark.inc').read_text()
+          route=(root/'route29.inc').read_text()
+          a=json.loads((root/'newbark.json').read_text())
+          b=json.loads((root/'route29.json').read_text())
+          assert a['id']=='MAP_NEW_BARK_TOWN_HNS'
+          assert b['id']=='MAP_ROUTE29_HNS'
+          assert any(c['map']=='MAP_ROUTE29_HNS' for c in a['connections'])
+          assert any(c['map']=='MAP_NEW_BARK_TOWN_HNS' for c in b['connections'])
+          assert 'NewBarkTown_EventScript_TestMan2::' in new
+          ops=new.split('NewBarkTown_EventScript_TestMan2::',1)[1].split('\n\tend',1)[0]
+          assert ops.count('\n\tsetvar ')==1 and ops.count('\n\tsetflag ')==4
+          assert 'Route29_EventScript_TuscanyYes::' in route
+          assert 'giveitem ITEM_SILK_SCARF' in route
+          assert 'FLAG_GOT_SILK_SCARF' in route
+          assert len(a['warp_events'])>=4 and len(b['object_events'])>=8
+          print('PASS_R41_PINNED_PUBLIC_HNS_SOURCE_METADATA original_new_bark=1 route29=1 johto_events=1 source_only=1')
+          PY
