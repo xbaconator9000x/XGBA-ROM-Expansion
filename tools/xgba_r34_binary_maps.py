@@ -137,7 +137,7 @@ class BinaryMapDiscovery:
             "original_layout_id": struct.unpack_from("<H", self.data, off + 18)[0],
         }
 
-    def _candidate(self, table_off, refs):
+    def _candidate(self, table_off, refs, *, allow_null_slots=False):
         if table_off % 4 or table_off >= self.size - 24:
             return None
         targets = []
@@ -168,23 +168,44 @@ class BinaryMapDiscovery:
         # Cheap fail-closed gate before touching every candidate header.
         probes = [(0, 0), (0, min(2, counts[0] - 1)),
                   (len(targets) // 2, 0), (len(targets) - 1, counts[-1] - 1)]
+        verified_probes = 0
         for g, n in probes:
-            if self._parse_header(self.u32(targets[g] + n * 4), g, n) is None:
+            address = self.u32(targets[g] + n * 4)
+            if allow_null_slots and address == 0:
+                continue
+            if self._parse_header(address, g, n) is None:
                 return None
+            verified_probes += 1
+        if not verified_probes:
+            return None
         maps = []
+        null_slots = []
         for group, start in enumerate(targets):
             for number in range(counts[group]):
-                record = self._parse_header(self.u32(start + number * 4), group, number)
+                address = self.u32(start + number * 4)
+                if address == 0 and allow_null_slots:
+                    # HnS decomp-derived map tables preserve deliberately
+                    # empty numeric slots; DO NOT compact/renumber other maps.
+                    null_slots.append({"group": group, "map": number})
+                    continue
+                record = self._parse_header(address, group, number)
                 if record is None:
+                    # An invalid *nonzero* pointer remains fatal even when
+                    # known-null holes are permitted; never skip corruption.
                     return None
                 maps.append(record)
+        if len(maps) < 32:
+            return None
         return {"table_offset": table_off, "reference_count": refs,
                 "group_count": len(targets), "map_count": len(maps),
+                "slot_count": total, "null_slot_count": len(null_slots),
+                "null_slots": null_slots,
                 "group_map_counts": counts, "maps": maps}
 
-    def discover(self, min_root_references=4):
-        if type(min_root_references) is not int or min_root_references < 2:
-            raise DiscoveryError("Invalid table reference threshold")
+    def discover(self, min_root_references=4, *, allow_null_slots=False):
+        if type(allow_null_slots) is not bool or type(min_root_references) is not int or \
+           min_root_references < (1 if allow_null_slots else 2):
+            raise DiscoveryError("Invalid table reference threshold or null-slot policy")
         # A ROM code/data pointer must refer to the table. Do not trust
         # only the header title, BPEE game code, or a pinned absolute offset.
         references = Counter()
@@ -195,7 +216,8 @@ class BinaryMapDiscovery:
         for absolute, count in references.items():
             if count < min_root_references:
                 continue
-            probe = self._candidate(absolute - GBA_BASE, count)
+            probe = self._candidate(absolute - GBA_BASE, count,
+                                    allow_null_slots=allow_null_slots)
             if probe:
                 candidates.append(probe)
         if not candidates:
@@ -214,6 +236,8 @@ class BinaryMapDiscovery:
             sizes["maps_with_scripts"] += bool(m["script_root_offset"] is not None)
         result["summary"] = {
             "map_groups": result["group_count"], "maps": result["map_count"],
+            "original_numeric_map_slots": result["slot_count"],
+            "zero_pointer_map_slots_preserved": result["null_slot_count"],
             "unique_layouts": len(layouts),
             "object_events": sizes["object_count"], "warp_events": sizes["warp_count"],
             "coordinate_events": sizes["coordinate_event_count"],
@@ -337,6 +361,7 @@ class BinaryMapDiscovery:
                       "binary_only_map_structures_verified": True,
                       "source_map_group_table_offset": discovered["table_offset"],
                       "group_map_counts": discovered["group_map_counts"],
+                      "original_null_map_slots": discovered["null_slots"],
                       "summary": dict(discovered["summary"], exported_fixed_segments=len(segments),
                                       exported_raw_bytes=total, shard_count=len(shards)),
                       "shards": shards, "segments": segments,
@@ -367,10 +392,14 @@ def main(argv=None):
     p.add_argument("--out", help="write local aggregate JSON evidence (no source bytes)")
     p.add_argument("--export", help="write all known fixed-length map structures to private sidecar shards")
     p.add_argument("--source-id", help="private source namespace required for --export")
+    p.add_argument("--allow-null-maps", action="store_true",
+                   help="permit actual zero-pointer map slots without changing original IDs (HnS compatibility)")
     args = p.parse_args(argv)
     try:
         scan = BinaryMapDiscovery(args.rom)
-        result = scan.discover()
+        result = scan.discover(
+            min_root_references=(1 if args.allow_null_maps else 4),
+            allow_null_slots=args.allow_null_maps)
         summary = {"bytes": scan.size, "game_code": scan.game_code,
                    "source_sha256": scan.digest, "header_valid": True,
                    "binary_map_structure_profile": "pret-emerald-structural-candidate-not-execution-certified",
