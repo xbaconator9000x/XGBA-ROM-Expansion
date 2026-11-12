@@ -233,6 +233,8 @@ class SourceStateBank:
     """Source-identity-checked, separately stored event state; no shared save."""
 
     def __init__(self, pool, *, bag_policies=None):
+        self._pool = pool
+        self._trusted_ir = {}
         self.identities = {sid: pool._source(sid).source_sha256 for sid in pool.source_ids}
         self._worlds = {sid: WorldState() for sid in self.identities}
         self.bag_policies = dict(bag_policies or {})
@@ -288,6 +290,15 @@ class SourceStateBank:
         sid = program.source_id
         if sid not in self.identities or program.source_sha256 != self.identities[sid]:
             raise ScriptCompatibilityError("Program/original ROM source identity mismatch")
+        # A dataclass alone is not an authorization token. Verify that every
+        # operation came from the mounted, SHA-checked source, not a forged IR.
+        key = (sid, program.source_sha256, program.root_offset)
+        expected = self._trusted_ir.get(key)
+        if expected is None:
+            expected = compile_script(self._pool, sid, program.root_offset)
+            self._trusted_ir[key] = expected
+        if expected != program:
+            raise ScriptCompatibilityError("Script IR differs from verified source bytes")
         instructions = {c[0]: c for c in program.commands}
         if len(instructions) != len(program.commands) or not instructions:
             raise ScriptCompatibilityError("Corrupted or empty script IR")
