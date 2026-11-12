@@ -795,6 +795,35 @@ int main(int argc, char **argv)
             }
         }
         if(fclose(image)!=0)fail("R43 cannot flush original game LCD evidence");
+
+        /* Real L/R/A controller acceptance on the homebrew cartridge:
+         * R steps Emerald -> Rocket -> Johto, each requiring a DISTINCT
+         * source-id lookup, new SHA-verified >32MiB fetch, and actual guest
+         * world-state change. A updates a third guest-side event counter.
+         * This is a storage/input demonstration, NOT a claim that the
+         * third-party source games' original event scripts execute. */
+        for(unsigned target=1u;target<=2u;target++) {
+            core->setKeys(core,1u<<8); /* GBA physical R */
+            for(unsigned k=0;k<5u;k++)core->runFrame(core);
+            core->setKeys(core,0u);
+            for(unsigned k=0;k<25u;k++)core->runFrame(core);
+            unsigned guest_world=core->busRead32(core,0x0203F910u);
+            unsigned guest_count=core->busRead32(core,0x0203F908u);
+            unsigned guest_status=core->busRead32(core,0x0203F904u);
+            fprintf(stderr,"R43 actual R input source=%u reads=%u game_count=%u status=%u rejected=%u\n",
+                    guest_world,device.successful_reads,guest_count,guest_status,device.failed_reads);
+            if(guest_world!=target || device.successful_reads!=target+1u ||
+               guest_count!=target+1u || guest_status!=1u || device.failed_reads!=0u)
+                fail("R43 genuine GBA controller failed to switch verified source in guest game");
+        }
+        core->setKeys(core,1u<<0); /* native A guest event action */
+        for(unsigned k=0;k<5u;k++)core->runFrame(core);
+        core->setKeys(core,0u);
+        for(unsigned k=0;k<25u;k++)core->runFrame(core);
+        if(core->busRead32(core,0x0203F90Cu)!=1u ||
+           device.successful_reads!=4u || device.failed_reads!=0u)
+            fail("R43 real GBA A event counter or source refetch incorrect");
+        puts("PASS_R43_NATIVE_CONTROLLER_3_EXTERNAL_SOURCE_SWITCHES_AND_GAME_EVENT count=4");
         puts("PASS_R43_GENUINE_ARM7_EXTERNAL_SOURCE_MMIO_AND_LCD source=sidecar original_game_cpu=1");
     }
     if (screenshot) {
