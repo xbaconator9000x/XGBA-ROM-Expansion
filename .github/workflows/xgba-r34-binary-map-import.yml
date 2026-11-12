@@ -1,0 +1,37 @@
+name: XGBA R34 binary Emerald-family map importer
+on:
+  push:
+    branches: [main, 'phase3/r34-binary-map-import-20261112']
+    paths:
+      - 'tools/xgba_r34_binary_maps.py'
+      - 'tools/xgba_resource_sidecar.py'
+      - 'tests/test_xgba_r34_binary_maps.py'
+      - '.github/workflows/xgba-r34-binary-map-import.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/xgba_r34_binary_maps.py'
+      - 'tools/xgba_resource_sidecar.py'
+      - 'tests/test_xgba_r34_binary_maps.py'
+      - '.github/workflows/xgba-r34-binary-map-import.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r34-import-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  binary-original-map-identities:
+    name: Synthetic binary ROM discovery, 13 adversarial tests and exact source byte roundtrip
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exercise full binary map database and every extracted resource through production v1 reader
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r34_binary_maps.py tests/test_xgba_r34_binary_maps.py
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r34_binary_maps.BinaryMapDiscoveryTests -v 2>&1 | tee /tmp/r34-import.log
+          grep -q 'Ran 13 tests' /tmp/r34-import.log
+          grep -q '^OK$' /tmp/r34-import.log
+          echo "PASS_R34_BINARY_MAP_IMPORT 13/13 original_ids_unchanged=1 source_ROM_unchanged=1"
