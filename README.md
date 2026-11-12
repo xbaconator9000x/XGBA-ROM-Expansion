@@ -1,5 +1,31 @@
 # XGBA — Expanding What a Game Boy Advance Game Can Access
 
+## What XGBA is
+
+XGBA is my experimental project to expand what Game Boy Advance games can access **without pretending that the original GBA has unlimited addressable ROM or RAM**. The goal is to let compatible, deliberately patched games request additional content from external, integrity-checked storage through an emulator extension, while keeping the game's executable ROM inside the ordinary GBA cartridge address space.
+
+Instead of requiring every map, sprite, tileset, animation or other asset to fit inside one conventional GBA ROM, an XGBA-enabled game would load identified resources on demand into its existing, finite working memory. The approach is **opt-in**: an unmodified game and stock emulator do not automatically gain these abilities.
+
+## Goals
+
+- **Substantially expand usable game content:** support multi-region worlds, more maps, graphics, music, dialogue and gameplay assets without fitting every asset simultaneously into the conventional ROM window. A Pokémon project spanning all nine regions is an aspirational example, **not** an implemented capability.
+- **Make expansion practical for ROM hackers:** work toward a straightforward, repeatable patching workflow for clean and already modified ROMs, with explicit compatibility checks, conflict detection and recoverable failures rather than unsafe universal patching.
+- **Integrate with existing tools:** develop adapters or plugins for ROM-hacking editors, build tools and emulators so external resources can eventually be created, managed and loaded within normal editing workflows.
+- **Preserve predictable gameplay:** prioritize bounded GBA memory use, resource lifetimes, graphics/DMA safety, save and save-state compatibility, performance and data integrity.
+- **Publish reproducible evidence:** verify changes against actual source-built FireRed/Emerald and pinned emulator builds, with honest test counts, source commits and negative-case results.
+
+## Potential implications
+
+A mature implementation could make emulator-targeted GBA projects much larger and more modular: richer Pokémon ROM hacks, ambitious multi-region games and separately distributable asset packs become more feasible when storage capacity is decoupled from the cartridge's directly addressable ROM window. It could also reduce the friction of working around tight ROM-space budgets for creators.
+
+**These are goals and potential implications, not completed features.** Host storage is not infinite; the GBA's CPU address space, RAM, VRAM, bandwidth, game-engine structures and emulator compatibility continue to impose real constraints. XGBA does not currently offer a one-click universal ROM expander, unrestricted map dimensions, compatibility with stock emulators or physical GBA hardware.
+
+## AI disclosure
+
+**I am developing XGBA with the help of AI for coding and logging purposes.** AI-assisted implementation, log analysis and technical documentation support the work. Functionality and performance claims are based on executed tests and verifiable source evidence, not AI-generated assertions.
+
+## Development history and verified results
+
 **Executed expansion proof: R6–R27 verified · 12 November 2026**
 
 **R27 verified native huge-map stress ([PR #82](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/82)):** Original Emerald running under pinned native mGBA passed **64×64 7/7 and 128×32 7/7** using complete external Petalburg tilesets plus 4,096-cell synthetic geometry derived from the real game's source map. Portable preflight passed **7/7** for 16 KiB and original 0x2800-cell backup limits, including 16,385-byte and oversized-map rejection. **All five triggered original-game regression gates also passed** at native head `3d31b5ba5115cab799da3cc3b30869c6afaadcb7`. [Original native CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43126703593) · [64×64 LCD + JSON](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43126703593/artifacts/13902333911) · [128×32 LCD + JSON](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43126703593/artifacts/13903334097) · [R27 capacity contract](docs/R27_HUGE_MAP_STRESS.md). **Not** a proof of arbitrary larger maps or 3+ connected-map eviction.
@@ -86,7 +112,7 @@ Original source-built FireRed and Emerald guest CPUs each arm repeating **DMA3 V
 
 **Not yet established:** a DMA channel interrupted *mid-beat*, guest CPU-store protection, source lifetime during decompression, >2 simultaneously live connected maps, stock mGBA or physical GBA compatibility. Those require explicit guest `borrow/pin/release` and broader native stress tests. See [R25 DMA engineering evidence and follow-up](docs/R25_DMA_LIFETIME_ENGINEERING.md).
 
-## Latest verified milestone — R24: original FireRed and Emerald synchronous transfer boundaries
+## R24 — original FireRed and Emerald synchronous transfer boundaries
 
 **12 November 2026 · merged [PR #78](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/78) · tested implementation SHA `f5256cad704f5648f518a1438f2a5a5841036ac8` · merged `main` commit [`13cb65b`](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/commit/13cb65b84f27937141ec9c28158827b389e05f93).**
 
