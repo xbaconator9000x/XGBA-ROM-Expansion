@@ -171,11 +171,14 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
         directory=Path(r18_dir).resolve()
         if not directory.is_dir() or second_resource_id is None:
             raise ValueError("R18 requires actual LCD directory and both original Emerald resources")
-        if r18_phase not in ("write","continue","corrupt","r40-corrupt") or not r18_savefile or not (
+        if r18_phase not in ("write","continue","corrupt","r40-corrupt","r42-write","r42-continue") or not r18_savefile or not (
                 0x02000000<=r18_save_probe<0x02040000):
             raise ValueError("R18 requires phase, genuine mGBA Flash file and native guest ELF proof")
         if r18_phase=="r40-corrupt" and "emerald.r40.script" not in extra_resource_ids:
             raise ValueError("R40 negative native phase requires the external script resource")
+        if r18_phase in ("r42-write","r42-continue") and tuple(extra_resource_ids)!=(
+            "rocket.r42.event","heart_soul.r42.event"):
+            raise ValueError("R42 gameplay needs both original source-namespaced event assets")
         flash=Path(r18_savefile).resolve()
         if not flash.parent.is_dir():
             raise ValueError("R18 Flash save parent absent")

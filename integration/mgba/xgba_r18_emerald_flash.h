@@ -12,8 +12,8 @@
 #define R40_NATIVE_STATE_REFUSED 0xE40u
 static int r40_fixture(const struct ResourceFile *source)
 {
-    if(!source->extra_count)return 0;
-    if(source->extra_count!=1u || strcmp(source->extra[0].id,R40_SCRIPT_ID) ||
+    if(source->extra_count!=1u)return 0;
+    if(strcmp(source->extra[0].id,R40_SCRIPT_ID) ||
        source->extra[0].length!=9u)
         fail("R40 script test expects exactly one nine-byte source-bound external resource");
     return 1;
@@ -44,6 +44,102 @@ static void r18_check(struct mCore *c,uint32_t save)
        r18_read(c,save,0)!=R18_MAGIC)
         fail("R18 real source-built Emerald Flash save-state evidence missing");
 }
+/* R42 original Emerald gameplay, source-labelled scripts (never real HnS
+ * / Rocket binary execution). R40 and R18 modes remain ABI unchanged. */
+#define R42_STATE_READY 1u
+#define R42_STATE_RESTORED 2u
+#define R42_STATE_COMPLETE 3u
+#define R42_ROCKET_VALUE 0x524Bu
+#define R42_JOHTO_VALUE 0x484Eu
+static int r42_fixture(const struct ResourceFile *source)
+{
+    if(source->extra_count!=2u)return 0;
+    if(strcmp(source->extra[0].id,"rocket.r42.event") ||
+       strcmp(source->extra[1].id,"heart_soul.r42.event") ||
+       source->extra[0].length!=96u || source->extra[1].length!=96u)
+        fail("R42 native event requires exactly two source-labelled 96-byte sidecar assets");
+    return 1;
+}
+static void r42_assert(struct mCore *core,uint32_t save,unsigned state)
+{
+    unsigned current=r18_read(core,save,11u);
+    unsigned fetches=r18_read(core,save,12u);
+    unsigned launches=r18_read(core,save,13u);
+    unsigned rocket_flag=r18_read(core,save,14u);
+    unsigned johto_flag=r18_read(core,save,15u);
+    unsigned rocket_var=r18_read(core,save,16u);
+    unsigned johto_var=r18_read(core,save,17u);
+    unsigned nugget=r18_read(core,save,18u);
+    unsigned scarf=r18_read(core,save,19u);
+    unsigned errors=r18_read(core,save,20u);
+    fprintf(stderr,"R42 native state=%u fetch=%u calls=%u flags=%u,%u vars=%u,%u bag=%u,%u err=%u\\n",
+            current,fetches,launches,rocket_flag,johto_flag,rocket_var,johto_var,nugget,scarf,errors);
+    if(current!=state || errors!=0u ||
+       fetches!=(state==R42_STATE_RESTORED?0u:2u) ||
+       launches!=(state==R42_STATE_RESTORED?0u:state==R42_STATE_COMPLETE?2u:1u) ||
+       rocket_flag!=1u || rocket_var!=R42_ROCKET_VALUE || nugget!=1u)
+        fail("R42 original Emerald Rocket-source adaptation did not execute actual item/flag/var");
+    if(state==R42_STATE_COMPLETE || state==R42_STATE_RESTORED) {
+        if(johto_flag!=1u || johto_var!=R42_JOHTO_VALUE || scarf!=1u)
+            fail("R42 original Emerald Johto-source adaptation did not execute actual item/flag/var");
+    } else if(johto_flag!=0u || johto_var!=0u || scarf!=0u) {
+        fail("R42 Johto source event triggered before L button");
+    }
+}
+static void xgba_r42_emerald_run(struct mCore *core,uint32_t map,uint32_t save,
+                                const char *folder,const char *phase,
+                                const struct XgbaGbaDevice *device,
+                                const struct ResourceFile *resource)
+{
+    if(!strcmp(phase,"r42-write")) {
+        if(r18_read(core,save,2)!=0u || r18_read(core,save,1)==1u)
+            fail("R42 original Emerald first boot must have no previous Flash");
+        r14_wait(core,180u);
+        r17_check_map(core,map,resource);
+        r17_frame(core,folder,"00-original-emerald-external-littleroot");
+        r14_press(core,1u<<8,3u); /* original physical R button */
+        /* Native Emerald's text printer and waitmessage must finish before
+         * waitbuttonpress can receive A; 45 frames only speeds up the text,
+         * leaving the global event context locked and suppressing L. */
+        r14_wait(core,150u);
+        r42_assert(core,save,R42_STATE_READY);
+        r17_frame(core,folder,"01-native-rocket-event-dialogue");
+        r14_press(core,1u<<0,3u); /* original A, dismiss message */
+        r14_wait(core,45u);
+        r14_press(core,1u<<0,3u); /* no-op if already dismissed */
+        r14_wait(core,45u);
+        r14_press(core,1u<<9,3u); /* original physical L button */
+        r14_wait(core,150u);
+        r42_assert(core,save,R42_STATE_COMPLETE);
+        r17_frame(core,folder,"02-native-johto-event-dialogue");
+        r14_press(core,1u<<0,3u);
+        r14_wait(core,45u);
+        r14_press(core,1u<<0,3u);
+        r14_wait(core,45u);
+        if(device->successful_reads!=4u || device->failed_reads)
+            fail("R42 original Emerald failed two independently verified external event reads");
+        r14_press(core,1u<<2,3u); /* actual GBA SELECT -> original TrySavingData */
+        for(unsigned i=0;i<3400u && r18_read(core,save,4u)==0u;++i) {
+            core->setKeys(core,0u);core->runFrame(core);
+        }
+        r14_wait(core,20u);
+        if(r18_read(core,save,3u)!=1u || r18_read(core,save,4u)!=1u)
+            fail("R42 native original Emerald Flash-sector save callback unsuccessful");
+        r42_assert(core,save,R42_STATE_COMPLETE);
+        r17_frame(core,folder,"03-real-flash-saved-both-events");
+        puts("PASS_R42_NATIVE_GAME_TWO_EXTERNAL_EVENTS dialogue=1 rocket_nugget=1 johto_silk_scarf=1 native_flash=1");
+    }else if(!strcmp(phase,"r42-continue")) {
+        if(r18_read(core,save,1u)!=1u || r18_read(core,save,2u)!=1u)
+            fail("R42 native Emerald did not cold load original Flash");
+        r14_wait(core,210u);
+        r17_check_map(core,map,resource);
+        r42_assert(core,save,R42_STATE_RESTORED);
+        if(device->successful_reads!=2u || device->failed_reads)
+            fail("R42 cold restarted native Emerald unnecessarily fetched original script packs");
+        r17_frame(core,folder,"04-cold-restarted-original-emerald-items-restored");
+        puts("PASS_R42_NATIVE_EMERALD_COLD_RESTORED_BOTH_EVENTS original_flash=1 no_reexecution=1 bag=2 flags=2 vars=2");
+    }else fail("R42 native emulator requested unsupported phase");
+}
 static void xgba_r18_emerald_run(struct mCore *core,uint32_t map,uint32_t save,
                                  const char *folder,const char *phase,
                                  const struct XgbaGbaDevice *device,
@@ -52,7 +148,14 @@ static void xgba_r18_emerald_run(struct mCore *core,uint32_t map,uint32_t save,
     if(!core||!map||!save||!folder||!phase||!enabled||!resource->second_id)
         fail("R18 requires original Emerald game, Flash proof, and both resources");
     const int r40=r40_fixture(resource);
+    const int r42=r42_fixture(resource);
+    if(resource->extra_count && !r40 && !r42)
+        fail("Unrecognized original Emerald external script source set");
     r18_check(core,save);
+    if(r42) {
+        xgba_r42_emerald_run(core,map,save,folder,phase,device,resource);
+        return;
+    }
     if(!strcmp(phase,"write")) {
         if(r18_read(core,save,2)!=0u || r18_read(core,save,1)==1u)
             fail("R18 first Emerald process unexpectedly continued an existing save");
