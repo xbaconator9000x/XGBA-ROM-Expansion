@@ -1,0 +1,37 @@
+name: XGBA R38 full three-ROM all-byte and hostile-window stress
+on:
+  push:
+    branches: [main, 'phase3/r38-three-rom-complete-stress-20261112']
+    paths:
+      - 'tools/xgba_r38_multi_rom_pool.py'
+      - 'tests/test_xgba_r38_multi_rom_pool.py'
+      - '.github/workflows/xgba-r38-three-rom-stress.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/xgba_r38_multi_rom_pool.py'
+      - 'tests/test_xgba_r38_multi_rom_pool.py'
+      - '.github/workflows/xgba-r38-three-rom-stress.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  three-complete-binary-roms:
+    name: Three source-identity-verified 32 MiB ROMs and 90k random windows
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python syntax and source-local multi-ROM stress
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r38_multi_rom_pool.py tests/test_xgba_r38_multi_rom_pool.py
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r38_multi_rom_pool.ThreeROMStress -v 2>&1 | tee /tmp/r38-tests.log
+          grep -q 'Ran 13 tests' /tmp/r38-tests.log
+          grep -q '^OK$' /tmp/r38-tests.log
+          echo 'PASS_R38_THREE_FULL_SYNTHETIC_ROMS source_bytes=100663296 pages=6144 random_windows=90000 guest_transfer_max=16384 no_script_execution=true'
+      - name: Preserve previous source import and script analysis regressions
+        run: |
+          set -euo pipefail
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r34_binary_maps test_xgba_r35_mixed_pool test_xgba_r36_binary_pages test_xgba_r37_script_graph -v 2>&1 | tee /tmp/r38-regressions.log
+          grep -q '^OK$' /tmp/r38-regressions.log
