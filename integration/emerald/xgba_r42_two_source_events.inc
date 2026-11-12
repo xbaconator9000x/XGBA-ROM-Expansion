@@ -122,6 +122,10 @@ static void XgbaR42Tick(void)
     if(gXgbaR18Proof.r42_state==XGBA_R42_REJECTED ||
        gXgbaR18Proof.r42_state==XGBA_R42_RESTORED)
         return;
+    /* Unlike R40's immediate script, R42 uses the original ASYNCHRONOUS
+     * global interpreter: refresh proof only after native frame execution. */
+    if(gXgbaR18Proof.r42_state!=0u)
+        XgbaR42Inspect();
     if(ScriptContext_IsEnabled())
         return;
     /* R = Team Rocket adaptation, L = Heart & Soul adaptation.
