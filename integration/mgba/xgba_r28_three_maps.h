@@ -141,8 +141,14 @@ static unsigned r28_route_next_step(const uint16_t grid[400],
             queue[end++]=(int)k;
         }
     }
-    if(found<0 || first[found]<0 || first[found]>3)
+    if(found<0 || first[found]<0 || first[found]>3) {
+        unsigned blocked_count=0u;
+        for(unsigned i=0;i<400u;++i)blocked_count+=blocked[i]!=0;
+        fprintf(stderr,"R28_PATH_DIAG x=%u y=%u north=%u reached=%d "
+                       "visited=%d blocked=%u current_tile=%04x\\n",
+                x,y,north,found,end,blocked_count,grid[y*20u+x]);
         fail("R28 original Route101 collision-aware path does not reach connection");
+    }
     return keys[first[found]];
 }
 static void r28_walk_route_connection(struct mCore *core,uint32_t proof,
