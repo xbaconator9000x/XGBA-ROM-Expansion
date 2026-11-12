@@ -85,6 +85,9 @@ static const struct MapLayout *XgbaR17Resolve(const struct MapLayout *base)
 #ifdef XGBA_R40_SCRIPT_TEST
 #include "__XGBA_R40_SCRIPT__"
 #endif
+#ifdef XGBA_R42_EVENT_TEST
+#include "__XGBA_R42_EVENT__"
+#endif
 #ifdef XGBA_R19_CONNECTED_MAPS
 #include "__XGBA_R19_MAPS__"
 #endif
@@ -119,6 +122,9 @@ static void XgbaR17Tick(void)
 #endif
 #ifdef XGBA_R40_SCRIPT_TEST
     XgbaR40Tick();
+#endif
+#ifdef XGBA_R42_EVENT_TEST
+    XgbaR42Tick();
 #endif
 #ifdef XGBA_R18_SAVE_TEST
     XgbaR18Tick();
