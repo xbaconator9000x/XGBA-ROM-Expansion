@@ -1,0 +1,67 @@
+name: XGBA R39 source-scoped script sandbox and three-ROM identity stress
+on:
+  push:
+    branches: [main, 'phase3/r39-source-scoped-script-sandbox-20261112']
+    paths:
+      - 'tools/xgba_r39_script_sandbox.py'
+      - 'tests/test_xgba_r39_script_sandbox.py'
+      - 'tests/check_xgba_r39_upstream_semantics.py'
+      - '.github/workflows/xgba-r39-script-sandbox.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/xgba_r39_script_sandbox.py'
+      - 'tests/test_xgba_r39_script_sandbox.py'
+      - 'tests/check_xgba_r39_upstream_semantics.py'
+      - '.github/workflows/xgba-r39-script-sandbox.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r39-script-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-isolated-script-state:
+    name: Pure host script semantics, transaction rollback and 60k three-world replays
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and execute source-identity-checked synthetic script suite
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r39_script_sandbox.py tests/test_xgba_r39_script_sandbox.py
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r39_script_sandbox.ScriptSandbox -v 2>&1 | tee /tmp/r39-host-tests.log
+          grep -q '^OK$' /tmp/r39-host-tests.log
+          echo 'PASS_R39_TRANSACTIONAL_SCRIPT_SANDBOX deterministic_replays=60000 source_isolated=true'
+      - name: R34 through R37 parser and script regressions
+        run: |
+          set -euo pipefail
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r34_binary_maps test_xgba_r35_mixed_pool test_xgba_r36_binary_pages test_xgba_r37_script_graph -v 2>&1 | tee /tmp/r39-regressions.log
+          grep -q '^OK$' /tmp/r39-regressions.log
+  actual-r36-r38-page-backend:
+    name: Mount and interpret source scripts from three independently verified 32 MiB ROMs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Three synthetic original-source 32 MiB full-paging integration
+        run: |
+          set -euo pipefail
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r39_script_sandbox.R39RealPagePoolIntegration -v 2>&1 | tee /tmp/r39-96mib.log
+          grep -q '^OK$' /tmp/r39-96mib.log
+          echo 'PASS_R39_ORIGINAL_96MIB_PAGE_INTEGRATION synthetic_only=true native_guest_execution=false'
+  pinned-original-emerald-contract:
+    name: Confirm modeled semantics against pinned original Emerald C implementation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch immutable upstream source and audit script commands
+        run: |
+          set -euo pipefail
+          git clone --quiet --filter=blob:none https://github.com/pret/pokeemerald.git upstream/pokeemerald
+          git -C upstream/pokeemerald checkout --quiet --detach 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          test "$(git -C upstream/pokeemerald rev-parse HEAD)" = 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          python3 tests/check_xgba_r37_upstream_profile.py --source upstream/pokeemerald
+          python3 tests/check_xgba_r39_upstream_semantics.py --source upstream/pokeemerald
