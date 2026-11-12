@@ -405,6 +405,7 @@ int main(int argc, char **argv)
     if (argc < 11 || argc > 128)
         fail("usage: ROM DATA SOURCE_ID SOURCE_SHA RESOURCE_ID OFFSET LENGTH RESOURCE_SHA FRAMES PROBE_ADDR [--screenshot path] [--scene-dir path] [--r10-dir path] [--r11-perf path] [--r12-dir path] [--r13-dir path] [--r14-dir path] [--second-resource ID OFFSET LENGTH SHA] [--disabled]");
     const char *screenshot = NULL;
+    const char *r43_probe = NULL; /* R43 original authored GBA homebrew CPU proof */
     const char *scene_dir = NULL;
     const char *r10_dir = NULL;
     const char *r11_perf = NULL;
@@ -451,6 +452,8 @@ int main(int argc, char **argv)
             enabled = 0;
         else if (!strcmp(argv[i], "--screenshot") && ++i < argc && !screenshot)
             screenshot = argv[i];
+        else if (!strcmp(argv[i], "--r43-probe") && ++i < argc && !r43_probe)
+            r43_probe = argv[i];
         else if (!strcmp(argv[i], "--scene-dir") && ++i < argc && !scene_dir)
             scene_dir = argv[i];
         else if (!strcmp(argv[i], "--r10-dir") && ++i < argc && !r10_dir)
@@ -610,9 +613,9 @@ int main(int argc, char **argv)
     struct mCore *core = GBACoreCreate();
     if (!core || !core->init(core))
         fail("mGBA core initialization failed");
-    mColor *video = (screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir || r30_dir)
+    mColor *video = (screenshot || r43_probe || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir || r30_dir)
                    ? calloc(240u*160u, sizeof(mColor)) : NULL;
-    if ((screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir || r30_dir) && !video)
+    if ((screenshot || r43_probe || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir || r30_dir) && !video)
         fail("cannot allocate GBA framebuffer");
     if (video)
         core->setVideoBuffer(core, video, 240);
@@ -745,11 +748,30 @@ int main(int argc, char **argv)
                   r19_battle0_offset,(uint32_t)r19_battle0_length,
                   r19_battle1_offset,(uint32_t)r19_battle1_length,enabled,r20_reentry,
                   (uint32_t)r21_heap_probe,(unsigned)r23_battles);
-    } else if (!scene_dir) {
+    } else if (!scene_dir && !r43_probe) {
         verify_game_copy(core, (uint32_t)probe, &device, &resource, enabled);
     }
     if (scene_dir)
         run_r9_movement_scene(core, (uint32_t)probe, scene_dir, &device, enabled);
+    if (r43_probe) {
+        /* R43 is a purpose-built, fully authored ARM7 CPU cartridge, not the
+         * R7 FireRed sprite fixture. Verify the guest CPU itself wrote the
+         * live proof in its EWRAM before reporting an external resource read. */
+        unsigned magic=core->busRead32(core,0x0203F900u);
+        unsigned status=core->busRead32(core,0x0203F904u);
+        fprintf(stderr,"R43 homebrew diag: magic=%08x status=%u provider_reads=%u rejected=%u\n",
+                magic,status,device.successful_reads,device.failed_reads);
+        if(magic!=0x58474241u || status!=1u ||
+           device.successful_reads!=1u || device.failed_reads!=0u)
+            fail("R43 original ARM7 test cartridge did not fetch external bytes at >32MiB");
+        const void *pixels=NULL;
+        size_t stride=0;
+        core->getPixels(core,&pixels,&stride);
+        if(!pixels||stride<240u)
+            fail("R43 original GBA video framebuffer was not produced");
+        save_native_frame(core,r43_probe);
+        puts("PASS_R43_GENUINE_ARM7_EXTERNAL_SOURCE_MMIO_AND_LCD source=sidecar original_game_cpu=1");
+    }
     if (screenshot) {
         /* Present multiple actual LCD frames after the GBA game sets OAM and
          * registers. No host graphics manipulation is permitted. */
