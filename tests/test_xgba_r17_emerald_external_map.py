@@ -80,7 +80,10 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         cls.resource_bytes=len(cls.pack)
         r19=bool(getattr(cls,"R19_CONNECTED",False))
         r19_battle=bool(getattr(cls,"R19_BATTLE",False))
+        r28=bool(getattr(cls,"R28_THREE_MAPS",False))
         r26_leases=bool(getattr(cls,"R26_LEASE_TEST",False))
+        if r28 and (not r19 or r19_battle or stress):
+            raise AssertionError("R28 three-map native fixture is distinct from R27 and battle test modes")
         if r19_battle and not r19:
             raise AssertionError("Real mixed-source battle must preserve connected map residency")
         if r19:
@@ -93,6 +96,16 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             cls.route_pack_offset=(cls.resource_bytes+3)&~3
             if cls.route_pack_offset+len(cls.route_pack)>16384:
                 raise AssertionError("Two simultaneous full maps exceed current Emerald 16KiB live arena")
+            if r28:
+                oldale_layout=EMERALD/"data/layouts/OldaleTown"
+                cls.oldale_grid=(oldale_layout/"map.bin").read_bytes()
+                cls.oldale_border=(oldale_layout/"border.bin").read_bytes()
+                if len(cls.oldale_grid)!=800 or len(cls.oldale_border)!=8:
+                    raise AssertionError("Pinned original OldaleTown layout drift")
+                cls.oldale_pack=r14.pack((cls.oldale_grid,cls.oldale_border),parts)
+                if (cls.route_pack_offset+len(cls.oldale_pack)>16384 or
+                    len(cls.pack)+len(cls.route_pack)+len(cls.oldale_pack)<=16384):
+                    raise AssertionError("R28 requires 2 fitting packs but 3 over budget")
         if r19_battle:
             cls.battle_original_compressed={}
             for species_name in ("Poochyena","Zigzagoon"):
@@ -160,6 +173,10 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             if not r19_battle:
                 raise AssertionError("R20 re-entry fixture requires R19 original mixed battle")
             config.write_text(config.read_text()+"\n#define XGBA_R20_LIFECYCLE_TEST 1\n")
+        if r28:
+            config.write_text(config.read_text()+
+                "\n#define XGBA_R28_THREE_MAPS 1\n"+
+                f"#define XGBA_R28_OLDALE_BYTES {len(cls.oldale_pack)}u\n")
         if r19:
             config.write_text(config.read_text()+
                 "\n#define XGBA_R19_CONNECTED_MAPS 1\n"
