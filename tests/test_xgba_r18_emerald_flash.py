@@ -36,7 +36,9 @@ class NativeEmeraldFlashColdContinue(unittest.TestCase):
                 emulator=cls.executable,frames=3200,
                 probe_address=cls.probe,second_resource_id=r17.BOOT,
                 r18_dir=cls.output,r18_savefile=sav,
-                r18_phase=phase,r18_save_probe=cls.save_probe)
+                r18_phase=phase,r18_save_probe=cls.save_probe,
+                extra_resource_ids=(("emerald.r40.script",)
+                    if getattr(cls,"R40_SCRIPT_TEST",False) else ()))
         write=execute("write")
         cls.write_log=write.stdout
         if "PASS_R18_EMERALD_ORIGINAL_FLASH_WRITE" not in cls.write_log:

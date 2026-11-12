@@ -82,6 +82,9 @@ static const struct MapLayout *XgbaR17Resolve(const struct MapLayout *base)
 #ifdef XGBA_R18_SAVE_TEST
 #include "__XGBA_R18_SAVE__"
 #endif
+#ifdef XGBA_R40_SCRIPT_TEST
+#include "__XGBA_R40_SCRIPT__"
+#endif
 #ifdef XGBA_R19_CONNECTED_MAPS
 #include "__XGBA_R19_MAPS__"
 #endif
@@ -113,6 +116,9 @@ static void XgbaR17Tick(void)
 #ifdef XGBA_R27_STRESS_WIDTH
     gXgbaR17Proof.r27_width=gMapHeader.mapLayout->width;
     gXgbaR17Proof.r27_height=gMapHeader.mapLayout->height;
+#endif
+#ifdef XGBA_R40_SCRIPT_TEST
+    XgbaR40Tick();
 #endif
 #ifdef XGBA_R18_SAVE_TEST
     XgbaR18Tick();

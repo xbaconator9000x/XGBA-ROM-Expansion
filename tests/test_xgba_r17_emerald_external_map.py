@@ -24,6 +24,7 @@ from xgba_memory_plan import Resource,Phase,plan_residency
 from xgba_r27_huge_map_geometry import plan_map, source_tiled_grid
 import xgba_resource_sidecar as sidecar
 import xgba_r31_map_catalog as r31catalog
+import xgba_r40_native_event as r40script
 import xgba_resource_integration_smoke as r6
 import xgba_mgba_run as launcher
 import apply_core_patch
@@ -178,8 +179,13 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                 f"#define XGBA_R27_STRESS_WIDTH {stress[0]}u\n"
                 f"#define XGBA_R27_STRESS_HEIGHT {stress[1]}u\n")
         r18=bool(getattr(cls,"R18_SAVE_TEST",False))
+        r40=bool(getattr(cls,"R40_SCRIPT_TEST",False))
+        if r40 and not r18:
+            raise AssertionError("R40 genuine script Flash test requires R18 native save")
         if r18:
             config.write_text(config.read_text()+"\n#define XGBA_R18_SAVE_TEST 1\n")
+        if r40:
+            config.write_text(config.read_text()+"#define XGBA_R40_SCRIPT_TEST 1\n")
         if r19_battle:
             config.write_text(config.read_text()+
                 "\n#define XGBA_R19_BATTLE_TEST 1\n"
@@ -366,6 +372,10 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         with data.open("wb") as fp:
             fp.seek(cls.offset);fp.write(cls.pack)
             fp.seek(boot_offset);fp.write(r6.PAYLOAD)
+            if r40:
+                cls.r40_script=r40script.script_bytes()
+                r40script.audit_script(cls.r40_script)
+                fp.seek(r40script.SCRIPT_OFFSET);fp.write(cls.r40_script)
             if r19:
                 cls.route_offset=32*1024*1024+65536
                 fp.seek(cls.route_offset);fp.write(cls.route_pack)
@@ -390,7 +400,9 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             "resources":[
                 {"id":RID,"offset":cls.offset,"length":len(cls.pack),"sha256":sha(cls.pack)},
                 {"id":BOOT,"offset":boot_offset,"length":64,"sha256":sha(r6.PAYLOAD)}
-            ]+([{"id":"emerald.route101","offset":cls.route_offset,
+            ]+([{"id":r40script.RESOURCE_ID,"offset":r40script.SCRIPT_OFFSET,
+                 "length":len(cls.r40_script),"sha256":sha(cls.r40_script)}]
+               if r40 else [])+([{"id":"emerald.route101","offset":cls.route_offset,
                  "length":len(cls.route_pack),"sha256":sha(cls.route_pack)}] if r19 else [])+
             ([{"id":"emerald.oldale","offset":cls.oldale_offset,
                "length":len(cls.oldale_pack),"sha256":sha(cls.oldale_pack)}]

@@ -5,6 +5,35 @@
 #ifndef XGBA_R18_EMERALD_FLASH_H
 #define XGBA_R18_EMERALD_FLASH_H
 #define R18_MAGIC 0x52313845u
+#define R40_SCRIPT_ID "emerald.r40.script"
+#define R40_NATIVE_VALUE 0x5A39u
+#define R40_NATIVE_STATE_READY 1u
+#define R40_NATIVE_STATE_RESTORED 2u
+#define R40_NATIVE_STATE_REFUSED 0xE40u
+static int r40_fixture(const struct ResourceFile *source)
+{
+    if(!source->extra_count)return 0;
+    if(source->extra_count!=1u || strcmp(source->extra[0].id,R40_SCRIPT_ID) ||
+       source->extra[0].length!=9u)
+        fail("R40 script test expects exactly one nine-byte source-bound external resource");
+    return 1;
+}
+static uint32_t r18_read(struct mCore *c,uint32_t p,unsigned field);
+static void r40_assert(struct mCore *core,uint32_t save,unsigned phase)
+{
+    uint32_t state=r18_read(core,save,11u);
+    uint32_t fetches=r18_read(core,save,12u);
+    uint32_t executions=r18_read(core,save,13u);
+    uint32_t value=r18_read(core,save,14u);
+    uint32_t flag=r18_read(core,save,15u);
+    uint32_t errors=r18_read(core,save,16u);
+    if(state!=phase || fetches!=(phase==R40_NATIVE_STATE_RESTORED?0u:1u) ||
+       executions!=(phase==R40_NATIVE_STATE_READY?1u:0u) ||
+       value!=(phase==R40_NATIVE_STATE_REFUSED?0u:R40_NATIVE_VALUE) ||
+       flag!=(phase==R40_NATIVE_STATE_REFUSED?0u:1u) ||
+       errors!=(phase==R40_NATIVE_STATE_REFUSED?1u:0u))
+        fail("R40 real Emerald game variable/flag, interpreter execution, or source SHA gate mismatched");
+}
 static uint32_t r18_read(struct mCore *c,uint32_t p,unsigned field)
 {
     return c->busRead32(c,p+4u*field);
@@ -22,14 +51,29 @@ static void xgba_r18_emerald_run(struct mCore *core,uint32_t map,uint32_t save,
 {
     if(!core||!map||!save||!folder||!phase||!enabled||!resource->second_id)
         fail("R18 requires original Emerald game, Flash proof, and both resources");
+    const int r40=r40_fixture(resource);
     r18_check(core,save);
     if(!strcmp(phase,"write")) {
         if(r18_read(core,save,2)!=0u || r18_read(core,save,1)==1u)
             fail("R18 first Emerald process unexpectedly continued an existing save");
         r14_wait(core,180u);
         r17_check_map(core,map,resource);
-        if(device->successful_reads!=2u || device->failed_reads)
-            fail("R18 original Emerald first load did not acquire external map");
+        if(r40) {
+            /* Native field callback may start after the R18 map-ready proof.
+             * Pump real emulated frames rather than injecting event state. */
+            for(unsigned i=0;i<600u && r18_read(core,save,11u)==0u;++i) {
+                core->setKeys(core,0u);
+                core->runFrame(core);
+            }
+            fprintf(stderr,"R40 first-boot diag: state=%u fetches=%u executions=%u value=%u flag=%u errors=%u reads=%u failed=%u lookups=%u\\n",
+                    r18_read(core,save,11u),r18_read(core,save,12u),
+                    r18_read(core,save,13u),r18_read(core,save,14u),
+                    r18_read(core,save,15u),r18_read(core,save,16u),
+                    device->successful_reads,device->failed_reads,resource->lookups);
+            r40_assert(core,save,R40_NATIVE_STATE_READY);
+        }
+        if(device->successful_reads!=(r40?3u:2u) || device->failed_reads)
+            fail("R18 original Emerald first load did not acquire external map/script");
         r17_frame(core,folder,"01-original-emerald-before-flash");
         r14_press(core,1u<<2,3u); /* SELECT -> real TrySavingData, not host save */
         for(unsigned f=0;f<3400u && r18_read(core,save,4)==0u;++f) {
@@ -52,6 +96,10 @@ static void xgba_r18_emerald_run(struct mCore *core,uint32_t map,uint32_t save,
         r17_check_map(core,map,resource);
         r17_frame(core,folder,"02-original-emerald-after-flash-write");
         puts("PASS_R18_EMERALD_ORIGINAL_FLASH_WRITE game_save=1 sector_write=1 map=0:9");
+        if(r40) {
+            r40_assert(core,save,R40_NATIVE_STATE_READY);
+            puts("PASS_R40_NATIVE_EMERALD_SCRIPT_FLASH_WRITE interpreter=original_scripttable source=sidecar flag=1 var=23097");
+        }
     }else if(!strcmp(phase,"continue")) {
         if(r18_read(core,save,1)!=1u || r18_read(core,save,2)!=1u)
             fail("R18 new native Emerald process did not load actual saved Flash");
@@ -61,6 +109,10 @@ static void xgba_r18_emerald_run(struct mCore *core,uint32_t map,uint32_t save,
            resource->reads!=2u)
             fail("R18 native Emerald cold continuation did not re-fetch external map");
         r17_frame(core,folder,"03-cold-emerald-reacquired-littleroot");
+        if(r40) {
+            r40_assert(core,save,R40_NATIVE_STATE_RESTORED);
+            puts("PASS_R40_NATIVE_EMERALD_COLD_SCRIPT_FLASH_RESTORE original_LoadGameSave=1 script_reexecutions=0 flag=1 var=23097");
+        }
         printf("PASS_R18_EMERALD_COLD_FLASH_CONTINUE original_LoadGameSave=1 "
                "CB2_ContinueSavedGame=1 external_littleroot_reacquired=1 "
                "native_grid=1 bg_vram=1 reads=%u\n",
@@ -73,6 +125,19 @@ static void xgba_r18_emerald_run(struct mCore *core,uint32_t map,uint32_t save,
             fail("R18 corrupted external pack was not rejected by native emulator");
         puts("PASS_R18_EMERALD_COLD_BAD_PACK_REFUSED original_flash_valid=1 "
              "corrupt_external_map_refused=1");
+    }else if(!strcmp(phase,"r40-corrupt") && r40) {
+        /* Independent clean boot. A deliberately altered source script must
+         * be refused by native mGBA's pinned SHA check, before any real
+         * Emerald command is executed or a Flash save is requested. */
+        if(r18_read(core,save,2)!=0u)
+            fail("R40 corrupt-script negative test had a prior Flash save");
+        r14_wait(core,180u);
+        r17_check_map(core,map,resource);
+        r40_assert(core,save,R40_NATIVE_STATE_REFUSED);
+        if(device->successful_reads!=2u || device->failed_reads<1u ||
+           r18_read(core,save,3)!=0u)
+            fail("R40 corrupt external script was executed or saved");
+        puts("PASS_R40_BAD_EXTERNAL_SCRIPT_SHA_REFUSED native_original_flag=0 native_original_var=0 no_flash_write=1");
     }else{
         fail("R18 native Emerald Flash phase unknown");
     }

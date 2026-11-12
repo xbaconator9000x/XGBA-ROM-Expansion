@@ -22,6 +22,15 @@ struct XgbaR18Proof {
     volatile u32 saved_y;
     volatile u32 base_offset;
     volatile u32 save_type;
+#ifdef XGBA_R40_SCRIPT_TEST
+    /* Append-only proof ABI: R18's first eleven words remain untouched. */
+    volatile u32 r40_state;
+    volatile u32 r40_fetches;
+    volatile u32 r40_executions;
+    volatile u32 r40_value;
+    volatile u32 r40_flag;
+    volatile u32 r40_errors;
+#endif
 };
 EWRAM_DATA volatile struct XgbaR18Proof gXgbaR18Proof = {0};
 
