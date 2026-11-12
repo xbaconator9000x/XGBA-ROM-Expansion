@@ -1,5 +1,8 @@
 # R33 — Source-aware multi-shard XGBA host resource pool
 
+**VERIFIED / MERGED · 12 November 2026.** [PR #94](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/94) · [merged source `32230b6`](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/commit/32230b63e9f21d6e727bde9faab0e7b2581b5a27). Exact-head CI: **3/3 workflows passed**, including **13/13 three-world synthetic tests**, full original Emerald 11,557 files, 31 sidecars and 518 original map identities, SHA-256 verified source read from every shard, FireRed native Flash cold restart and Emerald original four-battle regressions. [Full original Emerald R33 run](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43187833128) · [Aggregate-only evidence artifact](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43187833128/artifacts/13928818456).
+
+
 This phase connects the complete raw-source imports of R32 to a **selectively
 addressable host pool** spanning every sidecar and every supplied world. It
 does not claim cross-ROM execution.
