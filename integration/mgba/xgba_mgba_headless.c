@@ -365,6 +365,7 @@ static void run_r10_real_firered_live_swap(struct mCore *core, uint32_t probe,
 #include "xgba_r17_emerald_map.h"
 #include "xgba_r18_emerald_flash.h"
 #include "xgba_r19_connected_maps.h"
+#include "xgba_r28_three_maps.h"
 #include "xgba_r19_mixed_battle.h"
 #include "xgba_r24_boundary.h"
 
@@ -417,6 +418,9 @@ int main(int argc, char **argv)
     const char *r17_dir = NULL;
     const char *r18_dir = NULL;
     const char *r19_dir = NULL;
+    const char *r28_dir = NULL;
+    uint64_t r28_oldale_offset = 0;
+    uint64_t r28_oldale_length = 0;
     const char *r19_battle_dir = NULL;
     uint64_t r19_battle_probe = 0;
     uint64_t r21_heap_probe = 0;
@@ -472,6 +476,12 @@ int main(int argc, char **argv)
             r18_dir = argv[i];
         else if (!strcmp(argv[i], "--r19-connected-dir") && ++i < argc && !r19_dir)
             r19_dir = argv[i];
+        else if (!strcmp(argv[i], "--r28-three-map-dir") && ++i < argc && !r28_dir)
+            r28_dir = argv[i];
+        else if (!strcmp(argv[i], "--r28-oldale-offset") && ++i < argc && !r28_oldale_offset)
+            r28_oldale_offset = parse_number(argv[i]);
+        else if (!strcmp(argv[i], "--r28-oldale-length") && ++i < argc && !r28_oldale_length)
+            r28_oldale_length = parse_number(argv[i]);
         else if (!strcmp(argv[i], "--r19-battle-dir") && ++i < argc && !r19_battle_dir)
             r19_battle_dir = argv[i];
         else if (!strcmp(argv[i], "--r23-battles") && ++i < argc && !r23_battles)
@@ -591,9 +601,9 @@ int main(int argc, char **argv)
     struct mCore *core = GBACoreCreate();
     if (!core || !core->init(core))
         fail("mGBA core initialization failed");
-    mColor *video = (screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir)
+    mColor *video = (screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir)
                    ? calloc(240u*160u, sizeof(mColor)) : NULL;
-    if ((screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir) && !video)
+    if ((screenshot || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir) && !video)
         fail("cannot allocate GBA framebuffer");
     if (video)
         core->setVideoBuffer(core, video, 240);
@@ -631,7 +641,7 @@ int main(int argc, char **argv)
         if ((r17_dir || r18_dir) && probe &&
             core->busRead32(core,(uint32_t)probe+4)==0xE17u)
             break;
-        if (r19_dir && probe &&
+        if ((r19_dir || r28_dir) && probe &&
             core->busRead32(core,(uint32_t)probe+4)==0xE19u)
             break;
     }
@@ -674,6 +684,18 @@ int main(int argc, char **argv)
     } else if (r18_dir) {
         xgba_r18_emerald_run(core,(uint32_t)probe,(uint32_t)r18_save_probe,
                             r18_dir,r18_phase,&device,&resource,enabled);
+    } else if (r28_dir) {
+        if(!r19_route_offset || !r19_route_length ||
+           r19_route_length>16384u ||
+           !r28_oldale_offset || !r28_oldale_length ||
+           r28_oldale_length>16384u || r19_battle_dir ||
+           r19_dir || r17_dir || r18_dir || r24_dir)
+            fail("R28 original Emerald three-map fixture invalid");
+        xgba_r28_three_map_run(core,(uint32_t)probe,r28_dir,
+                               &device,&resource,
+                               r19_route_offset,(uint32_t)r19_route_length,
+                               r28_oldale_offset,(uint32_t)r28_oldale_length,
+                               enabled);
     } else if (r19_dir) {
         if(!r19_route_offset || !r19_route_length || r19_route_length>16384u)
             fail("R19 requires a bounded and exact original Emerald Route101 source span");
