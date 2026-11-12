@@ -11,6 +11,13 @@ extern const struct MapLayout *const gMapLayouts[];
 extern const struct MapHeader *const *const gMapGroups[];
 #include "constants/vars.h"
 #include "../common/xgba_ewram_lease.h"
+#ifdef XGBA_R28_THREE_MAPS
+#include "../common/xgba_map_cache.h"
+#define XGBA_R19_MAP_COUNT 3u
+#define XGBA_R28_OLDALE 10u
+#else
+#define XGBA_R19_MAP_COUNT 2u
+#endif
 #define XGBA_R19_GROUP 0u
 #define XGBA_R19_LITTLEROOT 9u
 #define XGBA_R19_ROUTE101 16u
@@ -27,13 +34,20 @@ struct XgbaR19MapProof {
     volatile u32 arena_owner,arena_epoch,world_claims,battle_claims;
     /* R26 appended, all historical probe offsets retained. */
     volatile u32 r26_busy_refusals,r26_map_borrows,r26_epoch,r26_live,r26_errors;
+#ifdef XGBA_R28_THREE_MAPS
+    volatile u32 r28_hits,r28_misses,r28_evictions,r28_refusals,r28_loads;
+    volatile u32 r28_active_slot,r28_slot0_key,r28_slot1_key,r28_generation;
+#endif
 };
 EWRAM_DATA volatile struct XgbaR19MapProof gXgbaR19MapProof = {0};
 EWRAM_DATA char gXgbaR19MapResourceId[32] = {0};
-static EWRAM_DATA struct MapHeader sXgbaR19Headers[2] = {0};
-static EWRAM_DATA struct MapLayout sXgbaR19Layouts[2] = {0};
-static EWRAM_DATA struct Tileset sXgbaR19Tilesets[2] = {0};
-static EWRAM_DATA bool8 sXgbaR19Ready[2] = {FALSE,FALSE};
+static EWRAM_DATA struct MapHeader sXgbaR19Headers[XGBA_R19_MAP_COUNT] = {0};
+static EWRAM_DATA struct MapLayout sXgbaR19Layouts[XGBA_R19_MAP_COUNT] = {0};
+static EWRAM_DATA struct Tileset sXgbaR19Tilesets[XGBA_R19_MAP_COUNT] = {0};
+static EWRAM_DATA bool8 sXgbaR19Ready[XGBA_R19_MAP_COUNT] = {0};
+#ifdef XGBA_R28_THREE_MAPS
+static EWRAM_DATA struct XgbaMapCache sXgbaR28MapCache;
+#endif
 static EWRAM_DATA u8 sXgbaR19LastMap = 0xFF;
 
 /* R20 tracks the OWNERSHIP of the shared protected 16 KiB region.
@@ -61,6 +75,11 @@ static void XgbaR20ClaimWorldArena(void)
      * Each sprite accessor must revalidate ownership before trusting them. */
     sXgbaR19Ready[0] = FALSE;
     sXgbaR19Ready[1] = FALSE;
+#ifdef XGBA_R28_THREE_MAPS
+    sXgbaR19Ready[2] = FALSE;
+    if(XgbaCacheInvalidate(&sXgbaR28MapCache)!=XGBA_CACHE_HIT)
+        XgbaR19Reject();
+#endif
     sXgbaR20ArenaOwner = XGBA_R20_ARENA_WORLD;
     sXgbaR20ArenaEpoch = sXgbaR26ArenaLease.generation;
     ++sXgbaR20WorldClaims;
@@ -76,6 +95,11 @@ static void XgbaR20ClaimBattleArena(void)
     /* Maps must not be considered resident after sprites claim their bytes. */
     sXgbaR19Ready[0] = FALSE;
     sXgbaR19Ready[1] = FALSE;
+#ifdef XGBA_R28_THREE_MAPS
+    sXgbaR19Ready[2] = FALSE;
+    if(XgbaCacheInvalidate(&sXgbaR28MapCache)!=XGBA_CACHE_HIT)
+        XgbaR19Reject();
+#endif
     sXgbaR20ArenaOwner = XGBA_R20_ARENA_BATTLE;
     sXgbaR20ArenaEpoch = sXgbaR26ArenaLease.generation;
     ++sXgbaR20BattleClaims;
@@ -93,6 +117,9 @@ static s32 XgbaR19Index(u16 group,u16 map)
     if(group!=XGBA_R19_GROUP)return -1;
     if(map==XGBA_R19_LITTLEROOT)return 0;
     if(map==XGBA_R19_ROUTE101)return 1;
+#ifdef XGBA_R28_THREE_MAPS
+    if(map==XGBA_R28_OLDALE)return 2;
+#endif
     return -1;
 }
 static void XgbaR19Load(unsigned idx)
