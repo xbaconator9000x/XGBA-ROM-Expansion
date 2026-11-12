@@ -80,7 +80,6 @@ jobs:
             --extra-resource-id heart_soul.world \
             --emulator build/r43-native/xgba-mgba-headless \
             --frames 600 \
-            --probe-address 0x0203F900 \
             --screenshot "$PWD/build/r43-probe/native-xgba-probe.png" \
             2>&1 | tee build/r43-probe/native-xgba-probe.log
           grep -q 'PASS_R7_XGBA_MGBA_BUILD enabled=1 requests=1 failures=0' build/r43-probe/native-xgba-probe.log
