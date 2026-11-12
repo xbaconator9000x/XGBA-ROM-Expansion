@@ -1,6 +1,8 @@
 # R32 — Whole-corpus importing and three-source stress
 
-**Purpose:** Import ALL relevant resources, not a hand-picked demonstration subset.
+**VERIFIED / MERGED · 12 November 2026.** [PR #92](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/92) · [source merged `f4e8eb9`](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/commit/f4e8eb9da33de3db9b62a8a3aa1607cdf7b7e70d). Full original-Emerald source import: **11,557 tracked files, 31 sharded local sidecars**, SHA-256 verified readback of all non-empty resources using the actual XGBA production sidecar reader; zero-length sources represented in the index. Synthetic multi-source **13/13** passing tests with **12,000+ logical resources** across three independently named source worlds and overlapping original map IDs. All **4/4 exact-head workflows** passed, including real FireRed cold-save and original Emerald battle regressions. [Exact-head full-corpus CI #43184932530](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43184932530) · [Only aggregate-count evidence artifact #13927519305](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43184932530/artifacts/13927519305).
+
+**Purpose:** Import ALL relevant *source bytes* without a curated shortlist. Runtime translation and binary-ROM extraction remain distinct, unimplemented deliverables.
 
 The new tool inventories every tracked file from each user-provided decomp
 source directory, including maps, layouts, scripts, events, trainer data,
