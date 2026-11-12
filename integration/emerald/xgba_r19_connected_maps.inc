@@ -128,12 +128,41 @@ static void XgbaR19Load(unsigned idx)
     const u32 *off;
     u32 length;
     const char *name=idx?"emerald.route101":"emerald.littleroot";
+    u32 slot=idx;
+#ifdef XGBA_R28_THREE_MAPS
+    u32 evicted=XGBA_MAP_CACHE_NONE;
+    u32 protected_key=XGBA_MAP_CACHE_NONE;
+    enum XgbaMapCacheResult choice;
+    s32 active;
+#endif
     u32 i;
     const struct MapHeader *source;
     struct XgbaLeaseToken lease;
-    if(idx>1)XgbaR19Reject();
+    if(idx>=XGBA_R19_MAP_COUNT)XgbaR19Reject();
     XgbaR20ClaimWorldArena();
+#ifdef XGBA_R28_THREE_MAPS
+    active=gSaveBlock1Ptr?
+        XgbaR19Index(gSaveBlock1Ptr->location.mapGroup,
+                     gSaveBlock1Ptr->location.mapNum):-1;
+    if(active>=0)protected_key=(u32)active;
+    choice=XgbaCacheBegin(&sXgbaR28MapCache,idx,protected_key,
+                          &slot,&evicted);
+    if(choice==XGBA_CACHE_HIT) {
+        if(!sXgbaR19Ready[idx])XgbaR19Reject();
+        return;
+    }
+    if(choice!=XGBA_CACHE_MISS)XgbaR19Reject();
+    if(evicted!=XGBA_MAP_CACHE_NONE) {
+        if(evicted>=XGBA_R19_MAP_COUNT)XgbaR19Reject();
+        sXgbaR19Ready[evicted]=FALSE;
+        /* Source descriptors of evicted maps are stale. Never evict active. */
+        sXgbaR19Layouts[evicted].map=0;
+        sXgbaR19Layouts[evicted].border=0;
+    }
+    if(idx==2)name="emerald.oldale";
+#else
     if(sXgbaR19Ready[idx])return;
+#endif
     if(XgbaLeaseBorrow(&sXgbaR26ArenaLease,XGBA_R20_ARENA_WORLD,&lease)
        != XGBA_LEASE_OK) XgbaR19Reject();
 #ifdef XGBA_R26_LEASE_PROOF
@@ -143,8 +172,13 @@ static void XgbaR19Load(unsigned idx)
        != XGBA_LEASE_BUSY) XgbaR19Reject();
     ++gXgbaR19MapProof.r26_busy_refusals;
 #endif
-    arena=idx?XGBA_R19_ARENA1:XGBA_R19_ARENA0;
+    arena=slot?XGBA_R19_ARENA1:XGBA_R19_ARENA0;
     length=idx?XGBA_R19_ROUTE_BYTES:XGBA_R19_LITTLEROOT_BYTES;
+#ifdef XGBA_R28_THREE_MAPS
+    if(idx==2)length=XGBA_R28_OLDALE_BYTES;
+    if(length>(slot?XGBA_R19_RESERVE-XGBA_R19_ROUTE_OFFSET:
+                         XGBA_R19_ROUTE_OFFSET))XgbaR19Reject();
+#endif
     for(i=0;i<32;i++)gXgbaR19MapResourceId[i]=0;
     for(i=0;name[i] && i<31;i++)
         gXgbaR19MapResourceId[i]=name[i];
@@ -160,7 +194,12 @@ static void XgbaR19Load(unsigned idx)
        off[4]>=off[5] || off[5]+512u>off[6] ||
        off[6]>=off[7] || off[7]>=length)
         XgbaR19Reject();
+#ifdef XGBA_R28_THREE_MAPS
+    source=gMapGroups[XGBA_R19_GROUP][idx==2?XGBA_R28_OLDALE:
+           (idx==1?XGBA_R19_ROUTE101:XGBA_R19_LITTLEROOT)];
+#else
     source=gMapGroups[XGBA_R19_GROUP][idx?XGBA_R19_ROUTE101:XGBA_R19_LITTLEROOT];
+#endif
     sXgbaR19Headers[idx]=*source;
     sXgbaR19Layouts[idx]=*gMapLayouts[source->mapLayoutId-1];
     sXgbaR19Tilesets[idx]=*sXgbaR19Layouts[idx].secondaryTileset;
@@ -179,6 +218,10 @@ static void XgbaR19Load(unsigned idx)
     ++gXgbaR19MapProof.r26_map_borrows;
     gXgbaR19MapProof.r26_epoch=sXgbaR26ArenaLease.generation;
     gXgbaR19MapProof.r26_live=sXgbaR26ArenaLease.borrowed;
+#endif
+#ifdef XGBA_R28_THREE_MAPS
+    if(XgbaCacheCommit(&sXgbaR28MapCache,slot,idx)!=XGBA_CACHE_HIT)
+        XgbaR19Reject();
 #endif
     sXgbaR19Ready[idx]=TRUE;
     ++gXgbaR19MapProof.loads;
