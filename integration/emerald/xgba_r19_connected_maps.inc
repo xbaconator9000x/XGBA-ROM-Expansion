@@ -15,6 +15,9 @@ extern const struct MapHeader *const *const gMapGroups[];
 #include "../common/xgba_map_cache.h"
 #define XGBA_R19_MAP_COUNT 3u
 #define XGBA_R28_OLDALE 10u
+/* Test-only: physical connected-map traversal must not be interrupted by
+ * random wild battle while no starter/party is set up in the native fixture. */
+extern void DisableWildEncounters(bool8 disabled);
 #else
 #define XGBA_R19_MAP_COUNT 2u
 #endif
@@ -281,6 +284,11 @@ static void XgbaR19MapTick(void)
     s32 idx;
     const struct Tileset *ts;
     if(!gMapHeader.mapLayout || !gSaveBlock1Ptr)return;
+#ifdef XGBA_R28_THREE_MAPS
+    /* Original Emerald pathfinding/collision stay untouched; only its
+     * random-encounter battle trigger is suppressed for the map-only proof. */
+    DisableWildEncounters(TRUE);
+#endif
     idx=XgbaR19Index(gSaveBlock1Ptr->location.mapGroup,
                      gSaveBlock1Ptr->location.mapNum);
     if(idx<0)return;
