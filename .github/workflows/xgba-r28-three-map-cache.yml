@@ -41,3 +41,68 @@ jobs:
           /tmp/xgba-r28-map-cache-tests 2>&1 | tee /tmp/xgba-r28-cache.log
           grep -q 'PASS_R28_PORTABLE_CACHE_CONTRACT 16/16' /tmp/xgba-r28-cache.log
           echo 'PASS_R28_PORTABLE_ONLY not_an_original_game_native_result=1'
+  original-emerald-three-connected-maps:
+    name: Original Emerald native three-map eviction, real D-pad and LCD
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install original Emerald toolchain and mGBA native dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev build-essential cmake python3-pil
+      - name: Checkout exact original game and emulator source pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokeemerald.git upstream/pokeemerald
+          git -C upstream/pokeemerald checkout --quiet --detach 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/pokeemerald rev-parse HEAD)" = 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Execute original Emerald 9-16-10-16-9 through genuine connected-map D-pad
+        shell: bash
+        env:
+          XGBA_R28_EVIDENCE_DIR: ${{ github.workspace }}/r28-evidence
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_mgba_run.py tests/test_xgba_r17_emerald_external_map.py tests/test_xgba_r28_emerald_three_maps.py
+          PYTHONPATH=tools:tests:integration/mgba python3 -m unittest test_xgba_r28_emerald_three_maps.RealEmeraldThreeMapLRUEviction -v 2>&1 | tee r28-native.log
+          grep -q 'Ran 8 tests' r28-native.log
+          grep -q '^OK$' r28-native.log
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          r=Path("r28-evidence")
+          proof=json.loads((r/"proof.json").read_text())
+          assert proof["source_map_sequence"]==[9,16,10,16,9]
+          assert proof["logical_resource_count"]==3
+          assert proof["simultaneously_resident_full_resource_slots"]==2
+          assert proof["actual_ewram_reserve"]==16384
+          assert "PASS_R28_REAL_EMERALD_THREE_MAP_EVICTION" in proof["native_c_log"]
+          assert "PASS_R28_DISABLED_EMERALD_ZERO_PROVIDER_READS" in proof["disabled_log"]
+          images=sorted(r.glob("*.png"))
+          assert len(images)==5, images
+          for path in images:
+              with Image.open(path) as img:
+                  assert img.size==(240,160)
+          assert not list(r.glob("*.gba")) and not list(r.glob("*.sav"))
+          print("PASS_R28_NATIVE_ORIGINAL_EMERALD 8/8 5_LCD three_maps two_slots")
+          PY
+      - name: Preserve original mGBA LCD frames and machine-checkable native proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r28-original-emerald-three-connected-maps
+          path: |
+            r28-evidence/
+            r28-native.log
+          retention-days: 90
+          if-no-files-found: warn
