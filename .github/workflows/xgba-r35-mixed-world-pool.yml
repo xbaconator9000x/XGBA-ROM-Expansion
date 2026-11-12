@@ -1,0 +1,106 @@
+name: XGBA R35 source-built and binary-map mixed world pool
+on:
+  push:
+    branches: [main, 'phase3/r35-mixed-source-binary-pool-20261112']
+    paths:
+      - 'tools/xgba_mixed_world_pool.py'
+      - 'tests/test_xgba_r35_mixed_pool.py'
+      - '.github/workflows/xgba-r35-mixed-world-pool.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/xgba_mixed_world_pool.py'
+      - 'tests/test_xgba_r35_mixed_pool.py'
+      - '.github/workflows/xgba-r35-mixed-world-pool.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r35-mixed-world-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  three-source-interoperability:
+    name: 12 binary-and-source-world synthetic fidelity and refusal cases
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Python compilation
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_mixed_world_pool.py tests/test_xgba_r35_mixed_pool.py
+      - name: Run R35 mixed worlds + hostile input regressions
+        run: |
+          set -euo pipefail
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r35_mixed_pool.MixedWorldAcceptance -v 2>&1 | tee /tmp/r35.log
+          grep -q 'Ran 12 tests' /tmp/r35.log
+          grep -q '^OK$' /tmp/r35.log
+          echo PASS_R35_SYNTHETIC_THREE_WORLDS 12/12
+      - name: Preserve existing original binary and source-corpus tests
+        run: |
+          set -euo pipefail
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r34_binary_maps test_xgba_corpus_pool -v 2>&1 | tee /tmp/r35-regressions.log
+          grep -q '^OK$' /tmp/r35-regressions.log
+  entire-source-with-binary-world:
+    name: Pinned original Emerald 11557-file corpus with independent binary map world
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clone exact original Emerald source for full-size source namespace
+        run: |
+          set -euo pipefail
+          git clone --quiet --filter=blob:none https://github.com/pret/pokeemerald.git upstream/pokeemerald
+          git -C upstream/pokeemerald checkout --quiet --detach 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          test "$(git -C upstream/pokeemerald rev-parse HEAD)" = 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+      - name: Produce all original Emerald source sidecars and mount with a synthetic binary world
+        env:
+          R35_ROOT: ${{ runner.temp }}/r35-pool
+        run: |
+          set -euo pipefail
+          python3 tools/xgba_whole_corpus.py --source emerald=upstream/pokeemerald --pack --output "$R35_ROOT/source"
+          python3 - <<'PY'
+          import json,os,sys
+          from pathlib import Path
+          sys.path.insert(0,'tools')
+          sys.path.insert(0,'tests')
+          from test_xgba_r34_binary_maps import FakeEmeraldBinary
+          from xgba_r34_binary_maps import BinaryMapDiscovery
+          from xgba_mixed_world_pool import MixedWorldPool
+          root=Path(os.environ['R35_ROOT'])
+          root.mkdir(exist_ok=True)
+          fake=FakeEmeraldBinary()
+          rom=root/'synthetic.gba'
+          rom.write_bytes(fake.image())
+          binary=BinaryMapDiscovery(rom)
+          binary.export_maps(binary.discover(),root/'binary','rocket',max_shard_entries=10,max_shard_bytes=4096)
+          pool=MixedWorldPool(max_window_bytes=16384)
+          pool.mount_corpus(root/'source/xgba-whole-corpus-index.json')
+          pool.mount_binary(root/'binary/xgba-binary-maps.json')
+          source=pool.find_source('emerald','data/maps/map_groups.json')
+          target=pool.find_segment('rocket',0,0,'map_grid')
+          assert source is not None and target is not None
+          assert pool.find_original_map('emerald',0,9)['name']=='LittlerootTown'
+          assert pool.find_original_map('rocket',0,0)['width']==48
+          assert pool.read_window(target,0,16)==fake.image()[fake.first_grid:fake.first_grid+16]
+          assert pool.read_window(source,0,1)==(Path('upstream/pokeemerald')/'data/maps/map_groups.json').read_bytes()[:1]
+          assert pool.staged_bytes==0
+          summary={'source_count':len(pool.source_ids),
+                   'resource_count':pool.resource_count,
+                   'source_original_maps':518,
+                   'synthetic_binary_original_maps':binary.discover()['map_count'],
+                   'binary_world_is_synthetic':True,
+                   'user_rom_in_public_ci':False,
+                   'native_cross_world_gameplay_proven':False}
+          assert summary['source_count']==2 and summary['resource_count']>11557
+          (Path(os.environ['RUNNER_TEMP'])/'r35-aggregate-only.json').write_text(json.dumps(summary,sort_keys=True,indent=2)+'\n')
+          print('PASS_R35_ORIGINAL_EMERALD_PLUS_BINARY_RESOURCE_POOL',json.dumps(summary,sort_keys=True))
+          PY
+      - name: Publish only aggregate counts (no source files, game assets, patches or binary ROM)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r35-public-aggregate-source-and-binary-pool
+          path: ${{ runner.temp }}/r35-aggregate-only.json
+          retention-days: 90
+          if-no-files-found: warn
