@@ -103,7 +103,10 @@ def check_readme(content: str) -> list[str]:
     if ("I am developing XGBA with the help of AI for coding and logging purposes."
             not in content):
         errors.append("README first-person AI disclosure absent")
-    if "R6–R27 verified" not in content:
+    # The verified history advances with each proven release. Reject absent,
+    # malformed or regressed summaries, but do not freeze the README at R27.
+    version = re.search(r"\\bR6[–-]R(\\d+)\\s+verified\\b", content)
+    if not version or int(version.group(1)) < 27:
         errors.append("README current verified milestone summary unexpectedly missing")
     return errors
 
