@@ -1,5 +1,8 @@
 # R35 — Binary-extracted ROM maps in the multi-source XGBA resource pool
 
+**VERIFIED / MERGED · 12 November 2026** — [PR #98](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/98) · [merged source `07a2c32`](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/commit/07a2c32d947fb80eb4550e575f87ac29b357026f). Four exact-head GitHub Actions runs passed including **12/12 three-world synthetic tests**, **11,557 real Emerald source files + 504 synthetic binary resource segments = 12,061 combined addressable resources**, and native FireRed/Emerald non-regressions. Private exact user-provided Team Rocket Edition 3.06 ROM verification confirmed **1,778 original map identities**, **16,854 matching source-ROM segments** and **66 sharded packs**, without changing original ROM bytes. [Public full-source + binary-world integration CI](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43197146129) · [Counts-only artifact](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43197146129/artifacts/13933377463). No user's copyrighted ROM or extracted bytes were committed or uploaded to public CI.
+
+
 **Scope:** Real binary-extracted map resources should be addressable alongside
 source-backed game resources without source map-ID rewriting, untrusted code
 execution or mandatory full-game memory residency.
