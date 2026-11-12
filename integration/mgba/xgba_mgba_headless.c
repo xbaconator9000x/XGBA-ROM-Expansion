@@ -776,7 +776,7 @@ int main(int argc, char **argv)
          * No host-rendered or invented game graphics. */
         FILE *image=fopen(r43_probe,"wb");
         if(!image)fail("R43 cannot open original mGBA framebuffer proof");
-        if(fprintf(image,"P6\\n240 160\\n255\\n")<0)fail("R43 cannot write screenshot PPM header");
+        if(fprintf(image,"P6\n240 160\n255\n")<0)fail("R43 cannot write screenshot PPM header");
         const mColor *frame=(const mColor *)pixels;
         for(unsigned y=0;y<160u;y++) {
             for(unsigned x=0;x<240u;x++) {
