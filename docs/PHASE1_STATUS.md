@@ -74,7 +74,7 @@ See [new v1.5 contracts](CRITICAL_SOURCE_CONTRACTS_v15.md) for save-state identi
 - No XGBA emulator/ROM expansion patch or end-to-end runtime tests have been implemented.
 
 ## Persistence and next step
-The reproducible pipeline is committed to this repository. The complete 11.5MB mapping workpack generated in ChatGPT must be copied to `imports/XGBA_Phase1_v1.5_Complete_Workpack.zip` for permanent GitHub persistence; the connected GitHub API cannot import a local binary attachment automatically. [Import workflow](../.github/workflows/import-workpack.yml) verifies each ZIP entry SHA256, the 29,068 record counts, and the non-completion status when the archive is uploaded.
+The reproducible pipeline is committed to this repository. The historical 11.5 MB mapping workpack must be copied to `imports/XGBA_Phase1_v1.5_Complete_Workpack.zip` for permanent GitHub persistence; the repository import workflow requires the archive to be uploaded explicitly. [Import workflow](../.github/workflows/import-workpack.yml) verifies each ZIP entry SHA256, the 29,068 record counts, and the non-completion status when the archive is uploaded.
 
 Once imported, continue ranked semantic review, source/asset dependency proofs, versioned adapter contracts and independent per-file approvals. Phase 2 compilation/runtime/compatibility checks are a separate release gate.
 
