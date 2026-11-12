@@ -37,7 +37,7 @@ jobs:
           arm-none-eabi-gcc -mcpu=arm7tdmi -marm -Os -ffreestanding -fno-builtin \
             -nostdlib -nodefaultlibs -ffunction-sections -fdata-sections \
             -Wl,-Ttext=0x080000C0 -Wl,-e,_start -Wl,--gc-sections -Wl,--build-id=none \
-            -o build/r43-probe/probe.elf android/xgba-tester/probe/xgba_probe.c
+            -o build/r43-probe/probe.elf android/xgba-tester/probe/xgba_probe.c -lgcc
           arm-none-eabi-objcopy -O binary build/r43-probe/probe.elf build/r43-probe/arm.bin
           python3 android/xgba-tester/probe/build_probe.py \
             --arm-binary build/r43-probe/arm.bin --out build/r43-probe/xgba-probe.zip
