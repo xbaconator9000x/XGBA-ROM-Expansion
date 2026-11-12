@@ -98,17 +98,24 @@ static void xgba_r42_emerald_run(struct mCore *core,uint32_t map,uint32_t save,
         r17_check_map(core,map,resource);
         r17_frame(core,folder,"00-original-emerald-external-littleroot");
         r14_press(core,1u<<8,3u); /* original physical R button */
-        r14_wait(core,45u); /* actual game text/message task */
+        /* Native Emerald's text printer and waitmessage must finish before
+         * waitbuttonpress can receive A; 45 frames only speeds up the text,
+         * leaving the global event context locked and suppressing L. */
+        r14_wait(core,150u);
         r42_assert(core,save,R42_STATE_READY);
         r17_frame(core,folder,"01-native-rocket-event-dialogue");
-        r14_press(core,1u<<0,3u); /* A closes game message UI */
-        r14_wait(core,65u);
-        r14_press(core,1u<<9,3u); /* original physical L button */
+        r14_press(core,1u<<0,3u); /* original A, dismiss message */
         r14_wait(core,45u);
+        r14_press(core,1u<<0,3u); /* no-op if already dismissed */
+        r14_wait(core,45u);
+        r14_press(core,1u<<9,3u); /* original physical L button */
+        r14_wait(core,150u);
         r42_assert(core,save,R42_STATE_COMPLETE);
         r17_frame(core,folder,"02-native-johto-event-dialogue");
         r14_press(core,1u<<0,3u);
-        r14_wait(core,65u);
+        r14_wait(core,45u);
+        r14_press(core,1u<<0,3u);
+        r14_wait(core,45u);
         if(device->successful_reads!=4u || device->failed_reads)
             fail("R42 original Emerald failed two independently verified external event reads");
         r14_press(core,1u<<2,3u); /* actual GBA SELECT -> original TrySavingData */
