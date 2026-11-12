@@ -42,6 +42,9 @@ jobs:
       - name: Check event opcode layouts and resource independence
         run: |
           set -euo pipefail
+          if ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
+            python3 -m pip install --user --break-system-packages --disable-pip-version-check 'Pillow==11.3.0'
+          fi
           python3 -m py_compile tools/xgba_r42_event_assets.py tests/test_xgba_r42_native_two_source_gameplay.py
           PYTHONPATH=tools:tests:integration/mgba python3 -m unittest test_xgba_r42_native_two_source_gameplay.TwoSourceAuthoredEventContracts -v 2>&1 | tee /tmp/r42-encoding.log
           grep -q 'Ran 4 tests' /tmp/r42-encoding.log
