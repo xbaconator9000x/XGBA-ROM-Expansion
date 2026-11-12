@@ -23,6 +23,7 @@ from xgba_r17_emerald_heap import patch_emerald_heap_tail
 from xgba_memory_plan import Resource,Phase,plan_residency
 from xgba_r27_huge_map_geometry import plan_map, source_tiled_grid
 import xgba_resource_sidecar as sidecar
+import xgba_r31_map_catalog as r31catalog
 import xgba_resource_integration_smoke as r6
 import xgba_mgba_run as launcher
 import apply_core_patch
@@ -80,7 +81,8 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         cls.resource_bytes=len(cls.pack)
         r19=bool(getattr(cls,"R19_CONNECTED",False))
         r19_battle=bool(getattr(cls,"R19_BATTLE",False))
-        r30=bool(getattr(cls,"R30_FOUR_MAPS",False))
+        r31=bool(getattr(cls,"R31_AUTO_CATALOG",False))
+        r30=bool(getattr(cls,"R30_FOUR_MAPS",False)) or r31
         r28=bool(getattr(cls,"R28_THREE_MAPS",False)) or r30
         r26_leases=bool(getattr(cls,"R26_LEASE_TEST",False))
         if r28 and (not r19 or r19_battle or stress):
@@ -200,6 +202,22 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             config.write_text(config.read_text()+
                 "\n#define XGBA_R30_FOUR_MAPS 1\n"+
                 f"#define XGBA_R30_ROUTE102_BYTES {len(cls.route102_pack)}u\n")
+        if r31:
+            # Derive the ORIGINAL group/map numbers, dimensions and connection
+            # prefetch hints from Emerald source, not a hand-written map table.
+            # Only these chosen external assets appear in the catalogue.
+            cls.r31_catalog=r31catalog.original_map_catalog(EMERALD,{
+                LAYOUT:(RID,cls.pack),
+                "Route101":("emerald.route101",cls.route_pack),
+                "OldaleTown":("emerald.oldale",cls.oldale_pack),
+                "Route102":("emerald.route102",cls.route102_pack),
+            })
+            cls.r31_catalog_header=root/"r31-original-identity.generated.h"
+            cls.r31_catalog_header.write_text(
+                r31catalog.render_c_catalog(cls.r31_catalog))
+            config.write_text(config.read_text()+
+                "\n#define XGBA_R31_AUTO_CATALOG 1\n"+
+                f"#define XGBA_R31_CATALOG_HEADER {json.dumps(str(cls.r31_catalog_header))}\n")
         if r19:
             config.write_text(config.read_text()+
                 "\n#define XGBA_R19_CONNECTED_MAPS 1\n"
