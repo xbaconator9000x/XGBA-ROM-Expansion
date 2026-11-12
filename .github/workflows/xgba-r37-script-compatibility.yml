@@ -1,0 +1,58 @@
+name: XGBA R37 binary script graph and cross-ROM dependency safety
+on:
+  push:
+    branches: [main, 'phase3/r37-script-dependency-graph-20261112']
+    paths:
+      - 'tools/xgba_r37_script_graph.py'
+      - 'tests/test_xgba_r37_script_graph.py'
+      - 'tests/check_xgba_r37_upstream_profile.py'
+      - '.github/workflows/xgba-r37-script-compatibility.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/xgba_r37_script_graph.py'
+      - 'tests/test_xgba_r37_script_graph.py'
+      - 'tests/check_xgba_r37_upstream_profile.py'
+      - '.github/workflows/xgba-r37-script-compatibility.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r37-script-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  synthetic-script-graph:
+    name: Bounded static graph, source imports and negative cases
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify pure Python parser and 20 synthetic negative/flow cases
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r37_script_graph.py tests/test_xgba_r37_script_graph.py
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r37_script_graph.ScriptGraphTests -v 2>&1 | tee /tmp/r37-tests.log
+          grep -q 'Ran 20 tests' /tmp/r37-tests.log
+          grep -q '^OK$' /tmp/r37-tests.log
+          echo 'PASS_R37_20_SYNTHETIC_SCRIPT_GRAPH_CASES script_execution=0'
+      - name: Preserve the existing R34-R36 parser and resource safety regression tests
+        run: |
+          set -euo pipefail
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r34_binary_maps test_xgba_r35_mixed_pool test_xgba_r36_binary_pages -v 2>&1 | tee /tmp/r37-regressions.log
+          grep -q '^OK$' /tmp/r37-regressions.log
+  pinned-original-engine-command-contract:
+    name: Check every recognized opcode against the pinned original Emerald command table
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Obtain immutable original source implementation
+        run: |
+          set -euo pipefail
+          git clone --quiet --filter=blob:none https://github.com/pret/pokeemerald.git upstream/pokeemerald
+          git -C upstream/pokeemerald checkout --quiet --detach 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          test "$(git -C upstream/pokeemerald rev-parse HEAD)" = 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+      - name: Verify opcode layout and critical instruction widths
+        run: |
+          set -euo pipefail
+          python3 tests/check_xgba_r37_upstream_profile.py --source upstream/pokeemerald
