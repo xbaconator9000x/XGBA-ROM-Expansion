@@ -1,5 +1,10 @@
 # R36 — Lossless binary-ROM pages and audited script entrypoints
 
+**VERIFIED / MERGED · 12 November 2026.** [PR #100](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/100) · [merged source `0d23957`](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/commit/0d23957f4e7561bd353230df1f12c237693999fe). **4/4 exact-head CI workflows passed**, including **15/15 synthetic binary paging / script-root source-provenance acceptance tests**, genuine pinned original Emerald **11,557 source-file pool**, full synthetic 2 MiB ROM page retrieval, R34/R35 regressions, actual original FireRed Flash cold restart and Emerald four-battle cache eviction. [Exact-head R36 import run #43201749178](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43201749178) · [Counts-only artifact #13935277365](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43201749178/artifacts/13935277365).
+
+Private actual Team Rocket Edition English 3.06 ROM SHA-256 **`5a02069e9e1166290eb84ea98835158c54a91987ff81d26c210832b238a077ca`**: 33,554,432 original bytes completely exported and SHA-256 verified across **2,048 independently addressable 16 KiB pages in 16 sidecar shards**; 1,778 original binary maps retained. An anchored map/event reference census found **11,962 entrypoint references at 9,189 distinct ROM offsets**; **two out-of-ROM references explicitly remain unresolved**, without inventing script lengths or execution compatibility. Neither the input ROM nor these private asset bytes were uploaded to the public repository or CI.
+
+
 **Engineering scope.** R34 extracted only fixed-length map structures from an
 Emerald-family ROM and R35 made those available next to source-built game
 resources. R36 additionally addresses **every single byte** of the original
