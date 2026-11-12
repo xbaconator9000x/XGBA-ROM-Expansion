@@ -1,6 +1,6 @@
 # XGBA Phase 2 experimental implementation — FireRed first, reusable GBA architecture
 
-**Priority authorised 10 November 2026:** cease using complete 14,834-file semantic mapping as a prerequisite for a working prototype. Reuse GBATEK, pret/pokefirered, mGBA Matrix, Hex Maniac Advance pointer models and XGBA's existing pointer-contracts. Keep older evidence, pins, histories and review gates unchanged; do not falsify the legacy mapping completion state.
+**Integration priority recorded 10 November 2026:** cease using complete 14,834-file semantic mapping as a prerequisite for a working prototype. Reuse GBATEK, pret/pokefirered, mGBA Matrix, Hex Maniac Advance pointer models and XGBA's existing pointer-contracts. Keep older evidence, pins, histories and review gates unchanged; do not falsify the legacy mapping completion state.
 
 **Important generality:** XGBA is an emulator-first general GBA platform. FireRed is the **first adapter/test vehicle**, not the only eventual target. Existing ROM hacks and unknown binary variants remain inspection-only until specifically fingerprinted and tested; see `docs/XGBA_PLATFORM_COMPATIBILITY_SCOPE_2026-10-29.md` on main. No in-place transformation of unknown ROMs.
 
@@ -18,7 +18,7 @@ The next three finite, automatically supervised assignments are:
 
 **Prioritisation:** integrate one low-risk static graphical asset first, where data is copied into a bounded native buffer and is not retained as a script PC, audio track or DMA source. No blanket pointer rewriting, no "infinite ROM pointer" claims. Keep original GBA CPU ROM address-space constraints. Specific source-backed pointer/lifetime issues are investigated only when the relevant integration touches them. Resource IDs are never raw CPU pointers.
 
-**Source reuse:** `docs/PHASE1_P0_FIRERED_MAP_SCRIPT_POINTER_ABI_2026-10-26.md`, `docs/FIELD_POINTER_ROLES_v22.md`, `docs/RESOURCE_LIFETIMES_v23.md`, `docs/PHASE1_P0_EXTERNAL_RESOURCE_BANKING_CONTRACT_2026-10-26.md`; `pret/pokefirered`, mGBA, and Hex Maniac Advance. Check licensing before reusing third-party implementation code; no unlicensed copying. No paid APIs beyond included Copilot Pro capacity, $0 billed overages.
+**Source reuse:** `docs/PHASE1_P0_FIRERED_MAP_SCRIPT_POINTER_ABI_2026-10-26.md`, `docs/FIELD_POINTER_ROLES_v22.md`, `docs/RESOURCE_LIFETIMES_v23.md`, `docs/PHASE1_P0_EXTERNAL_RESOURCE_BANKING_CONTRACT_2026-10-26.md`; `pret/pokefirered`, mGBA, and Hex Maniac Advance. Check licensing before reusing third-party implementation code; no unlicensed copying. No paid APIs beyond included Copilot Pro capacity, zero billed overages.
 
 ## Completion estimate: two distinct denominators
 
