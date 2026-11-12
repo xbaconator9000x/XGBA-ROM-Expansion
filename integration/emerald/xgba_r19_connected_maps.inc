@@ -238,8 +238,17 @@ static void XgbaR20PrepareReturnToField(void)
     if (XgbaR19Index(gSaveBlock1Ptr->location.mapGroup,
                       gSaveBlock1Ptr->location.mapNum) < 0)
         return;
+#ifdef XGBA_R28_THREE_MAPS
+    {
+        s32 index=XgbaR19Index(gSaveBlock1Ptr->location.mapGroup,
+                               gSaveBlock1Ptr->location.mapNum);
+        if(index==2) { XgbaR19Load(1); XgbaR19Load(2); }
+        else { XgbaR19Load(0); XgbaR19Load(1); }
+    }
+#else
     XgbaR19Load(0);
     XgbaR19Load(1);
+#endif
 }
 static const struct MapHeader *XgbaR19HeaderFor(u16 group,u16 map)
 {
@@ -247,8 +256,16 @@ static const struct MapHeader *XgbaR19HeaderFor(u16 group,u16 map)
     if(idx<0)return gMapGroups[group][map];
     /* BOTH external layouts are needed for seamless connected-map camera
      * rendering. Never evict one while the other is using border tiles. */
+#ifdef XGBA_R28_THREE_MAPS
+    /* Original connected-map camera owns and copies neighbour data. Keep
+     * the current source protected, while fetching the requested neighbour. */
+    if(idx==0) { XgbaR19Load(0); XgbaR19Load(1); }
+    else if(idx==2) { XgbaR19Load(1); XgbaR19Load(2); }
+    else XgbaR19Load(1);
+#else
     XgbaR19Load(0);
     XgbaR19Load(1);
+#endif
     return &sXgbaR19Headers[idx];
 }
 static const struct MapLayout *XgbaR19CurrentLayout(const struct MapLayout *fallback)
@@ -276,10 +293,10 @@ static void XgbaR19MapTick(void)
      * returning south through Route 101. R19 tests actual field camera/
      * collision transitions, not the mandatory introductory cutscene.
      * This conditional test-only flag is NOT part of production XGBA. */
-    if(idx && !gXgbaR19MapProof.route_visited)
+    if(idx==1 && !gXgbaR19MapProof.route_visited)
         VarSet(VAR_ROUTE101_STATE,3);
 #endif
-    if(idx)gXgbaR19MapProof.route_visited=1;
+    if(idx==1)gXgbaR19MapProof.route_visited=1;
     if(!idx && gXgbaR19MapProof.route_visited)
         gXgbaR19MapProof.littleroot_revisited=1;
     ts=gMapHeader.mapLayout->secondaryTileset;
@@ -288,7 +305,24 @@ static void XgbaR19MapTick(void)
     gXgbaR19MapProof.group=gSaveBlock1Ptr->location.mapGroup;
     gXgbaR19MapProof.map=gSaveBlock1Ptr->location.mapNum;
     gXgbaR19MapProof.active=idx;
+#ifdef XGBA_R28_THREE_MAPS
+    {
+        s32 slot=XgbaCacheFind(&sXgbaR28MapCache,(u32)idx);
+        if(slot<0)XgbaR19Reject();
+        gXgbaR19MapProof.arena=(u32)(slot?XGBA_R19_ARENA1:XGBA_R19_ARENA0);
+        gXgbaR19MapProof.r28_active_slot=(u32)slot;
+        gXgbaR19MapProof.r28_hits=sXgbaR28MapCache.hits;
+        gXgbaR19MapProof.r28_misses=sXgbaR28MapCache.misses;
+        gXgbaR19MapProof.r28_evictions=sXgbaR28MapCache.evictions;
+        gXgbaR19MapProof.r28_refusals=sXgbaR28MapCache.refusals;
+        gXgbaR19MapProof.r28_loads=sXgbaR28MapCache.loads;
+        gXgbaR19MapProof.r28_slot0_key=sXgbaR28MapCache.slots[0].key;
+        gXgbaR19MapProof.r28_slot1_key=sXgbaR28MapCache.slots[1].key;
+        gXgbaR19MapProof.r28_generation=sXgbaR28MapCache.generation;
+    }
+#else
     gXgbaR19MapProof.arena=(u32)(idx?XGBA_R19_ARENA1:XGBA_R19_ARENA0);
+#endif
     gXgbaR19MapProof.grid=(u32)gBackupMapLayout.map;
     gXgbaR19MapProof.stride=gBackupMapLayout.width;
     gXgbaR19MapProof.border=(u32)gMapHeader.mapLayout->border;
