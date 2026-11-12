@@ -213,7 +213,7 @@ class ScriptSandbox(unittest.TestCase):
         self.assertEqual(bank.world("rocket").flags,set())
 
     def test_forged_same_source_instruction_payload_is_not_executable(self):
-        p=pool_with(b"\\x29"+h(5)+b"\\x02")
+        p=pool_with(b"\x29"+h(5)+b"\x02")
         ir=r39.compile_script(p,"emerald",32)
         bad=r39.ScriptIR(ir.source_id,ir.source_sha256,ir.root_offset,
                          ((32,41,(999,),3),(35,2,(),1)))
@@ -223,9 +223,9 @@ class ScriptSandbox(unittest.TestCase):
         self.assertEqual(b.world("emerald").flags,set())
 
     def test_variable_backed_trainer_ids_resolved_from_own_world(self):
-        code=(b"\\x16"+h(0x4020)+h(700)+b"\\x61"+h(0x4020)+b"\\x60"+h(0x4020)+
-             b"\\x06\\x01"+ptr(96)+b"\\x02")
-        target=b"\\x62"+h(0x4020)+b"\\x02"
+        code=(b"\x16"+h(0x4020)+h(700)+b"\x61"+h(0x4020)+b"\x60"+h(0x4020)+
+             b"\x06\x01"+ptr(96)+b"\x02")
+        target=b"\x62"+h(0x4020)+b"\x02"
         b,_,_=self.run_code(code,target=target)
         self.assertEqual(b.world("emerald").vars[0x4020],700)
         self.assertEqual(b.world("emerald").trainers,set())
