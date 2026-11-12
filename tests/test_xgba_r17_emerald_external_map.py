@@ -80,7 +80,10 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         cls.resource_bytes=len(cls.pack)
         r19=bool(getattr(cls,"R19_CONNECTED",False))
         r19_battle=bool(getattr(cls,"R19_BATTLE",False))
+        r28=bool(getattr(cls,"R28_THREE_MAPS",False))
         r26_leases=bool(getattr(cls,"R26_LEASE_TEST",False))
+        if r28 and (not r19 or r19_battle or stress):
+            raise AssertionError("R28 three-map native fixture is distinct from R27 and battle test modes")
         if r19_battle and not r19:
             raise AssertionError("Real mixed-source battle must preserve connected map residency")
         if r19:
@@ -90,9 +93,28 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             if len(cls.route_grid)!=800 or len(cls.route_border)!=8:
                 raise AssertionError("Pinned original Route 101 external geometry drift")
             cls.route_pack=r14.pack((cls.route_grid,cls.route_border),parts)
-            cls.route_pack_offset=(cls.resource_bytes+3)&~3
+            # R28 uses two fixed 8 KiB physical slots in the actual reserved
+            # 16 KiB heap tail, not merely the sum of the packed payloads.
+            # Keep R19's historical tightly packed layout unchanged.
+            if r28:
+                if cls.resource_bytes>8192 or len(cls.route_pack)>8192:
+                    raise AssertionError("R28 full source packs exceed their 8 KiB physical slots")
+                cls.route_pack_offset=8192
+            else:
+                cls.route_pack_offset=(cls.resource_bytes+3)&~3
             if cls.route_pack_offset+len(cls.route_pack)>16384:
                 raise AssertionError("Two simultaneous full maps exceed current Emerald 16KiB live arena")
+            if r28:
+                oldale_layout=EMERALD/"data/layouts/OldaleTown"
+                cls.oldale_grid=(oldale_layout/"map.bin").read_bytes()
+                cls.oldale_border=(oldale_layout/"border.bin").read_bytes()
+                if len(cls.oldale_grid)!=800 or len(cls.oldale_border)!=8:
+                    raise AssertionError("Pinned original OldaleTown layout drift")
+                cls.oldale_pack=r14.pack((cls.oldale_grid,cls.oldale_border),parts)
+                if (len(cls.oldale_pack)>8192 or
+                    cls.route_pack_offset+len(cls.oldale_pack)>16384 or
+                    len(cls.pack)+len(cls.route_pack)+len(cls.oldale_pack)<=16384):
+                    raise AssertionError("R28 requires 2 fitting packs but 3 over budget")
         if r19_battle:
             cls.battle_original_compressed={}
             for species_name in ("Poochyena","Zigzagoon"):
@@ -109,8 +131,8 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             raise AssertionError("Emerald original full tileset exceeds one synchronous 16 KiB XGBA read; must implement chunking, never drop assets")
         if r19:
             resources=[
-                Resource("emerald_littleroot_pack",len(cls.pack)),
-                Resource("emerald_route101_pack",len(cls.route_pack))]
+                Resource("emerald_littleroot_pack",8192 if r28 else len(cls.pack)),
+                Resource("emerald_route101_pack",8192 if r28 else len(cls.route_pack))]
             phases=[Phase("original_emerald_connected_maps",
                           ("emerald_littleroot_pack","emerald_route101_pack"),
                           transient_heap_bytes=12288)]
@@ -160,6 +182,10 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             if not r19_battle:
                 raise AssertionError("R20 re-entry fixture requires R19 original mixed battle")
             config.write_text(config.read_text()+"\n#define XGBA_R20_LIFECYCLE_TEST 1\n")
+        if r28:
+            config.write_text(config.read_text()+
+                "\n#define XGBA_R28_THREE_MAPS 1\n"+
+                f"#define XGBA_R28_OLDALE_BYTES {len(cls.oldale_pack)}u\n")
         if r19:
             config.write_text(config.read_text()+
                 "\n#define XGBA_R19_CONNECTED_MAPS 1\n"
@@ -221,6 +247,24 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             stripped[rb:rb+8]=bytes(8)
             removed.append({"asset":"Route101.border","bytes":8,"offset":rb,
                             "sha256":sha(cls.route_border)})
+            if r28:
+                oldale_matches=[m.start() for m in re.finditer(
+                    re.escape(cls.oldale_grid),stripped)]
+                if len(oldale_matches)!=1:
+                    raise AssertionError("Original compiled Oldale grid not uniquely identifiable")
+                om=oldale_matches[0]
+                stripped[om:om+len(cls.oldale_grid)]=bytes(len(cls.oldale_grid))
+                removed.append({"asset":"OldaleTown.map","bytes":len(cls.oldale_grid),
+                                "offset":om,"sha256":sha(cls.oldale_grid)})
+                oldale_address,_=syms["OldaleTown_Layout"]
+                oldale_border_addr=struct.unpack_from(
+                    "<I",stripped,oldale_address-0x08000000+8)[0]
+                ob=oldale_border_addr-0x08000000
+                if stripped[ob:ob+8]!=cls.oldale_border:
+                    raise AssertionError("Original compiled Oldale border pointer drift")
+                stripped[ob:ob+8]=bytes(8)
+                removed.append({"asset":"OldaleTown.border","bytes":8,
+                                "offset":ob,"sha256":sha(cls.oldale_border)})
         for symbol,blob in parts:
             address,size=syms[symbol]
             off=address-0x08000000
@@ -250,7 +294,9 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             cls.local_treecko_sha=sha(stripped[tree_start:tree_start+tree_len])
             if tree_len<16 or stripped[tree_start]!=0x10:
                 raise AssertionError("Vanilla Treecko sprite missing from local ROM")
-        if len(stripped)>32*1024*1024 or grid in stripped or (r19 and cls.route_grid in stripped):
+        if (len(stripped)>32*1024*1024 or grid in stripped or
+            (r19 and cls.route_grid in stripped) or
+            (r28 and cls.oldale_grid in stripped)):
             raise AssertionError("Original Emerald map still embedded or ROM window exceeded")
         rom.write_bytes(stripped)
         cls.rom_sha=sha(stripped)
@@ -272,6 +318,9 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             if r19:
                 cls.route_offset=32*1024*1024+65536
                 fp.seek(cls.route_offset);fp.write(cls.route_pack)
+                if r28:
+                    cls.oldale_offset=32*1024*1024+131072
+                    fp.seek(cls.oldale_offset);fp.write(cls.oldale_pack)
             if r19_battle:
                 cls.battle_offsets={
                     "Poochyena":32*1024*1024+131072,
@@ -289,6 +338,9 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                 {"id":BOOT,"offset":boot_offset,"length":64,"sha256":sha(r6.PAYLOAD)}
             ]+([{"id":"emerald.route101","offset":cls.route_offset,
                  "length":len(cls.route_pack),"sha256":sha(cls.route_pack)}] if r19 else [])+
+            ([{"id":"emerald.oldale","offset":cls.oldale_offset,
+               "length":len(cls.oldale_pack),"sha256":sha(cls.oldale_pack)}]
+             if r28 else [])+
             ([{"id":"emerald.battle."+species.lower()+".front",
                "offset":cls.battle_offsets[species],
                "length":len(blob),"sha256":sha(blob)}

@@ -30,6 +30,7 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
            r16_emerald_dir=None, r17_emerald_map_dir=None,
            r18_dir=None, r18_savefile=None, r18_phase=None, r18_save_probe=0,
            r19_connected_dir=None, r19_route_offset=0, r19_route_length=0,
+           r28_three_map_dir=None, r28_oldale_offset=0, r28_oldale_length=0,
            r19_battle_dir=None, r19_battle_probe=0,
            r19_battle0_offset=0, r19_battle0_length=0,
            r19_battle1_offset=0, r19_battle1_length=0,
@@ -197,6 +198,19 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
         cmd.extend(["--r19-connected-dir",str(directory),
                     "--r19-route-offset",str(r19_route_offset),
                     "--r19-route-length",str(r19_route_length)])
+    if r28_three_map_dir is not None:
+        dest=Path(r28_three_map_dir).resolve()
+        if (not dest.is_dir() or r19_connected_dir is not None or
+            r19_battle_dir is not None or second_resource_id!="emerald.route101" or
+            "emerald.oldale" not in extra_resource_ids or
+            r19_route_offset<=MAX_ROM or not 0<r19_route_length<=MAX_GUEST_RESOURCE or
+            r28_oldale_offset<=MAX_ROM or not 0<r28_oldale_length<=MAX_GUEST_RESOURCE):
+            raise ValueError("R28 needs three original SHA-protected maps and exclusive native mode")
+        cmd.extend(["--r28-three-map-dir",str(dest),
+                    "--r19-route-offset",str(r19_route_offset),
+                    "--r19-route-length",str(r19_route_length),
+                    "--r28-oldale-offset",str(r28_oldale_offset),
+                    "--r28-oldale-length",str(r28_oldale_length)])
     if r23_battles:
         if (type(r23_battles) is not int or r23_battles!=4 or
             not r20_reentry or not r21_heap_probe or
