@@ -58,9 +58,22 @@ static void xgba_r18_emerald_run(struct mCore *core,uint32_t map,uint32_t save,
             fail("R18 first Emerald process unexpectedly continued an existing save");
         r14_wait(core,180u);
         r17_check_map(core,map,resource);
+        if(r40) {
+            /* Native field callback may start after the R18 map-ready proof.
+             * Pump real emulated frames rather than injecting event state. */
+            for(unsigned i=0;i<600u && r18_read(core,save,11u)==0u;++i) {
+                core->setKeys(core,0u);
+                core->runFrame(core);
+            }
+            fprintf(stderr,"R40 first-boot diag: state=%u fetches=%u executions=%u value=%u flag=%u errors=%u reads=%u failed=%u lookups=%u\\n",
+                    r18_read(core,save,11u),r18_read(core,save,12u),
+                    r18_read(core,save,13u),r18_read(core,save,14u),
+                    r18_read(core,save,15u),r18_read(core,save,16u),
+                    device->successful_reads,device->failed_reads,resource->lookups);
+            r40_assert(core,save,R40_NATIVE_STATE_READY);
+        }
         if(device->successful_reads!=(r40?3u:2u) || device->failed_reads)
             fail("R18 original Emerald first load did not acquire external map/script");
-        if(r40)r40_assert(core,save,R40_NATIVE_STATE_READY);
         r17_frame(core,folder,"01-original-emerald-before-flash");
         r14_press(core,1u<<2,3u); /* SELECT -> real TrySavingData, not host save */
         for(unsigned f=0;f<3400u && r18_read(core,save,4)==0u;++f) {
