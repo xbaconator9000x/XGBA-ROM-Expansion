@@ -64,6 +64,14 @@ class PublicRepositoryPrivacyChecks(unittest.TestCase):
         self.assertEqual([], audit.check_readme(readme))
         self.assertNotEqual([], audit.check_readme(readme.replace("## Goals", "")))
 
+    def test_retired_copilot_dispatch_sources_cannot_return(self):
+        self.assertIn("tools/xgba_autonomous_product.py",
+                      audit.RETIRED_DISPATCH_FILES)
+        self.assertIn(".github/workflows/phase1-copilot-chain.yml",
+                      audit.RETIRED_DISPATCH_FILES)
+        self.assertNotIn("integration/mgba/xgba_mgba_device.c",
+                         audit.RETIRED_DISPATCH_FILES)
+
     def test_binary_files_are_not_decoded_as_utf8(self):
         self.assertEqual([], audit.audit_bytes("img/a.png", b"\x89PNG\x00\x88"))
 
