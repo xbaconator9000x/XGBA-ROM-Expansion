@@ -78,15 +78,24 @@ static void r17_check_map(struct mCore *c,uint32_t p,const struct ResourceFile *
         if(offsets[i]>=length || r17_word(c,p,i+8)!=arena+offsets[i])
             fail("R17 original Emerald tileset pointers are not in validated pack");
     }
-    unsigned stride=r17_word(c,p,9);
+    unsigned width=r17_word(c,p,18u),height=r17_word(c,p,19u);
+    /* Zero means historical R17's unmodified 20x20 source layout. */
+    if(!width && !height) {width=20u;height=20u;}
+    if(!width || !height || width>65535u || height>65535u)
+        fail("R27 invalid game-authored native layout geometry");
+    const uint64_t stride=(uint64_t)width+15u;
+    const uint64_t backup_height=(uint64_t)height+14u;
+    const uint64_t cells=stride*backup_height;
     uint32_t grid=r17_word(c,p,8);
-    if(stride!=35u || grid<0x02000000u || grid+35u*34u*2u>0x02040000u)
-        fail("R17 Emerald backup map layout not physical EWRAM");
-    for(unsigned y=0;y<20u;++y)
-        for(unsigned x=0;x<20u;++x) {
-            unsigned actualmap=c->busRead16(c,grid+2*((y+7u)*stride+x+7u));
-            unsigned source=expected[offsets[2]+2*(y*20u+x)]|
-                            ((unsigned)expected[offsets[2]+2*(y*20u+x)+1]<<8);
+    if(cells>0x2800u || (uint64_t)offsets[2]+2ull*width*height>offsets[3] ||
+       (uint64_t)r17_word(c,p,9)!=stride ||
+       grid<0x02000000u || (uint64_t)grid+cells*2u>0x02040000u)
+        fail("R27 Emerald original backup-grid or sidecar geometry violates 0x2800-cell bound");
+    for(unsigned y=0;y<height;++y)
+        for(unsigned x=0;x<width;++x) {
+            unsigned actualmap=c->busRead16(c,grid+2u*((y+7u)*(unsigned)stride+x+7u));
+            unsigned source=expected[offsets[2]+2u*(y*width+x)]|
+                            ((unsigned)expected[offsets[2]+2u*(y*width+x)+1u]<<8);
             if(actualmap!=source){
                 fprintf(stderr,"R17 real Emerald map differs at %u,%u actual=%04x source=%04x\n",
                         x,y,actualmap,source);
@@ -126,6 +135,12 @@ static void xgba_r17_emerald_run(struct mCore *c,uint32_t probe,
     r17_check_map(c,probe,resource);
     r17_frame(c,directory,"02-littleroot-after-real-dpad");
     if(!moves)fail("R17 original Emerald player did not move from real D-pad input");
+    if (r17_word(c,probe,18u) || r17_word(c,probe,19u))
+        printf("PASS_R27_REAL_EMERALD_HUGE_MAP width=%u height=%u "
+               "backup_cells=%u full_grid_verified=1 complete_secondary_tileset=1 "
+               "native_bg_vram=1 original_dpad=1\n",
+               r17_word(c,probe,18u),r17_word(c,probe,19u),
+               (r17_word(c,probe,18u)+15u)*(r17_word(c,probe,19u)+14u));
     printf("PASS_R17_REAL_EMERALD_EXTERNAL_MAP_AND_SECONDARY_TILESET "
            "map=0:9 native_grid=1 native_bg_vram=1 physical_dpad=1 "
            "guest_requests=2 active_pack_reads=1 x=%u->%u y=%u->%u\n",

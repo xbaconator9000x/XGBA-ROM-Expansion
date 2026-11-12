@@ -14,6 +14,8 @@
 struct XgbaR17Proof {
     volatile u32 magic,state,group,num,ticks,reads,x,y,grid,stride,border;
     volatile u32 pack,tiles,palette,metatiles,attributes,callback,errors;
+    /* Append-only R27 instrumentation, R17 and R19 ABI unchanged. */
+    volatile u32 r27_width,r27_height;
 };
 EWRAM_DATA volatile struct XgbaR17Proof gXgbaR17Proof = {0};
 EWRAM_DATA char gXgbaR17Id[24] = {0};
@@ -51,6 +53,19 @@ static const struct MapLayout *XgbaR17Resolve(const struct MapLayout *base)
                 XgbaR17Refuse();
         }
         sXgbaR17Layout=*base;
+#ifdef XGBA_R27_STRESS_WIDTH
+        /* Only the opt-in original-game stress fixture changes geometry.
+         * Reject before exposing any pointer to the game renderer if it
+         * would exceed the original backup-grid or resource boundaries. */
+        if(((u64)XGBA_R27_STRESS_WIDTH+15u)*
+           ((u64)XGBA_R27_STRESS_HEIGHT+14u)>0x2800u ||
+           (u64)offsets[2]+2u*(u64)XGBA_R27_STRESS_WIDTH*
+           XGBA_R27_STRESS_HEIGHT>offsets[3] ||
+           XGBA_R17_PACK_SIZE>16384u)
+            XgbaR17Refuse();
+        sXgbaR17Layout.width=XGBA_R27_STRESS_WIDTH;
+        sXgbaR17Layout.height=XGBA_R27_STRESS_HEIGHT;
+#endif
         sXgbaR17Secondary=*base->secondaryTileset;
         sXgbaR17Layout.map=(const u16 *)(gXgbaR17Arena+offsets[2]);
         sXgbaR17Layout.border=(const u16 *)(gXgbaR17Arena+offsets[3]);
@@ -95,6 +110,10 @@ static void XgbaR17Tick(void)
     gXgbaR17Proof.metatiles=(u32)ts->metatiles;
     gXgbaR17Proof.attributes=(u32)ts->metatileAttributes;
     gXgbaR17Proof.callback=(u32)gMain.callback2;
+#ifdef XGBA_R27_STRESS_WIDTH
+    gXgbaR17Proof.r27_width=gMapHeader.mapLayout->width;
+    gXgbaR17Proof.r27_height=gMapHeader.mapLayout->height;
+#endif
 #ifdef XGBA_R18_SAVE_TEST
     XgbaR18Tick();
 #endif

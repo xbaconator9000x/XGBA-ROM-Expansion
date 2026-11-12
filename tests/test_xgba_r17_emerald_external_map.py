@@ -21,6 +21,7 @@ import xgba_r16_emerald_decomp_patch as e16
 import xgba_r17_emerald_patch as patch
 from xgba_r17_emerald_heap import patch_emerald_heap_tail
 from xgba_memory_plan import Resource,Phase,plan_residency
+from xgba_r27_huge_map_geometry import plan_map, source_tiled_grid
 import xgba_resource_sidecar as sidecar
 import xgba_resource_integration_smoke as r6
 import xgba_mgba_run as launcher
@@ -60,7 +61,22 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         if len(grid)!=20*20*2 or len(border)!=8:
             raise AssertionError("Pinned genuine Emerald Littleroot map geometry drift")
         parts=r14.tileset_parts(orig_rom,native_symbols,TILESET)
-        cls.pack=r14.pack((grid,border),parts)
+        stress=getattr(cls,"R27_MAP_SHAPE",None)
+        if stress:
+            if bool(getattr(cls,"R19_CONNECTED",False)) or bool(getattr(cls,"R19_BATTLE",False)):
+                raise AssertionError("R27 single-map geometry fixture cannot conflate connected-map proofs")
+            w,h=stress
+            # The unmodified source map is 20x20. Build a synthetic stress
+            # grid from its real metatiles; no host-side map memory injection.
+            original_pack=r14.pack((grid,border),parts)
+            cls.geometry_plan=plan_map(
+                w,h,base_pack_without_grid=len(original_pack)-len(grid))
+            cls.native_grid=source_tiled_grid(grid,w,h)
+        else:
+            cls.native_grid=grid
+        cls.pack=r14.pack((cls.native_grid,border),parts)
+        if stress and len(cls.pack)!=cls.geometry_plan.packed_bytes:
+            raise AssertionError("R27 packed payload differs from actual 4-byte aligned assets")
         cls.resource_bytes=len(cls.pack)
         r19=bool(getattr(cls,"R19_CONNECTED",False))
         r19_battle=bool(getattr(cls,"R19_BATTLE",False))
@@ -123,6 +139,10 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         config.write_text(
             f"#define XGBA_R17_PACK_SIZE {len(cls.pack)}u\n"
             f"#define XGBA_R17_RESERVE {budget.reserve_bytes}u\n")
+        if stress:
+            config.write_text(config.read_text()+
+                f"#define XGBA_R27_STRESS_WIDTH {stress[0]}u\n"
+                f"#define XGBA_R27_STRESS_HEIGHT {stress[1]}u\n")
         r18=bool(getattr(cls,"R18_SAVE_TEST",False))
         if r18:
             config.write_text(config.read_text()+"\n#define XGBA_R18_SAVE_TEST 1\n")
@@ -337,12 +357,22 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             "enabled_log":cls.log,"disabled_log":cls.disabled_log,
             "scope":"Real Emerald map geometry/border and full secondary tileset stripped and externally supplied; original CB2_NewGame, native field map, collision, tile renderer and controller. Title and truck intro bypassed in test-only fixture. One external map, not general map transitions or Emerald save/reboot."
         }
-        output=os.getenv("XGBA_R17_EVIDENCE_DIR")
+        if stress:
+            if f"PASS_R27_REAL_EMERALD_HUGE_MAP width={stress[0]} height={stress[1]}" not in cls.log:
+                raise AssertionError("Original Emerald large-geometry native proof absent")
+            cls.report["milestone"]="R27_ORIGINAL_EMERALD_HUGE_MAP_GEOMETRY"
+            cls.report["synthetic_test_grid_from_original_tiles"]=True
+            cls.report["stressed_map_geometry"]={"width":stress[0],"height":stress[1]}
+            cls.report["full_ewram_backup_cells"]=cls.geometry_plan.backup_cells
+            cls.report["complete_full_secondary_tileset"]=True
+            cls.report["original_emerald_native_all_map_cells_checked"]=stress[0]*stress[1]
+            cls.report["scope"]="Native original Emerald engine draws an XGBA-supplied synthetic 64x64 or 128x32 map built from the original Littleroot metatile bytes, plus the complete original Petalburg tileset; does not prove arbitrary giant maps or three-map eviction."
+        output=os.getenv("XGBA_R27_EVIDENCE_DIR" if stress else "XGBA_R17_EVIDENCE_DIR")
         if output:
             dest=Path(output);dest.mkdir(parents=True,exist_ok=True)
             for path in cls.output.glob("*.png"):
-                shutil.copy2(path,dest/path.name)
-            (dest/"proof.json").write_text(json.dumps(cls.report,indent=2,sort_keys=True))
+                shutil.copy2(path,dest/(f"{stress[0]}x{stress[1]}-"+path.name if stress else path.name))
+            (dest/(f"proof-{stress[0]}x{stress[1]}.json" if stress else "proof.json")).write_text(json.dumps(cls.report,indent=2,sort_keys=True))
 
     def test_original_game_loaded_source_stripped_external_littleroot(self):
         self.assertIn("map=0:9 native_grid=1",self.log)
