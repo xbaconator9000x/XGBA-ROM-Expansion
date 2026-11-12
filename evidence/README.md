@@ -7,6 +7,14 @@ No executable ROMs, sidecars, save files or raw proprietary game assets are arch
 Screenshots contain game imagery belonging to its rights holders and are shown
 only as limited, noncommercial engineering documentation.
 
+## R27 — verified original Emerald large-map geometry stress (Actions evidence)
+
+At pinned original-game native test head `3d31b5ba5115cab799da3cc3b30869c6afaadcb7`, real Pokémon Emerald rendered **64×64 and 128×32** synthetic source-tiled external map geometries with complete source-backed Petalburg secondary tileset, actual collision/backup grid, BG VRAM, and GBA D-pad input. Original game **7/7 native per shape**, portable capacity **7/7**. Each map uses **13,636 bytes** and has **4,096 independently verified source/backup-grid cells**.
+
+[Both exact-head native jobs and portable preflight](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43126703593) · [64×64 two original native LCD PNGs + proof](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43126703593/artifacts/13902333911) · [128×32 two original native LCD PNGs + proof](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43126703593/artifacts/13903334097) · [Merged PR #82](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/82) · [Limits and source-byte acceptance](../docs/R27_HUGE_MAP_STRESS.md).
+
+**Retention:** These artifacts are time-limited. No replacement screenshot or fictitious permanent media is in this repository. This result does not certify maps beyond the original game backup-grid/16KiB resource caps or three-map eviction.
+
 ## R26 — verified original Emerald scoped arena leases (Actions evidence)
 
 [Exact-head native R26 CI #43072910123](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43072910123) passed **17/17 original Emerald tests** at `93aa67d9e75792cc5a2100379f2668e9bbc1f3e2`. The original game performed four battles, three field restorations and scoped borrows across eight external maps and eight external opponent sources. Sixteen attempted unsafe phase switches were refused; no borrowed pins remained.

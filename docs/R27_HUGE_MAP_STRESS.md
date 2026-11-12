@@ -1,6 +1,6 @@
 # R27 — large-map geometry and capacity stress
 
-**Status:** development / exact-head CI required before claiming original-game pass.
+**Status: VERIFIED and MERGED** — original source-built Emerald **64×64 7/7** and **128×32 7/7**, portable geometry preflight **7/7** at native CI head `3d31b5ba5115cab799da3cc3b30869c6afaadcb7`. [Native run #43126703593](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43126703593), [PR #82 merged](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/82), main commit `099ee3b50c92ffd5ae4728e1c26bff3ac40163f7`.
 
 ## What R27 really tests
 
@@ -57,3 +57,13 @@ Emerald/mGBA versions, per-shape real map bytes and backup-grid
 capacity, C-side guest-proof fields, 4 genuine LCD PNG frames and
 native full-grid verification. Never mark an unrun scenario as
 passed. [Workflow](../.github/workflows/xgba-r27-huge-map-stress.yml).
+
+## Executed result ledger
+
+- Original pinned Emerald `731ad5bfd6e6f265508d0efcca0ba42f9dcf5881`, patched original mGBA `fd9dc5c2cbf234365068855851107e762fc6211b`, native proof at `3d31b5ba5115cab799da3cc3b30869c6afaadcb7`.
+- [R27 CI native/portable 21/21 assertions](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43126703593) (7 portable, 7 original-game 64×64, 7 original-game 128×32): **all green**.
+- [64×64 native screenshots and proof](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43126703593/artifacts/13902333911): two authentic GBA LCD PNGs, expected 13,636-byte full-tileset pack, 4,096 map cells verified.
+- [128×32 native screenshots and proof](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43126703593/artifacts/13903334097): two authentic PNGs, matching pack and grid checks.
+- [R17 original map](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43126703608), [R18 Flash/cold continue](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43126703423), [R24 boundary](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43126703575), [R26 arena leases](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43126703538), and [consolidated original save/battle checks](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43126703455) all green at this test head.
+- The first R27 native run had one valid **128×32 7/7** test, then the second source-build was blocked by a dirty pinned mGBA tree; independent job checkouts solved the test-fixture isolation issue. **Do not misclassify that as EWRAM corruption.**
+- Genuine LCD Actions artifacts are time-limited and not yet checked into this repository's permanent evidence gallery. All test source, acceptance contract, commit pins and run links are retained here.
