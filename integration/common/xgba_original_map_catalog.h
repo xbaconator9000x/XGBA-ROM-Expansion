@@ -56,8 +56,8 @@ static inline int XgbaOriginalMapCatalogValidate(
         uint64_t grid_bytes=(uint64_t)r->width*r->height*2u;
         if(!r->width || !r->height || !r->packed_bytes ||
            r->packed_bytes>max_pack || grid_bytes+40u>r->packed_bytes ||
-           r->prefetch_index!=XGBA_CATALOG_NO_NEIGHBOR &&
-           (r->prefetch_index>=n || r->prefetch_index==i) ||
+           (r->prefetch_index!=XGBA_CATALOG_NO_NEIGHBOR &&
+            (r->prefetch_index>=n || r->prefetch_index==i)) ||
            !p)return 0;
         while(p[chars] && chars<32u) {
             const unsigned char c=(unsigned char)p[chars];
