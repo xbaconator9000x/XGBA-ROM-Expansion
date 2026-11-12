@@ -224,7 +224,8 @@ def write_shard(dest,root,source,index,entries):
                         count+=len(block)
                         if count>e["bytes"]:raise CorpusError("Source grew before packing")
                         h.update(block)
-                        out.write(block)
+                        if out.write(block)!=len(block):
+                            raise CorpusError("Short write while packing source")
                 if count!=e["bytes"] or h.hexdigest()!=e["sha256"]:
                     raise CorpusError("Source changed since inventory: "+e["path"])
                 records.append({"id":e["resource_id"],"offset":offset,
@@ -242,6 +243,14 @@ def write_shard(dest,root,source,index,entries):
         manifest.write_bytes(encoded)
         verified=sidecar.load_manifest(manifest)
         if len(verified.resources)!=len(entries):raise CorpusError("Sidecar reader rejected shard")
+        # The v1 reader validates metadata bounds, not payload digests on load.
+        # Consume every resource to verify the actual packed output bytes too.
+        for e in entries:
+            readback=0
+            for block in sidecar.iter_resource_chunks(verified,e["resource_id"]):
+                readback+=len(block)
+            if readback!=e["bytes"]:
+                raise CorpusError("Sidecar readback length mismatch")
         for e,record in zip(entries,records):
             e["storage_status"]="verified_sidecar"
             e["shard"]=manifest.name
