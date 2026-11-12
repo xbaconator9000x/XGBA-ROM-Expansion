@@ -1,6 +1,6 @@
 # R28 — three connected maps with two physical EWRAM resource slots
 
-**Development status (12 November 2026): R28 implementation and native acceptance in progress. Do not call this verified until actual original Emerald passes.**
+**Status: VERIFIED and MERGED — 12 November 2026.** Original Emerald native **8/8**, portable production cache tests **16/16**, all **25/25** exact-head PR workflows green at source head `1d67b287450e42392fec9063057fb0655ef92423`. [Original native run](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43159185521) · [Five original LCD frames and proof](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43159185521/artifacts/13916609021) · [Merged PR #85](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/85) · [main commit `9727de7`](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/commit/9727de794cc526f80fcd30b9915c31b64c66894b).
 
 ## Specific original-game problem
 
@@ -34,4 +34,6 @@ R28 is a **two-slot LRU of three original 20×20 map packs**, not proof of unbou
 
 - [R28 exact-source portable and native CI workflow](../.github/workflows/xgba-r28-three-map-cache.yml).
 - [R28 native test source](../tests/test_xgba_r28_emerald_three_maps.py) and [emulator original-game verifier](../integration/mgba/xgba_r28_three_maps.h).
-- Final measured run, real LCD media and reproducible result ledger must be appended **after** the native job actually passes. GitHub Actions artifacts may expire and should later be permanently archived with the evidence SHA manifest.
+- **Executed exact-source native acceptance: 8/8 passed** after 100.449 seconds, with original 9→16→10→16→9 D-pad sequence, 5 actual 240×160 LCD PNGs, SHA-verified external resources and two simultaneous guest-resident packs in distinct physical slots. See [run #43159185521](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43159185521) and [artifact #13916609021](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43159185521/artifacts/13916609021).
+- **Fixed initial acceptance mismatch:** the original draft accidentally reserved only 12,488 bytes of actual compressed/source payload instead of the promised 16,384-byte physical arena. Commit [`1d67b28`](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/commit/1d67b287450e42392fec9063057fb0655ef92423) creates two fixed 8,192-byte slots, independently bounds each pack and retains R19–R27 layouts when R28 is disabled. The first 7/8 native run was *not* misrepresented as a pass.
+- Strict portable production map-cache lifetime cases **16/16 green**; all **25/25 original-game, regression and privacy workflow suites** succeeded at the final PR head. Genuine LCD artifacts are currently held by GitHub Actions with limited retention and should later be permanently archived with SHA-256 manifests; no commercial ROM or save is published.

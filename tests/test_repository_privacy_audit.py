@@ -63,6 +63,15 @@ class PublicRepositoryPrivacyChecks(unittest.TestCase):
         ))
         self.assertEqual([], audit.check_readme(readme))
         self.assertNotEqual([], audit.check_readme(readme.replace("## Goals", "")))
+        # Newly verified R28+ must not fail a stale audit string.
+        self.assertEqual([], audit.check_readme(readme.replace(
+            "R6–R27 verified", "R6–R28 verified")))
+        self.assertEqual([], audit.check_readme(readme.replace(
+            "R6–R27 verified", "R6–R35 verified")))
+        self.assertNotEqual([], audit.check_readme(readme.replace(
+            "R6–R27 verified", "R6–R26 verified")))
+        self.assertNotEqual([], audit.check_readme(readme.replace(
+            "R6–R27 verified", "Milestones complete")))
 
     def test_retired_copilot_dispatch_sources_cannot_return(self):
         self.assertIn("tools/xgba_autonomous_product.py",
