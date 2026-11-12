@@ -1,0 +1,112 @@
+name: XGBA R36 complete binary-ROM pages and script root provenance
+on:
+  push:
+    branches: [main, 'phase3/r36-complete-binary-rom-pages-20261112']
+    paths:
+      - 'tools/xgba_r36_binary_pages.py'
+      - 'tools/xgba_r36_mixed_world.py'
+      - 'tests/test_xgba_r36_binary_pages.py'
+      - '.github/workflows/xgba-r36-complete-rom-pages.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/xgba_r36_binary_pages.py'
+      - 'tools/xgba_r36_mixed_world.py'
+      - 'tests/test_xgba_r36_binary_pages.py'
+      - '.github/workflows/xgba-r36-complete-rom-pages.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r36-complete-rom-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  synthetic-binary-three-worlds:
+    name: Complete binary and script-root provenance, 15 original-ID safety tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile R36 source and run 15 original three-world safety tests
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r36_binary_pages.py tools/xgba_r36_mixed_world.py tests/test_xgba_r36_binary_pages.py
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r36_binary_pages.BinaryPaging -v 2>&1 | tee /tmp/r36-synthetic.log
+          grep -q 'Ran 15 tests' /tmp/r36-synthetic.log
+          grep -q '^OK$' /tmp/r36-synthetic.log
+          echo PASS_R36_SYNTHETIC_BINARY_PAGING 15/15 no_script_execution=1 original_rom_unchanged=1
+      - name: Retain R34-R35 binary and cross-source regression tests
+        run: |
+          set -euo pipefail
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r34_binary_maps test_xgba_r35_mixed_pool -v 2>&1 | tee /tmp/r36-regressions.log
+          grep -q '^OK$' /tmp/r36-regressions.log
+  full-emerald-plus-complete-binary:
+    name: Genuine pinned Emerald source and complete synthetic ROM bytes in one pool
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch exact original Emerald decomp source
+        run: |
+          set -euo pipefail
+          git clone --quiet --filter=blob:none https://github.com/pret/pokeemerald.git upstream/pokeemerald
+          git -C upstream/pokeemerald checkout --quiet --detach 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          test "$(git -C upstream/pokeemerald rev-parse HEAD)" = 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+      - name: Pack every original Emerald source file and complete synthetic ROM pages
+        env:
+          R36_ROOT: ${{ runner.temp }}/r36
+        run: |
+          set -euo pipefail
+          python3 tools/xgba_whole_corpus.py --source emerald=upstream/pokeemerald --pack --output "$R36_ROOT/emerald"
+          python3 - <<'PY'
+          import json,os,sys
+          from pathlib import Path
+          sys.path.insert(0,'tools')
+          sys.path.insert(0,'tests')
+          from xgba_r34_binary_maps import BinaryMapDiscovery
+          from xgba_r36_binary_pages import export_binary_pages
+          from xgba_r36_mixed_world import R36MixedWorldPool
+          from test_xgba_r34_binary_maps import FakeEmeraldBinary
+          root=Path(os.environ['R36_ROOT'])
+          f=FakeEmeraldBinary()
+          rom=root/'synthetic.gba'
+          rom.write_bytes(f.image())
+          scanner=BinaryMapDiscovery(rom)
+          d=scanner.discover()
+          scanner.export_maps(d,root/'rocket-maps','rocket',max_shard_entries=10,max_shard_bytes=4096)
+          export_binary_pages(scanner,d,root/'rocket-pages','rocket',pages_per_shard=8)
+          world=R36MixedWorldPool(max_staged_bytes=32768)
+          world.mount_corpus(root/'emerald/xgba-whole-corpus-index.json')
+          world.mount_binary(root/'rocket-maps/xgba-binary-maps.json')
+          raw=world.mount_binary_pages(root/'rocket-pages/xgba-binary-rom-pages.json')
+          assert len(world.source_ids)==2
+          assert raw.rom_bytes==len(f.image())
+          assert raw.verify_original_rom(rom)==len(f.image())
+          assert world.find_original_map('emerald',0,9)['name']=='LittlerootTown'
+          assert world.find_original_map('rocket',0,0)['width']==48
+          assert world.read_rom('rocket',16382,16)==f.image()[16382:16398]
+          h=world.find_source('emerald','data/maps/map_groups.json')
+          assert world.read_window(h,0,1)==b'{'
+          assert raw.staged_bytes==0
+          source=json.loads((root/'emerald/xgba-whole-corpus-index.json').read_text())
+          assert source['summary']['catalogued_files']==11557
+          summary={'genuine_original_emerald_source_files':11557,
+                   'binary_source_is_synthetic':True,
+                   'synthetic_complete_binary_pages':raw.resource_count,
+                   'synthetic_complete_binary_bytes':raw.rom_bytes,
+                   'combined_pool_resources':world.resource_count,
+                   'source_worlds':len(world.source_ids),
+                   'script_bytecode_decoded':0,
+                   'native_cross_rom_gameplay_proven':False,
+                   'user_rom_uploaded_to_ci':False}
+          (Path(os.environ['RUNNER_TEMP'])/'r36-aggregate.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          print('PASS_R36_EMERALD_AND_WHOLE_SYNTHETIC_BINARY',json.dumps(summary,sort_keys=True))
+          PY
+      - name: Publish counts only; never upload game assets, user ROM, save files or extracted bytes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r36-source-and-paged-binary-aggregate-only
+          path: ${{ runner.temp }}/r36-aggregate.json
+          retention-days: 90
+          if-no-files-found: warn
