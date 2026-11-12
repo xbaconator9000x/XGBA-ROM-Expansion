@@ -12,8 +12,15 @@ extern const struct MapHeader *const *const gMapGroups[];
 #include "constants/vars.h"
 #include "../common/xgba_ewram_lease.h"
 #ifdef XGBA_R28_THREE_MAPS
-/* R30 adds one original game map under the same two physical slots. */
-#ifdef XGBA_R30_FOUR_MAPS
+/* R31: build-time source-derived lookup; the original game's group/map
+ * numbers remain untouched. Only selected external assets appear here. */
+#ifdef XGBA_R31_AUTO_CATALOG
+#include "../common/xgba_original_map_catalog.h"
+#include XGBA_R31_CATALOG_HEADER
+#define XGBA_MAP_CACHE_KEYS XGBA_R31_CATALOG_COUNT
+#define XGBA_R19_MAP_COUNT XGBA_R31_CATALOG_COUNT
+/* Legacy R30 acceptance remains an independent opt-in mode. */
+#elif defined(XGBA_R30_FOUR_MAPS)
 #define XGBA_MAP_CACHE_KEYS 4u
 #define XGBA_R19_MAP_COUNT 4u
 #define XGBA_R30_ROUTE102 17u
@@ -59,7 +66,7 @@ static EWRAM_DATA bool8 sXgbaR19Ready[XGBA_R19_MAP_COUNT] = {0};
 #ifdef XGBA_R28_THREE_MAPS
 static EWRAM_DATA struct XgbaMapCache sXgbaR28MapCache;
 #endif
-static EWRAM_DATA u8 sXgbaR19LastMap = 0xFF;
+static EWRAM_DATA u32 sXgbaR19LastMap = 0xFFFFFFFFu;
 
 /* R20 tracks the OWNERSHIP of the shared protected 16 KiB region.
  * A valid cache identity is tied to an owning phase, not just a boolean.
@@ -84,13 +91,13 @@ static void XgbaR20ClaimWorldArena(void)
         return;
     /* A previous battle left compressed sprite pointers into the arena.
      * Each sprite accessor must revalidate ownership before trusting them. */
-    sXgbaR19Ready[0] = FALSE;
-    sXgbaR19Ready[1] = FALSE;
+    /* All externally-backed descriptors become stale on arena handoff. */
+    {
+        u32 i;
+        for(i=0;i<XGBA_R19_MAP_COUNT;++i)
+            sXgbaR19Ready[i]=FALSE;
+    }
 #ifdef XGBA_R28_THREE_MAPS
-    sXgbaR19Ready[2] = FALSE;
-#ifdef XGBA_R30_FOUR_MAPS
-    sXgbaR19Ready[3] = FALSE;
-#endif
     if(XgbaCacheInvalidate(&sXgbaR28MapCache)!=XGBA_CACHE_HIT)
         XgbaR19Reject();
 #endif
@@ -107,13 +114,13 @@ static void XgbaR20ClaimBattleArena(void)
     if (sXgbaR20ArenaOwner == XGBA_R20_ARENA_BATTLE)
         return;
     /* Maps must not be considered resident after sprites claim their bytes. */
-    sXgbaR19Ready[0] = FALSE;
-    sXgbaR19Ready[1] = FALSE;
+    /* All externally-backed descriptors become stale on arena handoff. */
+    {
+        u32 i;
+        for(i=0;i<XGBA_R19_MAP_COUNT;++i)
+            sXgbaR19Ready[i]=FALSE;
+    }
 #ifdef XGBA_R28_THREE_MAPS
-    sXgbaR19Ready[2] = FALSE;
-#ifdef XGBA_R30_FOUR_MAPS
-    sXgbaR19Ready[3] = FALSE;
-#endif
     if(XgbaCacheInvalidate(&sXgbaR28MapCache)!=XGBA_CACHE_HIT)
         XgbaR19Reject();
 #endif
@@ -131,6 +138,10 @@ static void XgbaR19Reject(void)
 }
 static s32 XgbaR19Index(u16 group,u16 map)
 {
+#ifdef XGBA_R31_AUTO_CATALOG
+    return XgbaOriginalMapCatalogFind(sXgbaR31Lookup,
+                                     XGBA_R31_CATALOG_COUNT,group,map);
+#else
     if(group!=XGBA_R19_GROUP)return -1;
     if(map==XGBA_R19_LITTLEROOT)return 0;
     if(map==XGBA_R19_ROUTE101)return 1;
@@ -141,6 +152,7 @@ static s32 XgbaR19Index(u16 group,u16 map)
 #endif
 #endif
     return -1;
+#endif
 }
 static void XgbaR19Load(unsigned idx)
 {
@@ -179,9 +191,13 @@ static void XgbaR19Load(unsigned idx)
         sXgbaR19Layouts[evicted].map=0;
         sXgbaR19Layouts[evicted].border=0;
     }
+#ifdef XGBA_R31_AUTO_CATALOG
+    name=sXgbaR31Catalog[idx].resource_id;
+#else
     if(idx==2)name="emerald.oldale";
 #ifdef XGBA_R30_FOUR_MAPS
     if(idx==3)name="emerald.route102";
+#endif
 #endif
 #else
     if(sXgbaR19Ready[idx])return;
@@ -196,11 +212,15 @@ static void XgbaR19Load(unsigned idx)
     ++gXgbaR19MapProof.r26_busy_refusals;
 #endif
     arena=slot?XGBA_R19_ARENA1:XGBA_R19_ARENA0;
+#ifdef XGBA_R31_AUTO_CATALOG
+    length=sXgbaR31Catalog[idx].packed_bytes;
+#else
     length=idx?XGBA_R19_ROUTE_BYTES:XGBA_R19_LITTLEROOT_BYTES;
 #ifdef XGBA_R28_THREE_MAPS
     if(idx==2)length=XGBA_R28_OLDALE_BYTES;
 #ifdef XGBA_R30_FOUR_MAPS
     if(idx==3)length=XGBA_R30_ROUTE102_BYTES;
+#endif
 #endif
     if(length>(slot?XGBA_R19_RESERVE-XGBA_R19_ROUTE_OFFSET:
                          XGBA_R19_ROUTE_OFFSET))XgbaR19Reject();
@@ -217,14 +237,22 @@ static void XgbaR19Load(unsigned idx)
         if(off[i]<32 || off[i]>=length || (off[i]&3u))
             XgbaR19Reject();
     if(off[2]+(
+#ifdef XGBA_R31_AUTO_CATALOG
+        2u*(u32)sXgbaR31Catalog[idx].width*
+           (u32)sXgbaR31Catalog[idx].height
+#else
 #ifdef XGBA_R30_FOUR_MAPS
         idx==3?2000u:
 #endif
-        800u)>off[3] || off[3]+8u>off[4] ||
+        800u
+#endif
+        )>off[3] || off[3]+8u>off[4] ||
        off[4]>=off[5] || off[5]+512u>off[6] ||
        off[6]>=off[7] || off[7]>=length)
         XgbaR19Reject();
-#ifdef XGBA_R28_THREE_MAPS
+#ifdef XGBA_R31_AUTO_CATALOG
+    source=gMapGroups[sXgbaR31Catalog[idx].group][sXgbaR31Catalog[idx].map];
+#elif defined(XGBA_R28_THREE_MAPS)
     source=gMapGroups[XGBA_R19_GROUP][
 #ifdef XGBA_R30_FOUR_MAPS
         idx==3?XGBA_R30_ROUTE102:
@@ -236,6 +264,11 @@ static void XgbaR19Load(unsigned idx)
 #endif
     sXgbaR19Headers[idx]=*source;
     sXgbaR19Layouts[idx]=*gMapLayouts[source->mapLayoutId-1];
+#ifdef XGBA_R31_AUTO_CATALOG
+    if(sXgbaR19Layouts[idx].width!=sXgbaR31Catalog[idx].width ||
+       sXgbaR19Layouts[idx].height!=sXgbaR31Catalog[idx].height)
+        XgbaR19Reject();
+#endif
     sXgbaR19Tilesets[idx]=*sXgbaR19Layouts[idx].secondaryTileset;
     sXgbaR19Layouts[idx].map=(const u16 *)(arena+off[2]);
     sXgbaR19Layouts[idx].border=(const u16 *)(arena+off[3]);
@@ -260,6 +293,17 @@ static void XgbaR19Load(unsigned idx)
     sXgbaR19Ready[idx]=TRUE;
     ++gXgbaR19MapProof.loads;
 }
+#ifdef XGBA_R31_AUTO_CATALOG
+/* The preferred connected neighbour is derived from the ORIGINAL game's
+ * map.json connections at build time, never from rewritten map numbers. */
+static void XgbaR31LoadCurrentPair(unsigned idx)
+{
+    const u32 other=sXgbaR31Catalog[idx].prefetch_index;
+    XgbaR19Load(idx);
+    if(other!=XGBA_CATALOG_NO_NEIGHBOR)
+        XgbaR19Load(other);
+}
+#endif
 /* Returning from battle bypasses a full map warp: the old map descriptors
  * can still point into an arena overwritten by compressed battle sprites.
  * Reacquire BOTH connected packs BEFORE Emerald's ReturnToFieldLocal calls
@@ -276,12 +320,16 @@ static void XgbaR20PrepareReturnToField(void)
     {
         s32 index=XgbaR19Index(gSaveBlock1Ptr->location.mapGroup,
                                gSaveBlock1Ptr->location.mapNum);
+#ifdef XGBA_R31_AUTO_CATALOG
+        XgbaR31LoadCurrentPair((unsigned)index);
+#else
 #ifdef XGBA_R30_FOUR_MAPS
         if(index==3) { XgbaR19Load(2); XgbaR19Load(3); }
         else
 #endif
         if(index==2) { XgbaR19Load(1); XgbaR19Load(2); }
         else { XgbaR19Load(0); XgbaR19Load(1); }
+#endif
     }
 #else
     XgbaR19Load(0);
@@ -297,12 +345,22 @@ static const struct MapHeader *XgbaR19HeaderFor(u16 group,u16 map)
 #ifdef XGBA_R28_THREE_MAPS
     /* Original connected-map camera owns and copies neighbour data. Keep
      * the current source protected, while fetching the requested neighbour. */
+#ifdef XGBA_R31_AUTO_CATALOG
+    {
+        s32 current=gSaveBlock1Ptr?
+            XgbaR19Index(gSaveBlock1Ptr->location.mapGroup,
+                         gSaveBlock1Ptr->location.mapNum):-1;
+        if(current==idx)XgbaR31LoadCurrentPair((unsigned)idx);
+        else XgbaR19Load((unsigned)idx);
+    }
+#else
     if(idx==0) { XgbaR19Load(0); XgbaR19Load(1); }
 #ifdef XGBA_R30_FOUR_MAPS
     else if(idx==3) { XgbaR19Load(2); XgbaR19Load(3); }
 #endif
     else if(idx==2) { XgbaR19Load(1); XgbaR19Load(2); }
     else XgbaR19Load(1);
+#endif
 #else
     XgbaR19Load(0);
     XgbaR19Load(1);
@@ -330,9 +388,9 @@ static void XgbaR19MapTick(void)
     idx=XgbaR19Index(gSaveBlock1Ptr->location.mapGroup,
                      gSaveBlock1Ptr->location.mapNum);
     if(idx<0)return;
-    if(sXgbaR19LastMap!=(u8)idx){
-        if(sXgbaR19LastMap!=0xFF)++gXgbaR19MapProof.transitions;
-        sXgbaR19LastMap=(u8)idx;
+    if(sXgbaR19LastMap!=(u32)idx){
+        if(sXgbaR19LastMap!=0xFFFFFFFFu)++gXgbaR19MapProof.transitions;
+        sXgbaR19LastMap=(u32)idx;
     }
 #ifdef XGBA_R19_NATIVE_TEST_OPEN_ROUTE
     /* The vanilla new-game story triggers Professor Birch's rescue when
@@ -344,7 +402,9 @@ static void XgbaR19MapTick(void)
 #endif
 #ifdef XGBA_R30_FOUR_MAPS
     /* Original Oldale west gate only unlocked for native source test. */
-    if(idx==2)VarSet(VAR_OLDALE_TOWN_STATE,1);
+    if(gSaveBlock1Ptr->location.mapGroup==XGBA_R19_GROUP &&
+       gSaveBlock1Ptr->location.mapNum==XGBA_R28_OLDALE)
+        VarSet(VAR_OLDALE_TOWN_STATE,1);
 #endif
     if(idx==1)gXgbaR19MapProof.route_visited=1;
     if(!idx && gXgbaR19MapProof.route_visited)
