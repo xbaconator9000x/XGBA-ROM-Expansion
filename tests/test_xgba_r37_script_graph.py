@@ -161,9 +161,8 @@ class ScriptGraphTests(unittest.TestCase):
         event=fake.first_event
         obj=struct.unpack_from('<I',image,event+4)[0]-r34.GBA_BASE
         struct.pack_into('<I',image,obj+16,0x08000000+script)
-        from xgba_r36_binary_pages import _root_census
         scanner=r34.BinaryMapDiscovery(image)
-        census=_root_census(scanner,scanner.discover())
+        census=r36.script_roots(scanner,scanner.discover())
         roots=[x for x in census['original_script_entrypoints']
                if x['source_rom_offset']==script]
         self.assertGreater(len(roots),0)
