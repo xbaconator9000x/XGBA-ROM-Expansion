@@ -1,0 +1,43 @@
+name: XGBA public repository privacy and README audit
+on:
+  push:
+    branches:
+      - main
+      - 'docs/readme-project-intro-public-privacy-audit-20261112'
+    paths:
+      - README.md
+      - 'docs/**'
+      - 'tools/**'
+      - 'tests/**'
+      - 'integration/**'
+      - 'evidence/**'
+      - 'semantic-snapshots/**'
+      - '.github/workflows/**'
+      - '.gitignore'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-public-privacy-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  privacy-and-readme:
+    name: Scan all tracked files for accidental secrets, PII and transcript artifacts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate scanner source, exercise synthetic bad-input fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/repository_privacy_audit.py tests/test_repository_privacy_audit.py
+          python3 -m unittest discover -s tests -p 'test_repository_privacy_audit.py' -v
+      - name: Scan all tracked working-tree content without printing confidential snippets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/repository_privacy_audit.py
+          echo 'Review scope: tracked checkout, not prior commits, PR bodies, issue comments or Actions logs'
