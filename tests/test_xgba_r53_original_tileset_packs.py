@@ -79,6 +79,23 @@ class OriginalSourceTilesetTests(unittest.TestCase):
         with self.assertRaisesRegex(r53.TilesetFormatError,"Truncated"):
             r53.gba_lz77(bytes([0x10,0x08,0,0,0x00,0x33]),0)
 
+    def test_original_emerald_short_lz77_secondary_preserves_real_length(self):
+        rom,desc,tile_at=synthetic_rom(compressed=True)
+        rom[desc+1]=1
+        # A real Emerald secondary sometimes decompresses only a few
+        # 4bpp tiles, although the BG tile reservation holds 512 slots.
+        compressed=(bytes([0x10,32,0,0])+
+                    b"".join(bytes([0])+bytes(range(i,i+8))
+                             for i in (0,8,16,24)))
+        rom[tile_at:tile_at+len(compressed)]=compressed
+        ident,header,parts=r53.descriptor_asset(rom,0,0,desc,True)
+        self.assertEqual(ident,"r53.w0.v0.t00000040")
+        self.assertEqual(len(parts[0]),32)
+        self.assertEqual(parts[0],bytes(range(32)))
+        self.assertEqual(struct.unpack_from("<H",header,28)[0],512)
+        self.assertEqual(struct.unpack_from("<I",header,12)[0],32)
+        self.assertEqual(header[34],1)
+
     def test_layouts_not_interchanged(self):
         rom,desc,_=synthetic_rom()
         _,old,parts=r53.descriptor_asset(rom,0,0,desc,False)
