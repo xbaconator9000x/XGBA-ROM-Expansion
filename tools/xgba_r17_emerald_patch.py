@@ -321,6 +321,31 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                 "    if (tileset)",
                 "R53 real original Emerald BG decompress-heap source tile copy")
             fm.write_text(code)
+        if "#define XGBA_R54_REAL_WARP_ADMISSION" in Path(config).read_text():
+            # Original Emerald's GetObjectEventGraphicsInfo is the ACTUAL
+            # object/NPC sprite frame/OAM/animation/palette dispatch used
+            # during InitObjectEventsLocal. Only override source-qualified
+            # per-map private graphics registered and verified by R55.
+            objects=e/"src/event_object_movement.c"
+            original_objects=objects.read_text()
+            originals[objects]=original_objects
+            sprite_src=r16.one(original_objects,
+                "const struct ObjectEventGraphicsInfo *GetObjectEventGraphicsInfo(u8 graphicsId)\n{",
+                "extern const struct ObjectEventGraphicsInfo *"
+                "XgbaR55GetVerifiedNativeOriginalObjectGraphics(u8 installed_slot);\n"
+                "const struct ObjectEventGraphicsInfo *GetObjectEventGraphicsInfo(u8 graphicsId)\n{",
+                "R55 real original Emerald OBJ graphics info resolver declaration")
+            sprite_src=r16.one(sprite_src,
+                "    if (graphicsId == OBJ_EVENT_GFX_BARD)\n    {",
+                "    {\n"
+                "        const struct ObjectEventGraphicsInfo *verifiedOriginal =\n"
+                "            XgbaR55GetVerifiedNativeOriginalObjectGraphics(graphicsId);\n"
+                "        if (verifiedOriginal != NULL)\n"
+                "            return verifiedOriginal;\n"
+                "    }\n"
+                "    if (graphicsId == OBJ_EVENT_GFX_BARD)\n    {",
+                "R55 native source-authenticated original NPC sprite image/palette dispatch")
+            objects.write_text(sprite_src)
         world.write_text(s)
         if r19_battle:
             # Instrument original Emerald battle sprite decompression, NOT a
