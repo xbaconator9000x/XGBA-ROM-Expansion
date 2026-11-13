@@ -22,6 +22,8 @@ on:
       - 'tests/xgba_r54_original_map_metatile_native.c'
       - 'integration/common/xgba_r55_source_qualified_sprite_slots.h'
       - 'tests/xgba_r55_source_sprite_slots_native.c'
+      - 'integration/common/xgba_r66_original_obj_animation.h'
+      - 'tests/xgba_r66_original_obj_animation_native.c'
       - 'integration/emerald/xgba_r17_external_littleroot.inc'
       - 'tools/xgba_r17_emerald_patch.py'
       - 'tests/test_xgba_r17_emerald_external_map.py'
@@ -65,6 +67,11 @@ jobs:
             tests/xgba_r55_source_sprite_slots_native.c -o build/r53/source-sprites
           ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
             UBSAN_OPTIONS=halt_on_error=1 build/r53/source-sprites
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r66_original_obj_animation_native.c -o build/r53/source-animation
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r53/source-animation
   native-original-emerald-graphics:
     name: Actual Emerald ARM BG tile loader, hardware arena, mGBA and Flash
     runs-on: ubuntu-24.04
