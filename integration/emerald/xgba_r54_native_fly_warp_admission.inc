@@ -210,6 +210,24 @@ static bool8 XgbaR54HasSourceMapWarpPending(void)
         return FALSE;
     return TRUE;
 }
+/* Caller is the ORIGINAL fade/load state machine, at case 0 BEFORE
+ * native heap reset. The original BG DMA must be retired. Release old
+ * source layout, event pointers and original per-map sprite mapping. */
+static bool8 XgbaR54ReleaseOldSourceBeforeNativeHeapReset(void)
+{
+    if(IsDma3ManagerBusyWithBgCopy() &&
+       (sXgbaR53SourceActive || sXgbaR51NativeTerrain.valid))
+        return FALSE;
+    if(sXgbaR53SourceActive || sXgbaR51NativeTerrain.valid ||
+       sXgbaR50Ready){
+        XgbaR51ReleaseOriginalGeometryAfterFade(TRUE);
+        if(sXgbaR53SourceActive || sXgbaR51NativeTerrain.valid ||
+           sXgbaR50Ready)
+            return FALSE;
+    }
+    XgbaR55ForgetSourceSpriteRegistrations();
+    return TRUE;
+}
 static bool8 XgbaR54PendingWarpMatchesCurrentLocation(void)
 {
     return XgbaR54HasSourceMapWarpPending() &&
@@ -251,16 +269,14 @@ static bool8 XgbaR54InstallPendingOriginalSourceAtNativeWarp(void)
         return FALSE;
     }
     ++gXgbaR54NativeWarpProof.source_prepare_attempts;
-    /* Before replacing source0 event bytes, release all source map
-     * pointers after genuine fade and completed original DMA3. */
+    /* Previous source-owned graphics MUST have been released while its
+     * heap was intact by the case-0 faded-source cleanup, *before* the
+     * original ResetMirageTowerAndSaveBlockPtrs heap reset. Freeing stale
+     * pointers here would corrupt the freshly reset Emerald allocator. */
     if(sXgbaR51NativeTerrain.valid || sXgbaR50Ready ||
        sXgbaR53SourceActive){
-        XgbaR51ReleaseOriginalGeometryAfterFade(TRUE);
-        if(sXgbaR51NativeTerrain.valid || sXgbaR50Ready ||
-           sXgbaR53SourceActive){
-            ++gXgbaR54NativeWarpProof.rejected_dma_release;
-            return FALSE;
-        }
+        ++gXgbaR54NativeWarpProof.rejected_dma_release;
+        return FALSE;
     }
     if(!XgbaR51PrepareOriginalSourceGeometry(world,group,map,
           XgbaR54ResolveOriginalSpriteSlot,NULL,TRUE) ||
