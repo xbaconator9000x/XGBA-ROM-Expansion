@@ -85,7 +85,9 @@ static inline int XgbaR53MetaLoad(struct XgbaR53Reader *r,
     counts[3]=secondary?13u-(version?7u:6u):(version?7u:6u);
     if(next.tiles!=counts[0] || next.metatiles!=counts[1] ||
        next.attribute_bytes!=counts[2] || next.palettes!=counts[3] ||
-       next.sizes[0]!=next.tiles*32u ||
+       next.sizes[0]<32u || next.sizes[0]>next.tiles*32u ||
+       (next.sizes[0]&31u) ||
+       (!next.original_compression && next.sizes[0]!=next.tiles*32u) ||
        next.sizes[1]!=next.metatiles*16u ||
        next.sizes[2]!=next.metatiles*next.attribute_bytes ||
        next.sizes[3]!=next.palettes*32u){
