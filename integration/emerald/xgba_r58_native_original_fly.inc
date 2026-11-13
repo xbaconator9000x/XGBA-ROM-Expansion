@@ -99,7 +99,13 @@ static bool8 XgbaR58PreflightOriginalDestination(u8 world,u8 group,u8 map,
        original.object_count>XGBA_R50_MAX_OBJECTS)
         goto refuse;
     for(i=0u;i<original.object_count;i++){
-        u16 source_id=XgbaR49Le16(original.objects+i*24u+1u);
+        const u8 *npc=original.objects+i*24u;
+        u16 source_id=XgbaR49Le16(npc+1u);
+        s16 nx=(s16)XgbaR49Le16(npc+4u);
+        s16 ny=(s16)XgbaR49Le16(npc+6u);
+        if(world!=0u && !XgbaR60OriginalNpcIsInLandingView(
+            world,group,map,location.width,location.height,nx,ny))
+            continue;
         for(j=0u;j<count;j++)if(ids[j]==source_id)break;
         if(j==count){
             if(count>=XGBA_R55_SPRITE_SLOTS)goto refuse;
