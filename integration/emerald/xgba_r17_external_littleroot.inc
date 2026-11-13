@@ -94,6 +94,9 @@ static const struct MapLayout *XgbaR17Resolve(const struct MapLayout *base)
 #ifdef XGBA_R50_ENGINE_EVENTS
 #include "__XGBA_R50_ENGINE_BRIDGE__"
 #endif
+#ifdef XGBA_R52_SOURCE_LAYOUT
+#include "__XGBA_R52_LAYOUT_BRIDGE__"
+#endif
 #ifdef XGBA_R51_ORIGINAL_TERRAIN
 #include "__XGBA_R51_TERRAIN_BRIDGE__"
 #endif
@@ -134,6 +137,9 @@ static void XgbaR17Tick(void)
 #endif
 #ifdef XGBA_R51_ORIGINAL_TERRAIN
     XgbaR51ObserveOriginalFieldFrame();
+#endif
+#ifdef XGBA_R52_SOURCE_LAYOUT
+    XgbaR52OriginalFrameProof();
 #endif
 #ifdef XGBA_R40_SCRIPT_TEST
     XgbaR40Tick();
