@@ -6,6 +6,14 @@ XGBA is my experimental project to expand what Game Boy Advance games can access
 
 Instead of requiring every map, sprite, tileset, animation or other asset to fit inside one conventional GBA ROM, an XGBA-enabled game would load identified resources on demand into its existing, finite working memory. The approach is **opt-in**: an unmodified game and stock emulator do not automatically gain these abilities.
 
+## Authoritative full three-ROM integration acceptance
+
+**XGBA's integration target is the COMPLETE relevant contents of the user's original Emerald, Team Rocket Edition 3.06 and Heart & Soul 2.0.6 ROMs—not three sample maps.** The private original-ROM inventory includes **2,856 maps, 17,089 NPC/object placements, 7,146 warps, 2,340 coordinate events and 4,697 background interactions**. These are the starting map-linked resource inventory, not an excuse to omit trainer/battle data, scripts, dialogue, items, audio, custom forms or progression.
+
+The next meaningful playable milestone is an actual **original Emerald game-engine** player approaching a **real imported foreign-ROM NPC**, seeing the **NPC's original dialogue**, executing their **original script** with original guest-state effects, then **Flash-saving and verifying the result after a cold restart**. Representative test NPCs validate the architecture; they do not narrow the eventual full-content objective. Do not advertise a successful merged three-game test for an offline map reconstruction, a homebrew source viewer, source-labelled test scripts or map-only interaction.
+
+[**R47: complete three-game content preservation, source coverage and real original NPC acceptance contract**](docs/R47_COMPLETE_THREE_GAME_CONTENT_ACCEPTANCE.md) is authoritative for future development, tests, watchdog reports and release claims.
+
 ## Goals
 
 - **Substantially expand usable game content:** support multi-region worlds, more maps, graphics, music, dialogue and gameplay assets without fitting every asset simultaneously into the conventional ROM window. A Pokémon project spanning all nine regions is an aspirational example, **not** an implemented capability.
