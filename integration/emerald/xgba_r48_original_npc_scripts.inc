@@ -49,11 +49,41 @@ static EWRAM_DATA bool8 sXgbaR48SourceMapLoaded=FALSE;
 /* Only the eventual real original-engine foreign map loader may declare
  * the imported map active. A source-labelled Fly menu selection alone
  * must NEVER set this flag or enable NPC script substitution. */
-void XgbaR48SetSourceMapLoaded(u8 source,u8 group,u8 number,bool8 loaded)
+void XgbaR48SetSourceMapLoaded(u8 source,u8 group,u8 number,
+                                  bool8 decoded_original_graphics_verified)
 {
+    /* A UI button or source ID alone is NOT proof of having flown into
+     * another original map. The genuine overworld must already expose
+     * the correct map dimensions and ACTUAL object-event placement. */
+    static const u8 map_groups[3]={0u,0u,0u};
+    static const u8 map_numbers[3]={9u,9u,4u};
+    static const s16 widths[3]={20,24,58};
+    static const s16 heights[3]={20,25,46};
+    static const u8 local_ids[3]={2u,2u,7u};
+    static const s16 npc_x[3]={12,14,39};
+    static const s16 npc_y[3]={13,13,22};
+    const struct MapEvents *events=gMapHeader.events;
+    unsigned i;
+    bool8 original_object_present=FALSE;
     sXgbaR48SourceMapLoaded=FALSE;
     gXgbaR48OriginalNpcProof.source_map_loaded=0u;
-    if(source>=XGBA_R48_WORLD_COUNT||!loaded)
+    if(source>=XGBA_R48_WORLD_COUNT ||
+       !decoded_original_graphics_verified ||
+       group!=map_groups[source] || number!=map_numbers[source] ||
+       !gMapHeader.mapLayout || !events || !events->objectEvents ||
+       gMapHeader.mapLayout->width!=widths[source] ||
+       gMapHeader.mapLayout->height!=heights[source] ||
+       !events->objectEventCount)
+        return;
+    for(i=0u;i<events->objectEventCount;i++){
+        const struct ObjectEventTemplate *obj=&events->objectEvents[i];
+        if(obj->localId==local_ids[source] &&
+           obj->x==npc_x[source] && obj->y==npc_y[source]){
+            original_object_present=TRUE;
+            break;
+        }
+    }
+    if(!original_object_present)
         return;
     sXgbaR48ImportedWorld=source;
     sXgbaR48ImportedGroup=group;
