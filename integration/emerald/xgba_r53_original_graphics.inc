@@ -157,11 +157,11 @@ bool8 XgbaR53InstallOriginalSourceGraphics(void)
         ++gXgbaR53GraphicsProof.rejected;return FALSE;
     }
     if(p[0].tiles!=sXgbaR52Profile.tiles_in_primary ||
-       p[0].metatiles!=sXgbaR52Profile.metatiles_in_primary ||
+       p[0].metatiles>sXgbaR52Profile.metatiles_in_primary ||
        p[0].palettes!=sXgbaR52Profile.palettes_in_primary ||
        p[0].attribute_bytes!=sXgbaR52Profile.attribute_bytes ||
        p[1].tiles+p[0].tiles!=1024u ||
-       p[1].metatiles+p[0].metatiles!=1024u ||
+       p[1].metatiles>1024u-sXgbaR52Profile.metatiles_in_primary ||
        p[1].palettes+p[0].palettes!=13u){
         ++gXgbaR53GraphicsProof.rejected;return FALSE;
     }
@@ -176,7 +176,8 @@ bool8 XgbaR53InstallOriginalSourceGraphics(void)
     }
     for(side=0;side<2u;side++){
         writers[side]=wr;
-        writers[side].start_metatile=side?p[0].metatiles:0u;
+        writers[side].start_metatile=side?
+            sXgbaR52Profile.metatiles_in_primary:0u;
         writers[side].start_palette=side?p[0].palettes:0u;
         writers[side].tile_start=side?p[0].tiles:0u;
         writers[side].original_attribute_bytes=p[side].attribute_bytes;
@@ -206,9 +207,11 @@ bool8 XgbaR53InstallOriginalSourceGraphics(void)
     sXgbaR53Primary.palettes=(const u16 (*)[16])sXgbaR53Resident->palettes;
     sXgbaR53Secondary.palettes=(const u16 (*)[16])sXgbaR53Resident->palettes;
     sXgbaR53Primary.metatiles=sXgbaR53Resident->metatiles;
-    sXgbaR53Secondary.metatiles=sXgbaR53Resident->metatiles+p[0].metatiles*8u;
+    sXgbaR53Secondary.metatiles=sXgbaR53Resident->metatiles+
+         sXgbaR52Profile.metatiles_in_primary*8u;
     sXgbaR53Primary.metatileAttributes=sXgbaR53Resident->attributes;
-    sXgbaR53Secondary.metatileAttributes=sXgbaR53Resident->attributes+p[0].metatiles;
+    sXgbaR53Secondary.metatileAttributes=sXgbaR53Resident->attributes+
+        sXgbaR52Profile.metatiles_in_primary;
     sXgbaR53Primary.callback=NULL;
     sXgbaR53Secondary.callback=NULL;
     layout.width=sXgbaR51NativeTerrain.width;
