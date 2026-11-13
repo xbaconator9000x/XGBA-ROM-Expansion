@@ -1,0 +1,58 @@
+name: XGBA R60 authentic Rocket first viewport and private sprite compiler
+on:
+  push:
+    branches: ['integration/r51-original-three-world-grid-native-20261113']
+    paths:
+      - 'integration/common/xgba_r50_engine_event_adapter.h'
+      - 'integration/common/xgba_r60_original_npc_viewport.h'
+      - 'integration/emerald/xgba_r57_native_source_sprite_installer.inc'
+      - 'integration/emerald/xgba_r58_native_original_fly.inc'
+      - 'tools/xgba_r60_original_rocket_sprites.py'
+      - 'tests/xgba_r60_original_npc_viewport_native.c'
+      - '.github/workflows/xgba-r60-original-rocket-first-viewport.yml'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-npc-viewport:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile native C11 original 9-NPC Rocket viewport under sanitizers
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/r60
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r60_original_npc_viewport_native.c \
+            -o build/r60/native-first-viewport
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 \
+            build/r60/native-first-viewport | tee build/r60/viewport.log
+          grep -q PASS_R60_ROCKET_REAL_LANDING_COORDINATES build/r60/viewport.log
+      - name: Private original ROM tool requires exact source SHA and refuses invented art
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r60_original_rocket_sprites.py
+          PYTHONPATH=tools python3 - <<'PY'
+          import hashlib
+          from xgba_r60_original_rocket_sprites import OriginalSpriteError, original_object
+          try:
+              original_object(bytes(32768),17)
+          except OriginalSpriteError as exc:
+              assert "SHA" in str(exc)
+          else:
+              raise AssertionError("R60 accepted a fake ROM or fabricated NPC art")
+          print("PASS_R60_NO_INVENTED_ORIGINAL_SOURCE_ART")
+          PY
+      - name: Enforce no copyrighted full ROM or sprite byte packs committed
+        run: |
+          set -euo pipefail
+          ! git ls-files | grep -Eiq '\.(gba|nds|sav|ips|bps)$'
+          test ! -e r60-private-original-rocket-sprites.bin
+          echo PASS_R60_PRIVATE_SOURCE_ONLY
