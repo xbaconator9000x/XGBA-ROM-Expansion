@@ -5,7 +5,7 @@
  * calling Stage. The source private R53 manifest holds SHA-verified 16 KiB
  * pages; the guest checks 64-byte metadata and original content CRC.
  *
- * BG graphics stream directly into genuine GBA tile VRAM via LoadBgTiles(2).
+ * BG graphics are resident in map-owned original Emerald heap until the\n * original queued DMA3 tile-copy is finished. Never DMA from reused XGBA scratch.
  * 1024 source metatiles + their collision/behavior attributes and all 13 BG
  * palettes remain in stable EWRAM, not in the leased 16 KiB resource scratch.
  * No fake/backup Emerald art, foreign script bytecode, or invented Fly.
@@ -30,7 +30,7 @@ EWRAM_DATA volatile struct XgbaR53OriginalGraphicsProof gXgbaR53GraphicsProof={0
  * A fixed EWRAM_DATA array previously overflowed the 256KiB hardware
  * linker region by 18,208 bytes. No emulated RAM expansion is assumed. */
 struct XgbaR53ResidentSourceGraphics {
-    u16 metatiles[1024u*8u];
+    u8 graphics[1024u*32u];\n    u16 metatiles[1024u*8u];
     u16 attributes[1024u];
     u16 palettes[13u*16u];
 };
@@ -106,12 +106,15 @@ static int XgbaR53NativeWriteSection(void *ctx,u8 kind,
         return 1;
     }
     if(kind==0u){
-        /* Native Emerald's BG tile number is not a byte offset. Every page
-         * begins on tile boundary because source graphics are 4bpp 32B. */
-        if((offset&31u)||(size&31u) ||
-           (offset/32u+w->tile_start+size/32u)>1024u)return 0;
-        LoadBgTiles(2,data,(u16)size,(u16)(w->tile_start+offset/32u));
-        ++gXgbaR53GraphicsProof.native_bg_tile_loads;
+        /* Original LoadBgTiles enqueues DMA3 transfers, not an immediate
+         * CPU copy. The single XGBA scratch page is overwritten on the
+         * next fetch. Keep all 1024 original source tiles alive until the
+         * field has retired the DMA queue. */
+        base=(u32)w->tile_start*32u;
+        maxsize=sizeof(sXgbaR53Resident->graphics);
+        if((offset&31u)||(size&31u)||base>maxsize ||
+           offset>maxsize-base || size>maxsize-base-offset)return 0;
+        memcpy(sXgbaR53Resident->graphics+base+offset,data,size);
         return 1;
     }
     return 0;
@@ -177,9 +180,10 @@ bool8 XgbaR53InstallOriginalSourceGraphics(void)
         writers[side].tile_start=side?p[0].tiles:0u;
         writers[side].original_attribute_bytes=p[side].attribute_bytes;
         writers[side].source_version=p[side].version;
-        /* Graphics are SHA/CRC verified now, then streamed into original
-         * VRAM by CopyTilesetToVram/UsingHeap during the real native warp. */
-        if(!XgbaR53VisitSection(&r,&p[side],0u,0,0)){
+        /* Original decompressed graphics go into stable native heap RAM;
+         * DMA3 can then safely run asynchronously from this pinned source. */
+        if(!XgbaR53VisitSection(&r,&p[side],0u,
+                    XgbaR53NativeWriteSection,&writers[side])){
             ++gXgbaR53GraphicsProof.rejected;
             Free(sXgbaR53Resident);sXgbaR53Resident=NULL;return FALSE;
         }
@@ -248,10 +252,14 @@ s16 XgbaR53TryLoadOriginalTileset(const struct Tileset *tileset)
        0u:sXgbaR53PrimaryMeta.tiles;
     wr.original_attribute_bytes=m->attribute_bytes;
     wr.source_version=m->version;
-    r.fetch=XgbaR53FetchNativePage;
-    r.scratch=(u8 *)gXgbaR17Arena;
-    if(!XgbaR53VisitSection(&r,m,0u,XgbaR53NativeWriteSection,&wr))
+    /* Original Emerald BG renderer queues its DMA3 copy. Source backing
+     * MUST remain stable after this call and until actual faded-field
+     * release completes. No asynchronous DMA references to XGBA scratch. */
+    if(LoadBgTiles(2,sXgbaR53Resident->graphics+
+                   (u32)wr.tile_start*32u,(u16)m->sizes[0],
+                   wr.tile_start)==0xffffu)
         return -1;
+    ++gXgbaR53GraphicsProof.native_bg_tile_loads;
     return 1;
 }
 void XgbaR53RefuseCorruptedSourceGraphics(void)
@@ -259,11 +267,16 @@ void XgbaR53RefuseCorruptedSourceGraphics(void)
     ++gXgbaR53GraphicsProof.rejected;
     for(;;){}
 }
-void XgbaR53ReleaseSourceGraphicsAfterFade(bool8 previous_renderer_released)
+bool8 XgbaR53ReleaseSourceGraphicsAfterFade(bool8 previous_renderer_released)
 {
-    if(!previous_renderer_released)return;
+    if(!previous_renderer_released)return FALSE;
+    /* Old native BG DMA must finish before original source graphic backing
+     * may be freed or handed to another map. The previous renderer being
+     * faded does not prove its queued DMA has retired. */
+    if(IsDma3ManagerBusyWithBgCopy())return FALSE;
     sXgbaR53SourceActive=FALSE;
     if(sXgbaR53Resident){
         Free(sXgbaR53Resident);sXgbaR53Resident=NULL;
     }
+    return TRUE;
 }
