@@ -16,7 +16,6 @@ from pathlib import Path
 import struct
 import zlib
 
-import xgba_r34_binary_maps as r34
 import xgba_resource_sidecar as sidecar
 
 PAGE=16384
@@ -27,6 +26,15 @@ SOURCES={
  "emerald": ("a9dec84dfe7f62ab2220bafaef7479da0929d066ece16a6885f6226db19085af",518,0),
  "rocket": ("5a02069e9e1166290eb84ea98835158c54a91987ff81d26c210832b238a077ca",1778,0),
  "heart_soul": ("cdfb9e1f83f72c05cb47af40fdf5635567b1973bcb759e070ad0971f67a49191",560,935),
+}
+# Byte-exact map-group pointer roots verified against the THREE SHA-pinned
+# original user-owned images. Group arrays are packed contiguously, and the
+# final group's pointer table ends immediately before its root pointer table.
+# This avoids false positive layout candidates from unrelated ROM code/data.
+ORIGINAL_GROUP_ROOTS={
+ "emerald":(0x00486578,34,0x00485d60),
+ "rocket":(0x013f1a44,75,0x013efe7c),
+ "heart_soul":(0x012df5a4,106,0x012dde48),
 }
 EXPECTED_MAPS=2856
 EXPECTED_NULL_SLOTS=935
@@ -101,15 +109,82 @@ def pack_original_grids(sources,*,require_complete=True):
            "actual_three_world_fly_completed":False}
     return index_pages,terrain_pages,stats
 
+def _original_rom_ptr(blob, value, needed=1):
+    """Original physical cart pointer: handle 16 and 32 MiB ROMs equally."""
+    at=value-0x08000000
+    if value<0x08000000 or not 0<=at<=len(blob)-needed:
+        raise OriginalGridError("Original ROM map pointer is out of range")
+    return at
+
+
+def discover_original_geometries(blob, root_offset, group_count,
+                                  expected_map_count, expected_null_count,
+                                  expected_first_group):
+    """Deterministically scan the authenticated *original* packed map tables.
+
+    Source-specific game events/scripts are NOT parsed or translated here;
+    only the raw original 24-byte MapLayout prefix and eight-byte border
+    are read. Source engine variant bytes are separately retained in R52.
+    """
+    if not isinstance(blob,(bytes,bytearray)) or root_offset%4 or \\
+       not 1<=group_count<=255 or root_offset+4*group_count>len(blob):
+        raise OriginalGridError("Original map-group table bounds invalid")
+    group_starts=[]
+    for group in range(group_count):
+        pointer=struct.unpack_from("<I",blob,root_offset+group*4)[0]
+        offset=_original_rom_ptr(blob,pointer,4)
+        if offset>=root_offset or offset%4 or \\
+           (group_starts and offset<=group_starts[-1]):
+            raise OriginalGridError("Source map pointer-group array not packed/ordered")
+        group_starts.append(offset)
+    if group_starts[0]!=expected_first_group:
+        raise OriginalGridError("Authenticated source first map-group root drift")
+    roster=[]
+    holes=0
+    total=0
+    for group,start in enumerate(group_starts):
+        end=group_starts[group+1] if group+1<group_count else root_offset
+        if end<start or (end-start)%4 or not 1<=(end-start)//4<=255:
+            raise OriginalGridError("Original source group-map count invalid")
+        for number,off in enumerate(range(start,end,4)):
+            raw=struct.unpack_from("<I",blob,off)[0]
+            total+=1
+            if raw==0:
+                holes+=1
+                continue
+            header_offset=_original_rom_ptr(blob,raw,4)
+            layout_ptr=struct.unpack_from("<I",blob,header_offset)[0]
+            layout_offset=_original_rom_ptr(blob,layout_ptr,24)
+            w,h,border,grid,primary,secondary=struct.unpack_from(
+                "<6I",blob,layout_offset)
+            if not 1<=w<=2048 or not 1<=h<=2048:
+                raise OriginalGridError("Original map dimensions outside source contract")
+            size=w*h*2
+            border_offset=_original_rom_ptr(blob,border,8)
+            map_grid_offset=_original_rom_ptr(blob,grid,size)
+            _original_rom_ptr(blob,primary,24)
+            _original_rom_ptr(blob,secondary,24)
+            roster.append({"group":group,"map":number,"width":w,"height":h,
+             "map_grid_offset":map_grid_offset,"border_offset":border_offset,
+             "map_grid_bytes":size,"header_offset":header_offset,
+             "layout_offset":layout_offset})
+    if (len(roster)!=expected_map_count or holes!=expected_null_count or
+        total!=expected_map_count+expected_null_count):
+        raise OriginalGridError("Source original populated/null map count mismatch")
+    return {"maps":roster,"null_slot_count":holes,
+            "original_map_slots":total,"original_group_count":group_count}
+
+
 def from_three_original_roms(paths):
     sources={}
-    for name,(sha,_,_) in SOURCES.items():
+    for name,(sha,expected,expected_nulls) in SOURCES.items():
         path=Path(paths[name])
         blob=path.read_bytes()
         if hashlib.sha256(blob).hexdigest()!=sha:
             raise OriginalGridError("Unrecognized original complete source: "+name)
-        parsed=r34.BinaryMapDiscovery(blob).discover(
-            min_root_references=1,allow_null_slots=True)
+        root,groups,first=ORIGINAL_GROUP_ROOTS[name]
+        parsed=discover_original_geometries(blob,root,groups,expected,
+                                            expected_nulls,first)
         sources[name]=(blob,parsed)
     return pack_original_grids(sources)
 
