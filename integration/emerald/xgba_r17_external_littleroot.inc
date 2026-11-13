@@ -91,6 +91,10 @@ static const struct MapLayout *XgbaR17Resolve(const struct MapLayout *base)
 #ifdef XGBA_R48_ORIGINAL_NPC_BRIDGE
 #include "__XGBA_R48_NPC_BRIDGE__"
 #endif
+#ifdef XGBA_R54_REAL_WARP_ADMISSION
+#define XGBA_R60_FOREIGN_VIEWPORT 1
+#include "../common/xgba_r60_original_npc_viewport.h"
+#endif
 #ifdef XGBA_R50_ENGINE_EVENTS
 #include "__XGBA_R50_ENGINE_BRIDGE__"
 #endif
