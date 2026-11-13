@@ -46,8 +46,8 @@ class ExactOriginalLayoutProfileTests(unittest.TestCase):
         a,b,c=[struct.unpack_from(r52.LAYOUT_ROW,pages[0],32*i) for i in range(3)]
         self.assertEqual([z[0] for z in (a,b,c)],[0x000009,0x010009,0x020004])
         self.assertEqual([z[6] for z in (a,b,c)],[512,640,640])
-        self.assertEqual([z[8] for z in (a,b,c)],[6,7,7])
-        self.assertEqual([z[9] for z in (a,b,c)],[2,2,2])
+        self.assertEqual([z[7] for z in (a,b,c)],[6,7,7])
+        self.assertEqual([z[8] for z in (a,b,c)],[2,2,2])
         with tempfile.TemporaryDirectory() as d:
             out=Path(d)/"profiles"
             manifest=r52.export_profiles(pages,report,out)
@@ -62,7 +62,7 @@ class ExactOriginalLayoutProfileTests(unittest.TestCase):
         self.assertEqual(len(report["unknown_or_unsafe_layouts"]),1)
         row=struct.unpack_from(r52.LAYOUT_ROW,pages[0],32)
         self.assertEqual(row[1],3)
-        self.assertEqual(row[10]&1,0)
+        self.assertEqual(row[9]&1,0)
 
     def test_unknown_source_and_geometry_mismatch_fail_closed(self):
         originals,index,checksums=self.sources()
