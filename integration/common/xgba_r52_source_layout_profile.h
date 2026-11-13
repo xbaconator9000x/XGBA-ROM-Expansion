@@ -5,7 +5,7 @@
  *
  * 0 = original Emerald legacy 512/512 and u16 attributes
  * 1 = FRLG variant 640/384 + 7 primary palettes, u32 attributes, custom border
- * 2 = HnS/Rocket family 640/384 + 7 primary palettes, u32 attributes, fixed border
+ * 2 = HnS/Rocket family 640/384 + 7 primary palettes, u16 attributes, fixed border
  * Others are kept private as unsupported and must NEVER silently reinterpret.
  */
 #ifndef XGBA_R52_SOURCE_LAYOUT_PROFILE_H
@@ -95,7 +95,7 @@ static inline int XgbaR52LoadProfile(struct XgbaR52Reader *r,
          next.palettes_in_primary==6u && next.attribute_bytes==2u) ||
         ((next.version==1u || next.version==2u) &&
          next.tiles_in_primary==640u && next.metatiles_in_primary==640u &&
-         next.palettes_in_primary==7u && next.attribute_bytes==4u)))
+         next.palettes_in_primary==7u && next.attribute_bytes==(next.version==1u?4u:2u))))
         return 0;
     if(!(next.flags & XGBA_R52_FLAG_PROFILE_SUPPORTED) ||
        next.flags & ~(XGBA_R52_FLAG_PROFILE_SUPPORTED|XGBA_R52_FLAG_WIDE_PRIMARY))
@@ -120,12 +120,12 @@ static inline int XgbaR52TranslateAttribute(const struct XgbaR52MapProfile *p,
 {
     unsigned behavior,layer;
     if(!p || !native)return 0;
-    if(p->version==0u) {
+    if(p->version==0u || p->version==2u) {
         if(original>UINT16_MAX)return 0;
         *native=(uint16_t)original;
         return 1;
     }
-    /* FRLG-family 32-bit behavior has 9 bits; vanilla Emerald's behavior
+    /* FRLG version-1 32-bit behavior has 9 bits; vanilla Emerald's behavior
      * is 8 bits. High values cannot be squeezed without silently changing
      * gameplay, so refuse until native behavior ABI is widened. */
     behavior=original&0x1ffu;
