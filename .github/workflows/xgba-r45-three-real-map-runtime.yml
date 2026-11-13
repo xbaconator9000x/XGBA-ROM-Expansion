@@ -1,0 +1,109 @@
+name: XGBA R45 native original Emerald Rocket HeartSoul three-map runtime
+on:
+  push:
+    branches: [main, 'phase4/r45-native-3-original-rom-map-runtime-20261113']
+    paths:
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'tools/xgba_mgba_run.py'
+      - '.github/workflows/xgba-r45-three-real-map-runtime.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'tools/xgba_mgba_run.py'
+      - '.github/workflows/xgba-r45-three-real-map-runtime.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r45-3rom-native-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  compile-native-three-map-acceptance:
+    name: Build pinned mGBA with original three-ROM source-map runtime acceptance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact R45 source contracts without any private ROMs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_mgba_run.py
+          python3 - <<'PY'
+          from pathlib import Path
+          src=Path('integration/mgba/xgba_mgba_headless.c').read_text()
+          cli=Path('tools/xgba_mgba_run.py').read_text()
+          assert '--r45-probe' in src and '--r45-probe' in cli
+          assert 'r45_3world_maps(core,&device,r45_probe)' in src
+          assert 'r45_check(core,device,0u,3u)' in src
+          assert 'r45_check(core,device,1u,7u)' in src
+          assert 'r45_check(core,device,2u,13u)' in src
+          assert 'r45_check(core,device,1u,17u)' in src
+          print('PASS_R45_ORIGINAL_SOURCE_RUNTIME_ACCEPTANCE_CONTRACT')
+          PY
+      - name: Clone pinned mGBA and apply XGBA R7 guest MMIO patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream/mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+          python3 integration/mgba/apply_core_patch.py upstream/mgba
+      - name: Compile patched native Linux mGBA with source-world acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/xgba_ci_png_prereqs.sh
+          cmake -S integration/mgba -B build/r45-native \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DXGBA_MGBA_CHECKOUT="$PWD/upstream/mgba"
+          cmake --build build/r45-native --target xgba-mgba-headless --parallel 2 \
+            2>&1 | tee build/r45-compile.log
+          test -x build/r45-native/xgba-mgba-headless
+          file build/r45-native/xgba-mgba-headless
+          ldd build/r45-native/xgba-mgba-headless
+          echo 'PASS_R45_NATIVE_BINARY_READY_FOR_PRIVATE_GENUINE_THREE_ROM_ARTIFACTS'
+      - name: Prepare private trial README (no ROM or extracted game assets)
+        shell: bash
+        run: |
+          cat > build/R45_PRIVATE_TRIAL_README.txt <<'EOF'
+          R45 native 3-original-ROM map runtime test binary.
+          This binary includes NO user-owned game ROM, extracted map, graphics or save.
+          Extract the PRIVATE R44 Android Import ZIP game.gba, sidecar.bin and manifest.json.
+          Run with the matching repo checkout and native emulator:
+          python3 tools/xgba_mgba_run.py \
+            --rom PRIVATE/game.gba \
+            --manifest PRIVATE/manifest.json \
+            --resource-id emerald.map.grid \
+            --extra-resource-id emerald.map.atlas.00 \
+            --extra-resource-id emerald.map.atlas.01 \
+            --extra-resource-id rocket.map.grid \
+            --extra-resource-id rocket.map.atlas.00 \
+            --extra-resource-id rocket.map.atlas.01 \
+            --extra-resource-id rocket.map.atlas.02 \
+            --extra-resource-id heart_soul.map.grid \
+            --extra-resource-id heart_soul.map.atlas.00 \
+            --extra-resource-id heart_soul.map.atlas.01 \
+            --extra-resource-id heart_soul.map.atlas.02 \
+            --extra-resource-id heart_soul.map.atlas.03 \
+            --extra-resource-id heart_soul.map.atlas.04 \
+            --emulator xgba-mgba-headless \
+            --frames 600 \
+            --r45-probe PRIVATE/R45_LCD_CAPTURES
+          Create PRIVATE/R45_LCD_CAPTURES before running. R45 verifies all three
+          actual original ROM-derived map resource sets, 17 SHA-checked requests,
+          R/L input switching, D-pad pan and A overlay in running ARM7 GBA code.
+          Saves six genuine native LCD captures. Not original Emerald engine
+          overworld execution; not a full merged 3-game world.
+          EOF
+      - name: Publish native mGBA binary for local private original-ROM acceptance
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r45-patched-native-mgba-for-private-3-rom-map-test
+          path: |
+            build/r45-native/xgba-mgba-headless
+            build/R45_PRIVATE_TRIAL_README.txt
+          retention-days: 90
+          if-no-files-found: error
