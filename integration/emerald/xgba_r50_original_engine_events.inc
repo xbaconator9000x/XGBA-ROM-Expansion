@@ -23,7 +23,13 @@ struct XgbaR50BridgeProof {
 EWRAM_DATA volatile struct XgbaR50BridgeProof gXgbaR50BridgeProof={0};
 /* R49 pages are ephemeral; actual Emerald events use a deep-copied, aligned
  * source event array, not pointers into a cache about to be evicted. */
-static EWRAM_DATA u8 sXgbaR50ReaderScratch[XGBA_R49_PAGE_BYTES]={0};
+/* R50 shares the protected 16KiB heap-tail arena with original map tiles.
+ * Event paging happens only after old graphics are released by a warp fade;
+ * source events are deep-copied before new graphics reclaim the arena. */
+#if XGBA_R17_RESERVE < XGBA_R49_PAGE_BYTES
+#error R50 original event paging requires a 16KiB protected heap-tail arena
+#endif
+static EWRAM_DATA bool8 sXgbaR50EventsPrepared=FALSE;
 static EWRAM_DATA struct XgbaR50EngineEvents sXgbaR50OriginalEvents={0};
 static EWRAM_DATA struct MapEvents sXgbaR50LiveEvents={0};
 static EWRAM_DATA struct MapHeader sXgbaR50LiveHeader={0};
@@ -52,55 +58,74 @@ static int XgbaR50FetchOriginalPage(void *context,const char *id,
  * It must have verified the actual original map metatile grids, collisions,
  * palette/tileset and every source graphics ID before registering this map.
  * No test-only source ID switch or source-named label can satisfy this API. */
-bool8 XgbaR50InstallOriginalMapEvents(
-    u8 world,u8 group,u8 number,const struct MapLayout *verified_original_layout,
-    XgbaR50ResolveSprite verified_graphics_slot,void *graphics_context,
-    bool8 verified_original_assets)
+/* Stage exact source-qualified original object events during a real faded
+ * native warp: the previous map must have relinquished its graphics arena.
+ * Never overwrite a currently rendered or active original map. */
+bool8 XgbaR50PrepareOriginalMapEvents(
+    u8 world,u8 group,u8 number,u16 width,u16 height,
+    XgbaR50ResolveSprite graphics_slot,void *graphics_context,
+    bool8 original_renderer_released)
 {
     struct XgbaR49Reader reader={0};
-    struct MapEvents events={0};
-    struct MapHeader header;
-    const u8 *packed;
     u32 key;
-    if(!verified_original_assets || !verified_original_layout ||
-       !verified_original_layout->map ||
-       !verified_original_layout->primaryTileset ||
-       !verified_original_layout->secondaryTileset ||
-       !verified_graphics_slot || world>=3u ||
-       (world!=0u && sXgbaR48PendingFlyWorld!=world) ||
-       verified_original_layout->width<=0 ||
-       verified_original_layout->height<=0 ||
-       verified_original_layout->width>255 ||
-       verified_original_layout->height>255){
+    if(!original_renderer_released || !graphics_slot ||
+       sXgbaR50Ready || sXgbaR50EventsPrepared ||
+       world>=3u || group!=0u || (world==2u?number!=4u:number!=9u) ||
+       !width || !height || width>255u || height>255u ||
+       (world!=0u && sXgbaR48PendingFlyWorld!=world)){
         ++gXgbaR50BridgeProof.rejected;
         return FALSE;
     }
-    /* Do not mutate an already-live map header while the original Emerald
-     * object engine is using its event pointers. Only stage before a warp. */
-    if(sXgbaR50Ready){
-        ++gXgbaR50BridgeProof.rejected;
-        return FALSE;
-    }
+    /* Old arena pointers are dead. The next verified original map tileset
+     * load reacquires and overwrites these temporary page bytes. */
+    sXgbaR17Active=FALSE;
     key=((u32)world<<16)|((u32)group<<8)|number;
     reader.fetch=XgbaR50FetchOriginalPage;
-    reader.scratch=sXgbaR50ReaderScratch;
+    reader.scratch=(uint8_t *)gXgbaR17Arena;
     reader.indexed_maps=XGBA_R49_ALL_MAPS;
     reader.cached_index_page=XGBA_R49_INVALID_PAGE;
-    if(!XgbaR50StageEvents(&reader,key,
-          (u16)verified_original_layout->width,
-          (u16)verified_original_layout->height,
-          verified_graphics_slot,graphics_context,
+    if(!XgbaR50StageEvents(&reader,key,width,height,
+          graphics_slot,graphics_context,
           (u32)(uintptr_t)sXgbaR50QuarantinedScript,
           &sXgbaR50OriginalEvents)){
         ++gXgbaR50BridgeProof.rejected;
         return FALSE;
     }
-    /* The source index never overlaps Emerald's native map header by number:
-     * 0:9 in Emerald and 0:9 in Rocket are independent source keys. */
-    header=*gMapGroups[group][number];
+    sXgbaR50World=world;
+    sXgbaR50Group=group;
+    sXgbaR50Number=number;
+    sXgbaR50EventsPrepared=TRUE;
+    gXgbaR50BridgeProof.magic=XGBA_R50_BRIDGE_MAGIC;
+    gXgbaR50BridgeProof.active_source_key=key;
+    gXgbaR50BridgeProof.active_npcs=sXgbaR50OriginalEvents.object_count;
+    gXgbaR50BridgeProof.original_warps=
+        sXgbaR50OriginalEvents.original_warp_count;
+    ++gXgbaR50BridgeProof.verified_original_headers;
+    return TRUE;
+}
+/* Bind authentic verified layout/collision and source object records only
+ * AFTER original graphics/tilesets have reoccupied the map arena. */
+bool8 XgbaR50CommitOriginalMapAfterGraphics(
+    const struct MapLayout *layout,bool8 original_assets_sha_verified)
+{
+    struct MapEvents events={0};
+    struct MapHeader header;
+    const u8 *packed;
+    if(!sXgbaR50EventsPrepared || sXgbaR50Ready ||
+       !original_assets_sha_verified || !layout || !layout->map ||
+       !layout->border || !layout->primaryTileset ||
+       !layout->secondaryTileset ||
+       layout->width!=sXgbaR50OriginalEvents.width ||
+       layout->height!=sXgbaR50OriginalEvents.height){
+        ++gXgbaR50BridgeProof.rejected;
+        return FALSE;
+    }
+    /* Numeric map collisions stay keyed by R49 source ID, not native slot.
+     * Current three witnesses are 0:9 Emerald/Rocket and 0:4 HnS. */
+    header=*gMapGroups[sXgbaR50Group][sXgbaR50Number];
     packed=XgbaR50EventBytes(&sXgbaR50OriginalEvents);
     events.objectEventCount=sXgbaR50OriginalEvents.object_count;
-    events.warpCount=0u; /* source-aware warp execution still required */
+    events.warpCount=0u;    /* native source warp still untranslated */
     events.coordEventCount=0u;
     events.bgEventCount=0u;
     events.objectEvents=(const struct ObjectEventTemplate *)packed;
@@ -113,24 +138,27 @@ bool8 XgbaR50InstallOriginalMapEvents(
                        sXgbaR50OriginalEvents.object_bytes+
                        sXgbaR50OriginalEvents.warp_bytes+
                        sXgbaR50OriginalEvents.coordinate_bytes);
-    sXgbaR50LiveLayout=*verified_original_layout;
+    sXgbaR50LiveLayout=*layout;
     sXgbaR50LiveEvents=events;
     header.mapLayout=&sXgbaR50LiveLayout;
     header.events=&sXgbaR50LiveEvents;
-    /* Do not execute original ROM map scripts until source-specific opcode
-     * relocation, specials and safe state namespace are implemented. */
     header.mapScripts=NULL;
-    header.connections=NULL; /* source-specific connections not rewritten */
+    header.connections=NULL;
     sXgbaR50LiveHeader=header;
-    sXgbaR50World=world;sXgbaR50Group=group;sXgbaR50Number=number;
+    sXgbaR50EventsPrepared=FALSE;
     sXgbaR50Ready=TRUE;
-    gXgbaR50BridgeProof.magic=XGBA_R50_BRIDGE_MAGIC;
-    gXgbaR50BridgeProof.active_source_key=key;
-    gXgbaR50BridgeProof.active_npcs=events.objectEventCount;
-    gXgbaR50BridgeProof.original_warps=
-        sXgbaR50OriginalEvents.original_warp_count;
-    ++gXgbaR50BridgeProof.verified_original_headers;
     return TRUE;
+}
+/* Call only after genuine original Emerald field fade has retired all
+ * previous map/graphics pointers; not a source-selector simulation. */
+void XgbaR50ReleaseAfterOriginalWarpFade(bool8 real_field_renderer_released)
+{
+    if(!real_field_renderer_released)return;
+    sXgbaR50Ready=FALSE;
+    sXgbaR50EventsPrepared=FALSE;
+    sXgbaR17Active=FALSE;
+    sXgbaR48SourceMapLoaded=FALSE;
+    gXgbaR48OriginalNpcProof.source_map_loaded=0u;
 }
 static const struct MapHeader *XgbaR50HeaderFor(
     u16 group,u16 number,const struct MapHeader *native_header)
