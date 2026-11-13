@@ -126,14 +126,14 @@ def discover_original_geometries(blob, root_offset, group_count,
     only the raw original 24-byte MapLayout prefix and eight-byte border
     are read. Source engine variant bytes are separately retained in R52.
     """
-    if not isinstance(blob,(bytes,bytearray)) or root_offset%4 or \\
+    if not isinstance(blob,(bytes,bytearray)) or root_offset%4 or \
        not 1<=group_count<=255 or root_offset+4*group_count>len(blob):
         raise OriginalGridError("Original map-group table bounds invalid")
     group_starts=[]
     for group in range(group_count):
         pointer=struct.unpack_from("<I",blob,root_offset+group*4)[0]
         offset=_original_rom_ptr(blob,pointer,4)
-        if offset>=root_offset or offset%4 or \\
+        if offset>=root_offset or offset%4 or \
            (group_starts and offset<=group_starts[-1]):
             raise OriginalGridError("Source map pointer-group array not packed/ordered")
         group_starts.append(offset)
