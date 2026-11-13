@@ -93,7 +93,7 @@ static const struct MapLayout *XgbaR17Resolve(const struct MapLayout *base)
 #endif
 #ifdef XGBA_R54_REAL_WARP_ADMISSION
 #define XGBA_R60_FOREIGN_VIEWPORT 1
-#include "../common/xgba_r60_original_npc_viewport.h"
+/* R50's own common header includes the viewport contract relative to itself. */
 #endif
 #ifdef XGBA_R50_ENGINE_EVENTS
 #include "__XGBA_R50_ENGINE_BRIDGE__"
