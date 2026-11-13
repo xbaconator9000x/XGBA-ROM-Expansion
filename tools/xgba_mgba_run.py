@@ -23,7 +23,7 @@ MAX_GUEST_RESOURCE = 16 * 1024
 
 
 def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
-           probe_address=0, disabled=False, screenshot=None, scene_dir=None, r43_probe=None,
+           probe_address=0, disabled=False, screenshot=None, scene_dir=None, r43_probe=None, r45_probe=None,
            second_resource_id=None, extra_resource_ids=(), r10_dir=None, r11_perf=None,
            r12_dir=None, r13_dir=None, r14_dir=None,
            r15_dir=None, r15_savefile=None, r15_phase=None, r15_save_probe=0,
@@ -75,6 +75,11 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
         cmd.extend(["--screenshot", str(Path(screenshot).resolve())])
     if r43_probe is not None:
         cmd.extend(["--r43-probe", str(Path(r43_probe).resolve())])
+    if r45_probe is not None:
+        folder=Path(r45_probe).resolve()
+        if not folder.is_dir():
+            raise ValueError("R45 genuine native-game frames need an existing private output directory")
+        cmd.extend(["--r45-probe", str(folder)])
     if scene_dir is not None:
         capture = Path(scene_dir).resolve()
         if not capture.is_dir():
@@ -293,6 +298,7 @@ def main():
     p.add_argument("--disabled", action="store_true")
     p.add_argument("--screenshot", help="Write an actual mGBA-rendered 240x160 PNG")
     p.add_argument("--r43-probe", help="Verify authored ARM7 MMIO guest status and write genuine LCD proof")
+    p.add_argument("--r45-probe", help="Run original three-ROM actual-map-source native emulator R/L/Dpad/A test (private source pack)")
     p.add_argument("--scene-dir", help="Record 16 genuine emulator frames while injecting D-pad inputs")
     p.add_argument("--second-resource-id", help="Additional ID in same sidecar for in-session switching")
     p.add_argument("--extra-resource-id", action="append", default=[], help="Additional verified resources in same sidecar for simultaneous original game use")
@@ -325,7 +331,7 @@ def main():
                  emulator=args.emulator, frames=args.frames,
                  probe_address=args.probe_address, disabled=args.disabled,
                  screenshot=args.screenshot, scene_dir=args.scene_dir,
-                 r43_probe=args.r43_probe,
+                 r43_probe=args.r43_probe, r45_probe=args.r45_probe,
                  second_resource_id=args.second_resource_id,
                  extra_resource_ids=args.extra_resource_id,
                  r10_dir=args.r10_dir, r11_perf=args.r11_perf,
