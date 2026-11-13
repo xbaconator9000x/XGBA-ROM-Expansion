@@ -11,6 +11,8 @@ on:
       - 'tests/verify_xgba_r53_real_smol_golden.py'
       - 'tests/xgba_r53_original_tileset_native.c'
       - 'integration/emerald/xgba_r53_original_graphics.inc'
+      - 'integration/emerald/xgba_r54_native_fly_warp_admission.inc'
+      - 'tests/test_xgba_r54_native_emerald_faded_warp.py'
       - 'integration/common/xgba_r54_source_map_metatile_contract.h'
       - 'tests/xgba_r54_original_map_metatile_native.c'
       - 'integration/emerald/xgba_r17_external_littleroot.inc'
@@ -83,7 +85,7 @@ jobs:
         run: |
           set -euo pipefail
           PYTHONPATH=tools:tests:integration/mgba python3 -m unittest \
-            test_xgba_r53_native_emerald_graphics.NativeEmeraldR53OriginalGraphics -v \
+            test_xgba_r54_native_emerald_faded_warp.NativeEmeraldR54ActualFadedWarp -v \
             2>&1 | tee r53-original-emerald-native.log
           grep -q '^OK$' r53-original-emerald-native.log
-          echo PASS_R53_REAL_EMERALD_BG_TILE_STREAM_SOURCE_HOOK_AND_FLASH
+          echo PASS_R54_REAL_EMERALD_FADED_WARP_PRELOAD_SOURCE_ADMISSION_HEAP_AND_FLASH_NO_FOREIGN_FLY
