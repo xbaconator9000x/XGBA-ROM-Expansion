@@ -63,9 +63,11 @@ class ExactOriginalThreeRomGroupRoots(unittest.TestCase):
         fixtures={name:(hashlib.sha256(blob).hexdigest(),3,1)
                   for name,blob in zip(names,blobs)}
         roots={name:(0x110,2,0x100) for name in names}
-        with tempfile.TemporaryDirectory() as tmp, \\
-             patch.object(r51,"SOURCES",fixtures), \\
-             patch.object(r51,"ORIGINAL_GROUP_ROOTS",roots):
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch.object(r51,"SOURCES",fixtures), \
+             patch.object(r51,"ORIGINAL_GROUP_ROOTS",roots), \
+             patch.object(r51,"EXPECTED_MAPS",9), \
+             patch.object(r51,"EXPECTED_NULL_SLOTS",3):
             files={}
             for n,blob in zip(names,blobs):
                 path=Path(tmp)/(n+".gba")
