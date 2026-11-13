@@ -165,8 +165,7 @@ static const struct MapHeader *XgbaR50HeaderFor(
 {
     if(sXgbaR50Ready && group==sXgbaR50Group &&
        number==sXgbaR50Number &&
-       (sXgbaR50World==sXgbaR48PendingFlyWorld ||
-        (sXgbaR50World==0u && sXgbaR48PendingFlyWorld==255u))){
+       sXgbaR50World<3u){
         return &sXgbaR50LiveHeader;
     }
     return native_header;
@@ -176,11 +175,13 @@ static const struct MapLayout *XgbaR50LayoutFor(const struct MapLayout *base)
     if(sXgbaR50Ready && gSaveBlock1Ptr &&
        gSaveBlock1Ptr->location.mapGroup==sXgbaR50Group &&
        gSaveBlock1Ptr->location.mapNum==sXgbaR50Number &&
-       (sXgbaR50World==sXgbaR48PendingFlyWorld ||
-        (sXgbaR50World==0u && sXgbaR48PendingFlyWorld==255u)))
+       sXgbaR50World<3u)
         return &sXgbaR50LiveLayout;
     return XgbaR17Resolve(base);
 }
+/* An arrival clears the pending Fly destination, but MUST NOT evict the
+ * VERIFIED active foreign world header. Lifetime ends only after an actual
+ * faded map warp calls XgbaR50ReleaseAfterOriginalWarpFade. */
 /* Called from an ACTUAL original Emerald overworld frame. The full R48
  * attestation also requires the original NPC at its actual coordinates. */
 void XgbaR50VerifyLoadedEngineMap(void)
