@@ -24,7 +24,7 @@ static int getpage(void *ctx,const char *id,uint8_t *dst,uint16_t length)
         if(i==4u || bad_page==i+1u)return 0;
         memcpy(dst,parts[i],length);
         if(bad_padding==i+1u)dst[length-1u]=0x5au;
-        if(bad_second==i+1u && reads>4u)dst[0]^=0x80u;
+        if(bad_second==i+1u && reads>=1u)dst[0]^=0x80u;
     }
     ++reads;
     return 1;
