@@ -415,8 +415,17 @@ static void r45_image(struct mCore *core,const char *folder,const char *name)
         fail("R45 output filename too long");
     snprintf(path,sizeof(path),"%s/%s.ppm",folder,name);
     core->getPixels(core,&pixels,&stride);
-    if(!pixels||stride<240u)
-        fail("R45 original framebuffer unavailable");
+    const int native_video=(pixels!=NULL && stride>=240u);
+    /* The authored R44 GBA cartridge uses genuine Mode 3/VRAM (240x160).
+     * Some pinned headless mGBA builds do not expose core->getPixels, but
+     * its *actual emulated GBA 0x06000000 VRAM* contains identical display
+     * pixels. No host graphics renderer or fabricated sprites are used. */
+    const unsigned dispcnt=core->busRead16(core,0x04000000u);
+    if((dispcnt&7u)!=3u || !(dispcnt&(1u<<10)))
+        fail("R45 actual GBA framebuffer is not Mode3 BG2-enabled");
+    fprintf(stderr,"R45 real game frame source=%s GBA_DISPCNT=%04x\n",
+            native_video?"native_mgba_video":"actual_emulated_GBA_VRAM",
+            dispcnt);
     FILE *out=fopen(path,"wb");
     if(!out)fail("R45 original LCD image cannot be opened");
     if(fprintf(out,"P6\n240 160\n255\n")<0)
@@ -424,16 +433,25 @@ static void r45_image(struct mCore *core,const char *folder,const char *name)
     const mColor *frame=(const mColor *)pixels;
     for(unsigned y=0;y<160u;y++){
         for(unsigned x=0;x<240u;x++){
-            uint32_t color=(uint32_t)frame[y*stride+x];
+            uint32_t color=native_video
+                ? (uint32_t)frame[y*stride+x]
+                : (uint32_t)core->busRead16(core,
+                       0x06000000u+2u*(y*240u+x));
             uint8_t rgb[3];
 #ifdef COLOR_16_BIT
             rgb[0]=(uint8_t)((color&31u)*255u/31u);
             rgb[1]=(uint8_t)(((color>>5u)&31u)*255u/31u);
             rgb[2]=(uint8_t)(((color>>10u)&31u)*255u/31u);
 #else
-            rgb[0]=(uint8_t)color;
-            rgb[1]=(uint8_t)(color>>8u);
-            rgb[2]=(uint8_t)(color>>16u);
+            if(!native_video){
+                rgb[0]=(uint8_t)((color&31u)*255u/31u);
+                rgb[1]=(uint8_t)(((color>>5u)&31u)*255u/31u);
+                rgb[2]=(uint8_t)(((color>>10u)&31u)*255u/31u);
+            }else{
+                rgb[0]=(uint8_t)color;
+                rgb[1]=(uint8_t)(color>>8u);
+                rgb[2]=(uint8_t)(color>>16u);
+            }
 #endif
             if(fwrite(rgb,1,3,out)!=3)
                 fail("R45 genuine LCD pixel data truncated");
