@@ -47,6 +47,13 @@ static inline void XgbaR56ResourceId(char id[32],unsigned world,
         id[16]=0;
     }
 }
+static inline int XgbaR56ValidGbaObjectShape(unsigned w,unsigned h)
+{
+    return (w==8u && (h==8u || h==16u || h==32u)) ||
+           (w==16u && (h==8u || h==16u || h==32u)) ||
+           (w==32u && (h==8u || h==16u || h==32u || h==64u)) ||
+           (w==64u && (h==32u || h==64u));
+}
 static inline int XgbaR56ReadMeta(struct XgbaR56Reader *reader,
     unsigned world,uint16_t original_id,struct XgbaR56SourceObject *result)
 {
@@ -78,7 +85,7 @@ static inline int XgbaR56ReadMeta(struct XgbaR56Reader *reader,
     next.width=p[50];next.height=p[51];
     next.frame_count=(uint8_t)XgbaR49Le16(p+52);
     next.metadata_crc=XgbaR49Le32(p+60);
-    if(!next.width || !next.height ||
+    if(!XgbaR56ValidGbaObjectShape(next.width,next.height) ||
        next.width>64u || next.height>64u ||
        (next.width&7u) || (next.height&7u) ||
        !next.frame_count || next.frame_count>8u ||
