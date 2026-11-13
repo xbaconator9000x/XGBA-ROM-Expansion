@@ -103,6 +103,9 @@ static const struct MapLayout *XgbaR17Resolve(const struct MapLayout *base)
 #ifdef XGBA_R53_ORIGINAL_GRAPHICS
 #include "__XGBA_R53_GRAPHICS_BRIDGE__"
 #endif
+#ifdef XGBA_R54_REAL_WARP_ADMISSION
+#include "__XGBA_R54_REAL_WARP_BRIDGE__"
+#endif
 #ifdef XGBA_R19_CONNECTED_MAPS
 #include "__XGBA_R19_MAPS__"
 #endif
