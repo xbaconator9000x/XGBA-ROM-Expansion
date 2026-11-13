@@ -70,7 +70,7 @@ def pack_event_record(source:int,rom:bytes,m:dict):
     return key,record
 
 
-def compile_all_original_map_events(private_rom_paths:dict):
+def compile_all_original_map_events(private_rom_paths:dict, *, require_complete=True):
     if set(private_rom_paths)!=set(SOURCES):
         raise OriginalEventImportError("All THREE private original ROMs required")
     index=[]
@@ -113,7 +113,7 @@ def compile_all_original_map_events(private_rom_paths:dict):
         }
     if pending:
         pages.append(bytes(pending).ljust(PAGE,b"\0"))
-    if len(index)!=2856:
+    if require_complete and len(index)!=2856:
         raise OriginalEventImportError("Expected ALL 2,856 original populated map events")
     expected_totals={
        "object_count":17089,"warp_count":7146,
@@ -121,7 +121,7 @@ def compile_all_original_map_events(private_rom_paths:dict):
     }
     totals={kind:sum(d["counts"][kind] for d in source_reports.values())
             for kind in expected_totals}
-    if totals!=expected_totals:
+    if require_complete and totals!=expected_totals:
         raise OriginalEventImportError(f"Loss of authentic NPC/warp/event data: {totals}")
     idx=b"".join(struct.pack(ORIGINAL_INDEX_ROW,*row) for row in index)
     index_pages=[idx[i:i+PAGE].ljust(PAGE,b"\0")
