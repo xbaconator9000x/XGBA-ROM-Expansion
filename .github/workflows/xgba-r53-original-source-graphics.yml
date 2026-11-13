@@ -12,6 +12,8 @@ on:
       - 'tests/xgba_r53_original_tileset_native.c'
       - 'integration/emerald/xgba_r53_original_graphics.inc'
       - 'integration/emerald/xgba_r54_native_fly_warp_admission.inc'
+      - 'integration/emerald/xgba_r48_original_npc_scripts.inc'
+      - 'integration/emerald/xgba_r50_original_engine_events.inc'
       - 'integration/emerald/xgba_r57_native_source_sprite_installer.inc'
       - 'integration/emerald/xgba_r58_native_original_fly.inc'
       - 'tools/xgba_r58_fly_menu_patch.py'

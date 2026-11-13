@@ -23,6 +23,10 @@
 #define XGBA_R48_SCRIPT_LENGTH 9u
 #define XGBA_R48_ORIGINAL_NPC_MAGIC 0x4E383458u
 #define XGBA_R48_PROOF_MAGIC 0x5234384Eu
+#ifdef XGBA_R54_REAL_WARP_ADMISSION
+extern const struct ObjectEventGraphicsInfo *
+    XgbaR55GetVerifiedNativeOriginalObjectGraphics(u8 installed_slot);
+#endif
 
 struct XgbaR48OriginalNpcProof {
     volatile u32 magic;
@@ -114,6 +118,7 @@ void XgbaR48SetSourceMapLoaded(u8 source,u8 group,u8 number,
     const struct MapEvents *events=gMapHeader.events;
     unsigned i;
     bool8 original_object_present=FALSE;
+    bool8 physical_original_npc_spawned=FALSE;
     sXgbaR48SourceMapLoaded=FALSE;
     gXgbaR48OriginalNpcProof.source_map_loaded=0u;
     if(source>=XGBA_R48_WORLD_COUNT ||
@@ -134,6 +139,27 @@ void XgbaR48SetSourceMapLoaded(u8 source,u8 group,u8 number,
     }
     if(!original_object_present)
         return;
+    /* A preserved R49 template is not a PHYSICAL original NPC spawn.
+     * Original Emerald's event-object manager and sprite engine must have
+     * instantiated the actual witness object before Fly/dialogue attests
+     * that we visited it. Reject invisible, despawned or missing sprites. */
+    for(i=0u;i<OBJECT_EVENTS_COUNT;i++){
+        const struct ObjectEvent *event=&gObjectEvents[i];
+        if(!event->active || event->localId!=local_ids[source] ||
+           event->mapGroup!=group || event->mapNum!=number ||
+           event->spriteId>=MAX_SPRITES ||
+           !gSprites[event->spriteId].inUse)
+            continue;
+#ifdef XGBA_R54_REAL_WARP_ADMISSION
+        if(source!=0u &&
+           !XgbaR55GetVerifiedNativeOriginalObjectGraphics(
+                 event->graphicsId))
+            continue;
+#endif
+        physical_original_npc_spawned=TRUE;
+        break;
+    }
+    if(!physical_original_npc_spawned)return;
     sXgbaR48ImportedWorld=source;
     sXgbaR48ImportedGroup=group;
     sXgbaR48ImportedMap=number;

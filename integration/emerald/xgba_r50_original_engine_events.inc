@@ -202,7 +202,8 @@ void XgbaR50VerifyLoadedEngineMap(void)
        gMapHeader.events==&sXgbaR50LiveEvents &&
        gSaveBlock1Ptr->location.mapGroup==sXgbaR50Group &&
        gSaveBlock1Ptr->location.mapNum==sXgbaR50Number){
-        XgbaR48SetSourceMapLoaded(sXgbaR50World,sXgbaR50Group,sXgbaR50Number,TRUE);
+        if(!sXgbaR48SourceMapLoaded)
+            XgbaR48SetSourceMapLoaded(sXgbaR50World,sXgbaR50Group,sXgbaR50Number,TRUE);
         if(gXgbaR48OriginalNpcProof.source_map_loaded){
             gXgbaR50BridgeProof.original_map_installed=1u;
             if(sXgbaR50World!=0u)
