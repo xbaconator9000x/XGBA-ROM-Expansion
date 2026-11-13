@@ -35,6 +35,20 @@ struct XgbaR54NativeWarpProof {
 EWRAM_DATA volatile struct XgbaR54NativeWarpProof gXgbaR54NativeWarpProof={0};
 static EWRAM_DATA bool8 sXgbaR54OriginalHeapPreReset=FALSE;
 static EWRAM_DATA bool8 sXgbaR54SourceMapPreparedInWarp=FALSE;
+/* EWRAM_DATA is placed in a zero-cleared GBA runtime section. Its static
+ * nonzero C initializer is not a hardware boot guarantee. R48's 0xFF
+ * no-pending-Fly sentinel therefore needs an explicit original-engine
+ * first-boot initialization BEFORE any source-world admission check. */
+static EWRAM_DATA bool8 sXgbaR54FlySentinelBootInitialized=FALSE;
+static void XgbaR54InitializeOriginalFlyPendingSentinel(void)
+{
+    if(sXgbaR54FlySentinelBootInitialized)return;
+    sXgbaR48PendingFlyWorld=0xffu;
+    sXgbaR48PendingFlyGroup=0xffu;
+    sXgbaR48PendingFlyMap=0xffu;
+    sXgbaR54FlySentinelBootInitialized=TRUE;
+}
+
 
 /* Source0 (vanilla Emerald) object IDs already have authentic native
  * sprites present in Emerald's own object-event graphics table. For
@@ -76,6 +90,7 @@ static bool8 XgbaR54PendingWarpMatchesCurrentLocation(void)
  * Do not mutate map state inside this preflight. */
 static u8 XgbaR54InspectFadedOriginalMapLoad(void)
 {
+    XgbaR54InitializeOriginalFlyPendingSentinel();
     ++gXgbaR54NativeWarpProof.native_faded_load_entries;
     gXgbaR54NativeWarpProof.magic=0x52353457u;
     sXgbaR54OriginalHeapPreReset=FALSE;
