@@ -209,7 +209,7 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
             originals[camera]=original_camera
             cc=r16.one(original_camera,
                 "static void DrawMetatileAt(const struct MapLayout *mapLayout, u16 offset, int x, int y)",
-                "extern u16 XgbaR52PrimaryMetatileCount(void);\\n"
+                "extern u16 XgbaR52PrimaryMetatileCount(void);\n"
                 "static void DrawMetatileAt(const struct MapLayout *mapLayout, u16 offset, int x, int y)",
                 "R52 dynamic original Emerald field camera declaration")
             cc=r16.one(cc,
@@ -225,9 +225,9 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
             original_fm=fm.read_text()
             originals[fm]=original_fm
             fs=r16.one(original_fm,
-                "u16 GetMetatileAttributesById(u16 metatile)\\n{",
-                "extern u16 XgbaR52PrimaryMetatileCount(void);\\n"
-                "u16 GetMetatileAttributesById(u16 metatile)\\n{",
+                "u16 GetMetatileAttributesById(u16 metatile)\n{",
+                "extern u16 XgbaR52PrimaryMetatileCount(void);\n"
+                "u16 GetMetatileAttributesById(u16 metatile)\n{",
                 "R52 native original Emerald collision behavior resolver")
             fs=r16.one(fs,
                 "if (metatile < NUM_METATILES_IN_PRIMARY)",
