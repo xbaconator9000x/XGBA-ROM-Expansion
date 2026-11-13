@@ -25,6 +25,7 @@
 #include "constants/event_objects.h"
 #include "../common/xgba_r55_source_qualified_sprite_slots.h"
 #include "../common/xgba_r56_original_obj_reader.h"
+#include "../common/xgba_r66_original_obj_animation.h"
 #include "../common/xgba_r63_native_return_path.h"
 
 static bool8 XgbaR57InstallPendingMapSprites(u8 world,u8 group,u8 map);
@@ -94,7 +95,21 @@ static int XgbaR56CheckGenuineNativeSpriteBacking(
     if(section==1u)
         return count==32u && c->palette &&
                memcmp(bytes,c->palette,32u)==0;
-    if(section!=0u)return 0; /* OAM/anim source validation is read-only. */
+    if(section==2u){
+        return count==XGBA_R66_OAM_BYTES && info->oam &&
+            sizeof(struct OamData)==XGBA_R66_OAM_BYTES &&
+            XgbaR66OriginalOamValid(bytes,count,
+                                    c->original.width,c->original.height) &&
+            memcmp(info->oam,bytes,count)==0;
+    }
+    if(section==3u){
+        return count<=XGBA_R66_ANIM_MAX_BYTES && info->anims &&
+            info->anims[0] && sizeof(union AnimCmd)==4u &&
+            XgbaR66OriginalFirstAnimationValid(bytes,count,
+                                                c->original.frame_count) &&
+            memcmp(info->anims[0],bytes,count)==0;
+    }
+    if(section!=0u)return 0;
     if(!info->images || info->width!=c->original.width ||
        info->height!=c->original.height ||
        count!=c->original.sizes[0])return 0;
@@ -127,12 +142,11 @@ static bool8 XgbaR56AuthenticateOriginalSourceForNativeSprite(
     backing.info=info;backing.palette=palette_data;
     backing.original=source;
     for(part=0u;part<XGBA_R56_SECTIONS;part++){
-        /* Frames and palette MUST match actual stable native backing.
-         * OAM/animations are provenance-verified here but still require
-         * source-versioned translation before gameplay can be enabled. */
+        /* ALL four authenticated original sections must match stable native
+         * backing: frames, palette, OAM and first animation. No silent
+         * substituted static GBA OAM/animation is eligible for registration. */
         if(!XgbaR56VisitSection(&reader,&source,part,
-              part<=1u?XgbaR56CheckGenuineNativeSpriteBacking:NULL,
-              &backing))
+              XgbaR56CheckGenuineNativeSpriteBacking,&backing))
             goto refused;
     }
     gXgbaR55NativeSpriteProof.authenticated_original_resource_sections+=

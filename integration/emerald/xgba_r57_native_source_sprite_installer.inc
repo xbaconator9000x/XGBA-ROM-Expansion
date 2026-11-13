@@ -1,8 +1,9 @@
 /* R57: original-source NPC graphics installed in the genuine Emerald heap.
  * Source key is the ORIGINAL (world,u16 graphics ID), never a substitute.
  * Host SHA + R56 native content CRC for F/P/O/A is required. OAM/animation
- * source bytes are verified but NOT interpreted as executable ROM pointers;
- * the first-pass renderer uses a safe still-frame native OAM adapter.
+ * source bytes are verified against actual guest OAM and first-animation
+ * backing, then admitted through a bounds-checked native GBA adapter.
+ * Other original directional animation tables still need source ingestion.
  * Four standard Emerald NPC palette slots only; refuse any fifth unique
  * source palette or unavailable source page before native map commit.
  */
@@ -14,6 +15,9 @@ struct XgbaR57SourceSprite {
     struct ObjectEventGraphicsInfo info;
     struct SpriteFrameImage images[8];
     u16 palette[16];
+    struct OamData original_oam;
+    union AnimCmd original_anims[XGBA_R66_ANIM_MAX_COMMANDS];
+    const union AnimCmd *native_anim_table[64];
     u16 original_id;
     u8 native_slot;
     u8 frames[];
@@ -27,43 +31,9 @@ struct XgbaR57SourceSpriteProof {
 };
 EWRAM_DATA volatile struct XgbaR57SourceSpriteProof gXgbaR57SourceSpriteProof={0};
 
-static const struct OamData sXgbaR57Oam[]={
-    {.shape=SPRITE_SHAPE(8x8),.size=SPRITE_SIZE(8x8),.priority=2},
-    {.shape=SPRITE_SHAPE(16x16),.size=SPRITE_SIZE(16x16),.priority=2},
-    {.shape=SPRITE_SHAPE(32x32),.size=SPRITE_SIZE(32x32),.priority=2},
-    {.shape=SPRITE_SHAPE(64x64),.size=SPRITE_SIZE(64x64),.priority=2},
-    {.shape=SPRITE_SHAPE(16x8),.size=SPRITE_SIZE(16x8),.priority=2},
-    {.shape=SPRITE_SHAPE(32x8),.size=SPRITE_SIZE(32x8),.priority=2},
-    {.shape=SPRITE_SHAPE(32x16),.size=SPRITE_SIZE(32x16),.priority=2},
-    {.shape=SPRITE_SHAPE(64x32),.size=SPRITE_SIZE(64x32),.priority=2},
-    {.shape=SPRITE_SHAPE(8x16),.size=SPRITE_SIZE(8x16),.priority=2},
-    {.shape=SPRITE_SHAPE(8x32),.size=SPRITE_SIZE(8x32),.priority=2},
-    {.shape=SPRITE_SHAPE(16x32),.size=SPRITE_SIZE(16x32),.priority=2},
-    {.shape=SPRITE_SHAPE(32x64),.size=SPRITE_SIZE(32x64),.priority=2},
-};
-static const u8 sXgbaR57Shapes[12][2]={
- {8,8},{16,16},{32,32},{64,64},{16,8},{32,8},
- {32,16},{64,32},{8,16},{8,32},{16,32},{32,64}
-};
-static const union AnimCmd sXgbaR57Still[]={
-    ANIMCMD_FRAME(0,8),ANIMCMD_END
-};
-/* Every native movement animation slot is bounded. This provisional table
- * deliberately does not pretend to implement foreign sprite animations. */
-static const union AnimCmd *const sXgbaR57StillTable[64]={
-    [0 ... 63]=sXgbaR57Still
-};
-static const struct OamData *XgbaR57Shape(u8 width,u8 height)
-{
-    unsigned i;
-    for(i=0u;i<12u;i++)
-        if(sXgbaR57Shapes[i][0]==width &&
-           sXgbaR57Shapes[i][1]==height)return &sXgbaR57Oam[i];
-    return NULL;
-}
 struct XgbaR57StageContext {
     struct XgbaR57SourceSprite *sprite;
-    u32 frame_bytes;
+    u32 frame_bytes,oam_bytes,animation_bytes;
 };
 static int XgbaR57CopyOriginalBytes(void *context,unsigned section,
                                    const u8 *data,u32 offset,u32 length)
@@ -78,6 +48,21 @@ static int XgbaR57CopyOriginalBytes(void *context,unsigned section,
     if(section==1u){
         if(length!=32u)return 0;
         memcpy(ctx->sprite->palette,data,32u);
+        return 1;
+    }
+    if(section==2u){
+        if(length!=XGBA_R66_OAM_BYTES || length!=ctx->oam_bytes ||
+           sizeof(ctx->sprite->original_oam)!=XGBA_R66_OAM_BYTES)
+            return 0;
+        memcpy(&ctx->sprite->original_oam,data,length);
+        return 1;
+    }
+    if(section==3u){
+        if(length!=ctx->animation_bytes ||
+           length>XGBA_R66_ANIM_MAX_BYTES ||
+           sizeof(union AnimCmd)!=4u)
+            return 0;
+        memcpy(ctx->sprite->original_anims,data,length);
         return 1;
     }
     return 0;
@@ -122,7 +107,6 @@ static int XgbaR57InstallOne(u8 world,u16 original_id)
     struct XgbaR56SourceObject original={0};
     struct XgbaR57SourceSprite *out;
     struct XgbaR57StageContext ctx={0};
-    const struct OamData *oam;
     u8 slot;
     unsigned i;
     reader.fetch=XgbaR53FetchNativePage;
@@ -130,21 +114,35 @@ static int XgbaR57InstallOne(u8 world,u16 original_id)
     if(!XgbaR56ReadMeta(&reader,world,original_id,&original)){
         ++gXgbaR57SourceSpriteProof.refused_pages;return 0;
     }
-    oam=XgbaR57Shape(original.width,original.height);
-    if(!oam || original.sizes[0]>XGBA_R56_MAX_FRAMES_BYTES ||
+    if(original.sizes[2]!=XGBA_R66_OAM_BYTES ||
+       original.sizes[3]>XGBA_R66_ANIM_MAX_BYTES ||
+       original.sizes[0]>XGBA_R56_MAX_FRAMES_BYTES ||
        original.frame_count>8u)return 0;
     out=AllocZeroed(sizeof(*out)+original.sizes[0]);
     if(!out){++gXgbaR57SourceSpriteProof.refused_heap;return 0;}
     out->original_id=original_id;
     ctx.sprite=out;ctx.frame_bytes=original.sizes[0];
+    ctx.oam_bytes=original.sizes[2];
+    ctx.animation_bytes=original.sizes[3];
     for(i=0;i<XGBA_R56_SECTIONS;i++){
         if(!XgbaR56VisitSection(&reader,&original,i,
-              i<2u?XgbaR57CopyOriginalBytes:NULL,&ctx)){
+              XgbaR57CopyOriginalBytes,&ctx)){
             ++gXgbaR57SourceSpriteProof.refused_pages;
             Free(out);return 0;
         }
     }
     gXgbaR57SourceSpriteProof.source_page_reads+=reader.page_reads;
+    if(!XgbaR66OriginalOamValid(
+           (const u8 *)&out->original_oam,original.sizes[2],
+           original.width,original.height) ||
+       !XgbaR66OriginalFirstAnimationValid(
+           (const u8 *)out->original_anims,original.sizes[3],
+           original.frame_count)){
+        ++gXgbaR57SourceSpriteProof.refused_pages;
+        Free(out);return 0;
+    }
+    for(i=0u;i<64u;i++)
+        out->native_anim_table[i]=out->original_anims;
     if(!XgbaR57AssignNativePalette(out,&slot)){Free(out);return 0;}
     out->info.tileTag=TAG_NONE;
     out->info.paletteTag=TAG_NONE;
@@ -153,10 +151,10 @@ static int XgbaR57InstallOne(u8 world,u16 original_id)
     out->info.height=original.height;
     out->info.size=(u16)((u32)original.width*original.height/2u);
     out->info.paletteSlot=slot;
-    out->info.inanimate=TRUE; /* still-frame provisional adapter */
+    out->info.inanimate=(original.frame_count==1u); /* authentic first anim only */
     out->info.disableReflectionPaletteLoad=TRUE;
-    out->info.oam=oam;
-    out->info.anims=sXgbaR57StillTable;
+    out->info.oam=&out->original_oam;
+    out->info.anims=out->native_anim_table;
     out->info.images=out->images;
     out->info.affineAnims=gDummySpriteAffineAnimTable;
     for(i=0;i<original.frame_count;i++){
