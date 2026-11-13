@@ -118,7 +118,7 @@ static int XgbaR53NativeWriteSection(void *ctx,u8 kind,
 }
 static bool8 XgbaR53SourceTileDataReady(void)
 {
-    return sXgbaR53SourceActive && sXgbaR50Ready &&
+    return sXgbaR53SourceActive && sXgbaR53Resident && sXgbaR50Ready &&
            sXgbaR51NativeTerrain.valid &&
            sXgbaR52ProfileReady &&
            sXgbaR53PrimaryMeta.world==sXgbaR50World &&
