@@ -102,7 +102,7 @@ def original_rocket_coverage(pages:dict[str,bytes]):
         raise PrivateBundleError("Rocket original NPC CRC corrupted")
     viewport=[]
     for i in range(cnt):
-        p=data+i*24
+        p=data[i*24:(i+1)*24]
         gfx=struct.unpack_from("<H",p,1)[0]
         x,y=struct.unpack_from("<hh",p,4)
         if x>=7 and x<=21 and y>=9 and y<=19 and x<24 and y<25:
