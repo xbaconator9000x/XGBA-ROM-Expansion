@@ -6,6 +6,9 @@
 #ifndef XGBA_R50_ENGINE_EVENT_ADAPTER_H
 #define XGBA_R50_ENGINE_EVENT_ADAPTER_H
 #include "xgba_r49_full_original_map_events.h"
+#ifdef XGBA_R60_FOREIGN_VIEWPORT
+#include "xgba_r60_original_npc_viewport.h"
+#endif
 
 #define XGBA_R50_EVENT_CAPACITY 4096u
 #define XGBA_R50_MAX_OBJECTS 64u
@@ -38,6 +41,8 @@ static inline int XgbaR50StageEvents(
     struct XgbaR49OriginalEvents e;
     uint32_t total, offsets[4],seen[8]={0};
     uint8_t graphics_slots[XGBA_R50_MAX_OBJECTS];
+    uint8_t selected[XGBA_R50_MAX_OBJECTS];
+    unsigned accepted=0u;
     unsigned i,source=(source_key>>16u)&255u;
     uint8_t *bytes;
     if(!reader || !out || !sprite || !map_width || !map_height ||
@@ -62,6 +67,14 @@ static inline int XgbaR50StageEvents(
         int16_t x=(int16_t)XgbaR49Le16(p+4u);
         int16_t y=(int16_t)XgbaR49Le16(p+6u);
         uint32_t script_addr=XgbaR49Le32(p+16u);
+#ifdef XGBA_R60_FOREIGN_VIEWPORT
+        /* Ineligible off-map and distant original NPCs remain in immutable
+         * R49 storage. Do not allocate their graphics on first landing. */
+        if(source!=0u && !XgbaR60OriginalNpcIsInLandingView(
+            source,(source_key>>8u)&255u,source_key&255u,
+            map_width,map_height,x,y))
+            continue;
+#endif
         if(!id || (seen[id>>5u]&(UINT32_C(1)<<(id&31u))) ||
            x<0 || y<0 || x>=map_width || y>=map_height ||
            !sprite(sprite_ctx,(uint8_t)source,gfx,&slot) ||
@@ -69,16 +82,31 @@ static inline int XgbaR50StageEvents(
               script_addr>=UINT32_C(0x0a000000))))
             return 0;
         seen[id>>5u]|=UINT32_C(1)<<(id&31u);
-        graphics_slots[i]=slot;
+        graphics_slots[accepted]=slot;
+        selected[accepted++]=(uint8_t)i;
     }
-    /* Deep copy: the R49 16 KiB scratch page can be reused after return. */
+    /* The native R49 page is preserved in full; deep-copy only genuine
+     * first-viewport source NPC templates into the bounded Emerald store. */
+    offsets[0]=0u;
+    offsets[1]=(uint32_t)accepted*24u;
+    offsets[2]=offsets[1]+(uint32_t)e.warp_count*8u;
+    offsets[3]=offsets[2]+(uint32_t)e.coordinate_count*16u;
+    if(offsets[3]+(uint32_t)e.background_count*12u>XGBA_R50_EVENT_CAPACITY)
+        return 0;
     bytes=XgbaR50EventBytes(out);
-    if(total)memcpy(bytes,e.objects,total);
-    for(i=0u;i<e.object_count;i++){
+    for(i=0u;i<accepted;i++)
+        memcpy(bytes+24u*i,e.objects+(unsigned)selected[i]*24u,24u);
+    if(e.warp_count)
+        memcpy(bytes+offsets[1],e.warps,(unsigned)e.warp_count*8u);
+    if(e.coordinate_count)
+        memcpy(bytes+offsets[2],e.coordinates,(unsigned)e.coordinate_count*16u);
+    if(e.background_count)
+        memcpy(bytes+offsets[3],e.background,(unsigned)e.background_count*12u);
+    for(i=0u;i<accepted;i++){
         uint8_t *p=bytes+24u*i;
         out->script_origins[i]=XgbaR49Le32(p+16u);
         out->original_flags[i]=XgbaR49Le16(p+20u);
-        p[1]=graphics_slots[i]; /* explicit source sprite translation */
+        p[1]=graphics_slots[i]; /* actual original source sprite slot */
         p[2]=0u; /* original Emerald OBJ_KIND_NORMAL, not gfx upper byte */
         /* Quarantine source-ROM pointers. R48 can resolve an authentic
          * original-NPC script on an actual physical A-button interaction. */
@@ -104,7 +132,7 @@ static inline int XgbaR50StageEvents(
     out->warp_bytes=(uint16_t)(offsets[2]-offsets[1]);
     out->coordinate_bytes=(uint16_t)(offsets[3]-offsets[2]);
     out->background_bytes=(uint16_t)(total-offsets[3]);
-    out->object_count=e.object_count;
+    out->object_count=(uint8_t)accepted;
     out->original_warp_count=e.warp_count;
     out->coordinate_count=0u;
     out->background_count=0u;
