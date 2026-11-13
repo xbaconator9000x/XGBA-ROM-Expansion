@@ -85,7 +85,7 @@ def original_r48_witnesses(z:zipfile.ZipFile)->dict[str,bytes]:
         payload=z.read(rid+".bin")
         if len(payload)!=256 or _sha(payload)!=record.get("sha256"):
             raise PrivateBundleError("Original NPC SHA integrity failure: "+rid)
-        if payload[:4]!=b"X84N" or payload[4]!=1 or \
+        if payload[:4]!=b"X48N" or payload[4]!=1 or \
            tuple(payload[5:9])!=(world,group,map_number,npc_id) or \
            struct.unpack_from("<hhH",payload,9)!=(x,y,gfx) or \
            struct.unpack_from("<II",payload,15)!=(script_at,text_at):
