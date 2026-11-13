@@ -182,10 +182,15 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         r18=bool(getattr(cls,"R18_SAVE_TEST",False))
         r40=bool(getattr(cls,"R40_SCRIPT_TEST",False))
         r42=bool(getattr(cls,"R42_EVENT_TEST",False))
+        r48=bool(getattr(cls,"R48_ORIGINAL_NPC_TEST",False))
         if r40 and r42:
             raise AssertionError("R40 and R42 guest fixtures must not share script state")
         if r42 and not r18:
             raise AssertionError("R42 source events require original Emerald Flash")
+        if r48 and not r18:
+            raise AssertionError("R48 imported real NPC script bridge requires original Emerald Flash/overworld")
+        if r48 and (r42 or r40):
+            raise AssertionError("R48 original source NPC tests may not disguise authored R40/R42 event scripts")
         if r40 and not r18:
             raise AssertionError("R40 genuine script Flash test requires R18 native save")
         if r18:
@@ -194,6 +199,8 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             config.write_text(config.read_text()+"#define XGBA_R40_SCRIPT_TEST 1\n")
         if r42:
             config.write_text(config.read_text()+"#define XGBA_R42_EVENT_TEST 1\n")
+        if r48:
+            config.write_text(config.read_text()+"#define XGBA_R48_ORIGINAL_NPC_BRIDGE 1\n")
         if r19_battle:
             config.write_text(config.read_text()+
                 "\n#define XGBA_R19_BATTLE_TEST 1\n"

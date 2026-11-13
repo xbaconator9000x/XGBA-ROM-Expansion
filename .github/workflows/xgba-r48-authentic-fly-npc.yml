@@ -1,0 +1,129 @@
+name: XGBA R48 original NPC scripts in real Emerald A-button engine bridge
+on:
+  push:
+    branches: [main, 'integration/r48-authentic-3world-fly-npc-20261113']
+    paths:
+      - 'tools/xgba_r48_original_npc_assets.py'
+      - 'tools/xgba_r49_all_original_map_events.py'
+      - 'integration/common/xgba_r49_full_original_map_events.h'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'integration/mgba/xgba_r18_emerald_flash.h'
+      - 'tests/test_xgba_r49_all_original_events.py'
+      - 'tests/xgba_r49_full_events_native.c'
+      - 'tools/xgba_r17_emerald_patch.py'
+      - 'integration/emerald/xgba_r48_original_npc_scripts.inc'
+      - 'integration/emerald/xgba_r17_external_littleroot.inc'
+      - 'tests/test_xgba_r48_original_npc_assets.py'
+      - 'tests/test_xgba_r48_native_emerald_npc_bridge.py'
+      - 'tests/test_xgba_r17_emerald_external_map.py'
+      - '.github/workflows/xgba-r48-authentic-fly-npc.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/xgba_r48_original_npc_assets.py'
+      - 'tools/xgba_r49_all_original_map_events.py'
+      - 'integration/common/xgba_r49_full_original_map_events.h'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'integration/mgba/xgba_r18_emerald_flash.h'
+      - 'tests/test_xgba_r49_all_original_events.py'
+      - 'tests/xgba_r49_full_events_native.c'
+      - 'tools/xgba_r17_emerald_patch.py'
+      - 'integration/emerald/xgba_r48_original_npc_scripts.inc'
+      - 'integration/emerald/xgba_r17_external_littleroot.inc'
+      - 'tests/test_xgba_r48_original_npc_assets.py'
+      - 'tests/test_xgba_r48_native_emerald_npc_bridge.py'
+      - 'tests/test_xgba_r17_emerald_external_map.py'
+      - '.github/workflows/xgba-r48-authentic-fly-npc.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: r48-original-npc-bridge-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  exact-original-resource-abi:
+    name: Original 3-ROM script/text pointer validation and actual NPC interaction hook contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate authored fake fixtures; never load private ROMs into public GitHub
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r48_original_npc_assets.py \
+            tests/test_xgba_r48_original_npc_assets.py tests/test_xgba_r48_native_emerald_npc_bridge.py \
+            tools/xgba_r17_emerald_patch.py
+          PYTHONPATH=tools:tests python3 -m unittest \
+            test_xgba_r48_original_npc_assets.RealOriginalNpcResourceTests -v \
+            2>&1 | tee r48-source-abi.log
+          grep -q 'Ran 5 tests' r48-source-abi.log
+          grep -q '^OK$' r48-source-abi.log
+          echo PASS_R48_AUTHENTIC_ORIGINAL_NPC_SOURCE_POINTERS_AND_3GAME_PROVENANCE_CONTRACT
+      - name: Assert original cross-world Fly is not yet falsely marked tested
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          source=Path("integration/emerald/xgba_r48_original_npc_scripts.inc").read_text()
+          script=Path("tools/xgba_r48_original_npc_assets.py").read_text()
+          assert "XgbaR48ResolveActualOriginalNpcScript" in source
+          assert "if(!sXgbaR48SourceMapLoaded)" in source
+          assert "actual_cross_world_fly_warps" in source
+          assert "real_fly_to_foreign_original_map_proven" in script
+          assert "all_original_npcs_imported" in script
+          print("PASS_R48_REAL_FLY_AND_FOREIGN_NPC_UNVERIFIED_UNTIL_ORIGINAL_ENGINE_MAP_LOADER")
+          PY
+  pinned-native-original-emerald-script-engine:
+    name: Actual source-built Emerald with physical A-button NPC resolver, original Flash, genuine LCD
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned original ARM compiler
+        uses: carlosperate/arm-none-eabi-gcc-action@49f4db4520f840e77ab1e99b24cfac2c540a21b1
+        with:
+          release: '13.2.Rel1'
+      - name: Install native screenshot dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/xgba_ci_png_prereqs.sh
+          if ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
+            python3 -m pip install --user --break-system-packages --disable-pip-version-check 'Pillow==11.3.0'
+          fi
+      - name: Obtain exact pinned original Emerald and native mGBA
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokeemerald.git upstream/pokeemerald
+          git -C upstream/pokeemerald checkout --quiet --detach 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Build Emerald NPC object-interaction hook and boot original game/Flash
+        shell: bash
+        env:
+          XGBA_R48_NATIVE_EVIDENCE_DIR: ${{ github.workspace }}/r48-evidence
+        run: |
+          set -euo pipefail
+          PYTHONPATH=tools:tests:integration/mgba python3 -m unittest \
+            test_xgba_r48_native_emerald_npc_bridge.SourceBuiltEmeraldOriginalNpcBridge -v \
+            2>&1 | tee r48-native.log
+          grep -q 'Ran 3 tests' r48-native.log
+          grep -q '^OK$' r48-native.log
+          test -s r48-evidence/NO_FOREIGN_NPC_YET.txt
+          test -n "$(find r48-evidence -name '*.png' -print -quit)"
+          test -z "$(find r48-evidence \( -name '*.gba' -o -name '*.sav' -o -name '*.bin' \) -print -quit)"
+          echo PASS_R48_REAL_ORIGINAL_EMERALD_NPC_SCRIPT_ENGINE_HOOK_COMPILED_AND_BOOTED
+      - name: Publish authentic Emerald LCD frames, not proprietary ROMs/saves
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r48-real-emerald-npc-script-bridge-boot-not-foreign-fly
+          path: |
+            r48-evidence/*.png
+            r48-evidence/NO_FOREIGN_NPC_YET.txt
+          retention-days: 90
+          if-no-files-found: error

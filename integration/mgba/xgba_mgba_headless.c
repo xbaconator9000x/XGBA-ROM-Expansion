@@ -31,7 +31,7 @@
 
 extern void XgbaProviderSha256(const uint8_t *, size_t, uint8_t[32]);
 
-#define XGBA_MAX_EXTRA_RESOURCES 16u
+#define XGBA_MAX_EXTRA_RESOURCES 65535u /* dynamically allocated; source manifest governs actual residency */
 struct ExtraResourceFile {
     char id[129];
     uint64_t offset;
@@ -50,7 +50,7 @@ struct ResourceFile {
     uint64_t second_offset;
     uint64_t second_length;
     uint8_t second_digest[32];
-    struct ExtraResourceFile extra[XGBA_MAX_EXTRA_RESOURCES];
+    struct ExtraResourceFile *extra; /* live dynamic host index, not guest EWRAM */
     unsigned extra_count;
 };
 
@@ -529,7 +529,7 @@ static void r45_3world_maps(struct mCore *core,
 
 int main(int argc, char **argv)
 {
-    if (argc < 11 || argc > 128)
+    if (argc < 11 || argc > (int)(11u + 4u*XGBA_MAX_EXTRA_RESOURCES + 128u))
         fail("usage: ROM DATA SOURCE_ID SOURCE_SHA RESOURCE_ID OFFSET LENGTH RESOURCE_SHA FRAMES PROBE_ADDR [--screenshot path] [--scene-dir path] [--r10-dir path] [--r11-perf path] [--r12-dir path] [--r13-dir path] [--r14-dir path] [--second-resource ID OFFSET LENGTH SHA] [--disabled]");
     const char *screenshot = NULL;
     const char *r43_probe = NULL; /* R43 original authored GBA homebrew CPU proof */
@@ -572,7 +572,8 @@ int main(int argc, char **argv)
     const char *second_id = NULL;
     uint64_t second_offset = 0, second_length = 0;
     uint8_t second_sha[32] = {0};
-    struct ExtraResourceFile extras[XGBA_MAX_EXTRA_RESOURCES] = {{0}};
+    struct ExtraResourceFile *extras=NULL;
+    size_t extra_capacity=0u;
     unsigned extra_count=0;
     int enabled = 1;
     for (int i=11; i<argc; ++i) {
@@ -662,7 +663,17 @@ int main(int argc, char **argv)
             r15_save_probe = parse_number(argv[i]);
         else if (!strcmp(argv[i], "--extra-resource") && i+4 < argc) {
             if(extra_count>=XGBA_MAX_EXTRA_RESOURCES)
-                fail("extra XGBA resource index exceeded bounded capacity");
+                fail("XGBA original resource manifest exceeds 65535 entries");
+            if((size_t)extra_count==extra_capacity) {
+                size_t grown=extra_capacity?extra_capacity*2u:32u;
+                if(grown>XGBA_MAX_EXTRA_RESOURCES)grown=XGBA_MAX_EXTRA_RESOURCES;
+                if(grown<extra_capacity || grown>SIZE_MAX/sizeof(*extras))
+                    fail("XGBA extra resource registry multiplication overflow");
+                void *updated=realloc(extras,grown*sizeof(*extras));
+                if(!updated)fail("XGBA extra resource index allocation failed");
+                extras=updated;
+                extra_capacity=grown;
+            }
             struct ExtraResourceFile *extra=&extras[extra_count++];
             const char *id=argv[++i];
             if(!*id || strlen(id)>128)
@@ -723,7 +734,7 @@ int main(int argc, char **argv)
     resource.second_length = second_length;
     memcpy(resource.second_digest, second_sha, 32);
     resource.extra_count=extra_count;
-    memcpy(resource.extra,extras,sizeof(extras));
+    resource.extra=extras;
     struct XgbaMgbaProviderV1 host = {
         .abi_version = 1u,
         .struct_size = sizeof(host),
@@ -976,5 +987,6 @@ int main(int argc, char **argv)
     core->deinit(core);
     free(video);
     free(rom);
+    free(extras);
     return 0;
 }

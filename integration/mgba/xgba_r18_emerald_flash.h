@@ -140,6 +140,23 @@ static void xgba_r42_emerald_run(struct mCore *core,uint32_t map,uint32_t save,
         puts("PASS_R42_NATIVE_EMERALD_COLD_RESTORED_BOTH_EVENTS original_flash=1 no_reexecution=1 bag=2 flags=2 vars=2");
     }else fail("R42 native emulator requested unsupported phase");
 }
+/* R49 test-only: source-built Emerald must still run/save with a host-side
+ * manifest holding >16 distinct future original-event resources. These are
+ * authored event-shaped CI pages, NOT original ROM NPCs or interactions. */
+static int r49_fixture_registered_pages(const struct ResourceFile *source)
+{
+    unsigned i;
+    if(source->extra_count!=32u)return 0;
+    for(i=0u;i<32u;i++){
+        char id[64];
+        snprintf(id,sizeof(id),"r49.synthetic.original_event_page.%03u",i);
+        if(strcmp(source->extra[i].id,id) ||
+           source->extra[i].length!=256u ||
+           source->extra[i].offset<=32u*1024u*1024u)
+            fail("R49 exact authored resource register regression unexpected");
+    }
+    return 1;
+}
 static void xgba_r18_emerald_run(struct mCore *core,uint32_t map,uint32_t save,
                                  const char *folder,const char *phase,
                                  const struct XgbaGbaDevice *device,
@@ -149,7 +166,8 @@ static void xgba_r18_emerald_run(struct mCore *core,uint32_t map,uint32_t save,
         fail("R18 requires original Emerald game, Flash proof, and both resources");
     const int r40=r40_fixture(resource);
     const int r42=r42_fixture(resource);
-    if(resource->extra_count && !r40 && !r42)
+    const int r49=r49_fixture_registered_pages(resource);
+    if(resource->extra_count && !r40 && !r42 && !r49)
         fail("Unrecognized original Emerald external script source set");
     r18_check(core,save);
     if(r42) {

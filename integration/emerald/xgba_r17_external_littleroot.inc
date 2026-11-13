@@ -88,6 +88,9 @@ static const struct MapLayout *XgbaR17Resolve(const struct MapLayout *base)
 #ifdef XGBA_R42_EVENT_TEST
 #include "__XGBA_R42_EVENT__"
 #endif
+#ifdef XGBA_R48_ORIGINAL_NPC_BRIDGE
+#include "__XGBA_R48_NPC_BRIDGE__"
+#endif
 #ifdef XGBA_R19_CONNECTED_MAPS
 #include "__XGBA_R19_MAPS__"
 #endif

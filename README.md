@@ -14,6 +14,9 @@ The next meaningful playable milestone is an actual **original Emerald game-engi
 
 [**R47: complete three-game content preservation, source coverage and real original NPC acceptance contract**](docs/R47_COMPLETE_THREE_GAME_CONTENT_ACCEPTANCE.md) is authoritative for future development, tests, watchdog reports and release claims.
 
+**R48–R49 real original NPC/full event integration (active PR #121, partial milestone):**
+The pinned original Emerald game now compiles with a native A-button original-NPC script resolver and actual Fly-in callback hook; original Emerald boots and saves under patched mGBA. All original **2,856 maps' 17,089 NPC objects, 7,146 warps, 2,340 coordinate triggers and 4,697 background interactions** have been read from the owner's exact SHA-verified three ROMs, preserved without omitting events and packed privately into **44 immutable 16KiB XGBA pages** (3 index + 41 events). A new native 16KiB guest reader validates source-keyed map records and original byte CRC; patched mGBA's host registry no longer has a 16-additional-resource cap. [Read actual R49 evidence, full-source boundaries and required Fly→Rocket NPC→HnS NPC→Emerald GIFs](docs/R49_FULL_ORIGINAL_EVENTS_FLY_NPC_INTEGRATION.md). **Not yet achieved: original-engine foreign map instantiation, Fly travel, the foreign NPC interactions, or full-cross-world GIFs; raw original scripts and pointers are not yet all executable. Do NOT substitute a map viewer or synthetic NPC dialogue.**
+
 ## Goals
 
 - **Substantially expand usable game content:** support multi-region worlds, more maps, graphics, music, dialogue and gameplay assets without fitting every asset simultaneously into the conventional ROM window. A Pokémon project spanning all nine regions is an aspirational example, **not** an implemented capability.
