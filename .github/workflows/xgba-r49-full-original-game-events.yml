@@ -1,0 +1,59 @@
+name: XGBA R49 3 complete original games native paged NPC/warp/event content
+on:
+  push:
+    branches: [main, 'integration/r48-authentic-3world-fly-npc-20261113']
+    paths:
+      - 'tools/xgba_r49_all_original_map_events.py'
+      - 'integration/common/xgba_r49_full_original_map_events.h'
+      - 'tests/xgba_r49_full_events_native.c'
+      - 'tests/test_xgba_r49_all_original_events.py'
+      - '.github/workflows/xgba-r49-full-original-game-events.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/xgba_r49_all_original_map_events.py'
+      - 'integration/common/xgba_r49_full_original_map_events.h'
+      - 'tests/xgba_r49_full_events_native.c'
+      - 'tests/test_xgba_r49_all_original_events.py'
+      - '.github/workflows/xgba-r49-full-original-game-events.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  full-original-events-intake-and-native-page-reader:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test exact-byte preservation of original NPC, warp, coordinate and background arrays
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r49_all_original_map_events.py tests/test_xgba_r49_all_original_events.py
+          PYTHONPATH=tools:tests python3 -m unittest             test_xgba_r49_all_original_events.R49EntireOriginalEventScope -v             2>&1 | tee r49-python.log
+          grep -q 'Ran 5 tests' r49-python.log
+          grep -q '^OK$' r49-python.log
+      - name: Compile source-scoped 16KiB guest event reader with true original pointer byte preservation
+        shell: bash
+        run: |
+          set -euo pipefail
+          gcc -std=c11 -O1 -g -Wall -Wextra -Werror -pedantic             -fsanitize=address,undefined -fno-omit-frame-pointer             tests/xgba_r49_full_events_native.c -o /tmp/xgba-r49-original-events
+          /tmp/xgba-r49-original-events 2>&1 | tee r49-native.log
+          grep -q 'PASS_R49_REAL_ORIGINAL_FORMAT_MAP_NPC_WARP_TRIGGER_BG_BYTE_STREAM' r49-native.log
+          gcc -std=c11 -Os -Wall -Wextra -Werror -pedantic             -ffreestanding -fno-builtin -c tests/xgba_r49_full_events_native.c             -o /tmp/xgba-r49-guest-freestanding.o
+          test -s /tmp/xgba-r49-guest-freestanding.o
+          echo PASS_R49_ORIGINAL_EVENT_BYTES_16K_GBA_GUEST_READER_ABI
+      - name: Reject map-only milestones as full native cross-world game
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          source=Path("tools/xgba_r49_all_original_map_events.py").read_text()
+          assert "if require_complete and len(index)!=2856" in source
+          assert "original_engine_foreign_npc_interaction_verified" in source
+          assert "cross_world_fly_verified" in source
+          assert "original_script_pointers_preserved_not_executed" in source
+          assert "event_array_offsets" in source
+          print("PASS_R49_ALL_THREE_GAME_NPC_EVENT_INTAKE_WITHOUT_FALSE_FLY_PROOF")
+          PY
