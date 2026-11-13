@@ -25,6 +25,7 @@
 #include "constants/event_objects.h"
 #include "../common/xgba_r55_source_qualified_sprite_slots.h"
 #include "../common/xgba_r56_original_obj_reader.h"
+#include "../common/xgba_r63_native_return_path.h"
 
 static bool8 XgbaR57InstallPendingMapSprites(u8 world,u8 group,u8 map);
 static void XgbaR57ReleasePendingMapSprites(void);
@@ -333,7 +334,30 @@ static bool8 XgbaR54PendingWarpMatchesCurrentLocation(void)
       gSaveBlock1Ptr->location.mapGroup==sXgbaR48PendingFlyGroup &&
       gSaveBlock1Ptr->location.mapNum==sXgbaR48PendingFlyMap;
 }
-/* Return: 0 no foreign source, 1 requires original source staging,
+/* R63: source0 is already linked into the ACTUAL Emerald game ROM.
+ * Verify original ROM header and actual witness placement, then let the
+ * vanilla engine do the return warp. Never require R53/R56 source0 art.
+ * This is an arrival precondition, not an arrival/progression witness. */
+static bool8 XgbaR63NativeEmeraldReturnHeaderPresent(void)
+{
+    const struct MapHeader *native=gMapGroups[0][9];
+    unsigned i;
+    if(!native || !native->mapLayout || !native->events ||
+       !native->events->objectEvents ||
+       !XgbaR63VerifyNativeReturnHeader(
+          0u,0u,9u,native->mapLayout->width,native->mapLayout->height,
+          native->events->objectEventCount,
+          XGBA_R63_NATIVE_LANDING_X,XGBA_R63_NATIVE_LANDING_Y))
+        return FALSE;
+    for(i=0u;i<native->events->objectEventCount;i++){
+        const struct ObjectEventTemplate *npc=&native->events->objectEvents[i];
+        if(npc->localId==2u && npc->x==12 && npc->y==13)
+            return TRUE;
+    }
+    return FALSE;
+}
+/* Return: 0 no foreign source or native Emerald return,
+ * 1 requires original foreign source staging,
  * 2 refuse wrong world/destination, 3 previous source DMA still busy.
  * Do not mutate map state inside this preflight. */
 static u8 XgbaR54InspectFadedOriginalMapLoad(void)
@@ -351,6 +375,17 @@ static u8 XgbaR54InspectFadedOriginalMapLoad(void)
     if(!XgbaR54PendingWarpMatchesCurrentLocation()){
         ++gXgbaR54NativeWarpProof.rejected_wrong_destination;
         return 2u;
+    }
+    /* The third Fly destination is the source-built Emerald already in
+     * cartridge ROM. Retire old foreign resources at case 0 and let
+     * LoadMapFromWarp + case-1 heap reset install the native map normally.
+     * Keep the pending world0 token until actual field arrival confirms it. */
+    if(sXgbaR48PendingFlyWorld==XGBA_R63_NATIVE_WORLD){
+        if(!XgbaR63NativeEmeraldReturnHeaderPresent()){
+            ++gXgbaR54NativeWarpProof.rejected_wrong_destination;
+            return 2u;
+        }
+        return 0u;
     }
     return 1u;
 }
