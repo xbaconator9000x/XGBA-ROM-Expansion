@@ -21,11 +21,14 @@ class NativeEmeraldR53OriginalGraphics(R52):
         for required in ("gXgbaR53GraphicsProof",
                          "XgbaR53InstallOriginalSourceGraphics",
                          "XgbaR53TryLoadOriginalTileset",
-                         "XgbaR53RefuseCorruptedSourceGraphics"):
+                         "XgbaR53RefuseCorruptedSourceGraphics",
+                         "gXgbaR54OriginalArtProof"):
             self.assertIn(required,symbols)
         address=symbols["gXgbaR53GraphicsProof"][0]
         self.assertTrue(0x02000000<=address<0x02040000)
         self.assertIn("PASS_R18_EMERALD_ORIGINAL_FLASH_WRITE",self.log)
+        physical_proof=symbols["gXgbaR54OriginalArtProof"][0]
+        self.assertTrue(0x02000000<=physical_proof<0x02040000)
         self.assertNotIn("PASS_R53_THREE_ROM_FLY",self.log)
 
 if __name__=="__main__":unittest.main()
