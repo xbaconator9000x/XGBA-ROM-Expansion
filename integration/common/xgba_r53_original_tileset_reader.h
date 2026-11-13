@@ -83,7 +83,12 @@ static inline int XgbaR53MetaLoad(struct XgbaR53Reader *r,
     counts[1]=counts[0];
     counts[2]=version==1u?4u:2u;
     counts[3]=secondary?13u-(version?7u:6u):(version?7u:6u);
-    if(next.tiles!=counts[0] || next.metatiles!=counts[1] ||
+    /* Original Emerald and expansion ROMs allocate 512/640 *slots*,
+     * but source-authored metatile tables may contain only 2, 8, 144,
+     * etc. The original map grid was separately checked against these
+     * physical counts by the private R54 import audit. */
+    if(next.tiles!=counts[0] || !next.metatiles ||
+       next.metatiles>counts[1] ||
        next.attribute_bytes!=counts[2] || next.palettes!=counts[3] ||
        next.sizes[0]<32u || next.sizes[0]>next.tiles*32u ||
        (next.sizes[0]&31u) ||
