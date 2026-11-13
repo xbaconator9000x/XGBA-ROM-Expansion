@@ -11,6 +11,8 @@ on:
       - 'tests/verify_xgba_r53_real_smol_golden.py'
       - 'tests/xgba_r53_original_tileset_native.c'
       - 'integration/emerald/xgba_r53_original_graphics.inc'
+      - 'integration/common/xgba_r54_source_map_metatile_contract.h'
+      - 'tests/xgba_r54_original_map_metatile_native.c'
       - 'integration/emerald/xgba_r17_external_littleroot.inc'
       - 'tools/xgba_r17_emerald_patch.py'
       - 'tests/test_xgba_r17_emerald_external_map.py'
@@ -44,6 +46,11 @@ jobs:
             tests/xgba_r53_original_tileset_native.c -o build/r53/asset-reader
           ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
             UBSAN_OPTIONS=halt_on_error=1 build/r53/asset-reader
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r54_original_map_metatile_native.c -o build/r53/physical-map
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r53/physical-map
   native-original-emerald-graphics:
     name: Actual Emerald ARM BG tile loader, hardware arena, mGBA and Flash
     runs-on: ubuntu-24.04
