@@ -74,7 +74,7 @@ class SmolOriginalAssetContracts(unittest.TestCase):
                 source=bytearray(80000)
                 source[64]=1;source[65]=0
                 struct.pack_into("<4I",source,68,
-                  *[0x08000000+n for n in (1024,40000,57000,76000)])
+                  *[0x08000000+n for n in (1024,40000,40256,76000)])
                 source[1024:1024+len(payload)]=payload
                 _,header,sections=r53.descriptor_asset(
                     bytes(source),2,2,64,False)
@@ -82,5 +82,8 @@ class SmolOriginalAssetContracts(unittest.TestCase):
                 self.assertEqual(struct.unpack_from("<I",header,12)[0],32)
                 self.assertEqual(struct.unpack_from("<H",header,28)[0],640)
                 self.assertEqual(header[34],1)
+                self.assertEqual(struct.unpack_from('<H',header,30)[0],16)
+                self.assertEqual(len(sections[1]),16*16)
+                self.assertEqual(len(sections[2]),16*2)
 
 if __name__=="__main__": unittest.main()
