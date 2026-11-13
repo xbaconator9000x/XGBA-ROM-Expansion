@@ -17,6 +17,7 @@
 #error R53 authentic graphics require verified R52 version-specific ABI
 #endif
 #include "../common/xgba_r53_original_tileset_reader.h"
+#include "malloc.h"
 
 struct XgbaR53OriginalGraphicsProof{
     volatile u32 magic,source_key,tiles_primary,tiles_secondary;
@@ -24,9 +25,16 @@ struct XgbaR53OriginalGraphicsProof{
     volatile u32 stream_page_reads,native_bg_tile_loads,commits,rejected;
 };
 EWRAM_DATA volatile struct XgbaR53OriginalGraphicsProof gXgbaR53GraphicsProof={0};
-static EWRAM_DATA u16 sXgbaR53OriginalMetatiles[1024u*8u]={0};
-static EWRAM_DATA u16 sXgbaR53OriginalAttributes[1024u]={0};
-static EWRAM_DATA u16 sXgbaR53OriginalPalettes[13u*16u]={0};
+/* Allocate per-map source art residency from ORIGINAL Emerald's bounded
+ * gHeap only after the previous map has relinquished its field resources.
+ * A fixed EWRAM_DATA array previously overflowed the 256KiB hardware
+ * linker region by 18,208 bytes. No emulated RAM expansion is assumed. */
+struct XgbaR53ResidentSourceGraphics {
+    u16 metatiles[1024u*8u];
+    u16 attributes[1024u];
+    u16 palettes[13u*16u];
+};
+static EWRAM_DATA struct XgbaR53ResidentSourceGraphics *sXgbaR53Resident=NULL;
 static EWRAM_DATA struct Tileset sXgbaR53Primary={0};
 static EWRAM_DATA struct Tileset sXgbaR53Secondary={0};
 static EWRAM_DATA struct XgbaR53Tileset sXgbaR53PrimaryMeta={0};
@@ -55,24 +63,24 @@ static int XgbaR53NativeWriteSection(void *ctx,u8 kind,
 {
     struct XgbaR53NativeWrite *w=(struct XgbaR53NativeWrite *)ctx;
     u32 maxsize,base;
-    if(!w || !data || (offset&1u) || (size&1u))
+    if(!w || !data || !sXgbaR53Resident || (offset&1u) || (size&1u))
         return 0;
     if(kind==1u){
         base=(u32)w->start_metatile*16u;
-        maxsize=sizeof(sXgbaR53OriginalMetatiles);
+        maxsize=sizeof(sXgbaR53Resident->metatiles);
         if(base>maxsize || offset>maxsize-base ||
            size>maxsize-base-offset)return 0;
-        memcpy((u8 *)sXgbaR53OriginalMetatiles+base+offset,data,size);
+        memcpy((u8 *)sXgbaR53Resident->metatiles+base+offset,data,size);
         return 1;
     }
     if(kind==2u){
         u32 i;
         base=(u32)w->start_metatile*2u;
-        maxsize=sizeof(sXgbaR53OriginalAttributes);
+        maxsize=sizeof(sXgbaR53Resident->attributes);
         if(w->original_attribute_bytes==2u){
             if(base>maxsize || offset>maxsize-base ||
                size>maxsize-base-offset)return 0;
-            memcpy((u8 *)sXgbaR53OriginalAttributes+base+offset,data,size);
+            memcpy((u8 *)sXgbaR53Resident->attributes+base+offset,data,size);
             return 1;
         }
         /* FRLG 32-bit metatile attributes do NOT fit Emerald u16 without
@@ -85,16 +93,16 @@ static int XgbaR53NativeWriteSection(void *ctx,u8 kind,
             if(index>=1024u ||
                !XgbaR52TranslateAttribute(&sXgbaR52Profile,
                     XgbaR49Le32(data+i),&translated))return 0;
-            sXgbaR53OriginalAttributes[index]=translated;
+            sXgbaR53Resident->attributes[index]=translated;
         }
         return 1;
     }
     if(kind==3u){
         base=(u32)w->start_palette*32u;
-        maxsize=sizeof(sXgbaR53OriginalPalettes);
+        maxsize=sizeof(sXgbaR53Resident->palettes);
         if(base>maxsize || offset>maxsize-base ||
            size>maxsize-base-offset)return 0;
-        memcpy((u8 *)sXgbaR53OriginalPalettes+base+offset,data,size);
+        memcpy((u8 *)sXgbaR53Resident->palettes+base+offset,data,size);
         return 1;
     }
     if(kind==0u){
@@ -153,6 +161,15 @@ bool8 XgbaR53InstallOriginalSourceGraphics(void)
        p[1].palettes+p[0].palettes!=13u){
         ++gXgbaR53GraphicsProof.rejected;return FALSE;
     }
+    if(sXgbaR53Resident){
+        ++gXgbaR53GraphicsProof.rejected;return FALSE;
+    }
+    sXgbaR53Resident=AllocZeroed(sizeof(*sXgbaR53Resident));
+    if(!sXgbaR53Resident){
+        /* Hard engine heap pressure is a legitimate non-destructive
+         * refusal. Do not steal the R17 scratch or overflow real EWRAM. */
+        ++gXgbaR53GraphicsProof.rejected;return FALSE;
+    }
     for(side=0;side<2u;side++){
         writers[side]=wr;
         writers[side].start_metatile=side?p[0].metatiles:0u;
@@ -163,12 +180,14 @@ bool8 XgbaR53InstallOriginalSourceGraphics(void)
         /* Graphics are SHA/CRC verified now, then streamed into original
          * VRAM by CopyTilesetToVram/UsingHeap during the real native warp. */
         if(!XgbaR53VisitSection(&r,&p[side],0u,0,0)){
-            ++gXgbaR53GraphicsProof.rejected;return FALSE;
+            ++gXgbaR53GraphicsProof.rejected;
+            Free(sXgbaR53Resident);sXgbaR53Resident=NULL;return FALSE;
         }
         for(part=1;part<4u;part++)
             if(!XgbaR53VisitSection(&r,&p[side],part,
                                     XgbaR53NativeWriteSection,&writers[side])){
-                ++gXgbaR53GraphicsProof.rejected;return FALSE;
+                ++gXgbaR53GraphicsProof.rejected;
+                Free(sXgbaR53Resident);sXgbaR53Resident=NULL;return FALSE;
             }
     }
     sXgbaR53Primary=(struct Tileset){0};
@@ -179,12 +198,12 @@ bool8 XgbaR53InstallOriginalSourceGraphics(void)
     sXgbaR53Secondary.isSecondary=TRUE;
     sXgbaR53Primary.tiles=NULL;
     sXgbaR53Secondary.tiles=NULL;
-    sXgbaR53Primary.palettes=(const u16 (*)[16])sXgbaR53OriginalPalettes;
-    sXgbaR53Secondary.palettes=(const u16 (*)[16])sXgbaR53OriginalPalettes;
-    sXgbaR53Primary.metatiles=sXgbaR53OriginalMetatiles;
-    sXgbaR53Secondary.metatiles=sXgbaR53OriginalMetatiles+p[0].metatiles*8u;
-    sXgbaR53Primary.metatileAttributes=sXgbaR53OriginalAttributes;
-    sXgbaR53Secondary.metatileAttributes=sXgbaR53OriginalAttributes+p[0].metatiles;
+    sXgbaR53Primary.palettes=(const u16 (*)[16])sXgbaR53Resident->palettes;
+    sXgbaR53Secondary.palettes=(const u16 (*)[16])sXgbaR53Resident->palettes;
+    sXgbaR53Primary.metatiles=sXgbaR53Resident->metatiles;
+    sXgbaR53Secondary.metatiles=sXgbaR53Resident->metatiles+p[0].metatiles*8u;
+    sXgbaR53Primary.metatileAttributes=sXgbaR53Resident->attributes;
+    sXgbaR53Secondary.metatileAttributes=sXgbaR53Resident->attributes+p[0].metatiles;
     sXgbaR53Primary.callback=NULL;
     sXgbaR53Secondary.callback=NULL;
     layout.width=sXgbaR51NativeTerrain.width;
@@ -192,7 +211,8 @@ bool8 XgbaR53InstallOriginalSourceGraphics(void)
     layout.primaryTileset=&sXgbaR53Primary;
     layout.secondaryTileset=&sXgbaR53Secondary;
     if(!XgbaR51CommitAfterOriginalSourceGraphics(&layout,TRUE,TRUE,TRUE)){
-        ++gXgbaR53GraphicsProof.rejected;return FALSE;
+        ++gXgbaR53GraphicsProof.rejected;
+        Free(sXgbaR53Resident);sXgbaR53Resident=NULL;return FALSE;
     }
     sXgbaR53PrimaryMeta=p[0];
     sXgbaR53SecondaryMeta=p[1];
@@ -243,4 +263,7 @@ void XgbaR53ReleaseSourceGraphicsAfterFade(bool8 previous_renderer_released)
 {
     if(!previous_renderer_released)return;
     sXgbaR53SourceActive=FALSE;
+    if(sXgbaR53Resident){
+        Free(sXgbaR53Resident);sXgbaR53Resident=NULL;
+    }
 }
