@@ -49,6 +49,9 @@ jobs:
           assert 'XgbaR50LayoutFor(gMapLayouts[mapLayoutId - 1])' in patch
           assert 'XgbaR50VerifyLoadedEngineMap();' in cb
           assert 'XgbaR50StageEvents(&reader,key' in guest
+          assert 'reader.scratch=(uint8_t *)gXgbaR17Arena' in guest
+          assert 'XgbaR50CommitOriginalMapAfterGraphics' in guest
+          assert 'sXgbaR50ReaderScratch' not in guest
           assert 'header.mapScripts=NULL' in guest
           assert 'events.warpCount=0u' in guest
           assert 'sXgbaR48PendingFlyWorld!=world' in guest
