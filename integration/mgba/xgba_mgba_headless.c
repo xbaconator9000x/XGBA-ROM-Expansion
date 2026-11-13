@@ -400,12 +400,118 @@ static void save_actual_game_frame(struct mCore *core, const char *path, int ena
            enabled, visual_pixels, path);
 }
 
+
+/* R45 authentic three-original-ROM map data viewer acceptance (not
+ * Pokémon's original overworld controller/warps). All displayed pixels
+ * come ONLY from host-verified original map tiles and metatile grids
+ * already fetched by the running ARM7 game. This captures real mGBA LCD
+ * pixels without manipulating or rendering any graphics on the host. */
+static void r45_image(struct mCore *core,const char *folder,const char *name)
+{
+    char path[1024];
+    const void *pixels=NULL;
+    size_t stride=0;
+    if(strlen(folder)+strlen(name)+10>=sizeof(path))
+        fail("R45 output filename too long");
+    snprintf(path,sizeof(path),"%s/%s.ppm",folder,name);
+    core->getPixels(core,&pixels,&stride);
+    if(!pixels||stride<240u)
+        fail("R45 original framebuffer unavailable");
+    FILE *out=fopen(path,"wb");
+    if(!out)fail("R45 original LCD image cannot be opened");
+    if(fprintf(out,"P6\n240 160\n255\n")<0)
+        fail("R45 original LCD PPM header write failed");
+    const mColor *frame=(const mColor *)pixels;
+    for(unsigned y=0;y<160u;y++){
+        for(unsigned x=0;x<240u;x++){
+            uint32_t color=(uint32_t)frame[y*stride+x];
+            uint8_t rgb[3];
+#ifdef COLOR_16_BIT
+            rgb[0]=(uint8_t)((color&31u)*255u/31u);
+            rgb[1]=(uint8_t)(((color>>5u)&31u)*255u/31u);
+            rgb[2]=(uint8_t)(((color>>10u)&31u)*255u/31u);
+#else
+            rgb[0]=(uint8_t)color;
+            rgb[1]=(uint8_t)(color>>8u);
+            rgb[2]=(uint8_t)(color>>16u);
+#endif
+            if(fwrite(rgb,1,3,out)!=3)
+                fail("R45 genuine LCD pixel data truncated");
+        }
+    }
+    if(fclose(out)!=0)fail("R45 original LCD image flush failed");
+}
+static void r45_press(struct mCore *core,unsigned button)
+{
+    core->setKeys(core,button);
+    for(unsigned frame=0;frame<5u;frame++)core->runFrame(core);
+    core->setKeys(core,0u);
+    for(unsigned frame=0;frame<35u;frame++)core->runFrame(core);
+}
+static void r45_check(struct mCore *core,const struct XgbaGbaDevice *device,
+                      unsigned selected,unsigned expected_reads)
+{
+    const uint32_t proof=0x0203F900u;
+    const uint32_t state=0x0201A800u;
+    const unsigned widths[3]={20u,24u,30u};
+    const unsigned heights[3]={20u,25u,39u};
+    const unsigned tile_counts[3]={63u,75u,142u};
+    unsigned marker=core->busRead32(core,proof);
+    unsigned good=core->busRead32(core,proof+4u);
+    unsigned recorded=core->busRead32(core,proof+8u);
+    unsigned world=core->busRead32(core,proof+16u);
+    unsigned width=core->busRead32(core,proof+20u);
+    unsigned height=core->busRead32(core,proof+24u);
+    unsigned tiles=core->busRead32(core,proof+28u);
+    unsigned issues=core->busRead32(core,state+16u);
+    fprintf(stderr,"R45 real ROM-derived world=%u map=%ux%u tiles=%u "
+                   "source_reads=%u guest_reads=%u issues=%u enabled=%u\n",
+            world,width,height,tiles,device->successful_reads,recorded,issues,good);
+    if(marker!=0x5234344du||good!=1u||world!=selected||
+       width!=widths[selected]||height!=heights[selected]||
+       tiles!=tile_counts[selected]||recorded!=expected_reads||
+       device->successful_reads!=expected_reads||
+       device->failed_reads!=0u||device->provider_bad_sha256!=0u||
+       issues!=0u)
+        fail("R45 genuine original three-ROM map source or guest graphics mismatch");
+}
+static void r45_3world_maps(struct mCore *core,
+                            const struct XgbaGbaDevice *device,const char *folder)
+{
+    r45_check(core,device,0u,3u);
+    r45_image(core,folder,"00-emerald-littleroot-original-map");
+    r45_press(core,1u<<8); /* actual R -> original Team Rocket map assets */
+    r45_check(core,device,1u,7u);
+    r45_image(core,folder,"01-rocket-littleroot-original-map");
+    r45_press(core,1u<<8); /* actual R -> original HnS New Bark assets */
+    r45_check(core,device,2u,13u);
+    r45_image(core,folder,"02-hns-new-bark-original-map");
+    unsigned before=core->busRead32(core,0x0203F920u);
+    r45_press(core,1u<<4); /* actual right D-pad, move viewport 1 metatile */
+    unsigned after=core->busRead32(core,0x0203F920u);
+    if(after!=before+16u || device->successful_reads!=13u)
+        fail("R45 genuine GBA D-pad scrolling did not move imported source map");
+    r45_image(core,folder,"03-hns-dpad-pan");
+    r45_press(core,1u<<0); /* A toggles original map collision/attribute overlay */
+    if(core->busRead32(core,0x0203F928u)!=2u||
+       device->successful_reads!=13u)
+        fail("R45 actual game A-button attribute display did not change");
+    r45_image(core,folder,"04-hns-map-attributes-overlay");
+    r45_press(core,1u<<9); /* L -> Rocket source, re-fetch from sidecar */
+    r45_check(core,device,1u,17u);
+    r45_image(core,folder,"05-return-to-rocket-reacquired");
+    puts("PASS_R45_GENUINE_3_ORIGINAL_ROM_MAP_ASSETS_IN_LIVE_GBA "
+         "emulator=patched_mgba worlds=3 verified_reads=17 sha_rejects=0 "
+         "real_controller_map_switches=3 scroll=1 overlay=1 real_LCD_frames=6");
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 11 || argc > 128)
         fail("usage: ROM DATA SOURCE_ID SOURCE_SHA RESOURCE_ID OFFSET LENGTH RESOURCE_SHA FRAMES PROBE_ADDR [--screenshot path] [--scene-dir path] [--r10-dir path] [--r11-perf path] [--r12-dir path] [--r13-dir path] [--r14-dir path] [--second-resource ID OFFSET LENGTH SHA] [--disabled]");
     const char *screenshot = NULL;
     const char *r43_probe = NULL; /* R43 original authored GBA homebrew CPU proof */
+    const char *r45_probe = NULL; /* REAL original Emerald/TRE/HnS ROM-derived map test */
     const char *scene_dir = NULL;
     const char *r10_dir = NULL;
     const char *r11_perf = NULL;
@@ -454,6 +560,8 @@ int main(int argc, char **argv)
             screenshot = argv[i];
         else if (!strcmp(argv[i], "--r43-probe") && ++i < argc && !r43_probe)
             r43_probe = argv[i];
+        else if (!strcmp(argv[i], "--r45-probe") && ++i < argc && !r45_probe)
+            r45_probe = argv[i];
         else if (!strcmp(argv[i], "--scene-dir") && ++i < argc && !scene_dir)
             scene_dir = argv[i];
         else if (!strcmp(argv[i], "--r10-dir") && ++i < argc && !r10_dir)
@@ -748,11 +856,16 @@ int main(int argc, char **argv)
                   r19_battle0_offset,(uint32_t)r19_battle0_length,
                   r19_battle1_offset,(uint32_t)r19_battle1_length,enabled,r20_reentry,
                   (uint32_t)r21_heap_probe,(unsigned)r23_battles);
-    } else if (!scene_dir && !r43_probe) {
+    } else if (!scene_dir && !r43_probe && !r45_probe) {
         verify_game_copy(core, (uint32_t)probe, &device, &resource, enabled);
     }
     if (scene_dir)
         run_r9_movement_scene(core, (uint32_t)probe, scene_dir, &device, enabled);
+    if (r45_probe) {
+        if(!enabled || !resource.extra_count || r43_probe || scene_dir)
+            fail("R45 requires patched mGBA, external resource IDs and one dedicated fixture");
+        r45_3world_maps(core,&device,r45_probe);
+    }
     if (r43_probe) {
         /* R43 is a purpose-built, fully authored ARM7 CPU cartridge, not the
          * R7 FireRed sprite fixture. Verify the guest CPU itself wrote the
