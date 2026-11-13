@@ -36,6 +36,42 @@ three games, including overlapping identities; use the key
 bounded, source-aware C11 warp lookup and a 16 KiB external-index page
 reader, but it is **not yet hooked into original Emerald's active overworld**.
 
+### Direct original NPC-to-script pointer census (private read-only ROM scan)
+
+In addition to the R41 aggregate, an independent R47 source-ROM walk followed
+each populated map's original event-object array and examined every object's
+native 24-byte record and original script reference at offset 0x10:
+
+| Source | Total original object records | Script pointers inside same original ROM | Null/no script pointers | Unusual non-ROM values |
+| --- | ---: | ---: | ---: | ---: |
+| Emerald | 2,941 | 2,163 | 778 | 0 |
+| Rocket Edition 3.06 | 9,410 | 7,167 | 2,242 | **1** |
+| Heart & Soul 2.0.6 | 4,738 | 2,458 | 2,280 | 0 |
+| **All three** | **17,089** | **11,788** | **5,300** | **1** |
+
+All 2,856 original object-array headers and physical object counts parsed
+consistently. The one unusual Rocket object is **source Rocket, original
+map group 19/map 10, object local ID 14**, with raw script field `0x000003E0`;
+it may encode a source-engine special case and must **not** be dropped,
+rewritten, or treated as an ordinary script address without further evidence.
+Null script values can be legitimate and must not be discarded either.
+
+Known **original NPC test candidates** for the first in-engine talk test
+(with original pointer provenance, not invented dialogue):
+
+- Emerald Littleroot 0:9, original object ID 1, (16,10), script ROM offset
+  `0x1E8034`, graphics ID 6
+- Rocket Littleroot 0:9, original object ID 1, (18,10), script ROM offset
+  `0x215555`, graphics ID 6
+- Heart & Soul New Bark 0:0, original object ID 1, (20,18), script ROM
+  offset `0x38E3DF`, graphics ID 416
+
+These are real script **pointers**, not evidence that their dialogue
+or custom engine commands can execute under vanilla Emerald. The first
+gameplay acceptance test must resolve and execute the selected original
+script in the actual guest interpreter and verify real resulting dialogue
+and state.
+
 These counts cover **map-linked objects/events** only. A full integration
 also requires independent inventories for every other game-specific
 resource class, rather than treating the above totals as complete.
