@@ -12,19 +12,20 @@ sys.path.insert(0,str(ROOT/"tools"))
 import xgba_r53_original_tileset_packs as r53
 import xgba_resource_sidecar as sidecar
 
-def synthetic_rom(version=2,compressed=False):
+def synthetic_rom(version=2,compressed=False,secondary=False):
     data=bytearray(125000)
     descriptor=64
     tiles=512
     metas=40000
-    attrs=57000
+    physical_count=(1024-(640 if version in (1,2) else 512)) if secondary else (640 if version in (1,2) else 512)
+    attrs=metas+physical_count*16
     pals=76000
     for i in range(30000):data[tiles+i]=(17*i+13)&255
-    for i in range(16000):data[metas+i]=(i*3+1)&255
-    for i in range(4100):data[attrs+i]=i&255
+    for i in range(physical_count*16):data[metas+i]=(i*3+1)&255
+    for i in range(physical_count*(4 if version==1 else 2)):data[attrs+i]=i&255
     for i in range(500):data[pals+i]=(i*7)&255
     data[descriptor]=int(compressed)
-    data[descriptor+1]=0
+    data[descriptor+1]=int(secondary)
     struct.pack_into("<4I",data,descriptor+4,
        *[0x08000000+x for x in (tiles,pals,metas,attrs)])
     return data,descriptor,tiles
@@ -52,8 +53,7 @@ class OriginalSourceTilesetTests(unittest.TestCase):
                                  entry["length"])
 
     def test_secondary_slot_selection_and_pointers(self):
-        rom,desc,_=synthetic_rom()
-        rom[desc+1]=1
+        rom,desc,_=synthetic_rom(secondary=True)
         ident,header,parts=r53.descriptor_asset(rom,2,2,desc,True)
         self.assertEqual([len(p) for p in parts],[12288,6144,768,192])
         self.assertEqual(parts[3],bytes(rom[76000+224:76000+416]))
@@ -80,8 +80,7 @@ class OriginalSourceTilesetTests(unittest.TestCase):
             r53.gba_lz77(bytes([0x10,0x08,0,0,0x00,0x33]),0)
 
     def test_original_emerald_short_lz77_secondary_preserves_real_length(self):
-        rom,desc,tile_at=synthetic_rom(compressed=True)
-        rom[desc+1]=1
+        rom,desc,tile_at=synthetic_rom(version=0,secondary=True,compressed=True)
         # A real Emerald secondary sometimes decompresses only a few
         # 4bpp tiles, although the BG tile reservation holds 512 slots.
         compressed=(bytes([0x10,32,0,0])+
@@ -97,7 +96,7 @@ class OriginalSourceTilesetTests(unittest.TestCase):
         self.assertEqual(header[34],1)
 
     def test_layouts_not_interchanged(self):
-        rom,desc,_=synthetic_rom()
+        rom,desc,_=synthetic_rom(version=0)
         _,old,parts=r53.descriptor_asset(rom,0,0,desc,False)
         self.assertEqual([len(p) for p in parts],[16384,8192,1024,192])
         self.assertEqual(old[5],0)
