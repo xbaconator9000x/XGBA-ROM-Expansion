@@ -59,7 +59,7 @@ int main(void)
     row(1,0x010009u,1,1);rd.cached_page=XGBA_R52_PAGE_INVALID;
     assert(XgbaR52LoadProfile(&rd,0x010009u,&p));
     assert(p.attribute_bytes==4u);
-    assert(XgbaR52TranslateAttribute(&p,0x40000142u,&attr) &&
+    assert(XgbaR52TranslateAttribute(&p,0x40000042u,&attr) &&
            attr==(0x42u|0x2000u));
     assert(!XgbaR52TranslateAttribute(&p,0x00000142u,&attr));
     missing=1u;rd.cached_page=XGBA_R52_PAGE_INVALID;
