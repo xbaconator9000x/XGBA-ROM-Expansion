@@ -145,6 +145,9 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             raise AssertionError("Emerald original full tileset exceeds one synchronous 16 KiB XGBA read; must implement chunking, never drop assets")
         r50=bool(getattr(cls,"R50_ENGINE_EVENT_TEST",False))
         r51=bool(getattr(cls,"R51_ORIGINAL_GRID_TEST",False))
+        r52=bool(getattr(cls,"R52_SOURCE_LAYOUT_TEST",False))
+        if r52 and not r51:
+            raise AssertionError("R52 requires native R51 original map terrain")
         if r51 and not r50:
             raise AssertionError("R51 original world geometry requires R50 true native source events")
         if r19:
@@ -223,6 +226,8 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             config.write_text(config.read_text()+"#define XGBA_R50_ENGINE_EVENTS 1\n")
         if r51:
             config.write_text(config.read_text()+"#define XGBA_R51_ORIGINAL_TERRAIN 1\n")
+        if r52:
+            config.write_text(config.read_text()+"#define XGBA_R52_SOURCE_LAYOUT 1\n")
         if r19_battle:
             config.write_text(config.read_text()+
                 "\n#define XGBA_R19_BATTLE_TEST 1\n"
