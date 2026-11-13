@@ -50,6 +50,8 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                       (ROOT/"integration/emerald/xgba_r53_original_graphics.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R54_REAL_WARP_BRIDGE__",
                       (ROOT/"integration/emerald/xgba_r54_native_fly_warp_admission.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R57_NATIVE_SPRITE_BRIDGE__",
+                      (ROOT/"integration/emerald/xgba_r57_native_source_sprite_installer.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_MAPS__",
                       (ROOT/"integration/emerald/xgba_r19_connected_maps.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_BATTLE__",
@@ -345,6 +347,24 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                 "    }\n"
                 "    if (graphicsId == OBJ_EVENT_GFX_BARD)\n    {",
                 "R55 native source-authenticated original NPC sprite image/palette dispatch")
+            sprite_src=r16.one(sprite_src,
+                "static void LoadObjectEventPalette(u16);",
+                "extern bool8 XgbaR57ApplyOriginalObjectPalette(u8 graphics_id,u8 palette_slot);\n"
+                "static void LoadObjectEventPalette(u16);",
+                "R57 actual source palette installer prototype")
+            sprite_src=r16.one(sprite_src,
+                "    sprite->oam.paletteNum = paletteSlot;\n"
+                "    sprite->coordOffsetEnabled = TRUE;\n"
+                "    sprite->sObjEventId = objectEventId;",
+                "    sprite->oam.paletteNum = paletteSlot;\n"
+                "    if (!XgbaR57ApplyOriginalObjectPalette(objectEvent->graphicsId, paletteSlot)) {\n"
+                "        objectEvent->active = FALSE;\n"
+                "        DestroySprite(sprite);\n"
+                "        return OBJECT_EVENTS_COUNT;\n"
+                "    }\n"
+                "    sprite->coordOffsetEnabled = TRUE;\n"
+                "    sprite->sObjEventId = objectEventId;",
+                "R57 copy actual original source palette at real NPC spawn")
             objects.write_text(sprite_src)
         world.write_text(s)
         if r19_battle:

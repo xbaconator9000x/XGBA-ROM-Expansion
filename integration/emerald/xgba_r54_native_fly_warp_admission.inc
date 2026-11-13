@@ -26,6 +26,8 @@
 #include "../common/xgba_r55_source_qualified_sprite_slots.h"
 #include "../common/xgba_r56_original_obj_reader.h"
 
+static bool8 XgbaR57InstallPendingMapSprites(u8 world,u8 group,u8 map);
+static void XgbaR57ReleasePendingMapSprites(void);
 struct XgbaR54NativeWarpProof {
     volatile u32 magic,native_faded_load_entries,source_prepare_attempts;
     volatile u32 source_committed_warps,source_world,last_source_key;
@@ -321,6 +323,7 @@ static bool8 XgbaR54ReleaseOldSourceBeforeNativeHeapReset(void)
            sXgbaR50Ready)
             return FALSE;
     }
+    XgbaR57ReleasePendingMapSprites();
     XgbaR55ForgetSourceSpriteRegistrations();
     return TRUE;
 }
@@ -374,13 +377,16 @@ static bool8 XgbaR54InstallPendingOriginalSourceAtNativeWarp(void)
         ++gXgbaR54NativeWarpProof.rejected_dma_release;
         return FALSE;
     }
-    if(!XgbaR51PrepareOriginalSourceGeometry(world,group,map,
+    if(!XgbaR57InstallPendingMapSprites(world,group,map) ||
+       !XgbaR51PrepareOriginalSourceGeometry(world,group,map,
           XgbaR54ResolveOriginalSpriteSlot,NULL,TRUE) ||
        !XgbaR53InstallOriginalSourceGraphics()){
         ++gXgbaR54NativeWarpProof.rejected_resource_load;
         /* Never let Emerald load its colliding source-local numeric map
          * if an original foreign sprite, CRC or original grid failed. */
         XgbaR51ReleaseOriginalGeometryAfterFade(TRUE);
+        XgbaR57ReleasePendingMapSprites();
+        XgbaR55ForgetSourceSpriteRegistrations();
         return FALSE;
     }
     sXgbaR54SourceMapPreparedInWarp=TRUE;
