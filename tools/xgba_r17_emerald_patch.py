@@ -264,21 +264,21 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
             fm=e/"src/fieldmap.c"
             code=fm.read_text()
             code=r16.one(code,
-                "static void CopyTilesetToVram(struct Tileset const *tileset, u16 numTiles, u16 offset)\\n{\\n    if (tileset)",
-                "extern s16 XgbaR53TryLoadOriginalTileset(const struct Tileset *tileset);\\n"
-                "extern void XgbaR53RefuseCorruptedSourceGraphics(void);\\n"
-                "static void CopyTilesetToVram(struct Tileset const *tileset, u16 numTiles, u16 offset)\\n"
-                "{\\n"
-                "    s16 xgbaResult=XgbaR53TryLoadOriginalTileset(tileset);\\n"
-                "    if(xgbaResult){if(xgbaResult<0) XgbaR53RefuseCorruptedSourceGraphics();return;}\\n"
+                "static void CopyTilesetToVram(struct Tileset const *tileset, u16 numTiles, u16 offset)\n{\n    if (tileset)",
+                "extern s16 XgbaR53TryLoadOriginalTileset(const struct Tileset *tileset);\n"
+                "extern void XgbaR53RefuseCorruptedSourceGraphics(void);\n"
+                "static void CopyTilesetToVram(struct Tileset const *tileset, u16 numTiles, u16 offset)\n"
+                "{\n"
+                "    s16 xgbaResult=XgbaR53TryLoadOriginalTileset(tileset);\n"
+                "    if(xgbaResult){if(xgbaResult<0) XgbaR53RefuseCorruptedSourceGraphics();return;}\n"
                 "    if (tileset)",
                 "R53 real native Emerald background source tile copy")
             code=r16.one(code,
-                "static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTiles, u16 offset)\\n{\\n    if (tileset)",
-                "static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTiles, u16 offset)\\n"
-                "{\\n"
-                "    s16 xgbaResult=XgbaR53TryLoadOriginalTileset(tileset);\\n"
-                "    if(xgbaResult){if(xgbaResult<0) XgbaR53RefuseCorruptedSourceGraphics();return;}\\n"
+                "static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTiles, u16 offset)\n{\n    if (tileset)",
+                "static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTiles, u16 offset)\n"
+                "{\n"
+                "    s16 xgbaResult=XgbaR53TryLoadOriginalTileset(tileset);\n"
+                "    if(xgbaResult){if(xgbaResult<0) XgbaR53RefuseCorruptedSourceGraphics();return;}\n"
                 "    if (tileset)",
                 "R53 real original Emerald BG decompress-heap source tile copy")
             fm.write_text(code)
