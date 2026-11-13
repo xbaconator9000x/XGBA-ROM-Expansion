@@ -52,6 +52,26 @@ class OriginalSourceTilesetTests(unittest.TestCase):
                 self.assertEqual(b"".join(sidecar.iter_resource_chunks(parsed,entry["id"])).__len__(),
                                  entry["length"])
 
+    def test_real_rocket_v2_attributes_before_metatiles_are_source_attested(self):
+        rom,desc,tiles=synthetic_rom(version=2)
+        meta=40000
+        # Actual Rocket 3.06 stores its 640 physical 2-byte attributes
+        # immediately before its 640 sixteen-byte metatile definitions.
+        attrs=meta-640*2
+        for i in range(640*2):
+            rom[attrs+i]=(i*5+7)&255
+        struct.pack_into("<I",rom,desc+16,0x08000000+attrs)
+        ident,header,sections=r53.descriptor_asset(rom,1,2,desc,False)
+        self.assertEqual(len(sections[1]),640*16)
+        self.assertEqual(len(sections[2]),640*2)
+        self.assertEqual(sections[2][:8],bytes((i*5+7)&255 for i in range(8)))
+        self.assertEqual(header[:4],b"X53T")
+        self.assertEqual(header[4:7],bytes((1,2,0)))
+        # Reject misaligned/ambiguous attribute records, never guess.
+        struct.pack_into("<I",rom,desc+16,0x08000000+attrs+1)
+        with self.assertRaisesRegex(r53.TilesetFormatError,"contiguous"):
+            r53.descriptor_asset(rom,1,2,desc,False)
+
     def test_secondary_slot_selection_and_pointers(self):
         rom,desc,_=synthetic_rom(secondary=True)
         ident,header,parts=r53.descriptor_asset(rom,2,2,desc,True)
