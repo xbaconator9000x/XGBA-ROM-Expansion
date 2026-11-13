@@ -85,7 +85,7 @@ class OriginalSourceTilesetTests(unittest.TestCase):
         self.assertEqual([len(p) for p in parts],[16384,8192,1024,192])
         self.assertEqual(old[5],0)
         self.assertEqual(old[33],6)
-        with self.assertRaisesRegex(r53.TilesetFormatError,"out of range"):
+        with self.assertRaisesRegex(r53.TilesetFormatError,"descriptor identity"):
             r53.descriptor_asset(rom,0,2,len(rom),False)
 
 if __name__=="__main__":unittest.main()
