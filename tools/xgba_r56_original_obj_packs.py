@@ -153,7 +153,7 @@ def write_private_pack(compiled,private_out:Path):
         for name in sorted(compiled):
             meta,parts=compiled[name]
             resources=[(name+".meta",meta)]
-            resources.extend((name+"."+suffix+"00",blob.ljust(PAGE,b"\\x00"))
+            resources.extend((name+"."+suffix+"00",blob.ljust(PAGE,bytes([0])))
                              for suffix,blob in zip(SECTIONS,parts))
             for resource,data in resources:
                 start=output.tell()
@@ -165,7 +165,7 @@ def write_private_pack(compiled,private_out:Path):
     manifest={"format":sidecar.FORMAT,"version":sidecar.VERSION,
               "source_identity":identity,"data_file":datafile,
               "resources":records}
-    (root/"manifest.json").write_text(json.dumps(manifest,sort_keys=True)+"\\n")
+    (root/"manifest.json").write_text(json.dumps(manifest,sort_keys=True)+chr(10))
     sidecar.load_manifest(root/"manifest.json",expected_source_identity=identity)
     (root/"R56_PRIVATE_SOURCE_SCOPE.json").write_text(json.dumps({
        "exact_original_sprite_entries":len(compiled),
@@ -173,7 +173,7 @@ def write_private_pack(compiled,private_out:Path):
        "native_emerald_obj_installer_complete":False,
        "native_original_fly_journey_complete":False,
        "original_sprite_id_ownership_requires_table_audit":True,
-       "no_public_source_art":True},sort_keys=True,indent=2)+"\\n")
+       "no_public_source_art":True},sort_keys=True,indent=2)+chr(10))
     return manifest
 
 def main():
