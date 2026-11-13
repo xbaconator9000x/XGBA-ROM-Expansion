@@ -4,6 +4,11 @@ on:
     branches: [main, 'integration/r48-authentic-3world-fly-npc-20261113']
     paths:
       - 'tools/xgba_r48_original_npc_assets.py'
+      - 'tools/xgba_r49_all_original_map_events.py'
+      - 'integration/common/xgba_r49_full_original_map_events.h'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'tests/test_xgba_r49_all_original_events.py'
+      - 'tests/xgba_r49_full_events_native.c'
       - 'tools/xgba_r17_emerald_patch.py'
       - 'integration/emerald/xgba_r48_original_npc_scripts.inc'
       - 'integration/emerald/xgba_r17_external_littleroot.inc'
@@ -15,6 +20,11 @@ on:
     branches: [main]
     paths:
       - 'tools/xgba_r48_original_npc_assets.py'
+      - 'tools/xgba_r49_all_original_map_events.py'
+      - 'integration/common/xgba_r49_full_original_map_events.h'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'tests/test_xgba_r49_all_original_events.py'
+      - 'tests/xgba_r49_full_events_native.c'
       - 'tools/xgba_r17_emerald_patch.py'
       - 'integration/emerald/xgba_r48_original_npc_scripts.inc'
       - 'integration/emerald/xgba_r17_external_littleroot.inc'
@@ -99,7 +109,7 @@ jobs:
           PYTHONPATH=tools:tests:integration/mgba python3 -m unittest \
             test_xgba_r48_native_emerald_npc_bridge.SourceBuiltEmeraldOriginalNpcBridge -v \
             2>&1 | tee r48-native.log
-          grep -q 'Ran 2 tests' r48-native.log
+          grep -q 'Ran 3 tests' r48-native.log
           grep -q '^OK$' r48-native.log
           test -s r48-evidence/NO_FOREIGN_NPC_YET.txt
           test -n "$(find r48-evidence -name '*.png' -print -quit)"
