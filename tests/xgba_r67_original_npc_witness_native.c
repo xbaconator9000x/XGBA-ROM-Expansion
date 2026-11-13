@@ -36,7 +36,7 @@ static void fixture(uint8_t *p,unsigned world)
 }
 int main(void)
 {
-    uint8_t src[XGBA_R67_BYTES];
+    uint8_t src[XGBA_R67_BYTES]={0};
     unsigned w;
     assert(!XgbaR67ValidateOriginalNpcWitness(3u,src,256u));
     assert(!XgbaR67ValidateOriginalNpcWitness(0u,NULL,256u));
