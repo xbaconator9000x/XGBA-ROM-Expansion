@@ -1,108 +1,126 @@
-# XGBA
+# XGBA — Expanding GBA game resources
 
-**More game. Same GBA.**
+XGBA is an experimental project exploring how Game Boy Advance games can access substantially more content than fits inside a conventional cartridge ROM.
 
-What if a Game Boy Advance game could access substantially more content than you can squeeze into its cartridge ROM?
+The approach is to let an **XGBA-enabled game** request additional maps, graphics, scripts and other resources from external files through a **modified emulator**. The game still runs its original GBA engine and uses its actual working memory. The extra storage is not a larger block of directly addressable GBA ROM or RAM.
 
-That's the question behind XGBA. I'm building an experimental way for compatible GBA games to **request maps, graphics, scripts and other resources from external storage while they're running**, instead of having to fit everything into one `.gba` file.
+My longer-term aim is to make this usable for ROM hacking: not just custom-built demonstrations, but eventually a repeatable expansion process for supported vanilla games and already modified ROMs, with editor and emulator integration.
 
-The dream? Massive games, enormous ROM hacks, and maybe even that mythical **nine-region Pokémon adventure**. Imagine making the game you actually want to make without spending half your life trying to find somewhere to put the assets.
+> **Status — 14 November 2026:** External resource loading has been demonstrated in real FireRed and Emerald engine tests. Three-ROM integration is under active development, but an uninterrupted Emerald → Team Rocket Edition → Heart & Soul → Emerald playthrough is **not yet demonstrated**. See [current progress](#what-we-have-demonstrated) and [draft PR #123](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/123).
 
-**And no, we haven't built a playable nine-region game.** We're proving the underlying technology first, with real game engines, real emulator tests, and increasingly ridiculous stress tests.
+## What XGBA is
 
-> **Status — 14 November 2026:** Working experimental FireRed/Emerald external-resource integration; full three-ROM gameplay integration **not yet complete**. See [what works](#what-actually-works) and [the active integration PR](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/123).
+A GBA cartridge ROM has a limited CPU-visible address range. XGBA separates **where resources are stored** from **where a running game needs them in memory**.
 
-## The idea
+The current prototype uses these components:
 
-Traditional GBA ROM hacking involves fighting cartridge space, repointing data and working around fairly unforgiving hardware limits. Bigger cartridge images, ROM banking, and multi-game cartridges are useful approaches, but they don't automatically give an existing game a clean way to fetch a world of new content on demand.
-
-**XGBA takes a different approach:**
-
-1. A deliberately XGBA-enabled game requests a named resource.
-2. A modified emulator checks its source identity and the resource's integrity.
-3. The emulator supplies that resource from an external **sidecar** package.
-4. The game uses a bounded buffer in **real GBA working memory** to load it through its existing engine systems.
+1. **A patched GBA game**, built or instrumented to request a resource by ID at specific points in its existing engine.
+2. **A modified mGBA emulator** that handles those requests and retrieves data from external resource packages (sidecars).
+3. **Source and integrity checks**, including original-ROM identity, resource identifiers and SHA-256 hashes, before the host supplies data.
+4. **Bounded transfers**, typically using 16 KiB resource pages and carefully managed EWRAM lifetimes. Graphics ultimately reach normal GBA VRAM through real game-engine code.
 
 ```text
-    XGBA-enabled FireRed / Emerald
-                  │
-         Request resource ID
-                  │
-       Modified mGBA provider
-                  │
-       External resource packs
-        (identity + SHA-256)
-                  │
-        Bounded 16 KiB pages
-                  │
-     Existing GBA RAM / VRAM
-                  │
-     Actual game-engine assets
+GBA game (real FireRed / Emerald engine)
+                |
+        Resource request
+                |
+      Modified mGBA provider
+                |
+   External integrity-checked files
+                |
+     Bounded transfer into RAM
+                |
+  Native game loaders / RAM / VRAM
 ```
 
-The executable game still runs as a GBA game. We are **not** claiming that the GBA suddenly has unlimited RAM, VRAM, or directly addressable ROM. The additional capacity is **external storage**, fetched in manageable pieces. Host storage and emulator support still impose limits, and a new resource format doesn't magically remove limitations in the game engine itself.
+The emulator provides additional *storage access*. It does not remove the GBA's CPU, graphics, memory-bandwidth or game-engine constraints. It also requires deliberate support from the game and emulator; a normal `.gba` file in an unmodified emulator does not acquire this functionality by itself.
 
-That distinction matters. A **64 MiB cartridge image** is still a larger *cartridge image*. A multicart menu that boots several games isn't one continuous game world. XGBA is experimenting with something else: a way for a running game to use a separately managed pool of content.
+## Why I started it
 
-## What actually works
+The normal approach to making a larger GBA game is to fit everything into the available cartridge space, repoint data, optimise assets, replace content or build around the engine's limits. Those techniques work, but space management becomes a substantial part of development as a project grows.
 
-There's a lot of code here now, but I'd rather be precise about what it proves.
+Other approaches address parts of this problem. Larger 64 MiB ROM configurations and banking can increase or rearrange cartridge storage, while multicarts can hold several games. Neither is automatically a way for **one running game** to request an arbitrary, source-verified resource collection outside its cartridge image, or to share a coherent world and save state across multiple games.
 
-| Capability | Current state |
-| --- | --- |
-| Real compiled FireRed fetching assets beyond the ordinary 32 MiB ROM window through modified mGBA | **Verified** — original game code, native emulator execution and OBJ VRAM checks |
-| Emerald maps, tilesets, sprite/resource lifetimes, battles and Flash-save recovery | **Verified in controlled native integration tests** |
-| Game-engine scripts using externally supplied, **test-authored** data with real flags, inventory and save recovery | **Verified** — not the same as executing a foreign ROM hack's entire original script system |
-| Original Emerald, Team Rocket Edition 3.06 and Heart & Soul 2.0.6 resource inventory | **Preserved and source-qualified** in private original-ROM-derived data |
-| Real Rocket source NPC frames, palettes and terrain for the first target map | **Extracted and integrity-checked**; first-viewport adapter and Fly UI are in the [draft integration PR](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/123) |
-| One uninterrupted, playable Emerald → Rocket → Johto → Emerald journey | **Not yet demonstrated** |
-| One-click expansion of any clean or already modified ROM | **Long-term goal**, not a released tool |
-| Stock mGBA or original GBA hardware running expanded sidecars | **Not supported by these experiments** |
+XGBA is an experiment in that latter model. I want storage capacity to become less of a constraint on the *scope* of a project, without ignoring the real hardware and engine limits that remain.
 
-For a sense of scale, our private original-ROM intake currently accounts for **2,856 populated maps, 17,089 NPC placements, 7,146 warps, 2,340 coordinate events and 4,697 background interactions** across the three games. The source identities are preserved; we aren't simply renumbering everything and hoping for the best.
+Pokémon is a useful proving ground: multiple regions mean extensive map data, tilesets, NPCs, events, species, music and progression state. A nine-region game is an ambitious possible application, **not a feature XGBA can currently deliver**.
 
-Preserving that data is an important milestone. **Making every part of it work together is a different, much harder job.**
+## What we have demonstrated
 
-### Evidence, without the 50-page changelog
+The project has progressed beyond storage-format tests. Several stages have been executed in real, source-built FireRed or Emerald running under a pinned, modified native mGBA build.
 
-- [R6 — real FireRed/mGBA external graphics proof](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42940797581): external asset beyond the standard ROM window, checked in the game's actual graphics path.
-- [R40 — original Emerald executing an external script and cold-reloading Flash state](docs/R40_REAL_EMERALD_EXTERNAL_EVENT_FLASH.md).
-- [R42 — two source-labelled, authored events running through Emerald's actual engine](docs/R42_NATIVE_TWO_SOURCE_IN_GAME_MECHANICS.md).
-- [R45 — original assets from all three games shown inside a native mGBA map viewer](docs/R45_ACTUAL_THREE_ORIGINAL_ROM_NATIVE_MAP_EXECUTION.md). **A viewer is not a playable three-game integration.**
-- [R51–R62 — active original-Emerald three-world integration](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/123): source-aware maps, original graphics, Fly selection, Rocket assets and private host-provider checks. **The end-to-end gameplay acceptance is still pending.**
+| Area | Demonstrated result | Important boundary |
+| --- | --- | --- |
+| **External graphics** | Actual FireRed game code retrieved a validated resource stored beyond the usual 32 MiB cartridge window and loaded it into OBJ VRAM. | The result requires patched game and emulator code. |
+| **Engine integration** | Emerald source-built map, tileset, object-graphics and battle tests exercise bounded resource loading, allocator pressure, DMA/VRAM lifetimes and map transitions. | These are controlled integrations, not a complete foreign game. |
+| **Persistence** | The real Emerald Flash-save path has saved externally supplied **test-authored** event effects; a separate cold emulator process recovered those flags, variables and items. | This does not yet establish one shared save across three original games. |
+| **Original game data** | The private intake for Emerald, Team Rocket Edition 3.06 and Heart & Soul 2.0.6 preserves source-qualified map identities, NPCs, warps and other event records. | Source data preservation is not the same as executable compatibility. |
+| **Foreign graphics integration** | Original Team Rocket Edition tilesets, NPC frames and palettes have been extracted, checked and assembled into private provider resources; native Emerald adapters and Fly-screen selection exist in the development branch. | A live, playable Fly into the original Rocket world has not passed. |
 
-The [historical README and milestone log](docs/archive/README_PRE_REWRITE_2026-11-14.md) retains the older detailed evidence instead of dumping it all onto the front page.
+The original three-game inventory currently contains **2,856 populated maps, 17,089 NPC/object placements, 7,146 warps, 2,340 coordinate events and 4,697 background interactions**. Those counts describe source records collected and preserved, not content that has all been made playable.
 
-## The big test: three actual games, one running Emerald
+### Selected evidence
 
-To stress this properly, we're not merely injecting three sample maps and calling it a day. We're working from the **original, user-owned ROM data** for Pokémon Emerald, Team Rocket Edition and Heart & Soul, aiming to retain all relevant content: maps, events, scripts, NPCs, graphics, Pokémon data, battles, music, progression and game state.
+- [R6: original FireRed external graphics and OBJ VRAM verification](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/42940797581).
+- [R40: original Emerald interpreter and Flash cold-restart test](docs/R40_REAL_EMERALD_EXTERNAL_EVENT_FLASH.md).
+- [R42: authored external events running through actual Emerald gameplay systems](docs/R42_NATIVE_TWO_SOURCE_IN_GAME_MECHANICS.md).
+- [R45: private original assets from three games rendered in a native mGBA map viewer](docs/R45_ACTUAL_THREE_ORIGINAL_ROM_NATIVE_MAP_EXECUTION.md). This was **not** a three-game overworld.
+- [R51–R62: current original-Emerald multi-world integration and original Rocket resources](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/123) (draft; full gameplay acceptance pending).
 
-The next real acceptance test is deliberately straightforward to describe, even if implementing it is anything but:
+The more detailed development record is retained in the [historical README archive](docs/archive/README_PRE_REWRITE_2026-11-14.md), with individual engineering reports under [docs](docs/).
 
-1. **Start in actual Emerald.** Fly to a location supplied from the original Team Rocket Edition.
-2. **Play a genuine Rocket map.** See its real geometry and original sprites; interact with an original NPC, run the original dialogue and compatible script effects.
-3. **Continue to Johto.** Enter the original Heart & Soul Goldenrod map with its own assets and interactions, without trampling Emerald or Rocket IDs.
-4. **Return to Emerald.** Retain party, bag, relevant flags and progress; save through actual Flash and prove the result after a cold emulator restart.
+### Current integration test: three original Pokémon games
 
-A homebrew showcase, static reconstruction, fabricated NPC conversation or a screenshot that merely *looks* like Pokémon won't count as passing this test. The real engine has to do the work.
+Our present stress and compatibility target is to bring the relevant original content of **Pokémon Emerald, Team Rocket Edition and Heart & Soul** into one Emerald-based running game, rather than selecting a few representative maps and treating them as the finished result.
 
-The acceptance criteria are documented in [the full-content integration contract](docs/R47_COMPLETE_THREE_GAME_CONTENT_ACCEPTANCE.md). **We are not there yet.** The largest remaining work is getting complete original foreign assets into the live engine, safely translating foreign scripts/warps and maintaining separate source namespaces within one reliable game state.
+The immediate acceptance path is:
 
-## Where I want to take it
+1. Play in the **actual Emerald engine**, then use its Fly interface to enter an original Rocket Edition map.
+2. Render the **original Rocket geometry and sprites**, interact with an original NPC, execute its compatible original dialogue and script, and retain the correct source identity.
+3. Continue to **Heart & Soul's Goldenrod**, with its original assets and events, without mixing map IDs or game-state namespaces.
+4. Return to Emerald, verify the relevant party, inventory, flags and progression, **save to Flash**, and recover that state after a cold restart.
 
-**First: make the three-ROM integration genuinely playable.** Finish original art, animation handling, live map/NPC paging, foreign-script compatibility, cross-world state and rigorous emulator evidence.
+This is a test specification, **not a completed playthrough**. The original-art pipeline, live map/NPC paging, script relocation and compatibility, source-specific state and complete save recovery all require further work. The acceptance requirements are defined in [R47's full-content contract](docs/R47_COMPLETE_THREE_GAME_CONTENT_ACCEPTANCE.md).
 
-**Then: make it useful to ROM hackers.** A game expansion method isn't much use if you need to rewrite half an engine by hand. I want editor and emulator integration that lets people manage external resources inside their usual tools, with compatibility checks and clear failures instead of silent corruption.
+## What this could mean for ROM hacking
 
-**Eventually: make expansion boring.** Select a supported ROM, validate it, patch it, and carry on building. Ideally that applies not only to vanilla FireRed/Emerald but to compatible existing ROM hacks as well. That is the ambition—not a claim of universal compatibility today.
+If we can turn the architecture into reliable tools, there are several practical implications for the community.
 
-If a nine-region game ever becomes practical because of this, fantastic. But even much smaller projects could benefit from no longer treating cartridge space as the final word on their scope.
+- **Larger playable projects.** Maps, graphics, dialogue and other resources could be stored outside the cartridge and loaded when needed. Projects would still need to respect game-engine and working-memory limits.
+- **Multi-region and multi-source development.** A game could eventually draw from substantially larger collections of world data, with explicit identifiers to prevent maps, scripts or other records from different sources colliding.
+- **Less destructive content management.** Instead of routinely removing or replacing assets to make space, compatible projects could manage additional resources as separate packages.
+- **Better workflows for creators.** ROM editors, build pipelines and emulators could eventually support these packages directly, making the process more accessible than hand-editing engine code and pointers.
 
-## Building, testing and contributing
+I don't think the interesting result here is merely a bigger ROM file. It's the prospect of a **game accessing a larger body of content during gameplay**, with the emulator handling storage and the engine loading what it needs.
 
-This is a **developer-stage experiment**, not a consumer download or a general ROM patcher. The source, native mGBA integrations, versioned resource formats, test harnesses and CI workflows are in this repository. Some end-to-end tests require pinned upstream FireRed/Emerald and mGBA source checkouts, ARM toolchains and opt-in experimental patches.
+XGBA isn't necessarily the first exploration of expanded GBA storage or emulator-side extensions, and it doesn't supersede cartridge banking, multi-ROM collections or other approaches. The intended contribution is a validated, reusable path for **game-initiated external resources**, particularly for existing GBA engines and ROM-hacking workflows.
 
-Start with [the architecture notes](docs/xgba-integration-architecture.md), the [memory and resource-lifetime policy](docs/xgba-memory-virtualization-policy.md), or the [current three-game acceptance contract](docs/R47_COMPLETE_THREE_GAME_CONTENT_ACCEPTANCE.md). For a public, source-safe smoke test of the private resource-fusion logic on the active development branch:
+## Future plans
+
+Development is currently organised around four connected goals.
+
+**1. Finish executable three-ROM integration.** Complete original Rocket and Johto graphics and animations, on-screen NPC loading as the player moves, native Fly/warp transitions, original script and event compatibility, battles, source-scoped state, and Flash save/recovery. Verify it in the real Emerald engine with emulator traces and actual gameplay captures.
+
+**2. Generalise the expansion system.** Move beyond the current test maps and resource types. Improve paging, prefetching, decompression, DMA ownership, cache eviction, resource lifetimes, integrity recovery and performance under sustained gameplay. Investigate what engine structures must change to support very large maps and resource catalogues.
+
+**3. Support already modified ROMs.** Explore compatibility-aware patching of supported FireRed/Emerald derivatives and existing hacks. This needs executable/version detection, pointer and patch-conflict analysis, rollback and tests; it cannot safely be assumed to work for every ROM.
+
+**4. Integrate with the tools people already use.** Provide editor, build-tool and emulator support for importing, organising, expanding and exporting external resources. The longer-term goal is a straightforward patch-and-edit workflow, rather than a custom engineering exercise for each game.
+
+Additional work on **extended EWRAM/IWRAM/VRAM capabilities** is being investigated separately. That is a different problem from storage expansion, and any emulator-assisted memory changes will require their own hardware-compatibility and performance evidence. See the [memory policy and architecture notes](docs/xgba-memory-virtualization-policy.md).
+
+## Current limits and project access
+
+XGBA is **experimental**, not a released universal ROM expansion patcher.
+
+- The working system presently depends on **modified mGBA and explicit game-side integration**. Stock emulators and physical GBA hardware are not established targets for these external resource packs.
+- The amount of content stored externally may grow far beyond a normal ROM image, but **simultaneously usable RAM, VRAM, bandwidth, map structures and engine behaviour are still bounded**. “Indefinite expansion” is a design ambition, not a measured infinite capacity.
+- Full original Team Rocket Edition / Heart & Soul script execution, shared progression and an uninterrupted three-world journey **remain unproven**.
+- Private source-ROM processing is used to check original game assets and resource identity. **This public repository does not distribute commercial ROMs or extracted copyrighted graphics and scripts.**
+
+For technical details, start with the [integration architecture](docs/xgba-integration-architecture.md), the [three-ROM acceptance criteria](docs/R47_COMPLETE_THREE_GAME_CONTENT_ACCEPTANCE.md) and the [current development PR](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/123). See [GitHub Actions](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions) for reproducible public tests; private original-ROM validations are identified separately.
+
+For a source-safe example on the current integration branch:
 
 ```bash
 git clone https://github.com/xbaconator9000x/XGBA-ROM-Expansion.git
@@ -111,12 +129,6 @@ git switch integration/r51-original-three-world-grid-native-20261113
 PYTHONPATH=tools:tests python3 -m unittest test_xgba_r62_private_original_provider_bundle -v
 ```
 
-That public test uses **authored fixtures**, not copyrighted ROM bytes. The actual original-ROM asset packs are kept private. See [GitHub Actions](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions) for execution evidence and [PR #123](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/123) for the current integration changes and unresolved blockers.
+This test uses authored fixtures; it does not require or include copyrighted game ROMs.
 
-**AI disclosure:** I use AI extensively to help develop, test and document XGBA. I'm not hiding that. But AI-written code and a green unit test are not a substitute for the game actually working. Claims here are deliberately tied to executed tests and their limitations.
-
-**A note on original games:** This repository does not distribute commercial Pokémon ROMs or extracted copyrighted game assets. Original-ROM-derived validation is performed privately with source-identity and integrity checks.
-
----
-
-**The short version:** We've demonstrated that an actual running GBA game can fetch and use verified data from outside its ordinary cartridge ROM space. That's a genuinely interesting foundation. Now I want to turn it into something ROM hackers can actually use—and ultimately make some gloriously oversized games with it.
+**AI disclosure:** I use AI assistance for implementation, testing, research and documentation. The work is evaluated through source inspection and reproducible tests. I distinguish between verified native game execution, authored test data, source-data imports and functionality that has not yet been implemented.

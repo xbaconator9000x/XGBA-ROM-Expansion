@@ -58,19 +58,20 @@ class PublicRepositoryPrivacyChecks(unittest.TestCase):
         readme = "\n".join((
             "# XGBA",
             "> **Status — 14 November 2026:** three-ROM gameplay not yet complete.",
-            "## The idea",
-            "## What actually works",
+            "## What XGBA is",
+            "## Why I started it",
+            "## What we have demonstrated",
             "R6 external resource proof; R62 authentic source-art progress.",
-            "## The big test: three actual games, one running Emerald",
-            "## Where I want to take it",
-            "## Building, testing and contributing",
+            "## What this could mean for ROM hacking",
+            "## Future plans",
+            "## Current limits and project access",
             "**AI disclosure:** I use AI extensively to assist development.",
         ))
         self.assertEqual([], audit.check_readme(readme))
         self.assertNotEqual([], audit.check_readme(
-            readme.replace("## What actually works", "")))
+            readme.replace("## What we have demonstrated", "")))
         self.assertNotEqual([], audit.check_readme(
-            readme.replace("## The idea", "## Where I want to take it")))
+            readme.replace("## Why I started it", "## Future plans")))
         self.assertNotEqual([], audit.check_readme(
             readme.replace("**AI disclosure:** I use AI extensively to assist development.", "")))
         self.assertNotEqual([], audit.check_readme(
