@@ -42,6 +42,8 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                       (ROOT/"integration/emerald/xgba_r48_original_npc_scripts.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R50_ENGINE_BRIDGE__",
                       (ROOT/"integration/emerald/xgba_r50_original_engine_events.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R51_TERRAIN_BRIDGE__",
+                      (ROOT/"integration/emerald/xgba_r51_original_terrain.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_MAPS__",
                       (ROOT/"integration/emerald/xgba_r19_connected_maps.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_BATTLE__",
