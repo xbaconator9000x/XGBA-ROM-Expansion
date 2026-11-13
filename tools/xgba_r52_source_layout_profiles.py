@@ -77,7 +77,7 @@ def extract_profiles(original_roms:tuple[bytes,...],r51_index:bytes,*,require_co
         supported_schema=known_version and has_valid_border
         primary=640 if version in (1,2) else 512
         pal=7 if version in (1,2) else 6
-        attr_width=4 if version in (1,2) else 2
+        attr_width=4 if version==1 else 2
         flags=(int(supported_schema) | (int(version in (1,2))<<1))
         packed=struct.pack(LAYOUT_ROW,key,version,border_w,border_h,extra,
             primary,primary,pal,attr_width,flags,
