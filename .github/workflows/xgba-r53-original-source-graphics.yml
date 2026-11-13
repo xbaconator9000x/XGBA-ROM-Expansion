@@ -1,0 +1,37 @@
+name: XGBA R53 exact original tileset compiler and 16KiB engine resource reader
+on:
+  push:
+    branches: ['integration/r51-original-three-world-grid-native-20261113']
+    paths:
+      - 'tools/xgba_r53_original_tileset_packs.py'
+      - 'integration/common/xgba_r53_original_tileset_reader.h'
+      - 'tests/test_xgba_r53_original_tileset_packs.py'
+      - 'tests/xgba_r53_original_tileset_native.c'
+      - '.github/workflows/xgba-r53-original-source-graphics.yml'
+  pull_request:
+    branches: [main, 'integration/r50-guest-original-engine-events-20261113']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-private-assets-authored-source-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact source compiler, strict LZ77 and private XGBA manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r53_original_tileset_packs.py tests/test_xgba_r53_original_tileset_packs.py
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r53_original_tileset_packs -v
+      - name: Run real native C source graphics reader and CRC streaming with ASan/UBSan
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/r53
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r53_original_tileset_native.c -o build/r53/asset-reader
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r53/asset-reader
