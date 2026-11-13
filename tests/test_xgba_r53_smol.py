@@ -68,16 +68,19 @@ class SmolOriginalAssetContracts(unittest.TestCase):
         for version,payload in [(1,mode_one_asset([0x0101+i for i in range(16)])),
                                 (6,mode_six_zeros())]:
             with self.subTest(compression_mode=version):
-                # 640 tiles are required for a primary v2 HnS descriptor.
-                # Smol fixtures are a single tile and therefore deliberately
-                # FAIL the native size gate: never pad/repeat source graphics.
+                # The original field has a full 640-tile *capacity*, but
+                # a compressed graphic can contain fewer physical tiles.
+                # Original bytes remain 32B; unused VRAM slots stay cleared.
                 source=bytearray(80000)
                 source[64]=1;source[65]=0
                 struct.pack_into("<4I",source,68,
                   *[0x08000000+n for n in (1024,40000,57000,76000)])
                 source[1024:1024+len(payload)]=payload
-                with self.assertRaisesRegex(r53.TilesetFormatError,
-                  "smaller than expected tiles"):
-                    r53.descriptor_asset(bytes(source),2,2,64,False)
+                _,header,sections=r53.descriptor_asset(
+                    bytes(source),2,2,64,False)
+                self.assertEqual(len(sections[0]),32)
+                self.assertEqual(struct.unpack_from("<I",header,12)[0],32)
+                self.assertEqual(struct.unpack_from("<H",header,28)[0],640)
+                self.assertEqual(header[34],1)
 
 if __name__=="__main__": unittest.main()
