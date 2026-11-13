@@ -93,6 +93,6 @@ int main(void)
     assert(!XgbaR56ReadMeta(&r,2u,0x4000u,&m));
     printf("PASS_R56_ORIGINAL_OBJ_AUTHENTICATED_16BIT_SOURCE_ID "
            "CRC_META=1 CRC_FRAMES=1 CRC_PALETTE=1 CRC_OAM_ANIMS=1 "
-           "NO_TRUNCATION=1 NO_UNVERIFIED_STAGE=1 REFUSED=%u\\n",r.refused);
+           "NO_TRUNCATION=1 NO_UNVERIFIED_STAGE=1 REFUSED=%u\n",r.refused);
     return 0;
 }
