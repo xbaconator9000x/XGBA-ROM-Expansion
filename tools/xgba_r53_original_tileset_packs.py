@@ -104,12 +104,20 @@ def descriptor_asset(blob,world,version,desc_offset,is_secondary):
     # The original attribute array begins immediately after the metatiles,
     # so the difference is a source-attested exact physical count. Do not
     # read 512 imaginary definitions into neighbouring ROM data.
-    if attr_ptr<=meta_ptr or (attr_ptr-meta_ptr)%16:
-        raise TilesetFormatError(
-            "Original metatile/attribute pointer span is not contiguous 16-byte records")
-    meta_count=(attr_ptr-meta_ptr)//16
     pal_count=(13-(7 if version in (1,2) else 6)) if is_secondary else (7 if version in (1,2) else 6)
     attr_bytes=4 if version==1 else 2
+    # Legacy Emerald lays out 16-byte metatiles immediately before its
+    # 2-byte attrs. Actual original Rocket v3.06 uses the inverse: the
+    # attributes occur first, followed immediately by the metatiles.
+    # Both orders are source-attested by exact physical pointer spans;
+    # do not guess a capacity or accept an unaligned distant pointer.
+    if attr_ptr>meta_ptr and (attr_ptr-meta_ptr)%16==0:
+        meta_count=(attr_ptr-meta_ptr)//16
+    elif meta_ptr>attr_ptr and (meta_ptr-attr_ptr)%attr_bytes==0:
+        meta_count=(meta_ptr-attr_ptr)//attr_bytes
+    else:
+        raise TilesetFormatError(
+            "Original metatile/attribute spans are not contiguous source records")
     if not (0<meta_count<=tile_count<=MAX_TILES and 0<pal_count<=13):
         raise TilesetFormatError("Original physical metatiles exceed versioned tileset capacity")
     tile_at=_ptr(blob,tiles_ptr,4 if compressed else tile_count*32)
