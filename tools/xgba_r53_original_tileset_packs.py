@@ -27,6 +27,7 @@ import zlib
 
 import xgba_r51_original_grid_pages as r51
 import xgba_resource_sidecar as sidecar
+import xgba_r53_smol as smol
 
 PAGE=16384
 META_BYTES=64
@@ -104,9 +105,22 @@ def descriptor_asset(blob,world,version,desc_offset,is_secondary):
         raise TilesetFormatError("Original source tileset dimensions invalid")
     tile_at=_ptr(blob,tiles_ptr,4 if compressed else tile_count*32)
     if compressed:
-        graphics=gba_lz77(blob,tile_at)
+        # Modern Emerald-derived hacks (including HnS) use packed 'Smol'
+        # modes 1–6 instead of only legacy BIOS LZ77 0x10. The original
+        # source uses a low-nibble mode field and a bitstream header.
+        # Decode only attested formats, never reinterpret as raw graphics.
+        try:
+            if blob[tile_at] == 0x10:
+                graphics=gba_lz77(blob,tile_at)
+            elif (blob[tile_at]&0x0f) in (1,2,3,4,5,6):
+                graphics=smol.decode(blob,tile_at,max_output=MAX_DECODE)
+            else:
+                raise TilesetFormatError(
+                    "Unsupported original source compressed tileset format")
+        except smol.SmolError as exc:
+            raise TilesetFormatError("Invalid original Smol compressed tileset: "+str(exc)) from exc
         if len(graphics)<tile_count*32:
-            raise TilesetFormatError("LZ77 source graphics smaller than original expected tiles")
+            raise TilesetFormatError("Original decoded graphics smaller than expected tiles")
         graphics=graphics[:tile_count*32]
     else:
         graphics=bytes(blob[tile_at:tile_at+tile_count*32])
