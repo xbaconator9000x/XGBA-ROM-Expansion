@@ -183,6 +183,9 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         r40=bool(getattr(cls,"R40_SCRIPT_TEST",False))
         r42=bool(getattr(cls,"R42_EVENT_TEST",False))
         r48=bool(getattr(cls,"R48_ORIGINAL_NPC_TEST",False))
+        r50=bool(getattr(cls,"R50_ENGINE_EVENT_TEST",False))
+        if r50 and (not r48 or r19):
+            raise AssertionError("R50 genuine Emerald map/NPC adapter requires R48, no overlapping R19 arena")
         if r40 and r42:
             raise AssertionError("R40 and R42 guest fixtures must not share script state")
         if r42 and not r18:
@@ -201,6 +204,8 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             config.write_text(config.read_text()+"#define XGBA_R42_EVENT_TEST 1\n")
         if r48:
             config.write_text(config.read_text()+"#define XGBA_R48_ORIGINAL_NPC_BRIDGE 1\n")
+        if r50:
+            config.write_text(config.read_text()+"#define XGBA_R50_ENGINE_EVENTS 1\n")
         if r19_battle:
             config.write_text(config.read_text()+
                 "\n#define XGBA_R19_BATTLE_TEST 1\n"
