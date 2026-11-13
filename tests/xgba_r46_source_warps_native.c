@@ -3,6 +3,7 @@
  * and with arm-none-eabi-gcc to verify ARM7-safe header semantics.
  */
 #include "../integration/common/xgba_r46_source_warps.h"
+#include "../integration/common/xgba_r46_paged_warps.h"
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -18,6 +19,66 @@ static const struct XgbaR46Warp warps[] = {
     {8,12,0,0,9,0},   /* Rocket 0:10 -> Rocket 0:9 */
     {11,7,1,0,0,0}   /* HeartSoul New Bark self-entry */
 };
+
+struct MemoryIndexFixture {
+    unsigned reads,deny;
+};
+static int fake_page(void *ctx,const char *id,uint8_t *dest,uint16_t exact)
+{
+    struct MemoryIndexFixture *f=(struct MemoryIndexFixture *)ctx;
+    const uint8_t *blob;
+    unsigned n;
+    if(f->deny)return 0;
+    if(strcmp(id,"r46.map.000")==0){blob=(const uint8_t *)maps;n=sizeof(maps);}
+    else if(strcmp(id,"r46.warp.000")==0){blob=(const uint8_t *)warps;n=sizeof(warps);}
+    else return 0;
+    if(exact!=n)return 0;
+    memcpy(dest,blob,n);
+    f->reads++;
+    return 1;
+}
+static void test_paged_guest_16k_source_warps(void)
+{
+    uint8_t scratch[XGBA_R46_PAGE_BYTES];
+    struct MemoryIndexFixture fake={0,0};
+    struct XgbaR46PagedIndex loader={
+        .fetch=fake_page,.context=&fake,.scratch=scratch,
+        .scratch_bytes=sizeof(scratch),.map_count=4,.warp_count=4
+    };
+    struct XgbaR46Location pos={XgbaR46MapKey(0,0,9),4,5,0,0};
+    struct XgbaR46Map target={0};
+    struct XgbaR46Portal portal={0x000009u,0x010009u,0,0,0};
+    XgbaR46CacheReset(&loader);
+    assert(XgbaR46FindMapPaged(&loader,0x000009u,&target)==0);
+    assert(target.key==0x000009u);
+    assert(XgbaR46FindMapPaged(&loader,0x010009u,&target)==1);
+    assert(target.key==0x010009u);
+    assert(XgbaR46FindMapPaged(&loader,0x020000u,&target)==3);
+    assert(target.key==0x020000u);
+    assert(XgbaR46FindMapPaged(&loader,0x020009u,&target)==-1);
+    assert(loader.physical_reads==1u);
+    assert(loader.cache_hits>=2u);
+    assert(XgbaR46TravelPaged(&loader,&pos,0,NULL)==XGBA_R46_ROUTE_MAP_HOLE);
+    assert(pos.key==0x000009u);
+    assert(XgbaR46TravelPaged(&loader,&pos,0,&portal)==XGBA_R46_ROUTE_OK);
+    assert(pos.key==0x010009u);
+    assert(XgbaR46TravelPaged(&loader,&pos,0,NULL)==XGBA_R46_ROUTE_OK);
+    assert(pos.key==0x01000au);
+    assert(XgbaR46TravelPaged(&loader,&pos,0,NULL)==XGBA_R46_ROUTE_OK);
+    assert(pos.key==0x010009u);
+    assert(XgbaR46TravelPaged(&loader,&pos,7,NULL)==XGBA_R46_ROUTE_WARP_NOT_PRESENT);
+    portal.source_key=0x010009u;portal.target_key=0x020000u;
+    assert(XgbaR46TravelPaged(&loader,&pos,0,&portal)==XGBA_R46_ROUTE_OK);
+    assert(pos.key==0x020000u && pos.x==11 && pos.y==7);
+    assert(loader.physical_reads>=4u);
+    XgbaR46CacheReset(&loader);
+    fake.deny=1;
+    assert(XgbaR46FindMapPaged(&loader,0x020000u,&target)==-1);
+    assert(XgbaR46TravelPaged(&loader,&pos,0,NULL)==XGBA_R46_ROUTE_MAP_HOLE);
+    assert(pos.key==0x020000u);
+    puts("PASS_R46_16K_GBA_EWRAM_PAGED_SOURCE_LOOKUPS_AND_ROUTING_FAIL_CLOSED");
+}
+
 int main(void)
 {
     struct XgbaR46Location pos={0x000009u,4,5,0,0},saved_before;
@@ -64,6 +125,7 @@ int main(void)
     bridge.reserved=1; /* malformed portal rejected without state change */
     assert(XgbaR46Target(maps,4,warps,4,&pos,0,&bridge)==XGBA_R46_ROUTE_BAD_PORTAL);
     assert(pos.key==0x020000u);
+    test_paged_guest_16k_source_warps();
     puts("PASS_R46_NATIVE_SOURCE_AWARE_ORIGINAL_WARP_KEYS_3_WORLDS");
     puts("PASS_R46_NATIVE_EXPLICIT_CROSS_WORLD_PORTALS_AND_SAVE_TAMPER_REJECTION");
     return 0;
