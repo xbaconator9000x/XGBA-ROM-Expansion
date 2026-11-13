@@ -72,22 +72,64 @@ struct XgbaR55InstalledOriginalSpriteSource {
  * content CRC for this world+full 16-bit source graphics identity.
  * The separately authored OBJ installer must still retain actual native
  * frames/OAM/palette backing for the live Emerald object lifetime. */
+struct XgbaR56NativeBackingCheck{
+    const struct ObjectEventGraphicsInfo *info;
+    const u16 *palette;
+    struct XgbaR56SourceObject original;
+};
+static int XgbaR56CheckGenuineNativeSpriteBacking(
+    void *context,unsigned section,const uint8_t *bytes,
+    uint32_t offset,uint32_t count)
+{
+    const struct XgbaR56NativeBackingCheck *c=
+        (const struct XgbaR56NativeBackingCheck *)context;
+    const struct ObjectEventGraphicsInfo *info=c?c->info:NULL;
+    unsigned i;
+    uint32_t frame_size;
+    if(!c || !info || !bytes || offset!=0u ||
+       section>=XGBA_R56_SECTIONS)return 0;
+    if(section==1u)
+        return count==32u && c->palette &&
+               memcmp(bytes,c->palette,32u)==0;
+    if(section!=0u)return 0; /* OAM/anim source validation is read-only. */
+    if(!info->images || info->width!=c->original.width ||
+       info->height!=c->original.height ||
+       count!=c->original.sizes[0])return 0;
+    frame_size=(uint32_t)c->original.width*c->original.height/2u;
+    for(i=0u;i<c->original.frame_count;i++){
+        const struct SpriteFrameImage *image=&info->images[i];
+        if(!image->data || image->size!=frame_size ||
+           memcmp(image->data,bytes+frame_size*i,frame_size)!=0)
+            return 0;
+    }
+    return 1;
+}
 static bool8 XgbaR56AuthenticateOriginalSourceForNativeSprite(
-    u8 world,u16 original_id,u32 palette_crc,u32 frames_crc)
+    u8 world,u16 original_id,const struct ObjectEventGraphicsInfo *info,
+    const u16 *palette_data,u32 palette_crc,u32 frames_crc)
 {
     struct XgbaR56Reader reader={0};
     struct XgbaR56SourceObject source={0};
+    struct XgbaR56NativeBackingCheck backing={0};
     unsigned part;
     if(world==0u || world>=3u || !palette_crc || !frames_crc ||
        !sXgbaR54OriginalHeapPreReset || sXgbaR54SourceMapPreparedInWarp)
         return FALSE;
     reader.fetch=XgbaR53FetchNativePage;
     reader.scratch=(u8 *)gXgbaR17Arena;
-    if(!XgbaR56ReadMeta(&reader,world,original_id,&source) ||
+    if(!info || !palette_data ||
+       !XgbaR56ReadMeta(&reader,world,original_id,&source) ||
        source.crc[0]!=frames_crc || source.crc[1]!=palette_crc)
         goto refused;
+    backing.info=info;backing.palette=palette_data;
+    backing.original=source;
     for(part=0u;part<XGBA_R56_SECTIONS;part++){
-        if(!XgbaR56VisitSection(&reader,&source,part,NULL,NULL))
+        /* Frames and palette MUST match actual stable native backing.
+         * OAM/animations are provenance-verified here but still require
+         * source-versioned translation before gameplay can be enabled. */
+        if(!XgbaR56VisitSection(&reader,&source,part,
+              part<=1u?XgbaR56CheckGenuineNativeSpriteBacking:NULL,
+              &backing))
             goto refused;
     }
     gXgbaR55NativeSpriteProof.authenticated_original_resource_sections+=
@@ -143,6 +185,7 @@ bool8 XgbaR55BeginOriginalSourceSpriteRegistration(u8 world,u8 group,u8 map)
 }
 bool8 XgbaR55RegisterOriginalSpriteGraphics(u8 world,u16 source_gfx,
     const struct ObjectEventGraphicsInfo *native_verified_info,
+    const u16 *source_native_palette_backing,
     u32 original_palette_crc,u32 original_frames_crc)
 {
     struct XgbaR55InstalledOriginalSpriteSource source={0};
@@ -159,7 +202,9 @@ bool8 XgbaR55RegisterOriginalSpriteGraphics(u8 world,u16 source_gfx,
     source.verified_palette_crc=original_palette_crc;
     source.verified_frames_crc=original_frames_crc;
     if(!XgbaR56AuthenticateOriginalSourceForNativeSprite(
-            world,source_gfx,original_palette_crc,original_frames_crc))
+            world,source_gfx,native_verified_info,
+            source_native_palette_backing,
+            original_palette_crc,original_frames_crc))
         return FALSE;
     if(!XgbaR55AcquireVerifiedSourceSprite(
         sXgbaR55OriginalSprites,world,source_gfx,
