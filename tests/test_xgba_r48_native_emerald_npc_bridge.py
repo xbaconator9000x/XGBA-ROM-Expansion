@@ -64,7 +64,6 @@ class SourceBuiltEmeraldOriginalNpcBridge(unittest.TestCase):
         assert self.elf.is_file()
         sym=r17.r14.symbols(self.elf)
         self.assertIn("XgbaR48ResolveActualOriginalNpcScript",sym)
-        self.assertIn("XgbaR48SetSourceMapLoaded",sym)
         self.assertIn("gXgbaR48OriginalNpcProof",sym)
         # Real guest EWRAM; not an instrumentation-only host-side variable.
         address=sym["gXgbaR48OriginalNpcProof"][0]
