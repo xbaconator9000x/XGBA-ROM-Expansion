@@ -104,18 +104,23 @@ def validate_progress_report(progress:dict,original:dict)->None:
         entry=progress[source]
         if not isinstance(entry,dict):
             raise IncompleteThreeRomIntegration(f"{source}: malformed content coverage")
+        counts=entry.get("counts")
+        classes=entry.get("classes")
+        if not isinstance(counts,dict) or not isinstance(classes,dict):
+            raise IncompleteThreeRomIntegration(
+                f"{source}: counts and per-class status must be separately recorded")
         for key in ("objects","warps","coord_events","bg_events","script_maps",
                     "populated_maps"):
-            present=entry.get(key)
+            present=counts.get(key)
             if type(present) is not int or present!=required[key]:
                 raise IncompleteThreeRomIntegration(
                     f"{source}: expected all {required[key]} original {key} retained, got {present!r}")
         for cls in COVERAGE_CLASSES:
-            # None indicates not yet assessed, not permission to omit data.
-            if cls not in entry:
+            # Unknown coverage must stay explicit rather than silently omitted.
+            if cls not in classes:
                 raise IncompleteThreeRomIntegration(
                     f"{source}: {cls} lacks an explicit preserved/unsupported/unassessed status")
-            if entry[cls] not in ("preserved", "unsupported_retained", "unassessed"):
+            if classes[cls] not in ("preserved", "unsupported_retained", "unassessed"):
                 raise IncompleteThreeRomIntegration(
                     f"{source}: {cls} was silently dropped or marked executable without original native proof")
 
