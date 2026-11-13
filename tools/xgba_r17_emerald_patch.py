@@ -48,6 +48,8 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                       (ROOT/"integration/emerald/xgba_r52_native_source_layout.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R53_GRAPHICS_BRIDGE__",
                       (ROOT/"integration/emerald/xgba_r53_original_graphics.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R54_REAL_WARP_BRIDGE__",
+                      (ROOT/"integration/emerald/xgba_r54_native_fly_warp_admission.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_MAPS__",
                       (ROOT/"integration/emerald/xgba_r19_connected_maps.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_BATTLE__",
@@ -135,6 +137,43 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
               "    return gMapGroups[mapGroup][mapNum];",
               "    return XgbaR50HeaderFor(mapGroup,mapNum,gMapGroups[mapGroup][mapNum]);",
               "R50 real Emerald MapHeader events resolver")
+        if "#define XGBA_R54_REAL_WARP_ADMISSION" in Path(config).read_text():
+            if "#define XGBA_R53_ORIGINAL_GRAPHICS" not in Path(config).read_text():
+                raise r16.AdapterDrift("R54 original warp admission needs R53 original graphics")
+            # This is the ACTUAL original Emerald local map-load state machine,
+            # not a made-up Fly debug action or frame callback. Source memory
+            # must be staged before LoadMapFromWarp reads MapHeader and
+            # before InitObjectEventsLocal/fieldmap BG DMA/camera.
+            # Original MoveSaveBlocks_ResetHeap from case 1 must not erase
+            # R53's map-owned verified graphics allocated in case 0.
+            s=r16.one(s,
+              "    case 0:\n        FieldClearVBlankHBlankCallbacks();\n"
+              "        LoadMapFromWarp(a2);\n        (*state)++;\n        break;",
+              "    case 0:\n        FieldClearVBlankHBlankCallbacks();\n"
+              "        {\n"
+              "            u8 originalSourceWarp = XgbaR54InspectFadedOriginalMapLoad();\n"
+              "            if (originalSourceWarp >= 2u)\n"
+              "                XgbaR54FailClosedBeforeForeignHeader();\n"
+              "            if (originalSourceWarp == 1u) {\n"
+              "                ResetMirageTowerAndSaveBlockPtrs();\n"
+              "                XgbaR54MarkNativePreloadHeapReset();\n"
+              "                if (!XgbaR54InstallPendingOriginalSourceAtNativeWarp())\n"
+              "                    XgbaR54FailClosedBeforeForeignHeader();\n"
+              "            } else if (sXgbaR53SourceActive) {\n"
+              "                /* The previous source was retired by an ACTUAL warp fade. */\n"
+              "                XgbaR51ReleaseOriginalGeometryAfterFade(TRUE);\n"
+              "            }\n"
+              "        }\n"
+              "        LoadMapFromWarp(a2);\n        (*state)++;\n        break;",
+              "R54 original field fade/source map admission before actual MapHeader/objects")
+            s=r16.one(s,
+              "    case 1:\n        ResetMirageTowerAndSaveBlockPtrs();\n"
+              "        ResetScreenForMapLoad();",
+              "    case 1:\n"
+              "        if (!XgbaR54ShouldSkipOriginalCaseOneHeapReset())\n"
+              "            ResetMirageTowerAndSaveBlockPtrs();\n"
+              "        ResetScreenForMapLoad();",
+              "R54 single original heap reset preserves queued source BG DMA")
         s=r16.one(s,
           "    OverworldBasic();\n    if (fading)\n        SetFieldVBlankCallback();",
           "    OverworldBasic();\n    XgbaR17Tick();\n    if (fading)\n        SetFieldVBlankCallback();",
