@@ -179,6 +179,22 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                 "    XgbaR48ConfirmActualFlyArrival();\n"
                 "    Overworld_PlaySpecialMapMusic();",
                 "R48 genuine original FldEff_FlyIn callback and loaded-map acceptance")
+            if r50_enabled:
+                # The original FieldCallback_FlyIntoMap is the real arrival.
+                # Verify the loaded source map and original object BEFORE
+                # the R48 Fly acceptance counter evaluates the arrival.
+                fly_source=r16.one(fly_source,
+                    "extern void XgbaR48ConfirmActualFlyArrival(void);\n",
+                    "extern void XgbaR50VerifyLoadedEngineMap(void);\n"
+                    "extern void XgbaR48ConfirmActualFlyArrival(void);\n",
+                    "R50 native verified original map attestation declaration")
+                fly_source=r16.one(fly_source,
+                    "    XgbaR48ConfirmActualFlyArrival();\n"
+                    "    Overworld_PlaySpecialMapMusic();",
+                    "    XgbaR50VerifyLoadedEngineMap();\n"
+                    "    XgbaR48ConfirmActualFlyArrival();\n"
+                    "    Overworld_PlaySpecialMapMusic();",
+                    "R50 confirm actual Fly only after real loaded original source map")
             flying.write_text(fly_source)
         world.write_text(s)
         if r19_battle:
