@@ -64,7 +64,7 @@ class OriginalSourceTilesetTests(unittest.TestCase):
     def test_bad_source_graphics_rejected_not_faked_as_raw(self):
         rom,desc,tiles=synthetic_rom(compressed=True)
         rom[tiles]=0x06
-        with self.assertRaisesRegex(r53.TilesetFormatError,"Unsupported compressed"):
+        with self.assertRaisesRegex(r53.TilesetFormatError,"Invalid original Smol"):
             r53.descriptor_asset(rom,1,2,desc,False)
         rom[tiles]=0x10
         rom[tiles+1:tiles+4]=bytes((0xff,0xff,0xff))
