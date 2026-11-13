@@ -184,6 +184,8 @@ static bool8 XgbaR57InstallPendingMapSprites(u8 world,u8 group,u8 map)
 {
     struct XgbaR49Reader reader={0};
     struct XgbaR49OriginalEvents events={0};
+    struct XgbaR51Reader terrain_index={0};
+    struct XgbaR51IndexRow terrain={0};
     u16 ids[XGBA_R50_MAX_OBJECTS];
     unsigned count=0u,i,j;
     u32 key=((u32)world<<16)|((u32)group<<8)|map;
@@ -194,6 +196,12 @@ static bool8 XgbaR57InstallPendingMapSprites(u8 world,u8 group,u8 map)
     ++gXgbaR57SourceSpriteProof.map_attempts;
     if(!XgbaR55BeginOriginalSourceSpriteRegistration(world,group,map))
         return FALSE;
+    terrain_index.fetch=XgbaR51FetchRealPage;
+    terrain_index.scratch=(u8 *)gXgbaR17Arena;
+    terrain_index.indexed_maps=XGBA_R51_ALL_SOURCE_MAPS;
+    terrain_index.cached_index_page=XGBA_R51_INVALID_PAGE;
+    if(!XgbaR51FindSourceMap(&terrain_index,key,&terrain))
+        goto fail;
     reader.fetch=XgbaR50FetchOriginalPage;
     reader.scratch=(u8 *)gXgbaR17Arena;
     reader.indexed_maps=XGBA_R49_ALL_MAPS;
@@ -202,7 +210,13 @@ static bool8 XgbaR57InstallPendingMapSprites(u8 world,u8 group,u8 map)
        events.object_count>XGBA_R50_MAX_OBJECTS)goto fail;
     /* The next resource overwrites event scratch: copy only unique u16 IDs. */
     for(i=0;i<events.object_count;i++){
-        u16 graphics=XgbaR49Le16(events.objects+i*24u+1u);
+        const u8 *raw=events.objects+i*24u;
+        u16 graphics=XgbaR49Le16(raw+1u);
+        s16 x=(s16)XgbaR49Le16(raw+4u);
+        s16 y=(s16)XgbaR49Le16(raw+6u);
+        if(!XgbaR60OriginalNpcIsInLandingView(
+            world,group,map,terrain.width,terrain.height,x,y))
+            continue;
         for(j=0;j<count;j++)if(ids[j]==graphics)break;
         if(j==count){
             if(count>=XGBA_R55_SPRITE_SLOTS)goto fail;
