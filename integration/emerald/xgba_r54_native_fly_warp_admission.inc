@@ -24,6 +24,7 @@
 #endif
 #include "constants/event_objects.h"
 #include "../common/xgba_r55_source_qualified_sprite_slots.h"
+#include "../common/xgba_r56_original_obj_reader.h"
 
 struct XgbaR54NativeWarpProof {
     volatile u32 magic,native_faded_load_entries,source_prepare_attempts;
@@ -55,6 +56,7 @@ static EWRAM_DATA bool8 sXgbaR55RosterHasSourceAssets=FALSE;
 struct XgbaR55NativeSpriteProof {
     volatile u32 registered_source_gfx,real_obj_info_resolutions;
     volatile u32 original_world,refused_mismatched_source,unavailable_sprites;
+    volatile u32 authenticated_original_resource_sections,rejected_original_crc;
 };
 EWRAM_DATA volatile struct XgbaR55NativeSpriteProof gXgbaR55NativeSpriteProof={0};
 /* Called ONLY by the forthcoming SHA-verified ORIGINAL source OBJ sprite
@@ -64,6 +66,37 @@ struct XgbaR55InstalledOriginalSpriteSource {
     const struct ObjectEventGraphicsInfo *info;
     u32 verified_palette_crc,verified_frames_crc;
 };
+/* R56 requires a real, host-SHA-backed original sprite source resource.
+ * No caller-provided integer CRC can authenticate source art on its own.
+ * The guest recomputes the complete original frame, palette, OAM and anim
+ * content CRC for this world+full 16-bit source graphics identity.
+ * The separately authored OBJ installer must still retain actual native
+ * frames/OAM/palette backing for the live Emerald object lifetime. */
+static bool8 XgbaR56AuthenticateOriginalSourceForNativeSprite(
+    u8 world,u16 original_id,u32 palette_crc,u32 frames_crc)
+{
+    struct XgbaR56Reader reader={0};
+    struct XgbaR56SourceObject source={0};
+    unsigned part;
+    if(world==0u || world>=3u || !palette_crc || !frames_crc ||
+       !sXgbaR54OriginalHeapPreReset || sXgbaR54SourceMapPreparedInWarp)
+        return FALSE;
+    reader.fetch=XgbaR53FetchNativePage;
+    reader.scratch=(u8 *)gXgbaR17Arena;
+    if(!XgbaR56ReadMeta(&reader,world,original_id,&source) ||
+       source.crc[0]!=frames_crc || source.crc[1]!=palette_crc)
+        goto refused;
+    for(part=0u;part<XGBA_R56_SECTIONS;part++){
+        if(!XgbaR56VisitSection(&reader,&source,part,NULL,NULL))
+            goto refused;
+    }
+    gXgbaR55NativeSpriteProof.authenticated_original_resource_sections+=
+        XGBA_R56_SECTIONS;
+    return TRUE;
+refused:
+    ++gXgbaR55NativeSpriteProof.rejected_original_crc;
+    return FALSE;
+}
 static int XgbaR55VerifyProvidedSourceGraphics(void *ctx,uint8_t world,
     uint16_t original,uint8_t assigned,uint32_t *palette,uint32_t *frames)
 {
@@ -125,6 +158,9 @@ bool8 XgbaR55RegisterOriginalSpriteGraphics(u8 world,u16 source_gfx,
     source.info=native_verified_info;
     source.verified_palette_crc=original_palette_crc;
     source.verified_frames_crc=original_frames_crc;
+    if(!XgbaR56AuthenticateOriginalSourceForNativeSprite(
+            world,source_gfx,original_palette_crc,original_frames_crc))
+        return FALSE;
     if(!XgbaR55AcquireVerifiedSourceSprite(
         sXgbaR55OriginalSprites,world,source_gfx,
         XgbaR55VerifyProvidedSourceGraphics,&source,&slot))
