@@ -99,12 +99,12 @@ def check_readme(content: str) -> list[str]:
     front page. The credential and chat-privacy scan is unchanged.
     """
     headings = (
-        "# XGBA",
-        "## The idea",
-        "## What actually works",
-        "## The big test: three actual games, one running Emerald",
-        "## Where I want to take it",
-        "## Building, testing and contributing",
+        "## What XGBA is",
+        "## Why I started it",
+        "## What we have demonstrated",
+        "## What this could mean for ROM hacking",
+        "## Future plans",
+        "## Current limits and project access",
     )
     lines = content.splitlines()
     locations = [lines.index(h) if h in lines else -1 for h in headings]
