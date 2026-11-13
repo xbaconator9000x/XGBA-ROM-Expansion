@@ -1,0 +1,47 @@
+name: XGBA R56 authentic source sprite byte admission
+on:
+  push:
+    branches: ['integration/r51-original-three-world-grid-native-20261113']
+    paths:
+      - 'tools/xgba_r56_original_obj_packs.py'
+      - 'tests/test_xgba_r56_original_obj_packs.py'
+      - 'integration/common/xgba_r56_original_obj_reader.h'
+      - 'tests/xgba_r56_original_obj_reader_native.c'
+      - 'integration/emerald/xgba_r54_native_fly_warp_admission.inc'
+      - '.github/workflows/xgba-r56-original-obj-authenticity.yml'
+  pull_request:
+    branches: ['integration/r50-guest-original-engine-events-20261113', main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-owned-original-npc-art:
+    name: Source pointer, 16-bit sprite identity and four-section native CRC
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test strict original ROM pointer compiler and 16KiB private pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r56_original_obj_packs.py tests/test_xgba_r56_original_obj_packs.py
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r56_original_obj_packs -v
+      - name: Compile and run real native C11 sprite resource gate under sanitizers
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/r56
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r56_original_obj_reader_native.c -o build/r56/obj-pages
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r56/obj-pages | tee build/r56/native-proof.log
+          grep -q PASS_R56_ORIGINAL_OBJ_AUTHENTICATED_16BIT_SOURCE_ID build/r56/native-proof.log
+      - name: Enforce no copyrighted original ROM/source pixels are published
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! git ls-files | grep -Eiq '\.(gba|nds|sav|bps|ips)$'
+          test ! -e r56-private-original-obj-resources.bin
+          echo PASS_R56_NO_PRIVATE_ROM_BYTES_IN_PUBLIC_GIT
