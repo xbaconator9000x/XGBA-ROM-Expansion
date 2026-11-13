@@ -27,6 +27,9 @@ SECTIONS=("f","p","o","a")
 MAGIC=b"X56S"
 WORLD_NAMES=("emerald","rocket","heart_soul")
 SOURCE_SHA=tuple(v[0] for v in r51.SOURCES.values())
+GBA_OBJECT_SIZES={(8,8),(16,16),(32,32),(64,64),
+                  (16,8),(32,8),(32,16),(64,32),
+                  (8,16),(8,32),(16,32),(32,64)}
 SECTION_LIMITS={"f":(32,8192,32),"p":(32,32,32),
                 "o":(4,512,4),"a":(4,1024,2)}
 class OriginalObjectSourceError(ValueError): pass
@@ -59,7 +62,8 @@ def extract_sprite(rom:bytes,record:dict,*,expected_world:int):
        type(width) is not int or not 8<=width<=64 or width%8 or \
        type(height) is not int or not 8<=height<=64 or height%8 or \
        type(frames) is not int or not 1<=frames<=8 or \
-       type(compression) is not int or compression not in range(7):
+       type(compression) is not int or compression not in range(7) or \
+       (width,height) not in GBA_OBJECT_SIZES:
         raise OriginalObjectSourceError("Invalid source-qualified 16-bit graphics metadata")
     size=width*height//2*frames
     if size>SECTION_LIMITS["f"][1]:
