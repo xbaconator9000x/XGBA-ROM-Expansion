@@ -132,6 +132,9 @@ static void XgbaR17Tick(void)
 #ifdef XGBA_R50_ENGINE_EVENTS
     XgbaR50VerifyLoadedEngineMap();
 #endif
+#ifdef XGBA_R51_ORIGINAL_TERRAIN
+    XgbaR51ObserveOriginalFieldFrame();
+#endif
 #ifdef XGBA_R40_SCRIPT_TEST
     XgbaR40Tick();
 #endif
