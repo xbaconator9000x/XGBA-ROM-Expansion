@@ -94,6 +94,9 @@ static const struct MapLayout *XgbaR17Resolve(const struct MapLayout *base)
 #ifdef XGBA_R50_ENGINE_EVENTS
 #include "__XGBA_R50_ENGINE_BRIDGE__"
 #endif
+#ifdef XGBA_R51_ORIGINAL_TERRAIN
+#include "__XGBA_R51_TERRAIN_BRIDGE__"
+#endif
 #ifdef XGBA_R19_CONNECTED_MAPS
 #include "__XGBA_R19_MAPS__"
 #endif
