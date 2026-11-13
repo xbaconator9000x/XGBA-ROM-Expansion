@@ -138,7 +138,7 @@ static int XgbaR57InstallOne(u8 world,u16 original_id)
     out->original_id=original_id;
     ctx.sprite=out;ctx.frame_bytes=original.sizes[0];
     for(i=0;i<XGBA_R56_SECTIONS;i++){
-        if(!XgbaR56VisitSection(&reader,&original,
+        if(!XgbaR56VisitSection(&reader,&original,i,
               i<2u?XgbaR57CopyOriginalBytes:NULL,&ctx)){
             ++gXgbaR57SourceSpriteProof.refused_pages;
             Free(out);return 0;
