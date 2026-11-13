@@ -94,6 +94,8 @@ int main(void)
     assert(out.object_count==4u);
     assert(out.originals_bytes==9u*24u);
     assert(out.object_bytes==4u*24u);
+    assert(out.warp_bytes==0u && out.coordinate_bytes==0u);
+    assert(out.background_bytes==0u); /* compacted NPCs are NOT bg events */
     assert(out.script_origins[0]==UINT32_C(0x08001200));
     assert(out.script_origins[3]==UINT32_C(0x08001200)+7u*4u);
     assert(out.original_flags[3]==107u);
@@ -105,6 +107,30 @@ int main(void)
     assert(XgbaR49Le32(b+24+16)==UINT32_C(0x08000040));
     assert(XgbaR49Le32(b+48+16)==UINT32_C(0x08000040));
     assert(XgbaR49Le32(b+72+16)==UINT32_C(0x08000040));
+    /* R65: extra ORIGINAL source background record must survive the
+     * compacted first-viewport NPC array without phantom background bytes
+     * from the five original NPCs that were not staged. */
+    {
+        uint8_t authored_bg[12]={2u,13u,4u,4u,6u,8u,0u,0u,0u,0u,0u,0u};
+        uint8_t *raw=events+32u;
+        memcpy(raw+9u*24u,authored_bg,sizeof(authored_bg));
+        events[11]=1u; /* original background event count */
+        le32(events+24u,9u*24u+12u);
+        le32(events+20u,XgbaR49Crc32(raw,9u*24u+12u));
+        le32(idx+8u,32u+9u*24u+12u);
+        reader.cached_index_page=XGBA_R49_INVALID_PAGE;
+        assert(XgbaR50StageEvents(&reader,(1u<<16)|9u,24u,25u,
+                 sprite,NULL,UINT32_C(0x08000040),&out));
+        assert(out.object_count==4u && out.object_bytes==96u);
+        assert(out.originals_bytes==228u);
+        assert(out.background_bytes==12u);
+        assert(out.warp_bytes==0u && out.coordinate_bytes==0u);
+        assert(memcmp(XgbaR50EventBytes(&out)+out.object_bytes,
+                      authored_bg,sizeof(authored_bg))==0);
+        /* The native Emerald MapEvents intentionally quarantines original
+         * background callbacks until their script IDs are translated. */
+        assert(out.background_count==0u);
+    }
     printf("PASS_R60_ROCKET_REAL_LANDING_COORDINATES "
            "ARCHIVED_NPCS=9 PHYSICAL_ENTRY_NPCS=4 "
            "PRESERVED_FULL_16BIT_IDS=1 OFFMAP_REJECTED=1 "
