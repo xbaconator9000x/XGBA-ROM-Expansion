@@ -20,6 +20,10 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
     original_world=world.read_text()
     original_newgame=newgame.read_text()
     originals.update({world:original_world,newgame:original_newgame})
+    r50_enabled = "#define XGBA_R50_ENGINE_EVENTS" in Path(config).read_text()
+    r48_enabled = "#define XGBA_R48_ORIGINAL_NPC_BRIDGE" in Path(config).read_text()
+    if r50_enabled and (not r48_enabled or r19_connected):
+        raise r16.AdapterDrift("R50 guest event bridge requires R48 and an exclusive owned map arena")
     if r26_leases and not (r19_connected and r19_battle):
         raise r16.AdapterDrift("R26 phase lease proof requires real map and battle integration")
     hook=(ROOT/"integration/emerald/xgba_r17_external_littleroot.inc").read_text()
@@ -36,6 +40,8 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                       (ROOT/"integration/emerald/xgba_r42_two_source_events.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R48_NPC_BRIDGE__",
                       (ROOT/"integration/emerald/xgba_r48_original_npc_scripts.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R50_ENGINE_BRIDGE__",
+                      (ROOT/"integration/emerald/xgba_r50_original_engine_events.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_MAPS__",
                       (ROOT/"integration/emerald/xgba_r19_connected_maps.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_BATTLE__",
@@ -114,6 +120,15 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
               "        return gMapLayouts[mapLayoutId - 1];",
               "        return XgbaR17Resolve(gMapLayouts[mapLayoutId - 1]);",
               "native Emerald map layout resolver")
+        if r50_enabled:
+            s=r16.one(s,
+              "        return XgbaR17Resolve(gMapLayouts[mapLayoutId - 1]);",
+              "        return XgbaR50LayoutFor(gMapLayouts[mapLayoutId - 1]);",
+              "R50 real Emerald map-layout resolver with source-owned graphics gate")
+            s=r16.one(s,
+              "    return gMapGroups[mapGroup][mapNum];",
+              "    return XgbaR50HeaderFor(mapGroup,mapNum,gMapGroups[mapGroup][mapNum]);",
+              "R50 real Emerald MapHeader events resolver")
         s=r16.one(s,
           "    OverworldBasic();\n    if (fading)\n        SetFieldVBlankCallback();",
           "    OverworldBasic();\n    XgbaR17Tick();\n    if (fading)\n        SetFieldVBlankCallback();",
@@ -164,6 +179,22 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                 "    XgbaR48ConfirmActualFlyArrival();\n"
                 "    Overworld_PlaySpecialMapMusic();",
                 "R48 genuine original FldEff_FlyIn callback and loaded-map acceptance")
+            if r50_enabled:
+                # The original FieldCallback_FlyIntoMap is the real arrival.
+                # Verify the loaded source map and original object BEFORE
+                # the R48 Fly acceptance counter evaluates the arrival.
+                fly_source=r16.one(fly_source,
+                    "extern void XgbaR48ConfirmActualFlyArrival(void);\n",
+                    "extern void XgbaR50VerifyLoadedEngineMap(void);\n"
+                    "extern void XgbaR48ConfirmActualFlyArrival(void);\n",
+                    "R50 native verified original map attestation declaration")
+                fly_source=r16.one(fly_source,
+                    "    XgbaR48ConfirmActualFlyArrival();\n"
+                    "    Overworld_PlaySpecialMapMusic();",
+                    "    XgbaR50VerifyLoadedEngineMap();\n"
+                    "    XgbaR48ConfirmActualFlyArrival();\n"
+                    "    Overworld_PlaySpecialMapMusic();",
+                    "R50 confirm actual Fly only after real loaded original source map")
             flying.write_text(fly_source)
         world.write_text(s)
         if r19_battle:
