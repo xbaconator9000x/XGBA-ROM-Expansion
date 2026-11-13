@@ -21,7 +21,7 @@ static int host(void *ctx,const char *id,uint8_t *target,uint16_t count)
         memcpy(target,grid_pages+page*XGBA_R51_PAGE_BYTES,count);
     else return 0;
     if(inject_corruption && strstr(id,"r51.grid.") && page==1u)
-        target[100u]^=1u;
+        target[1000u]^=1u;
     ++reads;return 1;
 }
 static void fixture(unsigned i,uint32_t key,uint16_t w,uint16_t h,
