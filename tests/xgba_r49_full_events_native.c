@@ -27,7 +27,7 @@ static int fetch(void *context,const char *id,uint8_t *out,uint16_t bytes)
         source=original_events;h->event_reads++;
     }else return 0;
     memcpy(out,source,bytes);
-    if(h->corrupt && source==original_events)out[55]^=1u;
+    if(h->corrupt && source==original_events)out[193]^=1u; /* corrupt actual third map NPC bytes */
     ++h->reads;
     return 1;
 }
