@@ -7,6 +7,7 @@ and privately supplied original source script/text packs.
 """
 from __future__ import annotations
 import hashlib
+import json
 import os
 from pathlib import Path
 import shutil
@@ -32,10 +33,31 @@ class SourceBuiltEmeraldOriginalNpcBridge(unittest.TestCase):
         cls.save=save
         if save.exists():
             raise AssertionError("R48 original Emerald game must boot clean")
+        # R49 regression: 32 original-event-shaped synthetic sidecar pages
+        # must be REGISTERED by the patched host provider without its old
+        # 16-resource ceiling. These authored test pages are never claimed
+        # to be original imported ROM data and are NOT guest-executed here.
+        manifest=json.loads(cls.manifest_path.read_text())
+        datafile=cls.manifest_path.parent/manifest["data_file"]
+        fake_ids=[]
+        with datafile.open("ab") as data:
+            base=data.tell()
+            for i in range(32):
+                rid=f"r49.synthetic.original_event_page.{i:03}"
+                payload=(f"ORIGINAL_MAP_EVENT_REGISTRY_TEST_{i:03}".encode()*8)[:256].ljust(256,b"\\0")
+                offset=base+256*i
+                data.write(payload)
+                manifest["resources"].append({
+                    "id":rid,"offset":offset,"length":len(payload),
+                    "sha256":hashlib.sha256(payload).hexdigest()})
+                fake_ids.append(rid)
+        cls.manifest_path.write_text(json.dumps(manifest))
+        cls.registered_original_event_test_pages=tuple(fake_ids)
         result=launcher.launch(
             cls.rom,cls.manifest_path,r17.RID,
             emulator=cls.executable,frames=3100,
             probe_address=cls.probe,second_resource_id=r17.BOOT,
+            extra_resource_ids=cls.registered_original_event_test_pages,
             r18_dir=cls.evidence,r18_savefile=save,
             r18_phase="write",r18_save_probe=cls.save_probe)
         cls.log=result.stdout
@@ -59,6 +81,12 @@ class SourceBuiltEmeraldOriginalNpcBridge(unittest.TestCase):
         self.assertIn("PASS_R18_EMERALD_ORIGINAL_FLASH_WRITE",self.log)
         self.assertIn("map=0:9",self.log)
         self.assertIn(self.flash_bytes,(131072,131088))
+
+    def test_host_registry_accepts_32_source_event_pages_without_gba_ram_growth(self):
+        self.assertEqual(len(self.registered_original_event_test_pages),32)
+        self.assertIn("PASS_R18_EMERALD_ORIGINAL_FLASH_WRITE",self.log)
+        # Registration is tested; these dummy pages are not claimed fetched.
+        self.assertNotIn("PASS_R48_FOREIGN_FLY_COMPLETE",self.log)
 
     def test_original_game_compiled_foreign_script_bridge_not_mock_viewer(self):
         assert self.elf.is_file()
