@@ -183,7 +183,7 @@ static const struct MapLayout *XgbaR50LayoutFor(const struct MapLayout *base)
 }
 /* Called from an ACTUAL original Emerald overworld frame. The full R48
  * attestation also requires the original NPC at its actual coordinates. */
-static void XgbaR50VerifyLoadedEngineMap(void)
+void XgbaR50VerifyLoadedEngineMap(void)
 {
     if(!gSaveBlock1Ptr || !gMapHeader.mapLayout || !gMapHeader.events)return;
     if(sXgbaR50Ready && gMapHeader.mapLayout==&sXgbaR50LiveLayout &&
