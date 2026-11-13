@@ -5,6 +5,7 @@ Author all fixture bytes. Never publish the user's actual source dialogue.
 from __future__ import annotations
 import hashlib
 import io
+import tempfile
 import json
 from pathlib import Path
 import struct
@@ -14,6 +15,7 @@ import zipfile
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"tools"))
 import xgba_r62_private_original_provider_bundle as r64
+import xgba_r64_upgrade_original_provider as upgrade
 
 CASES=(
     ("emerald.r48.npc","emerald",0,0,9,2,12,13,17,0x1e8022,0x1e8acf),
@@ -45,6 +47,84 @@ def fixture():
                    json.dumps({"resources":records}))
     archive.seek(0)
     return archive.getvalue()
+
+def authored_packs(root:Path):
+    """Create one completely authored source page + three authored witnesses."""
+    src=fixture()
+    with zipfile.ZipFile(io.BytesIO(src)) as z:
+        original={n:z.read(n) for n in z.namelist()}
+    page=bytes((i*9+3)%256 for i in range(16384))
+    source_entry={
+        "id":"r49.index.000","offset":0,"length":len(page),
+        "sha256":hashlib.sha256(page).hexdigest()
+    }
+    manifest={
+       "sources":{name:{"sha256":digest}
+                  for name,digest in r64.SOURCES.items()},
+       "manifest_resources":[source_entry],
+    }
+    original["private-manifest.json"]=json.dumps(manifest).encode()
+    original["r49.index.000.bin"]=page
+    r49=root/"authored-r49.zip"
+    with zipfile.ZipFile(r49,"w") as z:
+        for n,data in original.items():z.writestr(n,data)
+    origin={
+       "id":"private-all-original-events-with-rocket-source-art",
+       "sha256":hashlib.sha256(json.dumps(r64.SOURCES,sort_keys=True).encode()).hexdigest()
+    }
+    resource_manifest={
+        "format":"xgba-resource-manifest","version":1,
+        "source_identity":origin,"data_file":
+           "r62-private-original-three-world-provider.bin",
+        "resources":[source_entry],
+    }
+    r62=root/"authored-r62.zip"
+    with zipfile.ZipFile(r62,"w") as z:
+        z.writestr("manifest.json",json.dumps(resource_manifest))
+        z.writestr(resource_manifest["data_file"],page)
+    return r62,r49
+
+class PrivateProviderUpgraderTests(unittest.TestCase):
+    def test_authored_provider_remains_byte_identical_after_original_witness_attach(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            r62,r49=authored_packs(root)
+            out=root/"upgraded"
+            summary=upgrade.upgrade(r62,r49,out)
+            self.assertEqual(summary["old_provider_resources"],1)
+            self.assertEqual(summary["new_provider_resources"],4)
+            self.assertFalse(summary["original_script_played_in_native_emerald"])
+            self.assertTrue(summary["all_pages_sha256_verified"])
+            manifest=json.loads((out/"manifest.json").read_text())
+            self.assertEqual({r["id"] for r in manifest["resources"]},{
+                "r49.index.000","emerald.r48.npc",
+                "rocket.r48.npc","heart_soul.r48.npc",
+            })
+            blob=(out/manifest["data_file"]).read_bytes()
+            with zipfile.ZipFile(r62) as z:
+                previous=z.read("r62-private-original-three-world-provider.bin")
+            self.assertEqual(blob[:len(previous)],previous)
+            self.assertEqual(len(blob)-len(previous),3*256)
+            with self.assertRaisesRegex(r64.PrivateBundleError,"empty"):
+                upgrade.upgrade(r62,r49,out)
+
+    def test_reject_original_event_index_page_from_unrelated_pack(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            r62,r49=authored_packs(root)
+            with zipfile.ZipFile(r62) as z:
+                files={n:z.read(n) for n in z.namelist()}
+            wrong=bytearray(files["r62-private-original-three-world-provider.bin"])
+            wrong[31]^=1
+            files["r62-private-original-three-world-provider.bin"]=bytes(wrong)
+            manifest=json.loads(files["manifest.json"])
+            manifest["resources"][0]["sha256"]=hashlib.sha256(wrong).hexdigest()
+            files["manifest.json"]=json.dumps(manifest).encode()
+            bad=root/"bad-r62.zip"
+            with zipfile.ZipFile(bad,"w") as z:
+                for n,raw in files.items():z.writestr(n,raw)
+            with self.assertRaisesRegex(r64.PrivateBundleError,"mismatched existing R62"):
+                upgrade.upgrade(bad,r49,root/"new")
 
 class PrivateOriginalNpcWitnessTests(unittest.TestCase):
     def test_all_three_original_resource_ids_and_hashes_are_required(self):
