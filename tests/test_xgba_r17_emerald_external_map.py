@@ -143,6 +143,7 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                 cls.battle_original_compressed[species_name]=blob
         if cls.resource_bytes>16384:
             raise AssertionError("Emerald original full tileset exceeds one synchronous 16 KiB XGBA read; must implement chunking, never drop assets")
+        r50=bool(getattr(cls,"R50_ENGINE_EVENT_TEST",False))
         if r19:
             resources=[
                 Resource("emerald_littleroot_pack",8192 if r28 else len(cls.pack)),
@@ -165,6 +166,17 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                     transient_heap_bytes=12288))
             budget=plan_residency(
                 resources,phases,symbol_prefix="gXgbaR17")
+        elif r50:
+            # The R49 16KiB original-event page and native map tileset
+            # reuse a SINGLE protected heap-tail slot in distinct phases.
+            budget=plan_residency(
+                [Resource("emerald_littleroot_pack",len(cls.pack)),
+                 Resource("r50_transient_event_page",16384)],
+                [Phase("r50_faded_field_event_preload",
+                       ("r50_transient_event_page",),transient_heap_bytes=12288),
+                 Phase("r50_original_field_graphics",
+                       ("emerald_littleroot_pack",),transient_heap_bytes=12288)],
+                symbol_prefix="gXgbaR17")
         else:
             budget=plan_residency(
                 [Resource("emerald_littleroot_pack",len(cls.pack))],
