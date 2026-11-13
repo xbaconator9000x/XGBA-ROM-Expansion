@@ -54,11 +54,20 @@ bool8 XgbaR51PrepareOriginalSourceGeometry(
         ++gXgbaR51TerrainProof.refused;
         return FALSE;
     }
+#ifdef XGBA_R52_SOURCE_LAYOUT
+    if(!XgbaR52StageOriginalLayoutProfile(world,group,number,TRUE)){
+        ++gXgbaR51TerrainProof.refused;
+        return FALSE;
+    }
+#endif
     reader.fetch=XgbaR51FetchRealPage;
     reader.scratch=(u8 *)gXgbaR17Arena;
     reader.indexed_maps=XGBA_R51_ALL_SOURCE_MAPS;
     reader.cached_index_page=XGBA_R51_INVALID_PAGE;
     if(!XgbaR51StageOriginalGrid(&reader,key,&sXgbaR51NativeTerrain)){
+#ifdef XGBA_R52_SOURCE_LAYOUT
+        XgbaR52InvalidateSourceProfile();
+#endif
         ++gXgbaR51TerrainProof.refused;
         return FALSE;
     }
@@ -69,6 +78,9 @@ bool8 XgbaR51PrepareOriginalSourceGeometry(
           sXgbaR51NativeTerrain.height,resolve_sprite,
           sprite_context,TRUE)){
         XgbaR51InvalidateGeometry(&sXgbaR51NativeTerrain);
+#ifdef XGBA_R52_SOURCE_LAYOUT
+        XgbaR52InvalidateSourceProfile();
+#endif
         ++gXgbaR51TerrainProof.refused;
         return FALSE;
     }
@@ -131,6 +143,9 @@ void XgbaR51ReleaseOriginalGeometryAfterFade(bool8 previous_renderer_released)
     XgbaR50ReleaseAfterOriginalWarpFade(TRUE);
     XgbaR51InvalidateGeometry(&sXgbaR51NativeTerrain);
     sXgbaR51OriginalTerrainPrepared=FALSE;
+#ifdef XGBA_R52_SOURCE_LAYOUT
+    XgbaR52InvalidateSourceProfile();
+#endif
 }
 
 /* Real Emerald's frame loop observes active source geometry without changing
