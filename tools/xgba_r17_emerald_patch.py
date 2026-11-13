@@ -52,6 +52,8 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                       (ROOT/"integration/emerald/xgba_r54_native_fly_warp_admission.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R57_NATIVE_SPRITE_BRIDGE__",
                       (ROOT/"integration/emerald/xgba_r57_native_source_sprite_installer.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R58_NATIVE_FLY_BRIDGE__",
+                      (ROOT/"integration/emerald/xgba_r58_native_original_fly.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_MAPS__",
                       (ROOT/"integration/emerald/xgba_r19_connected_maps.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_BATTLE__",
@@ -366,6 +368,9 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                 "    sprite->sObjEventId = objectEventId;",
                 "R57 copy actual original source palette at real NPC spawn")
             objects.write_text(sprite_src)
+        if "#define XGBA_R54_REAL_WARP_ADMISSION" in Path(config).read_text():
+            from xgba_r58_fly_menu_patch import patch_native_original_fly_region_map
+            originals.update(patch_native_original_fly_region_map(e))
         world.write_text(s)
         if r19_battle:
             # Instrument original Emerald battle sprite decompression, NOT a

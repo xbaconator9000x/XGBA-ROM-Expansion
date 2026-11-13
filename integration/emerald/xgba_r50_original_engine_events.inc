@@ -187,6 +187,17 @@ static const struct MapLayout *XgbaR50LayoutFor(const struct MapLayout *base)
 void XgbaR50VerifyLoadedEngineMap(void)
 {
     if(!gSaveBlock1Ptr || !gMapHeader.mapLayout || !gMapHeader.events)return;
+    /* R58: the very first leg begins in ACTUAL unmodified Emerald, not
+     * in an R50 foreign-staged map. Attest native group 0/map 9's original
+     * object-event source and witness before permitting its A-button script
+     * and offering the Rocket destination on the real Fly map. */
+    if(!sXgbaR50Ready && !sXgbaR48SourceMapLoaded &&
+       gSaveBlock1Ptr->location.mapGroup==0u &&
+       gSaveBlock1Ptr->location.mapNum==9u &&
+       gMapHeader.events==gMapGroups[0][9]->events &&
+       gMapHeader.mapLayout->width==20u &&
+       gMapHeader.mapLayout->height==20u)
+        XgbaR48SetSourceMapLoaded(0u,0u,9u,TRUE);
     if(sXgbaR50Ready && gMapHeader.mapLayout==&sXgbaR50LiveLayout &&
        gMapHeader.events==&sXgbaR50LiveEvents &&
        gSaveBlock1Ptr->location.mapGroup==sXgbaR50Group &&
