@@ -45,6 +45,55 @@ static EWRAM_DATA u8 sXgbaR48ImportedWorld=0u;
 static EWRAM_DATA u8 sXgbaR48ImportedGroup=0u;
 static EWRAM_DATA u8 sXgbaR48ImportedMap=0u;
 static EWRAM_DATA bool8 sXgbaR48SourceMapLoaded=FALSE;
+/* Actual Fly route: Emerald -> Rocket -> Heart & Soul -> Emerald.
+ * These are source-local ORIGINAL IDs, never rewritten into another
+ * world's colliding (group,map). The engine Fly UI will call queue AFTER
+ * the player picks the destination, not on synthetic R/L button probes. */
+static EWRAM_DATA u8 sXgbaR48FlyLeg=0u;
+static EWRAM_DATA u8 sXgbaR48PendingFlyWorld=0xffu;
+static EWRAM_DATA u8 sXgbaR48PendingFlyGroup=0xffu;
+static EWRAM_DATA u8 sXgbaR48PendingFlyMap=0xffu;
+static EWRAM_DATA u8 sXgbaR48NpcTalkedMask=0u;
+
+bool8 XgbaR48QueueOriginalFly(u8 destination_world,u8 group,u8 map)
+{
+    static const u8 next_source[3]={1u,2u,0u};
+    static const u8 next_group[3]={0u,0u,0u};
+    static const u8 next_map[3]={9u,4u,9u};
+    if(sXgbaR48FlyLeg>=3u || sXgbaR48PendingFlyWorld!=0xffu ||
+       !sXgbaR48SourceMapLoaded || sXgbaR48FlyLeg!=sXgbaR48ImportedWorld ||
+       !(sXgbaR48NpcTalkedMask&(1u<<sXgbaR48FlyLeg)) ||
+       destination_world!=next_source[sXgbaR48FlyLeg] ||
+       group!=next_group[sXgbaR48FlyLeg] ||
+       map!=next_map[sXgbaR48FlyLeg])
+        return FALSE;
+    /* This records the user's REAL Fly selection. It is not a warp or
+     * game-engine transition until native original Fly callbacks finish. */
+    sXgbaR48PendingFlyWorld=destination_world;
+    sXgbaR48PendingFlyGroup=group;
+    sXgbaR48PendingFlyMap=map;
+    return TRUE;
+}
+void XgbaR48ConfirmActualFlyArrival(void)
+{
+    /* Hooked from original source-built Emerald FieldCallback_FlyIntoMap,
+     * called by native FLDEFF_FLY_IN after original WarpIntoMap/CB2_LoadMap.
+     * Reject unless original map/NPC/assets are already in the engine. */
+    if(sXgbaR48PendingFlyWorld==0xffu)return;
+    if(!sXgbaR48SourceMapLoaded ||
+       sXgbaR48ImportedWorld!=sXgbaR48PendingFlyWorld ||
+       sXgbaR48ImportedGroup!=sXgbaR48PendingFlyGroup ||
+       sXgbaR48ImportedMap!=sXgbaR48PendingFlyMap){
+        ++gXgbaR48OriginalNpcProof.rejected_mismatch;
+        return;
+    }
+    ++gXgbaR48OriginalNpcProof.actual_cross_world_fly_warps;
+    ++sXgbaR48FlyLeg;
+    sXgbaR48PendingFlyWorld=0xffu;
+    sXgbaR48PendingFlyGroup=0xffu;
+    sXgbaR48PendingFlyMap=0xffu;
+}
+
 
 /* Only the eventual real original-engine foreign map loader may declare
  * the imported map active. A source-labelled Fly menu selection alone
@@ -202,5 +251,6 @@ const u8 *XgbaR48ResolveActualOriginalNpcScript(
     gXgbaR48OriginalNpcProof.original_text_last_offset=
         XgbaR48Little32(sXgbaR48Payload[source]+19u);
     ++gXgbaR48OriginalNpcProof.real_npc_interactions;
+    sXgbaR48NpcTalkedMask|=(1u<<source);
     return sXgbaR48Payload[source]+XGBA_R48_HEADER;
 }
