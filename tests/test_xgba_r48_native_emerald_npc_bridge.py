@@ -44,7 +44,7 @@ class SourceBuiltEmeraldOriginalNpcBridge(unittest.TestCase):
             base=data.tell()
             for i in range(32):
                 rid=f"r49.synthetic.original_event_page.{i:03}"
-                payload=(f"ORIGINAL_MAP_EVENT_REGISTRY_TEST_{i:03}".encode()*8)[:256].ljust(256,b"\\0")
+                payload=(f"ORIGINAL_MAP_EVENT_REGISTRY_TEST_{i:03}".encode()*8)[:256].ljust(256,bytes([0]))
                 offset=base+256*i
                 data.write(payload)
                 manifest["resources"].append({
