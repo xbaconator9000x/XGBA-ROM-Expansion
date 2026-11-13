@@ -24,11 +24,11 @@ int main(void)
     assert(!XgbaR66OriginalOamValid(bad,8u,16u,32u));
     memcpy(bad,oam,8);bad[1]=0xc0; /* forbidden shape3 */
     assert(!XgbaR66OriginalOamValid(bad,8u,16u,32u));
-    memcpy(bad,oam,8);bad[2]=0xc0; /* wrong OAM size */
+    memcpy(bad,oam,8);bad[3]=0xc0; /* wrong OAM size */
     assert(!XgbaR66OriginalOamValid(bad,8u,16u,32u));
     memcpy(bad,oam,8);bad[4]=0x01; /* native tileNum must be zero */
     assert(!XgbaR66OriginalOamValid(bad,8u,16u,32u));
-    memcpy(bad,oam,8);bad[5]=0x18; /* different native priority is allowed */
+    memcpy(bad,oam,8);bad[5]=0x04; /* different native priority is allowed */
     assert(XgbaR66OriginalOamValid(bad,8u,16u,32u));
     memcpy(bad,oam,8);bad[5]=0xf8; /* source paletteNum must be zero */
     assert(!XgbaR66OriginalOamValid(bad,8u,16u,32u));
