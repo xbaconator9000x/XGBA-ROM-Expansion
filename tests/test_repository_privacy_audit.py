@@ -54,24 +54,37 @@ class PublicRepositoryPrivacyChecks(unittest.TestCase):
         code = 'def prompt_for(task): return {"prompt": task.goal}'
         self.assertEqual([], audit.audit_bytes("tools/dispatcher.py", code.encode()))
 
-    def test_readme_intro_in_required_order(self):
+    def test_readme_narrative_and_evidence_integrity(self):
         readme = "\n".join((
-            "## What XGBA is", "## Goals", "## Potential implications",
-            "## AI disclosure",
-            "I am developing XGBA with the help of AI for coding and logging purposes.",
-            "## Development history and verified results", "R6–R27 verified",
+            "# XGBA",
+            "> **Status — 14 November 2026:** three-ROM gameplay not yet complete.",
+            "## The idea",
+            "## What actually works",
+            "R6 external resource proof; R62 authentic source-art progress.",
+            "## The big test: three actual games, one running Emerald",
+            "## Where I want to take it",
+            "## Building, testing and contributing",
+            "**AI disclosure:** I use AI extensively to assist development.",
         ))
         self.assertEqual([], audit.check_readme(readme))
-        self.assertNotEqual([], audit.check_readme(readme.replace("## Goals", "")))
-        # Newly verified R28+ must not fail a stale audit string.
-        self.assertEqual([], audit.check_readme(readme.replace(
-            "R6–R27 verified", "R6–R28 verified")))
-        self.assertEqual([], audit.check_readme(readme.replace(
-            "R6–R27 verified", "R6–R35 verified")))
-        self.assertNotEqual([], audit.check_readme(readme.replace(
-            "R6–R27 verified", "R6–R26 verified")))
-        self.assertNotEqual([], audit.check_readme(readme.replace(
-            "R6–R27 verified", "Milestones complete")))
+        self.assertNotEqual([], audit.check_readme(
+            readme.replace("## What actually works", "")))
+        self.assertNotEqual([], audit.check_readme(
+            readme.replace("## The idea", "## Where I want to take it")))
+        self.assertNotEqual([], audit.check_readme(
+            readme.replace("**AI disclosure:** I use AI extensively to assist development.", "")))
+        self.assertNotEqual([], audit.check_readme(
+            readme.replace("R62", "R26").replace("R6", "R5")))
+        self.assertNotEqual([], audit.check_readme(
+            readme.replace("three-ROM gameplay not yet complete.", "Check progress online.")))
+        self.assertNotEqual([], audit.check_readme(
+            readme.replace("> **Status — 14 November 2026:**", "Status:")))
+        self.assertEqual([], audit.check_readme(
+            readme.replace("R62", "R63")))
+
+    def test_actual_project_readme_matches_narrative_contract(self):
+        self.assertEqual([], audit.check_readme((ROOT / "README.md").read_text()))
+
 
     def test_retired_copilot_dispatch_sources_cannot_return(self):
         self.assertIn("tools/xgba_autonomous_product.py",
