@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """R62 PRIVATE three-world XGBA provider bundle with authentic Rocket assets.
 
-Combine *existing user-owned private* R49 all-source events, R51 grids, R52
+Combine *existing user-owned private* R48 original NPC dialogue and R49 events, R51 grids, R52
 source-versioned layouts, R53 Rocket tiles and R56 Rocket original NPC art.
 All input SHA-256 pages are independently verified before the destination
 host-manifest is created. This is not a public ROM asset exporter: keep the
 result private and never commit its binary or derived tables.
 
 This is the existing XGBA host resource schema, NOT a full native Fly test:
-Johto original graphics/scripts remain absent and are reported as such.
+Johto original graphics and general script execution remain absent; three exact original NPC witness scripts are included but not evidence of live gameplay.
 """
 from __future__ import annotations
 import argparse
@@ -56,6 +56,50 @@ def _valid_pages(entries,reader):
         result[rid]=raw
     return result
 
+def original_r48_witnesses(z:zipfile.ZipFile)->dict[str,bytes]:
+    """Admit only SHA-attested user-owned ORIGINAL three NPC script witnesses.
+
+    R48's original Emerald native interpreter fetches these exact 256-byte
+    resource IDs on a *physical* A-button NPC interaction. R62 previously
+    exported the R49 event index but omitted all three R48 witness payloads,
+    leaving that interaction path unable to load any original dialogue.
+    """
+    inventory=_json(z.read("private-r48-original-npc-witnesses.json"))
+    records=inventory.get("resources")
+    if not isinstance(records,list) or len(records)!=3:
+        raise PrivateBundleError("Missing complete original R48 source witness catalogue")
+    canonical=(
+        ("emerald.r48.npc","emerald",0,0,9,2,12,13,17,0x1e8022,0x1e8acf),
+        ("rocket.r48.npc","rocket",1,0,9,2,14,13,17,0x215543,0x1dc3364),
+        ("heart_soul.r48.npc","heart_soul",2,0,4,7,39,22,406,0x390519,0x3908e6),
+    )
+    output={}
+    for record,expected in zip(records,canonical):
+        rid,name,world,group,map_number,npc_id,x,y,gfx,script_at,text_at=expected
+        if record.get("id")!=rid or record.get("length")!=256 or \
+           record.get("source_sha256")!=SOURCES[name] or \
+           record.get("original_npc_id")!=npc_id or \
+           record.get("original_script_offset")!=script_at or \
+           record.get("original_text_offset")!=text_at:
+            raise PrivateBundleError("Original NPC source witness catalogue changed: "+rid)
+        payload=z.read(rid+".bin")
+        if len(payload)!=256 or _sha(payload)!=record.get("sha256"):
+            raise PrivateBundleError("Original NPC SHA integrity failure: "+rid)
+        if payload[:4]!=b"X84N" or payload[4]!=1 or \
+           tuple(payload[5:9])!=(world,group,map_number,npc_id) or \
+           struct.unpack_from("<hhH",payload,9)!=(x,y,gfx) or \
+           struct.unpack_from("<II",payload,15)!=(script_at,text_at):
+            raise PrivateBundleError("Original NPC source header mismatch: "+rid)
+        script_len,text_len=struct.unpack_from("<HH",payload,23)
+        if script_len!=9 or not 0<text_len<=210 or 32+script_len+text_len>256:
+            raise PrivateBundleError("Original NPC script/text bounds mismatch: "+rid)
+        script=payload[32:41]
+        if script[:2]!=b"\x0f\x00" or script[2:6]!=struct.pack("<I",0x08000000+text_at) or \
+           script[6:]!=b"\x09\x02\x02" or payload[41+text_len-1]!=0xff:
+            raise PrivateBundleError("Original NPC interpreter bytecode mismatch: "+rid)
+        output[rid]=payload
+    return output
+
 def zip_manifest_pages(path:Path,kind:str):
     with zipfile.ZipFile(path) as z:
         if kind=="r49":
@@ -71,7 +115,12 @@ def zip_manifest_pages(path:Path,kind:str):
             def extract(e):
                 a=e["offset"];b=a+e["length"]
                 return data[a:b] if a>=0 and b<=len(data) else b""
-        return _valid_pages(entries,extract)
+        pages=_valid_pages(entries,extract)
+        if kind=="r49":
+            for rid,payload in original_r48_witnesses(z).items():
+                if rid in pages:raise PrivateBundleError("NPC/resource ID collision")
+                pages[rid]=payload
+        return pages
 
 def folder_manifest_pages(root:Path,expected_rocket_sha:str):
     m=_json((root/"manifest.json").read_bytes())
