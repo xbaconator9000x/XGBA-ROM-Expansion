@@ -45,7 +45,10 @@ static EWRAM_DATA bool8 sXgbaR54FlySentinelBootInitialized=FALSE;
  * authored Emerald substitutes. R55 installation requires a real original
  * source sprite compiler that has authenticated each 16-bit source identity
  * and installed the frame, animations and palette in stable GBA memory. */
-static EWRAM_DATA struct XgbaR55SourceSpriteRoster sXgbaR55OriginalSprites={0};
+/* Per-map roster is transient. Never reserve ~710B permanent EWRAM:
+ * source-built original Emerald exceeded 256KiB EWRAM by 428B. Allocate
+ * only AFTER original native heap reset, release BEFORE next heap reset. */
+static EWRAM_DATA struct XgbaR55SourceSpriteRoster *sXgbaR55OriginalSprites=NULL;
 static EWRAM_DATA const struct ObjectEventGraphicsInfo *
     sXgbaR55VerifiedGraphicInfo[XGBA_R55_SPRITE_SLOTS]={0};
 static EWRAM_DATA bool8 sXgbaR55RosterHasSourceAssets=FALSE;
@@ -89,12 +92,17 @@ bool8 XgbaR55BeginOriginalSourceSpriteRegistration(u8 world,u8 group,u8 map)
     unsigned i;
     if(world==0u || world>=3u || !sXgbaR54OriginalHeapPreReset ||
        sXgbaR54SourceMapPreparedInWarp ||
-       !gSaveBlock1Ptr ||
+       !gSaveBlock1Ptr || sXgbaR55OriginalSprites ||
        sXgbaR48PendingFlyWorld!=world ||
        gSaveBlock1Ptr->location.mapGroup!=group ||
-       gSaveBlock1Ptr->location.mapNum!=map ||
-       !XgbaR55ResetSourceRoster(&sXgbaR55OriginalSprites,world,group,map))
+       gSaveBlock1Ptr->location.mapNum!=map)
         return FALSE;
+    sXgbaR55OriginalSprites=AllocZeroed(sizeof(*sXgbaR55OriginalSprites));
+    if(!sXgbaR55OriginalSprites)return FALSE;
+    if(!XgbaR55ResetSourceRoster(sXgbaR55OriginalSprites,world,group,map)){
+        Free(sXgbaR55OriginalSprites);sXgbaR55OriginalSprites=NULL;
+        return FALSE;
+    }
     for(i=0;i<XGBA_R55_SPRITE_SLOTS;i++)
         sXgbaR55VerifiedGraphicInfo[i]=NULL;
     sXgbaR55RosterHasSourceAssets=FALSE;
@@ -110,14 +118,15 @@ bool8 XgbaR55RegisterOriginalSpriteGraphics(u8 world,u16 source_gfx,
     if(!native_verified_info || world>=3u ||
        !sXgbaR54OriginalHeapPreReset ||
        sXgbaR54SourceMapPreparedInWarp ||
-       sXgbaR55OriginalSprites.world!=world ||
+       !sXgbaR55OriginalSprites ||
+       sXgbaR55OriginalSprites->world!=world ||
        !original_palette_crc || !original_frames_crc)
         return FALSE;
     source.info=native_verified_info;
     source.verified_palette_crc=original_palette_crc;
     source.verified_frames_crc=original_frames_crc;
     if(!XgbaR55AcquireVerifiedSourceSprite(
-        &sXgbaR55OriginalSprites,world,source_gfx,
+        sXgbaR55OriginalSprites,world,source_gfx,
         XgbaR55VerifyProvidedSourceGraphics,&source,&slot))
         return FALSE;
     idx=(unsigned)slot-XGBA_R55_SPRITE_FIRST;
@@ -135,7 +144,12 @@ void XgbaR55ForgetSourceSpriteRegistrations(void)
 {
     unsigned i;
     sXgbaR55RosterHasSourceAssets=FALSE;
-    sXgbaR55OriginalSprites.count=0u;
+    if(sXgbaR55OriginalSprites){
+        /* Caller must be the actual faded native map loader with
+         * source animation/DMA callbacks quiescent. */
+        Free(sXgbaR55OriginalSprites);
+        sXgbaR55OriginalSprites=NULL;
+    }
     for(i=0;i<XGBA_R55_SPRITE_SLOTS;i++)
         sXgbaR55VerifiedGraphicInfo[i]=NULL;
 }
@@ -165,7 +179,7 @@ static int XgbaR54ResolveOriginalSpriteSlot(void *context,
         return 1;
     }
     if(source!=0u && sXgbaR55RosterHasSourceAssets &&
-       XgbaR55FindVerifiedSprite(&sXgbaR55OriginalSprites,
+       XgbaR55FindVerifiedSprite(sXgbaR55OriginalSprites,
                                  source,original_sprite,installed_slot)){
         unsigned idx=(unsigned)*installed_slot-XGBA_R55_SPRITE_FIRST;
         if(idx<XGBA_R55_SPRITE_SLOTS &&
@@ -183,16 +197,17 @@ const struct ObjectEventGraphicsInfo *
 XgbaR55GetVerifiedNativeOriginalObjectGraphics(u8 installed_slot)
 {
     unsigned index;
-    if(!sXgbaR55RosterHasSourceAssets || !sXgbaR54SourceMapPreparedInWarp ||
+    if(!sXgbaR55RosterHasSourceAssets || !sXgbaR55OriginalSprites ||
+       !sXgbaR54SourceMapPreparedInWarp ||
        !sXgbaR50Ready || !gSaveBlock1Ptr ||
-       sXgbaR50World!=sXgbaR55OriginalSprites.world ||
-       gSaveBlock1Ptr->location.mapGroup!=sXgbaR55OriginalSprites.source_group ||
-       gSaveBlock1Ptr->location.mapNum!=sXgbaR55OriginalSprites.source_map ||
+       sXgbaR50World!=sXgbaR55OriginalSprites->world ||
+       gSaveBlock1Ptr->location.mapGroup!=sXgbaR55OriginalSprites->source_group ||
+       gSaveBlock1Ptr->location.mapNum!=sXgbaR55OriginalSprites->source_map ||
        installed_slot<XGBA_R55_SPRITE_FIRST ||
        installed_slot>XGBA_R55_SPRITE_LAST)
         return NULL;
     index=installed_slot-XGBA_R55_SPRITE_FIRST;
-    if(index>=sXgbaR55OriginalSprites.count ||
+    if(index>=sXgbaR55OriginalSprites->count ||
        sXgbaR55VerifiedGraphicInfo[index]==NULL)
         return NULL;
     ++gXgbaR55NativeSpriteProof.real_obj_info_resolutions;
