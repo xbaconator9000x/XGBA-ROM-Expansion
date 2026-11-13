@@ -151,6 +151,20 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                 "    return script;\n}",
                 "R48 original Pokémon object event A-button scripting")
             interaction.write_text(source)
+            # Link the ACTUAL Fly field-effect arrival callback, not a
+            # surrogate keypress or map-viewer source switch. This only
+            # increments proof when the genuine foreign map/object is active.
+            flying=e/"src/field_effect.c"
+            original_flying=flying.read_text()
+            originals[flying]=original_flying
+            fly_source=r16.one(original_flying,
+                "static void FieldCallback_FlyIntoMap(void)\n{\n    Overworld_PlaySpecialMapMusic();",
+                "extern void XgbaR48ConfirmActualFlyArrival(void);\n"
+                "static void FieldCallback_FlyIntoMap(void)\n{\n"
+                "    XgbaR48ConfirmActualFlyArrival();\n"
+                "    Overworld_PlaySpecialMapMusic();",
+                "R48 genuine original FldEff_FlyIn callback and loaded-map acceptance")
+            flying.write_text(fly_source)
         world.write_text(s)
         if r19_battle:
             # Instrument original Emerald battle sprite decompression, NOT a
