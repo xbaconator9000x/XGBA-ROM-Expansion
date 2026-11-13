@@ -132,3 +132,14 @@ void XgbaR51ReleaseOriginalGeometryAfterFade(bool8 previous_renderer_released)
     XgbaR51InvalidateGeometry(&sXgbaR51NativeTerrain);
     sXgbaR51OriginalTerrainPrepared=FALSE;
 }
+
+/* Real Emerald's frame loop observes active source geometry without changing
+ * the map or claiming a foreign Fly. This also keeps the runtime module
+ * linked into the exact original ARM game for native memory validation. */
+void XgbaR51ObserveOriginalFieldFrame(void)
+{
+    if(sXgbaR51OriginalTerrainPrepared &&
+       sXgbaR51NativeTerrain.valid &&
+       gXgbaR51TerrainProof.source_key==sXgbaR51NativeTerrain.source_key)
+        gXgbaR51TerrainProof.source_grid_bytes=sXgbaR51NativeTerrain.grid_bytes;
+}
