@@ -119,9 +119,16 @@ def descriptor_asset(blob,world,version,desc_offset,is_secondary):
                     "Unsupported original source compressed tileset format")
         except smol.SmolError as exc:
             raise TilesetFormatError("Invalid original Smol compressed tileset: "+str(exc)) from exc
-        if len(graphics)<tile_count*32:
-            raise TilesetFormatError("Original decoded graphics smaller than expected tiles")
-        graphics=graphics[:tile_count*32]
+        # Native Emerald reserves 512 secondary tile slots, but the
+        # ORIGINAL LZ77/Smol data often holds far fewer. The field renderer
+        # clears VRAM at map load and copies only the decompressed source
+        # length; do NOT require exactly 512 (or 384) source tiles.
+        # Preserve the exact decoded byte length, not a padded/fabricated
+        # copy of the source graphics. The guest uses AllocZeroed for the
+        # unused reserved slots, exactly mirroring cleared BG VRAM.
+        if not 32<=len(graphics)<=tile_count*32 or len(graphics)%32:
+            raise TilesetFormatError(
+                "Original graphics size outside reserved source tile capacity")
     else:
         graphics=bytes(blob[tile_at:tile_at+tile_count*32])
     metatiles=bytes(blob[_ptr(blob,meta_ptr,meta_count*16):][:meta_count*16])
@@ -130,7 +137,8 @@ def descriptor_asset(blob,world,version,desc_offset,is_secondary):
     # slots; the original field renderer selects only the secondary range.
     pal_start=0 if not is_secondary else (7 if version in (1,2) else 6)*32
     palettes=bytes(blob[_ptr(blob,pal_ptr,pal_start+pal_count*32)+pal_start:][:pal_count*32])
-    if len(graphics)!=tile_count*32 or len(metatiles)!=meta_count*16 or \
+    if not 32<=len(graphics)<=tile_count*32 or len(graphics)%32 or \
+       len(metatiles)!=meta_count*16 or \
        len(attributes)!=meta_count*attr_bytes or len(palettes)!=pal_count*32:
         raise TilesetFormatError("Original tileset arrays have inconsistent lengths")
     sections=(graphics,metatiles,attributes,palettes)
