@@ -72,7 +72,7 @@ def validate_original_inventory(report:dict)->dict:
             "populated_maps":record.get("structurally_valid_populated_maps"),
             "map_slots":record.get("original_numeric_map_slots"),
             "null_map_slots":record.get("original_zero_pointer_slots_preserved"),
-            **{key:counts.get(key) for key in totals},
+            **{key:counts.get(key) for key in totals if key!="populated_maps"},
         }
         if actual!=expected:
             missing={key:{"original":val,"supplied":actual.get(key)}
