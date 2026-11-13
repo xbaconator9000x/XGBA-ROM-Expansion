@@ -131,7 +131,11 @@ static inline int XgbaR50StageEvents(
     out->object_bytes=(uint16_t)offsets[1];
     out->warp_bytes=(uint16_t)(offsets[2]-offsets[1]);
     out->coordinate_bytes=(uint16_t)(offsets[3]-offsets[2]);
-    out->background_bytes=(uint16_t)(total-offsets[3]);
+    /* 'total' is the FULL original source event array, while offsets[3]
+     * refers to the COMPACTED first-viewport copy. Subtracting the two
+     * silently counted dropped NPC bytes as BG events. Keep all four
+     * lengths derived from the actual source type counts instead. */
+    out->background_bytes=(uint16_t)((uint32_t)e.background_count*12u);
     out->object_count=(uint8_t)accepted;
     out->original_warp_count=e.warp_count;
     out->coordinate_count=0u;
