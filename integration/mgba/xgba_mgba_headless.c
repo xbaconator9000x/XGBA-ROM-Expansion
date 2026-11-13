@@ -464,7 +464,11 @@ static void r45_press(struct mCore *core,unsigned button)
     core->setKeys(core,button);
     for(unsigned frame=0;frame<5u;frame++)core->runFrame(core);
     core->setKeys(core,0u);
-    for(unsigned frame=0;frame<35u;frame++)core->runFrame(core);
+    /* R44 renders all 240x144 Mode3 pixels from externally supplied
+     * metatiles in actual ARM7 guest code, not cached GPU textures. This
+     * is intentionally slower than a typical game frame: let it finish
+     * drawing the full map and UI before issuing the next R/L press. */
+    for(unsigned frame=0;frame<600u;frame++)core->runFrame(core);
 }
 static void r45_check(struct mCore *core,const struct XgbaGbaDevice *device,
                       unsigned selected,unsigned expected_reads)
