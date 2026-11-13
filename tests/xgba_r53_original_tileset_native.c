@@ -37,7 +37,7 @@ static int fetch(void *ctx,const char *id,uint8_t *dst,uint16_t count)
         memcpy(dst,asset+page*16384u,16384u);
     else
         memcpy(dst,asset+page*16384u,length-page*16384u);
-    if(id[20]=='g'&&corrupt_graphics&&fetches>3u)dst[0]^=1u;
+    if(id[20]=='g'&&corrupt_graphics&&fetches>=3u)dst[0]^=1u;
     ++fetches;
     return 1;
 }
