@@ -30,7 +30,8 @@ EWRAM_DATA volatile struct XgbaR53OriginalGraphicsProof gXgbaR53GraphicsProof={0
  * A fixed EWRAM_DATA array previously overflowed the 256KiB hardware
  * linker region by 18,208 bytes. No emulated RAM expansion is assumed. */
 struct XgbaR53ResidentSourceGraphics {
-    u8 graphics[1024u*32u];\n    u16 metatiles[1024u*8u];
+    u8 graphics[1024u*32u];
+    u16 metatiles[1024u*8u];
     u16 attributes[1024u];
     u16 palettes[13u*16u];
 };
