@@ -188,6 +188,9 @@ static bool8 XgbaR48VerifyPayload(u8 source)
 }
 static const char *XgbaR48OriginalNpcResourceName(u8 source)
 {
+    static const char *const names[3]={
+        "emerald.r48.npc","rocket.r48.npc","heart_soul.r48.npc"
+    };
     return source<3u?names[source]:NULL;
 }
 /* R67: read-only Fly preflight. No pending world, script cache,
@@ -209,9 +212,6 @@ bool8 XgbaR48PreflightOriginalNpcResource(u8 source)
 }
 static bool8 XgbaR48LoadOriginalNpc(u8 source)
 {
-    static const char *const names[3]={
-        "emerald.r48.npc","rocket.r48.npc","heart_soul.r48.npc"
-    };
     u32 i;
     const char *src;
     u8 *script;
