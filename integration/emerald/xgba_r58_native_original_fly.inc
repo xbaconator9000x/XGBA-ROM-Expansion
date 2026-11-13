@@ -63,6 +63,16 @@ static bool8 XgbaR58PreflightOriginalDestination(u8 world,u8 group,u8 map,
     if(world>=3u || x<0 || y<0 || group!=0u ||
        (world==2u?map!=4u:map!=9u))return FALSE;
     ++gXgbaR58NativeFlyProof.all_resource_preflights;
+    /* World0 return uses the ORIGINAL Emerald ROM-linked map and native
+     * object assets. No R51/R53/R56 sidecar for Emerald is needed; see
+     * the native header / original witness guard shared with R54. */
+    if(world==XGBA_R63_NATIVE_WORLD){
+        if(XgbaR63VerifyNativeReturnHeader(world,group,map,
+              XGBA_R63_NATIVE_WIDTH,XGBA_R63_NATIVE_HEIGHT,1u,x,y) &&
+           XgbaR63NativeEmeraldReturnHeaderPresent())
+            return TRUE;
+        goto refuse;
+    }
     grid.fetch=XgbaR51FetchRealPage;grid.scratch=(u8 *)gXgbaR17Arena;
     grid.indexed_maps=XGBA_R51_ALL_SOURCE_MAPS;
     grid.cached_index_page=XGBA_R51_INVALID_PAGE;
