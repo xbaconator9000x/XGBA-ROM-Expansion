@@ -58,3 +58,11 @@ These options are not interchangeable. Increased host storage is proven. Guest E
 6. Archive verified screenshots, exact CI head, machine-readable checks and scope. Never label planner-only tests as expanded hardware or live streaming proof.
 
 The R15 shared memory planner covers steps 1–3 at the modelling level. Actual engine integration and steps 4–6 require separate native demonstrations.
+
+## Future features pipeline — XRAM / XIWRAM / XVRAM (13 November 2026)
+
+**Tracked roadmap:** [Issue #124 — opt-in XRAM, extended IWRAM and virtual / expanded VRAM](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/issues/124). This is **future research, not an implemented capability** and must not displace the current original-three-ROM Emerald Fly/graphics/NPC acceptance work except where hard resource telemetry justifies intervention.
+
+Order: (1) measure peak/fragmented native memory and engine hardcoded buffer requirements, (2) prototype opt-in **1 MiB then 8 MiB writable XRAM** in a modified emulator with ordinary-hardware fallback, (3) assess emulator-only **XIWRAM** beyond native 32 KiB with timing/IRQ/stack semantics preserved, (4) implement **virtual VRAM** by caching decoded assets in XRAM/host and streaming only active BG/OBJ graphics into native 96 KiB, and (5) investigate **genuinely larger emulated PPU/VRAM** only where actual measured simultaneous on-screen demand proves it necessary. Physical GBA IWRAM/VRAM cannot be transparently enlarged by a ROM patch or ordinary cartridge; external cartridge memory can provide backing storage or banked RAM, not new on-chip IWRAM or true display VRAM.
+
+All enhanced-only paths require a versioned capability handshake, strict fail-closed fallback, original CPU/VRAM/IRQ bus timing compatibility, original game ARM execution and genuine LCD tests, Flash save, emulator savestate and cold restart. Avoid enlarging mirrored standard address ranges in default mode; an extra byte buffer in mGBA is **not** proof of an expanded working memory ABI or simultaneous PPU tile capacity.
