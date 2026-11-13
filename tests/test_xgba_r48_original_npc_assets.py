@@ -116,6 +116,10 @@ class RealOriginalNpcResourceTests(unittest.TestCase):
             self.assertIn(required,include)
         self.assertIn("src/field_control_avatar.c",source_patch)
         self.assertIn("gObjectEvents[objectEventId].localId",source_patch)
+        self.assertIn("FieldCallback_FlyIntoMap",source_patch)
+        self.assertIn("XgbaR48ConfirmActualFlyArrival",source_patch)
+        self.assertIn("XgbaR48QueueOriginalFly",include)
+        self.assertIn("sXgbaR48PendingFlyWorld",include)
         self.assertNotIn("FLY_TEST_PASSED",include)
 
 
