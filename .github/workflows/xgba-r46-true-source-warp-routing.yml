@@ -4,6 +4,7 @@ on:
     branches: [main, 'implementation/r46-original-source-aware-warp-routing-20261113']
     paths:
       - 'integration/common/xgba_r46_source_warps.h'
+      - 'integration/common/xgba_r46_paged_warps.h'
       - 'tools/xgba_r46_source_warp_index.py'
       - 'tests/xgba_r46_source_warps_native.c'
       - 'tests/test_xgba_r46_source_warps.py'
@@ -12,6 +13,7 @@ on:
     branches: [main]
     paths:
       - 'integration/common/xgba_r46_source_warps.h'
+      - 'integration/common/xgba_r46_paged_warps.h'
       - 'tools/xgba_r46_source_warp_index.py'
       - 'tests/xgba_r46_source_warps_native.c'
       - 'tests/test_xgba_r46_source_warps.py'
