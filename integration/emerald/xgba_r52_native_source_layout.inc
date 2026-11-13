@@ -81,6 +81,24 @@ u16 XgbaR52PrimaryMetatileCount(void)
     }
     return 512u;
 }
+u16 XgbaR52PrimaryTilesCount(void)
+{
+    if(sXgbaR52ProfileReady && sXgbaR50Ready && gSaveBlock1Ptr &&
+       sXgbaR52Profile.key==sXgbaR50OriginalEvents.active_source_key &&
+       gSaveBlock1Ptr->location.mapGroup==sXgbaR50Group &&
+       gSaveBlock1Ptr->location.mapNum==sXgbaR50Number)
+        return sXgbaR52Profile.tiles_in_primary;
+    return 512u;
+}
+u16 XgbaR52PrimaryPaletteCount(void)
+{
+    if(sXgbaR52ProfileReady && sXgbaR50Ready && gSaveBlock1Ptr &&
+       sXgbaR52Profile.key==sXgbaR50OriginalEvents.active_source_key &&
+       gSaveBlock1Ptr->location.mapGroup==sXgbaR50Group &&
+       gSaveBlock1Ptr->location.mapNum==sXgbaR50Number)
+        return sXgbaR52Profile.palettes_in_primary;
+    return 6u;
+}
 void XgbaR52OriginalFrameProof(void)
 {
     if(sXgbaR52ProfileReady &&
