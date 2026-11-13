@@ -1,0 +1,50 @@
+name: XGBA R46 original 3-source warp resolver native engine ABI
+on:
+  push:
+    branches: [main, 'implementation/r46-original-source-aware-warp-routing-20261113']
+    paths:
+      - 'integration/common/xgba_r46_source_warps.h'
+      - 'integration/common/xgba_r46_paged_warps.h'
+      - 'tools/xgba_r46_source_warp_index.py'
+      - 'tests/xgba_r46_source_warps_native.c'
+      - 'tests/test_xgba_r46_source_warps.py'
+      - '.github/workflows/xgba-r46-true-source-warp-routing.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'integration/common/xgba_r46_source_warps.h'
+      - 'integration/common/xgba_r46_paged_warps.h'
+      - 'tools/xgba_r46_source_warp_index.py'
+      - 'tests/xgba_r46_source_warps_native.c'
+      - 'tests/test_xgba_r46_source_warps.py'
+      - '.github/workflows/xgba-r46-true-source-warp-routing.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-routing-and-private-index-contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run 3-original-world namespace/index converter regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=tools python3 -m unittest discover -s tests -p 'test_xgba_r46_source_warps.py' -v
+          python3 -m py_compile tools/xgba_r46_source_warp_index.py
+          echo PASS_R46_PYTHON_SOURCE_SCOPED_ORIGINAL_MAP_AND_WARP_INDEX
+      - name: Compile actual C engine resolver with UB/ASan and execute 3-world tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          gcc -std=c11 -O1 -g -Wall -Wextra -Werror -pedantic             -fsanitize=address,undefined -fno-omit-frame-pointer             tests/xgba_r46_source_warps_native.c -o /tmp/xgba-r46-native-3world
+          /tmp/xgba-r46-native-3world
+          echo PASS_R46_C_NATIVE_SOURCE_WARP_ROUTER_ATOMIC_PORTALS_AND_SAVE
+      - name: Compile with strict freestanding GBA-compatible C11 flags
+        shell: bash
+        run: |
+          set -euo pipefail
+          gcc -std=c11 -ffreestanding -fno-builtin -Os             -Wall -Wextra -Werror -pedantic             -c tests/xgba_r46_source_warps_native.c -o /tmp/xgba-r46-freestanding.o
+          test -s /tmp/xgba-r46-freestanding.o
+          echo PASS_R46_FREESTANDING_SOURCE_WARP_HEADER_ABI
