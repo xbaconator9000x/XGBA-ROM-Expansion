@@ -1,0 +1,34 @@
+name: XGBA R62 original source provider fusion
+on:
+  push:
+    branches: ['integration/r51-original-three-world-grid-native-20261113']
+    paths:
+      - 'tools/xgba_r62_private_original_provider_bundle.py'
+      - 'tests/test_xgba_r62_private_original_provider_bundle.py'
+      - '.github/workflows/xgba-r62-original-provider-fusion.yml'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  authored-source-byte-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate all original source identities, CRCs and SHA corruption refusal
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r62_private_original_provider_bundle.py \
+              tests/test_xgba_r62_private_original_provider_bundle.py
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r62_private_original_provider_bundle -v
+          echo PASS_R62_SOURCE_PACK_FUSION_AUTHORED_ONLY
+      - name: Never commit private source pages or original copyrighted ROMs
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! git ls-files | grep -Eiq '\.(gba|nds|sav|ips|bps)$'
+          test ! -f r62-private-original-three-world-provider.bin
+          echo PASS_R62_NO_PRIVATE_SOURCE_ART_PUBLIC
