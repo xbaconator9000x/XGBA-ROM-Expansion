@@ -93,10 +93,12 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
             raise ValueError("R10 second asset must begin after 32 MiB")
         cmd.extend(["--second-resource", second.id,
                     str(second.offset), str(second.length), second.sha256])
-    # R19 resource manifest has any number of independently verified source
-    # references. Preserve legacy two-resource CLI as-is for R7–R18.
-    if not isinstance(extra_resource_ids,(tuple,list)) or len(extra_resource_ids)>16:
-        raise ValueError("The bounded XGBA provider permits at most 16 additional assets")
+    # Full three-ROM NPC/warp imports occupy many >32MiB 16KiB pages.
+    # The host registry grows dynamically (no extra GBA EWRAM allocated).
+    # Bound per invocation to the native uint16 resource identity count;
+    # each requested asset is still individually length/SHA validated.
+    if not isinstance(extra_resource_ids,(tuple,list)) or len(extra_resource_ids)>65535:
+        raise ValueError("The expanded XGBA provider permits at most 65535 additional assets")
     used={resource_id}
     if second_resource_id is not None:
         used.add(second_resource_id)
