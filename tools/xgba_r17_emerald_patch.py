@@ -200,6 +200,44 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                     "    Overworld_PlaySpecialMapMusic();",
                     "R50 confirm actual Fly only after real loaded original source map")
             flying.write_text(fly_source)
+        if "#define XGBA_R52_SOURCE_LAYOUT" in Path(config).read_text():
+            # Original Emerald hardcodes 512 primary metatiles everywhere.
+            # Rocket/HnS versioned layouts use 640. Patch the real original
+            # field camera AND collision/behavior lookup, not an image viewer.
+            camera=e/"src/field_camera.c"
+            original_camera=camera.read_text()
+            originals[camera]=original_camera
+            cc=r16.one(original_camera,
+                "static void DrawMetatileAt(const struct MapLayout *mapLayout, u16 offset, int x, int y)",
+                "extern u16 XgbaR52PrimaryMetatileCount(void);\\n"
+                "static void DrawMetatileAt(const struct MapLayout *mapLayout, u16 offset, int x, int y)",
+                "R52 dynamic original Emerald field camera declaration")
+            cc=r16.one(cc,
+                "if (metatileId < NUM_METATILES_IN_PRIMARY)",
+                "if (metatileId < XgbaR52PrimaryMetatileCount())",
+                "R52 original Emerald primary metatile camera routing")
+            cc=r16.one(cc,
+                "metatileId -= NUM_METATILES_IN_PRIMARY;",
+                "metatileId -= XgbaR52PrimaryMetatileCount();",
+                "R52 original Emerald secondary metatile camera offset")
+            camera.write_text(cc)
+            fm=e/"src/fieldmap.c"
+            original_fm=fm.read_text()
+            originals[fm]=original_fm
+            fs=r16.one(original_fm,
+                "u16 GetMetatileAttributesById(u16 metatile)\\n{",
+                "extern u16 XgbaR52PrimaryMetatileCount(void);\\n"
+                "u16 GetMetatileAttributesById(u16 metatile)\\n{",
+                "R52 native original Emerald collision behavior resolver")
+            fs=r16.one(fs,
+                "if (metatile < NUM_METATILES_IN_PRIMARY)",
+                "if (metatile < XgbaR52PrimaryMetatileCount())",
+                "R52 source-qualified map collision primary split")
+            fs=r16.one(fs,
+                "metatile - NUM_METATILES_IN_PRIMARY];",
+                "metatile - XgbaR52PrimaryMetatileCount()];",
+                "R52 source-qualified map collision secondary offset")
+            fm.write_text(fs)
         world.write_text(s)
         if r19_battle:
             # Instrument original Emerald battle sprite decompression, NOT a
