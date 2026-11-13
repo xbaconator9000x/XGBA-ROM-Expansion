@@ -46,6 +46,8 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                       (ROOT/"integration/emerald/xgba_r51_original_terrain.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R52_LAYOUT_BRIDGE__",
                       (ROOT/"integration/emerald/xgba_r52_native_source_layout.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R53_GRAPHICS_BRIDGE__",
+                      (ROOT/"integration/emerald/xgba_r53_original_graphics.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_MAPS__",
                       (ROOT/"integration/emerald/xgba_r19_connected_maps.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_BATTLE__",
@@ -252,6 +254,34 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                 "extern u16 XgbaR52PrimaryPaletteCount(void);\n",
                 "R52 original Emerald BG graphics and palette split declarations")
             fm.write_text(fs)
+        if "#define XGBA_R53_ORIGINAL_GRAPHICS" in Path(config).read_text():
+            if "#define XGBA_R52_SOURCE_LAYOUT" not in Path(config).read_text():
+                raise r16.AdapterDrift("R53 native tileset requires exact R52 source profile")
+            # Unlike a demonstration map viewer, this rewires the genuine
+            # Emerald BG tile-copy functions, including the heap variant.
+            # The source installer returns 0 for vanilla, +1 on verified
+            # original source VRAM DMA, and -1 on corruption/stale pointers.
+            fm=e/"src/fieldmap.c"
+            code=fm.read_text()
+            code=r16.one(code,
+                "static void CopyTilesetToVram(struct Tileset const *tileset, u16 numTiles, u16 offset)\\n{\\n    if (tileset)",
+                "extern s16 XgbaR53TryLoadOriginalTileset(const struct Tileset *tileset);\\n"
+                "extern void XgbaR53RefuseCorruptedSourceGraphics(void);\\n"
+                "static void CopyTilesetToVram(struct Tileset const *tileset, u16 numTiles, u16 offset)\\n"
+                "{\\n"
+                "    s16 xgbaResult=XgbaR53TryLoadOriginalTileset(tileset);\\n"
+                "    if(xgbaResult){if(xgbaResult<0) XgbaR53RefuseCorruptedSourceGraphics();return;}\\n"
+                "    if (tileset)",
+                "R53 real native Emerald background source tile copy")
+            code=r16.one(code,
+                "static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTiles, u16 offset)\\n{\\n    if (tileset)",
+                "static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTiles, u16 offset)\\n"
+                "{\\n"
+                "    s16 xgbaResult=XgbaR53TryLoadOriginalTileset(tileset);\\n"
+                "    if(xgbaResult){if(xgbaResult<0) XgbaR53RefuseCorruptedSourceGraphics();return;}\\n"
+                "    if (tileset)",
+                "R53 real original Emerald BG decompress-heap source tile copy")
+            fm.write_text(code)
         world.write_text(s)
         if r19_battle:
             # Instrument original Emerald battle sprite decompression, NOT a
