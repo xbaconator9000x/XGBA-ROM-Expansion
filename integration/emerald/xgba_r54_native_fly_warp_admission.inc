@@ -57,19 +57,87 @@ EWRAM_DATA volatile struct XgbaR55NativeSpriteProof gXgbaR55NativeSpriteProof={0
 /* Called ONLY by the forthcoming SHA-verified ORIGINAL source OBJ sprite
  * importer. Supplying a numeric 16-bit source ID alone never establishes
  * source sprite art and cannot activate a foreign map. */
+struct XgbaR55InstalledOriginalSpriteSource {
+    const struct ObjectEventGraphicsInfo *info;
+    u32 verified_palette_crc,verified_frames_crc;
+};
 static int XgbaR55VerifyProvidedSourceGraphics(void *ctx,uint8_t world,
     uint16_t original,uint8_t assigned,uint32_t *palette,uint32_t *frames)
 {
-    const struct ObjectEventGraphicsInfo *info=
-        (const struct ObjectEventGraphicsInfo *)ctx;
+    const struct XgbaR55InstalledOriginalSpriteSource *source=
+        (const struct XgbaR55InstalledOriginalSpriteSource *)ctx;
+    const struct ObjectEventGraphicsInfo *info=source?source->info:NULL;
     (void)original;
     if(!info || world>=3u || !info->images || !info->oam ||
        !info->anims || !info->size || !palette || !frames ||
+       !source->verified_palette_crc || !source->verified_frames_crc ||
        assigned<XGBA_R55_SPRITE_FIRST || assigned>XGBA_R55_SPRITE_LAST)
         return 0;
-    /* Palette/frame digests are set by a separate original source loader.
-     * Never trust zero hashes as proof of installed foreign graphics. */
-    return *palette!=0u && *frames!=0u;
+    /* The original source ROM sprite importer must authenticate these
+     * ORIGINAL frames and palette on host before invoking this callback.
+     * A source label and numeric sprite ID do not count as graphics. */
+    *palette=source->verified_palette_crc;
+    *frames=source->verified_frames_crc;
+    return 1;
+}
+/* This entry point can only be called by an actual original asset installer
+ * at a genuine faded original source transition, after native heap reset.
+ * The installer must retain image/OAM/animations/palette backing until
+ * XgbaR55ForgetSourceSpriteRegistrations is called at the next fade. */
+bool8 XgbaR55BeginOriginalSourceSpriteRegistration(u8 world,u8 group,u8 map)
+{
+    unsigned i;
+    if(world==0u || world>=3u || !sXgbaR54OriginalHeapPreReset ||
+       sXgbaR54SourceMapPreparedInWarp ||
+       !gSaveBlock1Ptr ||
+       sXgbaR48PendingFlyWorld!=world ||
+       gSaveBlock1Ptr->location.mapGroup!=group ||
+       gSaveBlock1Ptr->location.mapNum!=map ||
+       !XgbaR55ResetSourceRoster(&sXgbaR55OriginalSprites,world,group,map))
+        return FALSE;
+    for(i=0;i<XGBA_R55_SPRITE_SLOTS;i++)
+        sXgbaR55VerifiedGraphicInfo[i]=NULL;
+    sXgbaR55RosterHasSourceAssets=FALSE;
+    return TRUE;
+}
+bool8 XgbaR55RegisterOriginalSpriteGraphics(u8 world,u16 source_gfx,
+    const struct ObjectEventGraphicsInfo *native_verified_info,
+    u32 original_palette_crc,u32 original_frames_crc)
+{
+    struct XgbaR55InstalledOriginalSpriteSource source={0};
+    u8 slot;
+    unsigned idx;
+    if(!native_verified_info || world>=3u ||
+       !sXgbaR54OriginalHeapPreReset ||
+       sXgbaR54SourceMapPreparedInWarp ||
+       sXgbaR55OriginalSprites.world!=world ||
+       !original_palette_crc || !original_frames_crc)
+        return FALSE;
+    source.info=native_verified_info;
+    source.verified_palette_crc=original_palette_crc;
+    source.verified_frames_crc=original_frames_crc;
+    if(!XgbaR55AcquireVerifiedSourceSprite(
+        &sXgbaR55OriginalSprites,world,source_gfx,
+        XgbaR55VerifyProvidedSourceGraphics,&source,&slot))
+        return FALSE;
+    idx=(unsigned)slot-XGBA_R55_SPRITE_FIRST;
+    if(idx>=XGBA_R55_SPRITE_SLOTS)return FALSE;
+    if(sXgbaR55VerifiedGraphicInfo[idx] &&
+       sXgbaR55VerifiedGraphicInfo[idx]!=native_verified_info)
+        return FALSE;
+    sXgbaR55VerifiedGraphicInfo[idx]=native_verified_info;
+    sXgbaR55RosterHasSourceAssets=TRUE;
+    ++gXgbaR55NativeSpriteProof.registered_source_gfx;
+    gXgbaR55NativeSpriteProof.original_world=world;
+    return TRUE;
+}
+void XgbaR55ForgetSourceSpriteRegistrations(void)
+{
+    unsigned i;
+    sXgbaR55RosterHasSourceAssets=FALSE;
+    sXgbaR55OriginalSprites.count=0u;
+    for(i=0;i<XGBA_R55_SPRITE_SLOTS;i++)
+        sXgbaR55VerifiedGraphicInfo[i]=NULL;
 }
 
 static void XgbaR54InitializeOriginalFlyPendingSentinel(void)
