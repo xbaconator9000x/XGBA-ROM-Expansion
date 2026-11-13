@@ -34,6 +34,8 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                       (ROOT/"integration/emerald/xgba_r40_external_script.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R42_EVENT__",
                       (ROOT/"integration/emerald/xgba_r42_two_source_events.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R48_NPC_BRIDGE__",
+                      (ROOT/"integration/emerald/xgba_r48_original_npc_scripts.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_MAPS__",
                       (ROOT/"integration/emerald/xgba_r19_connected_maps.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_BATTLE__",
@@ -126,6 +128,29 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
           "    gFieldCallback = ExecuteTruckSequence;",
           "    gFieldCallback = FieldCB_DefaultWarpExit;",
           "normal native field loading rather than truck introduction")
+        if "#define XGBA_R48_ORIGINAL_NPC_BRIDGE" in Path(config).read_text():
+            # Hook the ACTUAL Emerald A-button object-event/script resolver.
+            # No virtual NPC interaction is counted if the player's current
+            # foreign-source map/NPC was never instantiated by the map loader.
+            interaction=e/"src/field_control_avatar.c"
+            original_interaction=interaction.read_text()
+            originals[interaction]=original_interaction
+            source=original_interaction
+            source=r16.one(source,
+                "static const u8 *GetInteractedObjectEventScript(struct MapPosition *position, u8 metatileBehavior, u8 direction)\n{",
+                "extern const u8 *XgbaR48ResolveActualOriginalNpcScript(u8 group,u8 map,u8 npc,const u8 *ordinary);\n"
+                "static const u8 *GetInteractedObjectEventScript(struct MapPosition *position, u8 metatileBehavior, u8 direction)\n{",
+                "R48 real original Emerald physical A-button NPC interaction resolver declaration")
+            source=r16.one(source,
+                "    script = GetRamScript(gSpecialVar_LastTalked, script);\n    return script;\n}",
+                "    script = GetRamScript(gSpecialVar_LastTalked, script);\n"
+                "    script = XgbaR48ResolveActualOriginalNpcScript(\n"
+                "        gObjectEvents[objectEventId].mapGroup,\n"
+                "        gObjectEvents[objectEventId].mapNum,\n"
+                "        gObjectEvents[objectEventId].localId,script);\n"
+                "    return script;\n}",
+                "R48 original Pokémon object event A-button scripting")
+            interaction.write_text(source)
         world.write_text(s)
         if r19_battle:
             # Instrument original Emerald battle sprite decompression, NOT a
