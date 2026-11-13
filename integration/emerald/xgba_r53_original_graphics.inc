@@ -17,6 +17,7 @@
 #error R53 authentic graphics require verified R52 version-specific ABI
 #endif
 #include "../common/xgba_r53_original_tileset_reader.h"
+#include "../common/xgba_r54_source_map_metatile_contract.h"
 #include "malloc.h"
 
 struct XgbaR53OriginalGraphicsProof{
@@ -25,6 +26,12 @@ struct XgbaR53OriginalGraphicsProof{
     volatile u32 stream_page_reads,native_bg_tile_loads,commits,rejected;
 };
 EWRAM_DATA volatile struct XgbaR53OriginalGraphicsProof gXgbaR53GraphicsProof={0};
+struct XgbaR54OriginalArtProof {
+    volatile u32 magic,source_key,original_cells_verified;
+    volatile u32 original_primary_authored,original_secondary_authored;
+    volatile u32 rejected,verified_maps;
+};
+EWRAM_DATA volatile struct XgbaR54OriginalArtProof gXgbaR54OriginalArtProof={0};
 /* Allocate per-map source art residency from ORIGINAL Emerald's bounded
  * gHeap only after the previous map has relinquished its field resources.
  * A fixed EWRAM_DATA array previously overflowed the 256KiB hardware
@@ -140,6 +147,7 @@ bool8 XgbaR53InstallOriginalSourceGraphics(void)
     struct MapLayout layout={0};
     unsigned side,part;
     struct XgbaR53Tileset p[2];
+    struct XgbaR54OriginalMapUse original_source_use={0};
     struct XgbaR53NativeWrite writers[2];
     if(!sXgbaR51OriginalTerrainPrepared ||
        !sXgbaR51NativeTerrain.valid || !sXgbaR52ProfileReady ||
@@ -163,6 +171,20 @@ bool8 XgbaR53InstallOriginalSourceGraphics(void)
        p[1].tiles+p[0].tiles!=1024u ||
        p[1].metatiles>1024u-sXgbaR52Profile.metatiles_in_primary ||
        p[1].palettes+p[0].palettes!=13u){
+        ++gXgbaR53GraphicsProof.rejected;return FALSE;
+    }
+    /* Before installing map tiles/objects, compare EVERY original source
+     * 16-bit map cell and all four border cells against original physically
+     * authored metatile counts. The 512/640 nominal capacity is not proof
+     * that ROM contains every slot; HnS/Rocket version-2 split is 640.
+     * A mismatch refuses the incoming map without touching live graphics. */
+    if(!XgbaR54OriginalMapUsesOnlyAuthoredMetatiles(
+       XgbaR51NativeBytes(&sXgbaR51NativeTerrain),
+       sXgbaR51NativeTerrain.width,sXgbaR51NativeTerrain.height,
+       sXgbaR51NativeTerrain.grid_bytes,
+       sXgbaR52Profile.metatiles_in_primary,
+       p[0].metatiles,p[1].metatiles,&original_source_use)){
+        ++gXgbaR54OriginalArtProof.rejected;
         ++gXgbaR53GraphicsProof.rejected;return FALSE;
     }
     if(sXgbaR53Resident){
@@ -222,6 +244,13 @@ bool8 XgbaR53InstallOriginalSourceGraphics(void)
         ++gXgbaR53GraphicsProof.rejected;
         Free(sXgbaR53Resident);sXgbaR53Resident=NULL;return FALSE;
     }
+    gXgbaR54OriginalArtProof.magic=0x52353441u;
+    gXgbaR54OriginalArtProof.source_key=sXgbaR52Profile.key;
+    gXgbaR54OriginalArtProof.original_cells_verified=
+        original_source_use.cells_verified;
+    gXgbaR54OriginalArtProof.original_primary_authored=p[0].metatiles;
+    gXgbaR54OriginalArtProof.original_secondary_authored=p[1].metatiles;
+    ++gXgbaR54OriginalArtProof.verified_maps;
     sXgbaR53PrimaryMeta=p[0];
     sXgbaR53SecondaryMeta=p[1];
     gXgbaR53GraphicsProof.magic=0x52353347u;
