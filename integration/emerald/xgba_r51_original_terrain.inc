@@ -137,9 +137,17 @@ bool8 XgbaR51CommitAfterOriginalSourceGraphics(
 
 /* Call only after a genuine original-game map fade; never during rendering,
  * script dispatch, camera access or an active battle. */
+#ifdef XGBA_R53_ORIGINAL_GRAPHICS
+void XgbaR53ReleaseSourceGraphicsAfterFade(bool8 previous_renderer_released);
+#endif
 void XgbaR51ReleaseOriginalGeometryAfterFade(bool8 previous_renderer_released)
 {
     if(!previous_renderer_released)return;
+#ifdef XGBA_R53_ORIGINAL_GRAPHICS
+    /* Original field renderer is no longer holding any palette/metatile
+     * pointers; return the R53 heap allocation before R50 invalidation. */
+    XgbaR53ReleaseSourceGraphicsAfterFade(TRUE);
+#endif
     XgbaR50ReleaseAfterOriginalWarpFade(TRUE);
     XgbaR51InvalidateGeometry(&sXgbaR51NativeTerrain);
     sXgbaR51OriginalTerrainPrepared=FALSE;
