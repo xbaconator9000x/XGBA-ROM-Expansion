@@ -8,7 +8,7 @@
 #include "xgba_r49_full_original_map_events.h"
 
 #define XGBA_R50_EVENT_CAPACITY 4096u
-#define XGBA_R50_MAX_OBJECTS 255u
+#define XGBA_R50_MAX_OBJECTS 64u
 
 /* Source sprite index -> installed guest slot. Reject unknown sprites; never
  * truncate 16-bit expanded Heart & Soul IDs into Emerald's 8-bit slot. */
