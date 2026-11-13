@@ -30,9 +30,9 @@ def progress_fixture():
     result={}
     for source,b in gate.BASELINE.items():
         result[source]={
-            **{key:b[key] for key in ("objects","warps","coord_events",
-                                     "bg_events","script_maps","populated_maps")},
-            **{key:"unassessed" for key in gate.COVERAGE_CLASSES},
+            "counts":{key:b[key] for key in ("objects","warps","coord_events",
+                                           "bg_events","script_maps","populated_maps")},
+            "classes":{key:"unassessed" for key in gate.COVERAGE_CLASSES},
         }
     return result
 
@@ -74,22 +74,22 @@ class TestCompleteThreeRomScope(unittest.TestCase):
         original=gate.validate_original_inventory(original_fixture())
         for key in ("objects","warps","coord_events","bg_events","script_maps"):
             coverage=progress_fixture()
-            coverage["rocket"][key]-=1
+            coverage["rocket"]["counts"][key]-=1
             with self.subTest(key=key),self.assertRaises(gate.IncompleteThreeRomIntegration):
                 gate.validate_progress_report(coverage,original)
         coverage=progress_fixture()
-        del coverage["rocket"]["dialogue_text"]
+        del coverage["rocket"]["classes"]["dialogue_text"]
         with self.assertRaises(gate.IncompleteThreeRomIntegration):
             gate.validate_progress_report(coverage,original)
     def test_unsupported_data_must_be_retained_and_accounted_for(self):
         original=gate.validate_original_inventory(original_fixture())
         coverage=progress_fixture()
-        coverage["heart_soul"]["native_engine_callbacks"]="unsupported_retained"
+        coverage["heart_soul"]["classes"]["native_engine_callbacks"]="unsupported_retained"
         gate.validate_progress_report(coverage,original)
-        coverage["heart_soul"]["native_engine_callbacks"]="omitted"
+        coverage["heart_soul"]["classes"]["native_engine_callbacks"]="omitted"
         with self.assertRaises(gate.IncompleteThreeRomIntegration):
             gate.validate_progress_report(coverage,original)
-        coverage["heart_soul"]["native_engine_callbacks"]="native_test_passed"
+        coverage["heart_soul"]["classes"]["native_engine_callbacks"]="native_test_passed"
         with self.assertRaises(gate.IncompleteThreeRomIntegration):
             gate.validate_progress_report(coverage,original)
     def test_rejects_false_or_partial_original_report(self):
