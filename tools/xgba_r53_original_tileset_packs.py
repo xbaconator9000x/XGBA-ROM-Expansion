@@ -98,11 +98,20 @@ def descriptor_asset(blob,world,version,desc_offset,is_secondary):
     tiles_ptr,pal_ptr,meta_ptr,attr_ptr=struct.unpack_from("<4I",desc,4)
     primary_count=640 if version in (1,2) else 512
     tile_count=(1024-primary_count) if is_secondary else primary_count
-    meta_count=tile_count
+    # A source metatile graphics *capacity* is 512/640, but the actual
+    # contiguous source metatile table is often much shorter. For example
+    # authentic original Emerald Petalburg has 144 secondary metatiles.
+    # The original attribute array begins immediately after the metatiles,
+    # so the difference is a source-attested exact physical count. Do not
+    # read 512 imaginary definitions into neighbouring ROM data.
+    if attr_ptr<=meta_ptr or (attr_ptr-meta_ptr)%16:
+        raise TilesetFormatError(
+            "Original metatile/attribute pointer span is not contiguous 16-byte records")
+    meta_count=(attr_ptr-meta_ptr)//16
     pal_count=(13-(7 if version in (1,2) else 6)) if is_secondary else (7 if version in (1,2) else 6)
     attr_bytes=4 if version==1 else 2
-    if not (0<tile_count<=MAX_TILES and 0<pal_count<=13):
-        raise TilesetFormatError("Original source tileset dimensions invalid")
+    if not (0<meta_count<=tile_count<=MAX_TILES and 0<pal_count<=13):
+        raise TilesetFormatError("Original physical metatiles exceed versioned tileset capacity")
     tile_at=_ptr(blob,tiles_ptr,4 if compressed else tile_count*32)
     if compressed:
         # Modern Emerald-derived hacks (including HnS) use packed 'Smol'
