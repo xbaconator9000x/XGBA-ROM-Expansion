@@ -19,6 +19,7 @@ struct XgbaR58NativeFlyProof {
     volatile u32 all_resource_preflights,source_art_crc_checks;
     volatile u32 source_palette_checks,rejected_resources;
     volatile u32 original_fly_queued; /* NOT arrival proof */
+    volatile u32 original_witness_preflights,rejected_original_witness;
 };
 EWRAM_DATA volatile struct XgbaR58NativeFlyProof gXgbaR58NativeFlyProof={0};
 
@@ -63,6 +64,14 @@ static bool8 XgbaR58PreflightOriginalDestination(u8 world,u8 group,u8 map,
     if(world>=3u || x<0 || y<0 || group!=0u ||
        (world==2u?map!=4u:map!=9u))return FALSE;
     ++gXgbaR58NativeFlyProof.all_resource_preflights;
+    /* All three legs, including return to native Emerald, require their
+     * genuine original NPC script/text witness before the Fly UI queues
+     * any map change. No source art, save state or R48 cache is altered. */
+    ++gXgbaR58NativeFlyProof.original_witness_preflights;
+    if(!XgbaR48PreflightOriginalNpcResource(world)){
+        ++gXgbaR58NativeFlyProof.rejected_original_witness;
+        goto refuse;
+    }
     /* World0 return uses the ORIGINAL Emerald ROM-linked map and native
      * object assets. No R51/R53/R56 sidecar for Emerald is needed; see
      * the native header / original witness guard shared with R54. */

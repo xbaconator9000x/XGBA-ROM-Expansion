@@ -16,6 +16,7 @@
 #endif
 #include "script.h"
 #include "event_data.h"
+#include "../common/xgba_r67_original_npc_witness.h"
 
 #define XGBA_R48_WORLD_COUNT 3u
 #define XGBA_R48_BYTES 256u
@@ -177,40 +178,33 @@ static u16 XgbaR48Little16(const u8 *src)
 {
     return (u16)src[0]|((u16)src[1]<<8);
 }
+/* Pure guest copy of the same 256-byte original source witness format
+ * also checked by R64 host SHA validation. This is NOT generic ROM script
+ * compatibility: exactly three known original NPCs are supported. */
 static bool8 XgbaR48VerifyPayload(u8 source)
 {
-    static const u8 map_groups[3]={0u,0u,0u};
-    static const u8 map_numbers[3]={9u,9u,4u};
-    static const u8 npc_local_ids[3]={2u,2u,7u};
-    static const u16 sprite_ids[3]={17u,17u,406u};
-    static const s16 x_coords[3]={12,14,39};
-    static const s16 y_coords[3]={13,13,22};
-    static const u32 script_origins[3]={0x1e8022u,0x215543u,0x390519u};
-    static const u32 text_origins[3]={0x1e8acfu,0x1dc3364u,0x3908e6u};
-    const u8 *p=sXgbaR48Payload[source];
-    const u8 *script=p+XGBA_R48_HEADER;
-    u16 text_length=XgbaR48Little16(p+25u);
-    u32 original_text=XgbaR48Little32(p+19u);
-    if(XgbaR48Little32(p)!=XGBA_R48_ORIGINAL_NPC_MAGIC ||
-       p[4]!=1u || p[5]!=source ||
-       p[6]!=map_groups[source] || p[7]!=map_numbers[source] ||
-       p[8]!=npc_local_ids[source] ||
-       (s16)XgbaR48Little16(p+9u)!=x_coords[source] ||
-       (s16)XgbaR48Little16(p+11u)!=y_coords[source] ||
-       XgbaR48Little16(p+13u)!=sprite_ids[source] ||
-       XgbaR48Little32(p+15u)!=script_origins[source] ||
-       original_text!=text_origins[source] ||
-       XgbaR48Little16(p+23u)!=XGBA_R48_SCRIPT_LENGTH ||
-       !text_length || text_length>210u ||
-       (u32)XGBA_R48_HEADER+XGBA_R48_SCRIPT_LENGTH+text_length>XGBA_R48_BYTES)
+    return XgbaR67ValidateOriginalNpcWitness(
+        source,sXgbaR48Payload[source],XGBA_R48_BYTES);
+}
+static const char *XgbaR48OriginalNpcResourceName(u8 source)
+{
+    return source<3u?names[source]:NULL;
+}
+/* R67: read-only Fly preflight. No pending world, script cache,
+ * original game save, object map or R48 talked bit is modified.
+ * R48LoadOriginalNpc will re-fetch and revalidate the same source on
+ * physical A-button interaction after actual Emerald object spawning. */
+bool8 XgbaR48PreflightOriginalNpcResource(u8 source)
+{
+    u8 source_bytes[XGBA_R48_BYTES];
+    const char *name=XgbaR48OriginalNpcResourceName(source);
+    if(!name || XgbaGuestFetch(name,source_bytes,XGBA_R48_BYTES)
+                 !=XGBA_R48_BYTES ||
+       !XgbaR67ValidateOriginalNpcWitness(
+              source,source_bytes,XGBA_R48_BYTES)){
+        ++gXgbaR48OriginalNpcProof.rejected_mismatch;
         return FALSE;
-    /* Require all original opcode bytes and original pointer to be intact.
-     * Relocation happens ONLY after this original-script verification. */
-    if(script[0]!=0x0fu || script[1]!=0u ||
-       XgbaR48Little32(script+2u)!=0x08000000u+original_text ||
-       script[6]!=0x09u || script[7]!=0x02u || script[8]!=0x02u ||
-       p[XGBA_R48_HEADER+XGBA_R48_SCRIPT_LENGTH+text_length-1u]!=0xffu)
-        return FALSE;
+    }
     return TRUE;
 }
 static bool8 XgbaR48LoadOriginalNpc(u8 source)
@@ -224,7 +218,7 @@ static bool8 XgbaR48LoadOriginalNpc(u8 source)
     u32 relocated;
     if(source>=3u)return FALSE;
     if(sXgbaR48Ready[source])return TRUE;
-    src=names[source];
+    src=XgbaR48OriginalNpcResourceName(source);
     for(i=0u;i<sizeof(sXgbaR48ResourceName);++i)
         sXgbaR48ResourceName[i]=0u;
     for(i=0u;src[i] && i<sizeof(sXgbaR48ResourceName)-1u;i++)

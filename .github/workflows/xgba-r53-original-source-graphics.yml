@@ -13,6 +13,8 @@ on:
       - 'integration/emerald/xgba_r53_original_graphics.inc'
       - 'integration/emerald/xgba_r54_native_fly_warp_admission.inc'
       - 'integration/emerald/xgba_r48_original_npc_scripts.inc'
+      - 'integration/common/xgba_r67_original_npc_witness.h'
+      - 'tests/xgba_r67_original_npc_witness_native.c'
       - 'integration/emerald/xgba_r50_original_engine_events.inc'
       - 'integration/emerald/xgba_r57_native_source_sprite_installer.inc'
       - 'integration/emerald/xgba_r58_native_original_fly.inc'
@@ -72,6 +74,11 @@ jobs:
             tests/xgba_r66_original_obj_animation_native.c -o build/r53/source-animation
           ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
             UBSAN_OPTIONS=halt_on_error=1 build/r53/source-animation
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r67_original_npc_witness_native.c -o build/r53/npc-witness
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r53/npc-witness
   native-original-emerald-graphics:
     name: Actual Emerald ARM BG tile loader, hardware arena, mGBA and Flash
     runs-on: ubuntu-24.04
