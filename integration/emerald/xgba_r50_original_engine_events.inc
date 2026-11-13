@@ -10,9 +10,10 @@
 #ifndef XGBA_R48_ORIGINAL_NPC_BRIDGE
 #error R50 depends on the actual R48 NPC A-button and Fly-in hook
 #endif
-#include "__XGBA_R50_ENGINE_HEADER__"
+#include "../common/xgba_r50_engine_event_adapter.h"
 #include <stdint.h>
 
+extern const struct MapHeader *const *const gMapGroups[];
 #define XGBA_R50_BRIDGE_MAGIC 0x52353045u
 struct XgbaR50BridgeProof {
     volatile u32 magic,verified_original_headers,real_guest_fetches;
