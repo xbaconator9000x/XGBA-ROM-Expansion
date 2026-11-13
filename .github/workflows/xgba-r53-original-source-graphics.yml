@@ -4,8 +4,10 @@ on:
     branches: ['integration/r51-original-three-world-grid-native-20261113']
     paths:
       - 'tools/xgba_r53_original_tileset_packs.py'
+      - 'tools/xgba_r53_smol.py'
       - 'integration/common/xgba_r53_original_tileset_reader.h'
       - 'tests/test_xgba_r53_original_tileset_packs.py'
+      - 'tests/test_xgba_r53_smol.py'
       - 'tests/xgba_r53_original_tileset_native.c'
       - 'integration/emerald/xgba_r53_original_graphics.inc'
       - 'integration/emerald/xgba_r17_external_littleroot.inc'
@@ -28,8 +30,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m py_compile tools/xgba_r53_original_tileset_packs.py tests/test_xgba_r53_original_tileset_packs.py
-          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r53_original_tileset_packs -v
+          python3 -m py_compile tools/xgba_r53_original_tileset_packs.py tools/xgba_r53_smol.py tests/test_xgba_r53_original_tileset_packs.py tests/test_xgba_r53_smol.py
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r53_original_tileset_packs test_xgba_r53_smol -v
       - name: Run real native C source graphics reader and CRC streaming with ASan/UBSan
         shell: bash
         run: |
