@@ -237,6 +237,20 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                 "metatile - NUM_METATILES_IN_PRIMARY];",
                 "metatile - XgbaR52PrimaryMetatileCount()];",
                 "R52 source-qualified map collision secondary offset")
+            # A genuine version-2 foreign map needs the *same* 640/384
+            # tile split (and 7/6 palette split) in the actual original
+            # Emerald BG DMA and palette-copy paths, not just field camera.
+            # Scope these source-wide replacements to audited exact counts.
+            if fs.count("NUM_TILES_IN_PRIMARY")!=8 or fs.count("NUM_PALS_IN_PRIMARY")!=4:
+                raise r16.AdapterDrift("Pinned Emerald BG tile/palette split callsite drift")
+            fs=fs.replace("NUM_TILES_IN_PRIMARY","XgbaR52PrimaryTilesCount()")
+            fs=fs.replace("NUM_PALS_IN_PRIMARY","XgbaR52PrimaryPaletteCount()")
+            fs=r16.one(fs,
+                "extern u16 XgbaR52PrimaryMetatileCount(void);\n",
+                "extern u16 XgbaR52PrimaryMetatileCount(void);\n"
+                "extern u16 XgbaR52PrimaryTilesCount(void);\n"
+                "extern u16 XgbaR52PrimaryPaletteCount(void);\n",
+                "R52 original Emerald BG graphics and palette split declarations")
             fm.write_text(fs)
         world.write_text(s)
         if r19_battle:
