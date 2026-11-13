@@ -529,7 +529,7 @@ static void r45_3world_maps(struct mCore *core,
 
 int main(int argc, char **argv)
 {
-    if (argc < 11 || argc > 128)
+    if (argc < 11 || argc > (int)(11u + 4u*XGBA_MAX_EXTRA_RESOURCES + 128u))
         fail("usage: ROM DATA SOURCE_ID SOURCE_SHA RESOURCE_ID OFFSET LENGTH RESOURCE_SHA FRAMES PROBE_ADDR [--screenshot path] [--scene-dir path] [--r10-dir path] [--r11-perf path] [--r12-dir path] [--r13-dir path] [--r14-dir path] [--second-resource ID OFFSET LENGTH SHA] [--disabled]");
     const char *screenshot = NULL;
     const char *r43_probe = NULL; /* R43 original authored GBA homebrew CPU proof */
