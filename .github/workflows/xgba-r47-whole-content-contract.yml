@@ -1,0 +1,50 @@
+name: XGBA R47 complete original 3-ROM NPC and event retention contract
+on:
+  push:
+    branches: [main, 'integration/r47-whole-game-content-npc-acceptance-20261113']
+    paths:
+      - 'docs/R47_COMPLETE_THREE_GAME_CONTENT_ACCEPTANCE.md'
+      - 'tools/xgba_r47_full_content_gate.py'
+      - 'tests/test_xgba_r47_full_content_gate.py'
+      - '.github/workflows/xgba-r47-whole-content-contract.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/R47_COMPLETE_THREE_GAME_CONTENT_ACCEPTANCE.md'
+      - 'tools/xgba_r47_full_content_gate.py'
+      - 'tests/test_xgba_r47_full_content_gate.py'
+      - '.github/workflows/xgba-r47-whole-content-contract.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  full_source_scope:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enforce full three-game inventory acceptance, not map-only test
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r47_full_content_gate.py
+          PYTHONPATH=tools python3 -m unittest discover -s tests -p 'test_xgba_r47_full_content_gate.py' -v
+      - name: Assert that complete-original NPC gameplay acceptance remains explicit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import ast,sys
+          sys.path.insert(0,'tools')
+          import xgba_r47_full_content_gate as gate
+          source=Path('docs/R47_COMPLETE_THREE_GAME_CONTENT_ACCEPTANCE.md').read_text()
+          assert len(gate.BASELINE)==3
+          assert sum(d['objects'] for d in gate.BASELINE.values())==17089
+          assert sum(d['warps'] for d in gate.BASELINE.values())==7146
+          for word in ('REAL NPC conversation','original script bytes',
+                       'original dialogue text','original Emerald',
+                       'trainer','encounter','Flash','cold restart',
+                       'complete relevant content','not yet'):
+              assert word.lower() in source.lower(),word
+          print('PASS_R47_ORIGINAL_3_ROM_NPCS_EVENTS_AND_WHOLE_CONTENT_SCOPE_LOCKED')
+          PY
