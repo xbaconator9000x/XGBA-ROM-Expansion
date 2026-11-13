@@ -52,6 +52,9 @@ jobs:
           assert 'reader.scratch=(uint8_t *)gXgbaR17Arena' in guest
           assert 'XgbaR50CommitOriginalMapAfterGraphics' in guest
           assert 'sXgbaR50ReaderScratch' not in guest
+          assert 'XgbaR50VerifyLoadedEngineMap(void)' in guest
+          assert 'XgbaR50VerifyLoadedEngineMap();\\n' in patch
+          assert 'R50 confirm actual Fly only after real loaded original source map' in patch
           assert 'header.mapScripts=NULL' in guest
           assert 'events.warpCount=0u' in guest
           assert 'sXgbaR48PendingFlyWorld!=world' in guest
