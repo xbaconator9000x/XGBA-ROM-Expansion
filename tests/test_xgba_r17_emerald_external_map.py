@@ -147,6 +147,9 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         r51=bool(getattr(cls,"R51_ORIGINAL_GRID_TEST",False))
         r52=bool(getattr(cls,"R52_SOURCE_LAYOUT_TEST",False))
         r53=bool(getattr(cls,"R53_GRAPHICS_TEST",False))
+        r54=bool(getattr(cls,"R54_REAL_WARP_ADMISSION_TEST",False))
+        if r54 and not r53:
+            raise AssertionError("R54 requires verified R53 original map graphics")
         if r53 and not r52:
             raise AssertionError("R53 requires R52 original layout and R51 terrain")
         if r52 and not r51:
@@ -233,6 +236,8 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             config.write_text(config.read_text()+"#define XGBA_R52_SOURCE_LAYOUT 1\n")
         if r53:
             config.write_text(config.read_text()+"#define XGBA_R53_ORIGINAL_GRAPHICS 1\n")
+        if r54:
+            config.write_text(config.read_text()+"#define XGBA_R54_REAL_WARP_ADMISSION 1\n")
         if r19_battle:
             config.write_text(config.read_text()+
                 "\n#define XGBA_R19_BATTLE_TEST 1\n"
