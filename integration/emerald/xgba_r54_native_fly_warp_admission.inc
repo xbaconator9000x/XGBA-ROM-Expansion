@@ -23,6 +23,7 @@
 #error R54 requires source tiles/palettes/collision validation
 #endif
 #include "constants/event_objects.h"
+#include "../common/xgba_r55_source_qualified_sprite_slots.h"
 
 struct XgbaR54NativeWarpProof {
     volatile u32 magic,native_faded_load_entries,source_prepare_attempts;
@@ -40,6 +41,37 @@ static EWRAM_DATA bool8 sXgbaR54SourceMapPreparedInWarp=FALSE;
  * no-pending-Fly sentinel therefore needs an explicit original-engine
  * first-boot initialization BEFORE any source-world admission check. */
 static EWRAM_DATA bool8 sXgbaR54FlySentinelBootInitialized=FALSE;
+/* Native original source sprite graphics pointers are not populated by
+ * authored Emerald substitutes. R55 installation requires a real original
+ * source sprite compiler that has authenticated each 16-bit source identity
+ * and installed the frame, animations and palette in stable GBA memory. */
+static EWRAM_DATA struct XgbaR55SourceSpriteRoster sXgbaR55OriginalSprites={0};
+static EWRAM_DATA const struct ObjectEventGraphicsInfo *
+    sXgbaR55VerifiedGraphicInfo[XGBA_R55_SPRITE_SLOTS]={0};
+static EWRAM_DATA bool8 sXgbaR55RosterHasSourceAssets=FALSE;
+struct XgbaR55NativeSpriteProof {
+    volatile u32 registered_source_gfx,real_obj_info_resolutions;
+    volatile u32 original_world,refused_mismatched_source,unavailable_sprites;
+};
+EWRAM_DATA volatile struct XgbaR55NativeSpriteProof gXgbaR55NativeSpriteProof={0};
+/* Called ONLY by the forthcoming SHA-verified ORIGINAL source OBJ sprite
+ * importer. Supplying a numeric 16-bit source ID alone never establishes
+ * source sprite art and cannot activate a foreign map. */
+static int XgbaR55VerifyProvidedSourceGraphics(void *ctx,uint8_t world,
+    uint16_t original,uint8_t assigned,uint32_t *palette,uint32_t *frames)
+{
+    const struct ObjectEventGraphicsInfo *info=
+        (const struct ObjectEventGraphicsInfo *)ctx;
+    (void)original;
+    if(!info || world>=3u || !info->images || !info->oam ||
+       !info->anims || !info->size || !palette || !frames ||
+       assigned<XGBA_R55_SPRITE_FIRST || assigned>XGBA_R55_SPRITE_LAST)
+        return 0;
+    /* Palette/frame digests are set by a separate original source loader.
+     * Never trust zero hashes as proof of installed foreign graphics. */
+    return *palette!=0u && *frames!=0u;
+}
+
 static void XgbaR54InitializeOriginalFlyPendingSentinel(void)
 {
     if(sXgbaR54FlySentinelBootInitialized)return;
@@ -64,8 +96,39 @@ static int XgbaR54ResolveOriginalSpriteSlot(void *context,
         *installed_slot=(uint8_t)original_sprite;
         return 1;
     }
+    if(source!=0u && sXgbaR55RosterHasSourceAssets &&
+       XgbaR55FindVerifiedSprite(&sXgbaR55OriginalSprites,
+                                 source,original_sprite,installed_slot)){
+        unsigned idx=(unsigned)*installed_slot-XGBA_R55_SPRITE_FIRST;
+        if(idx<XGBA_R55_SPRITE_SLOTS &&
+           sXgbaR55VerifiedGraphicInfo[idx]!=NULL)
+            return 1;
+    }
+    ++gXgbaR55NativeSpriteProof.unavailable_sprites;
     ++gXgbaR54NativeWarpProof.missing_source_sprites;
     return 0;
+}
+/* Deterministic verified 16-bit sprite -> native source art. This bridge
+ * returns NULL when the user-owned source OBJ frames have not been installed;
+ * the original Emerald GetObjectEventGraphicsInfo then remains unchanged. */
+const struct ObjectEventGraphicsInfo *
+XgbaR55GetVerifiedNativeOriginalObjectGraphics(u8 installed_slot)
+{
+    unsigned index;
+    if(!sXgbaR55RosterHasSourceAssets || !sXgbaR54SourceMapPreparedInWarp ||
+       !sXgbaR50Ready || !gSaveBlock1Ptr ||
+       sXgbaR50World!=sXgbaR55OriginalSprites.world ||
+       gSaveBlock1Ptr->location.mapGroup!=sXgbaR55OriginalSprites.source_group ||
+       gSaveBlock1Ptr->location.mapNum!=sXgbaR55OriginalSprites.source_map ||
+       installed_slot<XGBA_R55_SPRITE_FIRST ||
+       installed_slot>XGBA_R55_SPRITE_LAST)
+        return NULL;
+    index=installed_slot-XGBA_R55_SPRITE_FIRST;
+    if(index>=sXgbaR55OriginalSprites.count ||
+       sXgbaR55VerifiedGraphicInfo[index]==NULL)
+        return NULL;
+    ++gXgbaR55NativeSpriteProof.real_obj_info_resolutions;
+    return sXgbaR55VerifiedGraphicInfo[index];
 }
 /* Native overworld local state machine owns the preceding fade. This
  * explicit source target is queued only after native Fly destination UI
