@@ -30,9 +30,11 @@ class TestR79(unittest.TestCase):
   g,c=self.fixture()
   with self.assertRaises(m.SourceCapacityError):
    m.validate_full_source_graphics(g,c,0x0800abcd)
-  arr=bytearray(c);arr[0:2]=(640+384).to_bytes(2,"little")
-  with self.assertRaises(m.SourceCapacityError):
-   m.validate_full_source_graphics(g,bytes(arr),0)
+  # A GBA metatile stores only 10 tile-index bits: 640+384 == 1024
+  # would wrap to zero. 1023 (secondary index 383) is the true ceiling.
+  arr=bytearray(c);arr[0:2]=(640+383).to_bytes(2,"little")
+  self.assertEqual(
+   m.validate_full_source_graphics(g,bytes(arr),0)["max_static_secondary_tile_index"],383)
   with self.assertRaises(m.SourceCapacityError):
    m.validate_full_source_graphics(g[:-32],c,0)
  def test_wrong_complete_rom_sha_must_fail_before_any_output(self):
