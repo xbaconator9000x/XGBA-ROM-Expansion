@@ -11,6 +11,18 @@
 #error R50 depends on the actual R48 NPC A-button and Fly-in hook
 #endif
 #include "../common/xgba_r50_engine_event_adapter.h"
+#include "../common/xgba_r80_foreign_map_slot.h"
+#ifndef XGBA_R80_FOREIGN_SOURCE_ACTIVATION
+static int XgbaR80SourceTargetAuthorized(unsigned w,unsigned g,unsigned m)
+{(void)w;(void)g;(void)m;return 0;}
+static int XgbaR80SourceLocationMatchesNative(unsigned w,unsigned g,unsigned m)
+{(void)w;return gSaveBlock1Ptr &&
+ gSaveBlock1Ptr->location.mapGroup==g &&
+ gSaveBlock1Ptr->location.mapNum==m;}
+static void XgbaR80OnSourceRendererReleased(void){}
+static void XgbaR80ConfirmRealSourceMapArrival(void){}
+static int XgbaR80ForeignInteriorActive(void){return 0;}
+#endif
 #include <stdint.h>
 
 extern const struct MapHeader *const *const gMapGroups[];

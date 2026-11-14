@@ -186,9 +186,10 @@ bool8 XgbaR55BeginOriginalSourceSpriteRegistration(u8 world,u8 group,u8 map)
     if(world==0u || world>=3u || !sXgbaR54OriginalHeapPreReset ||
        sXgbaR54SourceMapPreparedInWarp ||
        !gSaveBlock1Ptr || sXgbaR55OriginalSprites ||
-       sXgbaR48PendingFlyWorld!=world ||
-       gSaveBlock1Ptr->location.mapGroup!=group ||
-       gSaveBlock1Ptr->location.mapNum!=map)
+       ((sXgbaR48PendingFlyWorld!=world ||
+         gSaveBlock1Ptr->location.mapGroup!=group ||
+         gSaveBlock1Ptr->location.mapNum!=map) &&
+        !XgbaR80SourceTargetAuthorized(world,group,map)))
         return FALSE;
     sXgbaR55OriginalSprites=AllocZeroed(sizeof(*sXgbaR55OriginalSprites));
     if(!sXgbaR55OriginalSprites)return FALSE;
@@ -300,8 +301,9 @@ XgbaR55GetVerifiedNativeOriginalObjectGraphics(u8 installed_slot)
        !sXgbaR54SourceMapPreparedInWarp ||
        !sXgbaR50Ready || !gSaveBlock1Ptr ||
        sXgbaR50World!=sXgbaR55OriginalSprites->world ||
-       gSaveBlock1Ptr->location.mapGroup!=sXgbaR55OriginalSprites->source_group ||
-       gSaveBlock1Ptr->location.mapNum!=sXgbaR55OriginalSprites->source_map ||
+       !XgbaR80SourceLocationMatchesNative(sXgbaR55OriginalSprites->world,
+                      sXgbaR55OriginalSprites->source_group,
+                      sXgbaR55OriginalSprites->source_map) ||
        installed_slot<XGBA_R55_SPRITE_FIRST ||
        installed_slot>XGBA_R55_SPRITE_LAST)
         return NULL;
@@ -364,9 +366,10 @@ static bool8 XgbaR54ReleaseOldSourceBeforeNativeHeapReset(void)
 }
 static bool8 XgbaR54PendingWarpMatchesCurrentLocation(void)
 {
-    return XgbaR54HasSourceMapWarpPending() &&
-      gSaveBlock1Ptr->location.mapGroup==sXgbaR48PendingFlyGroup &&
-      gSaveBlock1Ptr->location.mapNum==sXgbaR48PendingFlyMap;
+    return XgbaR80PendingNativeMapMatches() ||
+      (XgbaR54HasSourceMapWarpPending() &&
+       gSaveBlock1Ptr->location.mapGroup==sXgbaR48PendingFlyGroup &&
+       gSaveBlock1Ptr->location.mapNum==sXgbaR48PendingFlyMap);
 }
 /* R63: source0 is already linked into the ACTUAL Emerald game ROM.
  * Verify original ROM header and actual witness placement, then let the
@@ -405,6 +408,13 @@ static u8 XgbaR54InspectFadedOriginalMapLoad(void)
         ++gXgbaR54NativeWarpProof.rejected_dma_release;
         return 3u;
     }
+    if(XgbaR80HasSourceWarpPending()){
+        if(!XgbaR80PendingNativeMapMatches()){
+            ++gXgbaR54NativeWarpProof.rejected_wrong_destination;
+            return 2u;
+        }
+        return 1u; /* original Rocket source in safe native 0:9 slot */
+    }
     if(sXgbaR48PendingFlyWorld==0xffu)return 0u;
     if(!XgbaR54PendingWarpMatchesCurrentLocation()){
         ++gXgbaR54NativeWarpProof.rejected_wrong_destination;
@@ -428,9 +438,12 @@ static u8 XgbaR54InspectFadedOriginalMapLoad(void)
  * loaded source world geometry, do not reuse stale R51 buffer or R50 NPCs. */
 static bool8 XgbaR54InstallPendingOriginalSourceAtNativeWarp(void)
 {
-    const u8 world=sXgbaR48PendingFlyWorld;
-    const u8 group=sXgbaR48PendingFlyGroup;
-    const u8 map=sXgbaR48PendingFlyMap;
+    const u8 world=XgbaR80HasSourceWarpPending()?
+        (u8)XgbaR80DestinationWorld():sXgbaR48PendingFlyWorld;
+    const u8 group=XgbaR80HasSourceWarpPending()?
+        (u8)XgbaR80DestinationGroup():sXgbaR48PendingFlyGroup;
+    const u8 map=XgbaR80HasSourceWarpPending()?
+        (u8)XgbaR80DestinationMap():sXgbaR48PendingFlyMap;
     if(!XgbaR54PendingWarpMatchesCurrentLocation() ||
        !sXgbaR54OriginalHeapPreReset || sXgbaR54SourceMapPreparedInWarp){
         ++gXgbaR54NativeWarpProof.rejected_wrong_destination;
@@ -498,6 +511,7 @@ static bool8 XgbaR54FailClosedBeforeForeignHeader(void)
     XgbaR55ForgetSourceSpriteRegistrations();
     /* Revoke the unfulfilled Fly token before the original field engine
      * obtains gMapGroups[0][9]; no false cross-world progress is recorded. */
+    XgbaR80InvalidateSourceWarp();
     sXgbaR48PendingFlyWorld=0xffu;
     sXgbaR48PendingFlyGroup=0xffu;
     sXgbaR48PendingFlyMap=0xffu;

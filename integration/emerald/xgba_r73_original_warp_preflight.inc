@@ -15,12 +15,13 @@ bool8 XgbaR73PreflightLoadedForeignWarp(u8 warp_index,
     u32 key,target;
     u8 world;
     if(!route || !gSaveBlock1Ptr || !sXgbaR50Ready ||
-       !sXgbaR51NativeTerrain.valid || !sXgbaR48SourceMapLoaded ||
+       !sXgbaR51NativeTerrain.valid ||
+       (!sXgbaR48SourceMapLoaded && !XgbaR80ForeignInteriorActive()) ||
        sXgbaR50World==0u || sXgbaR50World>=3u ||
        warp_index>=sXgbaR50OriginalEvents.original_warp_count ||
        sXgbaR50OriginalEvents.original_warp_count==0u ||
-       gSaveBlock1Ptr->location.mapGroup!=sXgbaR50Group ||
-       gSaveBlock1Ptr->location.mapNum!=sXgbaR50Number)
+       !XgbaR80SourceLocationMatchesNative(
+          sXgbaR50World,sXgbaR50Group,sXgbaR50Number))
         return FALSE;
     world=sXgbaR50World;
     key=XgbaR73ScopedKey(world,sXgbaR50Group,sXgbaR50Number);

@@ -207,8 +207,9 @@ static bool8 XgbaR57InstallPendingMapSprites(u8 world,u8 group,u8 map)
     reader.cached_index_page=XGBA_R49_INVALID_PAGE;
     if(!XgbaR49LoadOriginalMapEvents(&reader,key,&events) ||
        events.object_count>XGBA_R50_MAX_OBJECTS ||
-       !XgbaR70OriginalWitnessRecordPresent(world,group,map,
-                                             events.objects,events.object_count))
+       (!XgbaR80SourceTargetAuthorized(world,group,map) &&
+        !XgbaR70OriginalWitnessRecordPresent(world,group,map,
+                                             events.objects,events.object_count)))
         goto fail;
     /* The next resource overwrites event scratch: copy only unique u16 IDs. */
     for(i=0;i<events.object_count;i++){
@@ -216,7 +217,7 @@ static bool8 XgbaR57InstallPendingMapSprites(u8 world,u8 group,u8 map)
         u16 graphics=XgbaR49Le16(raw+1u);
         s16 x=(s16)XgbaR49Le16(raw+4u);
         s16 y=(s16)XgbaR49Le16(raw+6u);
-        if(!XgbaR60OriginalNpcIsInLandingView(
+        if(!XgbaR80SpriteVisibleInSourceMap(
             world,group,map,terrain.width,terrain.height,x,y))
             continue;
         for(j=0;j<count;j++)if(ids[j]==graphics)break;

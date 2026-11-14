@@ -48,7 +48,8 @@ static int XgbaR58CopySourcePalette(void *ctx,unsigned section,
     return 1;
 }
 static bool8 XgbaR58PreflightOriginalDestination(u8 world,u8 group,u8 map,
-                                                 s8 x,s8 y)
+                                                 s8 x,s8 y,
+                                                 bool8 fly_witness_required)
 {
     struct XgbaR51Reader grid={0};
     struct XgbaR51IndexRow location={0};
@@ -62,14 +63,17 @@ static bool8 XgbaR58PreflightOriginalDestination(u8 world,u8 group,u8 map,
     u8 palettes[4][32]={0},current[32]={0};
     u32 key=((u32)world<<16)|((u32)group<<8)|map;
     unsigned i,j,count=0u,palette_count=0u,side,part;
-    if(world>=3u || x<0 || y<0 || group!=0u ||
-       (world==2u?map!=4u:map!=9u))return FALSE;
+    if(world>=3u || x<0 || y<0 ||
+       (fly_witness_required &&
+          (group!=0u || (world==2u?map!=4u:map!=9u))) ||
+       (!fly_witness_required && !XgbaR80SupportedFirstHopMap(key)))
+        return FALSE;
     ++gXgbaR58NativeFlyProof.all_resource_preflights;
     /* All three legs, including return to native Emerald, require their
      * genuine original NPC script/text witness before the Fly UI queues
      * any map change. No source art, save state or R48 cache is altered. */
-    ++gXgbaR58NativeFlyProof.original_witness_preflights;
-    if(!XgbaR48PreflightOriginalNpcResource(world)){
+    if(fly_witness_required)++gXgbaR58NativeFlyProof.original_witness_preflights;
+    if(fly_witness_required && !XgbaR48PreflightOriginalNpcResource(world)){
         ++gXgbaR58NativeFlyProof.rejected_original_witness;
         goto refuse;
     }
@@ -117,16 +121,21 @@ static bool8 XgbaR58PreflightOriginalDestination(u8 world,u8 group,u8 map,
     events.cached_index_page=XGBA_R49_INVALID_PAGE;
     if(!XgbaR49LoadOriginalMapEvents(&events,key,&original) ||
        original.object_count>XGBA_R50_MAX_OBJECTS ||
-       !XgbaR70OriginalWitnessRecordPresent(world,group,map,
-                          original.objects,original.object_count))
+       (fly_witness_required &&
+        !XgbaR70OriginalWitnessRecordPresent(world,group,map,
+                          original.objects,original.object_count)))
         goto refuse;
     for(i=0u;i<original.object_count;i++){
         const u8 *npc=original.objects+i*24u;
         u16 source_id=XgbaR49Le16(npc+1u);
         s16 nx=(s16)XgbaR49Le16(npc+4u);
         s16 ny=(s16)XgbaR49Le16(npc+6u);
-        if(world!=0u && !XgbaR60OriginalNpcIsInLandingView(
-            world,group,map,location.width,location.height,nx,ny))
+        if(world!=0u &&
+           (fly_witness_required?
+             !XgbaR60OriginalNpcIsInLandingView(
+                world,group,map,location.width,location.height,nx,ny):
+             !XgbaR80NpcVisibleAtSourceArrival(
+                location.width,location.height,x,y,nx,ny)))
             continue;
         for(j=0u;j<count;j++)if(ids[j]==source_id)break;
         if(j==count){
@@ -177,7 +186,7 @@ bool8 XgbaR58QueuePlayerSelectedOriginalFly(void)
     map=sXgbaR58NextMap[step];
     x=sXgbaR58LandingX[step];y=sXgbaR58LandingY[step];
     ++gXgbaR58NativeFlyProof.actual_player_selections;
-    if(!XgbaR58PreflightOriginalDestination(world,group,map,x,y))
+    if(!XgbaR58PreflightOriginalDestination(world,group,map,x,y,TRUE))
         return FALSE;
     if(!XgbaR48QueueOriginalFly(world,group,map))
         return FALSE;

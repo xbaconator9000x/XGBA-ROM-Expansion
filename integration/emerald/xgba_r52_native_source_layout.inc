@@ -76,8 +76,8 @@ u16 XgbaR52PrimaryMetatileCount(void)
 {
     if(sXgbaR52ProfileReady && sXgbaR50Ready && gSaveBlock1Ptr &&
        sXgbaR52Profile.key==sXgbaR50OriginalEvents.active_source_key &&
-       gSaveBlock1Ptr->location.mapGroup==sXgbaR50Group &&
-       gSaveBlock1Ptr->location.mapNum==sXgbaR50Number){
+       XgbaR80SourceLocationMatchesNative(
+           sXgbaR50World,sXgbaR50Group,sXgbaR50Number)){
         ++gXgbaR52LayoutProof.real_emerald_field_uses;
         return sXgbaR52Profile.metatiles_in_primary;
     }
@@ -87,8 +87,8 @@ u16 XgbaR52PrimaryTilesCount(void)
 {
     if(sXgbaR52ProfileReady && sXgbaR50Ready && gSaveBlock1Ptr &&
        sXgbaR52Profile.key==sXgbaR50OriginalEvents.active_source_key &&
-       gSaveBlock1Ptr->location.mapGroup==sXgbaR50Group &&
-       gSaveBlock1Ptr->location.mapNum==sXgbaR50Number)
+       XgbaR80SourceLocationMatchesNative(
+           sXgbaR50World,sXgbaR50Group,sXgbaR50Number))
         return sXgbaR52Profile.tiles_in_primary;
     return 512u;
 }
@@ -96,8 +96,8 @@ u16 XgbaR52PrimaryPaletteCount(void)
 {
     if(sXgbaR52ProfileReady && sXgbaR50Ready && gSaveBlock1Ptr &&
        sXgbaR52Profile.key==sXgbaR50OriginalEvents.active_source_key &&
-       gSaveBlock1Ptr->location.mapGroup==sXgbaR50Group &&
-       gSaveBlock1Ptr->location.mapNum==sXgbaR50Number)
+       XgbaR80SourceLocationMatchesNative(
+           sXgbaR50World,sXgbaR50Group,sXgbaR50Number))
         return sXgbaR52Profile.palettes_in_primary;
     return 6u;
 }
