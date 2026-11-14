@@ -69,7 +69,8 @@ def bind_private_sources(
     out_dir: Path, *,
     expected_private_sha: str = ORIGINAL_R79_SHA,
     required_witnesses: dict[str,str] = REQUIRED_WITNESSES,
-    required_prefixes: tuple[str,...] = REQUIRED_ORIGINAL_PREFIXES
+    required_prefixes: tuple[str,...] = REQUIRED_ORIGINAL_PREFIXES,
+    hns_source_manifest: Path | None = None
 ):
     built_emerald_rom = Path(built_emerald_rom).resolve(strict=True)
     native_manifest = Path(native_manifest).resolve(strict=True)
@@ -117,13 +118,53 @@ def bind_private_sources(
     for prefix in required_prefixes:
         if not any(k.startswith(prefix) for k in private_names):
             raise PrivateProviderAdmissionError("Original source resource family missing: " + prefix)
+    # R94: HnS is an official OPEN SOURCE project. The released v2.0.6
+    # source build (R93) yields authentic source-linked world2 BG art. Merge
+    # its independently hashed pages into the existing owner-private R79
+    # provider. The original user's HnS ROM is not required and NO assets
+    # are copied into the public repository.
+    hns_data=b""
+    hns_entries=[]
+    hns_sha=None
+    if hns_source_manifest is not None:
+        source_manifest=Path(hns_source_manifest).resolve(strict=True)
+        hns=sidecar.load_manifest(source_manifest)
+        provenance_path=source_manifest.parent/"provenance.json"
+        if not provenance_path.is_file():
+            raise PrivateProviderAdmissionError("HnS upstream v2.0.6 source provenance is missing")
+        provenance=json.loads(provenance_path.read_text())
+        if hns.source_identity.id!="upstream-hns-v2.0.6-built" or \
+           provenance.get("commit")!="167aa6d537b109bb229c231ddce4616974c4da71" or \
+           provenance.get("rom_sha256")!=hns.source_identity.sha256 or \
+           len(provenance.get("tilesets",[]))!=2 or \
+           provenance.get("original_owner_rom_sha_equal_claimed") is not False:
+            raise PrivateProviderAdmissionError("Wrong or falsely claimed official HnS source build")
+        hns_data=hns.data_path.read_bytes()
+        hns_entries=[{"id":x.id,"offset":x.offset,
+                     "length":x.length,"sha256":x.sha256}
+                     for x in hns.resources.values()]
+        hns_names=_validated_entries(hns_data,hns_entries,prefix="upstream-hns")
+        needed={"r53.w2.v2.t00f8823c.meta","r53.w2.v2.t00f885e4.meta"}
+        if not needed.issubset(hns_names) or \
+           names & hns_names or private_names & hns_names:
+            raise PrivateProviderAdmissionError("Missing original HnS primary/secondary BG or resource ID collision")
+        for prefix in ("r53.w2.v2.t00f8823c","r53.w2.v2.t00f885e4"):
+            for suffix in (".g00",".m00",".a00",".p00"):
+                if prefix+suffix not in hns_names:
+                    raise PrivateProviderAdmissionError("Incomplete HnS source-built tile/metatile/palette section")
+        hns_sha=hns.source_identity.sha256
     first = (len(base_data)+15) & ~15
     if first <= GBA_WINDOW:
         first = GBA_WINDOW+16
     if first + len(private_payload) >= 2**32:
         raise PrivateProviderAdmissionError("mGBA host source exceeds 32-bit resource range")
+    hns_start=(first+len(private_payload)+15)&~15
+    if hns_data and hns_start+len(hns_data)>=2**32:
+        raise PrivateProviderAdmissionError("HnS open-source provider exceeds host GBA 32-bit address space")
     new_entries = base_entries + [
         {**entry,"offset":first+entry["offset"]} for entry in original_entries
+    ] + [
+        {**entry,"offset":hns_start+entry["offset"]} for entry in hns_entries
     ]
     # Recheck that no original resource absolute offset intersects native content.
     if any(e["offset"] < first or e["offset"]+e["length"] > first+len(private_payload)
@@ -136,6 +177,9 @@ def bind_private_sources(
         f.write(base_data)
         f.write(bytes(first-len(base_data)))
         f.write(private_payload)
+        if hns_data:
+            f.write(bytes(hns_start-(first+len(private_payload))))
+            f.write(hns_data)
     manifest = {
         "format":sidecar.FORMAT, "version":sidecar.VERSION,
         "source_identity":{
@@ -161,6 +205,10 @@ def bind_private_sources(
         "native_rom_sha256":base.source_identity.sha256,
         "native_resources_preserved":len(base_entries),
         "authenticated_original_private_resources":len(original_entries),
+        "authenticated_official_hns_source_build_bg_resources":len(hns_entries),
+        "official_hns_release_commit":
+            "167aa6d537b109bb229c231ddce4616974c4da71" if hns_entries else None,
+        "official_hns_source_built_rom_sha256":hns_sha,
         "total_mgba_registerable_resources":len(new_entries),
         "original_source_catalogue_sha256":PRIVATE_SOURCE_DIGEST,
         "exact_parent_private_zip_sha256":expected_private_sha,
@@ -181,9 +229,12 @@ def main():
     p.add_argument("--native-manifest",required=True,type=Path)
     p.add_argument("--original-private-r79",required=True,type=Path)
     p.add_argument("--private-output-dir",required=True,type=Path)
+    p.add_argument("--hns-source-manifest",type=Path,
+                   help="R93 exact official open-source v2.0.6 Goldenrod BG source pack")
     args=p.parse_args()
     report=bind_private_sources(args.built_emerald,args.native_manifest,
-                                args.original_private_r79,args.private_output_dir)
+                                args.original_private_r79,args.private_output_dir,
+                                hns_source_manifest=args.hns_source_manifest)
     print(json.dumps(report,indent=2,sort_keys=True))
 if __name__=="__main__":
     main()

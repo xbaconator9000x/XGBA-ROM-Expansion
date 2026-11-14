@@ -37,6 +37,7 @@ on:
       - 'tools/xgba_r17_emerald_patch.py'
       - 'tests/test_xgba_r84_foreign_flash_save_gate.py'
       - 'tools/xgba_r85_bind_private_source_provider.py'
+      - 'tests/test_xgba_r94_hns_official_source_provider_merge.py'
       - 'tests/test_xgba_r85_bind_private_source_provider.py'
       - 'integration/mgba/xgba_mgba_headless.c'
       - 'tools/xgba_mgba_run.py'
@@ -103,6 +104,7 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_xgba_r81_native_rocket_room_roundtrip.py' -v
           python3 -m unittest discover -s tests -p 'test_xgba_r84_foreign_flash_save_gate.py' -v
           python3 -m unittest discover -s tests -p 'test_xgba_r85_bind_private_source_provider.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r94_hns_official_source_provider_merge.py' -v
           python3 -m unittest discover -s tests -p 'test_xgba_r86_real_rocket_mgba_route.py' -v
           python3 -m unittest discover -s tests -p 'test_xgba_r90_original_fly_party_fixture.py' -v
           python3 -m unittest discover -s tests -p 'test_xgba_r91_actual_fly_completion_counter.py' -v
