@@ -35,6 +35,7 @@ on:
       - 'integration/emerald/xgba_r54_native_fly_warp_admission.inc'
       - 'integration/emerald/xgba_r17_external_littleroot.inc'
       - 'tools/xgba_r17_emerald_patch.py'
+      - 'tests/test_xgba_r84_foreign_flash_save_gate.py'
       - 'tests/xgba_r76_physical_original_warp_native.c'
       - 'tests/test_xgba_r76_actual_emerald_physical_warp.py'
       - 'tests/test_xgba_r75_original_rocket_onehop_extend.py'
@@ -89,6 +90,7 @@ jobs:
           PYTHONPATH=tools:tests python3 -m unittest test_xgba_r79_rocket_oversized_bg_source -v
           python3 -m unittest discover -s tests -p 'test_xgba_r76_actual_emerald_physical_warp.py' -v
           python3 -m unittest discover -s tests -p 'test_xgba_r81_native_rocket_room_roundtrip.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r84_foreign_flash_save_gate.py' -v
       - name: Run real native C source graphics reader and CRC streaming with ASan/UBSan
         shell: bash
         run: |

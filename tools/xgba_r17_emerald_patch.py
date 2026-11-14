@@ -411,6 +411,40 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                 "R57 copy actual original source palette at real NPC spawn")
             objects.write_text(sprite_src)
         if "#define XGBA_R54_REAL_WARP_ADMISSION" in Path(config).read_text():
+            # R84: No source-world group 35 may be saved as Emerald's
+            # original map slot 0:9. Include direct/partial sector writers.
+            saving=e/"src/save.c"
+            original_saving=saving.read_text()
+            originals[saving]=original_saving
+            safe=r16.one(original_saving,
+                "u8 HandleSavingData(u8 saveType)\n{",
+                "extern bool8 XgbaR84NativeSaveAllowed(void);\n"
+                "u8 HandleSavingData(u8 saveType)\n"
+                "{\n"
+                "    if (!XgbaR84NativeSaveAllowed()) return SAVE_STATUS_ERROR;",
+                "R84 native Emerald core save transaction admission")
+            safe=r16.one(safe,
+                "u8 TrySavingData(u8 saveType)\n{",
+                "u8 TrySavingData(u8 saveType)\n"
+                "{\n"
+                "    if (!XgbaR84NativeSaveAllowed()) {\n"
+                "        gSaveAttemptStatus = SAVE_STATUS_ERROR;\n"
+                "        return SAVE_STATUS_ERROR;\n"
+                "    }",
+                "R84 original native Emerald player save refusal")
+            for name in (
+                "LinkFullSave_Init",
+                "LinkFullSave_WriteSector",
+                "LinkFullSave_ReplaceLastSector",
+                "LinkFullSave_SetLastSectorSignature",
+                "WriteSaveBlock2",
+                "WriteSaveBlock1Sector"):
+                anchor="bool8 "+name+"(void)\n{"
+                safe=r16.one(safe,anchor,
+                    anchor+"\n    if (!XgbaR84NativeSaveAllowed()) return TRUE;",
+                    "R84 native incremental link/sector flash writer "+name)
+            saving.write_text(safe)
+        if "#define XGBA_R54_REAL_WARP_ADMISSION" in Path(config).read_text():
             from xgba_r58_fly_menu_patch import patch_native_original_fly_region_map
             originals.update(patch_native_original_fly_region_map(e))
         world.write_text(s)

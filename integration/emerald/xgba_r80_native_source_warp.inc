@@ -15,6 +15,18 @@ struct XgbaR80SourceRoomProof {
     volatile u32 route_revoked,actual_original_target_key,native_slot;
 };
 EWRAM_DATA volatile struct XgbaR80SourceRoomProof gXgbaR80SourceRoomProof={0};
+/* R84: vanilla Emerald Flash stores native group/map, not original source
+ * world. Forbid native writes in transient original foreign-world rooms,
+ * pending Rocket door fades and pending three-world Fly transitions.
+ */
+bool8 XgbaR84NativeSaveAllowed(void)
+{
+    if(sXgbaR80Route.phase!=0u ||
+       sXgbaR48PendingFlyWorld!=0xffu ||
+       (sXgbaR50Ready && sXgbaR50World!=0u))
+        return FALSE;
+    return TRUE;
+}
 static int XgbaR80SameSource(unsigned world,unsigned group,unsigned map)
 {
     return sXgbaR80Route.phase!=0u &&
