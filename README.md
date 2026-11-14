@@ -8,6 +8,12 @@ My longer-term aim is to make this usable for ROM hacking: not just custom-built
 
 > **Status — 14 November 2026:** External resource loading has been demonstrated in real FireRed and Emerald engine tests. Three-ROM integration is under active development, but an uninterrupted Emerald → Team Rocket Edition → Heart & Soul → Emerald playthrough is **not yet demonstrated**. See [current progress](#what-we-have-demonstrated) and [draft PR #123](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/123).
 
+### Latest verified engineering evidence — 14 November 2026 (R84)
+
+- Draft [PR #123](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/123), exact implementation head [`201cecf065fc5046a8dfac95c3421b9bccf203f7`](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/commit/201cecf065fc5046a8dfac95c3421b9bccf203f7): **12/12 associated PR-triggered GitHub Actions workflows completed successfully**, including [original Emerald ARM/mGBA/Flash and native source-contract jobs](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/actions/runs/43567516721). The original Emerald job logged **9/9 tests in 153.333 seconds**; native source checks include R70/R71 original NPC identity/dialogue integrity, R73/R76 physical warp constraints, and R80 native map-slot separation.
+- **R84 Flash safety:** when a foreign Rocket/Heart & Soul source-world route, foreign Fly, or foreign renderer is active, native Emerald saving is refused before Flash writes/counter changes. The player's save path returns an error rather than claiming success; native Emerald-only saving remains available. This is a protective refusal, **not** three-world save persistence or a successful foreign-world cold restart.
+- **Still unverified:** an authentic original-ROM Emerald → Rocket → Heart & Soul → Emerald playable Fly journey, original foreign NPC script execution, authentic Heart & Soul graphics in native gameplay, and source-qualified multiworld Flash persistence with cold-restart evidence. Public CI uses source-built original Emerald plus authored fixtures; do not interpret green CI as the missing private original-ROM LCD acceptance.
+
 ## What XGBA is
 
 A GBA cartridge ROM has a limited CPU-visible address range. XGBA separates **where resources are stored** from **where a running game needs them in memory**.
