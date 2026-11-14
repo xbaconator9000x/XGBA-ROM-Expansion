@@ -78,10 +78,10 @@ class R69GuestMmioEwramSourceContract(unittest.TestCase):
         self.assertNotEqual(corrupted,src)
         self.assertFalse(valid_guest_fetch_contract(corrupted))
         corrupted=src.replace(
-            "    if(sXgbaR48Ready[source]){\\n"
-            "        if(XgbaR71CachedOriginalNpcValid(\\n"
-            "               source,sXgbaR48Payload[source],XGBA_R48_BYTES))\\n"
-            "            return TRUE;\\n        goto rejected;\\n    }",
+            "    if(sXgbaR48Ready[source]){\n"
+            "        if(XgbaR71CachedOriginalNpcValid(\n"
+            "               source,sXgbaR48Payload[source],XGBA_R48_BYTES))\n"
+            "            return TRUE;\n        goto rejected;\n    }",
             "    /* mistakenly overwrite live relocated scripts */")
         self.assertNotEqual(corrupted,src)
         self.assertFalse(valid_guest_fetch_contract(corrupted))
