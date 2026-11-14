@@ -46,7 +46,8 @@ static int XgbaR50FetchOriginalPage(void *context,const char *id,
 {
     u32 read;
     (void)context;
-    read=XgbaGuestFetch(id,target,bytes);
+    if(!XgbaR48StagePagedResourceName(id))return 0;
+    read=XgbaGuestFetch((const char *)sXgbaR48ResourceName,target,bytes);
     if(read!=bytes){
         ++gXgbaR50BridgeProof.rejected;
         return 0;

@@ -214,6 +214,30 @@ static const char *XgbaR48OriginalNpcResourceName(u8 source)
  * the EXISTING 32-byte EWRAM ID and 3x256-byte R48 payload buffers;
  * neither ROM-backed const names nor IWRAM stack arrays are valid.
  * Original source payload verification must happen before relocation. */
+
+/* R74: R49/R51/R52/R53 readers build IDs on the IWRAM stack. mGBA's
+ * resource device accepts IDs only in EWRAM. Reuse the existing R48 ID
+ * buffer for EVERY original-source page callback. GuestFetch is synchronous;
+ * this buffer is not a permanent new EWRAM allocation or concurrent lease.
+ * The source original NPC loader restages its ID independently when used.
+ */
+static bool8 XgbaR48StagePagedResourceName(const char *name)
+{
+    unsigned i=0u;
+    if(!name)return FALSE;
+    while(i+1u<sizeof(sXgbaR48ResourceName) && name[i]){
+        const u8 c=(u8)name[i];
+        if(!((c>='a' && c<='z') || (c>='0' && c<='9') ||
+             c=='.' || c=='_' || c=='-'))
+            return FALSE;
+        sXgbaR48ResourceName[i]=c;
+        ++i;
+    }
+    if(i==0u || name[i])return FALSE;
+    sXgbaR48ResourceName[i]=0u;
+    return TRUE;
+}
+
 static bool8 XgbaR48StageOriginalNpcResourceName(u8 source)
 {
     const char *name=XgbaR48OriginalNpcResourceName(source);

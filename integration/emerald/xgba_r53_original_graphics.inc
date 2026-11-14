@@ -58,7 +58,8 @@ static int XgbaR53FetchNativePage(void *ctx,const char *id,u8 *dst,u16 length)
 {
     u32 count;
     (void)ctx;
-    count=XgbaGuestFetch(id,dst,length);
+    if(!XgbaR48StagePagedResourceName(id))return 0;
+    count=XgbaGuestFetch((const char *)sXgbaR48ResourceName,dst,length);
     if(count!=length){
         ++gXgbaR53GraphicsProof.rejected;
         return 0;

@@ -1,0 +1,7 @@
+# R74 — systematic real mGBA EWRAM guest resource ID repair
+
+**Root cause:** R69 fixed original NPC dialogue fetch using an existing EWRAM resource-name buffer; but the R49 original event, R51 terrain grid, R52 map profile and R53 tileset/OBJ page callbacks still passed stack-built (IWRAM) resource-name strings to the mGBA guest MMIO device. That device explicitly only accepts EWRAM pointers for both resource ID and destination. Any original foreign-world destination that passes host R72 checks could therefore fail immediately during its real game-engine page read.
+
+**Code-level repair:** All four guest source pagers now stage their authenticated source resource ID into the previously allocated R48 EWRAM 32-byte resource buffer, then call the existing synchronous MMIO with the EWRAM pointer. The staging helper bounds-checks the name, rejects unsupported characters and rejects truncated/empty IDs. No new static EWRAM, no weakening of CRC/SHA bounds, no source-game assets in public Git. The existing R48 original dialogue loader retains its separate restaging and cached-packet integrity checks. Includes an exact-source static test on R49–R53 callers, real original-Emerald ARM/mGBA compile and Flash regression in existing workflow.
+
+**Validation boundary:** this unblocks actual mGBA resource requests; it does not prove physical Fly, source sprite animation, foreign map warps/scripts or Flash cross-world cold continue. R72 HnS art gap persists. Keep PR draft.

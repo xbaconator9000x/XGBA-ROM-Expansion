@@ -24,7 +24,9 @@ static int XgbaR52FetchRealLayoutPage(void *ctx,const char *id,
                                      u8 *target,u16 length)
 {
     (void)ctx;
-    if(XgbaGuestFetch(id,target,length)!=length){
+    if(!XgbaR48StagePagedResourceName(id) ||
+       XgbaGuestFetch((const char *)sXgbaR48ResourceName,
+                      target,length)!=length){
         ++gXgbaR52LayoutProof.refused;
         return 0;
     }

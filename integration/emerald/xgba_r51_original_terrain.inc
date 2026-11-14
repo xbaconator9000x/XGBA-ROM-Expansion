@@ -29,7 +29,8 @@ static EWRAM_DATA bool8 sXgbaR51OriginalTerrainPrepared=FALSE;
 static int XgbaR51FetchRealPage(void *ctx,const char *name,u8 *dst,u16 count)
 {
     (void)ctx;
-    if(XgbaGuestFetch(name,dst,count)!=count){
+    if(!XgbaR48StagePagedResourceName(name) ||
+       XgbaGuestFetch((const char *)sXgbaR48ResourceName,dst,count)!=count){
         ++gXgbaR51TerrainProof.refused;
         return 0;
     }
