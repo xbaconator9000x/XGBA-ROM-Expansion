@@ -36,13 +36,13 @@ jobs:
         run: |
           make hns -j2 -O
           test -s pokehns.gba
-          test -s pokeemerald.elf
+          test -s pokehns.elf
       - name: Build original source-linked Goldenrod BG into private XGBA R53 resource pages
         run: |
           PYTHONPATH=tools python3 tools/xgba_r93_hns_official_source.py \
             --source-tree upstream-hns-v206 \
             --built-gba upstream-hns-v206/pokehns.gba \
-            --built-elf upstream-hns-v206/pokeemerald.elf \
+            --built-elf upstream-hns-v206/pokehns.elf \
             --private-out "$RUNNER_TEMP/r93-open-source-goldenrod"
           python3 - <<'PY'
           import json,os
