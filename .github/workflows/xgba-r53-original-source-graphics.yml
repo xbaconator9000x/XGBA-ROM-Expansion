@@ -41,6 +41,8 @@ on:
       - 'integration/mgba/xgba_mgba_headless.c'
       - 'tools/xgba_mgba_run.py'
       - 'tools/xgba_r86_private_rocket_mgba_acceptance.py'
+      - 'tools/xgba_r90_original_fly_party_fixture.py'
+      - 'tests/test_xgba_r90_original_fly_party_fixture.py'
       - 'tests/test_xgba_r86_real_rocket_mgba_route.py'
       - 'tests/xgba_r76_physical_original_warp_native.c'
       - 'tests/test_xgba_r76_actual_emerald_physical_warp.py'
@@ -99,6 +101,7 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_xgba_r84_foreign_flash_save_gate.py' -v
           python3 -m unittest discover -s tests -p 'test_xgba_r85_bind_private_source_provider.py' -v
           python3 -m unittest discover -s tests -p 'test_xgba_r86_real_rocket_mgba_route.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r90_original_fly_party_fixture.py' -v
       - name: Run real native C source graphics reader and CRC streaming with ASan/UBSan
         shell: bash
         run: |

@@ -22,6 +22,11 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
     originals.update({world:original_world,newgame:original_newgame})
     r50_enabled = "#define XGBA_R50_ENGINE_EVENTS" in Path(config).read_text()
     r48_enabled = "#define XGBA_R48_ORIGINAL_NPC_BRIDGE" in Path(config).read_text()
+    r90_fly_fixture = "#define XGBA_R90_REAL_FLY_TEST" in Path(config).read_text()
+    if r90_fly_fixture and not (
+            "#define XGBA_R54_REAL_WARP_ADMISSION" in Path(config).read_text()
+            and r50_enabled and r48_enabled):
+        raise r16.AdapterDrift("R90 party Fly requires actual original Emerald Fly/field engine, R48/R50")
     if r50_enabled and (not r48_enabled or r19_connected):
         raise r16.AdapterDrift("R50 guest event bridge requires R48 and an exclusive owned map arena")
     if r26_leases and not (r19_connected and r19_battle):
@@ -107,6 +112,13 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                 "WARP_ID_NONE, 10, 1);",
                 "start close to original Littleroot-Route101 boundary")
         newgame.write_text(s)
+        if r90_fly_fixture:
+            from xgba_r90_original_fly_party_fixture import enable_original_emerald_fly_party_fixture
+            # Replace the original source snapshot in the backup mapping
+            # only with already patched file contents; restore original at exit.
+            fly_originals=enable_original_emerald_fly_party_fixture(e)
+            if set(fly_originals)!={newgame}:
+                raise r16.AdapterDrift("R90 changed a file outside the original Emerald new-game source")
         s=r16.one(original_world,
           "#define PLAYER_LINK_STATE_IDLE 0x80",
           hook+"\n#define PLAYER_LINK_STATE_IDLE 0x80",

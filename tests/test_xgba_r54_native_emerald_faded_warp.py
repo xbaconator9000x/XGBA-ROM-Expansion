@@ -17,6 +17,7 @@ import test_xgba_r17_emerald_external_map as r17
 
 class NativeEmeraldR54ActualFadedWarp(R53):
     R54_REAL_WARP_ADMISSION_TEST=True
+    R90_NATIVE_FLY_DEMO_TEST=True  # R90 genuine party Fly HM, zero debug world switches
 
     def test_real_original_emerald_faded_warp_preload_is_linked(self):
         symbols=r17.r14.symbols(self.elf)
@@ -32,6 +33,8 @@ class NativeEmeraldR54ActualFadedWarp(R53):
         self.assertIn("XgbaR57ApplyOriginalObjectPalette",symbols)
         self.assertIn("gXgbaR58NativeFlyProof",symbols)
         self.assertIn("gXgbaR80SourceRoomProof",symbols)
+        self.assertIn("SetMonMoveSlot",symbols)
+        self.assertIn("CreateMon",symbols)
         addr=symbols["gXgbaR80SourceRoomProof"][0]
         self.assertTrue(0x02000000<=addr<0x02040000)
         self.assertIn("XgbaR58QueuePlayerSelectedOriginalFly",symbols)

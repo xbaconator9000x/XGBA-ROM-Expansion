@@ -238,6 +238,10 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             config.write_text(config.read_text()+"#define XGBA_R53_ORIGINAL_GRAPHICS 1\n")
         if r54:
             config.write_text(config.read_text()+"#define XGBA_R54_REAL_WARP_ADMISSION 1\n")
+        if getattr(cls,"R90_NATIVE_FLY_DEMO_TEST",False):
+            if not r54:
+                raise AssertionError("R90 cannot run without native Emerald Fly field engine")
+            config.write_text(config.read_text()+"#define XGBA_R90_REAL_FLY_TEST 1\n")
         if r19_battle:
             config.write_text(config.read_text()+
                 "\n#define XGBA_R19_BATTLE_TEST 1\n"
