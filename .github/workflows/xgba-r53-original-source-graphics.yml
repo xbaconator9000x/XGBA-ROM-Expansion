@@ -21,6 +21,8 @@ on:
       - 'tests/xgba_r73_source_warp_preflight_native.c'
       - 'tests/test_xgba_r73_original_warp_preflight.py'
       - 'tests/test_xgba_r74_guest_paged_resource_ewram.py'
+      - 'tools/xgba_r75_original_rocket_onehop_extend.py'
+      - 'tests/test_xgba_r75_original_rocket_onehop_extend.py'
       - 'integration/emerald/xgba_r52_native_source_layout.inc'
       - 'integration/common/xgba_r71_original_script_cache_integrity.h'
       - 'tests/xgba_r71_original_script_cache_integrity_native.c'
@@ -68,6 +70,7 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_xgba_r71_original_script_cache_integrity.py' -v
           python3 -m unittest discover -s tests -p 'test_xgba_r73_original_warp_preflight.py' -v
           python3 -m unittest discover -s tests -p 'test_xgba_r74_guest_paged_resource_ewram.py' -v
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r75_original_rocket_onehop_extend -v
       - name: Run real native C source graphics reader and CRC streaming with ASan/UBSan
         shell: bash
         run: |
