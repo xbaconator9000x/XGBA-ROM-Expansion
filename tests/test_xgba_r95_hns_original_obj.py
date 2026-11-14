@@ -19,8 +19,8 @@ def fixture(folder):
         p.write_text(data) if isinstance(data,str) else p.write_bytes(data)
     put("include/constants/event_objects.h","#define OBJ_EVENT_GFX_BOY_2_HNS 406\n")
     put("src/data/object_events/object_event_graphics_info_pointers.h",
-        "const struct ObjectEventGraphicsInfo *const gObjectEventGraphicsInfoPointers[NUM_OBJ_EVENT_GFX] = {\\n"
-        "[OBJ_EVENT_GFX_BOY_2_HNS] = &gObjectEventGraphicsInfo_Boy2_hns,\\n};\\n")
+        "const struct ObjectEventGraphicsInfo *const gObjectEventGraphicsInfoPointers[NUM_OBJ_EVENT_GFX] = {\n"
+        "[OBJ_EVENT_GFX_BOY_2_HNS] = &gObjectEventGraphicsInfo_Boy2_hns,\n};\n")
     put("src/data/object_events/object_event_graphics_info.h",
         "const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Boy2_hns = {TAG_NONE, OBJ_EVENT_PAL_TAG_NPC_4_HNS, OBJ_EVENT_PAL_TAG_NONE, 256, 16, 32, 2, SHADOW_SIZE_M, FALSE, FALSE, TRACKS_FOOT, &gObjectEventBaseOam_16x32, sOamTables_16x32, sAnimTable_Standard, sPicTable_Boy2_hns};\n")
     put("src/data/object_events/object_event_pic_tables.h",
