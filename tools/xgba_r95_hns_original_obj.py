@@ -38,6 +38,7 @@ def _symbol_offset(symbols,rom,symbol,size):
 def _assert_source_declarations(root):
     root=Path(root)
     paths={
+        "gfx_table":root/"src/data/object_events/object_event_graphics_info_pointers.h",
         "constants":root/"include/constants/event_objects.h",
         "info":root/"src/data/object_events/object_event_graphics_info.h",
         "pics":root/"src/data/object_events/object_event_pic_tables.h",
@@ -49,6 +50,7 @@ def _assert_source_declarations(root):
     # Bind the linked object to its exact official source-defined assets,
     # not a coincidentally named symbol in a different build.
     expected=(
+        (texts["gfx_table"],r"\[OBJ_EVENT_GFX_BOY_2_HNS\]\s*=\s*&gObjectEventGraphicsInfo_Boy2_hns"),
         (texts["info"],r"gObjectEventGraphicsInfo_Boy2_hns\s*=\s*\{[^;]*sPicTable_Boy2_hns"),
         (texts["info"],r"gObjectEventGraphicsInfo_Boy2_hns\s*=\s*\{[^;]*OBJ_EVENT_PAL_TAG_NPC_4_HNS"),
         (texts["pics"],r"sPicTable_Boy2_hns\[\]\s*=\s*\{"),
@@ -83,6 +85,12 @@ def extract_original_boy2(root,rom,symbols):
     frames_offset=_symbol_offset(symbols,rom,PIC_BYTES,FRAMES*FRAME_BYTES)
     pic_offset=_symbol_offset(symbols,rom,PIC_TABLE,FRAMES*8)
     desc_offset=_symbol_offset(symbols,rom,SOURCE_OBJECT,48)
+    # Source-written 16-bit graphics ID is not enough. Authenticate the
+    # *compiled* global original graphics-id pointer table's entry 406.
+    gfx_table_offset=_symbol_offset(
+        symbols,rom,"gObjectEventGraphicsInfoPointers",(GFX_ID+1)*4)
+    if struct.unpack_from("<I",rom,gfx_table_offset+GFX_ID*4)[0]!=symbols[SOURCE_OBJECT]:
+        raise HnsOriginalObjectError("Original 16-bit Boy2 graphics table does not bind the source descriptor")
     palette_offset=_symbol_offset(symbols,rom,PAL_BYTES,32)
     oam_offset=_symbol_offset(symbols,rom,OAM_BYTES,8)
     anim_table_offset=_symbol_offset(symbols,rom,ANIM_TABLE,4)
@@ -137,6 +145,7 @@ def extract_original_boy2(root,rom,symbols):
     evidence={
         "id":name,"original_graphics_id":GFX_ID,"world":WORLD,
         "npc_source_symbol":SOURCE_OBJECT,"source_graphics_info_offset":desc_offset,
+        "compiled_graphics_table_offset":gfx_table_offset,
         "linked_pic_table_offset":pic_offset,"linked_frame_data_offset":frames_offset,
         "linked_palette_offset":palette_offset,"linked_oam_offset":oam_offset,
         "linked_first_animation_offset":anim_offset,
