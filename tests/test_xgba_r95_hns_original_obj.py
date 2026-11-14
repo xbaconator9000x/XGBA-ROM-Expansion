@@ -49,7 +49,7 @@ def fixture(folder):
     rom[0xe00:0xe20]=bytes(range(32))
     struct.pack_into("<4H",rom,0xf00,0x8000,0x8000,0,0)
     struct.pack_into("<I",rom,0xf20,symbols[r95.FIRST_ANIM])
-    struct.pack_into("<4H",rom,0xf40,0,16,0xfffd,0)
+    struct.pack_into("<4H",rom,0xf40,0,16,0xfffe,0)
     return root,rom,symbols
 
 class NineFrameSourceBoy2Tests(unittest.TestCase):
