@@ -547,6 +547,11 @@ static void xgba_r86_run_real_rocket_door(
     uint32_t arrivals,observed,source_to;
     uint32_t saw_room=0u,saw_return=0u;
     unsigned line_number=0u,actions=0u,captures=0u,total_frames=0u;
+    /* R89: native actor arrival precedes the field palette fade. A screenshot
+     * taken immediately is black, even when the engine-loaded map is genuine.
+     * Defer each evidence frame until 80 more REAL emulated LCD frames pass. */
+    uint32_t deferred_lcd_source=0u,deferred_lcd_arrival=0u;
+    unsigned deferred_lcd_frames=0u,rendered_lcd_arrivals=0u;
     if(!core || !device || !script_file || !lcd_dir ||
        proof_addr<0x02000000u || proof_addr>0x0203ffe8u ||
        (proof_addr&3u) || device->failed_reads)
@@ -588,13 +593,45 @@ static void xgba_r86_run_real_rocket_door(
                     fclose(fp);
                     fail("R86 unsupported/wrong order original source-world loaded map");
                 }
+                if(deferred_lcd_frames){
+                    fclose(fp);
+                    fail("R89 overlapping original room transitions before prior visible LCD");
+                }
+                deferred_lcd_source=source_to;
+                deferred_lcd_arrival=arrivals;
+                deferred_lcd_frames=80u;
+            }
+            if(deferred_lcd_frames && --deferred_lcd_frames==0u){
+                const void *pixels=NULL;
+                size_t pixel_stride=0u;
+                const mColor *framebuffer;
+                mColor background;
+                unsigned different=0u;
+                core->getPixels(core,&pixels,&pixel_stride);
+                if(!pixels || pixel_stride<240u){
+                    fclose(fp);
+                    fail("R89 original room LCD framebuffer unavailable");
+                }
+                framebuffer=(const mColor *)pixels;
+                background=framebuffer[0];
+                for(unsigned row=0u;row<160u;row++)
+                    for(unsigned col=0u;col<240u;col++)
+                        if(framebuffer[row*pixel_stride+col]!=background)
+                            ++different;
+                if(different<128u ||
+                   core->busRead32(core,proof_addr+16u)!=deferred_lcd_source){
+                    fclose(fp);
+                    fail("R89 original room LCD blank or changed source after field fade");
+                }
                 if(snprintf(frame_name,sizeof(frame_name),
                        "%s/r86-native-arrival-%02u-source-%06x.png",
-                       lcd_dir,arrivals,source_to)>= (int)sizeof(frame_name)){
-                    fclose(fp);fail("R86 LCD capture path too long");
+                       lcd_dir,deferred_lcd_arrival,deferred_lcd_source)
+                       >= (int)sizeof(frame_name)){
+                    fclose(fp);fail("R89 original room LCD capture path too long");
                 }
                 save_native_frame(core,frame_name);
                 ++captures;
+                ++rendered_lcd_arrivals;
             }
         }
         if(snapshot){
@@ -610,6 +647,7 @@ static void xgba_r86_run_real_rocket_door(
     fclose(fp);
     core->setKeys(core,0u);
     if(!saw_room || !saw_return || arrivals!=2u ||
+       rendered_lcd_arrivals!=2u || deferred_lcd_frames!=0u ||
        core->busRead32(core,proof_addr)<2u ||
        core->busRead32(core,proof_addr+8u)!=0u ||
        core->busRead32(core,proof_addr+12u)!=0u ||
