@@ -229,7 +229,7 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                     "static bool8 TryStartWarpEventScript(struct MapPosition *position, u16 metatileBehavior)\n"
                     "{\n"
                     "    s8 warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);\n"
-                    "    if (warpEventId == WARP_ID_NONE && IsWarpMetatileBehavior(metatileBehavior) == TRUE)\n"
+                    "    if (warpEventId == WARP_ID_NONE)\n"
                     "        XgbaR76NotePhysicalOriginalStepWarp(position->x,position->y,position->elevation);\n",
                     "R76 real original Emerald physical step-warp metatile lookup")
                 source=r16.one(source,
@@ -240,18 +240,17 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                     "static bool8 TryArrowWarp(struct MapPosition *position, u16 metatileBehavior, u8 direction)\n"
                     "{\n"
                     "    s8 warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);\n"
-                    "    if (warpEventId == WARP_ID_NONE && "
-                    "IsArrowWarpMetatileBehavior(metatileBehavior, direction) == TRUE)\n"
+                    "    if (warpEventId == WARP_ID_NONE)\n"
                     "        XgbaR76NotePhysicalOriginalStepWarp(position->x,position->y,position->elevation);\n",
                     "R77 original Emerald on-map directional arrow warp path")
                 source=r16.one(source,
-                    "            warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);\n"
-                    "            if (warpEventId != WARP_ID_NONE && IsWarpMetatileBehavior(metatileBehavior) == TRUE)",
-                    "            warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);\n"
-                    "            if (warpEventId == WARP_ID_NONE && IsWarpMetatileBehavior(metatileBehavior) == TRUE)\n"
-                    "                XgbaR76NotePhysicalOriginalStepWarp(position->x,position->y,position->elevation);\n"
-                    "            if (warpEventId != WARP_ID_NONE && IsWarpMetatileBehavior(metatileBehavior) == TRUE)",
-                    "R77 original Emerald A-button north-door warp path")
+                    "        if (MetatileBehavior_IsWarpDoor(metatileBehavior) == TRUE)\n"
+                    "        {\n",
+                    "        /* R78 original R49 source door candidates may use non-Emerald tile IDs. */\n"
+                    "        XgbaR76NotePhysicalOriginalStepWarp(position->x,position->y,position->elevation);\n"
+                    "        if (MetatileBehavior_IsWarpDoor(metatileBehavior) == TRUE)\n"
+                    "        {\n",
+                    "R78 original held-direction north-door probe before native tile category")
             interaction.write_text(source)
             # Link the ACTUAL Fly field-effect arrival callback, not a
             # surrogate keypress or map-viewer source switch. This only
