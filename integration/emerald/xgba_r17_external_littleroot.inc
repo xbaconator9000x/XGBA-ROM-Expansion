@@ -93,6 +93,7 @@ static const struct MapLayout *XgbaR17Resolve(const struct MapLayout *base)
 #endif
 #ifdef XGBA_R54_REAL_WARP_ADMISSION
 #define XGBA_R60_FOREIGN_VIEWPORT 1
+#define XGBA_R80_FOREIGN_SOURCE_ACTIVATION 1
 /* R50's own common header includes the viewport contract relative to itself. */
 #endif
 #ifdef XGBA_R50_ENGINE_EVENTS
@@ -111,6 +112,7 @@ static const struct MapLayout *XgbaR17Resolve(const struct MapLayout *base)
 #include "__XGBA_R54_REAL_WARP_BRIDGE__"
 #include "__XGBA_R57_NATIVE_SPRITE_BRIDGE__"
 #include "__XGBA_R58_NATIVE_FLY_BRIDGE__"
+#include "__XGBA_R80_NATIVE_SOURCE_WARP_BRIDGE__"
 #include "__XGBA_R76_PHYSICAL_WARP_BRIDGE__"
 #endif
 #ifdef XGBA_R19_CONNECTED_MAPS

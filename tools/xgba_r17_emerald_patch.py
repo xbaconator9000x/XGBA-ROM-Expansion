@@ -54,6 +54,8 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                       (ROOT/"integration/emerald/xgba_r57_native_source_sprite_installer.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R58_NATIVE_FLY_BRIDGE__",
                       (ROOT/"integration/emerald/xgba_r58_native_original_fly.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R80_NATIVE_SOURCE_WARP_BRIDGE__",
+                      (ROOT/"integration/emerald/xgba_r80_native_source_warp.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R76_PHYSICAL_WARP_BRIDGE__",
                       (ROOT/"integration/emerald/xgba_r76_physical_original_warp.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_MAPS__",

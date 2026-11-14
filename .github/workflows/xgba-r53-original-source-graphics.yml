@@ -23,6 +23,9 @@ on:
       - 'tests/test_xgba_r74_guest_paged_resource_ewram.py'
       - 'tools/xgba_r75_original_rocket_onehop_extend.py'
       - 'tools/xgba_r79_rocket_oversized_bg_source.py'
+      - 'integration/common/xgba_r80_foreign_map_slot.h'
+      - 'integration/emerald/xgba_r80_native_source_warp.inc'
+      - 'tests/xgba_r80_foreign_source_map_slot_native.c'
       - 'tests/test_xgba_r79_rocket_oversized_bg_source.py'
       - 'integration/common/xgba_r76_physical_original_warp.h'
       - 'integration/emerald/xgba_r76_physical_original_warp.inc'
@@ -132,6 +135,11 @@ jobs:
             tests/xgba_r76_physical_original_warp_native.c -o build/r53/r76-warp
           ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
             UBSAN_OPTIONS=halt_on_error=1 build/r53/r76-warp
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r80_foreign_source_map_slot_native.c -o build/r53/r80-slot
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r53/r80-slot
   native-original-emerald-graphics:
     name: Actual Emerald ARM BG tile loader, hardware arena, mGBA and Flash
     runs-on: ubuntu-24.04

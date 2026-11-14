@@ -6,6 +6,9 @@
 #ifndef XGBA_R50_ENGINE_EVENT_ADAPTER_H
 #define XGBA_R50_ENGINE_EVENT_ADAPTER_H
 #include "xgba_r49_full_original_map_events.h"
+#ifdef XGBA_R80_FOREIGN_SOURCE_ACTIVATION
+#include "xgba_r80_foreign_map_slot.h"
+#endif
 #ifdef XGBA_R60_FOREIGN_VIEWPORT
 #include "xgba_r60_original_npc_viewport.h"
 #endif
@@ -70,10 +73,17 @@ static inline int XgbaR50StageEvents(
 #ifdef XGBA_R60_FOREIGN_VIEWPORT
         /* Ineligible off-map and distant original NPCs remain in immutable
          * R49 storage. Do not allocate their graphics on first landing. */
+#ifdef XGBA_R80_FOREIGN_SOURCE_ACTIVATION
+        if(source!=0u && !XgbaR80SpriteVisibleInSourceMap(
+            source,(source_key>>8u)&255u,source_key&255u,
+            map_width,map_height,x,y))
+            continue;
+#else
         if(source!=0u && !XgbaR60OriginalNpcIsInLandingView(
             source,(source_key>>8u)&255u,source_key&255u,
             map_width,map_height,x,y))
             continue;
+#endif
 #endif
         if(!id || (seen[id>>5u]&(UINT32_C(1)<<(id&31u))) ||
            x<0 || y<0 || x>=map_width || y>=map_height ||

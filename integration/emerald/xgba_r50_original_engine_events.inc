@@ -71,9 +71,12 @@ bool8 XgbaR50PrepareOriginalMapEvents(
     u32 key;
     if(!original_renderer_released || !graphics_slot ||
        sXgbaR50Ready || sXgbaR50EventsPrepared ||
-       world>=3u || group!=0u || (world==2u?number!=4u:number!=9u) ||
+       world>=3u ||
+       ((group!=0u || (world==2u?number!=4u:number!=9u)) &&
+        !XgbaR80SourceTargetAuthorized(world,group,number)) ||
        !width || !height || width>255u || height>255u ||
-       (world!=0u && sXgbaR48PendingFlyWorld!=world)){
+       (world!=0u && sXgbaR48PendingFlyWorld!=world &&
+        !XgbaR80SourceTargetAuthorized(world,group,number))){
         ++gXgbaR50BridgeProof.rejected;
         return FALSE;
     }
@@ -123,7 +126,12 @@ bool8 XgbaR50CommitOriginalMapAfterGraphics(
     }
     /* Numeric map collisions stay keyed by R49 source ID, not native slot.
      * Current three witnesses are 0:9 Emerald/Rocket and 0:4 HnS. */
-    header=*gMapGroups[sXgbaR50Group][sXgbaR50Number];
+    /* Source group 35 cannot index original Emerald gMapGroups[35]. */
+    if(XgbaR80SourceTargetAuthorized(
+         sXgbaR50World,sXgbaR50Group,sXgbaR50Number))
+        header=*gMapGroups[XGBA_R80_NATIVE_GROUP][XGBA_R80_NATIVE_MAP];
+    else
+        header=*gMapGroups[sXgbaR50Group][sXgbaR50Number];
     packed=XgbaR50EventBytes(&sXgbaR50OriginalEvents);
     events.objectEventCount=sXgbaR50OriginalEvents.object_count;
     events.warpCount=0u;    /* native source warp still untranslated */
@@ -160,13 +168,17 @@ void XgbaR50ReleaseAfterOriginalWarpFade(bool8 real_field_renderer_released)
     sXgbaR17Active=FALSE;
     sXgbaR48SourceMapLoaded=FALSE;
     gXgbaR48OriginalNpcProof.source_map_loaded=0u;
+    XgbaR80OnSourceRendererReleased();
 }
 static const struct MapHeader *XgbaR50HeaderFor(
     u16 group,u16 number,const struct MapHeader *native_header)
 {
-    if(sXgbaR50Ready && group==sXgbaR50Group &&
-       number==sXgbaR50Number &&
-       sXgbaR50World<3u){
+    if(sXgbaR50Ready && sXgbaR50World<3u &&
+       ((group==sXgbaR50Group && number==sXgbaR50Number) ||
+        (group==XGBA_R80_NATIVE_GROUP &&
+         number==XGBA_R80_NATIVE_MAP &&
+         XgbaR80SourceLocationMatchesNative(sXgbaR50World,
+                        sXgbaR50Group,sXgbaR50Number)))){
         return &sXgbaR50LiveHeader;
     }
     return native_header;
@@ -174,8 +186,8 @@ static const struct MapHeader *XgbaR50HeaderFor(
 static const struct MapLayout *XgbaR50LayoutFor(const struct MapLayout *base)
 {
     if(sXgbaR50Ready && gSaveBlock1Ptr &&
-       gSaveBlock1Ptr->location.mapGroup==sXgbaR50Group &&
-       gSaveBlock1Ptr->location.mapNum==sXgbaR50Number &&
+       XgbaR80SourceLocationMatchesNative(
+           sXgbaR50World,sXgbaR50Group,sXgbaR50Number) &&
        sXgbaR50World<3u)
         return &sXgbaR50LiveLayout;
     return XgbaR17Resolve(base);
@@ -201,9 +213,11 @@ void XgbaR50VerifyLoadedEngineMap(void)
         XgbaR48SetSourceMapLoaded(0u,0u,9u,TRUE);
     if(sXgbaR50Ready && gMapHeader.mapLayout==&sXgbaR50LiveLayout &&
        gMapHeader.events==&sXgbaR50LiveEvents &&
-       gSaveBlock1Ptr->location.mapGroup==sXgbaR50Group &&
-       gSaveBlock1Ptr->location.mapNum==sXgbaR50Number){
-        if(!sXgbaR48SourceMapLoaded)
+       XgbaR80SourceLocationMatchesNative(
+           sXgbaR50World,sXgbaR50Group,sXgbaR50Number)){
+        XgbaR80ConfirmRealSourceMapArrival();
+        if(!sXgbaR48SourceMapLoaded &&
+           !XgbaR80ForeignInteriorActive())
             XgbaR48SetSourceMapLoaded(sXgbaR50World,sXgbaR50Group,sXgbaR50Number,TRUE);
         if(gXgbaR48OriginalNpcProof.source_map_loaded){
             gXgbaR50BridgeProof.original_map_installed=1u;

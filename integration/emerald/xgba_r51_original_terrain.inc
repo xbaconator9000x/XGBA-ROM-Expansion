@@ -51,7 +51,8 @@ bool8 XgbaR51PrepareOriginalSourceGeometry(
        world>=3u || sXgbaR51NativeTerrain.valid ||
        sXgbaR51OriginalTerrainPrepared ||
        !gSaveBlock1Ptr ||
-       (world!=0u && sXgbaR48PendingFlyWorld!=world)){
+       (world!=0u && sXgbaR48PendingFlyWorld!=world &&
+        !XgbaR80SourceTargetAuthorized(world,group,number))){
         ++gXgbaR51TerrainProof.refused;
         return FALSE;
     }
