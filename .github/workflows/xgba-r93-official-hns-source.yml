@@ -6,6 +6,8 @@ on:
       - 'tools/xgba_r93_hns_official_source.py'
       - 'tools/xgba_r95_hns_original_obj.py'
       - 'tests/test_xgba_r95_hns_original_obj.py'
+      - 'tests/test_xgba_r95_hns_provider_admission.py'
+      - 'tools/xgba_r85_bind_private_source_provider.py'
       - 'tests/test_xgba_r93_hns_official_source.py'
       - '.github/workflows/xgba-r93-official-hns-source.yml'
   workflow_dispatch:
@@ -21,6 +23,7 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -p 'test_xgba_r93_hns_official_source.py' -v
           python3 -m unittest discover -s tests -p 'test_xgba_r95_hns_original_obj.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r95_hns_provider_admission.py' -v
       - name: Checkout exact public original Heart and Soul 2.0.6 source
         uses: actions/checkout@v4
         with:
