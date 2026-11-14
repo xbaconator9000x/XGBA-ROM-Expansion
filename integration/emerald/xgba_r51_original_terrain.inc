@@ -166,3 +166,6 @@ void XgbaR51ObserveOriginalFieldFrame(void)
        gXgbaR51TerrainProof.source_key==sXgbaR51NativeTerrain.source_key)
         gXgbaR51TerrainProof.source_grid_bytes=sXgbaR51NativeTerrain.grid_bytes;
 }
+
+/* R73 read-only source-owned route verification. */
+#include "xgba_r73_original_warp_preflight.inc"
