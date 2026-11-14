@@ -40,6 +40,29 @@ struct XgbaR54NativeWarpProof {
     volatile u32 actual_native_fly_success; /* stays zero until real original Fly */
 };
 EWRAM_DATA volatile struct XgbaR54NativeWarpProof gXgbaR54NativeWarpProof={0};
+/* R91: the original R54 Fly success counter previously remained ZERO even
+ * after a genuine FieldCallback_FlyIntoMap. Make it reflect ONLY the R48
+ * verified arrival, not a queued menu option or physical door navigation.
+ * The monotonic R48 counter and original source actor must both agree. */
+static void XgbaR54CountVerifiedNativeFlyArrival(u8 world,u8 group,u8 map)
+{
+    u32 verified=gXgbaR48OriginalNpcProof.actual_cross_world_fly_warps;
+    if(world>=3u || group!=0u || map!=(world==2u?4u:9u) ||
+       !sXgbaR48SourceMapLoaded ||
+       sXgbaR48ImportedWorld!=world ||
+       sXgbaR48ImportedGroup!=group ||
+       sXgbaR48ImportedMap!=map ||
+       verified!=gXgbaR54NativeWarpProof.actual_native_fly_success+1u ||
+       (world!=0u && (!sXgbaR50Ready || !sXgbaR53SourceActive ||
+                      !sXgbaR51NativeTerrain.valid ||
+                      gXgbaR54NativeWarpProof.last_source_key!=
+                          (((u32)world<<16)|((u32)group<<8)|map))))
+    {
+        ++gXgbaR54NativeWarpProof.rejected_wrong_destination;
+        return;
+    }
+    ++gXgbaR54NativeWarpProof.actual_native_fly_success;
+}
 static EWRAM_DATA bool8 sXgbaR54OriginalHeapPreReset=FALSE;
 static EWRAM_DATA bool8 sXgbaR54SourceMapPreparedInWarp=FALSE;
 /* EWRAM_DATA is placed in a zero-cleared GBA runtime section. Its static

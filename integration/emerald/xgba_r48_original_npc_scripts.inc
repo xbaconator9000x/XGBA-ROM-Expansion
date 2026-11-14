@@ -33,6 +33,12 @@ extern bool8 XgbaR70ResolveAuthenticWitnessGraphics(u8 world,u8 group,
                                                        u8 map,u8 *slot);
 #endif
 
+#ifdef XGBA_R54_REAL_WARP_ADMISSION
+/* R91: native ARM Fly acceptance counter is updated only after R48's
+ * genuine FieldCallback_FlyIntoMap attests actual original source actors.
+ * The function is defined after R54's native runtime proof declaration. */
+static void XgbaR54CountVerifiedNativeFlyArrival(u8 world,u8 group,u8 map);
+#endif
 struct XgbaR48OriginalNpcProof {
     volatile u32 magic;
     volatile u32 source_map_loaded;
@@ -97,6 +103,10 @@ void XgbaR48ConfirmActualFlyArrival(void)
         return;
     }
     ++gXgbaR48OriginalNpcProof.actual_cross_world_fly_warps;
+#ifdef XGBA_R54_REAL_WARP_ADMISSION
+    XgbaR54CountVerifiedNativeFlyArrival(sXgbaR48PendingFlyWorld,
+          sXgbaR48PendingFlyGroup,sXgbaR48PendingFlyMap);
+#endif
     ++sXgbaR48FlyLeg;
     sXgbaR48PendingFlyWorld=0xffu;
     sXgbaR48PendingFlyGroup=0xffu;
