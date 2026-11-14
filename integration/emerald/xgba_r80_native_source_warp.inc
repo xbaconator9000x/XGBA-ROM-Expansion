@@ -76,6 +76,34 @@ void XgbaR80InvalidateSourceWarp(void)
     sXgbaR80Route.from=0u;
     sXgbaR80Route.to=0u;
 }
+/* A SHA-checked event template is NOT a rendered NPC. Require a real
+ * spawned original object with its authentic mapped u16 source graphic,
+ * the native sprite still in use, and the same source-verified R55 backing.
+ * We intentionally do not count the player sprite or orphaned templates. */
+static bool8 XgbaR80HasActualNativeOriginalSourceActor(void)
+{
+    const u8 *objects=XgbaR50EventBytes(&sXgbaR50OriginalEvents);
+    unsigned i,j;
+    if(!sXgbaR50OriginalEvents.object_count ||
+       sXgbaR50OriginalEvents.object_count>XGBA_R50_MAX_OBJECTS)
+        return FALSE;
+    for(i=0u;i<sXgbaR50OriginalEvents.object_count;i++){
+        const u8 local_id=objects[i*24u],slot=objects[i*24u+1u];
+        if(!local_id || !slot)continue;
+        for(j=0u;j<OBJECT_EVENTS_COUNT;j++){
+            const struct ObjectEvent *obj=&gObjectEvents[j];
+            if(obj->active && obj->localId==local_id &&
+               obj->mapGroup==XGBA_R80_NATIVE_GROUP &&
+               obj->mapNum==XGBA_R80_NATIVE_MAP &&
+               obj->graphicsId==slot &&
+               obj->spriteId<MAX_SPRITES &&
+               gSprites[obj->spriteId].inUse &&
+               XgbaR55GetVerifiedNativeOriginalObjectGraphics(slot)!=NULL)
+                return TRUE;
+        }
+    }
+    return FALSE;
+}
 void XgbaR80ConfirmRealSourceMapArrival(void)
 {
     if(!XgbaR80PendingNativeMapMatches() || !sXgbaR50Ready ||
@@ -86,8 +114,11 @@ void XgbaR80ConfirmRealSourceMapArrival(void)
        gMapHeader.mapLayout!=&sXgbaR50LiveLayout ||
        !sXgbaR55RosterHasSourceAssets ||
        sXgbaR50OriginalEvents.active_source_key!=sXgbaR80Route.to ||
+       gXgbaR51TerrainProof.source_key!=sXgbaR80Route.to ||
        gXgbaR53GraphicsProof.source_key!=sXgbaR80Route.to ||
-       gXgbaR54NativeWarpProof.last_source_key!=sXgbaR80Route.to)
+       gXgbaR54OriginalArtProof.source_key!=sXgbaR80Route.to ||
+       gXgbaR54NativeWarpProof.last_source_key!=sXgbaR80Route.to ||
+       !XgbaR80HasActualNativeOriginalSourceActor())
         return;
     sXgbaR80Route.phase=2u;
     ++gXgbaR80SourceRoomProof.original_room_loaded;

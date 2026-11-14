@@ -23,6 +23,10 @@ class FirstHopActualSourceDoor(unittest.TestCase):
   self.assertIn("header=*gMapGroups[XGBA_R80_NATIVE_GROUP][XGBA_R80_NATIVE_MAP]",r50)
   self.assertIn("gXgbaR53GraphicsProof.source_key!=sXgbaR80Route.to",native)
   self.assertIn("sXgbaR80Route.phase=2u;",native)
+  self.assertIn("XgbaR80HasActualNativeOriginalSourceActor()",native)
+  self.assertIn("gSprites[obj->spriteId].inUse",native)
+  self.assertIn("XgbaR55GetVerifiedNativeOriginalObjectGraphics(slot)",native)
+  self.assertIn("gXgbaR54OriginalArtProof.source_key!=sXgbaR80Route.to",native)
   self.assertIn("(sXgbaR50Group==0u && sXgbaR50Number==9u)",r50)
   self.assertIn("XgbaR48SetSourceMapLoaded(sXgbaR50World",r50)
  def test_original_scripts_remain_quarantined_and_no_fake_flash_claim(self):

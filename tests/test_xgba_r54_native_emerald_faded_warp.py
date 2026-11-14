@@ -31,6 +31,9 @@ class NativeEmeraldR54ActualFadedWarp(R53):
         self.assertIn("XgbaR57InstallPendingMapSprites",symbols)
         self.assertIn("XgbaR57ApplyOriginalObjectPalette",symbols)
         self.assertIn("gXgbaR58NativeFlyProof",symbols)
+        self.assertIn("gXgbaR80SourceRoomProof",symbols)
+        addr=symbols["gXgbaR80SourceRoomProof"][0]
+        self.assertTrue(0x02000000<=addr<0x02040000)
         self.assertIn("XgbaR58QueuePlayerSelectedOriginalFly",symbols)
         self.assertIn("XgbaR58GetOfferedOriginalFlyWorld",symbols)
         for name in ("gXgbaR54NativeWarpProof","gXgbaR54OriginalArtProof",

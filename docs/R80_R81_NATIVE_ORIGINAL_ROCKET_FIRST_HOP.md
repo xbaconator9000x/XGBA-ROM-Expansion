@@ -9,3 +9,7 @@ The real player now physically steps on a source-owned original Rocket door/arro
 ## R82 original Rocket story progression after a genuine interior return
 
 An R80 source room→Rocket landing 0:9 return must both prove that the actual source map reloaded and **reattest the original R48 physical witness** before exposing its source A-button dialogue and Johto Fly destination. The R50 original-native field arrival callback now permits R48 witness verification on room→landing return, while still requiring room-only R80 proof for group 35 interior maps (which have no special original landing NPC witness). This is source original-map progression repair, not a synthetic quest flag.
+
+## R83 — physical source actor required for room arrival proof
+
+An R50 header, original source terrain, palette and sprite roster can be SHA-verified while the field engine has *not* successfully spawned an on-screen NPC. R83 therefore requires a real native `gObjectEvents` actor whose local ID and sprite graphics slot match a deep-copied original R49 source template, with a live native sprite object in `gSprites` and its R55 original source graphics backing still valid. The world-keyed R51 geometry, R53 tile source and R54 original artwork proof must also match the exact active original source key. Only then is R80 arrival counted. A test-only label or missing sprite cannot qualify; no more than 64 original NPCs are iterated and no new EWRAM cache is allocated. Real private-gameplay emulator evidence remains outstanding.
