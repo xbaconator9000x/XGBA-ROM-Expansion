@@ -8,6 +8,7 @@ import argparse,hashlib,json,re,struct,subprocess,zlib
 from pathlib import Path
 import xgba_r53_original_tileset_packs as r53
 import xgba_resource_sidecar as sidecar
+import xgba_r95_hns_original_obj as r95
 
 RELEASE="167aa6d537b109bb229c231ddce4616974c4da71"
 UPSTREAM="PokemonHnS-Development/pokehns-expansion"
@@ -94,6 +95,8 @@ def compile_source(root,rom,elf,out,*,symbols=None,require_git=True):
    "source_map_r52_logical_offset":logical,
    "source_rekeyed":actual!=logical,
    "decoded_source_section_sha256":[hashlib.sha256(p).hexdigest() for p in parts]})
+ obj_resources,obj_evidence=r95.extract_original_boy2(root,blob,symbols)
+ resources.extend(obj_resources)
  out.mkdir(parents=True,exist_ok=False)
  datafile=out/"r93-open-source-hns-tileset.bin"
  entries=[]
@@ -110,6 +113,7 @@ def compile_source(root,rom,elf,out,*,symbols=None,require_git=True):
  sidecar.load_manifest(out/"manifest.json")
  result={**proof,"result":"UPSTREAM_BUILD_R53_GOLDENROD_TWO_ORIGINAL_BG_TILESETS",
      "rom_sha256":hashlib.sha256(blob).hexdigest(),"tilesets":report,
+     "npc_sprites":[obj_evidence],
      "resources":len(entries),"original_owner_rom_sha_equal_claimed":False,
      "native_hns_npc_animations_complete":False,
      "actual_player_three_world_fly_complete":False}
