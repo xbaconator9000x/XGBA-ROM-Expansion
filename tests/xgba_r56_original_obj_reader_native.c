@@ -91,7 +91,18 @@ int main(void)
     bad_second=0u;
     head[50]=7u;put32(head+60,XgbaR49Crc32(head,60u));
     assert(!XgbaR56ReadMeta(&r,2u,0x4000u,&m));
-    printf("PASS_R56_ORIGINAL_OBJ_AUTHENTICATED_16BIT_SOURCE_ID "
+    /* Source-backed HnS Boy2 stores nine 16x32 frames (2304 bytes). */
+    fixture();
+    sizes[0]=2304u;
+    head[50]=16u;head[51]=32u;put16(head+52,9u);
+    put32(head+12,sizes[0]);
+    put32(head+28,XgbaR49Crc32(parts[0],sizes[0]));
+    put32(head+60,XgbaR49Crc32(head,60u));
+    assert(XgbaR56ReadMeta(&r,2u,0x4000u,&m));
+    assert(m.frame_count==9u && m.sizes[0]==2304u);
+    put16(head+52,17u);put32(head+60,XgbaR49Crc32(head,60u));
+    assert(!XgbaR56ReadMeta(&r,2u,0x4000u,&m));
+    printf("PASS_R56_ORIGINAL_OBJ_AUTHENTICATED_16BIT_SOURCE_ID 
            "CRC_META=1 CRC_FRAMES=1 CRC_PALETTE=1 CRC_OAM_ANIMS=1 "
            "NO_TRUNCATION=1 NO_UNVERIFIED_STAGE=1 REFUSED=%u\n",r.refused);
     return 0;
