@@ -45,11 +45,19 @@ int main(void)
     assert(XgbaR66OriginalFirstAnimationValid(bad,8u,2u));
     memcpy(bad,animate,8);bad[2]=0u; /* zero frame duration */
     assert(!XgbaR66OriginalFirstAnimationValid(bad,8u,1u));
-    memcpy(bad,animate,8);bad[4]=0xffu; /* unknown 0xffff opcode */
+    memcpy(bad,animate,8);bad[4]=0xffu; /* native 0xffff END */
+    assert(XgbaR66OriginalFirstAnimationValid(bad,8u,1u));
+    bad[6]=1u; /* nonzero terminator data rejected */
     assert(!XgbaR66OriginalFirstAnimationValid(bad,8u,1u));
-    memcpy(bad,animate,8);bad[4]=0xfdu;bad[5]=0xffu;bad[6]=0u;bad[7]=0u;
-    assert(XgbaR66OriginalFirstAnimationValid(bad,8u,1u)); /* jump to 0 */
+    memcpy(bad,animate,8);bad[4]=0xfdu;bad[5]=0xffu;
+    assert(!XgbaR66OriginalFirstAnimationValid(bad,8u,1u)); /* LOOP cannot masquerade as JUMP */
+    memcpy(bad,animate,8);
+    assert(XgbaR66OriginalFirstAnimationValid(bad,8u,1u)); /* genuine JUMP(0) */
     bad[6]=1u; /* out-of-range jump */
+    assert(!XgbaR66OriginalFirstAnimationValid(bad,8u,1u));
+    memcpy(bad,animate,8);bad[2]=0x50; /* duration 16 and original hFlip */
+    assert(XgbaR66OriginalFirstAnimationValid(bad,8u,1u));
+    bad[3]=1u; /* reserved frame argument high bits */
     assert(!XgbaR66OriginalFirstAnimationValid(bad,8u,1u));
     puts("PASS_R66_ORIGINAL_OAM_FIRST_ANIMATION_NATIVE_SAFE_ADMISSION");
     return 0;
