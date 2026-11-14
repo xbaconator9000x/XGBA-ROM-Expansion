@@ -86,7 +86,13 @@ def extract_original_boy2(root,rom,symbols):
     palette_offset=_symbol_offset(symbols,rom,PAL_BYTES,32)
     oam_offset=_symbol_offset(symbols,rom,OAM_BYTES,8)
     anim_table_offset=_symbol_offset(symbols,rom,ANIM_TABLE,4)
-    anim_offset=_symbol_offset(symbols,rom,FIRST_ANIM,8)
+    # Multiple local sAnim_FaceSouth symbols can occur in the built ELF.
+    # Follow the *actual* table pointer bound to this NPC descriptor; the
+    # exact upstream source pins the table's first entry to sAnim_FaceSouth.
+    first_ptr=struct.unpack_from("<I",rom,anim_table_offset)[0]
+    if not BASE<=first_ptr<=BASE+len(rom)-8:
+        raise HnsOriginalObjectError("Original linked first animation outside compiled ROM")
+    anim_offset=first_ptr-BASE
     for i in range(FRAMES):
         pointer,bytes_per_frame=struct.unpack_from("<IH",rom,pic_offset+8*i)
         if pointer!=BASE+frames_offset+i*FRAME_BYTES or bytes_per_frame!=FRAME_BYTES:
@@ -97,8 +103,6 @@ def extract_original_boy2(root,rom,symbols):
     for symbol in (PIC_TABLE,OAM_BYTES,ANIM_TABLE):
         if struct.pack("<I",symbols[symbol]) not in desc:
             raise HnsOriginalObjectError("Original HnS graphics descriptor pointer not connected: "+symbol)
-    if struct.unpack_from("<I",rom,anim_table_offset)[0]!=symbols[FIRST_ANIM]:
-        raise HnsOriginalObjectError("Original first animation not connected to official table")
     f=rom[frames_offset:frames_offset+FRAMES*FRAME_BYTES]
     p=rom[palette_offset:palette_offset+32]
     o=rom[oam_offset:oam_offset+8]
