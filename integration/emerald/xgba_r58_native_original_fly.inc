@@ -11,6 +11,7 @@
  * original Emerald's faded loader remains the actual commit boundary.
  * Normal original Fly UI and vanilla Emerald remain unchanged if unavailable.
  */
+#include "../common/xgba_r70_original_witness_binding.h"
 #ifndef XGBA_R54_REAL_WARP_ADMISSION
 #error R58 requires the native R54 real original Fly/warp path
 #endif
@@ -115,7 +116,9 @@ static bool8 XgbaR58PreflightOriginalDestination(u8 world,u8 group,u8 map,
     events.indexed_maps=XGBA_R49_ALL_MAPS;
     events.cached_index_page=XGBA_R49_INVALID_PAGE;
     if(!XgbaR49LoadOriginalMapEvents(&events,key,&original) ||
-       original.object_count>XGBA_R50_MAX_OBJECTS)
+       original.object_count>XGBA_R50_MAX_OBJECTS ||
+       !XgbaR70OriginalWitnessRecordPresent(world,group,map,
+                          original.objects,original.object_count))
         goto refuse;
     for(i=0u;i<original.object_count;i++){
         const u8 *npc=original.objects+i*24u;

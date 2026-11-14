@@ -27,6 +27,7 @@
 #include "../common/xgba_r56_original_obj_reader.h"
 #include "../common/xgba_r66_original_obj_animation.h"
 #include "../common/xgba_r63_native_return_path.h"
+#include "../common/xgba_r70_original_witness_binding.h"
 
 static bool8 XgbaR57InstallPendingMapSprites(u8 world,u8 group,u8 map);
 static void XgbaR57ReleasePendingMapSprites(void);
@@ -310,6 +311,25 @@ XgbaR55GetVerifiedNativeOriginalObjectGraphics(u8 installed_slot)
         return NULL;
     ++gXgbaR55NativeSpriteProof.real_obj_info_resolutions;
     return sXgbaR55VerifiedGraphicInfo[index];
+}
+/* R70: require the same exact source artwork on the original witness
+ * template and the physically spawned native object-event actor. The R55
+ * roster must be the active source map, not a stale allocation. */
+bool8 XgbaR70ResolveAuthenticWitnessGraphics(u8 world,u8 group,u8 map,
+                                               u8 *slot)
+{
+    if(!slot || world>=3u)return FALSE;
+    if(world==0u)
+        return XgbaR70VerifiedWitnessNativeSlot(NULL,world,group,map,slot);
+    if(!sXgbaR54SourceMapPreparedInWarp || !sXgbaR50Ready ||
+       !sXgbaR55RosterHasSourceAssets || !sXgbaR55OriginalSprites ||
+       !gSaveBlock1Ptr || sXgbaR50World!=world ||
+       gSaveBlock1Ptr->location.mapGroup!=group ||
+       gSaveBlock1Ptr->location.mapNum!=map ||
+       !XgbaR70VerifiedWitnessNativeSlot(sXgbaR55OriginalSprites,
+                                          world,group,map,slot))
+        return FALSE;
+    return XgbaR55GetVerifiedNativeOriginalObjectGraphics(*slot)!=NULL;
 }
 /* Native overworld local state machine owns the preceding fade. This
  * explicit source target is queued only after native Fly destination UI

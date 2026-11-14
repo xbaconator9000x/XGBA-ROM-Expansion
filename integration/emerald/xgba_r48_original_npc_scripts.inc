@@ -17,6 +17,7 @@
 #include "script.h"
 #include "event_data.h"
 #include "../common/xgba_r67_original_npc_witness.h"
+#include "../common/xgba_r70_original_witness_binding.h"
 
 #define XGBA_R48_WORLD_COUNT 3u
 #define XGBA_R48_BYTES 256u
@@ -27,6 +28,8 @@
 #ifdef XGBA_R54_REAL_WARP_ADMISSION
 extern const struct ObjectEventGraphicsInfo *
     XgbaR55GetVerifiedNativeOriginalObjectGraphics(u8 installed_slot);
+extern bool8 XgbaR70ResolveAuthenticWitnessGraphics(u8 world,u8 group,
+                                                       u8 map,u8 *slot);
 #endif
 
 struct XgbaR48OriginalNpcProof {
@@ -120,6 +123,7 @@ void XgbaR48SetSourceMapLoaded(u8 source,u8 group,u8 number,
     unsigned i;
     bool8 original_object_present=FALSE;
     bool8 physical_original_npc_spawned=FALSE;
+    u8 expected_native_graphics=0xffu;
     sXgbaR48SourceMapLoaded=FALSE;
     gXgbaR48OriginalNpcProof.source_map_loaded=0u;
     if(source>=XGBA_R48_WORLD_COUNT ||
@@ -130,10 +134,21 @@ void XgbaR48SetSourceMapLoaded(u8 source,u8 group,u8 number,
        gMapHeader.mapLayout->height!=heights[source] ||
        !events->objectEventCount)
         return;
+    /* Do not accept a different physical actor using the source NPC's
+     * local ID. Bind the expected original u16 art to the actual native
+     * R55 slot before either the template or the spawned sprite qualifies. */
+#ifdef XGBA_R54_REAL_WARP_ADMISSION
+    if(!XgbaR70ResolveAuthenticWitnessGraphics(
+           source,group,number,&expected_native_graphics))return;
+#else
+    if(source!=0u)return;
+    expected_native_graphics=17u;
+#endif
     for(i=0u;i<events->objectEventCount;i++){
         const struct ObjectEventTemplate *obj=&events->objectEvents[i];
         if(obj->localId==local_ids[source] &&
-           obj->x==npc_x[source] && obj->y==npc_y[source]){
+           obj->x==npc_x[source] && obj->y==npc_y[source] &&
+           obj->graphicsId==expected_native_graphics){
             original_object_present=TRUE;
             break;
         }
@@ -148,6 +163,7 @@ void XgbaR48SetSourceMapLoaded(u8 source,u8 group,u8 number,
         const struct ObjectEvent *event=&gObjectEvents[i];
         if(!event->active || event->localId!=local_ids[source] ||
            event->mapGroup!=group || event->mapNum!=number ||
+           event->graphicsId!=expected_native_graphics ||
            event->spriteId>=MAX_SPRITES ||
            !gSprites[event->spriteId].inUse)
             continue;
