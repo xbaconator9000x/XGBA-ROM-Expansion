@@ -98,6 +98,6 @@ class NineFrameSourceBoy2Tests(unittest.TestCase):
                 r95.extract_original_boy2(root,rom,symbols)
             struct.pack_into("<H",rom,0xf00,0x8000)
             struct.pack_into("<I",rom,0xf20,0x08000000)
-            with self.assertRaisesRegex(r95.HnsOriginalObjectError,"first animation not connected"):
+            with self.assertRaisesRegex(r95.HnsOriginalObjectError,"first animation incompatible"):
                 r95.extract_original_boy2(root,rom,symbols)
 if __name__=="__main__":unittest.main()
