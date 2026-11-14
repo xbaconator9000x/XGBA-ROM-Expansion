@@ -55,7 +55,7 @@ static inline int XgbaR66OriginalFirstAnimationValid(
     const uint8_t *raw,unsigned bytes,unsigned frame_count)
 {
     unsigned i,commands;
-    if(!raw || !frame_count || frame_count>8u ||
+    if(!raw || !frame_count || frame_count>16u ||
        bytes<8u || bytes>XGBA_R66_ANIM_MAX_BYTES || (bytes&3u))
         return 0;
     commands=bytes/4u;
