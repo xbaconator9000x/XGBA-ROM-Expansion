@@ -4,6 +4,8 @@ on:
     branches: ['integration/r51-original-three-world-grid-native-20261113']
     paths:
       - 'tools/xgba_r93_hns_official_source.py'
+      - 'tools/xgba_r95_hns_original_obj.py'
+      - 'tests/test_xgba_r95_hns_original_obj.py'
       - 'tests/test_xgba_r93_hns_official_source.py'
       - '.github/workflows/xgba-r93-official-hns-source.yml'
   workflow_dispatch:
@@ -17,6 +19,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Authored source-provenance and native R53 bridge tests
         run: python3 -m unittest discover -s tests -p 'test_xgba_r93_hns_official_source.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r95_hns_original_obj.py' -v
       - name: Checkout exact public original Heart and Soul 2.0.6 source
         uses: actions/checkout@v4
         with:
@@ -49,8 +52,10 @@ jobs:
           from pathlib import Path
           x=json.loads((Path(os.environ['RUNNER_TEMP'])/'r93-open-source-goldenrod'/'provenance.json').read_text())
           assert len(x["tilesets"])==2
-          assert x["resources"]>=10
+          assert x["resources"]>=15
+          assert x["npc_sprites"][0]["original_graphics_id"]==406
+          assert x["npc_sprites"][0]["frame_count"]==9
           assert not x["actual_player_three_world_fly_complete"]
-          print("PASS_R93_HNS_V206_REAL_SOURCE_LINKED_GOLDENROD_BG",x["resources"])
+          print("PASS_R95_HNS_V206_SOURCE_LINKED_GOLDENROD_BG_AND_NINE_FRAME_OBJ",x["resources"])
           PY
       # Do not upload built game ROM, packed art or assets. Log provenance only.
