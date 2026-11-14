@@ -113,7 +113,9 @@ def extract_original_boy2(root,rom,symbols):
     if shape!=2 or size!=2 or (attr0&0x3f00) or (attr1&0x3c00) or (attr2&0xf3ff) or attr3:
         raise HnsOriginalObjectError("Original Boy2 OAM incompatible with R66 native 16x32")
     image,delay,jump,argument=struct.unpack("<4H",a)
-    if image!=0 or not 1<=delay<=255 or jump!=0xfffd or argument!=0:
+    # The official Boy2 source uses FRAME(0,16), JUMP(0) and the GBA
+    # Sprite AnimCmd ABI codes JUMP as -2 (0xfffe), not -3 (LOOP).
+    if image!=0 or delay!=16 or jump!=0xfffe or argument!=0:
         raise HnsOriginalObjectError("Original Boy2 first animation incompatible with native R66")
     parts=(f,p,o,a)
     meta=bytearray(64)
