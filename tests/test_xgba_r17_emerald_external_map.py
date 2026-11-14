@@ -144,6 +144,18 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         if cls.resource_bytes>16384:
             raise AssertionError("Emerald original full tileset exceeds one synchronous 16 KiB XGBA read; must implement chunking, never drop assets")
         r50=bool(getattr(cls,"R50_ENGINE_EVENT_TEST",False))
+        r51=bool(getattr(cls,"R51_ORIGINAL_GRID_TEST",False))
+        r52=bool(getattr(cls,"R52_SOURCE_LAYOUT_TEST",False))
+        r53=bool(getattr(cls,"R53_GRAPHICS_TEST",False))
+        r54=bool(getattr(cls,"R54_REAL_WARP_ADMISSION_TEST",False))
+        if r54 and not r53:
+            raise AssertionError("R54 requires verified R53 original map graphics")
+        if r53 and not r52:
+            raise AssertionError("R53 requires R52 original layout and R51 terrain")
+        if r52 and not r51:
+            raise AssertionError("R52 requires native R51 original map terrain")
+        if r51 and not r50:
+            raise AssertionError("R51 original world geometry requires R50 true native source events")
         if r19:
             resources=[
                 Resource("emerald_littleroot_pack",8192 if r28 else len(cls.pack)),
@@ -218,6 +230,18 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             config.write_text(config.read_text()+"#define XGBA_R48_ORIGINAL_NPC_BRIDGE 1\n")
         if r50:
             config.write_text(config.read_text()+"#define XGBA_R50_ENGINE_EVENTS 1\n")
+        if r51:
+            config.write_text(config.read_text()+"#define XGBA_R51_ORIGINAL_TERRAIN 1\n")
+        if r52:
+            config.write_text(config.read_text()+"#define XGBA_R52_SOURCE_LAYOUT 1\n")
+        if r53:
+            config.write_text(config.read_text()+"#define XGBA_R53_ORIGINAL_GRAPHICS 1\n")
+        if r54:
+            config.write_text(config.read_text()+"#define XGBA_R54_REAL_WARP_ADMISSION 1\n")
+        if getattr(cls,"R90_NATIVE_FLY_DEMO_TEST",False):
+            if not r54:
+                raise AssertionError("R90 cannot run without native Emerald Fly field engine")
+            config.write_text(config.read_text()+"#define XGBA_R90_REAL_FLY_TEST 1\n")
         if r19_battle:
             config.write_text(config.read_text()+
                 "\n#define XGBA_R19_BATTLE_TEST 1\n"

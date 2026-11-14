@@ -1,0 +1,202 @@
+name: XGBA R53 exact original tileset compiler and 16KiB engine resource reader
+on:
+  push:
+    branches: ['integration/r51-original-three-world-grid-native-20261113']
+    paths:
+      - 'tools/xgba_r53_original_tileset_packs.py'
+      - 'tools/xgba_r53_smol.py'
+      - 'integration/common/xgba_r53_original_tileset_reader.h'
+      - 'tests/test_xgba_r53_original_tileset_packs.py'
+      - 'tests/test_xgba_r53_smol.py'
+      - 'tests/verify_xgba_r53_real_smol_golden.py'
+      - 'tests/xgba_r53_original_tileset_native.c'
+      - 'integration/emerald/xgba_r53_original_graphics.inc'
+      - 'integration/emerald/xgba_r54_native_fly_warp_admission.inc'
+      - 'integration/emerald/xgba_r48_original_npc_scripts.inc'
+      - 'integration/common/xgba_r67_original_npc_witness.h'
+      - 'integration/common/xgba_r70_original_witness_binding.h'
+      - 'integration/common/xgba_r73_source_warp_preflight.h'
+      - 'integration/emerald/xgba_r73_original_warp_preflight.inc'
+      - 'integration/emerald/xgba_r51_original_terrain.inc'
+      - 'tests/xgba_r73_source_warp_preflight_native.c'
+      - 'tests/test_xgba_r73_original_warp_preflight.py'
+      - 'tests/test_xgba_r74_guest_paged_resource_ewram.py'
+      - 'tools/xgba_r75_original_rocket_onehop_extend.py'
+      - 'tools/xgba_r79_rocket_oversized_bg_source.py'
+      - 'integration/common/xgba_r80_foreign_map_slot.h'
+      - 'integration/emerald/xgba_r80_native_source_warp.inc'
+      - 'tests/xgba_r80_foreign_source_map_slot_native.c'
+      - 'tests/test_xgba_r81_native_rocket_room_roundtrip.py'
+      - 'integration/emerald/xgba_r52_native_source_layout.inc'
+      - 'integration/emerald/xgba_r58_native_original_fly.inc'
+      - 'tests/test_xgba_r79_rocket_oversized_bg_source.py'
+      - 'integration/common/xgba_r76_physical_original_warp.h'
+      - 'integration/emerald/xgba_r76_physical_original_warp.inc'
+      - 'integration/emerald/xgba_r54_native_fly_warp_admission.inc'
+      - 'integration/emerald/xgba_r17_external_littleroot.inc'
+      - 'tools/xgba_r17_emerald_patch.py'
+      - 'tests/test_xgba_r84_foreign_flash_save_gate.py'
+      - 'tools/xgba_r85_bind_private_source_provider.py'
+      - 'tests/test_xgba_r94_hns_official_source_provider_merge.py'
+      - 'tests/test_xgba_r85_bind_private_source_provider.py'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'tools/xgba_mgba_run.py'
+      - 'tools/xgba_r86_private_rocket_mgba_acceptance.py'
+      - 'tools/xgba_r90_original_fly_party_fixture.py'
+      - 'tests/test_xgba_r91_actual_fly_completion_counter.py'
+      - 'tools/xgba_r92_three_world_actual_fly.py'
+      - 'tests/test_xgba_r92_real_native_three_fly.py'
+      - 'tests/test_xgba_r90_original_fly_party_fixture.py'
+      - 'tests/test_xgba_r86_real_rocket_mgba_route.py'
+      - 'tests/xgba_r76_physical_original_warp_native.c'
+      - 'tests/test_xgba_r76_actual_emerald_physical_warp.py'
+      - 'tests/test_xgba_r75_original_rocket_onehop_extend.py'
+      - 'integration/emerald/xgba_r52_native_source_layout.inc'
+      - 'integration/common/xgba_r71_original_script_cache_integrity.h'
+      - 'tests/xgba_r71_original_script_cache_integrity_native.c'
+      - 'tests/test_xgba_r71_original_script_cache_integrity.py'
+      - 'tests/xgba_r70_original_witness_binding_native.c'
+      - 'tests/test_xgba_r70_original_witness_binding.py'
+      - 'tests/xgba_r67_original_npc_witness_native.c'
+      - 'tests/test_xgba_r69_guest_ewram_contract.py'
+      - 'integration/emerald/xgba_r50_original_engine_events.inc'
+      - 'integration/emerald/xgba_r57_native_source_sprite_installer.inc'
+      - 'integration/emerald/xgba_r58_native_original_fly.inc'
+      - 'tools/xgba_r58_fly_menu_patch.py'
+      - 'tests/test_xgba_r54_native_emerald_faded_warp.py'
+      - 'integration/common/xgba_r54_source_map_metatile_contract.h'
+      - 'tests/xgba_r54_original_map_metatile_native.c'
+      - 'integration/common/xgba_r55_source_qualified_sprite_slots.h'
+      - 'tests/xgba_r55_source_sprite_slots_native.c'
+      - 'integration/common/xgba_r66_original_obj_animation.h'
+      - 'tests/xgba_r66_original_obj_animation_native.c'
+      - 'integration/emerald/xgba_r17_external_littleroot.inc'
+      - 'tools/xgba_r17_emerald_patch.py'
+      - 'tests/test_xgba_r17_emerald_external_map.py'
+      - 'tests/test_xgba_r53_native_emerald_graphics.py'
+      - '.github/workflows/xgba-r53-original-source-graphics.yml'
+  pull_request:
+    branches: [main, 'integration/r50-guest-original-engine-events-20261113']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-private-assets-authored-source-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact source compiler, strict LZ77 and private XGBA manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r53_original_tileset_packs.py tools/xgba_r53_smol.py tests/test_xgba_r53_original_tileset_packs.py tests/test_xgba_r53_smol.py
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r53_original_tileset_packs test_xgba_r53_smol -v
+          python3 tests/verify_xgba_r53_real_smol_golden.py
+          python3 -m unittest discover -s tests -p 'test_xgba_r69_guest_ewram_contract.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r70_original_witness_binding.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r71_original_script_cache_integrity.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r73_original_warp_preflight.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r74_guest_paged_resource_ewram.py' -v
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r75_original_rocket_onehop_extend -v
+          PYTHONPATH=tools:tests python3 -m unittest test_xgba_r79_rocket_oversized_bg_source -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r76_actual_emerald_physical_warp.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r81_native_rocket_room_roundtrip.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r84_foreign_flash_save_gate.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r85_bind_private_source_provider.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r94_hns_official_source_provider_merge.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r86_real_rocket_mgba_route.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r90_original_fly_party_fixture.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r91_actual_fly_completion_counter.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r92_real_native_three_fly.py' -v
+      - name: Run real native C source graphics reader and CRC streaming with ASan/UBSan
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/r53
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r53_original_tileset_native.c -o build/r53/asset-reader
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r53/asset-reader
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r54_original_map_metatile_native.c -o build/r53/physical-map
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r53/physical-map
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r55_source_sprite_slots_native.c -o build/r53/source-sprites
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r53/source-sprites
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r66_original_obj_animation_native.c -o build/r53/source-animation
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r53/source-animation
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r67_original_npc_witness_native.c -o build/r53/npc-witness
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r53/npc-witness
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r70_original_witness_binding_native.c -o build/r53/r70-witness
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r53/r70-witness
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r71_original_script_cache_integrity_native.c -o build/r53/r71-cache
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r53/r71-cache
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r73_source_warp_preflight_native.c -o build/r53/r73-warp
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r53/r73-warp
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r76_physical_original_warp_native.c -o build/r53/r76-warp
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r53/r76-warp
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r80_foreign_source_map_slot_native.c -o build/r53/r80-slot
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r53/r80-slot
+  native-original-emerald-graphics:
+    name: Actual Emerald ARM BG tile loader, hardware arena, mGBA and Flash
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - name: Original ARM compiler
+        uses: carlosperate/arm-none-eabi-gcc-action@49f4db4520f840e77ab1e99b24cfac2c540a21b1
+        with:
+          release: '13.2.Rel1'
+      - name: Native original-mGBA dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/xgba_ci_png_prereqs.sh
+          if ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
+            python3 -m pip install --user --break-system-packages --disable-pip-version-check 'Pillow==11.3.0'
+          fi
+      - name: Pinned original Emerald and original mGBA
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokeemerald.git upstream/pokeemerald
+          git -C upstream/pokeemerald checkout --quiet --detach 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Real original Emerald graphics, Flash cold resume and source-integrity proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=tools:tests:integration/mgba python3 -m unittest \
+            test_xgba_r54_native_emerald_faded_warp.NativeEmeraldR54ActualFadedWarp -v \
+            2>&1 | tee r53-original-emerald-native.log
+          grep -q '^OK$' r53-original-emerald-native.log
+          echo PASS_R54_REAL_EMERALD_FADED_WARP_PRELOAD_SOURCE_ADMISSION_HEAP_AND_FLASH_NO_FOREIGN_FLY

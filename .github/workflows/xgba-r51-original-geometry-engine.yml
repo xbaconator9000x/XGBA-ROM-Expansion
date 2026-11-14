@@ -1,0 +1,98 @@
+name: XGBA R51 original three-world geometry in genuine Emerald field engine
+on:
+  push:
+    branches: ['integration/r51-original-three-world-grid-native-20261113']
+    paths:
+      - 'integration/common/xgba_r51_original_grid_reader.h'
+      - 'integration/emerald/xgba_r51_original_terrain.inc'
+      - 'integration/emerald/xgba_r17_external_littleroot.inc'
+      - 'tools/xgba_r51_original_grid_pages.py'
+      - 'tools/xgba_r17_emerald_patch.py'
+      - 'tests/test_xgba_r17_emerald_external_map.py'
+      - 'tests/test_xgba_r51_original_grid_pages.py'
+      - 'tests/test_xgba_r51_rooted_original_terrain.py'
+      - 'tests/xgba_r51_original_grid_native.c'
+      - 'tests/test_xgba_r51_native_emerald_terrain.py'
+      - '.github/workflows/xgba-r51-original-geometry-engine.yml'
+  pull_request:
+    branches: [main, 'integration/r50-guest-original-engine-events-20261113']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r51-source-geometry-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  full-private-source-pack-format:
+    name: Source-aware original 3-world geometry paging and native corruption/integrity tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Full original-map lossless paging contracts (authored fixtures only)
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r51_original_grid_pages.py tests/test_xgba_r51_original_grid_pages.py tests/test_xgba_r51_rooted_original_terrain.py
+          PYTHONPATH=tools:tests python3 -m unittest \
+            test_xgba_r51_original_grid_pages.OriginalThreeWorldTerrainPages \
+            test_xgba_r51_rooted_original_terrain.ExactOriginalThreeRomGroupRoots -v \
+            2>&1 | tee r51-private-source-format.log
+          grep -q '^OK$' r51-private-source-format.log
+      - name: GBA-native source identity, real map-cell copy and map-page boundary
+        run: |
+          set -euo pipefail
+          mkdir -p build/r51
+          cc -std=c11 -O1 -g -Wall -Wextra -Werror -pedantic \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r51_original_grid_native.c -o build/r51/reader
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r51/reader
+      - name: Assert no false completed three-world Fly claim
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("integration/emerald/xgba_r51_original_terrain.inc").read_text()
+          q=Path("tools/xgba_r51_original_grid_pages.py").read_text()
+          assert "XgbaR50PrepareOriginalMapEvents" in p
+          assert "XgbaR50CommitOriginalMapAfterGraphics" in p
+          assert "original_primary_tiles_verified" in p
+          assert "source_sha256" in q
+          assert "actual_three_world_fly_completed" in q
+          print("PASS_R51_NATIVE_ORIGINAL_GEOMETRY_LOADER_NO_FALSE_CROSS_WORLD_FLY")
+          PY
+  original-emerald-arm-native:
+    name: True original Emerald source build, 256KiB EWRAM/linker, mGBA LCD/Flash
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pinned exact ARM compiler
+        uses: carlosperate/arm-none-eabi-gcc-action@49f4db4520f840e77ab1e99b24cfac2c540a21b1
+        with:
+          release: '13.2.Rel1'
+      - name: Native emulator screenshot deps
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/xgba_ci_png_prereqs.sh
+          if ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
+            python3 -m pip install --user --break-system-packages --disable-pip-version-check 'Pillow==11.3.0'
+          fi
+      - name: Checkout original pinned Emerald and original native mGBA
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokeemerald.git upstream/pokeemerald
+          git -C upstream/pokeemerald checkout --quiet --detach 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Compile genuine Emerald with R48-R51 engine hooks and run actual Flash
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=tools:tests:integration/mgba python3 -m unittest \
+            test_xgba_r51_native_emerald_terrain.NativeEmeraldR51OriginalTerrain -v \
+            2>&1 | tee r51-original-emerald.log
+          grep -q '^OK$' r51-original-emerald.log
+          echo PASS_R51_TRUE_ORIGINAL_EMERALD_BOUNDED_SOURCE_GEOMETRY_RUNTIME_COMPILES

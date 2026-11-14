@@ -91,8 +91,29 @@ static const struct MapLayout *XgbaR17Resolve(const struct MapLayout *base)
 #ifdef XGBA_R48_ORIGINAL_NPC_BRIDGE
 #include "__XGBA_R48_NPC_BRIDGE__"
 #endif
+#ifdef XGBA_R54_REAL_WARP_ADMISSION
+#define XGBA_R60_FOREIGN_VIEWPORT 1
+#define XGBA_R80_FOREIGN_SOURCE_ACTIVATION 1
+/* R50's own common header includes the viewport contract relative to itself. */
+#endif
 #ifdef XGBA_R50_ENGINE_EVENTS
 #include "__XGBA_R50_ENGINE_BRIDGE__"
+#endif
+#ifdef XGBA_R52_SOURCE_LAYOUT
+#include "__XGBA_R52_LAYOUT_BRIDGE__"
+#endif
+#ifdef XGBA_R51_ORIGINAL_TERRAIN
+#include "__XGBA_R51_TERRAIN_BRIDGE__"
+#endif
+#ifdef XGBA_R53_ORIGINAL_GRAPHICS
+#include "__XGBA_R53_GRAPHICS_BRIDGE__"
+#endif
+#ifdef XGBA_R54_REAL_WARP_ADMISSION
+#include "__XGBA_R54_REAL_WARP_BRIDGE__"
+#include "__XGBA_R57_NATIVE_SPRITE_BRIDGE__"
+#include "__XGBA_R58_NATIVE_FLY_BRIDGE__"
+#include "__XGBA_R80_NATIVE_SOURCE_WARP_BRIDGE__"
+#include "__XGBA_R76_PHYSICAL_WARP_BRIDGE__"
 #endif
 #ifdef XGBA_R19_CONNECTED_MAPS
 #include "__XGBA_R19_MAPS__"
@@ -128,6 +149,12 @@ static void XgbaR17Tick(void)
 #endif
 #ifdef XGBA_R50_ENGINE_EVENTS
     XgbaR50VerifyLoadedEngineMap();
+#endif
+#ifdef XGBA_R51_ORIGINAL_TERRAIN
+    XgbaR51ObserveOriginalFieldFrame();
+#endif
+#ifdef XGBA_R52_SOURCE_LAYOUT
+    XgbaR52OriginalFrameProof();
 #endif
 #ifdef XGBA_R40_SCRIPT_TEST
     XgbaR40Tick();

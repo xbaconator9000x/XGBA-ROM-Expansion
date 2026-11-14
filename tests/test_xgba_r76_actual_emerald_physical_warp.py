@@ -1,0 +1,32 @@
+"""R76 requires actual Emerald metatile and source-world runtime admission."""
+from pathlib import Path
+import unittest
+ROOT=Path(__file__).resolve().parents[1]
+class R76OriginalStepNative(unittest.TestCase):
+ def test_real_emerald_patch_injects_once(self):
+  patch=(ROOT/"tools/xgba_r17_emerald_patch.py").read_text()
+  core=(ROOT/"integration/emerald/xgba_r76_physical_original_warp.inc").read_text()
+  loader=(ROOT/"integration/emerald/xgba_r54_native_fly_warp_admission.inc").read_text()
+  header=(ROOT/"integration/emerald/xgba_r17_external_littleroot.inc").read_text()
+  self.assertIn("TryStartWarpEventScript(struct MapPosition *position, u16 metatileBehavior)",patch)
+  self.assertIn("if (warpEventId == WARP_ID_NONE &&",patch)
+  self.assertIn("XgbaR76NotePhysicalOriginalStepWarp(position->x,position->y,position->elevation)",patch)
+  self.assertIn('__XGBA_R76_PHYSICAL_WARP_BRIDGE__',patch)
+  self.assertIn('__XGBA_R76_PHYSICAL_WARP_BRIDGE__',header)
+  self.assertIn("XgbaR73PreflightLoadedForeignWarp(idx,&route)",core)
+  self.assertIn("TryArrowWarp(struct MapPosition *position, u16 metatileBehavior, u8 direction)",patch)
+  self.assertIn("R78 original held-direction north-door probe before native tile category",patch)
+  self.assertIn("warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);",patch)
+  self.assertIn("R78 original held-direction north-door probe before native tile category",patch)
+  self.assertIn("R77 original Emerald on-map directional arrow warp path",patch)
+  self.assertEqual(patch.count("XgbaR76NotePhysicalOriginalStepWarp(position->x,position->y,position->elevation))"),2)
+  self.assertIn("if (XgbaR76NotePhysicalOriginalStepWarp(",patch)
+  self.assertIn("XgbaR76FindOriginalWarpOnTile(",core)
+  self.assertIn("XgbaR80QueueVerifiedPhysicalOriginalDoor(&plan)",core)
+  self.assertIn("DoWarp();",core)
+  self.assertIn("static bool8 XgbaR54FailClosedBeforeForeignHeader(void)",loader)
+  self.assertIn("SetWarpDestination(0,9,WARP_ID_NONE,",loader)
+  self.assertNotIn("for(;;){}",loader)
+  self.assertIn("originalSourceWarp == 3u",patch)
+  self.assertIn("return FALSE; /* DMA still owns old source pages */",patch)
+if __name__=="__main__":unittest.main()

@@ -1,0 +1,72 @@
+name: XGBA R63-R65 native return and original NPC provider safety
+on:
+  push:
+    branches: ['integration/r51-original-three-world-grid-native-20261113']
+    paths:
+      - 'integration/common/xgba_r63_native_return_path.h'
+      - 'integration/emerald/xgba_r54_native_fly_warp_admission.inc'
+      - 'integration/emerald/xgba_r58_native_original_fly.inc'
+      - 'integration/common/xgba_r50_engine_event_adapter.h'
+      - 'tests/xgba_r63_original_emerald_return_native.c'
+      - 'tests/xgba_r60_original_npc_viewport_native.c'
+      - 'tests/test_xgba_r64_original_npc_witness_provider.py'
+      - 'tools/xgba_r62_private_original_provider_bundle.py'
+      - 'tools/xgba_r64_upgrade_original_provider.py'
+      - '.github/workflows/xgba-r63-r65-original-route-and-witness.yml'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-return-and-original-source-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Real-source immutable NPC viewport and native Emerald return boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/r65
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r63_original_emerald_return_native.c \
+            -o build/r65/native-return
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r60_original_npc_viewport_native.c \
+            -o build/r65/native-original-events
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 \
+            build/r65/native-return
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 \
+            build/r65/native-original-events
+      - name: R48 original script provenance and source-identity corruption refusal
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r62_private_original_provider_bundle.py \
+            tools/xgba_r64_upgrade_original_provider.py \
+            tests/test_xgba_r64_original_npc_witness_provider.py
+          PYTHONPATH=tools:tests python3 -m unittest \
+            test_xgba_r64_original_npc_witness_provider \
+            test_xgba_r62_private_original_provider_bundle -v
+      - name: Detect source0 fallback bypasses and all public ROM bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          r54=Path("integration/emerald/xgba_r54_native_fly_warp_admission.inc").read_text()
+          r58=Path("integration/emerald/xgba_r58_native_original_fly.inc").read_text()
+          assert "XgbaR63NativeEmeraldReturnHeaderPresent()" in r54
+          assert "sXgbaR48PendingFlyWorld==XGBA_R63_NATIVE_WORLD" in r54
+          assert "XgbaR63NativeEmeraldReturnHeaderPresent()" in r58
+          assert "if(world==XGBA_R63_NATIVE_WORLD)" in r58
+          assert "return 0u;" in r54 and "return TRUE;" in r58
+          print("PASS_R63_NATIVE_RETURN_ROUTE_HOOKED_IN_ORIGINAL_EMERALD")
+          PY
+          ! git ls-files | grep -Eiq '\.(gba|nds|sav|ips|bps)$'
+          echo PASS_R65_ORIGINAL_ROM_BYTES_STAY_PRIVATE

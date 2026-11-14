@@ -92,22 +92,41 @@ def audit_bytes(path: str, data: bytes) -> list[tuple[str, int]]:
 
 
 def check_readme(content: str) -> list[str]:
+    """Keep the public narrative, proof boundaries and disclosure intact.
+
+    This is a *documentation integrity* contract, not a frozen milestone
+    template. Don't force stale R27 headings/phrases back into a readable
+    front page. The credential and chat-privacy scan is unchanged.
+    """
     headings = (
-        "## What XGBA is", "## Goals", "## Potential implications",
-        "## AI disclosure", "## Development history and verified results",
+        "## What XGBA is",
+        "## Why I started it",
+        "## What we have demonstrated",
+        "## What this could mean for ROM hacking",
+        "## Future plans",
+        "## Current limits and project access",
     )
-    locations = [content.find(s) for s in headings]
+    lines = content.splitlines()
+    locations = [lines.index(h) if h in lines else -1 for h in headings]
     errors = []
     if any(n < 0 for n in locations) or locations != sorted(locations):
-        errors.append("README intro headings absent or out of requested order")
-    if ("I am developing XGBA with the help of AI for coding and logging purposes."
-            not in content):
+        errors.append("README narrative headings missing or out of order")
+    if not re.search(r"(?im)^\*\*AI disclosure:\*\*\s*I\b[^\n]*\bAI\b", content):
         errors.append("README first-person AI disclosure absent")
-    # The verified history advances with each proven release. Reject absent,
-    # malformed or regressed summaries, but do not freeze the README at R27.
-    version = re.search(r"\bR6[–-]R(\d+)\s+verified\b", content)
-    if not version or int(version.group(1)) < 27:
-        errors.append("README current verified milestone summary unexpectedly missing")
+    # Require an explicit dated project status, a meaningful backed milestone,
+    # and an unmistakable warning that the three-ROM gameplay is still pending.
+    # Never treat the source-preservation inventory as game acceptance.
+    versions = [int(v) for v in re.findall(r"\bR(\d{1,3})\b", content)]
+    status = re.search(r"(?m)^> \*\*Status\b[^\n]{20,}", content)
+    pending = re.search(
+        r"(?i)(?:three-ROM|three.game|Emerald.?[→-].?Rocket|end-to-end)"
+        r"[^\n]{0,200}(?:not yet|pending|unproven|not complete|not demonstrated)"
+        r"|(?:not yet|pending|unproven|not complete|not demonstrated)"
+        r"[^\n]{0,200}(?:three-ROM|three.game|Emerald.?[→-].?Rocket|end-to-end)",
+        content,
+    )
+    if not status or not versions or max(versions) < 27 or not pending:
+        errors.append("README verified evidence and pending acceptance status missing")
     return errors
 
 

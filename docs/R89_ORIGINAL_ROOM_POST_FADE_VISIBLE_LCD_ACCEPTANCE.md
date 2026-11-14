@@ -1,0 +1,7 @@
+# R89 — require visible original Rocket room LCD after native palette fade
+
+On the owner-private **real** mGBA R88 playthrough, original Rocket **0:9 → 35:4 → 0:9** succeeded with actual physical controller input, correct exact source-key proof, two native field-actor arrivals, 362 SHA-backed original source MMIO fetches and zero failed fetches. However, the two automatic `r86-native-arrival-*.png` frames were black because the R80 field-arrival proof fired **before** the native palette fade finished, although delayed `r86-controller-*.png` captured the actual two original rooms visibly.
+
+R89 changes the original headless native mGBA driver to defer each arrival frame **80 real GBA LCD frames** before capture. It reads the actual emulated LCD framebuffer, requires at least 128 pixels differing from the first pixel, requires the guest original-source key still matches that arrival, and fails closed on overlapping or uncaptured arrivals. The original R86 success result now requires **exactly two nonblack post-fade arrival LCD images**. No host-side map jump, game pixel painting, guest memory write, synthetic route flag or user-private original-ROM data is placed in public GitHub.
+
+The genuine R88 private QA entry chord remains private test setup, not player-unlocked Emerald HM Fly. The actual original Rocket door round trip was authentic mGBA gameplay. Remaining limitations: native source-world Flash persistence, Heart & Soul source artwork, original script execution and original Rocket tile/palette fidelity. PR #123 stays draft.

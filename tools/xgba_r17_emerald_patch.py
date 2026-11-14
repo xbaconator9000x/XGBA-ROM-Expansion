@@ -22,6 +22,11 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
     originals.update({world:original_world,newgame:original_newgame})
     r50_enabled = "#define XGBA_R50_ENGINE_EVENTS" in Path(config).read_text()
     r48_enabled = "#define XGBA_R48_ORIGINAL_NPC_BRIDGE" in Path(config).read_text()
+    r90_fly_fixture = "#define XGBA_R90_REAL_FLY_TEST" in Path(config).read_text()
+    if r90_fly_fixture and not (
+            "#define XGBA_R54_REAL_WARP_ADMISSION" in Path(config).read_text()
+            and r50_enabled and r48_enabled):
+        raise r16.AdapterDrift("R90 party Fly requires actual original Emerald Fly/field engine, R48/R50")
     if r50_enabled and (not r48_enabled or r19_connected):
         raise r16.AdapterDrift("R50 guest event bridge requires R48 and an exclusive owned map arena")
     if r26_leases and not (r19_connected and r19_battle):
@@ -42,6 +47,22 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                       (ROOT/"integration/emerald/xgba_r48_original_npc_scripts.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R50_ENGINE_BRIDGE__",
                       (ROOT/"integration/emerald/xgba_r50_original_engine_events.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R51_TERRAIN_BRIDGE__",
+                      (ROOT/"integration/emerald/xgba_r51_original_terrain.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R52_LAYOUT_BRIDGE__",
+                      (ROOT/"integration/emerald/xgba_r52_native_source_layout.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R53_GRAPHICS_BRIDGE__",
+                      (ROOT/"integration/emerald/xgba_r53_original_graphics.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R54_REAL_WARP_BRIDGE__",
+                      (ROOT/"integration/emerald/xgba_r54_native_fly_warp_admission.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R57_NATIVE_SPRITE_BRIDGE__",
+                      (ROOT/"integration/emerald/xgba_r57_native_source_sprite_installer.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R58_NATIVE_FLY_BRIDGE__",
+                      (ROOT/"integration/emerald/xgba_r58_native_original_fly.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R80_NATIVE_SOURCE_WARP_BRIDGE__",
+                      (ROOT/"integration/emerald/xgba_r80_native_source_warp.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R76_PHYSICAL_WARP_BRIDGE__",
+                      (ROOT/"integration/emerald/xgba_r76_physical_original_warp.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_MAPS__",
                       (ROOT/"integration/emerald/xgba_r19_connected_maps.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_BATTLE__",
@@ -91,6 +112,13 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                 "WARP_ID_NONE, 10, 1);",
                 "start close to original Littleroot-Route101 boundary")
         newgame.write_text(s)
+        if r90_fly_fixture:
+            from xgba_r90_original_fly_party_fixture import enable_original_emerald_fly_party_fixture
+            # Replace the original source snapshot in the backup mapping
+            # only with already patched file contents; restore original at exit.
+            fly_originals=enable_original_emerald_fly_party_fixture(e)
+            if set(fly_originals)!={newgame}:
+                raise r16.AdapterDrift("R90 changed a file outside the original Emerald new-game source")
         s=r16.one(original_world,
           "#define PLAYER_LINK_STATE_IDLE 0x80",
           hook+"\n#define PLAYER_LINK_STATE_IDLE 0x80",
@@ -129,6 +157,47 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
               "    return gMapGroups[mapGroup][mapNum];",
               "    return XgbaR50HeaderFor(mapGroup,mapNum,gMapGroups[mapGroup][mapNum]);",
               "R50 real Emerald MapHeader events resolver")
+        if "#define XGBA_R54_REAL_WARP_ADMISSION" in Path(config).read_text():
+            if "#define XGBA_R53_ORIGINAL_GRAPHICS" not in Path(config).read_text():
+                raise r16.AdapterDrift("R54 original warp admission needs R53 original graphics")
+            # This is the ACTUAL original Emerald local map-load state machine,
+            # not a made-up Fly debug action or frame callback. Source memory
+            # must be staged before LoadMapFromWarp reads MapHeader and
+            # before InitObjectEventsLocal/fieldmap BG DMA/camera.
+            # Original MoveSaveBlocks_ResetHeap from case 1 must not erase
+            # R53's map-owned verified graphics allocated in case 0.
+            s=r16.one(s,
+              "    case 0:\n        FieldClearVBlankHBlankCallbacks();\n"
+              "        LoadMapFromWarp(a2);\n        (*state)++;\n        break;",
+              "    case 0:\n        FieldClearVBlankHBlankCallbacks();\n"
+              "        {\n"
+              "            u8 originalSourceWarp = XgbaR54InspectFadedOriginalMapLoad();\n"
+              "            if (originalSourceWarp == 3u)\n"
+              "                return FALSE; /* DMA still owns old source pages */\n"
+              "            if (originalSourceWarp == 2u) {\n"
+              "                if (!XgbaR54FailClosedBeforeForeignHeader()) return FALSE;\n"
+              "                originalSourceWarp = 0u;\n"
+              "            }\n"
+              "            /* Retire old source while its original heap is intact. */\n"
+              "            if (!XgbaR54ReleaseOldSourceBeforeNativeHeapReset())\n"
+              "                return FALSE;\n"
+              "            if (originalSourceWarp == 1u) {\n"
+              "                ResetMirageTowerAndSaveBlockPtrs();\n"
+              "                XgbaR54MarkNativePreloadHeapReset();\n"
+              "                if (!XgbaR54InstallPendingOriginalSourceAtNativeWarp())\n"
+              "                    if (!XgbaR54FailClosedBeforeForeignHeader()) return FALSE;\n"
+              "            }\n"
+              "        }\n"
+              "        LoadMapFromWarp(a2);\n        (*state)++;\n        break;",
+              "R54 original field fade/source map admission before actual MapHeader/objects")
+            s=r16.one(s,
+              "    case 1:\n        ResetMirageTowerAndSaveBlockPtrs();\n"
+              "        ResetScreenForMapLoad();",
+              "    case 1:\n"
+              "        if (!XgbaR54ShouldSkipOriginalCaseOneHeapReset())\n"
+              "            ResetMirageTowerAndSaveBlockPtrs();\n"
+              "        ResetScreenForMapLoad();",
+              "R54 single original heap reset preserves queued source BG DMA")
         s=r16.one(s,
           "    OverworldBasic();\n    if (fading)\n        SetFieldVBlankCallback();",
           "    OverworldBasic();\n    XgbaR17Tick();\n    if (fading)\n        SetFieldVBlankCallback();",
@@ -165,6 +234,40 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                 "        gObjectEvents[objectEventId].localId,script);\n"
                 "    return script;\n}",
                 "R48 original Pokémon object event A-button scripting")
+            if "#define XGBA_R54_REAL_WARP_ADMISSION" in Path(config).read_text():
+                # Genuine original Emerald movement warp metatile probe. The
+                # foreign source remains quarantined until assets, map slot
+                # routing and save namespaces can be admitted end-to-end.
+                source=r16.one(source,
+                    "static bool8 TryStartWarpEventScript(struct MapPosition *position, u16 metatileBehavior)\n{\n    s8 warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);\n",
+                    "static bool8 TryStartWarpEventScript(struct MapPosition *position, u16 metatileBehavior)\n"
+                    "{\n"
+                    "    s8 warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);\n"
+                    "    if (warpEventId == WARP_ID_NONE &&\n"
+                    "        XgbaR76NotePhysicalOriginalStepWarp(position->x,position->y,position->elevation))\n"
+                    "        return TRUE;\n",
+                    "R76 real original Emerald physical step-warp metatile lookup")
+                source=r16.one(source,
+                    "static bool8 TryArrowWarp(struct MapPosition *position, u16 metatileBehavior, u8 direction)\n"
+                    "{\n"
+                    "    s8 warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);\n",
+                    "extern bool8 XgbaR76NotePhysicalOriginalStepWarp(u16 x,u16 y,u8 elevation);\n"
+                    "static bool8 TryArrowWarp(struct MapPosition *position, u16 metatileBehavior, u8 direction)\n"
+                    "{\n"
+                    "    s8 warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);\n"
+                    "    if (warpEventId == WARP_ID_NONE &&\n"
+                    "        XgbaR76NotePhysicalOriginalStepWarp(position->x,position->y,position->elevation))\n"
+                    "        return TRUE;\n",
+                    "R77 original Emerald on-map directional arrow warp path")
+                source=r16.one(source,
+                    "        if (MetatileBehavior_IsWarpDoor(metatileBehavior) == TRUE)\n"
+                    "        {\n",
+                    "        /* R78 original R49 source door candidates may use non-Emerald tile IDs. */\n"
+                    "        if (XgbaR76NotePhysicalOriginalStepWarp(\n"
+                    "              position->x,position->y,position->elevation)) return TRUE;\n"
+                    "        if (MetatileBehavior_IsWarpDoor(metatileBehavior) == TRUE)\n"
+                    "        {\n",
+                    "R78 original held-direction north-door probe before native tile category")
             interaction.write_text(source)
             # Link the ACTUAL Fly field-effect arrival callback, not a
             # surrogate keypress or map-viewer source switch. This only
@@ -196,6 +299,166 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                     "    Overworld_PlaySpecialMapMusic();",
                     "R50 confirm actual Fly only after real loaded original source map")
             flying.write_text(fly_source)
+        if "#define XGBA_R52_SOURCE_LAYOUT" in Path(config).read_text():
+            # Original Emerald hardcodes 512 primary metatiles everywhere.
+            # Rocket/HnS versioned layouts use 640. Patch the real original
+            # field camera AND collision/behavior lookup, not an image viewer.
+            camera=e/"src/field_camera.c"
+            original_camera=camera.read_text()
+            originals[camera]=original_camera
+            cc=r16.one(original_camera,
+                "static void DrawMetatileAt(const struct MapLayout *mapLayout, u16 offset, int x, int y)",
+                "extern u16 XgbaR52PrimaryMetatileCount(void);\n"
+                "static void DrawMetatileAt(const struct MapLayout *mapLayout, u16 offset, int x, int y)",
+                "R52 dynamic original Emerald field camera declaration")
+            cc=r16.one(cc,
+                "if (metatileId < NUM_METATILES_IN_PRIMARY)",
+                "if (metatileId < XgbaR52PrimaryMetatileCount())",
+                "R52 original Emerald primary metatile camera routing")
+            cc=r16.one(cc,
+                "metatileId -= NUM_METATILES_IN_PRIMARY;",
+                "metatileId -= XgbaR52PrimaryMetatileCount();",
+                "R52 original Emerald secondary metatile camera offset")
+            camera.write_text(cc)
+            fm=e/"src/fieldmap.c"
+            original_fm=fm.read_text()
+            originals[fm]=original_fm
+            fs=r16.one(original_fm,
+                "u16 GetMetatileAttributesById(u16 metatile)\n{",
+                "extern u16 XgbaR52PrimaryMetatileCount(void);\n"
+                "u16 GetMetatileAttributesById(u16 metatile)\n{",
+                "R52 native original Emerald collision behavior resolver")
+            fs=r16.one(fs,
+                "if (metatile < NUM_METATILES_IN_PRIMARY)",
+                "if (metatile < XgbaR52PrimaryMetatileCount())",
+                "R52 source-qualified map collision primary split")
+            fs=r16.one(fs,
+                "metatile - NUM_METATILES_IN_PRIMARY];",
+                "metatile - XgbaR52PrimaryMetatileCount()];",
+                "R52 source-qualified map collision secondary offset")
+            # A genuine version-2 foreign map needs the *same* 640/384
+            # tile split (and 7/6 palette split) in the actual original
+            # Emerald BG DMA and palette-copy paths, not just field camera.
+            # Scope these source-wide replacements to audited exact counts.
+            if fs.count("NUM_TILES_IN_PRIMARY")!=8 or fs.count("NUM_PALS_IN_PRIMARY")!=4:
+                raise r16.AdapterDrift("Pinned Emerald BG tile/palette split callsite drift")
+            fs=fs.replace("NUM_TILES_IN_PRIMARY","XgbaR52PrimaryTilesCount()")
+            fs=fs.replace("NUM_PALS_IN_PRIMARY","XgbaR52PrimaryPaletteCount()")
+            fs=r16.one(fs,
+                "extern u16 XgbaR52PrimaryMetatileCount(void);\n",
+                "extern u16 XgbaR52PrimaryMetatileCount(void);\n"
+                "extern u16 XgbaR52PrimaryTilesCount(void);\n"
+                "extern u16 XgbaR52PrimaryPaletteCount(void);\n",
+                "R52 original Emerald BG graphics and palette split declarations")
+            fm.write_text(fs)
+        if "#define XGBA_R53_ORIGINAL_GRAPHICS" in Path(config).read_text():
+            if "#define XGBA_R52_SOURCE_LAYOUT" not in Path(config).read_text():
+                raise r16.AdapterDrift("R53 native tileset requires exact R52 source profile")
+            # Unlike a demonstration map viewer, this rewires the genuine
+            # Emerald BG tile-copy functions, including the heap variant.
+            # The source installer returns 0 for vanilla, +1 on verified
+            # original source VRAM DMA, and -1 on corruption/stale pointers.
+            fm=e/"src/fieldmap.c"
+            code=fm.read_text()
+            code=r16.one(code,
+                "static void CopyTilesetToVram(struct Tileset const *tileset, u16 numTiles, u16 offset)\n{\n    if (tileset)",
+                "extern s16 XgbaR53TryLoadOriginalTileset(const struct Tileset *tileset);\n"
+                "extern void XgbaR53RefuseCorruptedSourceGraphics(void);\n"
+                "static void CopyTilesetToVram(struct Tileset const *tileset, u16 numTiles, u16 offset)\n"
+                "{\n"
+                "    s16 xgbaResult=XgbaR53TryLoadOriginalTileset(tileset);\n"
+                "    if(xgbaResult){if(xgbaResult<0) XgbaR53RefuseCorruptedSourceGraphics();return;}\n"
+                "    if (tileset)",
+                "R53 real native Emerald background source tile copy")
+            code=r16.one(code,
+                "static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTiles, u16 offset)\n{\n    if (tileset)",
+                "static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTiles, u16 offset)\n"
+                "{\n"
+                "    s16 xgbaResult=XgbaR53TryLoadOriginalTileset(tileset);\n"
+                "    if(xgbaResult){if(xgbaResult<0) XgbaR53RefuseCorruptedSourceGraphics();return;}\n"
+                "    if (tileset)",
+                "R53 real original Emerald BG decompress-heap source tile copy")
+            fm.write_text(code)
+        if "#define XGBA_R54_REAL_WARP_ADMISSION" in Path(config).read_text():
+            # Original Emerald's GetObjectEventGraphicsInfo is the ACTUAL
+            # object/NPC sprite frame/OAM/animation/palette dispatch used
+            # during InitObjectEventsLocal. Only override source-qualified
+            # per-map private graphics registered and verified by R55.
+            objects=e/"src/event_object_movement.c"
+            original_objects=objects.read_text()
+            originals[objects]=original_objects
+            sprite_src=r16.one(original_objects,
+                "const struct ObjectEventGraphicsInfo *GetObjectEventGraphicsInfo(u8 graphicsId)\n{",
+                "extern const struct ObjectEventGraphicsInfo *"
+                "XgbaR55GetVerifiedNativeOriginalObjectGraphics(u8 installed_slot);\n"
+                "const struct ObjectEventGraphicsInfo *GetObjectEventGraphicsInfo(u8 graphicsId)\n{",
+                "R55 real original Emerald OBJ graphics info resolver declaration")
+            sprite_src=r16.one(sprite_src,
+                "    if (graphicsId == OBJ_EVENT_GFX_BARD)\n    {",
+                "    {\n"
+                "        const struct ObjectEventGraphicsInfo *verifiedOriginal =\n"
+                "            XgbaR55GetVerifiedNativeOriginalObjectGraphics(graphicsId);\n"
+                "        if (verifiedOriginal != NULL)\n"
+                "            return verifiedOriginal;\n"
+                "    }\n"
+                "    if (graphicsId == OBJ_EVENT_GFX_BARD)\n    {",
+                "R55 native source-authenticated original NPC sprite image/palette dispatch")
+            sprite_src=r16.one(sprite_src,
+                "static void LoadObjectEventPalette(u16);",
+                "extern bool8 XgbaR57ApplyOriginalObjectPalette(u8 graphics_id,u8 palette_slot);\n"
+                "static void LoadObjectEventPalette(u16);",
+                "R57 actual source palette installer prototype")
+            sprite_src=r16.one(sprite_src,
+                "    sprite->oam.paletteNum = paletteSlot;\n"
+                "    sprite->coordOffsetEnabled = TRUE;\n"
+                "    sprite->sObjEventId = objectEventId;",
+                "    sprite->oam.paletteNum = paletteSlot;\n"
+                "    if (!XgbaR57ApplyOriginalObjectPalette(objectEvent->graphicsId, paletteSlot)) {\n"
+                "        objectEvent->active = FALSE;\n"
+                "        DestroySprite(sprite);\n"
+                "        return OBJECT_EVENTS_COUNT;\n"
+                "    }\n"
+                "    sprite->coordOffsetEnabled = TRUE;\n"
+                "    sprite->sObjEventId = objectEventId;",
+                "R57 copy actual original source palette at real NPC spawn")
+            objects.write_text(sprite_src)
+        if "#define XGBA_R54_REAL_WARP_ADMISSION" in Path(config).read_text():
+            # R84: No source-world group 35 may be saved as Emerald's
+            # original map slot 0:9. Include direct/partial sector writers.
+            saving=e/"src/save.c"
+            original_saving=saving.read_text()
+            originals[saving]=original_saving
+            safe=r16.one(original_saving,
+                "u8 HandleSavingData(u8 saveType)\n{",
+                "extern bool8 XgbaR84NativeSaveAllowed(void);\n"
+                "u8 HandleSavingData(u8 saveType)\n"
+                "{\n"
+                "    if (!XgbaR84NativeSaveAllowed()) return SAVE_STATUS_ERROR;",
+                "R84 native Emerald core save transaction admission")
+            safe=r16.one(safe,
+                "u8 TrySavingData(u8 saveType)\n{",
+                "u8 TrySavingData(u8 saveType)\n"
+                "{\n"
+                "    if (!XgbaR84NativeSaveAllowed()) {\n"
+                "        gSaveAttemptStatus = SAVE_STATUS_ERROR;\n"
+                "        return SAVE_STATUS_ERROR;\n"
+                "    }",
+                "R84 original native Emerald player save refusal")
+            for name in (
+                "LinkFullSave_Init",
+                "LinkFullSave_WriteSector",
+                "LinkFullSave_ReplaceLastSector",
+                "LinkFullSave_SetLastSectorSignature",
+                "WriteSaveBlock2",
+                "WriteSaveBlock1Sector"):
+                anchor="bool8 "+name+"(void)\n{"
+                safe=r16.one(safe,anchor,
+                    anchor+"\n    if (!XgbaR84NativeSaveAllowed()) return TRUE;",
+                    "R84 native incremental link/sector flash writer "+name)
+            saving.write_text(safe)
+        if "#define XGBA_R54_REAL_WARP_ADMISSION" in Path(config).read_text():
+            from xgba_r58_fly_menu_patch import patch_native_original_fly_region_map
+            originals.update(patch_native_original_fly_region_map(e))
         world.write_text(s)
         if r19_battle:
             # Instrument original Emerald battle sprite decompression, NOT a

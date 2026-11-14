@@ -1,0 +1,10 @@
+# R70 — exact original NPC witness and native sprite binding
+
+This change closes a source-authenticity gap in the original Emerald three-world Fly acceptance route. A real **physical** object-event spawn must now use the exact world-qualified original source graphics identity, not just a matching local NPC ID and any installed native Emerald sprite.
+
+- Guest R49 event preflight requires **one and only one** original witness at the original local ID, coordinates and full 16-bit graphics ID, with the original R49 map/event-page CRC checks still required. The Rocket witness uses gfx 17; Heart & Soul uses gfx 406, never silently truncated to 8 bits.
+- At the faded original Emerald map transition, R57 repeats the original witness check before staging foreign NPC frames, so changes between preflight and map loading cannot admit the wrong actor.
+- On the **actual Emerald overworld**, R48 requires the MapEvents template **and active physical NPC** to carry the same R55-installed native slot obtained from the exact original graphics ID. R54 requires the foreign R55 roster to match the active source world, group and map and to expose authenticated native graphics. Source 0 retains its original native gfx 17.
+- All checks are fail-closed. No fallback sprite, fabricated dialogue, replacement map or permanent EWRAM allocation was introduced. R70 C regression uses author-owned 24-byte event fixtures, malformed graphics and coordinates, duplicate locals, mismatched source maps, missing/corrupt roster CRCs.
+
+**Acceptance boundary:** This is a concrete live admission-path hardening, **not** proof of Emerald → Rocket → Heart & Soul → Emerald gameplay. Heart & Soul still lacks private original source-qualified tileset/OBJ assets for its Fly landing. Imported foreign scripts, full native warp/encounter mechanics and a unified Flash cold resume also remain incomplete. Public CI cannot include the user's original commercial ROM, its art/dialogue resources or private provider ZIP; acceptance must use owner-private native mGBA with actual LCD frames and save/restart artifacts.
