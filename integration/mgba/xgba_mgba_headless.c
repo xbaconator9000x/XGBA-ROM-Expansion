@@ -664,6 +664,128 @@ static void xgba_r86_run_real_rocket_door(
            total_frames,device->successful_reads);
 }
 
+
+/* R92: real 3-leg HM Fly through original Emerald party/region map.
+ * The completion counters are native game EWRAM from original
+ * FieldCallback_FlyIntoMap; GBA keys remain the only gameplay input.
+ * No SetWarpDestination, guest RAM writes or fake map-switch probes.
+ */
+static void xgba_r92_real_three_world_fly(
+    struct mCore *core,struct XgbaGbaDevice *device,
+    const char *script,const char *lcd,
+    uint32_t r48,uint32_t r54,uint32_t r58)
+{
+    static const uint32_t target_worlds[3]={1u,2u,0u};
+    static const uint32_t target_keys[3]={0x00010009u,0x00020004u,0x00000009u};
+    FILE *fp;
+    char line[192],fname[1024];
+    unsigned actions=0u,frames_total=0u,photos=0u,arrival=0u;
+    unsigned pending_fade=0u;
+    uint32_t pending_world=0u;
+    if(!core || !device || !script || !lcd ||
+       r48<0x02000000u || r54<0x02000000u || r58<0x02000000u ||
+       r48>0x0203ffccu || r54>0x0203ffccu || r58>0x0203ffccu ||
+       (r48&3u) || (r54&3u) || (r58&3u) ||
+       device->failed_reads || core->busRead32(core,r48+36u) ||
+       core->busRead32(core,r54+48u) ||
+       core->busRead32(core,r58+24u))
+        fail("R92 requires pristine source-built Emerald, actual Fly proof addresses");
+    fp=fopen(script,"r");
+    if(!fp)fail("R92 native real Fly controller script missing");
+    while(fgets(line,sizeof(line),fp)){
+        unsigned frames=0u,mask=0u,shot=0u;
+        char trailing=0;
+        if(line[0]=='#' || line[0]=='\n' || line[0]=='\r')continue;
+        if(++actions>256u || sscanf(line,"%u %x %u %c",
+                &frames,&mask,&shot,&trailing)!=3 ||
+           frames==0u || frames>2400u || mask>0x3ffu || shot>1u ||
+           frames_total>36000u-frames){
+            fclose(fp);fail("R92 unsafe/invalid physical Fly controller inputs");
+        }
+        frames_total+=frames;
+        core->setKeys(core,mask);
+        for(unsigned frame=0u;frame<frames;frame++){
+            uint32_t fly_count,native_count,queued,world;
+            core->runFrame(core);
+            fly_count=core->busRead32(core,r48+36u);
+            native_count=core->busRead32(core,r54+48u);
+            queued=core->busRead32(core,r58+24u);
+            if(fly_count>3u || native_count>3u || queued>3u ||
+               fly_count>queued || native_count>fly_count ||
+               fly_count>arrival+1u){
+                fclose(fp);fail("R92 menu Fly and actual field effect counters disagree");
+            }
+            if(fly_count!=arrival){
+                world=core->busRead32(core,r48+8u);
+                if(native_count!=fly_count || queued!=fly_count ||
+                   core->busRead32(core,r54+28u) ||
+                   world!=target_worlds[arrival] || pending_fade){
+                    fclose(fp);fail("R92 true native Fly arrived at wrong original world");
+                }
+                if(world!=0u &&
+                   core->busRead32(core,r54+20u)!=target_keys[arrival]){
+                    fclose(fp);fail("R92 original foreign map source key mismatch");
+                }
+                arrival=fly_count;
+                pending_world=world;
+                pending_fade=80u;
+            }
+            if(pending_fade && --pending_fade==0u){
+                const void *pixel_buffer=NULL;
+                const mColor *pixels;
+                size_t stride=0u;
+                mColor first;
+                unsigned nonuniform=0u;
+                core->getPixels(core,&pixel_buffer,&stride);
+                if(!pixel_buffer || stride<240u){
+                    fclose(fp);fail("R92 true Fly LCD framebuffer absent");
+                }
+                pixels=(const mColor *)pixel_buffer;
+                first=pixels[0];
+                for(unsigned y=0u;y<160u;y++)
+                    for(unsigned x=0u;x<240u;x++)
+                        if(pixels[y*stride+x]!=first)++nonuniform;
+                if(nonuniform<128u ||
+                   core->busRead32(core,r48+8u)!=pending_world){
+                    fclose(fp);fail("R92 real Fly map visible LCD absent/black");
+                }
+                if(snprintf(fname,sizeof(fname),
+                     "%s/r92-real-fly-%u-world-%u.png",lcd,arrival,pending_world)
+                        >=(int)sizeof(fname)){
+                    fclose(fp);fail("R92 LCD screenshot destination invalid");
+                }
+                save_native_frame(core,fname);
+                ++photos;
+            }
+        }
+        if(shot){
+            if(snprintf(fname,sizeof(fname),"%s/r92-input-%03u.png",lcd,actions)
+                >=(int)sizeof(fname)){
+                fclose(fp);fail("R92 input screenshot destination invalid");
+            }
+            save_native_frame(core,fname);
+        }
+    }
+    fclose(fp);
+    core->setKeys(core,0u);
+    if(arrival!=3u || photos!=3u || pending_fade ||
+       core->busRead32(core,r58+24u)!=3u ||
+       core->busRead32(core,r48+36u)!=3u ||
+       core->busRead32(core,r54+48u)!=3u ||
+       core->busRead32(core,r48+8u)!=0u ||
+       core->busRead32(core,r58+4u)<3u ||
+       core->busRead32(core,r58+20u) ||
+       core->busRead32(core,r58+32u) ||
+       device->failed_reads){
+        fail("R92 NOT PASS: Emerald -> Rocket -> Heart & Soul -> Emerald genuine Fly");
+    }
+    printf("PASS_R92_NATIVE_THREE_WORLD_HM_FLY actual_party_fly=3 "
+           "genuine_field_fly_in=3 destinations=1,2,0 "
+           "postfade_original_lcd_frames=%u source_fetches=%u "
+           "physical_controller_actions=%u frames=%u\n",
+           photos,device->successful_reads,actions,frames_total);
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 11 || argc > (int)(11u + 4u*XGBA_MAX_EXTRA_RESOURCES + 128u))
@@ -674,6 +796,8 @@ int main(int argc, char **argv)
     const char *r86_dir = NULL; /* owner-private actual Rocket door LCD */
     const char *r86_script = NULL; /* physical GBA controller input, not memory edits */
     uint64_t r86_proof = 0u;
+    const char *r92_dir = NULL,*r92_script = NULL;
+    uint64_t r92_r48=0u,r92_r54=0u,r92_r58=0u;
     const char *scene_dir = NULL;
     const char *r10_dir = NULL;
     const char *r11_perf = NULL;
@@ -731,6 +855,16 @@ int main(int argc, char **argv)
             r86_script = argv[i];
         else if (!strcmp(argv[i], "--r86-proof") && ++i < argc && !r86_proof)
             r86_proof = parse_number(argv[i]);
+        else if (!strcmp(argv[i], "--r92-fly-dir") && ++i < argc && !r92_dir)
+            r92_dir = argv[i];
+        else if (!strcmp(argv[i], "--r92-fly-script") && ++i < argc && !r92_script)
+            r92_script = argv[i];
+        else if (!strcmp(argv[i], "--r92-r48") && ++i < argc && !r92_r48)
+            r92_r48 = parse_number(argv[i]);
+        else if (!strcmp(argv[i], "--r92-r54") && ++i < argc && !r92_r54)
+            r92_r54 = parse_number(argv[i]);
+        else if (!strcmp(argv[i], "--r92-r58") && ++i < argc && !r92_r58)
+            r92_r58 = parse_number(argv[i]);
         else if (!strcmp(argv[i], "--scene-dir") && ++i < argc && !scene_dir)
             scene_dir = argv[i];
         else if (!strcmp(argv[i], "--r10-dir") && ++i < argc && !r10_dir)
@@ -900,9 +1034,9 @@ int main(int argc, char **argv)
     struct mCore *core = GBACoreCreate();
     if (!core || !core->init(core))
         fail("mGBA core initialization failed");
-    mColor *video = (r86_dir || screenshot || r43_probe || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir || r30_dir)
+    mColor *video = (r92_dir || r86_dir || screenshot || r43_probe || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir || r30_dir)
                    ? calloc(240u*160u, sizeof(mColor)) : NULL;
-    if ((r86_dir || screenshot || r43_probe || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir || r30_dir) && !video)
+    if ((r92_dir || r86_dir || screenshot || r43_probe || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir || r30_dir) && !video)
         fail("cannot allocate GBA framebuffer");
     if (video)
         core->setVideoBuffer(core, video, 240);
@@ -943,6 +1077,14 @@ int main(int argc, char **argv)
         if ((r19_dir || r28_dir || r30_dir) && probe &&
             core->busRead32(core,(uint32_t)probe+4)==0xE19u)
             break;
+    }
+    if(r92_dir){
+        if(!r92_script || !r92_r48 || !r92_r54 || !r92_r58 ||
+           !enabled || !resource.extra_count || r86_dir ||
+           r17_dir || r18_dir || r15_dir || r19_dir ||
+           r19_battle_dir || r24_dir || r43_probe || r45_probe ||
+           scene_dir || r16_dir)
+            fail("R92 native three-world Fly requires exclusive owner-private genuine Emerald");
     }
     if(r86_dir){
         if(!r86_script || r86_proof<0x02000000u ||
@@ -1044,7 +1186,7 @@ int main(int argc, char **argv)
                   r19_battle0_offset,(uint32_t)r19_battle0_length,
                   r19_battle1_offset,(uint32_t)r19_battle1_length,enabled,r20_reentry,
                   (uint32_t)r21_heap_probe,(unsigned)r23_battles);
-    } else if (!scene_dir && !r43_probe && !r45_probe && !r86_dir) {
+    } else if (!scene_dir && !r43_probe && !r45_probe && !r86_dir && !r92_dir) {
         verify_game_copy(core, (uint32_t)probe, &device, &resource, enabled);
     }
     if (scene_dir)
@@ -1052,6 +1194,10 @@ int main(int argc, char **argv)
     if (r86_dir)
         xgba_r86_run_real_rocket_door(core,&device,r86_script,
                                      r86_dir,(uint32_t)r86_proof);
+    if (r92_dir)
+        xgba_r92_real_three_world_fly(core,&device,r92_script,
+                              r92_dir,(uint32_t)r92_r48,
+                              (uint32_t)r92_r54,(uint32_t)r92_r58);
     if (r45_probe) {
         if(!enabled || !resource.extra_count || r43_probe || scene_dir)
             fail("R45 requires patched mGBA, external resource IDs and one dedicated fixture");

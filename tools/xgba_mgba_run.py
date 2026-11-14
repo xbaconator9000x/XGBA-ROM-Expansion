@@ -38,7 +38,8 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
            r20_reentry=False, r21_heap_probe=0, r22_round_trips=0,
            r23_battles=0, r24_boundary_dir=None, r24_boundary_probe=0,
            r24_firered=False, r86_input_dir=None, r86_input_script=None,
-           r86_proof=0):
+           r86_proof=0, r92_fly_dir=None, r92_fly_script=None,
+           r92_r48=0, r92_r54=0, r92_r58=0):
     rom = Path(rom).resolve(strict=True)
     if not rom.is_file() or rom.stat().st_size > MAX_ROM:
         raise ValueError("ROM must be a real GBA file of at most 32 MiB")
@@ -177,6 +178,19 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
         if r16_emerald_dir is not None or r15_dir is not None:
             raise ValueError("R17 may not overlap earlier game proof modes")
         cmd.extend(["--r17-emerald-map-dir",str(destination)])
+    if r92_fly_dir is not None:
+        dest=Path(r92_fly_dir).resolve(strict=True)
+        keys=Path(r92_fly_script).resolve(strict=True) if r92_fly_script else None
+        addresses=(r92_r48,r92_r54,r92_r58)
+        if not dest.is_dir() or keys is None or not keys.is_file() or (
+                any(type(v) is not int or v<0x02000000 or v>0x0203ffcc
+                    or v&3 for v in addresses)):
+            raise ValueError("R92 requires physical controller and native original Emerald ELF fly proof symbols")
+        if disabled or len(extra_resource_ids)<435 or r86_input_dir is not None or r18_dir is not None:
+            raise ValueError("R92 refuses missing original private 3-world data or overlapping native test mode")
+        cmd.extend(["--r92-fly-dir",str(dest),"--r92-fly-script",str(keys),
+                    "--r92-r48",hex(r92_r48),"--r92-r54",hex(r92_r54),
+                    "--r92-r58",hex(r92_r58)])
     if r86_input_dir is not None:
         directory=Path(r86_input_dir).resolve(strict=True)
         script=Path(r86_input_script).resolve(strict=True) if r86_input_script else None
