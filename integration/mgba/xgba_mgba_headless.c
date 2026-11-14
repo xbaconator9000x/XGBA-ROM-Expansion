@@ -527,6 +527,105 @@ static void r45_3world_maps(struct mCore *core,
          "real_controller_map_switches=3 scroll=1 overlay=1 real_LCD_frames=6");
 }
 
+
+/* R86 owner-private actual controller/LCD acceptance.
+ * All button events pass through the real mGBA GBA core; source map state is
+ * READ ONLY in EWRAM. A screenshot is taken on each original loaded source
+ * room, including the return. The test cannot be marked pass by static host
+ * graph closure or by writing any fake guest RAM.
+ *
+ * Private script lines: <frames:decimal> <gba-key-mask:hex> <snapshot:0|1>
+ * Key bits 0=A,1=B,2=SELECT,3=START,4=RIGHT,5=LEFT,6=UP,7=DOWN,
+ *          8=R,9=L; 0 means release all buttons.
+ */
+static void xgba_r86_run_real_rocket_door(
+    struct mCore *core, struct XgbaGbaDevice *device,
+    const char *script_file,const char *lcd_dir,uint32_t proof_addr)
+{
+    char line[192],frame_name[1024];
+    FILE *fp;
+    uint32_t arrivals,observed,source_to;
+    uint32_t saw_room=0u,saw_return=0u;
+    unsigned line_number=0u,actions=0u,captures=0u,total_frames=0u;
+    if(!core || !device || !script_file || !lcd_dir ||
+       proof_addr<0x02000000u || proof_addr>0x0203ffe8u ||
+       (proof_addr&3u) || device->failed_reads)
+        fail("R86 requires real Emerald EWRAM proof and clean original-source provider");
+    arrivals=core->busRead32(core,proof_addr+4u);
+    if(arrivals || core->busRead32(core,proof_addr))
+        fail("R86 source room input test must begin BEFORE any source-room transition");
+    fp=fopen(script_file,"r");
+    if(!fp)fail("R86 private controller input file cannot be opened");
+    while(fgets(line,sizeof(line),fp)) {
+        unsigned frames=0u,mask=0u,snapshot=0u;
+        char trailing=0;
+        ++line_number;
+        if(line[0]=='#' || line[0]=='\n' || line[0]=='\r')continue;
+        if(++actions>256u ||
+           sscanf(line,"%u %x %u %c",&frames,&mask,&snapshot,&trailing)!=3 ||
+           frames<1u || frames>2400u || mask>0x3ffu ||
+           snapshot>1u || total_frames>36000u-frames){
+            fclose(fp);
+            fail("R86 private controller script unsafe/malformed input");
+        }
+        total_frames+=frames;
+        core->setKeys(core,mask);
+        for(unsigned i=0u;i<frames;i++){
+            core->runFrame(core);
+            observed=core->busRead32(core,proof_addr+4u);
+            if(observed< arrivals || observed>arrivals+1u){
+                fclose(fp);
+                fail("R86 inconsistent original native room-arrival counter");
+            }
+            if(observed!=arrivals){
+                arrivals=observed;
+                source_to=core->busRead32(core,proof_addr+16u);
+                if(source_to==0x00012304u && !saw_room && !saw_return)
+                    saw_room=1u;
+                else if(source_to==0x00010009u && saw_room && !saw_return)
+                    saw_return=1u;
+                else {
+                    fclose(fp);
+                    fail("R86 unsupported/wrong order original source-world loaded map");
+                }
+                if(snprintf(frame_name,sizeof(frame_name),
+                       "%s/r86-native-arrival-%02u-source-%06x.png",
+                       lcd_dir,arrivals,source_to)>= (int)sizeof(frame_name)){
+                    fclose(fp);fail("R86 LCD capture path too long");
+                }
+                save_native_frame(core,frame_name);
+                ++captures;
+            }
+        }
+        if(snapshot){
+            if(captures>=64u || snprintf(frame_name,sizeof(frame_name),
+                "%s/r86-controller-%03u.png",lcd_dir,line_number)
+                >=(int)sizeof(frame_name)){
+                fclose(fp);fail("R86 controller LCD path/capture limit invalid");
+            }
+            save_native_frame(core,frame_name);
+            ++captures;
+        }
+    }
+    fclose(fp);
+    core->setKeys(core,0u);
+    if(!saw_room || !saw_return || arrivals!=2u ||
+       core->busRead32(core,proof_addr)<2u ||
+       core->busRead32(core,proof_addr+8u)!=0u ||
+       core->busRead32(core,proof_addr+12u)!=0u ||
+       core->busRead32(core,proof_addr+16u)!=0x00010009u ||
+       core->busRead32(core,proof_addr+20u)!=0x0009u ||
+       device->failed_reads){
+        fail("R86 genuine Emerald original Rocket 0:9 -> 35:4 -> 0:9 playthrough NOT accepted");
+    }
+    printf("PASS_R86_ORIGINAL_ROCKET_DOOR_ROUNDTRIP_NATIVE_GBA "
+           "real_player_doors=%u original_loaded_rooms=%u "
+           "source_witnesses=0x012304,0x010009 lcd_frames=%u "
+           "gba_controller_actions=%u frames=%u original_source_fetches=%u\n",
+           core->busRead32(core,proof_addr),arrivals,captures,actions,
+           total_frames,device->successful_reads);
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 11 || argc > (int)(11u + 4u*XGBA_MAX_EXTRA_RESOURCES + 128u))
@@ -534,6 +633,9 @@ int main(int argc, char **argv)
     const char *screenshot = NULL;
     const char *r43_probe = NULL; /* R43 original authored GBA homebrew CPU proof */
     const char *r45_probe = NULL; /* REAL original Emerald/TRE/HnS ROM-derived map test */
+    const char *r86_dir = NULL; /* owner-private actual Rocket door LCD */
+    const char *r86_script = NULL; /* physical GBA controller input, not memory edits */
+    uint64_t r86_proof = 0u;
     const char *scene_dir = NULL;
     const char *r10_dir = NULL;
     const char *r11_perf = NULL;
@@ -585,6 +687,12 @@ int main(int argc, char **argv)
             r43_probe = argv[i];
         else if (!strcmp(argv[i], "--r45-probe") && ++i < argc && !r45_probe)
             r45_probe = argv[i];
+        else if (!strcmp(argv[i], "--r86-input-dir") && ++i < argc && !r86_dir)
+            r86_dir = argv[i];
+        else if (!strcmp(argv[i], "--r86-input-script") && ++i < argc && !r86_script)
+            r86_script = argv[i];
+        else if (!strcmp(argv[i], "--r86-proof") && ++i < argc && !r86_proof)
+            r86_proof = parse_number(argv[i]);
         else if (!strcmp(argv[i], "--scene-dir") && ++i < argc && !scene_dir)
             scene_dir = argv[i];
         else if (!strcmp(argv[i], "--r10-dir") && ++i < argc && !r10_dir)
@@ -754,9 +862,9 @@ int main(int argc, char **argv)
     struct mCore *core = GBACoreCreate();
     if (!core || !core->init(core))
         fail("mGBA core initialization failed");
-    mColor *video = (screenshot || r43_probe || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir || r30_dir)
+    mColor *video = (r86_dir || screenshot || r43_probe || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir || r30_dir)
                    ? calloc(240u*160u, sizeof(mColor)) : NULL;
-    if ((screenshot || r43_probe || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir || r30_dir) && !video)
+    if ((r86_dir || screenshot || r43_probe || scene_dir || r10_dir || r11_perf || r12_dir || r13_dir || r14_dir || r15_dir || r16_dir || r24_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir || r28_dir || r30_dir) && !video)
         fail("cannot allocate GBA framebuffer");
     if (video)
         core->setVideoBuffer(core, video, 240);
@@ -797,6 +905,15 @@ int main(int argc, char **argv)
         if ((r19_dir || r28_dir || r30_dir) && probe &&
             core->busRead32(core,(uint32_t)probe+4)==0xE19u)
             break;
+    }
+    if(r86_dir){
+        if(!r86_script || r86_proof<0x02000000u ||
+           r86_proof>0x0203ffe8u || (r86_proof&3u) ||
+           !enabled || !resource.extra_count ||
+           r15_dir || r18_dir || r19_dir || r19_battle_dir ||
+           r24_dir || r45_probe || r43_probe || scene_dir ||
+           r17_dir || r16_dir)
+            fail("R86 original Rocket actual controller proof requires exclusive private mode");
     }
     if (r24_firered && !r24_dir)
         fail("R24 FireRed mode needs genuine original game boundary proof");
@@ -889,11 +1006,14 @@ int main(int argc, char **argv)
                   r19_battle0_offset,(uint32_t)r19_battle0_length,
                   r19_battle1_offset,(uint32_t)r19_battle1_length,enabled,r20_reentry,
                   (uint32_t)r21_heap_probe,(unsigned)r23_battles);
-    } else if (!scene_dir && !r43_probe && !r45_probe) {
+    } else if (!scene_dir && !r43_probe && !r45_probe && !r86_dir) {
         verify_game_copy(core, (uint32_t)probe, &device, &resource, enabled);
     }
     if (scene_dir)
         run_r9_movement_scene(core, (uint32_t)probe, scene_dir, &device, enabled);
+    if (r86_dir)
+        xgba_r86_run_real_rocket_door(core,&device,r86_script,
+                                     r86_dir,(uint32_t)r86_proof);
     if (r45_probe) {
         if(!enabled || !resource.extra_count || r43_probe || scene_dir)
             fail("R45 requires patched mGBA, external resource IDs and one dedicated fixture");
