@@ -12,6 +12,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
+import struct
+import zlib
 from pathlib import Path
 import shutil
 import zipfile
@@ -34,6 +37,9 @@ REQUIRED_ORIGINAL_PREFIXES = ("r49.index.", "r49.events.", "r51.grid.",
 
 class PrivateProviderAdmissionError(ValueError):
     pass
+
+def _valid_sha256(value):
+    return isinstance(value,str) and re.fullmatch(r"[0-9a-f]{64}",value) is not None
 
 def digest_file(path: Path) -> str:
     h = hashlib.sha256()
@@ -126,6 +132,7 @@ def bind_private_sources(
     hns_data=b""
     hns_entries=[]
     hns_sha=None
+    hns_obj_resources=0
     if hns_source_manifest is not None:
         source_manifest=Path(hns_source_manifest).resolve(strict=True)
         hns=sidecar.load_manifest(source_manifest)
@@ -152,6 +159,48 @@ def bind_private_sources(
             for suffix in (".g00",".m00",".a00",".p00"):
                 if prefix+suffix not in hns_names:
                     raise PrivateProviderAdmissionError("Incomplete HnS source-built tile/metatile/palette section")
+        # R95: no source art is accepted merely because a manifest mentions
+        # original HnS Boy2. Cross-check the authentic compiled sprite's 9
+        # frames, palette, OAM and first animation against SHA + CRC witnesses.
+        original_actor=provenance.get("npc_sprites",[])
+        if original_actor:
+            expected_actor="r56.w2.s0196"
+            if (type(original_actor) is not list or len(original_actor)!=1 or
+                original_actor[0].get("id")!=expected_actor or
+                original_actor[0].get("original_graphics_id")!=406 or
+                original_actor[0].get("frame_count")!=9 or
+                original_actor[0].get("original_directional_animations_complete") is not False or
+                original_actor[0].get("real_gameplay_fly_passed") is not False):
+                raise PrivateProviderAdmissionError("HnS official source Boy2 provenance changed")
+            actor_pages={expected_actor+"."+part for part in
+                         ("meta","f00","p00","o00","a00")}
+            if not actor_pages.issubset(hns_names):
+                raise PrivateProviderAdmissionError("Incomplete original HnS source-built OBJ frame/palette/OAM/animation")
+            lookup={entry["id"]:entry for entry in hns_entries}
+            meta_row=lookup[expected_actor+".meta"]
+            m=hns_data[meta_row["offset"]:meta_row["offset"]+meta_row["length"]]
+            if (len(m)!=64 or m[:6]!=b"X56S"+bytes((1,2)) or
+                struct.unpack_from("<H",m,6)[0]!=406 or
+                struct.unpack_from("<H",m,52)[0]!=9 or
+                (zlib.crc32(m[:60])&0xffffffff)!=struct.unpack_from("<I",m,60)[0]):
+                raise PrivateProviderAdmissionError("Original HnS R56 nine-frame OBJ metadata corrupt")
+            claimed=original_actor[0].get("exact_source_sections_sha256")
+            if not isinstance(claimed,list) or len(claimed)!=4:
+                raise PrivateProviderAdmissionError("Original HnS source sprite hashes absent")
+            for i,part in enumerate("fpoa"):
+                row=lookup[expected_actor+"."+part+"00"]
+                section_size=struct.unpack_from("<I",m,12+4*i)[0]
+                section_crc=struct.unpack_from("<I",m,28+4*i)[0]
+                data=hns_data[row["offset"]:row["offset"]+row["length"]]
+                if (not 1<=section_size<=16384 or len(data)!=16384 or
+                    not _valid_sha256(claimed[i]) or
+                    hashlib.sha256(data[:section_size]).hexdigest()!=claimed[i] or
+                    (zlib.crc32(data[:section_size])&0xffffffff)!=section_crc or
+                    any(data[section_size:])):
+                    raise PrivateProviderAdmissionError("Original HnS source-built sprite section integrity changed: "+part)
+            hns_obj_resources=5
+        else:
+            hns_obj_resources=0
         hns_sha=hns.source_identity.sha256
     first = (len(base_data)+15) & ~15
     if first <= GBA_WINDOW:
@@ -208,7 +257,8 @@ def bind_private_sources(
         "native_rom_sha256":base.source_identity.sha256,
         "native_resources_preserved":len(base_entries),
         "authenticated_original_private_resources":len(original_entries),
-        "authenticated_official_hns_source_build_bg_resources":len(hns_entries),
+        "authenticated_official_hns_source_build_bg_resources":len(hns_entries)-hns_obj_resources,
+        "authenticated_official_hns_source_build_obj_resources":hns_obj_resources,
         "official_hns_release_commit":
             "167aa6d537b109bb229c231ddce4616974c4da71" if hns_entries else None,
         "official_hns_source_built_rom_sha256":hns_sha,
