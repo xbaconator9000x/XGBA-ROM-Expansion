@@ -18,6 +18,7 @@
 #include "event_data.h"
 #include "../common/xgba_r67_original_npc_witness.h"
 #include "../common/xgba_r70_original_witness_binding.h"
+#include "../common/xgba_r71_original_script_cache_integrity.h"
 
 #define XGBA_R48_WORLD_COUNT 3u
 #define XGBA_R48_BYTES 256u
@@ -199,7 +200,7 @@ static u16 XgbaR48Little16(const u8 *src)
  * compatibility: exactly three known original NPCs are supported. */
 static bool8 XgbaR48VerifyPayload(u8 source)
 {
-    return XgbaR67ValidateOriginalNpcWitness(
+    return XgbaR71OriginalNpcPacketValid(
         source,sXgbaR48Payload[source],XGBA_R48_BYTES);
 }
 static const char *XgbaR48OriginalNpcResourceName(u8 source)
@@ -239,8 +240,12 @@ bool8 XgbaR48PreflightOriginalNpcResource(u8 source)
 {
     if(source>=XGBA_R48_WORLD_COUNT)
         goto rejected;
-    if(sXgbaR48Ready[source])
-        return TRUE;
+    if(sXgbaR48Ready[source]){
+        if(XgbaR71CachedOriginalNpcValid(
+               source,sXgbaR48Payload[source],XGBA_R48_BYTES))
+            return TRUE;
+        goto rejected;
+    }
     if(!XgbaR48StageOriginalNpcResourceName(source) ||
        XgbaGuestFetch((const char *)sXgbaR48ResourceName,
                       sXgbaR48Payload[source],XGBA_R48_BYTES)
@@ -257,7 +262,13 @@ static bool8 XgbaR48LoadOriginalNpc(u8 source)
     u8 *script;
     u32 relocated;
     if(source>=3u)return FALSE;
-    if(sXgbaR48Ready[source])return TRUE;
+    if(sXgbaR48Ready[source]){
+        if(XgbaR71CachedOriginalNpcValid(
+               source,sXgbaR48Payload[source],XGBA_R48_BYTES))
+            return TRUE;
+        ++gXgbaR48OriginalNpcProof.rejected_mismatch;
+        return FALSE;
+    }
     if(!XgbaR48StageOriginalNpcResourceName(source)){
         ++gXgbaR48OriginalNpcProof.rejected_mismatch;
         return FALSE;
@@ -277,6 +288,11 @@ static bool8 XgbaR48LoadOriginalNpc(u8 source)
     script[3]=(u8)(relocated>>8u);
     script[4]=(u8)(relocated>>16u);
     script[5]=(u8)(relocated>>24u);
+    if(!XgbaR71CachedOriginalNpcValid(source,sXgbaR48Payload[source],
+                                      XGBA_R48_BYTES)){
+        ++gXgbaR48OriginalNpcProof.rejected_mismatch;
+        return FALSE;
+    }
     sXgbaR48Ready[source]=TRUE;
     ++gXgbaR48OriginalNpcProof.original_script_fetches;
     return TRUE;

@@ -15,6 +15,9 @@ on:
       - 'integration/emerald/xgba_r48_original_npc_scripts.inc'
       - 'integration/common/xgba_r67_original_npc_witness.h'
       - 'integration/common/xgba_r70_original_witness_binding.h'
+      - 'integration/common/xgba_r71_original_script_cache_integrity.h'
+      - 'tests/xgba_r71_original_script_cache_integrity_native.c'
+      - 'tests/test_xgba_r71_original_script_cache_integrity.py'
       - 'tests/xgba_r70_original_witness_binding_native.c'
       - 'tests/test_xgba_r70_original_witness_binding.py'
       - 'tests/xgba_r67_original_npc_witness_native.c'
@@ -55,6 +58,7 @@ jobs:
           python3 tests/verify_xgba_r53_real_smol_golden.py
           python3 -m unittest discover -s tests -p 'test_xgba_r69_guest_ewram_contract.py' -v
           python3 -m unittest discover -s tests -p 'test_xgba_r70_original_witness_binding.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r71_original_script_cache_integrity.py' -v
       - name: Run real native C source graphics reader and CRC streaming with ASan/UBSan
         shell: bash
         run: |
@@ -90,6 +94,11 @@ jobs:
             tests/xgba_r70_original_witness_binding_native.c -o build/r53/r70-witness
           ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
             UBSAN_OPTIONS=halt_on_error=1 build/r53/r70-witness
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r71_original_script_cache_integrity_native.c -o build/r53/r71-cache
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r53/r71-cache
   native-original-emerald-graphics:
     name: Actual Emerald ARM BG tile loader, hardware arena, mGBA and Flash
     runs-on: ubuntu-24.04
