@@ -35,6 +35,9 @@ int main(void)
     memcpy(bad,oam,8);bad[7]=0x01; /* affine padding forbidden */
     assert(!XgbaR66OriginalOamValid(bad,8u,16u,32u));
     assert(XgbaR66OriginalFirstAnimationValid(animate,sizeof(animate),1u));
+    /* R95 HnS source NPC has nine native frames, not eight. */
+    assert(XgbaR66OriginalFirstAnimationValid(animate,sizeof(animate),9u));
+    assert(!XgbaR66OriginalFirstAnimationValid(animate,sizeof(animate),17u));
     assert(!XgbaR66OriginalFirstAnimationValid(animate,4u,1u));
     assert(!XgbaR66OriginalFirstAnimationValid(animate,7u,1u));
     memcpy(bad,animate,8);bad[0]=1u; /* second frame absent */
