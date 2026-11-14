@@ -23,6 +23,8 @@ class FirstHopActualSourceDoor(unittest.TestCase):
   self.assertIn("header=*gMapGroups[XGBA_R80_NATIVE_GROUP][XGBA_R80_NATIVE_MAP]",r50)
   self.assertIn("gXgbaR53GraphicsProof.source_key!=sXgbaR80Route.to",native)
   self.assertIn("sXgbaR80Route.phase=2u;",native)
+  self.assertIn("(sXgbaR50Group==0u && sXgbaR50Number==9u)",r50)
+  self.assertIn("XgbaR48SetSourceMapLoaded(sXgbaR50World",r50)
  def test_original_scripts_remain_quarantined_and_no_fake_flash_claim(self):
   r50=(R/"integration/emerald/xgba_r50_original_engine_events.inc").read_text()
   native=(R/"integration/emerald/xgba_r80_native_source_warp.inc").read_text()

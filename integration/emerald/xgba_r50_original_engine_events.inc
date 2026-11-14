@@ -228,8 +228,13 @@ void XgbaR50VerifyLoadedEngineMap(void)
        XgbaR80SourceLocationMatchesNative(
            sXgbaR50World,sXgbaR50Group,sXgbaR50Number)){
         XgbaR80ConfirmRealSourceMapArrival();
+        /* R82: a real room->Rocket 0:9 return must reinstate the authentic
+         * landing NPC witness, A-button script and subsequent Johto Fly.
+         * Interior rooms (group 35) have no landing witness and remain
+         * source-map-qualified via their R80 native room arrival proof. */
         if(!sXgbaR48SourceMapLoaded &&
-           !XgbaR80ForeignInteriorActive())
+           (!XgbaR80ForeignInteriorActive() ||
+            (sXgbaR50Group==0u && sXgbaR50Number==9u)))
             XgbaR48SetSourceMapLoaded(sXgbaR50World,sXgbaR50Group,sXgbaR50Number,TRUE);
         if(gXgbaR48OriginalNpcProof.source_map_loaded){
             gXgbaR50BridgeProof.original_map_installed=1u;
