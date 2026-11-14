@@ -22,6 +22,13 @@ on:
       - 'tests/test_xgba_r73_original_warp_preflight.py'
       - 'tests/test_xgba_r74_guest_paged_resource_ewram.py'
       - 'tools/xgba_r75_original_rocket_onehop_extend.py'
+      - 'integration/common/xgba_r76_physical_original_warp.h'
+      - 'integration/emerald/xgba_r76_physical_original_warp.inc'
+      - 'integration/emerald/xgba_r54_native_fly_warp_admission.inc'
+      - 'integration/emerald/xgba_r17_external_littleroot.inc'
+      - 'tools/xgba_r17_emerald_patch.py'
+      - 'tests/xgba_r76_physical_original_warp_native.c'
+      - 'tests/test_xgba_r76_actual_emerald_physical_warp.py'
       - 'tests/test_xgba_r75_original_rocket_onehop_extend.py'
       - 'integration/emerald/xgba_r52_native_source_layout.inc'
       - 'integration/common/xgba_r71_original_script_cache_integrity.h'
@@ -71,6 +78,7 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_xgba_r73_original_warp_preflight.py' -v
           python3 -m unittest discover -s tests -p 'test_xgba_r74_guest_paged_resource_ewram.py' -v
           PYTHONPATH=tools:tests python3 -m unittest test_xgba_r75_original_rocket_onehop_extend -v
+          python3 -m unittest discover -s tests -p 'test_xgba_r76_actual_emerald_physical_warp.py' -v
       - name: Run real native C source graphics reader and CRC streaming with ASan/UBSan
         shell: bash
         run: |
@@ -116,6 +124,11 @@ jobs:
             tests/xgba_r73_source_warp_preflight_native.c -o build/r53/r73-warp
           ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
             UBSAN_OPTIONS=halt_on_error=1 build/r53/r73-warp
+          cc -std=c11 -Wall -Wextra -Werror -pedantic -O1 -g \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r76_physical_original_warp_native.c -o build/r53/r76-warp
+          ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 \
+            UBSAN_OPTIONS=halt_on_error=1 build/r53/r76-warp
   native-original-emerald-graphics:
     name: Actual Emerald ARM BG tile loader, hardware arena, mGBA and Flash
     runs-on: ubuntu-24.04

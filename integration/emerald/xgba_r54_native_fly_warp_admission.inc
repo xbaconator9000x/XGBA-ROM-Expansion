@@ -480,10 +480,40 @@ static void XgbaR54MarkNativePreloadHeapReset(void)
     sXgbaR54OriginalHeapPreReset=TRUE;
     ++gXgbaR54NativeWarpProof.native_heap_resets_before_source;
 }
-static void XgbaR54FailClosedBeforeForeignHeader(void)
+/* R76: missing foreign assets must never strand the player in a black LCD
+ * busy loop. Revert to the real native Emerald 0:9 map with a real fade/load;
+ * do NOT count a Fly leg or carry an unsafe foreign map header into Emerald.
+ * If an in-flight DMA still owns source graphics, retry this case next frame.
+ */
+static bool8 XgbaR54FailClosedBeforeForeignHeader(void)
 {
-    /* A wrong-world Emerald header is worse than a bounded refusal.
-     * Future end-user UI may recover to origin map after reporting error. */
     ++gXgbaR54NativeWarpProof.rejected_resource_load;
-    for(;;){}
+    if(IsDma3ManagerBusyWithBgCopy())return FALSE;
+    if(sXgbaR53SourceActive || sXgbaR51NativeTerrain.valid ||
+       sXgbaR50Ready)
+        XgbaR51ReleaseOriginalGeometryAfterFade(TRUE);
+    if(sXgbaR53SourceActive || sXgbaR51NativeTerrain.valid ||
+       sXgbaR50Ready)return FALSE;
+    XgbaR57ReleasePendingMapSprites();
+    XgbaR55ForgetSourceSpriteRegistrations();
+    /* Revoke the unfulfilled Fly token before the original field engine
+     * obtains gMapGroups[0][9]; no false cross-world progress is recorded. */
+    sXgbaR48PendingFlyWorld=0xffu;
+    sXgbaR48PendingFlyGroup=0xffu;
+    sXgbaR48PendingFlyMap=0xffu;
+    sXgbaR48SourceMapLoaded=FALSE;
+    sXgbaR48ImportedWorld=0u;
+    sXgbaR48ImportedGroup=0u;
+    sXgbaR48ImportedMap=0u;
+    sXgbaR48FlyLeg=0u;
+    sXgbaR48NpcTalkedMask=0u;
+    gXgbaR48OriginalNpcProof.source_map_loaded=0u;
+    sXgbaR54OriginalHeapPreReset=FALSE;
+    sXgbaR54SourceMapPreparedInWarp=FALSE;
+    /* The landing is explicitly the original source0 Emerald cartridge map,
+     * not an authored placeholder or the numeric collision from Rocket. */
+    SetWarpDestination(0,9,WARP_ID_NONE,
+                       XGBA_R63_NATIVE_LANDING_X,
+                       XGBA_R63_NATIVE_LANDING_Y);
+    return TRUE;
 }

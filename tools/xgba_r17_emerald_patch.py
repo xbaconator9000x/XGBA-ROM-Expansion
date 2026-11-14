@@ -54,6 +54,8 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                       (ROOT/"integration/emerald/xgba_r57_native_source_sprite_installer.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R58_NATIVE_FLY_BRIDGE__",
                       (ROOT/"integration/emerald/xgba_r58_native_original_fly.inc").resolve().as_posix())
+    hook=hook.replace("__XGBA_R76_PHYSICAL_WARP_BRIDGE__",
+                      (ROOT/"integration/emerald/xgba_r76_physical_original_warp.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_MAPS__",
                       (ROOT/"integration/emerald/xgba_r19_connected_maps.inc").resolve().as_posix())
     hook=hook.replace("__XGBA_R19_BATTLE__",
@@ -156,16 +158,20 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
               "    case 0:\n        FieldClearVBlankHBlankCallbacks();\n"
               "        {\n"
               "            u8 originalSourceWarp = XgbaR54InspectFadedOriginalMapLoad();\n"
-              "            if (originalSourceWarp >= 2u)\n"
-              "                XgbaR54FailClosedBeforeForeignHeader();\n"
+              "            if (originalSourceWarp == 3u)\n"
+              "                return FALSE; /* DMA still owns old source pages */\n"
+              "            if (originalSourceWarp == 2u) {\n"
+              "                if (!XgbaR54FailClosedBeforeForeignHeader()) return FALSE;\n"
+              "                originalSourceWarp = 0u;\n"
+              "            }\n"
               "            /* Retire old source while its original heap is intact. */\n"
               "            if (!XgbaR54ReleaseOldSourceBeforeNativeHeapReset())\n"
-              "                XgbaR54FailClosedBeforeForeignHeader();\n"
+              "                return FALSE;\n"
               "            if (originalSourceWarp == 1u) {\n"
               "                ResetMirageTowerAndSaveBlockPtrs();\n"
               "                XgbaR54MarkNativePreloadHeapReset();\n"
               "                if (!XgbaR54InstallPendingOriginalSourceAtNativeWarp())\n"
-              "                    XgbaR54FailClosedBeforeForeignHeader();\n"
+              "                    if (!XgbaR54FailClosedBeforeForeignHeader()) return FALSE;\n"
               "            }\n"
               "        }\n"
               "        LoadMapFromWarp(a2);\n        (*state)++;\n        break;",
@@ -214,6 +220,19 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                 "        gObjectEvents[objectEventId].localId,script);\n"
                 "    return script;\n}",
                 "R48 original Pokémon object event A-button scripting")
+            if "#define XGBA_R54_REAL_WARP_ADMISSION" in Path(config).read_text():
+                # Genuine original Emerald movement warp metatile probe. The
+                # foreign source remains quarantined until assets, map slot
+                # routing and save namespaces can be admitted end-to-end.
+                source=r16.one(source,
+                    "static bool8 TryStartWarpEventScript(struct MapPosition *position, u16 metatileBehavior)\n{\n    s8 warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);\n",
+                    "extern bool8 XgbaR76NotePhysicalOriginalStepWarp(u16 x,u16 y,u8 elevation);\n"
+                    "static bool8 TryStartWarpEventScript(struct MapPosition *position, u16 metatileBehavior)\n"
+                    "{\n"
+                    "    s8 warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);\n"
+                    "    if (warpEventId == WARP_ID_NONE && IsWarpMetatileBehavior(metatileBehavior) == TRUE)\n"
+                    "        XgbaR76NotePhysicalOriginalStepWarp(position->x,position->y,position->elevation);\n",
+                    "R76 real original Emerald physical step-warp metatile lookup")
             interaction.write_text(source)
             # Link the ACTUAL Fly field-effect arrival callback, not a
             # surrogate keypress or map-viewer source switch. This only
