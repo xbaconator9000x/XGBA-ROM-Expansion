@@ -18,6 +18,9 @@ def fixture(folder):
         p.parent.mkdir(parents=True,exist_ok=True)
         p.write_text(data) if isinstance(data,str) else p.write_bytes(data)
     put("include/constants/event_objects.h","#define OBJ_EVENT_GFX_BOY_2_HNS 406\n")
+    put("src/data/object_events/object_event_graphics_info_pointers.h",
+        "const struct ObjectEventGraphicsInfo *const gObjectEventGraphicsInfoPointers[NUM_OBJ_EVENT_GFX] = {\\n"
+        "[OBJ_EVENT_GFX_BOY_2_HNS] = &gObjectEventGraphicsInfo_Boy2_hns,\\n};\\n")
     put("src/data/object_events/object_event_graphics_info.h",
         "const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Boy2_hns = {TAG_NONE, OBJ_EVENT_PAL_TAG_NPC_4_HNS, OBJ_EVENT_PAL_TAG_NONE, 256, 16, 32, 2, SHADOW_SIZE_M, FALSE, FALSE, TRACKS_FOOT, &gObjectEventBaseOam_16x32, sOamTables_16x32, sAnimTable_Standard, sPicTable_Boy2_hns};\n")
     put("src/data/object_events/object_event_pic_tables.h",
@@ -37,7 +40,8 @@ def fixture(folder):
         r95.PAL_BYTES:0x08000e00,
         r95.OAM_BYTES:0x08000f00,
         r95.ANIM_TABLE:0x08000f20,
-        r95.FIRST_ANIM:0x08000f40
+        r95.FIRST_ANIM:0x08000f40,
+        "gObjectEventGraphicsInfoPointers":0x08001000
     }
     rom=bytearray(16384)
     for j in range(9):
@@ -50,6 +54,7 @@ def fixture(folder):
     struct.pack_into("<4H",rom,0xf00,0x8000,0x8000,0,0)
     struct.pack_into("<I",rom,0xf20,symbols[r95.FIRST_ANIM])
     struct.pack_into("<4H",rom,0xf40,0,16,0xfffe,0)
+    struct.pack_into("<I",rom,0x1000+406*4,symbols[r95.SOURCE_OBJECT])
     return root,rom,symbols
 
 class NineFrameSourceBoy2Tests(unittest.TestCase):
@@ -83,6 +88,12 @@ class NineFrameSourceBoy2Tests(unittest.TestCase):
             root,rom,symbols=fixture(d)
             del symbols[r95.PIC_BYTES]
             with self.assertRaisesRegex(r95.HnsOriginalObjectError,"linked HnS symbol"):
+                r95.extract_original_boy2(root,rom,symbols)
+    def test_refuse_wrong_built_original_graphics_table_slot(self):
+        with tempfile.TemporaryDirectory() as d:
+            root,rom,symbols=fixture(d)
+            struct.pack_into("<I",rom,0x1000+406*4,0x08000500)
+            with self.assertRaisesRegex(r95.HnsOriginalObjectError,"graphics table"):
                 r95.extract_original_boy2(root,rom,symbols)
     def test_refuse_wrong_source_graphics_id(self):
         with tempfile.TemporaryDirectory() as d:
