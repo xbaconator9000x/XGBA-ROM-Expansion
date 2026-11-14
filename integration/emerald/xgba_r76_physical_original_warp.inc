@@ -7,6 +7,7 @@
  * Loading target original-world graphics and committing it remains TODO.
  */
 #include "../common/xgba_r76_physical_original_warp.h"
+extern void DoWarp(void);
 struct XgbaR76PhysicalWarpProof {
     volatile u32 physical_source_warp_hits;
     volatile u32 original_r73_route_verified;
@@ -22,12 +23,13 @@ bool8 XgbaR76NotePhysicalOriginalStepWarp(u16 x,u16 y,u8 elevation)
     struct XgbaR73SourceWarpRoute route={0};
     u8 idx;
     if(!gSaveBlock1Ptr || !sXgbaR50Ready || !sXgbaR51NativeTerrain.valid ||
-       !sXgbaR48SourceMapLoaded || sXgbaR50World==0u ||
+       (!sXgbaR48SourceMapLoaded && !XgbaR80ForeignInteriorActive()) ||
+       sXgbaR50World==0u ||
        sXgbaR50World>=3u || !gMapHeader.mapLayout ||
        gMapHeader.events!=&sXgbaR50LiveEvents ||
        gMapHeader.mapLayout!=&sXgbaR50LiveLayout ||
-       gSaveBlock1Ptr->location.mapGroup!=sXgbaR50Group ||
-       gSaveBlock1Ptr->location.mapNum!=sXgbaR50Number ||
+       !XgbaR80SourceLocationMatchesNative(
+          sXgbaR50World,sXgbaR50Group,sXgbaR50Number) ||
        x<MAP_OFFSET || y<MAP_OFFSET ||
        IsDma3ManagerBusyWithBgCopy())
         return FALSE;
@@ -46,5 +48,19 @@ bool8 XgbaR76NotePhysicalOriginalStepWarp(u16 x,u16 y,u8 elevation)
     sXgbaR76PhysicalProof.last_source_key=route.source_key;
     sXgbaR76PhysicalProof.last_target_key=route.target_key;
     ++sXgbaR76PhysicalProof.original_r73_route_verified;
-    return FALSE; /* native destination graphics/script installer not ready */
+    {
+        struct XgbaR80DoorPlan plan={0};
+        if(!XgbaR80PlanFirstHop(&route,&plan))return FALSE;
+        if(!XgbaR58PreflightOriginalDestination(
+               plan.source_world,plan.source_group,plan.source_map,
+               (s8)plan.original_x,(s8)plan.original_y,FALSE)){
+            ++gXgbaR80SourceRoomProof.refused_art;
+            return FALSE;
+        }
+        if(!XgbaR80QueueVerifiedPhysicalOriginalDoor(&plan))return FALSE;
+        SetWarpDestination(plan.native_group,plan.native_map,WARP_ID_NONE,
+                           (s8)plan.original_x,(s8)plan.original_y);
+        DoWarp(); /* genuine native original Emerald fade and field load */
+        return TRUE;
+    }
 }

@@ -231,8 +231,9 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                     "static bool8 TryStartWarpEventScript(struct MapPosition *position, u16 metatileBehavior)\n"
                     "{\n"
                     "    s8 warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);\n"
-                    "    if (warpEventId == WARP_ID_NONE)\n"
-                    "        XgbaR76NotePhysicalOriginalStepWarp(position->x,position->y,position->elevation);\n",
+                    "    if (warpEventId == WARP_ID_NONE &&\n"
+                    "        XgbaR76NotePhysicalOriginalStepWarp(position->x,position->y,position->elevation))\n"
+                    "        return TRUE;\n",
                     "R76 real original Emerald physical step-warp metatile lookup")
                 source=r16.one(source,
                     "static bool8 TryArrowWarp(struct MapPosition *position, u16 metatileBehavior, u8 direction)\n"
@@ -242,14 +243,16 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                     "static bool8 TryArrowWarp(struct MapPosition *position, u16 metatileBehavior, u8 direction)\n"
                     "{\n"
                     "    s8 warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);\n"
-                    "    if (warpEventId == WARP_ID_NONE)\n"
-                    "        XgbaR76NotePhysicalOriginalStepWarp(position->x,position->y,position->elevation);\n",
+                    "    if (warpEventId == WARP_ID_NONE &&\n"
+                    "        XgbaR76NotePhysicalOriginalStepWarp(position->x,position->y,position->elevation))\n"
+                    "        return TRUE;\n",
                     "R77 original Emerald on-map directional arrow warp path")
                 source=r16.one(source,
                     "        if (MetatileBehavior_IsWarpDoor(metatileBehavior) == TRUE)\n"
                     "        {\n",
                     "        /* R78 original R49 source door candidates may use non-Emerald tile IDs. */\n"
-                    "        XgbaR76NotePhysicalOriginalStepWarp(position->x,position->y,position->elevation);\n"
+                    "        if (XgbaR76NotePhysicalOriginalStepWarp(\n"
+                    "              position->x,position->y,position->elevation)) return TRUE;\n"
                     "        if (MetatileBehavior_IsWarpDoor(metatileBehavior) == TRUE)\n"
                     "        {\n",
                     "R78 original held-direction north-door probe before native tile category")
