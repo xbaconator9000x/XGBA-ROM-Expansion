@@ -61,7 +61,7 @@ def extract_sprite(rom:bytes,record:dict,*,expected_world:int):
        type(desc) is not int or not 0<=desc<=0x01ffffff or \
        type(width) is not int or not 8<=width<=64 or width%8 or \
        type(height) is not int or not 8<=height<=64 or height%8 or \
-       type(frames) is not int or not 1<=frames<=8 or \
+       type(frames) is not int or not 1<=frames<=16 or \
        type(compression) is not int or compression not in range(7) or \
        (width,height) not in GBA_OBJECT_SIZES:
         raise OriginalObjectSourceError("Invalid source-qualified 16-bit graphics metadata")
