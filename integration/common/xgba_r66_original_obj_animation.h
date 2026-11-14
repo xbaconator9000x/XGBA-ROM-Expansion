@@ -62,12 +62,18 @@ static inline int XgbaR66OriginalFirstAnimationValid(
     for(i=0u;i<commands;i++){
         const uint16_t image=XgbaR66Le16(raw+4u*i);
         const uint16_t argument=XgbaR66Le16(raw+4u*i+2u);
-        if(image==UINT16_C(0xfffe)) /* native ANIMCMD_END */
+        /* Actual pokeemerald/pokehns union AnimCmd ABI:
+         * END = -1 (0xffff), JUMP = -2 (0xfffe), LOOP = -3 (0xfffd).
+         * Frame duration occupies six bits; bit6/7 are horizontal/vertical
+         * flips. Refuse unsupported LOOP and nonzero reserved bits. */
+        if(image==UINT16_C(0xffff)) /* ANIMCMD_END */
             return i>0u && i+1u==commands && argument==0u;
-        if(image==UINT16_C(0xfffd)){ /* native ANIMCMD_JUMP */
+        if(image==UINT16_C(0xfffe)) /* ANIMCMD_JUMP */
             return i>0u && i+1u==commands && argument<i;
-        }
-        if(image>=frame_count || argument==0u || argument>255u)
+        if(image==UINT16_C(0xfffd)) /* ANIMCMD_LOOP: unsupported */
+            return 0;
+        if(image>=frame_count || (argument&UINT16_C(0xff00))!=0u ||
+           (argument&UINT16_C(0x003f))==0u)
             return 0;
     }
     return 0; /* Unterminated original animation would read outside backing. */
