@@ -18,7 +18,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Authored source-provenance and native R53 bridge tests
-        run: python3 -m unittest discover -s tests -p 'test_xgba_r93_hns_official_source.py' -v
+        run: |
+          python3 -m unittest discover -s tests -p 'test_xgba_r93_hns_official_source.py' -v
           python3 -m unittest discover -s tests -p 'test_xgba_r95_hns_original_obj.py' -v
       - name: Checkout exact public original Heart and Soul 2.0.6 source
         uses: actions/checkout@v4
