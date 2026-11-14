@@ -14,7 +14,7 @@
 struct XgbaR57SourceSprite {
     struct XgbaR57SourceSprite *next;
     struct ObjectEventGraphicsInfo info;
-    struct SpriteFrameImage images[8];
+    struct SpriteFrameImage images[16];
     u16 palette[16];
     struct OamData original_oam;
     union AnimCmd original_anims[XGBA_R66_ANIM_MAX_COMMANDS];
@@ -118,7 +118,7 @@ static int XgbaR57InstallOne(u8 world,u16 original_id)
     if(original.sizes[2]!=XGBA_R66_OAM_BYTES ||
        original.sizes[3]>XGBA_R66_ANIM_MAX_BYTES ||
        original.sizes[0]>XGBA_R56_MAX_FRAMES_BYTES ||
-       original.frame_count>8u)return 0;
+       original.frame_count>16u)return 0;
     out=AllocZeroed(sizeof(*out)+original.sizes[0]);
     if(!out){++gXgbaR57SourceSpriteProof.refused_heap;return 0;}
     out->original_id=original_id;
