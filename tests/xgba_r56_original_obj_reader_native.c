@@ -102,7 +102,7 @@ int main(void)
     assert(m.frame_count==9u && m.sizes[0]==2304u);
     put16(head+52,17u);put32(head+60,XgbaR49Crc32(head,60u));
     assert(!XgbaR56ReadMeta(&r,2u,0x4000u,&m));
-    printf("PASS_R56_ORIGINAL_OBJ_AUTHENTICATED_16BIT_SOURCE_ID 
+    printf("PASS_R56_ORIGINAL_OBJ_AUTHENTICATED_16BIT_SOURCE_ID "
            "CRC_META=1 CRC_FRAMES=1 CRC_PALETTE=1 CRC_OAM_ANIMS=1 "
            "NO_TRUNCATION=1 NO_UNVERIFIED_STAGE=1 REFUSED=%u\n",r.refused);
     return 0;
