@@ -88,7 +88,7 @@ static inline int XgbaR56ReadMeta(struct XgbaR56Reader *reader,
     if(!XgbaR56ValidGbaObjectShape(next.width,next.height) ||
        next.width>64u || next.height>64u ||
        (next.width&7u) || (next.height&7u) ||
-       !next.frame_count || next.frame_count>8u ||
+       !next.frame_count || next.frame_count>16u ||
        next.descriptor_offset>0x01ffffffu){
         ++reader->refused;return 0;
     }
