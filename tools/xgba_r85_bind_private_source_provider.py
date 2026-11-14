@@ -168,8 +168,11 @@ def bind_private_sources(
     ]
     # Recheck that no original resource absolute offset intersects native content.
     if any(e["offset"] < first or e["offset"]+e["length"] > first+len(private_payload)
-           for e in new_entries[len(base_entries):]):
-        raise PrivateProviderAdmissionError("Private source relocation invalid")
+           for e in new_entries[len(base_entries):len(base_entries)+len(original_entries)]):
+        raise PrivateProviderAdmissionError("Private original Rocket source relocation invalid")
+    if any(e["offset"] < hns_start or e["offset"]+e["length"] > hns_start+len(hns_data)
+           for e in new_entries[len(base_entries)+len(original_entries):]):
+        raise PrivateProviderAdmissionError("Official HnS original source build relocation invalid")
     out_dir.mkdir(parents=True,exist_ok=False)
     data_path = out_dir / "xgba-private-original-emerald-sidecar.bin"
     manifest_path = out_dir / "manifest.json"
