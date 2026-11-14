@@ -16,7 +16,7 @@ class R76OriginalStepNative(unittest.TestCase):
   self.assertIn("XgbaR73PreflightLoadedForeignWarp(idx,&route)",core)
   self.assertIn("TryArrowWarp(struct MapPosition *position, u16 metatileBehavior, u8 direction)",patch)
   self.assertIn("IsArrowWarpMetatileBehavior(metatileBehavior, direction) == TRUE",patch)
-  self.assertIn("TryDoorWarp",patch)
+  self.assertIn("warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);",patch)
   self.assertIn("R77 original Emerald A-button north-door warp path",patch)
   self.assertIn("R77 original Emerald on-map directional arrow warp path",patch)
   self.assertGreaterEqual(patch.count("XgbaR76NotePhysicalOriginalStepWarp(position->x,position->y,position->elevation)"),3)
