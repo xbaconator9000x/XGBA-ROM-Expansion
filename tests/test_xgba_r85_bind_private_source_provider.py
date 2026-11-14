@@ -69,6 +69,8 @@ class R85OriginalBindingTests(unittest.TestCase):
     r85.bind_private_sources(rom,base,private,root/"bad",expected_private_sha=r85.digest_file(private),
                              required_witnesses=witness)
    self.assertFalse((root/"bad").exists())
+   # Restore the actual fixture ROM before testing independent pack SHA rejection.
+   rom.write_bytes(b"ORIGINAL_AUTHORED_FIXTURE"*64)
    with self.assertRaisesRegex(r85.PrivateProviderAdmissionError,"original private R79"):
     r85.bind_private_sources(rom,base,private,root/"bad",expected_private_sha="0"*64,
                              required_witnesses=witness)
