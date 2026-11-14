@@ -226,7 +226,6 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                 # routing and save namespaces can be admitted end-to-end.
                 source=r16.one(source,
                     "static bool8 TryStartWarpEventScript(struct MapPosition *position, u16 metatileBehavior)\n{\n    s8 warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);\n",
-                    "extern bool8 XgbaR76NotePhysicalOriginalStepWarp(u16 x,u16 y,u8 elevation);\n"
                     "static bool8 TryStartWarpEventScript(struct MapPosition *position, u16 metatileBehavior)\n"
                     "{\n"
                     "    s8 warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);\n"
@@ -237,6 +236,7 @@ def patch_emerald_littleroot_sources(emerald:Path,config:Path,*,r18_save:bool=Fa
                     "static bool8 TryArrowWarp(struct MapPosition *position, u16 metatileBehavior, u8 direction)\n"
                     "{\n"
                     "    s8 warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);\n",
+                    "extern bool8 XgbaR76NotePhysicalOriginalStepWarp(u16 x,u16 y,u8 elevation);\n"
                     "static bool8 TryArrowWarp(struct MapPosition *position, u16 metatileBehavior, u8 direction)\n"
                     "{\n"
                     "    s8 warpEventId = GetWarpEventAtMapPosition(&gMapHeader, position);\n"
