@@ -9,6 +9,10 @@ on:
       - 'integration/expansion/**'
       - 'integration/fire_red/xgba_guest.h'
       - 'tools/xgba_expansion_source_adapter.py'
+      - 'tools/xgba_expansion_native_acceptance.py'
+      - 'tools/xgba_mgba_run.py'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'integration/mgba/xgba_expansion_native.h'
       - 'tests/test_xgba_expansion_source_adapter.py'
       - '.github/workflows/xgba-expansion-frameworks.yml'
   pull_request:
@@ -16,6 +20,10 @@ on:
       - 'integration/expansion/**'
       - 'integration/fire_red/xgba_guest.h'
       - 'tools/xgba_expansion_source_adapter.py'
+      - 'tools/xgba_expansion_native_acceptance.py'
+      - 'tools/xgba_mgba_run.py'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'integration/mgba/xgba_expansion_native.h'
       - 'tests/test_xgba_expansion_source_adapter.py'
       - '.github/workflows/xgba-expansion-frameworks.yml'
   workflow_dispatch:
@@ -46,7 +54,7 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
             binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi \
-            build-essential cmake ninja-build pkg-config libpng-dev
+            build-essential cmake ninja-build pkg-config libpng-dev python3-pil
       - name: Clone exact tagged upstream source
         run: |
           git clone --depth 1 --recurse-submodules --branch expansion/1.17.2 \
@@ -63,8 +71,31 @@ jobs:
           test -s "upstream/poke${{ matrix.target }}.elf"
           arm-none-eabi-nm "upstream/poke${{ matrix.target }}.elf" |
             grep -F gXgbaExpansionProof
+      - name: Clone pinned upstream native mGBA
+        run: |
+          mkdir -p upstream-mgba
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream-mgba
+          git -C upstream-mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream-mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Execute actual expanded game guest MMIO in patched native mGBA
+        run: |
+          python3 tools/xgba_expansion_native_acceptance.py \
+            --source upstream --mgba upstream-mgba \
+            --target "${{ matrix.target }}" --output native-evidence
+          test ! -e native-evidence/xgba-private-test-sidecar.bin
+          test ! -e native-evidence/xgba-private-test-manifest.json
+      - name: Publish native LCD and non-ROM proof only
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-rhh-${{ matrix.target }}-native-mmio-lcd
+          path: |
+            native-evidence/*.png
+            native-evidence/*-proof.json
+          retention-days: 30
+          if-no-files-found: error
       - name: Disclosure
         run: |
           echo 'This is a genuine upstream ARM source-build gate only.'
-          echo 'Native patched-mGBA external reads, LCD frames, Flash and gameplay still require separate acceptance.'
+          echo 'Native MMIO external reads and LCD proof accepted ONLY when the preceding job passes; maps/battles/Flash still pending.'
           echo 'No generated ROM or copyrighted asset artifacts are uploaded.'
