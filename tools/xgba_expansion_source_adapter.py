@@ -79,9 +79,16 @@ def patched_main(original: str, header: Path, probe: str) -> str:
     header_name = header.resolve().as_posix()
     if '"' in header_name or "\n" in header_name:
         raise ExpansionDrift("unsafe header path")
-    if probe.count("__XGBA_SHARED_GUEST__") != 1:
-        raise ExpansionDrift("shared guest source include drift")
-    probe = probe.replace("__XGBA_SHARED_GUEST__", header_name)
+    if probe.count("__XGBA_SHARED_GUEST__") != 1 or probe.count("__XGBA_PAGE_API__") != 1:
+        raise ExpansionDrift("XGBA source ABI include drift")
+    page_api = ROOT / "integration/expansion/xgba_expansion_page.h"
+    if not page_api.is_file():
+        raise ExpansionDrift("XGBA expansion page ABI header missing")
+    page_api_name = page_api.resolve().as_posix()
+    if '"' in page_api_name or "\n" in page_api_name:
+        raise ExpansionDrift("unsafe page API header path")
+    probe = (probe.replace("__XGBA_SHARED_GUEST__", header_name)
+                  .replace("__XGBA_PAGE_API__", page_api_name))
     text = _one(original,
                 "void AgbMain(void)\n{",
                 probe + "\nvoid AgbMain(void)\n{",
