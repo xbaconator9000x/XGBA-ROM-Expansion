@@ -61,6 +61,8 @@ class ExpansionSourceTests(unittest.TestCase):
                         self.assertEqual(patched.count("XgbaExpansionProbeBoot();"), 1)
                         self.assertEqual(patched.count("XgbaExpansionProbeTick();"), 1)
                         self.assertIn("XGBA_EXPANSION_RESOURCE_ID", patched)
+                        self.assertIn("InitHeap(gHeap, XGBA_EXPANSION_HEAP_BYTES);", patched)
+                        self.assertNotIn("InitHeap(gHeap, HEAP_SIZE);", patched)
                         self.assertIn("xgba_guest.h", patched)
                         raise RuntimeError("synthetic failure")
                 self.assertEqual(file.read_text(), MAIN)
@@ -93,6 +95,22 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("if (video)\n        core->setVideoBuffer(core, video, 240);", native)
         header = (adapter.ROOT / "integration/mgba/xgba_expansion_native.h").read_text()
         self.assertIn('fail("RHH native mGBA framebuffer not attached")', header)
+
+    def test_real_heap_tail_16k_page_contract(self):
+        content = (adapter.ROOT / "integration/expansion/xgba_expansion_probe.inc").read_text()
+        native = (adapter.ROOT / "integration/mgba/xgba_expansion_native.h").read_text()
+        harness = (adapter.ROOT / "tools/xgba_expansion_native_acceptance.py").read_text()
+        self.assertIn("#define XGBA_EXPANSION_PAGE_BYTES 0x4000u", content)
+        self.assertIn("HEAP_SIZE - XGBA_EXPANSION_PAGE_BYTES", content)
+        self.assertIn("XgbaExpansionPageAcquire", content)
+        self.assertIn("XgbaExpansionPageReset", content)
+        self.assertIn("gXgbaExpansionProof.page_resident = 0u;", content)
+        self.assertIn("gXgbaExpansionProof.page_resident = length;", content)
+        self.assertIn("return 0u; /* reject truncation/ambiguous source resource ID */", content)
+        self.assertIn("uint8_t expected[16384];", native)
+        self.assertIn("RHH original engine overwrote protected XGBA page", native)
+        self.assertIn("PAGE_PAYLOAD = bytes(", harness)
+        self.assertIn("range(16 * 1024)", harness)
 
     def test_rejects_injected_header_path(self):
         probe = (adapter.ROOT / "integration/expansion/xgba_expansion_probe.inc").read_text()
