@@ -76,7 +76,7 @@ jobs:
         run: |
           python3 tools/xgba_expansion_source_adapter.py \
             --source upstream --target "${{ matrix.target }}" \
-            --require-tag expansion/1.17.2 --build
+            --require-tag expansion/1.17.2 --build --map-smoke
           git -C upstream diff --exit-code -- src/main.c
           test -s "upstream/poke${{ matrix.target }}.gba"
           test -s "upstream/poke${{ matrix.target }}.elf"
@@ -124,7 +124,7 @@ jobs:
         run: |
           python3 tools/xgba_expansion_native_acceptance.py \
             --source upstream --mgba upstream-mgba \
-            --target "${{ matrix.target }}" --output native-evidence
+            --target "${{ matrix.target }}" --output native-evidence --map-smoke
           test ! -e native-evidence/xgba-private-test-sidecar.bin
           test ! -e native-evidence/xgba-private-test-manifest.json
       - name: Publish native LCD and non-ROM proof only
@@ -139,6 +139,6 @@ jobs:
           if-no-files-found: error
       - name: Disclosure
         run: |
-          echo 'This is a genuine upstream ARM source-build gate only.'
-          echo 'Original-source map and tileset page manifest verified; actual renderer use, battles and Flash cold restart still pending.'
+          echo 'This builds genuine upstream ARM targets and invokes original fieldmap/primary tileset loader entrypoints.'
+          echo 'Native fieldmap grid and BG VRAM byte proof required; playable navigation, battles and Flash cold restart remain pending.'
           echo 'No generated ROM or copyrighted asset artifacts are uploaded.'
