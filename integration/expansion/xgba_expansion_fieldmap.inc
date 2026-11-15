@@ -102,7 +102,7 @@ static void XgbaExpansionBindOriginalMap(const struct MapHeader *header)
  * original grid to avoid mixed-source map data. */
 static bool8 XgbaExpansionTryMapCopy(const struct MapLayout *layout)
 {
-    u32 total, start, n, at;
+    u32 total, start, n, at, copied = 0u;
     char id[XGBA_FIELD_ID_SIZE];
     const u8 *data;
     u16 *dest;
@@ -139,8 +139,9 @@ static bool8 XgbaExpansionTryMapCopy(const struct MapLayout *layout)
             at += segment;
         }
         XgbaExpansionPageRelease();
+        copied += n;
     }
-    if (start == total)
+    if (copied == total)
     {
         sXgbaSmokeMapUsed = TRUE;
         return TRUE;
@@ -161,7 +162,7 @@ static bool8 XgbaExpansionTryTilesetCopy(const struct Tileset *tileset,
     const char *base = NULL;
     const u8 *data;
     u32 total = (u32)numTiles * 32u;
-    u32 start, n;
+    u32 start, n, copied = 0u;
     char id[XGBA_FIELD_ID_SIZE];
     if (tileset && sXgbaMapLayout)
     {
@@ -188,8 +189,9 @@ static bool8 XgbaExpansionTryTilesetCopy(const struct Tileset *tileset,
             break;
         CpuCopy16(data, (void *)(BG_VRAM + (u32)offset * 32u + start), n);
         XgbaExpansionPageRelease();
+        copied += n;
     }
-    if (start == total)
+    if (copied == total)
     {
         if (tileset == sXgbaMapLayout->primaryTileset)
             sXgbaSmokePrimaryUsed = TRUE;
