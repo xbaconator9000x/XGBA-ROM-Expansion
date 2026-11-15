@@ -60,8 +60,8 @@ def validate_source(source: Path, target: str) -> dict:
             raise ExpansionDrift(f"expansion main ABI drift at {anchor!r}")
     if "XgbaExpansionProbeBoot" in main or "gXgbaExpansionProof" in main:
         raise ExpansionDrift("upstream main.c is already patched")
-    if "EWRAM_DATA" not in global_path.read_text(encoding="utf-8"):
-        raise ExpansionDrift("missing expected expansion EWRAM declaration ABI")
+    if "EWRAM_DATA" not in main:
+        raise ExpansionDrift("missing expected expansion EWRAM declaration usage")
     return {
         "framework": "rh-hideout/pokeemerald-expansion",
         "target": target,
