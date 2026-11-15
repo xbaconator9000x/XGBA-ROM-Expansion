@@ -24,6 +24,8 @@ MAIN = (
 )
 FIELDMAP = (
     'COMMON_DATA struct BackupMapLayout gBackupMapLayout = {0};\n'
+    'static inline u16 GetBorderBlockAt(int x, int y)\n'
+    '{\n    return 0;\n}\n'
     'static void InitMapLayoutData(const struct MapHeader *mapHeader)\n'
     '{\n'
     '    InitBackupMapLayoutData(mapLayout->map, mapLayout->width, mapLayout->height);\n'
@@ -78,6 +80,7 @@ class ExpansionSourceTests(unittest.TestCase):
                         self.assertNotIn("InitHeap(gHeap, HEAP_SIZE);", patched)
                         fieldmap = (self.root / "src/fieldmap.c").read_text()
                         self.assertIn("XgbaExpansionTryMapCopy(mapLayout);", fieldmap)
+                        self.assertIn("XgbaExpansionBindOriginalMap(mapHeader);", fieldmap)
                         self.assertEqual(fieldmap.count("XgbaExpansionTryTilesetCopy(tileset, numTiles, offset)"), 2)
                         self.assertIn("xgba_guest.h", patched)
                         raise RuntimeError("synthetic failure")
@@ -150,6 +153,9 @@ class ExpansionSourceTests(unittest.TestCase):
         patched = adapter.patched_fieldmap(FIELDMAP)
         self.assertIn("XgbaExpansionTryMapCopy(mapLayout)", patched)
         self.assertIn("DISPCNT_FORCED_BLANK", patched)
+        self.assertIn("XgbaExpansionBindOriginalMap(mapHeader);", patched)
+        self.assertIn("XgbaExpansionChunkId", patched)
+        self.assertIn("InitBackupMapLayoutData(layout->map", patched)
         self.assertIn("XgbaExpansionPageRelease()", patched)
         self.assertIn("XgbaExpansionBindMapTilesets", patched)
         self.assertEqual(patched.count("XgbaExpansionTryTilesetCopy(tileset, numTiles, offset)"), 2)
