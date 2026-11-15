@@ -79,6 +79,13 @@ static void xgba_expansion_native_run(struct mCore *core, uint32_t probe,
     if (snprintf(path,sizeof(path),"%s/expansion-%s-%s.png",
                  directory,target,enabled?"enabled":"disabled") >= (int)sizeof(path))
         fail("RHH native LCD screenshot path too long");
+    /* A missing render buffer must fail safely instead of crashing the host.
+     * This is a REAL native mGBA LCD capture, not a substituted image. */
+    const void *pixels=NULL;
+    size_t stride=0u;
+    core->getPixels(core,&pixels,&stride);
+    if (!pixels || stride < 240u)
+        fail("RHH native mGBA framebuffer not attached");
     save_native_frame(core,path);
     printf("PASS_XGBA_RHH_EXPANSION_NATIVE_GUEST_MMIO "
            "target=%s enabled=%d requests=%u bytes=%u "
