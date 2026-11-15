@@ -52,7 +52,7 @@ static inline uint32_t XgbaRhhFetchPage(const char *id, void *dst, uint32_t capa
     if (!id || !dst || !capacity || capacity > XGBA_RHH_PAGE_LIMIT)
         return 0;
     if (idAddr < XGBA_RHH_EWRAM_START || idAddr >= XGBA_RHH_EWRAM_END ||
-        dstAddr < XGBA_RHH_EWRAM_START ||
+        dstAddr < XGBA_RHH_EWRAM_START || dstAddr >= XGBA_RHH_EWRAM_END ||
         capacity > XGBA_RHH_EWRAM_END - dstAddr)
         return 0;
     if (mmio[0] != XGBA_RHH_MMIO_MAGIC || mmio[1] != XGBA_RHH_MMIO_ABI)
