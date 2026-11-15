@@ -56,13 +56,13 @@ def validate_source(source: Path, target: str) -> dict:
     missing = [s for s in required_make if s not in normalized_makefile]
     if missing:
         raise ExpansionDrift(f"unsupported expansion build matrix: {missing}")
+    if "XgbaExpansionProbeBoot" in main or "gXgbaExpansionProof" in main:
+        raise ExpansionDrift("upstream main.c is already patched")
     for anchor in ("void AgbMain(void)\n{",
                    "    InitHeap(gHeap, HEAP_SIZE);",
                    "    ReadKeys();"):
         if main.count(anchor) != 1:
             raise ExpansionDrift(f"expansion main ABI drift at {anchor!r}")
-    if "XgbaExpansionProbeBoot" in main or "gXgbaExpansionProof" in main:
-        raise ExpansionDrift("upstream main.c is already patched")
     if "EWRAM_DATA" not in main:
         raise ExpansionDrift("missing expected expansion EWRAM declaration usage")
     return {
