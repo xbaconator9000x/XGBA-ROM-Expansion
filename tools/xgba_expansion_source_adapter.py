@@ -68,7 +68,7 @@ def validate_source(source: Path, target: str) -> dict:
         raise ExpansionDrift("missing original fieldmap.c")
     fieldmap = fieldmap_path.read_text(encoding="utf-8")
     for anchor in (
-        "COMMON_DATA struct BackupMapLayout gBackupMapLayout = {0};",
+        "static inline u16 GetBorderBlockAt(int x, int y)",
         "    InitBackupMapLayoutData(mapLayout->map, mapLayout->width, mapLayout->height);",
         "static void CopyTilesetToVram(struct Tileset const *tileset, u16 numTiles, u16 offset)",
         "static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTiles, u16 offset)",
@@ -96,12 +96,12 @@ def patched_fieldmap(original: str) -> str:
     bridge = bridge_path.read_text(encoding="utf-8").replace(
         "XGBA_EXPANSION_MAP_API_PLACEHOLDER", page_api.resolve().as_posix())
     text = _one(original,
-                "COMMON_DATA struct BackupMapLayout gBackupMapLayout = {0};",
-                "COMMON_DATA struct BackupMapLayout gBackupMapLayout = {0};\n"
-                + bridge,
-                "fieldmap global ABI")
+                "static inline u16 GetBorderBlockAt(int x, int y)",
+                bridge + "\nstatic inline u16 GetBorderBlockAt(int x, int y)",
+                "fieldmap declaration ABI")
     text = _one(text,
                 "    InitBackupMapLayoutData(mapLayout->map, mapLayout->width, mapLayout->height);",
+                "    XgbaExpansionBindOriginalMap(mapHeader);\n"
                 "    InitBackupMapLayoutData(mapLayout->map, mapLayout->width, mapLayout->height);\n"
                 "    XgbaExpansionTryMapCopy(mapLayout);",
                 "original map layout copy")
