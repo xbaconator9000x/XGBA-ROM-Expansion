@@ -118,7 +118,9 @@ def patched_fieldmap(original: str) -> str:
 
 def patched_overworld(original: str) -> str:
     """Test-only direct new-game entry followed by unmodified overworld input."""
-    test_start = """    NewGameInitData();
+    test_start = """    XgbaExpansionLiveStage(2u);
+    NewGameInitData();
+    XgbaExpansionLiveStage(3u);
     /* RHH XGBA playable test: real new-game state, no intro or scripted truck.
      * Preserve all map events, NPCs, scripts and original map/tileset IDs. */
     if (IS_FRLG)
@@ -132,6 +134,7 @@ def patched_overworld(original: str) -> str:
                            MAP_NUM(MAP_LITTLEROOT_TOWN), WARP_ID_NONE, 10, 4);
     }
     WarpIntoMap();
+    XgbaExpansionLiveStage(4u);
     ResetInitialPlayerAvatarState();"""
     text = _one(original,
                 "    NewGameInitData();\n    ResetInitialPlayerAvatarState();",
@@ -139,7 +142,10 @@ def patched_overworld(original: str) -> str:
     text = _one(text,
                 "    gFieldCallback2 = NULL;\n    DoMapLoadLoop(&gMain.state);",
                 "    gFieldCallback = FieldCB_WarpExitFadeFromBlack;\n"
-                "    gFieldCallback2 = NULL;\n    DoMapLoadLoop(&gMain.state);",
+                "    gFieldCallback2 = NULL;\n"
+                "    XgbaExpansionLiveStage(5u);\n"
+                "    DoMapLoadLoop(&gMain.state);\n"
+                "    XgbaExpansionLiveStage(6u);",
                 "original field callback")
     text = _one(text,
                 "void CB2_Overworld(void)\n{\n    bool32 fading = (gPaletteFade.active != 0);\n",
@@ -152,6 +158,11 @@ def patched_overworld(original: str) -> str:
                 "        gSaveBlock1Ptr->pos.x, gSaveBlock1Ptr->pos.y);\n"
                 "    if (fading)\n",
                 "actual overworld movement callback")
+    text = _one(text,
+                "void CB2_NewGame(void)\n{",
+                "extern void XgbaExpansionLiveStage(u32 stage);\n"
+                "void CB2_NewGame(void)\n{",
+                "native source new-game stage declaration")
     return _one(text,
                 "void CB2_Overworld(void)\n{",
                 "extern void XgbaExpansionLiveTick(u32 layout, s32 x, s32 y);\n"
@@ -185,7 +196,8 @@ def patched_main(original: str, header: Path, probe: str, *, map_smoke: bool = F
                  " /* explicit native source-loader test only */")
     if overworld_play:
         boot += ("\n    SetMainCallback2(CB2_NewGame);"
-                 " /* genuine RHH game state and overworld, test only */")
+                 " /* genuine RHH game state and overworld, test only */"
+                 "\n    XgbaExpansionLiveStage(1u);")
     text = _one(text,
                 "    InitHeap(gHeap, HEAP_SIZE);",
                 boot,
