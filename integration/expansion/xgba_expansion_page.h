@@ -41,4 +41,7 @@ void XgbaExpansionBindMapTilesets(const struct MapLayout *layout,
                                   const char *secondaryTilesId);
 void XgbaExpansionUnbindMapTilesets(void);
 
+/* Explicit native loader acceptance only; never called by ordinary game boot. */
+void XgbaExpansionNativeMapTileSmoke(void);
+
 #endif /* XGBA_EXPANSION_PAGE_API_H */
