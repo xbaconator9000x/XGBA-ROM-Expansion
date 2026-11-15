@@ -796,7 +796,8 @@ int main(int argc, char **argv)
         /* Expansion source proof uses a versioned layout; state at +8,
          * unlike the old R16 Emerald-only boot probe with state at +4. */
         if (expansion_dir && probe &&
-            core->busRead32(core,(uint32_t)probe+8u)==3u)
+            core->busRead32(core,(uint32_t)probe+
+                (resource.extra_count?44u:8u))==3u)
             break;
         if (probe && core->busRead32(core, (uint32_t)probe+4) == 3u)
             break;
