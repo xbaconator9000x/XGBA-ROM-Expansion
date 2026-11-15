@@ -153,7 +153,7 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("XgbaExpansionPageRelease()", patched)
         self.assertIn("XgbaExpansionBindMapTilesets", patched)
         self.assertEqual(patched.count("XgbaExpansionTryTilesetCopy(tileset, numTiles, offset)"), 2)
-        with self.assertRaisesRegex(adapter.ExpansionDrift, "fieldmap global ABI"):
+        with self.assertRaisesRegex(adapter.ExpansionDrift, "CopyTilesetToVram"):
             adapter.patched_fieldmap(patched)
 
     def test_rejects_injected_header_path(self):
