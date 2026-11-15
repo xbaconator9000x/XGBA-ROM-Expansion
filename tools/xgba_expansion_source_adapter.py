@@ -195,16 +195,25 @@ def patched_main(original: str, header: Path, probe: str, *, map_smoke: bool = F
         boot += ("\n    XgbaExpansionNativeMapTileSmoke();"
                  " /* explicit native source-loader test only */")
     if overworld_play:
-        boot += ("\n    SetMainCallback2(CB2_NewGame);"
-                 " /* genuine RHH game state and overworld, test only */"
-                 "\n    XgbaExpansionLiveStage(1u);")
+        boot += ("\n    XgbaExpansionLiveStage(1u);"
+                 " /* gameplay callback is scheduled after boot initialization */")
     text = _one(text,
                 "    InitHeap(gHeap, HEAP_SIZE);",
                 boot,
                 "post-heap initialization")
+    tick = "    XgbaExpansionProbeTick();\n    ReadKeys();"
+    if overworld_play:
+        # AgbMain continues configuring callbacks after InitHeap. Scheduling
+        # CB2_NewGame there can be overwritten by subsequent boot setup.
+        # Install it once from the running main loop, after initialization.
+        tick += ("\n    { static bool8 sXgbaNewGameScheduled = FALSE;"
+                 "\n      if (!sXgbaNewGameScheduled) {"
+                 "\n        sXgbaNewGameScheduled = TRUE;"
+                 "\n        SetMainCallback2(CB2_NewGame);"
+                 "\n      }\n    }")
     text = _one(text,
                 "    ReadKeys();",
-                "    XgbaExpansionProbeTick();\n    ReadKeys();",
+                tick,
                 "normal game loop")
     return text
 
