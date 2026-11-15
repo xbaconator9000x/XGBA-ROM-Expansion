@@ -122,6 +122,19 @@ class ExpansionSourceTests(unittest.TestCase):
                 self.assertEqual(path.read_text(), MAIN)
                 self.assertEqual(fieldmap_path.read_text(), FIELDMAP)
 
+    def test_short_final_map_page_and_two_part_frlg_tileset_are_counted(self):
+        # A for(start += 16KiB) loop cannot compare start == total
+        # after the final 800-byte map or 4096-byte FRLG tileset page.
+        # Only bytes actually transferred establish success.
+        bridge = (adapter.ROOT / "integration/expansion/xgba_expansion_fieldmap.inc").read_text()
+        self.assertNotIn("if (start == total)", bridge)
+        self.assertEqual(bridge.count("copied += n;"), 2)
+        self.assertEqual(bridge.count("if (copied == total)"), 2)
+        self.assertIn("sXgbaSmokeMapUsed = TRUE;", bridge)
+        self.assertIn("sXgbaSmokePrimaryUsed = TRUE;", bridge)
+        self.assertIn("InitBackupMapLayoutData(layout->map", bridge)
+        self.assertIn("XgbaExpansionPageRelease();", bridge)
+
     def test_native_map_proof_verifies_guest_hashes_and_both_provider_states(self):
         native = (adapter.ROOT / "integration/mgba/xgba_expansion_native.h").read_text()
         self.assertIn("xgba_expansion_native_field_load", native)
