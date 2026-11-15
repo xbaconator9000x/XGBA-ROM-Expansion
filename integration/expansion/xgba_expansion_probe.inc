@@ -57,6 +57,19 @@ struct XgbaExpansionProof {
     volatile u32 map_smoke_tiles_hash;   /* FNV-1a over physical BG VRAM */
     volatile u32 map_smoke_map_bytes;
     volatile u32 map_smoke_tiles_bytes;
+    /* Test-only real overworld witness. Appended: all legacy offsets stable. */
+    volatile u32 live_state;
+    volatile u32 live_frames;
+    volatile u32 live_layout;
+    volatile u32 live_first_layout;
+    volatile u32 live_x;
+    volatile u32 live_y;
+    volatile u32 live_movements;
+    volatile u32 live_transitions;
+    volatile u32 live_source_maps;
+    volatile u32 live_source_primary;
+    volatile u32 live_source_secondary;
+    volatile u32 live_source_bytes;
 };
 
 /* Small metadata only. The 16KiB payload itself resides inside the
@@ -138,6 +151,45 @@ void XgbaExpansionMapSmokeReport(u32 layout, u32 mapUsed, u32 tilesUsed,
     gXgbaExpansionProof.map_smoke_map_bytes = mapBytes;
     gXgbaExpansionProof.map_smoke_tiles_bytes = tilesBytes;
     gXgbaExpansionProof.map_smoke_state = 3u;
+}
+
+
+/* Updated ONLY by the genuine CB2_Overworld and actual fieldmap loaders.
+ * The emulator never injects game state, memory or a fake controller event. */
+void XgbaExpansionLiveTick(u32 layout, s32 x, s32 y)
+{
+    if (!layout || !gXgbaExpansionProof.state)
+        return;
+    if (!gXgbaExpansionProof.live_state)
+    {
+        gXgbaExpansionProof.live_first_layout = layout;
+        gXgbaExpansionProof.live_state = 1u;
+    }
+    else
+    {
+        if (gXgbaExpansionProof.live_x != (u32)x ||
+            gXgbaExpansionProof.live_y != (u32)y)
+            ++gXgbaExpansionProof.live_movements;
+        if (gXgbaExpansionProof.live_layout != layout)
+            ++gXgbaExpansionProof.live_transitions;
+    }
+    ++gXgbaExpansionProof.live_frames;
+    gXgbaExpansionProof.live_layout = layout;
+    gXgbaExpansionProof.live_x = (u32)x;
+    gXgbaExpansionProof.live_y = (u32)y;
+}
+
+void XgbaExpansionSourceTransfer(u32 kind, u32 bytes)
+{
+    if (kind == 1u)
+        ++gXgbaExpansionProof.live_source_maps;
+    else if (kind == 2u)
+        ++gXgbaExpansionProof.live_source_primary;
+    else if (kind == 3u)
+        ++gXgbaExpansionProof.live_source_secondary;
+    else
+        return;
+    gXgbaExpansionProof.live_source_bytes += bytes;
 }
 
 static void XgbaExpansionProbeBoot(void)
