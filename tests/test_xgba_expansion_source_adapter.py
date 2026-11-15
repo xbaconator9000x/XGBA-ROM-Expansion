@@ -159,6 +159,8 @@ class ExpansionSourceTests(unittest.TestCase):
                     main = path.read_text()
                     ow = game.read_text()
                     self.assertIn("SetMainCallback2(CB2_NewGame);", main)
+                    self.assertIn("SetSaveBlocksPointers(0);", main)
+                    self.assertLess(main.index("SetSaveBlocksPointers(0);"), main.index("SetMainCallback2(CB2_NewGame);"))
                     self.assertIn("static bool8 sXgbaNewGameScheduled = FALSE;", main)
                     self.assertLess(main.index("ReadKeys();"), main.index("SetMainCallback2(CB2_NewGame);"))
                     self.assertNotIn("InitHeap(gHeap, XGBA_EXPANSION_HEAP_BYTES);\\n    SetMainCallback2", main)
