@@ -28,7 +28,8 @@ import apply_core_patch
 import test_xgba_r7_mgba_core as r7
 
 RESOURCE_OFFSET = r6.RESOURCE_OFFSET
-RESOURCE_SIZE = len(r6.PAYLOAD)
+PAGE_PAYLOAD = bytes(((i * 7 + 47) % 256 for i in range(16 * 1024)))
+RESOURCE_SIZE = len(PAGE_PAYLOAD)
 
 
 def verify_elf_probe(source: Path, target: str) -> tuple[Path, int]:
@@ -65,7 +66,7 @@ def prove(source: Path, mgba: Path, target: str, output: Path) -> dict:
     rom, proof_address = verify_elf_probe(source, target)
     game_bytes = rom.read_bytes()
     game_sha = hashlib.sha256(game_bytes).hexdigest()
-    if r6.PAYLOAD in game_bytes:
+    if PAGE_PAYLOAD in game_bytes:
         raise AssertionError("External resource must not be embedded in the ROM")
 
     mgba_sha = r7.run(["git", "-C", mgba, "rev-parse", "HEAD"]).stdout.strip()
@@ -87,7 +88,7 @@ def prove(source: Path, mgba: Path, target: str, output: Path) -> dict:
     with external.open("wb") as file:
         file.truncate(RESOURCE_OFFSET + RESOURCE_SIZE)
         file.seek(RESOURCE_OFFSET)
-        file.write(r6.PAYLOAD)
+        file.write(PAGE_PAYLOAD)
     manifest = output / "xgba-private-test-manifest.json"
     manifest.write_text(json.dumps({
         "format": sidecar.FORMAT,
@@ -98,7 +99,7 @@ def prove(source: Path, mgba: Path, target: str, output: Path) -> dict:
         "resources": [{"id": resource_id,
                        "offset": RESOURCE_OFFSET,
                        "length": RESOURCE_SIZE,
-                       "sha256": hashlib.sha256(r6.PAYLOAD).hexdigest()}],
+                       "sha256": hashlib.sha256(PAGE_PAYLOAD).hexdigest()}],
     }), encoding="utf-8")
 
     outputs = {}
@@ -111,8 +112,8 @@ def prove(source: Path, mgba: Path, target: str, output: Path) -> dict:
         label = "enabled" if enabled else "disabled"
         expected = (f"PASS_XGBA_RHH_EXPANSION_NATIVE_GUEST_MMIO "
                     f"target={target} enabled={int(enabled)}")
-        if expected not in proc.stdout:
-            raise AssertionError(f"native {target} {label} probe not accepted")
+        if expected not in proc.stdout or "page_intact_after_frames=1" not in proc.stdout:
+            raise AssertionError(f"native {target} {label} protected-page proof not accepted")
         filename = output / f"expansion-{target}-{label}.png"
         if not filename.is_file() or filename.stat().st_size <= 64:
             raise AssertionError("real mGBA LCD capture was not created")
@@ -136,8 +137,10 @@ def prove(source: Path, mgba: Path, target: str, output: Path) -> dict:
         "guest_ewram_proof_address": f"0x{proof_address:08x}",
         "resource_id": resource_id,
         "external_resource_offset": RESOURCE_OFFSET,
-        "external_payload_sha256": hashlib.sha256(r6.PAYLOAD).hexdigest(),
+        "external_payload_sha256": hashlib.sha256(PAGE_PAYLOAD).hexdigest(),
         "external_resource_bytes": RESOURCE_SIZE,
+        "actual_16k_page_intact_after_game_frames": True,
+        "heap_bytes_reserved_for_xgba_page": RESOURCE_SIZE,
         "real_expanded_guest_provider_reads_verified": True,
         "same_source_built_rom_enabled_and_disabled": True,
         "original_source_restored": True,
