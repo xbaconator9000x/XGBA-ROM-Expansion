@@ -27,4 +27,18 @@ const u8 *XgbaExpansionPageData(void);
 u32 XgbaExpansionPageResidentBytes(void);
 u32 XgbaExpansionPageGeneration(void);
 
+/*
+ * Bind exact source-owned map and tile page IDs to an original MapLayout.
+ * Call before the usual map load, never during an IRQ. Passing NULL IDs
+ * disables individual overrides; unbound layouts retain all vanilla assets.
+ * The ID lifetime must exceed the next map transition. Resource sizes are
+ * checked by the runtime against the 16KiB single-page limit.
+ */
+struct MapLayout;
+void XgbaExpansionBindMapTilesets(const struct MapLayout *layout,
+                                  const char *mapId,
+                                  const char *primaryTilesId,
+                                  const char *secondaryTilesId);
+void XgbaExpansionUnbindMapTilesets(void);
+
 #endif /* XGBA_EXPANSION_PAGE_API_H */
