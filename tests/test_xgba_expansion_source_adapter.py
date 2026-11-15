@@ -112,6 +112,23 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("PAGE_PAYLOAD = bytes(", harness)
         self.assertIn("range(16 * 1024)", harness)
 
+    def test_public_runtime_page_api_contract(self):
+        header = (adapter.ROOT / "integration/expansion/xgba_expansion_page.h").read_text()
+        impl = (adapter.ROOT / "integration/expansion/xgba_expansion_probe.inc").read_text()
+        for fn in ("XgbaExpansionPageAcquire", "XgbaExpansionPageRelease",
+                   "XgbaExpansionPageData", "XgbaExpansionPageResidentBytes",
+                   "XgbaExpansionPageGeneration"):
+            self.assertIn(fn, header)
+            self.assertIn(fn, impl)
+        self.assertIn("return gXgbaExpansionProof.page_resident ? XGBA_EXPANSION_PAGE : NULL;", impl)
+        self.assertIn("XgbaExpansionPageReset();\\n        return 0u;", impl)
+        self.assertIn("XgbaExpansionPageReset();\\n        return 0u; /* reject truncation", impl)
+        self.assertIn("XGBA_EXPANSION_PAGE_CAPACITY 16384u", header)
+        patched = adapter.patched_main(
+            MAIN, adapter.ROOT / "integration/fire_red/xgba_guest.h", impl)
+        self.assertIn("xgba_expansion_page.h", patched)
+        self.assertNotIn("__XGBA_PAGE_API__", patched)
+
     def test_rejects_injected_header_path(self):
         probe = (adapter.ROOT / "integration/expansion/xgba_expansion_probe.inc").read_text()
         with self.assertRaisesRegex(adapter.ExpansionDrift, "unsafe header path"):
