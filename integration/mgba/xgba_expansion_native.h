@@ -58,7 +58,16 @@ static void xgba_expansion_native_field_load(struct mCore *core,
     if (state!=3u || layout!=expected_layout ||
         !map_bytes || map_bytes>20480u || tile_bytes!=expected_tiles ||
         used_map!=(enabled?1u:0u) || used_tiles!=(enabled?1u:0u))
+    {
+        fprintf(stderr, "RHH_MAP_OBSERVED target=%s enabled=%d state=%u "
+                "layout=%u expected_layout=%u map_used=%u tiles_used=%u "
+                "map_bytes=%u tile_bytes=%u expected_tile_bytes=%u "
+                "provider_reads=%u extra_pages=%u\\n",
+                target,enabled,state,layout,expected_layout,used_map,
+                used_tiles,map_bytes,tile_bytes,expected_tiles,
+                device->successful_reads,resource->extra_count);
         fail("RHH original fieldmap and tile loading did not complete expected external/fallback path");
+    }
     if (snprintf(prefix,sizeof(prefix),"rhh.m.%04x.",layout)>=(int)sizeof(prefix))
         fail("RHH map source ID format exceeds host space");
     const uint32_t expect_map=xgba_expansion_source_hash(resource,prefix,map_bytes);
