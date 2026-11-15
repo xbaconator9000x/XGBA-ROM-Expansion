@@ -23,6 +23,7 @@ static bool8 sXgbaSmokePrimaryUsed;
 extern void XgbaExpansionMapSmokeReport(u32 layout, u32 mapUsed, u32 tilesUsed,
                                         u32 mapHash, u32 tilesHash,
                                         u32 mapBytes, u32 tilesBytes);
+extern void XgbaExpansionSourceTransfer(u32 kind, u32 bytes);
 
 /* The provider manifest holds one entry per original-source page, including
  * the short final page. Never change or recatalogue original map/layout IDs. */
@@ -144,6 +145,7 @@ static bool8 XgbaExpansionTryMapCopy(const struct MapLayout *layout)
     if (copied == total)
     {
         sXgbaSmokeMapUsed = TRUE;
+        XgbaExpansionSourceTransfer(1u, total);
         return TRUE;
     }
     XgbaExpansionPageRelease();
@@ -194,7 +196,12 @@ static bool8 XgbaExpansionTryTilesetCopy(const struct Tileset *tileset,
     if (copied == total)
     {
         if (tileset == sXgbaMapLayout->primaryTileset)
+        {
             sXgbaSmokePrimaryUsed = TRUE;
+            XgbaExpansionSourceTransfer(2u, total);
+        }
+        else
+            XgbaExpansionSourceTransfer(3u, total);
         return TRUE;
     }
     XgbaExpansionPageRelease();
