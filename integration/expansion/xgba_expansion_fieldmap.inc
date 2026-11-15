@@ -18,6 +18,11 @@ static const char *sXgbaSecondaryResource;
 static char sXgbaAutoMapId[20];
 static char sXgbaAutoPrimaryId[20];
 static char sXgbaAutoSecondaryId[20];
+static bool8 sXgbaSmokeMapUsed;
+static bool8 sXgbaSmokePrimaryUsed;
+extern void XgbaExpansionMapSmokeReport(u32 layout, u32 mapUsed, u32 tilesUsed,
+                                        u32 mapHash, u32 tilesHash,
+                                        u32 mapBytes, u32 tilesBytes);
 
 /* The provider manifest holds one entry per original-source page, including
  * the short final page. Never change or recatalogue original map/layout IDs. */
@@ -136,7 +141,10 @@ static bool8 XgbaExpansionTryMapCopy(const struct MapLayout *layout)
         XgbaExpansionPageRelease();
     }
     if (start == total)
+    {
+        sXgbaSmokeMapUsed = TRUE;
         return TRUE;
+    }
     XgbaExpansionPageRelease();
     InitBackupMapLayoutData(layout->map, layout->width, layout->height);
     return FALSE;
@@ -182,7 +190,62 @@ static bool8 XgbaExpansionTryTilesetCopy(const struct Tileset *tileset,
         XgbaExpansionPageRelease();
     }
     if (start == total)
+    {
+        if (tileset == sXgbaMapLayout->primaryTileset)
+            sXgbaSmokePrimaryUsed = TRUE;
         return TRUE;
+    }
     XgbaExpansionPageRelease();
     return FALSE;
+}
+
+/*
+ * Explicit test-only native entrypoint, invoked by --map-smoke builds once
+ * after InitHeap. It calls the real original map and primary tile loaders;
+ * it is NOT a scripted gameplay transition, and its pixels are not claimed
+ * to be an in-game map screenshot. Normal builds do not invoke this routine.
+ */
+void XgbaExpansionNativeMapTileSmoke(void)
+{
+    struct MapHeader header = {0};
+    const struct MapLayout *layout;
+    u32 mapHash = 2166136261u;
+    u32 tileHash = 2166136261u;
+    u32 mapBytes, tileBytes, y, x, i;
+    const u8 *grid;
+    const volatile u8 *vram = (const volatile u8 *)BG_VRAM;
+    u16 oldDisplay;
+#if defined(EMERALD)
+    const u16 layoutId = 10u;  /* LAYOUT_LITTLEROOT_TOWN in pinned RHH */
+#else
+    const u16 layoutId = 481u; /* LAYOUT_PALLET_TOWN in pinned RHH */
+#endif
+
+    layout = GetMapLayout(layoutId);
+    if (!layout || layout->width <= 0 || layout->height <= 0)
+        return;
+    sXgbaSmokeMapUsed = FALSE;
+    sXgbaSmokePrimaryUsed = FALSE;
+    header.mapLayout = layout;
+    header.mapLayoutId = layoutId;
+    InitMapLayoutData(&header); /* genuine original RHH fieldmap entrypoint */
+    mapBytes = (u32)layout->width * (u32)layout->height * 2u;
+    grid = (const u8 *)gBackupMapLayout.map;
+    for (y = 0; y < (u32)layout->height; ++y)
+    {
+        const u32 row = ((y + MAP_OFFSET) * gBackupMapLayout.width + MAP_OFFSET) * 2u;
+        for (x = 0; x < (u32)layout->width * 2u; ++x)
+            mapHash = (mapHash ^ grid[row + x]) * 16777619u;
+    }
+    oldDisplay = REG_DISPCNT;
+    REG_DISPCNT = oldDisplay | DISPCNT_FORCED_BLANK;
+    CopyPrimaryTilesetToVram(layout); /* genuine original RHH tileset path */
+    tileBytes = GetNumTilesInPrimary(layout) * 32u;
+    for (i = 0; i < tileBytes; ++i)
+        tileHash = (tileHash ^ vram[i]) * 16777619u;
+    REG_DISPCNT = oldDisplay;
+    XgbaExpansionUnbindMapTilesets();
+    XgbaExpansionMapSmokeReport(layoutId, sXgbaSmokeMapUsed,
+                                sXgbaSmokePrimaryUsed, mapHash, tileHash,
+                                mapBytes, tileBytes);
 }
