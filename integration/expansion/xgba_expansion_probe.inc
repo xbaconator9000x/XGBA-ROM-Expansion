@@ -47,6 +47,16 @@ struct XgbaExpansionProof {
     volatile u32 heap_usable_bytes;
     volatile u32 page_generation;
     volatile u32 page_resident;
+    /* Only the explicit --map-smoke source-build calls the real map loader
+     * at boot. The ordinary game build leaves these values zero. */
+    volatile u32 map_smoke_state;   /* 3 after original loader execution */
+    volatile u32 map_smoke_layout;
+    volatile u32 map_smoke_map_used;
+    volatile u32 map_smoke_tiles_used;
+    volatile u32 map_smoke_map_hash;     /* FNV-1a over copied live grid */
+    volatile u32 map_smoke_tiles_hash;   /* FNV-1a over physical BG VRAM */
+    volatile u32 map_smoke_map_bytes;
+    volatile u32 map_smoke_tiles_bytes;
 };
 
 /* Small metadata only. The 16KiB payload itself resides inside the
@@ -114,6 +124,20 @@ u32 XgbaExpansionPageResidentBytes(void)
 u32 XgbaExpansionPageGeneration(void)
 {
     return gXgbaExpansionProof.page_generation;
+}
+
+void XgbaExpansionMapSmokeReport(u32 layout, u32 mapUsed, u32 tilesUsed,
+                                 u32 mapHash, u32 tilesHash,
+                                 u32 mapBytes, u32 tilesBytes)
+{
+    gXgbaExpansionProof.map_smoke_layout = layout;
+    gXgbaExpansionProof.map_smoke_map_used = mapUsed;
+    gXgbaExpansionProof.map_smoke_tiles_used = tilesUsed;
+    gXgbaExpansionProof.map_smoke_map_hash = mapHash;
+    gXgbaExpansionProof.map_smoke_tiles_hash = tilesHash;
+    gXgbaExpansionProof.map_smoke_map_bytes = mapBytes;
+    gXgbaExpansionProof.map_smoke_tiles_bytes = tilesBytes;
+    gXgbaExpansionProof.map_smoke_state = 3u;
 }
 
 static void XgbaExpansionProbeBoot(void)
