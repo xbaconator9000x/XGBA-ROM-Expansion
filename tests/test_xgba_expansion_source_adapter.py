@@ -85,6 +85,15 @@ class ExpansionSourceTests(unittest.TestCase):
                 adapter.validate_source(self.root, "emerald")
         self.assertEqual(file.read_text(), MAIN)
 
+    def test_native_expansion_mode_owns_lcd_buffer_in_both_guards(self):
+        # Regression: every expanded-engine variant previously segfaulted
+        # (signal 11) when native LCD capture had no allocated video buffer.
+        native = (adapter.ROOT / "integration/mgba/xgba_mgba_headless.c").read_text()
+        self.assertEqual(native.count("r15_dir || r16_dir || expansion_dir || r24_dir"), 2)
+        self.assertIn("if (video)\n        core->setVideoBuffer(core, video, 240);", native)
+        header = (adapter.ROOT / "integration/mgba/xgba_expansion_native.h").read_text()
+        self.assertIn('fail("RHH native mGBA framebuffer not attached")', header)
+
     def test_rejects_injected_header_path(self):
         probe = (adapter.ROOT / "integration/expansion/xgba_expansion_probe.inc").read_text()
         with self.assertRaisesRegex(adapter.ExpansionDrift, "unsafe header path"):
