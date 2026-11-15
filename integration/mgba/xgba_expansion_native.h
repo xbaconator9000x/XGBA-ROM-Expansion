@@ -9,6 +9,95 @@
 #ifndef XGBA_EXPANSION_NATIVE_H
 #define XGBA_EXPANSION_NATIVE_H
 
+
+static uint32_t xgba_expansion_source_hash(const struct ResourceFile *resource,
+                                            const char *prefix,
+                                            uint32_t expected_bytes)
+{
+    uint32_t hash=2166136261u, seen=0u;
+    for (unsigned i=0;i<resource->extra_count;++i) {
+        const struct ExtraResourceFile *item=&resource->extra[i];
+        if (strncmp(item->id,prefix,strlen(prefix)))
+            continue;
+        if (item->length>16384u || item->length>expected_bytes-seen)
+            fail("RHH original map/tileset page exceeds bounded source");
+        FILE *file=fopen(resource->path,"rb");
+        if (!file || item->offset>INT64_MAX ||
+            fseeko(file,(off_t)item->offset,SEEK_SET))
+            fail("RHH native source page unavailable");
+        for (uint64_t j=0;j<item->length;++j) {
+            int byte=fgetc(file);
+            if (byte==EOF) fail("RHH source page unexpectedly truncated");
+            hash=(hash^(uint8_t)byte)*16777619u;
+        }
+        fclose(file);
+        seen+=(uint32_t)item->length;
+    }
+    if (seen!=expected_bytes)
+        fail("RHH native proof must cover complete original source asset bytes");
+    return hash;
+}
+
+static void xgba_expansion_native_field_load(struct mCore *core,
+           uint32_t probe, const char *target, const char *directory,
+           const struct XgbaGbaDevice *device,
+           const struct ResourceFile *resource, int enabled)
+{
+    /* Appended native witness begins after original 44-byte boot proof. */
+    const uint32_t state=core->busRead32(core,probe+44u);
+    const uint32_t layout=core->busRead32(core,probe+48u);
+    const uint32_t used_map=core->busRead32(core,probe+52u);
+    const uint32_t used_tiles=core->busRead32(core,probe+56u);
+    const uint32_t actual_map=core->busRead32(core,probe+60u);
+    const uint32_t actual_tiles=core->busRead32(core,probe+64u);
+    const uint32_t map_bytes=core->busRead32(core,probe+68u);
+    const uint32_t tile_bytes=core->busRead32(core,probe+72u);
+    const uint32_t expected_layout=!strcmp(target,"emerald")?10u:481u;
+    const uint32_t expected_tiles=!strcmp(target,"emerald")?16384u:20480u;
+    char prefix[24];
+    if (state!=3u || layout!=expected_layout ||
+        !map_bytes || map_bytes>20480u || tile_bytes!=expected_tiles ||
+        used_map!=(enabled?1u:0u) || used_tiles!=(enabled?1u:0u))
+        fail("RHH original fieldmap and tile loading did not complete expected external/fallback path");
+    if (snprintf(prefix,sizeof(prefix),"rhh.m.%04x.",layout)>=(int)sizeof(prefix))
+        fail("RHH map source ID format exceeds host space");
+    const uint32_t expect_map=xgba_expansion_source_hash(resource,prefix,map_bytes);
+    if (snprintf(prefix,sizeof(prefix),"rhh.p.%04x.",layout)>=(int)sizeof(prefix))
+        fail("RHH tileset source ID format exceeds host space");
+    const uint32_t expect_tiles=xgba_expansion_source_hash(resource,prefix,tile_bytes);
+    if (actual_map!=expect_map)
+        fail("RHH real map loader produced a different copied map grid from verified source pages");
+    if (enabled && actual_tiles!=expect_tiles)
+        fail("RHH real primary tileset path loaded VRAM different from verified source tiles");
+    if ((enabled && (device->successful_reads!=1u+resource->extra_count ||
+                     resource->reads!=1u+resource->extra_count ||
+                     device->failed_reads)) ||
+        (!enabled && (device->successful_reads || resource->reads ||
+                      device->failed_reads)))
+        fail("RHH native original map or multi-page tile source reads do not match");
+    /* Preserve LCD as genuine native engine continuation, NOT proof that the
+     * smoke-loaded tiles are rendered as a playable map on the title screen. */
+    core->setKeys(core,0u);
+    for (unsigned i=0;i<240u;++i)
+        core->runFrame(core);
+    char path[1024];
+    if (snprintf(path,sizeof(path),"%s/expansion-%s-%s.png",
+                 directory,target,enabled?"enabled":"disabled") >= (int)sizeof(path))
+        fail("RHH map native screenshot path exceeds limit");
+    const void *pixels=NULL;
+    size_t stride=0u;
+    core->getPixels(core,&pixels,&stride);
+    if (!pixels || stride<240u)
+        fail("RHH source map native LCD framebuffer unattached");
+    save_native_frame(core,path);
+    printf("PASS_XGBA_RHH_NATIVE_REAL_FIELD_LOADER "
+           "target=%s enabled=%d layout=%u map_bytes=%u tiles_bytes=%u "
+           "map_source_used=%u tile_source_used=%u provider_reads=%u "
+           "map_source_hash=%08x tiles_source_hash=%08x real_lcd=%s\n",
+           target,enabled,layout,map_bytes,tile_bytes,used_map,used_tiles,
+           device->successful_reads,actual_map,actual_tiles,path);
+}
+
 static void xgba_expansion_native_run(struct mCore *core, uint32_t probe,
         const char *target, const char *directory,
         const struct XgbaGbaDevice *device,
@@ -35,6 +124,11 @@ static void xgba_expansion_native_run(struct mCore *core, uint32_t probe,
     }
     if (strcmp(resource->id,required_id) || resource->length != 16384u)
         fail("RHH native provider resource does not match actual game target");
+    if (resource->extra_count) {
+        xgba_expansion_native_field_load(core,probe,target,directory,
+                                         device,resource,enabled);
+        return;
+    }
 
     const uint32_t magic=core->busRead32(core,probe);
     const uint32_t variant=core->busRead32(core,probe+4u);
