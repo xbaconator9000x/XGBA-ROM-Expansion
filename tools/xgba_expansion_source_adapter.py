@@ -63,6 +63,20 @@ def validate_source(source: Path, target: str) -> dict:
                    "    ReadKeys();"):
         if main.count(anchor) != 1:
             raise ExpansionDrift(f"expansion main ABI drift at {anchor!r}")
+    fieldmap_path = source / "src/fieldmap.c"
+    if not fieldmap_path.is_file():
+        raise ExpansionDrift("missing original fieldmap.c")
+    fieldmap = fieldmap_path.read_text(encoding="utf-8")
+    for anchor in (
+        "COMMON_DATA struct BackupMapLayout gBackupMapLayout = {0};",
+        "    InitBackupMapLayoutData(mapLayout->map, mapLayout->width, mapLayout->height);",
+        "static void CopyTilesetToVram(struct Tileset const *tileset, u16 numTiles, u16 offset)",
+        "static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTiles, u16 offset)",
+    ):
+        if fieldmap.count(anchor) != 1:
+            raise ExpansionDrift(f"expansion fieldmap ABI drift at {anchor!r}")
+    if "XgbaExpansionTryMapCopy" in fieldmap:
+        raise ExpansionDrift("upstream fieldmap.c already patched")
     if "EWRAM_DATA" not in main:
         raise ExpansionDrift("missing expected expansion EWRAM declaration usage")
     return {
@@ -73,6 +87,33 @@ def validate_source(source: Path, target: str) -> dict:
         "source_anchors": 3,
         "runtime_gameplay_verified": False,
     }
+
+
+def patched_fieldmap(original: str) -> str:
+    """Integrate original RHH fieldmap and both tileset load entrypoints."""
+    bridge_path = ROOT / "integration/expansion/xgba_expansion_fieldmap.inc"
+    page_api = ROOT / "integration/expansion/xgba_expansion_page.h"
+    bridge = bridge_path.read_text(encoding="utf-8").replace(
+        "XGBA_EXPANSION_MAP_API_PLACEHOLDER", page_api.resolve().as_posix())
+    text = _one(original,
+                "COMMON_DATA struct BackupMapLayout gBackupMapLayout = {0};",
+                "COMMON_DATA struct BackupMapLayout gBackupMapLayout = {0};\n"
+                + bridge,
+                "fieldmap global ABI")
+    text = _one(text,
+                "    InitBackupMapLayoutData(mapLayout->map, mapLayout->width, mapLayout->height);",
+                "    InitBackupMapLayoutData(mapLayout->map, mapLayout->width, mapLayout->height);\n"
+                "    XgbaExpansionTryMapCopy(mapLayout);",
+                "original map layout copy")
+    for signature in (
+        "static void CopyTilesetToVram(struct Tileset const *tileset, u16 numTiles, u16 offset)",
+        "static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTiles, u16 offset)",
+    ):
+        text = _one(text, signature + "\n{\n    if (tileset)",
+                    signature + "\n{\n    if (XgbaExpansionTryTilesetCopy(tileset, numTiles, offset))\n"
+                    "        return;\n    if (tileset)",
+                    signature)
+    return text
 
 
 def patched_main(original: str, header: Path, probe: str) -> str:
@@ -110,17 +151,22 @@ def patched_source(source: Path, target: str):
     """Apply only during build; reliably restore upstream source afterwards."""
     report = validate_source(source, target)
     path = source / "src/main.c"
+    fieldmap_path = source / "src/fieldmap.c"
     before = path.read_text(encoding="utf-8")
+    fieldmap_before = fieldmap_path.read_text(encoding="utf-8")
     header = ROOT / "integration/fire_red/xgba_guest.h"
     probe_path = ROOT / "integration/expansion/xgba_expansion_probe.inc"
     if not header.is_file() or not probe_path.is_file():
         raise ExpansionDrift("XGBA shared ABI/probe source unavailable")
     after = patched_main(before, header, probe_path.read_text(encoding="utf-8"))
+    fieldmap_after = patched_fieldmap(fieldmap_before)
     try:
         path.write_text(after, encoding="utf-8")
+        fieldmap_path.write_text(fieldmap_after, encoding="utf-8")
         yield report
     finally:
         path.write_text(before, encoding="utf-8")
+        fieldmap_path.write_text(fieldmap_before, encoding="utf-8")
 
 
 def require_release_tag(source: Path, tag: str) -> str:
