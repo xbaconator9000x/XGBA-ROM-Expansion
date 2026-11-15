@@ -21,6 +21,7 @@ sys.path[:0] = [str(ROOT / "tools"), str(ROOT / "integration/mgba"),
                str(ROOT / "tests")]
 
 import xgba_expansion_source_adapter as adapter
+import xgba_expansion_map_pages as map_pages
 import xgba_resource_integration_smoke as r6
 import xgba_resource_sidecar as sidecar
 import xgba_mgba_run as launcher
@@ -51,7 +52,7 @@ def verify_elf_probe(source: Path, target: str) -> tuple[Path, int]:
     return rom, address
 
 
-def prove(source: Path, mgba: Path, target: str, output: Path) -> dict:
+def prove(source: Path, mgba: Path, target: str, output: Path, *, map_smoke: bool = False) -> dict:
     if target not in adapter.TARGETS:
         raise ValueError("Unrecognized expanded game variant")
     source = source.resolve()
@@ -89,6 +90,30 @@ def prove(source: Path, mgba: Path, target: str, output: Path) -> dict:
         file.truncate(RESOURCE_OFFSET + RESOURCE_SIZE)
         file.seek(RESOURCE_OFFSET)
         file.write(PAGE_PAYLOAD)
+    page_entries = []
+    if map_smoke:
+        layout = ("LAYOUT_LITTLEROOT_TOWN" if target == "emerald"
+                  else "LAYOUT_PALLET_TOWN")
+        png = ("data/tilesets/primary/general/tiles.png" if target == "emerald"
+               else "data/tilesets/primary/general_frlg/tiles.png")
+        plan = map_pages.build(source, target, layout, output / "private-source",
+                               primary_png=png)
+        page_manifest = sidecar.load_manifest(plan["private_manifest"])
+        with external.open("r+b") as combined:
+            combined.seek(0, 2)
+            for name, entry in page_manifest.resources.items():
+                if not name.startswith(("rhh.m.", "rhh.p.")):
+                    raise AssertionError("Unexpected RHH original external resource")
+                with page_manifest.data_path.open("rb") as original:
+                    original.seek(entry.offset)
+                    blob = original.read(entry.length)
+                if hashlib.sha256(blob).hexdigest() != entry.sha256:
+                    raise AssertionError("Original RHH source page SHA-256 mismatch")
+                offset = combined.tell()
+                combined.write(blob)
+                page_entries.append({"id": name, "offset": offset,
+                                     "length": entry.length,
+                                     "sha256": entry.sha256})
     manifest = output / "xgba-private-test-manifest.json"
     manifest.write_text(json.dumps({
         "format": sidecar.FORMAT,
@@ -99,7 +124,7 @@ def prove(source: Path, mgba: Path, target: str, output: Path) -> dict:
         "resources": [{"id": resource_id,
                        "offset": RESOURCE_OFFSET,
                        "length": RESOURCE_SIZE,
-                       "sha256": hashlib.sha256(PAGE_PAYLOAD).hexdigest()}],
+                       "sha256": hashlib.sha256(PAGE_PAYLOAD).hexdigest()}] + page_entries,
     }), encoding="utf-8")
 
     outputs = {}
@@ -108,12 +133,19 @@ def prove(source: Path, mgba: Path, target: str, output: Path) -> dict:
             rom, manifest, resource_id, emulator=executable,
             frames=1200, probe_address=proof_address,
             expansion_dir=output, expansion_target=target,
-            disabled=not enabled)
+            disabled=not enabled,
+            extra_resource_ids=tuple(entry["id"] for entry in page_entries))
         label = "enabled" if enabled else "disabled"
-        expected = (f"PASS_XGBA_RHH_EXPANSION_NATIVE_GUEST_MMIO "
-                    f"target={target} enabled={int(enabled)}")
-        if expected not in proc.stdout or "page_intact_after_frames=1" not in proc.stdout:
-            raise AssertionError(f"native {target} {label} protected-page proof not accepted")
+        if map_smoke:
+            expected = (f"PASS_XGBA_RHH_NATIVE_REAL_FIELD_LOADER "
+                        f"target={target} enabled={int(enabled)}")
+            if expected not in proc.stdout or "map_bytes=" not in proc.stdout:
+                raise AssertionError(f"native {target} {label} original field loader unverified")
+        else:
+            expected = (f"PASS_XGBA_RHH_EXPANSION_NATIVE_GUEST_MMIO "
+                        f"target={target} enabled={int(enabled)}")
+            if expected not in proc.stdout or "page_intact_after_frames=1" not in proc.stdout:
+                raise AssertionError(f"native {target} {label} protected-page proof not accepted")
         filename = output / f"expansion-{target}-{label}.png"
         if not filename.is_file() or filename.stat().st_size <= 64:
             raise AssertionError("real mGBA LCD capture was not created")
@@ -139,7 +171,10 @@ def prove(source: Path, mgba: Path, target: str, output: Path) -> dict:
         "external_resource_offset": RESOURCE_OFFSET,
         "external_payload_sha256": hashlib.sha256(PAGE_PAYLOAD).hexdigest(),
         "external_resource_bytes": RESOURCE_SIZE,
-        "actual_16k_page_intact_after_game_frames": True,
+        "actual_16k_page_intact_after_game_frames": not map_smoke,
+        "map_tileset_loader_source_native_verified": map_smoke,
+        "map_tileset_real_source_page_count": len(page_entries),
+        "gameplay_map_rendering_verified": False,
         "heap_bytes_reserved_for_xgba_page": RESOURCE_SIZE,
         "real_expanded_guest_provider_reads_verified": True,
         "same_source_built_rom_enabled_and_disabled": True,
@@ -147,7 +182,7 @@ def prove(source: Path, mgba: Path, target: str, output: Path) -> dict:
         "actual_lcd_frames": 2,
         "native_enabled": outputs["enabled"],
         "native_disabled": outputs["disabled"],
-        "not_proven": "expanded game's external maps, NPCs, battle sprites or Flash save",
+        "not_proven": "native playable map transition/render, NPCs, battle sprites or Flash save",
     }
     (output / f"{target}-proof.json").write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -155,6 +190,8 @@ def prove(source: Path, mgba: Path, target: str, output: Path) -> dict:
     # generated private-style sidecar and manifest remain transient.
     external.unlink()
     manifest.unlink()
+    if map_smoke:
+        shutil.rmtree(output / "private-source")
     shutil.rmtree(build)
     return report
 
@@ -165,8 +202,10 @@ def main() -> int:
     parser.add_argument("--mgba", type=Path, required=True)
     parser.add_argument("--target", choices=adapter.TARGETS, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--map-smoke", action="store_true")
     args = parser.parse_args()
-    report = prove(args.source, args.mgba, args.target, args.output)
+    report = prove(args.source, args.mgba, args.target, args.output,
+                   map_smoke=args.map_smoke)
     print("PASS_XGBA_RHH_NATIVE_INTEGRATION",
           report["target"], report["upstream_sha"],
           report["native_mgba_sha"])
