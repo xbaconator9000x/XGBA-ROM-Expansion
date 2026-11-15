@@ -42,8 +42,8 @@ static void xgba_expansion_native_overworld(struct mCore *core,
           const struct XgbaGbaDevice *device,
           const struct ResourceFile *resource, int enabled)
 {
-    const u_int32_t start_id = !strcmp(target,"emerald") ? 10u : 481u;
-    const u_int32_t next_id = !strcmp(target,"emerald") ? 17u : 492u;
+    const uint32_t start_id = !strcmp(target,"emerald") ? 10u : 481u;
+    const uint32_t next_id = !strcmp(target,"emerald") ? 17u : 492u;
     if (core->busRead32(core,probe+RHH_LIVE_STATE)!=1u ||
         core->busRead32(core,probe+RHH_LIVE_LAYOUT)!=start_id ||
         core->busRead32(core,probe+RHH_LIVE_FRAMES)<12u)
