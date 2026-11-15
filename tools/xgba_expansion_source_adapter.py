@@ -116,7 +116,7 @@ def patched_fieldmap(original: str) -> str:
     return text
 
 
-def patched_main(original: str, header: Path, probe: str) -> str:
+def patched_main(original: str, header: Path, probe: str, *, map_smoke: bool = False) -> str:
     header_name = header.resolve().as_posix()
     if '"' in header_name or "\n" in header_name:
         raise ExpansionDrift("unsafe header path")
@@ -134,10 +134,14 @@ def patched_main(original: str, header: Path, probe: str) -> str:
                 "void AgbMain(void)\n{",
                 probe + "\nvoid AgbMain(void)\n{",
                 "game boot function")
+    boot = ("    InitHeap(gHeap, XGBA_EXPANSION_HEAP_BYTES);\n"
+            "    XgbaExpansionProbeBoot();")
+    if map_smoke:
+        boot += ("\n    XgbaExpansionNativeMapTileSmoke();"
+                 " /* explicit native source-loader test only */")
     text = _one(text,
                 "    InitHeap(gHeap, HEAP_SIZE);",
-                "    InitHeap(gHeap, XGBA_EXPANSION_HEAP_BYTES);\n"
-                "    XgbaExpansionProbeBoot();",
+                boot,
                 "post-heap initialization")
     text = _one(text,
                 "    ReadKeys();",
@@ -147,7 +151,7 @@ def patched_main(original: str, header: Path, probe: str) -> str:
 
 
 @contextmanager
-def patched_source(source: Path, target: str):
+def patched_source(source: Path, target: str, *, map_smoke: bool = False):
     """Apply only during build; reliably restore upstream source afterwards."""
     report = validate_source(source, target)
     path = source / "src/main.c"
@@ -158,7 +162,7 @@ def patched_source(source: Path, target: str):
     probe_path = ROOT / "integration/expansion/xgba_expansion_probe.inc"
     if not header.is_file() or not probe_path.is_file():
         raise ExpansionDrift("XGBA shared ABI/probe source unavailable")
-    after = patched_main(before, header, probe_path.read_text(encoding="utf-8"))
+    after = patched_main(before, header, probe_path.read_text(encoding="utf-8"), map_smoke=map_smoke)
     fieldmap_after = patched_fieldmap(fieldmap_before)
     try:
         path.write_text(after, encoding="utf-8")
@@ -185,6 +189,8 @@ def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--source", type=Path, required=True)
     p.add_argument("--target", choices=TARGETS, required=True)
+    p.add_argument("--map-smoke", action="store_true",
+                   help="opt-in actual original map and tileset loader test at boot")
     p.add_argument("--build", action="store_true",
                    help="build the temporary patched upstream source")
     p.add_argument("--require-tag", default=None,
@@ -195,8 +201,9 @@ def main() -> int:
     if args.require_tag:
         report["upstream_head"] = require_release_tag(source, args.require_tag)
         report["release_tag"] = args.require_tag
+    report["map_smoke_requested"] = bool(args.map_smoke)
     if args.build:
-        with patched_source(source, args.target):
+        with patched_source(source, args.target, map_smoke=args.map_smoke):
             subprocess.run(["make", args.target, "-j2"], cwd=source, check=True)
         report["source_build_passed"] = True
     else:
