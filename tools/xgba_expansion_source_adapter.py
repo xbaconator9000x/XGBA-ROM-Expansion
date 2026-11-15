@@ -116,7 +116,51 @@ def patched_fieldmap(original: str) -> str:
     return text
 
 
-def patched_main(original: str, header: Path, probe: str, *, map_smoke: bool = False) -> str:
+def patched_overworld(original: str) -> str:
+    """Test-only direct new-game entry followed by unmodified overworld input."""
+    test_start = """    NewGameInitData();
+    /* RHH XGBA playable test: real new-game state, no intro or scripted truck.
+     * Preserve all map events, NPCs, scripts and original map/tileset IDs. */
+    if (IS_FRLG)
+        SetWarpDestination(MAP_GROUP(MAP_PALLET_TOWN),
+                           MAP_NUM(MAP_PALLET_TOWN), WARP_ID_NONE, 11, 4);
+    else
+    {
+        VarSet(VAR_LITTLEROOT_TOWN_STATE, 4);
+        VarSet(VAR_ROUTE101_STATE, 3);
+        SetWarpDestination(MAP_GROUP(MAP_LITTLEROOT_TOWN),
+                           MAP_NUM(MAP_LITTLEROOT_TOWN), WARP_ID_NONE, 10, 4);
+    }
+    WarpIntoMap();
+    ResetInitialPlayerAvatarState();"""
+    text = _one(original,
+                "    NewGameInitData();\n    ResetInitialPlayerAvatarState();",
+                test_start, "authentic new-game-to-overworld transition")
+    text = _one(text,
+                "    gFieldCallback2 = NULL;\n    DoMapLoadLoop(&gMain.state);",
+                "    gFieldCallback = FieldCB_WarpExitFadeFromBlack;\n"
+                "    gFieldCallback2 = NULL;\n    DoMapLoadLoop(&gMain.state);",
+                "original field callback")
+    text = _one(text,
+                "void CB2_Overworld(void)\n{\n    bool32 fading = (gPaletteFade.active != 0);\n",
+                "void CB2_Overworld(void)\n{\n    bool32 fading = (gPaletteFade.active != 0);\n",
+                "overworld callback entry")
+    text = _one(text,
+                "    OverworldBasic();\n    if (fading)\n",
+                "    OverworldBasic();\n"
+                "    XgbaExpansionLiveTick(gMapHeader.mapLayoutId,\n"
+                "        gSaveBlock1Ptr->pos.x, gSaveBlock1Ptr->pos.y);\n"
+                "    if (fading)\n",
+                "actual overworld movement callback")
+    return _one(text,
+                "void CB2_Overworld(void)\n{",
+                "extern void XgbaExpansionLiveTick(u32 layout, s32 x, s32 y);\n"
+                "void CB2_Overworld(void)\n{",
+                "external witness declaration")
+
+
+def patched_main(original: str, header: Path, probe: str, *, map_smoke: bool = False,
+                 overworld_play: bool = False) -> str:
     header_name = header.resolve().as_posix()
     if '"' in header_name or "\n" in header_name:
         raise ExpansionDrift("unsafe header path")
@@ -139,6 +183,9 @@ def patched_main(original: str, header: Path, probe: str, *, map_smoke: bool = F
     if map_smoke:
         boot += ("\n    XgbaExpansionNativeMapTileSmoke();"
                  " /* explicit native source-loader test only */")
+    if overworld_play:
+        boot += ("\n    SetMainCallback2(CB2_NewGame);"
+                 " /* genuine RHH game state and overworld, test only */")
     text = _one(text,
                 "    InitHeap(gHeap, HEAP_SIZE);",
                 boot,
@@ -151,26 +198,37 @@ def patched_main(original: str, header: Path, probe: str, *, map_smoke: bool = F
 
 
 @contextmanager
-def patched_source(source: Path, target: str, *, map_smoke: bool = False):
+def patched_source(source: Path, target: str, *, map_smoke: bool = False,
+                   overworld_play: bool = False):
     """Apply only during build; reliably restore upstream source afterwards."""
+    if map_smoke and overworld_play:
+        raise ExpansionDrift("native map smoke and playable overworld are mutually exclusive")
     report = validate_source(source, target)
     path = source / "src/main.c"
     fieldmap_path = source / "src/fieldmap.c"
+    overworld_path = source / "src/overworld.c"
     before = path.read_text(encoding="utf-8")
     fieldmap_before = fieldmap_path.read_text(encoding="utf-8")
+    overworld_before = overworld_path.read_text(encoding="utf-8") if overworld_play else None
     header = ROOT / "integration/fire_red/xgba_guest.h"
     probe_path = ROOT / "integration/expansion/xgba_expansion_probe.inc"
     if not header.is_file() or not probe_path.is_file():
         raise ExpansionDrift("XGBA shared ABI/probe source unavailable")
-    after = patched_main(before, header, probe_path.read_text(encoding="utf-8"), map_smoke=map_smoke)
+    after = patched_main(before, header, probe_path.read_text(encoding="utf-8"),
+                         map_smoke=map_smoke, overworld_play=overworld_play)
     fieldmap_after = patched_fieldmap(fieldmap_before)
+    overworld_after = patched_overworld(overworld_before) if overworld_play else None
     try:
         path.write_text(after, encoding="utf-8")
         fieldmap_path.write_text(fieldmap_after, encoding="utf-8")
+        if overworld_play:
+            overworld_path.write_text(overworld_after, encoding="utf-8")
         yield report
     finally:
         path.write_text(before, encoding="utf-8")
         fieldmap_path.write_text(fieldmap_before, encoding="utf-8")
+        if overworld_play:
+            overworld_path.write_text(overworld_before, encoding="utf-8")
 
 
 def require_release_tag(source: Path, tag: str) -> str:
@@ -191,6 +249,8 @@ def main() -> int:
     p.add_argument("--target", choices=TARGETS, required=True)
     p.add_argument("--map-smoke", action="store_true",
                    help="opt-in actual original map and tileset loader test at boot")
+    p.add_argument("--overworld-play", action="store_true",
+                   help="opt-in real game new-game callback and physical mGBA D-pad test")
     p.add_argument("--build", action="store_true",
                    help="build the temporary patched upstream source")
     p.add_argument("--require-tag", default=None,
@@ -202,8 +262,10 @@ def main() -> int:
         report["upstream_head"] = require_release_tag(source, args.require_tag)
         report["release_tag"] = args.require_tag
     report["map_smoke_requested"] = bool(args.map_smoke)
+    report["overworld_play_requested"] = bool(args.overworld_play)
     if args.build:
-        with patched_source(source, args.target, map_smoke=args.map_smoke):
+        with patched_source(source, args.target, map_smoke=args.map_smoke,
+                            overworld_play=args.overworld_play):
             subprocess.run(["make", args.target, "-j2"], cwd=source, check=True)
         report["source_build_passed"] = True
     else:
