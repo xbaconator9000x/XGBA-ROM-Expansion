@@ -205,11 +205,11 @@ def patched_main(original: str, header: Path, probe: str, *, map_smoke: bool = F
     if overworld_play:
         # AgbMain continues configuring callbacks after InitHeap. Scheduling
         # CB2_NewGame there can be overwritten by subsequent boot setup.
-        # Install it once from the running main loop, after initialization.
+        # Initialize save-block pointers before NewGameInitData: pinned RHH\n        # InitMainCallbacks initializes only SaveBlock2/Storage, while\n        # gSaveBlock1Ptr remains NULL until SetSaveBlocksPointers().\n        # Install the callback once after this prerequisite.
         tick += ("\n    { static bool8 sXgbaNewGameScheduled = FALSE;"
                  "\n      if (!sXgbaNewGameScheduled) {"
                  "\n        sXgbaNewGameScheduled = TRUE;"
-                 "\n        SetMainCallback2(CB2_NewGame);"
+                 "\n        SetSaveBlocksPointers(0);"\n                 "\n        SetMainCallback2(CB2_NewGame);"
                  "\n      }\n    }")
     text = _one(text,
                 "    ReadKeys();",
