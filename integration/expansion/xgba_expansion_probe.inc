@@ -1,19 +1,24 @@
 /*
  * XGBA on RH-Hideout pokeemerald-expansion (Emerald / FireRed / LeafGreen).
  *
- * Source-only bootstrap: prove the EXISTING opt-in XGBA guest MMIO ABI can
- * be linked into every supported upstream game variant. NOT a map loader.
- * The resource ID and the destination must live in actual guest EWRAM.
- * No vendor assets, ROM bytes, save files or new emulator protocol.
+ * Phase 2: a reusable protected 16KiB external-resource page leased from the
+ * existing RH-Hideout heap, not a new unbudgeted EWRAM allocation.  Each
+ * versioned resource is fetched by the REAL game CPU using the shared MMIO.
+ * Gameplay map/tileset/battle hooks remain separate acceptance work.
  */
 #if (defined(EMERALD) + defined(FIRERED) + defined(LEAFGREEN)) != 1
-#error "XGBA expansion bootstrap requires exactly one game build target"
+#error "XGBA expansion adapter requires exactly one game build target"
 #endif
 
 #include "__XGBA_SHARED_GUEST__"
 
 #define XGBA_EXPANSION_PROBE_MAGIC 0x58474241u
-#define XGBA_EXPANSION_PROBE_SIZE 64u
+#define XGBA_EXPANSION_PAGE_BYTES 0x4000u
+#if HEAP_SIZE <= XGBA_EXPANSION_PAGE_BYTES
+#error "XGBA protected page exceeds RH-Hideout allocator"
+#endif
+#define XGBA_EXPANSION_HEAP_BYTES (HEAP_SIZE - XGBA_EXPANSION_PAGE_BYTES)
+#define XGBA_EXPANSION_PAGE (gHeap + XGBA_EXPANSION_HEAP_BYTES)
 
 #if defined(EMERALD)
 #define XGBA_EXPANSION_RESOURCE_ID "expansion.emerald.bridge"
@@ -29,44 +34,81 @@
 struct XgbaExpansionProof {
     volatile u32 magic;
     volatile u32 build_marker;
-    volatile u32 state;          /* 1 before fetch, 3 afterwards */
+    volatile u32 state;          /* 1 before fetch; 3 after fetch */
     volatile u32 received;
-    volatile u32 valid;          /* 1 ONLY after exact length */
+    volatile u32 valid;
     volatile u32 buffer_address; /* native guest EWRAM pointer */
     volatile u32 main_loop_ticks;
+    volatile u32 arena_capacity; /* exact bounded hardware-facing page */
+    volatile u32 heap_usable_bytes;
+    volatile u32 page_generation;
+    volatile u32 page_resident;
 };
 
+/* Small metadata only. The 16KiB payload itself resides inside the
+ * existing gHeap EWRAM region, outside the allocator's reduced ownership. */
 EWRAM_DATA volatile struct XgbaExpansionProof gXgbaExpansionProof = {0};
-EWRAM_DATA ALIGNED(4) u8 gXgbaExpansionData[XGBA_EXPANSION_PROBE_SIZE] = {0};
 EWRAM_DATA ALIGNED(4) char gXgbaExpansionId[40] = {0};
+
+static void XgbaExpansionPageReset(void)
+{
+    u32 i;
+    for (i = 0; i < XGBA_EXPANSION_PAGE_BYTES; ++i)
+        XGBA_EXPANSION_PAGE[i] = 0xA5u;
+    gXgbaExpansionProof.page_resident = 0u;
+    ++gXgbaExpansionProof.page_generation;
+}
+
+/* Reusable one-page ownership API for runtime graphics/map integrations.
+ * Never disclose a page as valid after a short, missing or corrupt fetch.
+ * The host manifest validates source and SHA-256 before writing into EWRAM.
+ * Each acquire explicitly invalidates prior residency/cache generations. */
+static u32 XgbaExpansionPageAcquire(const char *resource, u32 length)
+{
+    u32 i;
+    u32 got;
+    if (!resource || length == 0u || length > XGBA_EXPANSION_PAGE_BYTES)
+        return 0u;
+    for (i = 0; i < sizeof(gXgbaExpansionId); ++i)
+        gXgbaExpansionId[i] = 0;
+    for (i = 0; i < sizeof(gXgbaExpansionId)-1u && resource[i]; ++i)
+        gXgbaExpansionId[i] = resource[i];
+    if (resource[i])
+        return 0u; /* reject truncation/ambiguous source resource ID */
+    XgbaExpansionPageReset();
+    got = XgbaGuestFetch(gXgbaExpansionId, XGBA_EXPANSION_PAGE, length);
+    if (got != length)
+    {
+        XgbaExpansionPageReset();
+        return 0u;
+    }
+    gXgbaExpansionProof.page_resident = length;
+    return got;
+}
 
 static void XgbaExpansionProbeBoot(void)
 {
     static const char resourceId[] = XGBA_EXPANSION_RESOURCE_ID;
-    u32 i;
-    u32 received;
+    u32 got;
 
     gXgbaExpansionProof.magic = XGBA_EXPANSION_PROBE_MAGIC;
     gXgbaExpansionProof.build_marker = XGBA_EXPANSION_GAME_MARKER;
-    gXgbaExpansionProof.state = 1;
-    gXgbaExpansionProof.valid = 0;
-    gXgbaExpansionProof.received = 0;
-    gXgbaExpansionProof.main_loop_ticks = 0;
-    gXgbaExpansionProof.buffer_address = (u32)gXgbaExpansionData;
+    gXgbaExpansionProof.state = 1u;
+    gXgbaExpansionProof.received = 0u;
+    gXgbaExpansionProof.valid = 0u;
+    gXgbaExpansionProof.buffer_address = (u32)XGBA_EXPANSION_PAGE;
+    gXgbaExpansionProof.main_loop_ticks = 0u;
+    gXgbaExpansionProof.arena_capacity = XGBA_EXPANSION_PAGE_BYTES;
+    gXgbaExpansionProof.heap_usable_bytes = XGBA_EXPANSION_HEAP_BYTES;
+    gXgbaExpansionProof.page_generation = 0u;
+    gXgbaExpansionProof.page_resident = 0u;
 
-    /* EWRAM_DATA can be NOLOAD: initialize both arrays explicitly. */
-    for (i = 0; i < sizeof(gXgbaExpansionData); ++i)
-        gXgbaExpansionData[i] = 0xA5u;
-    for (i = 0; i < sizeof(resourceId); ++i)
-        gXgbaExpansionId[i] = resourceId[i];
+    got = XgbaExpansionPageAcquire(resourceId, XGBA_EXPANSION_PAGE_BYTES);
+    gXgbaExpansionProof.received = got;
+    gXgbaExpansionProof.valid = (got == XGBA_EXPANSION_PAGE_BYTES);
+    gXgbaExpansionProof.state = 3u;
 
-    received = XgbaGuestFetch(gXgbaExpansionId, gXgbaExpansionData,
-                              sizeof(gXgbaExpansionData));
-    gXgbaExpansionProof.received = received;
-    gXgbaExpansionProof.valid = (received == XGBA_EXPANSION_PROBE_SIZE);
-    gXgbaExpansionProof.state = 3;
-
-    /* Return to the unmodified upstream boot path even if no sidecar exists. */
+    /* Continue unmodified RHH game boot, even if the provider is disabled. */
 }
 
 static void XgbaExpansionProbeTick(void)
