@@ -65,10 +65,7 @@ class SourcePagesTests(unittest.TestCase):
         self.assertEqual(report["resource_ids"], ["rhh.m.0002.00"])
 
     def test_original_frlg_20k_primary_tileset_spans_two_pages(self):
-        try:
-            from PIL import Image
-        except ImportError:
-            self.skipTest("Pillow not installed; required in native build matrix")
+        from PIL import Image
         layout = json.loads((self.source / "data/layouts/layouts.json").read_text())
         layout["layouts"][0]["layout_version"] = "frlg"
         (self.source / "data/layouts/layouts.json").write_text(json.dumps(layout))
@@ -88,10 +85,7 @@ class SourcePagesTests(unittest.TestCase):
             self.assertEqual(stream.read(4096), bytes(4096))
 
     def test_partial_tileset_rejected_instead_of_zero_padding(self):
-        try:
-            from PIL import Image
-        except ImportError:
-            self.skipTest("Pillow not installed")
+        from PIL import Image
         (self.source / "data/tilesets").mkdir(parents=True)
         tile = Image.new("P", (128, 80), 0)
         tile.save(self.source / "data/tilesets/partial.png")
