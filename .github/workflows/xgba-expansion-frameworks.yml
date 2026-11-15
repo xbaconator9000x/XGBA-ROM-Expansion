@@ -1,0 +1,70 @@
+name: XGBA expansion framework source and ARM builds
+
+on:
+  push:
+    branches:
+      - main
+      - integration/expansion-frameworks-20261115
+    paths:
+      - 'integration/expansion/**'
+      - 'integration/fire_red/xgba_guest.h'
+      - 'tools/xgba_expansion_source_adapter.py'
+      - 'tests/test_xgba_expansion_source_adapter.py'
+      - '.github/workflows/xgba-expansion-frameworks.yml'
+  pull_request:
+    paths:
+      - 'integration/expansion/**'
+      - 'integration/fire_red/xgba_guest.h'
+      - 'tools/xgba_expansion_source_adapter.py'
+      - 'tests/test_xgba_expansion_source_adapter.py'
+      - '.github/workflows/xgba-expansion-frameworks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  adapter-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Source safety and negative regression tests
+        run: python3 -m unittest discover -s tests -p 'test_xgba_expansion_source_adapter.py' -v
+
+  upstream-arm-build:
+    needs: adapter-tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [emerald, firered, leafgreen]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install open ARM cross-compilation toolchain
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi \
+            build-essential cmake ninja-build pkg-config libpng-dev
+      - name: Clone exact tagged upstream source
+        run: |
+          git clone --depth 1 --recurse-submodules --branch expansion/1.17.2 \
+            https://github.com/rh-hideout/pokeemerald-expansion.git upstream
+          git -C upstream rev-parse HEAD
+          git -C upstream tag --points-at HEAD
+      - name: Build source-integrated XGBA guest for ${{ matrix.target }}
+        run: |
+          python3 tools/xgba_expansion_source_adapter.py \
+            --source upstream --target "${{ matrix.target }}" \
+            --require-tag expansion/1.17.2 --build
+          git -C upstream diff --exit-code -- src/main.c
+          test -s "upstream/poke${{ matrix.target }}.gba"
+          test -s "upstream/poke${{ matrix.target }}.elf"
+          arm-none-eabi-nm "upstream/poke${{ matrix.target }}.elf" |
+            grep -F gXgbaExpansionProof
+      - name: Disclosure
+        run: |
+          echo 'This is a genuine upstream ARM source-build gate only.'
+          echo 'Native patched-mGBA external reads, LCD frames, Flash and gameplay still require separate acceptance.'
+          echo 'No generated ROM or copyrighted asset artifacts are uploaded.'
