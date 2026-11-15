@@ -49,9 +49,14 @@ jobs:
           test -s evidence/verified/r23/proof.json
           # Guard the evidence headline structure without hard-coding the LAST
           # milestone; R24 and future verified milestones must not break CI.
-          grep -Fq '**Executed expansion proof: R6–R' README.md
-          grep -Eq 'R6–R[0-9]+ verified' README.md
-          grep -q 'R24' README.md
+          # The 14 Nov README rewrite moved detailed historic milestones to
+          # the permanently archived snapshot. Verify preserved evidence there,
+          # not against obsolete text expected in the current status README.
+          test -s docs/archive/README_PRE_REWRITE_2026-11-14.md
+          grep -Fq '**Executed expansion proof: R6–R' docs/archive/README_PRE_REWRITE_2026-11-14.md
+          grep -Eq 'R6–R[0-9]+ verified' docs/archive/README_PRE_REWRITE_2026-11-14.md
+          grep -q 'R24' docs/archive/README_PRE_REWRITE_2026-11-14.md
+          grep -Fq '# XGBA' README.md
           if git ls-files | grep -Ei '\.(gba|nds|sav|elf|rom)$'; then
             echo 'FAIL: committed playable ROM, save or built binary'
             exit 1
