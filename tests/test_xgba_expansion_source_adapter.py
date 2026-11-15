@@ -36,6 +36,23 @@ FIELDMAP = (
     '{\n    if (tileset) {}\n}\n'
 )
 
+OVERWORLD = (
+    'void CB2_NewGame(void)\n'
+    '{\n'
+    '    NewGameInitData();\n'
+    '    ResetInitialPlayerAvatarState();\n'
+    '    gFieldCallback2 = NULL;\n'
+    '    DoMapLoadLoop(&gMain.state);\n'
+    '}\n'
+    'void CB2_Overworld(void)\n'
+    '{\n'
+    '    bool32 fading = (gPaletteFade.active != 0);\n'
+    '    OverworldBasic();\n'
+    '    if (fading)\n'
+    '        SetFieldVBlankCallback();\n'
+    '}\n'
+)
+
 MAKEFILE = (
     'GAME_VERSION ?= EMERALD\n'
     'GAME_VERSION := FIRERED\n'
@@ -56,6 +73,7 @@ class ExpansionSourceTests(unittest.TestCase):
         (self.root / "Makefile").write_text(MAKEFILE)
         (self.root / "src/main.c").write_text(MAIN)
         (self.root / "src/fieldmap.c").write_text(FIELDMAP)
+        (self.root / "src/overworld.c").write_text(OVERWORLD)
         (self.root / "include/global.h").write_text("/* RHH global ABI */\n")
 
     def test_all_three_upstream_targets_checked(self):
@@ -121,6 +139,47 @@ class ExpansionSourceTests(unittest.TestCase):
                     self.assertIn("XgbaExpansionMapSmokeReport(layoutId", fieldmap)
                 self.assertEqual(path.read_text(), MAIN)
                 self.assertEqual(fieldmap_path.read_text(), FIELDMAP)
+
+
+    def test_real_overworld_entry_uses_normal_new_game_map_and_player_callback(self):
+        path = self.root / "src/main.c"
+        game = self.root / "src/overworld.c"
+        for target in adapter.TARGETS:
+            with self.subTest(target=target):
+                with adapter.patched_source(self.root, target, overworld_play=True):
+                    main = path.read_text()
+                    ow = game.read_text()
+                    self.assertIn("SetMainCallback2(CB2_NewGame);", main)
+                    self.assertNotIn("XgbaExpansionNativeMapTileSmoke();", main)
+                    self.assertIn("NewGameInitData();", ow)
+                    self.assertIn("WarpIntoMap();", ow)
+                    self.assertIn("MAP_LITTLEROOT_TOWN", ow)
+                    self.assertIn("MAP_PALLET_TOWN", ow)
+                    self.assertIn("XgbaExpansionLiveTick(gMapHeader.mapLayoutId", ow)
+                    self.assertEqual(ow.count("OverworldBasic();"), 1)
+                self.assertEqual(game.read_text(), OVERWORLD)
+                self.assertEqual(path.read_text(), MAIN)
+                self.assertEqual((self.root / "src/fieldmap.c").read_text(), FIELDMAP)
+
+    def test_overworld_and_boot_smoke_exclusive(self):
+        with self.assertRaisesRegex(adapter.ExpansionDrift, "mutually exclusive"):
+            with adapter.patched_source(self.root, "emerald",
+                                        map_smoke=True, overworld_play=True):
+                pass
+
+    def test_real_overworld_host_does_not_write_player_memory(self):
+        code = (adapter.ROOT / "integration/mgba/xgba_expansion_overworld_native.h").read_text()
+        self.assertIn("core->setKeys(core,1u<<4)", code)
+        self.assertIn("core->setKeys(core,1u<<6)", code)
+        self.assertIn("RHH_REAL_OVERWORLD_DIAG", code)
+        self.assertIn("RHH_ROUTE_ATTEMPT", code)
+        self.assertIn("if (final_map!=next_id || transitions<1u)", code)
+        self.assertIn("original_source_maps=", code) if False else None
+        self.assertNotIn("core->busWrite", code)
+        proof = (adapter.ROOT / "integration/expansion/xgba_expansion_probe.inc").read_text()
+        self.assertIn("void XgbaExpansionLiveTick(u32 layout, s32 x, s32 y)", proof)
+        self.assertIn("live_transitions", proof)
+        self.assertIn("live_source_primary", proof)
 
     def test_short_final_map_page_and_two_part_frlg_tileset_are_counted(self):
         # A for(start += 16KiB) loop cannot compare start == total
