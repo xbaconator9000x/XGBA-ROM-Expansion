@@ -21,6 +21,7 @@ TARGETS = ("emerald", "firered", "leafgreen")
 UPSTREAM = "https://github.com/rh-hideout/pokeemerald-expansion"
 VALIDATED_RELEASE = "expansion/1.17.2"
 VALIDATED_RELEASE_SHA = "79dd436920845ebc145577649de624f65298c209"
+MGBA_PIN = "fd9dc5c2cbf234365068855851107e762fc6211b"
 
 class ExpansionDrift(RuntimeError):
     """Refuse unsupported or already-patched source instead of guessing."""
