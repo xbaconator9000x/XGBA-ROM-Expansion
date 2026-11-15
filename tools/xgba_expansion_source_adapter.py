@@ -279,9 +279,15 @@ def main() -> int:
     args = p.parse_args()
     source = args.source.resolve()
     report = validate_source(source, args.target)
-    if args.require_tag:
-        report["upstream_head"] = require_release_tag(source, args.require_tag)
-        report["release_tag"] = args.require_tag
+    # Compiled adapters depend on exact RHH source anchors and structures.
+    # Refuse an unpinned checkout even when the caller omits --require-tag.
+    # Read-only source inspection remains available without a Git checkout.
+    required_tag = args.require_tag or (VALIDATED_RELEASE if args.build else None)
+    if required_tag:
+        if required_tag != VALIDATED_RELEASE:
+            raise ExpansionDrift(f"unsupported expansion release: {required_tag}")
+        report["upstream_head"] = require_release_tag(source, required_tag)
+        report["release_tag"] = required_tag
     report["map_smoke_requested"] = bool(args.map_smoke)
     report["overworld_play_requested"] = bool(args.overworld_play)
     if args.build:
