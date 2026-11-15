@@ -15,6 +15,9 @@
 
 #define XGBA_EXPANSION_PROBE_MAGIC 0x58474241u
 #define XGBA_EXPANSION_PAGE_BYTES 0x4000u
+#if XGBA_EXPANSION_PAGE_CAPACITY != XGBA_EXPANSION_PAGE_BYTES
+#error "XGBA runtime page size diverged from public ABI"
+#endif
 #if HEAP_SIZE <= XGBA_EXPANSION_PAGE_BYTES
 #error "XGBA protected page exceeds RH-Hideout allocator"
 #endif
