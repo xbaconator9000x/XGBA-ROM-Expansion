@@ -174,7 +174,6 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("RHH_REAL_OVERWORLD_DIAG", code)
         self.assertIn("RHH_ROUTE_ATTEMPT", code)
         self.assertIn("if (final_map!=next_id || transitions<1u)", code)
-        self.assertIn("original_source_maps=", code) if False else None
         self.assertNotIn("core->busWrite", code)
         proof = (adapter.ROOT / "integration/expansion/xgba_expansion_probe.inc").read_text()
         self.assertIn("void XgbaExpansionLiveTick(u32 layout, s32 x, s32 y)", proof)
