@@ -88,7 +88,7 @@ def patched_main(original: str, header: Path, probe: str) -> str:
                 "game boot function")
     text = _one(text,
                 "    InitHeap(gHeap, HEAP_SIZE);",
-                "    InitHeap(gHeap, HEAP_SIZE);\n"
+                "    InitHeap(gHeap, XGBA_EXPANSION_HEAP_BYTES);\n"
                 "    XgbaExpansionProbeBoot();",
                 "post-heap initialization")
     text = _one(text,
