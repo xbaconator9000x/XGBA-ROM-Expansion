@@ -14,6 +14,8 @@ on:
       - 'integration/mgba/xgba_mgba_headless.c'
       - 'integration/mgba/xgba_expansion_native.h'
       - 'tests/test_xgba_expansion_source_adapter.py'
+      - 'tests/test_xgba_expansion_map_pages.py'
+      - 'tools/xgba_expansion_map_pages.py'
       - '.github/workflows/xgba-expansion-frameworks.yml'
   pull_request:
     paths:
@@ -25,6 +27,8 @@ on:
       - 'integration/mgba/xgba_mgba_headless.c'
       - 'integration/mgba/xgba_expansion_native.h'
       - 'tests/test_xgba_expansion_source_adapter.py'
+      - 'tests/test_xgba_expansion_map_pages.py'
+      - 'tools/xgba_expansion_map_pages.py'
       - '.github/workflows/xgba-expansion-frameworks.yml'
   workflow_dispatch:
 
@@ -37,7 +41,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Source safety and negative regression tests
-        run: python3 -m unittest discover -s tests -p 'test_xgba_expansion_source_adapter.py' -v
+        run: |
+          python3 -m unittest discover -s tests -p 'test_xgba_expansion_source_adapter.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_expansion_map_pages.py' -v
 
   upstream-arm-build:
     needs: adapter-tests
@@ -71,6 +77,38 @@ jobs:
           test -s "upstream/poke${{ matrix.target }}.elf"
           arm-none-eabi-nm "upstream/poke${{ matrix.target }}.elf" |
             grep -F gXgbaExpansionProof
+      - name: Package authentic original map and full primary tileset as private external pages
+        run: |
+          if [ "${{ matrix.target }}" = emerald ]; then
+            layout=LAYOUT_LITTLEROOT_TOWN
+            tiles=data/tilesets/primary/general/tiles.png
+          else
+            layout=LAYOUT_PALLET_TOWN
+            tiles=data/tilesets/primary/general_frlg/tiles.png
+          fi
+          python3 tools/xgba_expansion_map_pages.py --source upstream \
+            --target "${{ matrix.target }}" --layout "$layout" \
+            --primary-png "$tiles" --output private-source-pages
+          python3 - <<'PY'
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, "tools")
+          import xgba_resource_sidecar as sidecar
+          files=list(Path("private-source-pages").glob("*.json"))
+          assert len(files)==1
+          manifest=sidecar.load_manifest(files[0])
+          names=list(manifest.resources)
+          assert any(n.startswith("rhh.m.") for n in names), names
+          assert any(n.startswith("rhh.p.") for n in names), names
+          for entry in manifest.resources.values():
+              with manifest.data_path.open("rb") as f:
+                  f.seek(entry.offset)
+                  assert __import__("hashlib").sha256(f.read(entry.length)).hexdigest()==entry.sha256
+          print("PASS_RHH_ORIGINAL_LAYOUT_AND_TILESET_SOURCE_PAGES",names)
+          PY
+          # Source artwork, externally packed binaries, and source-built ROMs
+          # remain on the runner; no private page is uploaded as an artifact.
+          rm -rf private-source-pages
       - name: Clone pinned upstream native mGBA
         run: |
           mkdir -p upstream-mgba
@@ -97,5 +135,5 @@ jobs:
       - name: Disclosure
         run: |
           echo 'This is a genuine upstream ARM source-build gate only.'
-          echo 'Native MMIO external reads and LCD proof accepted ONLY when the preceding job passes; maps/battles/Flash still pending.'
+          echo 'Original-source map and tileset page manifest verified; actual renderer use, battles and Flash cold restart still pending.'
           echo 'No generated ROM or copyrighted asset artifacts are uploaded.'
