@@ -363,6 +363,7 @@ static void run_r10_real_firered_live_swap(struct mCore *core, uint32_t probe,
 #include "xgba_r15_save.h"
 #include "xgba_r16_emerald.h"
 #include "xgba_expansion_native.h"
+#include "xgba_expansion_overworld_native.h"
 #include "xgba_r17_emerald_map.h"
 #include "xgba_r18_emerald_flash.h"
 #include "xgba_r19_connected_maps.h"
@@ -545,6 +546,7 @@ int main(int argc, char **argv)
     const char *r16_dir = NULL;
     const char *expansion_dir = NULL;
     const char *expansion_target = NULL;
+    int expansion_overworld = 0;
     const char *r24_dir = NULL;
     uint64_t r24_probe = 0;
     int r24_firered = 0;
@@ -614,6 +616,8 @@ int main(int argc, char **argv)
             expansion_dir = argv[i];
         else if (!strcmp(argv[i], "--expansion-target") && ++i < argc && !expansion_target)
             expansion_target = argv[i];
+        else if (!strcmp(argv[i], "--expansion-overworld") && !expansion_overworld)
+            expansion_overworld = 1;
         else if (!strcmp(argv[i], "--r17-emerald-map-dir") && ++i < argc && !r17_dir)
             r17_dir = argv[i];
         else if (!strcmp(argv[i], "--r18-dir") && ++i < argc && !r18_dir)
@@ -795,7 +799,11 @@ int main(int argc, char **argv)
         core->runFrame(core);
         /* Expansion source proof uses a versioned layout; state at +8,
          * unlike the old R16 Emerald-only boot probe with state at +4. */
-        if (expansion_dir && probe &&
+        if (expansion_overworld && probe &&
+            core->busRead32(core,(uint32_t)probe+RHH_LIVE_STATE)==1u &&
+            core->busRead32(core,(uint32_t)probe+RHH_LIVE_FRAMES)>35u)
+            break;
+        if (expansion_dir && !expansion_overworld && probe &&
             core->busRead32(core,(uint32_t)probe+
                 (resource.extra_count?44u:8u))==3u)
             break;
@@ -848,8 +856,12 @@ int main(int argc, char **argv)
         xgba_r24_boundary_run(core,r24_firered?0u:(uint32_t)probe,(uint32_t)r24_probe,
                               r24_dir,&device,&resource,enabled);
     } else if (expansion_dir) {
-        xgba_expansion_native_run(core,(uint32_t)probe,expansion_target,
-                                  expansion_dir,&device,&resource,enabled);
+        if (expansion_overworld)
+            xgba_expansion_native_overworld(core,(uint32_t)probe,expansion_target,
+                                            expansion_dir,&device,&resource,enabled);
+        else
+            xgba_expansion_native_run(core,(uint32_t)probe,expansion_target,
+                                      expansion_dir,&device,&resource,enabled);
     } else if (r16_dir) {
         xgba_r16_emerald_run(core,(uint32_t)probe,r16_dir,&device,&resource,enabled);
     } else if (r17_dir) {
