@@ -112,7 +112,7 @@ def build(source: Path, target: str, layout: str, output: Path,
                 })
                 written += len(chunk)
     manifest.write_text(json.dumps({
-        "format": "xgba-resource-sidecar",
+        "format": "xgba-resource-manifest",
         "version": 1,
         "source_identity": {"id": f"rhh-{target}-expansion-1.17.2", "sha256": source_rom_sha},
         "data_file": sidecar.name,
