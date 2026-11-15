@@ -105,6 +105,15 @@ class ExpansionSourceTests(unittest.TestCase):
                 self.assertEqual(file.read_text(), MAIN)
                 self.assertEqual((self.root / "src/fieldmap.c").read_text(), FIELDMAP)
 
+    def test_pinned_build_policy_rejects_unsupported_tag(self):
+        # All compiled target adapters share one exact RHH release ABI.
+        self.assertEqual(adapter.VALIDATED_RELEASE, "expansion/1.17.2")
+        self.assertEqual(len(adapter.VALIDATED_RELEASE_SHA), 40)
+        source = (adapter.ROOT / "tools/xgba_expansion_source_adapter.py").read_text()
+        self.assertIn("required_tag = args.require_tag or (VALIDATED_RELEASE if args.build else None)", source)
+        self.assertIn("if required_tag != VALIDATED_RELEASE:", source)
+        self.assertIn("require_release_tag(source, required_tag)", source)
+
     def test_rejects_missing_game_target_or_build_matrix(self):
         with self.assertRaises(adapter.ExpansionDrift):
             adapter.validate_source(self.root, "ruby")
