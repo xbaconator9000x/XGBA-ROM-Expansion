@@ -22,6 +22,18 @@ MAIN = (
     '    }\n'
     '}\n'
 )
+FIELDMAP = (
+    'COMMON_DATA struct BackupMapLayout gBackupMapLayout = {0};\n'
+    'static void InitMapLayoutData(const struct MapHeader *mapHeader)\n'
+    '{\n'
+    '    InitBackupMapLayoutData(mapLayout->map, mapLayout->width, mapLayout->height);\n'
+    '}\n'
+    'static void CopyTilesetToVram(struct Tileset const *tileset, u16 numTiles, u16 offset)\n'
+    '{\n    if (tileset) {}\n}\n'
+    'static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTiles, u16 offset)\n'
+    '{\n    if (tileset) {}\n}\n'
+)
+
 MAKEFILE = (
     'GAME_VERSION ?= EMERALD\n'
     'GAME_VERSION := FIRERED\n'
@@ -41,6 +53,7 @@ class ExpansionSourceTests(unittest.TestCase):
         (self.root / "include").mkdir()
         (self.root / "Makefile").write_text(MAKEFILE)
         (self.root / "src/main.c").write_text(MAIN)
+        (self.root / "src/fieldmap.c").write_text(FIELDMAP)
         (self.root / "include/global.h").write_text("/* RHH global ABI */\n")
 
     def test_all_three_upstream_targets_checked(self):
@@ -63,9 +76,13 @@ class ExpansionSourceTests(unittest.TestCase):
                         self.assertIn("XGBA_EXPANSION_RESOURCE_ID", patched)
                         self.assertIn("InitHeap(gHeap, XGBA_EXPANSION_HEAP_BYTES);", patched)
                         self.assertNotIn("InitHeap(gHeap, HEAP_SIZE);", patched)
+                        fieldmap = (self.root / "src/fieldmap.c").read_text()
+                        self.assertIn("XgbaExpansionTryMapCopy(mapLayout);", fieldmap)
+                        self.assertEqual(fieldmap.count("XgbaExpansionTryTilesetCopy(tileset, numTiles, offset)"), 2)
                         self.assertIn("xgba_guest.h", patched)
                         raise RuntimeError("synthetic failure")
                 self.assertEqual(file.read_text(), MAIN)
+                self.assertEqual((self.root / "src/fieldmap.c").read_text(), FIELDMAP)
 
     def test_rejects_missing_game_target_or_build_matrix(self):
         with self.assertRaises(adapter.ExpansionDrift):
@@ -128,6 +145,16 @@ class ExpansionSourceTests(unittest.TestCase):
             MAIN, adapter.ROOT / "integration/fire_red/xgba_guest.h", impl)
         self.assertIn("xgba_expansion_page.h", patched)
         self.assertNotIn("__XGBA_PAGE_API__", patched)
+
+    def test_fieldmap_hooks_fail_closed_and_reversible(self):
+        patched = adapter.patched_fieldmap(FIELDMAP)
+        self.assertIn("XgbaExpansionTryMapCopy(mapLayout)", patched)
+        self.assertIn("DISPCNT_FORCED_BLANK", patched)
+        self.assertIn("XgbaExpansionPageRelease()", patched)
+        self.assertIn("XgbaExpansionBindMapTilesets", patched)
+        self.assertEqual(patched.count("XgbaExpansionTryTilesetCopy(tileset, numTiles, offset)"), 2)
+        with self.assertRaisesRegex(adapter.ExpansionDrift, "fieldmap global ABI"):
+            adapter.patched_fieldmap(patched)
 
     def test_rejects_injected_header_path(self):
         probe = (adapter.ROOT / "integration/expansion/xgba_expansion_probe.inc").read_text()
