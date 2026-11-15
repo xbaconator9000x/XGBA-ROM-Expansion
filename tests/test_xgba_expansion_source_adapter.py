@@ -61,7 +61,7 @@ class ExpansionSourceTests(unittest.TestCase):
                         self.assertEqual(patched.count("XgbaExpansionProbeBoot();"), 1)
                         self.assertEqual(patched.count("XgbaExpansionProbeTick();"), 1)
                         self.assertIn("XGBA_EXPANSION_RESOURCE_ID", patched)
-                        self.assertIn("XGBA_GUEST_MMIO_BASE", patched)
+                        self.assertIn("xgba_guest.h", patched)
                         raise RuntimeError("synthetic failure")
                 self.assertEqual(file.read_text(), MAIN)
 
