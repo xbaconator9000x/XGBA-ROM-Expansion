@@ -121,8 +121,8 @@ class ExpansionSourceTests(unittest.TestCase):
             self.assertIn(fn, header)
             self.assertIn(fn, impl)
         self.assertIn("return gXgbaExpansionProof.page_resident ? XGBA_EXPANSION_PAGE : NULL;", impl)
-        self.assertIn("XgbaExpansionPageReset();\\n        return 0u;", impl)
-        self.assertIn("XgbaExpansionPageReset();\\n        return 0u; /* reject truncation", impl)
+        self.assertIn("XgbaExpansionPageReset();\n        return 0u;", impl)
+        self.assertIn("XgbaExpansionPageReset();\n        return 0u; /* reject truncation", impl)
         self.assertIn("XGBA_EXPANSION_PAGE_CAPACITY 16384u", header)
         patched = adapter.patched_main(
             MAIN, adapter.ROOT / "integration/fire_red/xgba_guest.h", impl)
