@@ -70,6 +70,7 @@ struct XgbaExpansionProof {
     volatile u32 live_source_primary;
     volatile u32 live_source_secondary;
     volatile u32 live_source_bytes;
+    volatile u32 live_stage; /* opt-in deterministic native startup checkpoints */
 };
 
 /* Small metadata only. The 16KiB payload itself resides inside the
@@ -177,6 +178,11 @@ void XgbaExpansionLiveTick(u32 layout, s32 x, s32 y)
     gXgbaExpansionProof.live_layout = layout;
     gXgbaExpansionProof.live_x = (u32)x;
     gXgbaExpansionProof.live_y = (u32)y;
+}
+
+void XgbaExpansionLiveStage(u32 stage)
+{
+    gXgbaExpansionProof.live_stage = stage;
 }
 
 void XgbaExpansionSourceTransfer(u32 kind, u32 bytes)
