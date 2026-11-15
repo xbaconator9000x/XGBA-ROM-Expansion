@@ -52,7 +52,10 @@ def verify_elf_probe(source: Path, target: str) -> tuple[Path, int]:
     return rom, address
 
 
-def prove(source: Path, mgba: Path, target: str, output: Path, *, map_smoke: bool = False) -> dict:
+def prove(source: Path, mgba: Path, target: str, output: Path, *,
+          map_smoke: bool = False, overworld_play: bool = False) -> dict:
+    if map_smoke and overworld_play:
+        raise ValueError("Overworld play and isolated map smoke cannot run together")
     if target not in adapter.TARGETS:
         raise ValueError("Unrecognized expanded game variant")
     source = source.resolve()
@@ -91,29 +94,32 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *, map_smoke: boo
         file.seek(RESOURCE_OFFSET)
         file.write(PAGE_PAYLOAD)
     page_entries = []
-    if map_smoke:
-        layout = ("LAYOUT_LITTLEROOT_TOWN" if target == "emerald"
-                  else "LAYOUT_PALLET_TOWN")
+    if map_smoke or overworld_play:
+        first = ("LAYOUT_LITTLEROOT_TOWN" if target == "emerald"
+                 else "LAYOUT_PALLET_TOWN")
+        layouts = ([first, "LAYOUT_ROUTE101" if target == "emerald" else "LAYOUT_ROUTE1"]
+                   if overworld_play else [first])
         png = ("data/tilesets/primary/general/tiles.png" if target == "emerald"
                else "data/tilesets/primary/general_frlg/tiles.png")
-        plan = map_pages.build(source, target, layout, output / "private-source",
-                               primary_png=png)
-        page_manifest = sidecar.load_manifest(plan["private_manifest"])
         with external.open("r+b") as combined:
             combined.seek(0, 2)
-            for name, entry in page_manifest.resources.items():
-                if not name.startswith(("rhh.m.", "rhh.p.")):
-                    raise AssertionError("Unexpected RHH original external resource")
-                with page_manifest.data_path.open("rb") as original:
-                    original.seek(entry.offset)
-                    blob = original.read(entry.length)
-                if hashlib.sha256(blob).hexdigest() != entry.sha256:
-                    raise AssertionError("Original RHH source page SHA-256 mismatch")
-                offset = combined.tell()
-                combined.write(blob)
-                page_entries.append({"id": name, "offset": offset,
-                                     "length": entry.length,
-                                     "sha256": entry.sha256})
+            for layout in layouts:
+                plan = map_pages.build(source, target, layout,
+                                       output / "private-source", primary_png=png)
+                page_manifest = sidecar.load_manifest(plan["private_manifest"])
+                for name, entry in page_manifest.resources.items():
+                    if not name.startswith(("rhh.m.", "rhh.p.")):
+                        raise AssertionError("Unexpected RHH original external resource")
+                    with page_manifest.data_path.open("rb") as original:
+                        original.seek(entry.offset)
+                        blob = original.read(entry.length)
+                    if hashlib.sha256(blob).hexdigest() != entry.sha256:
+                        raise AssertionError("Original RHH source page SHA-256 mismatch")
+                    offset = combined.tell()
+                    combined.write(blob)
+                    page_entries.append({"id": name, "offset": offset,
+                                         "length": entry.length,
+                                         "sha256": entry.sha256})
     manifest = output / "xgba-private-test-manifest.json"
     manifest.write_text(json.dumps({
         "format": sidecar.FORMAT,
@@ -133,10 +139,16 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *, map_smoke: boo
             rom, manifest, resource_id, emulator=executable,
             frames=1200, probe_address=proof_address,
             expansion_dir=output, expansion_target=target,
+            expansion_overworld=overworld_play,
             disabled=not enabled,
             extra_resource_ids=tuple(entry["id"] for entry in page_entries))
         label = "enabled" if enabled else "disabled"
-        if map_smoke:
+        if overworld_play:
+            expected = (f"PASS_RHH_REAL_OVERWORLD_NATIVE "
+                        f"target={target} enabled={int(enabled)}")
+            if expected not in proc.stdout:
+                raise AssertionError(f"native {target} {label} real player-controlled route acceptance failed")
+        elif map_smoke:
             expected = (f"PASS_XGBA_RHH_NATIVE_REAL_FIELD_LOADER "
                         f"target={target} enabled={int(enabled)}")
             if expected not in proc.stdout or "map_bytes=" not in proc.stdout:
@@ -146,15 +158,18 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *, map_smoke: boo
                         f"target={target} enabled={int(enabled)}")
             if expected not in proc.stdout or "page_intact_after_frames=1" not in proc.stdout:
                 raise AssertionError(f"native {target} {label} protected-page proof not accepted")
-        filename = output / f"expansion-{target}-{label}.png"
-        if not filename.is_file() or filename.stat().st_size <= 64:
-            raise AssertionError("real mGBA LCD capture was not created")
+        captures = ([output / f"rhh-{target}-{label}-{stage}.png"
+                     for stage in ("00-initial-real-town","01-dpad-movement","02-after-north")]
+                    if overworld_play else [output / f"expansion-{target}-{label}.png"])
         from PIL import Image
-        with Image.open(filename) as image:
-            if image.size != (240, 160):
-                raise AssertionError("native screenshot is not real GBA LCD size")
-            if len(set(image.convert("RGB").getdata())) <= 8:
-                raise AssertionError("RHH LCD image is blank or monochrome")
+        for filename in captures:
+            if not filename.is_file() or filename.stat().st_size <= 64:
+                raise AssertionError(f"real mGBA LCD capture missing: {filename.name}")
+            with Image.open(filename) as image:
+                if image.size != (240, 160):
+                    raise AssertionError("native screenshot is not real GBA LCD size")
+                if len(set(image.convert("RGB").getdata())) <= 8:
+                    raise AssertionError(f"RHH LCD image blank or monochrome: {filename.name}")
         outputs[label] = proc.stdout
 
     report = {
@@ -172,17 +187,21 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *, map_smoke: boo
         "external_payload_sha256": hashlib.sha256(PAGE_PAYLOAD).hexdigest(),
         "external_resource_bytes": RESOURCE_SIZE,
         "actual_16k_page_intact_after_game_frames": not map_smoke,
-        "map_tileset_loader_source_native_verified": map_smoke,
+        "map_tileset_loader_source_native_verified": map_smoke or overworld_play,
+        "player_controlled_overworld_verified": overworld_play,
+        "original_town_to_route_native_acceptance": overworld_play,
         "map_tileset_real_source_page_count": len(page_entries),
-        "gameplay_map_rendering_verified": False,
+        "gameplay_map_rendering_verified": overworld_play,
         "heap_bytes_reserved_for_xgba_page": RESOURCE_SIZE,
         "real_expanded_guest_provider_reads_verified": True,
         "same_source_built_rom_enabled_and_disabled": True,
         "original_source_restored": True,
-        "actual_lcd_frames": 2,
+        "actual_lcd_frames": 6 if overworld_play else 2,
         "native_enabled": outputs["enabled"],
         "native_disabled": outputs["disabled"],
-        "not_proven": "native playable map transition/render, NPCs, battle sprites or Flash save",
+        "not_proven": ("scripted NPC interactions, battles and Flash cold restart"
+                       if overworld_play else
+                       "native playable map transition/render, NPCs, battle sprites or Flash save"),
     }
     (output / f"{target}-proof.json").write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -190,7 +209,7 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *, map_smoke: boo
     # generated private-style sidecar and manifest remain transient.
     external.unlink()
     manifest.unlink()
-    if map_smoke:
+    if map_smoke or overworld_play:
         shutil.rmtree(output / "private-source")
     shutil.rmtree(build)
     return report
@@ -203,9 +222,11 @@ def main() -> int:
     parser.add_argument("--target", choices=adapter.TARGETS, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--map-smoke", action="store_true")
+    parser.add_argument("--overworld-play", action="store_true")
     args = parser.parse_args()
     report = prove(args.source, args.mgba, args.target, args.output,
-                   map_smoke=args.map_smoke)
+                   map_smoke=args.map_smoke,
+                   overworld_play=args.overworld_play)
     print("PASS_XGBA_RHH_NATIVE_INTEGRATION",
           report["target"], report["upstream_sha"],
           report["native_mgba_sha"])
