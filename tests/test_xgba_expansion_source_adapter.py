@@ -107,6 +107,32 @@ class ExpansionSourceTests(unittest.TestCase):
                 adapter.validate_source(self.root, "emerald")
         self.assertEqual(file.read_text(), MAIN)
 
+    def test_opt_in_smoke_calls_real_upstream_loader_and_restores_source(self):
+        path = self.root / "src/main.c"
+        fieldmap_path = self.root / "src/fieldmap.c"
+        for target in adapter.TARGETS:
+            with self.subTest(target=target):
+                with adapter.patched_source(self.root, target, map_smoke=True):
+                    text = path.read_text()
+                    fieldmap = fieldmap_path.read_text()
+                    self.assertEqual(text.count("XgbaExpansionNativeMapTileSmoke();"), 1)
+                    self.assertIn("InitMapLayoutData(&header);", fieldmap)
+                    self.assertIn("CopyPrimaryTilesetToVram(layout);", fieldmap)
+                    self.assertIn("XgbaExpansionMapSmokeReport(layoutId", fieldmap)
+                self.assertEqual(path.read_text(), MAIN)
+                self.assertEqual(fieldmap_path.read_text(), FIELDMAP)
+
+    def test_native_map_proof_verifies_guest_hashes_and_both_provider_states(self):
+        native = (adapter.ROOT / "integration/mgba/xgba_expansion_native.h").read_text()
+        self.assertIn("xgba_expansion_native_field_load", native)
+        self.assertIn("actual_map!=expect_map", native)
+        self.assertIn("enabled && actual_tiles!=expect_tiles", native)
+        self.assertIn("used_map!=(enabled?1u:0u)", native)
+        self.assertIn("device->successful_reads!=1u+resource->extra_count", native)
+        probe = (adapter.ROOT / "integration/expansion/xgba_expansion_probe.inc").read_text()
+        self.assertIn("map_smoke_map_hash", probe)
+        self.assertIn("map_smoke_tiles_hash", probe)
+
     def test_native_expansion_mode_owns_lcd_buffer_in_both_guards(self):
         # Regression: every expanded-engine variant previously segfaulted
         # (signal 11) when native LCD capture had no allocated video buffer.
