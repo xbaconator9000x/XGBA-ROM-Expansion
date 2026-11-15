@@ -11,6 +11,7 @@
 #endif
 
 #include "__XGBA_SHARED_GUEST__"
+#include "__XGBA_PAGE_API__"
 
 #define XGBA_EXPANSION_PROBE_MAGIC 0x58474241u
 #define XGBA_EXPANSION_PAGE_BYTES 0x4000u
@@ -63,18 +64,24 @@ static void XgbaExpansionPageReset(void)
  * Never disclose a page as valid after a short, missing or corrupt fetch.
  * The host manifest validates source and SHA-256 before writing into EWRAM.
  * Each acquire explicitly invalidates prior residency/cache generations. */
-static u32 XgbaExpansionPageAcquire(const char *resource, u32 length)
+u32 XgbaExpansionPageAcquire(const char *resource, u32 length)
 {
     u32 i;
     u32 got;
     if (!resource || length == 0u || length > XGBA_EXPANSION_PAGE_BYTES)
+    {
+        XgbaExpansionPageReset();
         return 0u;
+    }
     for (i = 0; i < sizeof(gXgbaExpansionId); ++i)
         gXgbaExpansionId[i] = 0;
     for (i = 0; i < sizeof(gXgbaExpansionId)-1u && resource[i]; ++i)
         gXgbaExpansionId[i] = resource[i];
     if (resource[i])
+    {
+        XgbaExpansionPageReset();
         return 0u; /* reject truncation/ambiguous source resource ID */
+    }
     XgbaExpansionPageReset();
     got = XgbaGuestFetch(gXgbaExpansionId, XGBA_EXPANSION_PAGE, length);
     if (got != length)
@@ -84,6 +91,26 @@ static u32 XgbaExpansionPageAcquire(const char *resource, u32 length)
     }
     gXgbaExpansionProof.page_resident = length;
     return got;
+}
+
+void XgbaExpansionPageRelease(void)
+{
+    XgbaExpansionPageReset();
+}
+
+const u8 *XgbaExpansionPageData(void)
+{
+    return gXgbaExpansionProof.page_resident ? XGBA_EXPANSION_PAGE : NULL;
+}
+
+u32 XgbaExpansionPageResidentBytes(void)
+{
+    return gXgbaExpansionProof.page_resident;
+}
+
+u32 XgbaExpansionPageGeneration(void)
+{
+    return gXgbaExpansionProof.page_generation;
 }
 
 static void XgbaExpansionProbeBoot(void)
