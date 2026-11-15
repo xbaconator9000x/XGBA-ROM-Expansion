@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TARGETS = ("emerald", "firered", "leafgreen")
 UPSTREAM = "https://github.com/rh-hideout/pokeemerald-expansion"
 VALIDATED_RELEASE = "expansion/1.17.2"
+VALIDATED_RELEASE_SHA = "79dd436920845ebc145577649de624f65298c209"
 
 class ExpansionDrift(RuntimeError):
     """Refuse unsupported or already-patched source instead of guessing."""
@@ -41,6 +42,7 @@ def validate_source(source: Path, target: str) -> dict:
     if not all(p.is_file() for p in (makefile_path, main_path, global_path)):
         raise ExpansionDrift("not an intact pokeemerald-expansion source checkout")
     makefile = makefile_path.read_text(encoding="utf-8")
+    normalized_makefile = " ".join(makefile.split())
     main = main_path.read_text(encoding="utf-8")
     required_make = (
         "GAME_VERSION ?= EMERALD",
@@ -50,7 +52,7 @@ def validate_source(source: Path, target: str) -> dict:
         "firered: all",
         "leafgreen: all",
     )
-    missing = [s for s in required_make if s not in makefile]
+    missing = [s for s in required_make if s not in normalized_makefile]
     if missing:
         raise ExpansionDrift(f"unsupported expansion build matrix: {missing}")
     for anchor in ("void AgbMain(void)\n{",
@@ -120,6 +122,8 @@ def require_release_tag(source: Path, tag: str) -> str:
         ["git", "-C", str(source), "tag", "--points-at", "HEAD"], text=True)
     if tag not in tags.splitlines():
         raise ExpansionDrift(f"source HEAD {sha} is not tagged {tag}")
+    if tag == VALIDATED_RELEASE and sha != VALIDATED_RELEASE_SHA:
+        raise ExpansionDrift(f"release tag {tag} moved to unexpected commit {sha}")
     return sha
 
 
