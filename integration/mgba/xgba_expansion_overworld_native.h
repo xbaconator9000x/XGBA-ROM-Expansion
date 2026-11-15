@@ -19,7 +19,8 @@ enum {
     RHH_LIVE_MAP_READS = 108,
     RHH_LIVE_PRIMARY_READS = 112,
     RHH_LIVE_SECONDARY_READS = 116,
-    RHH_LIVE_BYTES = 120
+    RHH_LIVE_BYTES = 120,
+    RHH_LIVE_STAGE = 124
 };
 static void rhh_overworld_screen(struct mCore *core, const char *dir,
                                  const char *target, const char *phase,
@@ -47,7 +48,25 @@ static void xgba_expansion_native_overworld(struct mCore *core,
     if (core->busRead32(core,probe+RHH_LIVE_STATE)!=1u ||
         core->busRead32(core,probe+RHH_LIVE_LAYOUT)!=start_id ||
         core->busRead32(core,probe+RHH_LIVE_FRAMES)<12u)
+    {
+        fprintf(stderr, "RHH_WORLD_BOOT_DIAG target=%s enabled=%d "
+            "boot_state=%u stage=%u live_state=%u live_frames=%u "
+            "first_layout=%u current_layout=%u x=%u y=%u source_maps=%u "
+            "source_primary=%u guest_reads=%u guest_rejections=%u\\n",
+            target, enabled,
+            core->busRead32(core,probe+8u),
+            core->busRead32(core,probe+RHH_LIVE_STAGE),
+            core->busRead32(core,probe+RHH_LIVE_STATE),
+            core->busRead32(core,probe+RHH_LIVE_FRAMES),
+            core->busRead32(core,probe+RHH_LIVE_FIRST_LAYOUT),
+            core->busRead32(core,probe+RHH_LIVE_LAYOUT),
+            core->busRead32(core,probe+RHH_LIVE_X),
+            core->busRead32(core,probe+RHH_LIVE_Y),
+            core->busRead32(core,probe+RHH_LIVE_MAP_READS),
+            core->busRead32(core,probe+RHH_LIVE_PRIMARY_READS),
+            device->successful_reads,device->failed_reads);
         fail("RHH playable new-game callback never entered original town overworld");
+    }
     uint32_t x0 = core->busRead32(core,probe+RHH_LIVE_X);
     uint32_t y0 = core->busRead32(core,probe+RHH_LIVE_Y);
     if (enabled && (!core->busRead32(core,probe+RHH_LIVE_MAP_READS) ||
