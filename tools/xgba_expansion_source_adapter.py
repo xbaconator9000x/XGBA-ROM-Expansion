@@ -64,6 +64,8 @@ def validate_source(source: Path, target: str) -> dict:
         if main.count(anchor) != 1:
             raise ExpansionDrift(f"expansion main ABI drift at {anchor!r}")
     fieldmap_path = source / "src/fieldmap.c"
+    if not (source / "src/load_save.c").is_file():
+        raise ExpansionDrift("missing original save-block heap lifecycle")
     if not fieldmap_path.is_file():
         raise ExpansionDrift("missing original fieldmap.c")
     fieldmap = fieldmap_path.read_text(encoding="utf-8")
@@ -114,6 +116,18 @@ def patched_fieldmap(original: str) -> str:
                     "        return;\n    if (tileset)",
                     signature)
     return text
+
+
+def patched_save_heap(original: str) -> str:
+    """Keep the external page outside the original save-block heap reset.
+
+    RHH MoveSaveBlocks_ResetHeap restores HEAP_SIZE after save relocation.
+    That would re-expose the 16-KiB leased tail to the game's allocator.
+    """
+    return _one(original,
+                "    InitHeap(gHeap, HEAP_SIZE);",
+                "    InitHeap(gHeap, HEAP_SIZE - 0x4000u);",
+                "save relocation heap lease")
 
 
 def patched_overworld(original: str) -> str:
@@ -232,6 +246,8 @@ def patched_source(source: Path, target: str, *, map_smoke: bool = False,
     path = source / "src/main.c"
     fieldmap_path = source / "src/fieldmap.c"
     overworld_path = source / "src/overworld.c"
+    save_heap_path = source / "src/load_save.c"
+    save_heap_before = save_heap_path.read_text(encoding="utf-8")
     before = path.read_text(encoding="utf-8")
     fieldmap_before = fieldmap_path.read_text(encoding="utf-8")
     overworld_before = overworld_path.read_text(encoding="utf-8") if overworld_play else None
@@ -242,16 +258,19 @@ def patched_source(source: Path, target: str, *, map_smoke: bool = False,
     after = patched_main(before, header, probe_path.read_text(encoding="utf-8"),
                          map_smoke=map_smoke, overworld_play=overworld_play)
     fieldmap_after = patched_fieldmap(fieldmap_before)
+    save_heap_after = patched_save_heap(save_heap_before)
     overworld_after = patched_overworld(overworld_before) if overworld_play else None
     try:
         path.write_text(after, encoding="utf-8")
         fieldmap_path.write_text(fieldmap_after, encoding="utf-8")
+        save_heap_path.write_text(save_heap_after, encoding="utf-8")
         if overworld_play:
             overworld_path.write_text(overworld_after, encoding="utf-8")
         yield report
     finally:
         path.write_text(before, encoding="utf-8")
         fieldmap_path.write_text(fieldmap_before, encoding="utf-8")
+        save_heap_path.write_text(save_heap_before, encoding="utf-8")
         if overworld_play:
             overworld_path.write_text(overworld_before, encoding="utf-8")
 
