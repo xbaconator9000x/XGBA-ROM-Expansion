@@ -88,9 +88,11 @@ static void XgbaExpansionBindOriginalMap(const struct MapHeader *header)
     id = header->mapLayoutId;
     if (!id || GetMapLayout(id) != header->mapLayout)
     {
+        XgbaExpansionSourceTransfer(10u, 0u);
         XgbaExpansionUnbindMapTilesets();
         return;
     }
+    XgbaExpansionSourceTransfer(11u, 0u);
     XgbaExpansionMakeLayoutId(sXgbaAutoMapId, 'm', id);
     XgbaExpansionMakeLayoutId(sXgbaAutoPrimaryId, 'p', id);
     XgbaExpansionMakeLayoutId(sXgbaAutoSecondaryId, 's', id);
@@ -176,7 +178,10 @@ static bool8 XgbaExpansionTryTilesetCopy(const struct Tileset *tileset,
     if (!base || !numTiles || !total || (u32)offset + numTiles > NUM_TILES_TOTAL)
         return FALSE;
     if (!(REG_DISPCNT & DISPCNT_FORCED_BLANK))
+    {
+        XgbaExpansionSourceTransfer(12u, 0u);
         return FALSE;
+    }
     for (start = 0; start < total; start += XGBA_FIELD_CHUNK)
     {
         if (!XgbaExpansionChunkId(id, base, start / XGBA_FIELD_CHUNK))
