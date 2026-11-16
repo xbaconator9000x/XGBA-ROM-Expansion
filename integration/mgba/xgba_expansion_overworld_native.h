@@ -163,7 +163,12 @@ static void xgba_expansion_native_overworld(struct mCore *core,
             source_maps,source_primary,device->successful_reads);
     if (final_map!=next_id || transitions<1u)
         fail("RHH playable town-to-route native map transition unverified");
-    /* Pinned RHH Littleroot/Route101 and Pallet/Route1 each share the same\n     * primary and secondary tileset pointers. The original field loader can\n     * legitimately retain the already-loaded tileset across a connection.\n     * Require two authentic external map acquisitions, at least one original\n     * primary acquisition, and successful host reads without rejection. */\n    if ((enabled && (source_maps<2u || source_primary<1u ||
+    /* Pinned RHH Littleroot/Route101 and Pallet/Route1 each share the same
+     * primary and secondary tileset pointers. The original field loader can
+     * legitimately retain the already-loaded tileset across a connection.
+     * Require two authentic external map acquisitions, at least one original
+     * primary acquisition, and successful host reads without rejection. */
+    if ((enabled && (source_maps<2u || source_primary<1u ||
                      device->successful_reads<5u || device->failed_reads)) ||
         (!enabled && (source_maps || source_primary ||
                       device->successful_reads || device->failed_reads)))
