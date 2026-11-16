@@ -97,6 +97,9 @@ def patched_fieldmap(original: str) -> str:
     page_api = ROOT / "integration/expansion/xgba_expansion_page.h"
     bridge = bridge_path.read_text(encoding="utf-8").replace(
         "XGBA_EXPANSION_MAP_API_PLACEHOLDER", page_api.resolve().as_posix())
+    # The reusable graphics lease owns buffers across the upstream BG DMA.
+    # Include its allocator declarations explicitly, not transitively.
+    bridge = '#include "malloc.h"\\n' + bridge
     text = _one(original,
                 "static inline u16 GetBorderBlockAt(int x, int y)",
                 bridge + "\nstatic inline u16 GetBorderBlockAt(int x, int y)",
