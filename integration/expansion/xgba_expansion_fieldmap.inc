@@ -177,26 +177,31 @@ static bool8 XgbaExpansionTryTilesetCopy(const struct Tileset *tileset,
     }
     if (!base || !numTiles || !total || (u32)offset + numTiles > NUM_TILES_TOTAL)
         return FALSE;
-    if (!(REG_DISPCNT & DISPCNT_FORCED_BLANK))
+    /* Real RHH field loading runs with display enabled. The earlier guard
+     * excluded every authentic gameplay tileset load, despite successful
+     * map acquisition. Temporarily blank only for the synchronous VRAM
+     * transfer, restoring the exact original display register on ALL paths.
+     * The guest page is never retained by DMA or the background loader. */
     {
-        XgbaExpansionSourceTransfer(12u, 0u);
-        return FALSE;
-    }
-    for (start = 0; start < total; start += XGBA_FIELD_CHUNK)
-    {
-        if (!XgbaExpansionChunkId(id, base, start / XGBA_FIELD_CHUNK))
-            break;
-        n = total - start;
-        if (n > XGBA_FIELD_CHUNK)
-            n = XGBA_FIELD_CHUNK;
-        if (XgbaExpansionPageAcquire(id, n) != n)
-            break;
-        data = XgbaExpansionPageData();
-        if (!data)
-            break;
-        CpuCopy16(data, (void *)(BG_VRAM + (u32)offset * 32u + start), n);
-        XgbaExpansionPageRelease();
-        copied += n;
+        u16 originalDisplay = REG_DISPCNT;
+        REG_DISPCNT = originalDisplay | DISPCNT_FORCED_BLANK;
+        for (start = 0; start < total; start += XGBA_FIELD_CHUNK)
+        {
+            if (!XgbaExpansionChunkId(id, base, start / XGBA_FIELD_CHUNK))
+                break;
+            n = total - start;
+            if (n > XGBA_FIELD_CHUNK)
+                n = XGBA_FIELD_CHUNK;
+            if (XgbaExpansionPageAcquire(id, n) != n)
+                break;
+            data = XgbaExpansionPageData();
+            if (!data)
+                break;
+            CpuCopy16(data, (void *)(BG_VRAM + (u32)offset * 32u + start), n);
+            XgbaExpansionPageRelease();
+            copied += n;
+        }
+        REG_DISPCNT = originalDisplay;
     }
     if (copied == total)
     {
