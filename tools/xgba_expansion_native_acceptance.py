@@ -158,7 +158,7 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
                         f"target={target} enabled={int(enabled)}")
             if expected not in proc.stdout or "page_intact_after_frames=1" not in proc.stdout:
                 raise AssertionError(f"native {target} {label} protected-page proof not accepted")
-        captures = ([output / f"rhh-{target}-{label}-{stage}.png"
+        captures = ([output / f"rhh-{target}-{'external' if enabled else 'fallback'}-{stage}.png"
                      for stage in ("00-initial-real-town","01-dpad-movement","02-after-north")]
                     if overworld_play else [output / f"expansion-{target}-{label}.png"])
         from PIL import Image
