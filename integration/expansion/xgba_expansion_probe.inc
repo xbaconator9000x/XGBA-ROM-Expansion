@@ -71,6 +71,10 @@ struct XgbaExpansionProof {
     volatile u32 live_source_secondary;
     volatile u32 live_source_bytes;
     volatile u32 live_stage; /* opt-in deterministic native startup checkpoints */
+    /* Diagnostics appended after stable acceptance ABI fields. */
+    volatile u32 live_map_bind_accepted;
+    volatile u32 live_map_bind_rejected;
+    volatile u32 live_tileset_blank_rejected;
 };
 
 /* Small metadata only. The 16KiB payload itself resides inside the
@@ -193,6 +197,21 @@ void XgbaExpansionSourceTransfer(u32 kind, u32 bytes)
         ++gXgbaExpansionProof.live_source_primary;
     else if (kind == 3u)
         ++gXgbaExpansionProof.live_source_secondary;
+    else if (kind == 10u)
+    {
+        ++gXgbaExpansionProof.live_map_bind_rejected;
+        return;
+    }
+    else if (kind == 11u)
+    {
+        ++gXgbaExpansionProof.live_map_bind_accepted;
+        return;
+    }
+    else if (kind == 12u)
+    {
+        ++gXgbaExpansionProof.live_tileset_blank_rejected;
+        return;
+    }
     else
         return;
     gXgbaExpansionProof.live_source_bytes += bytes;
