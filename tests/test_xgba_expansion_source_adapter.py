@@ -73,7 +73,7 @@ class ExpansionSourceTests(unittest.TestCase):
         (self.root / "Makefile").write_text(MAKEFILE)
         (self.root / "src/main.c").write_text(MAIN)
         (self.root / "src/fieldmap.c").write_text(FIELDMAP)
-        (self.root / "src/load_save.c").write_text("void MoveSaveBlocks_ResetHeap(void)\\n{\\n    InitHeap(gHeap, HEAP_SIZE);\\n}\\n")
+        (self.root / "src/load_save.c").write_text("void MoveSaveBlocks_ResetHeap(void)\n{\n    InitHeap(gHeap, HEAP_SIZE);\n}\n")
         (self.root / "src/overworld.c").write_text(OVERWORLD)
         (self.root / "include/global.h").write_text("/* RHH global ABI */\n")
 
