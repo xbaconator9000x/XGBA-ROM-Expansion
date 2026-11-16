@@ -155,18 +155,42 @@ static bool8 XgbaExpansionTryMapCopy(const struct MapLayout *layout)
     return FALSE;
 }
 
-/* A tileset can exceed one 16 KiB page (FRLG primary = 20 KiB).
- * Page bytes are raw original 4bpp tiles, never LZ77. Copy directly to VRAM
- * only under forced blank, so no queued BG loader/DMA retains a page pointer.
- * If a later page is unavailable the caller executes the full ROM loader,
- * replacing any partially transferred external graphics. */
+/* A native RHH BG loader owns the DMA scheduling and BG charbase offset.
+ * External pages are transient: assemble the complete original tileset in
+ * a heap-owned staging lease, then enqueue it ONCE through LoadBgTiles.
+ * Never free the source until the engine reports its BG DMA complete.
+ * No direct VRAM writes, forced blank toggles, or retained page pointers.
+ * Two bounded leases cover the primary and secondary loads in one map. */
+#define XGBA_GRAPHICS_LEASES 2u
+struct XgbaGraphicsLease
+{
+    void *data;
+};
+static struct XgbaGraphicsLease sXgbaGraphicsLeases[XGBA_GRAPHICS_LEASES];
+
+static void XgbaExpansionGraphicsPoll(void)
+{
+    u32 i;
+    if (IsDma3ManagerBusyWithBgCopy())
+        return;
+    for (i = 0; i < XGBA_GRAPHICS_LEASES; ++i)
+    {
+        if (sXgbaGraphicsLeases[i].data)
+        {
+            Free(sXgbaGraphicsLeases[i].data);
+            sXgbaGraphicsLeases[i].data = NULL;
+        }
+    }
+}
+
 static bool8 XgbaExpansionTryTilesetCopy(const struct Tileset *tileset,
                                          u16 numTiles, u16 offset)
 {
     const char *base = NULL;
-    const u8 *data;
+    u8 *staging;
+    const u8 *page;
     u32 total = (u32)numTiles * 32u;
-    u32 start, n, copied = 0u;
+    u32 start, n, slot;
     char id[XGBA_FIELD_ID_SIZE];
     if (tileset && sXgbaMapLayout)
     {
@@ -177,45 +201,52 @@ static bool8 XgbaExpansionTryTilesetCopy(const struct Tileset *tileset,
     }
     if (!base || !numTiles || !total || (u32)offset + numTiles > NUM_TILES_TOTAL)
         return FALSE;
-    /* Real RHH field loading runs with display enabled. The earlier guard
-     * excluded every authentic gameplay tileset load, despite successful
-     * map acquisition. Temporarily blank only for the synchronous VRAM
-     * transfer, restoring the exact original display register on ALL paths.
-     * The guest page is never retained by DMA or the background loader. */
+    XgbaExpansionGraphicsPoll();
+    for (slot = 0; slot < XGBA_GRAPHICS_LEASES; ++slot)
+        if (!sXgbaGraphicsLeases[slot].data)
+            break;
+    if (slot == XGBA_GRAPHICS_LEASES)
+        return FALSE; /* never overwrite a pending DMA source */
+    staging = Alloc(total);
+    if (!staging)
+        return FALSE;
+    for (start = 0; start < total; start += XGBA_FIELD_CHUNK)
     {
-        u16 originalDisplay = REG_DISPCNT;
-        REG_DISPCNT = originalDisplay | DISPCNT_FORCED_BLANK;
-        for (start = 0; start < total; start += XGBA_FIELD_CHUNK)
-        {
-            if (!XgbaExpansionChunkId(id, base, start / XGBA_FIELD_CHUNK))
-                break;
-            n = total - start;
-            if (n > XGBA_FIELD_CHUNK)
-                n = XGBA_FIELD_CHUNK;
-            if (XgbaExpansionPageAcquire(id, n) != n)
-                break;
-            data = XgbaExpansionPageData();
-            if (!data)
-                break;
-            CpuCopy16(data, (void *)(BG_VRAM + (u32)offset * 32u + start), n);
-            XgbaExpansionPageRelease();
-            copied += n;
-        }
-        REG_DISPCNT = originalDisplay;
-    }
-    if (copied == total)
-    {
-        if (tileset == sXgbaMapLayout->primaryTileset)
-        {
-            sXgbaSmokePrimaryUsed = TRUE;
-            XgbaExpansionSourceTransfer(2u, total);
-        }
-        else
-            XgbaExpansionSourceTransfer(3u, total);
-        return TRUE;
+        if (!XgbaExpansionChunkId(id, base, start / XGBA_FIELD_CHUNK))
+            break;
+        n = total - start;
+        if (n > XGBA_FIELD_CHUNK)
+            n = XGBA_FIELD_CHUNK;
+        if (XgbaExpansionPageAcquire(id, n) != n)
+            break;
+        page = XgbaExpansionPageData();
+        if (!page)
+            break;
+        CpuCopy16(page, staging + start, n);
+        XgbaExpansionPageRelease();
     }
     XgbaExpansionPageRelease();
-    return FALSE;
+    if (start < total)
+    {
+        Free(staging);
+        return FALSE; /* original loader may safely use ROM assets */
+    }
+    /* RHH's own BG loader schedules DMA, handles charbase and tile tracking.
+     * Retain the staging lease until its completion is observed. */
+    if (LoadBgTiles(2, staging, total, offset) == 0xFFFFu)
+    {
+        Free(staging);
+        return FALSE;
+    }
+    sXgbaGraphicsLeases[slot].data = staging;
+    if (tileset == sXgbaMapLayout->primaryTileset)
+    {
+        sXgbaSmokePrimaryUsed = TRUE;
+        XgbaExpansionSourceTransfer(2u, total);
+    }
+    else
+        XgbaExpansionSourceTransfer(3u, total);
+    return TRUE;
 }
 
 /*
