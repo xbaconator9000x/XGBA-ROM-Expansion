@@ -227,6 +227,8 @@ def patched_main(original: str, header: Path, probe: str, *, map_smoke: bool = F
                  "\n      if (!sXgbaNewGameScheduled) {"
                  "\n        sXgbaNewGameScheduled = TRUE;"
                  "\n        SetSaveBlocksPointers(0);"
+                 "\n        /* FRLG normally receives a terminated rival name from the intro. */"
+                 "\n        if (IS_FRLG) gSaveBlock1Ptr->rivalName[0] = EOS;"
                  "\n        SetMainCallback2(CB2_NewGame);"
                  "\n      }\n    }")
     text = _one(text,
