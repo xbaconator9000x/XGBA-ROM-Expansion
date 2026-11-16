@@ -73,6 +73,7 @@ class ExpansionSourceTests(unittest.TestCase):
         (self.root / "Makefile").write_text(MAKEFILE)
         (self.root / "src/main.c").write_text(MAIN)
         (self.root / "src/fieldmap.c").write_text(FIELDMAP)
+        (self.root / "src/load_save.c").write_text("void MoveSaveBlocks_ResetHeap(void)\\n{\\n    InitHeap(gHeap, HEAP_SIZE);\\n}\\n")
         (self.root / "src/overworld.c").write_text(OVERWORLD)
         (self.root / "include/global.h").write_text("/* RHH global ABI */\n")
 
@@ -113,6 +114,16 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("required_tag = args.require_tag or (VALIDATED_RELEASE if args.build else None)", source)
         self.assertIn("if required_tag != VALIDATED_RELEASE:", source)
         self.assertIn("require_release_tag(source, required_tag)", source)
+
+    def test_save_block_heap_reset_preserves_page_lease_and_restores_source(self):
+        path = self.root / "src/load_save.c"
+        before = path.read_text()
+        with adapter.patched_source(self.root, "emerald"):
+            self.assertIn("InitHeap(gHeap, HEAP_SIZE - 0x4000u);", path.read_text())
+            self.assertNotIn("InitHeap(gHeap, HEAP_SIZE);", path.read_text())
+        self.assertEqual(path.read_text(), before)
+        with self.assertRaisesRegex(adapter.ExpansionDrift, "save relocation heap lease"):
+            adapter.patched_save_heap(before.replace("HEAP_SIZE", "OTHER_HEAP_SIZE"))
 
     def test_rejects_missing_game_target_or_build_matrix(self):
         with self.assertRaises(adapter.ExpansionDrift):
