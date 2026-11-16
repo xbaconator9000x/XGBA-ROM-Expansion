@@ -20,7 +20,10 @@ enum {
     RHH_LIVE_PRIMARY_READS = 112,
     RHH_LIVE_SECONDARY_READS = 116,
     RHH_LIVE_BYTES = 120,
-    RHH_LIVE_STAGE = 124
+    RHH_LIVE_STAGE = 124,
+    RHH_LIVE_BIND_ACCEPTED = 128,
+    RHH_LIVE_BIND_REJECTED = 132,
+    RHH_LIVE_BLANK_REJECTED = 136
 };
 static void rhh_overworld_screen(struct mCore *core, const char *dir,
                                  const char *target, const char *phase,
@@ -71,7 +74,22 @@ static void xgba_expansion_native_overworld(struct mCore *core,
     uint32_t y0 = core->busRead32(core,probe+RHH_LIVE_Y);
     if (enabled && (!core->busRead32(core,probe+RHH_LIVE_MAP_READS) ||
                     !core->busRead32(core,probe+RHH_LIVE_PRIMARY_READS)))
+    {
+        fprintf(stderr, "RHH_RESOURCE_DIAG target=%s stage=%u layout=%u "
+            "bind_accepted=%u bind_rejected=%u blank_rejected=%u "
+            "map_reads=%u primary_reads=%u secondary_reads=%u "
+            "guest_reads=%u guest_rejections=%u\\n", target,
+            core->busRead32(core,probe+RHH_LIVE_STAGE),
+            core->busRead32(core,probe+RHH_LIVE_LAYOUT),
+            core->busRead32(core,probe+RHH_LIVE_BIND_ACCEPTED),
+            core->busRead32(core,probe+RHH_LIVE_BIND_REJECTED),
+            core->busRead32(core,probe+RHH_LIVE_BLANK_REJECTED),
+            core->busRead32(core,probe+RHH_LIVE_MAP_READS),
+            core->busRead32(core,probe+RHH_LIVE_PRIMARY_READS),
+            core->busRead32(core,probe+RHH_LIVE_SECONDARY_READS),
+            device->successful_reads,device->failed_reads);
         fail("RHH real overworld never fetched external original town map/tileset");
+    }
     if (!enabled && (device->successful_reads || resource->reads))
         fail("RHH disabled-provider overworld read external assets");
     rhh_overworld_screen(core,directory,target,"00-initial-real-town",enabled);
