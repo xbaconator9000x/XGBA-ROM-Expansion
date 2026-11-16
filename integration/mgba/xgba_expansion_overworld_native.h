@@ -125,9 +125,16 @@ static void xgba_expansion_native_overworld(struct mCore *core,
          * The first candidate is the original direct northward route. */
         if (lane)
         {
-            unsigned key = (1u<<5);
-            core->setKeys(core,key);
-            for (unsigned frame=0;frame<16u;frame++) core->runFrame(core);
+            /* At the north border a side-step may be blocked by the
+             * original town's upper wall. Retreat into the walkable town
+             * interior, move one lane west, then approach north again.
+             * All steps remain physical D-pad input through game collision. */
+            core->setKeys(core,1u<<7);
+            for (unsigned frame=0;frame<32u;frame++) core->runFrame(core);
+            core->setKeys(core,0u);
+            for (unsigned frame=0;frame<8u;frame++) core->runFrame(core);
+            core->setKeys(core,1u<<5);
+            for (unsigned frame=0;frame<18u;frame++) core->runFrame(core);
             core->setKeys(core,0u);
             for (unsigned frame=0;frame<8u;frame++) core->runFrame(core);
         }
