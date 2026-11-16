@@ -99,7 +99,7 @@ def patched_fieldmap(original: str) -> str:
         "XGBA_EXPANSION_MAP_API_PLACEHOLDER", page_api.resolve().as_posix())
     # The reusable graphics lease owns buffers across the upstream BG DMA.
     # Include its allocator declarations explicitly, not transitively.
-    bridge = '#include "malloc.h"\\n' + bridge
+    bridge = '#include "malloc.h"\n' + bridge
     text = _one(original,
                 "static inline u16 GetBorderBlockAt(int x, int y)",
                 bridge + "\nstatic inline u16 GetBorderBlockAt(int x, int y)",
