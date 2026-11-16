@@ -231,6 +231,22 @@ static bool8 XgbaExpansionTryTilesetCopy(const struct Tileset *tileset,
         Free(staging);
         return FALSE; /* original loader may safely use ROM assets */
     }
+    /* A caller that already owns forced blank can complete the transfer
+     * synchronously, including early boot before BG DMA initialization.
+     * Active-display gameplay always delegates to the original BG loader. */
+    if (REG_DISPCNT & DISPCNT_FORCED_BLANK)
+    {
+        CpuCopy16(staging, (void *)(BG_VRAM + (u32)offset * 32u), total);
+        Free(staging);
+        if (tileset == sXgbaMapLayout->primaryTileset)
+        {
+            sXgbaSmokePrimaryUsed = TRUE;
+            XgbaExpansionSourceTransfer(2u, total);
+        }
+        else
+            XgbaExpansionSourceTransfer(3u, total);
+        return TRUE;
+    }
     /* RHH's own BG loader schedules DMA, handles charbase and tile tracking.
      * Retain the staging lease until its completion is observed. */
     if (LoadBgTiles(2, staging, total, offset) == 0xFFFFu)
