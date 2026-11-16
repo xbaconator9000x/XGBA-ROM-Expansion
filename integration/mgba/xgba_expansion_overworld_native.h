@@ -125,7 +125,7 @@ static void xgba_expansion_native_overworld(struct mCore *core,
          * The first candidate is the original direct northward route. */
         if (lane)
         {
-            unsigned key = (lane & 1u) ? (1u<<5) : (1u<<4);
+            unsigned key = (1u<<5);
             core->setKeys(core,key);
             for (unsigned frame=0;frame<16u;frame++) core->runFrame(core);
             core->setKeys(core,0u);
