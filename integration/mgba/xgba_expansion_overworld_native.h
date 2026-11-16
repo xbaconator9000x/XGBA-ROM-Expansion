@@ -111,12 +111,36 @@ static void xgba_expansion_native_overworld(struct mCore *core,
     if (!moves || (x0==x1 && y0==y1))
         fail("RHH native physical D-pad did not move actual game player");
     rhh_overworld_screen(core,directory,target,"01-dpad-movement",enabled);
-    /* Continue north across original town/route connection. The game
-     * must trigger any scripts/collision/warp itself. Do not spoof position. */
-    core->setKeys(core,1u<<6);
-    for(unsigned frame=0;frame<220u;frame++) core->runFrame(core);
-    core->setKeys(core,0u);
-    for(unsigned frame=0;frame<60u;frame++) core->runFrame(core);
+    /* Walk the original town's north connection through physical input only.
+     * A straight line can terminate against authentic collision near the
+     * border. Probe neighbouring lanes, keeping the game's own movement,
+     * collision, scripts and map transitions authoritative. */
+    static const unsigned lanes[] = {0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u};
+    for (unsigned lane = 0; lane < sizeof(lanes)/sizeof(lanes[0]); ++lane)
+    {
+        uint32_t current = core->busRead32(core,probe+RHH_LIVE_LAYOUT);
+        if (current == next_id)
+            break;
+        /* First try the current lane, then alternate one tile sideways.
+         * The first candidate is the original direct northward route. */
+        if (lane)
+        {
+            unsigned key = (lane & 1u) ? (1u<<5) : (1u<<4);
+            core->setKeys(core,key);
+            for (unsigned frame=0;frame<16u;frame++) core->runFrame(core);
+            core->setKeys(core,0u);
+            for (unsigned frame=0;frame<8u;frame++) core->runFrame(core);
+        }
+        core->setKeys(core,1u<<6);
+        for (unsigned frame=0;frame<180u;frame++) core->runFrame(core);
+        core->setKeys(core,0u);
+        for (unsigned frame=0;frame<28u;frame++) core->runFrame(core);
+        fprintf(stderr,"RHH_ROUTE_LANE target=%s lane=%u layout=%u x=%u y=%u movements=%u\\n",
+                target,lane,core->busRead32(core,probe+RHH_LIVE_LAYOUT),
+                core->busRead32(core,probe+RHH_LIVE_X),
+                core->busRead32(core,probe+RHH_LIVE_Y),
+                core->busRead32(core,probe+RHH_LIVE_MOVEMENTS));
+    }
     uint32_t final_map=core->busRead32(core,probe+RHH_LIVE_LAYOUT);
     uint32_t transitions=core->busRead32(core,probe+RHH_LIVE_TRANSITIONS);
     uint32_t source_maps=core->busRead32(core,probe+RHH_LIVE_MAP_READS);
