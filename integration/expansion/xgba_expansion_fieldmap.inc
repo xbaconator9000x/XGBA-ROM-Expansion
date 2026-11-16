@@ -168,7 +168,7 @@ struct XgbaGraphicsLease
 };
 static struct XgbaGraphicsLease sXgbaGraphicsLeases[XGBA_GRAPHICS_LEASES];
 
-static void XgbaExpansionGraphicsPoll(void)
+void XgbaExpansionGraphicsPoll(void)
 {
     u32 i;
     if (IsDma3ManagerBusyWithBgCopy())
