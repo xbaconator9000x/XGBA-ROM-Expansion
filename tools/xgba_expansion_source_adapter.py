@@ -168,6 +168,7 @@ def patched_overworld(original: str) -> str:
     text = _one(text,
                 "    OverworldBasic();\n    if (fading)\n",
                 "    OverworldBasic();\n"
+                "    XgbaExpansionGraphicsPoll();\n"
                 "    XgbaExpansionLiveTick(gMapHeader.mapLayoutId,\n"
                 "        gSaveBlock1Ptr->pos.x, gSaveBlock1Ptr->pos.y);\n"
                 "    if (fading)\n",
@@ -179,6 +180,7 @@ def patched_overworld(original: str) -> str:
                 "native source new-game stage declaration")
     return _one(text,
                 "void CB2_Overworld(void)\n{",
+                "extern void XgbaExpansionGraphicsPoll(void);\n"
                 "extern void XgbaExpansionLiveTick(u32 layout, s32 x, s32 y);\n"
                 "void CB2_Overworld(void)\n{",
                 "external witness declaration")
