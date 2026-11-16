@@ -217,8 +217,15 @@ class ExpansionSourceTests(unittest.TestCase):
         # Only bytes actually transferred establish success.
         bridge = (adapter.ROOT / "integration/expansion/xgba_expansion_fieldmap.inc").read_text()
         self.assertNotIn("if (start == total)", bridge)
-        self.assertEqual(bridge.count("copied += n;"), 2)
-        self.assertEqual(bridge.count("if (copied == total)"), 2)
+        self.assertEqual(bridge.count("copied += n;"), 1)
+        self.assertEqual(bridge.count("if (copied == total)"), 1)
+        # The graphics path now stages every page in owned heap memory
+        # before handing the complete tileset to the upstream BG DMA API.
+        self.assertIn("CpuCopy16(page, staging + start, n);", bridge)
+        self.assertIn("if (start < total)", bridge)
+        self.assertIn("LoadBgTiles(2, staging, total, offset)", bridge)
+        self.assertIn("IsDma3ManagerBusyWithBgCopy()", bridge)
+        self.assertNotIn("REG_DISPCNT = originalDisplay", bridge.split("static bool8 XgbaExpansionTryTilesetCopy")[1].split("Explicit test-only")[0])
         self.assertIn("sXgbaSmokeMapUsed = TRUE;", bridge)
         self.assertIn("sXgbaSmokePrimaryUsed = TRUE;", bridge)
         self.assertIn("InitBackupMapLayoutData(layout->map", bridge)
