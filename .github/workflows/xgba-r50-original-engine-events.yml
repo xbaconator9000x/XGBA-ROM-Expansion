@@ -1,0 +1,112 @@
+name: XGBA R50 native Emerald source-owned map object events
+on:
+  push:
+    branches: [main, 'integration/r50-guest-original-engine-events-20261113']
+    paths:
+      - 'integration/common/xgba_r50_engine_event_adapter.h'
+      - 'integration/emerald/xgba_r50_original_engine_events.inc'
+      - 'integration/emerald/xgba_r17_external_littleroot.inc'
+      - 'tools/xgba_r17_emerald_patch.py'
+      - 'tests/test_xgba_r17_emerald_external_map.py'
+      - 'tests/xgba_r50_engine_event_adapter_native.c'
+      - 'tests/test_xgba_r50_native_emerald_events.py'
+      - '.github/workflows/xgba-r50-original-engine-events.yml'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xgba-r50-engine-events
+  cancel-in-progress: true
+jobs:
+  source-aware-original-event-native:
+    name: Three original-source GBA event ABI and corruption/overlap hardening
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Native sanitize and compile original-shape event adapter
+        run: |
+          set -euo pipefail
+          gcc -std=c11 -O1 -g -Wall -Wextra -Werror \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/xgba_r50_engine_event_adapter_native.c -o /tmp/xgba-r50-native
+          ASAN_OPTIONS=detect_leaks=1 /tmp/xgba-r50-native | tee /tmp/r50.log
+          grep -q 'PASS_R50_GUEST_ENGINE_EVENT_STAGING' /tmp/r50.log
+      - name: Source-built Emerald compatibility contract (no proprietary game asset)
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/xgba_r17_emerald_patch.py \
+            tests/test_xgba_r17_emerald_external_map.py \
+            tests/test_xgba_r50_native_emerald_events.py
+          python3 - <<'PY'
+          from pathlib import Path
+          patch=Path('tools/xgba_r17_emerald_patch.py').read_text()
+          guest=Path('integration/emerald/xgba_r50_original_engine_events.inc').read_text()
+          cb=Path('integration/emerald/xgba_r17_external_littleroot.inc').read_text()
+          assert 'XgbaR50HeaderFor(mapGroup,mapNum,gMapGroups[mapGroup][mapNum])' in patch
+          assert 'XgbaR50LayoutFor(gMapLayouts[mapLayoutId - 1])' in patch
+          assert 'XgbaR50VerifyLoadedEngineMap();' in cb
+          assert 'XgbaR50StageEvents(&reader,key' in guest
+          assert 'reader.scratch=(uint8_t *)gXgbaR17Arena' in guest
+          assert 'XgbaR50CommitOriginalMapAfterGraphics' in guest
+          assert 'sXgbaR50ReaderScratch' not in guest
+          assert 'XgbaR50VerifyLoadedEngineMap(void)' in guest
+          assert 'XgbaR50VerifyLoadedEngineMap();\\n' in patch
+          assert 'R50 confirm actual Fly only after real loaded original source map' in patch
+          resident=guest.split('static const struct MapHeader *XgbaR50HeaderFor',1)[1].split('/* Called from',1)[0]
+          assert resident.count('sXgbaR50World<3u') == 2
+          assert 'sXgbaR48PendingFlyWorld' not in resident
+          print('PASS_R50_FOREIGN_MAP_REMAINS_ACTIVE_AFTER_FLY_PENDING_IS_CONSUMED')
+          assert 'header.mapScripts=NULL' in guest
+          assert 'events.warpCount=0u' in guest
+          assert 'sXgbaR48PendingFlyWorld!=world' in guest
+          print('PASS_R50_ACTUAL_EMERALD_MAP_HEADER_AND_EVENTS_INTEGRATION_CONTRACT')
+          PY
+  pinned-native-real-original-emerald:
+    name: Source-built Pokémon Emerald native event bridge, Flash and original LCD
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: carlosperate/arm-none-eabi-gcc-action@49f4db4520f840e77ab1e99b24cfac2c540a21b1
+        with:
+          release: '13.2.Rel1'
+      - name: Install pinned screenshot prerequisites
+        run: |
+          set -euo pipefail
+          bash tools/xgba_ci_png_prereqs.sh
+          if ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
+            python3 -m pip install --user --break-system-packages --disable-pip-version-check 'Pillow==11.3.0'
+          fi
+      - name: Clone pinned authentic Emerald and patched mGBA source
+        run: |
+          set -euo pipefail
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none https://github.com/pret/pokeemerald.git upstream/pokeemerald
+          git -C upstream/pokeemerald checkout --quiet --detach 731ad5bfd6e6f265508d0efcca0ba42f9dcf5881
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream/mgba
+          git -C upstream/mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Actual Emerald compilation and genuine native Flash smoke with guest event bridge
+        env:
+          XGBA_R48_NATIVE_EVIDENCE_DIR: r50-native-evidence
+        run: |
+          set -euo pipefail
+          PYTHONPATH=tools:tests:integration/mgba python3 -m unittest \
+            test_xgba_r50_native_emerald_events.NativeEmeraldR50OriginalEngineEventHooks -v \
+            2>&1 | tee /tmp/r50-emerald-native.log
+          grep -q '^OK$' /tmp/r50-emerald-native.log
+          test -n "$(find r50-native-evidence -name '*.png' -print -quit)"
+          test -z "$(find r50-native-evidence \( -name '*.gba' -o -name '*.sav' -o -name '*.bin' \) -print -quit)"
+          echo PASS_R50_ACTUAL_ORIGINAL_EMERALD_SOURCE_ENGINE_EVENT_HOOKS_FLASH_BOOT
+      - name: Original GBA LCD frames — no foreign Fly claim or private ROM
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-r50-original-emerald-event-hooks-boot-not-foreign-fly
+          path: |
+            r50-native-evidence/*.png
+            r50-native-evidence/NO_FOREIGN_NPC_YET.txt
+          retention-days: 60
+          if-no-files-found: error

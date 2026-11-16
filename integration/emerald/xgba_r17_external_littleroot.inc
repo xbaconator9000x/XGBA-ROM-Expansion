@@ -91,6 +91,9 @@ static const struct MapLayout *XgbaR17Resolve(const struct MapLayout *base)
 #ifdef XGBA_R48_ORIGINAL_NPC_BRIDGE
 #include "__XGBA_R48_NPC_BRIDGE__"
 #endif
+#ifdef XGBA_R50_ENGINE_EVENTS
+#include "__XGBA_R50_ENGINE_BRIDGE__"
+#endif
 #ifdef XGBA_R19_CONNECTED_MAPS
 #include "__XGBA_R19_MAPS__"
 #endif
@@ -122,6 +125,9 @@ static void XgbaR17Tick(void)
 #ifdef XGBA_R27_STRESS_WIDTH
     gXgbaR17Proof.r27_width=gMapHeader.mapLayout->width;
     gXgbaR17Proof.r27_height=gMapHeader.mapLayout->height;
+#endif
+#ifdef XGBA_R50_ENGINE_EVENTS
+    XgbaR50VerifyLoadedEngineMap();
 #endif
 #ifdef XGBA_R40_SCRIPT_TEST
     XgbaR40Tick();

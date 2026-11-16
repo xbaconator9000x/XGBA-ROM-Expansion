@@ -143,6 +143,7 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                 cls.battle_original_compressed[species_name]=blob
         if cls.resource_bytes>16384:
             raise AssertionError("Emerald original full tileset exceeds one synchronous 16 KiB XGBA read; must implement chunking, never drop assets")
+        r50=bool(getattr(cls,"R50_ENGINE_EVENT_TEST",False))
         if r19:
             resources=[
                 Resource("emerald_littleroot_pack",8192 if r28 else len(cls.pack)),
@@ -165,6 +166,17 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
                     transient_heap_bytes=12288))
             budget=plan_residency(
                 resources,phases,symbol_prefix="gXgbaR17")
+        elif r50:
+            # The R49 16KiB original-event page and native map tileset
+            # reuse a SINGLE protected heap-tail slot in distinct phases.
+            budget=plan_residency(
+                [Resource("emerald_littleroot_pack",len(cls.pack)),
+                 Resource("r50_transient_event_page",16384)],
+                [Phase("r50_faded_field_event_preload",
+                       ("r50_transient_event_page",),transient_heap_bytes=12288),
+                 Phase("r50_original_field_graphics",
+                       ("emerald_littleroot_pack",),transient_heap_bytes=12288)],
+                symbol_prefix="gXgbaR17")
         else:
             budget=plan_residency(
                 [Resource("emerald_littleroot_pack",len(cls.pack))],
@@ -183,6 +195,9 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
         r40=bool(getattr(cls,"R40_SCRIPT_TEST",False))
         r42=bool(getattr(cls,"R42_EVENT_TEST",False))
         r48=bool(getattr(cls,"R48_ORIGINAL_NPC_TEST",False))
+        r50=bool(getattr(cls,"R50_ENGINE_EVENT_TEST",False))
+        if r50 and (not r48 or r19):
+            raise AssertionError("R50 genuine Emerald map/NPC adapter requires R48, no overlapping R19 arena")
         if r40 and r42:
             raise AssertionError("R40 and R42 guest fixtures must not share script state")
         if r42 and not r18:
@@ -201,6 +216,8 @@ class ActualEmeraldLittlerootExternalMap(unittest.TestCase):
             config.write_text(config.read_text()+"#define XGBA_R42_EVENT_TEST 1\n")
         if r48:
             config.write_text(config.read_text()+"#define XGBA_R48_ORIGINAL_NPC_BRIDGE 1\n")
+        if r50:
+            config.write_text(config.read_text()+"#define XGBA_R50_ENGINE_EVENTS 1\n")
         if r19_battle:
             config.write_text(config.read_text()+
                 "\n#define XGBA_R19_BATTLE_TEST 1\n"
