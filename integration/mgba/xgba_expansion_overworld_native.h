@@ -147,7 +147,10 @@ static void xgba_expansion_native_overworld(struct mCore *core,
             for (unsigned frame=0;frame<32u;frame++) core->runFrame(core);
             core->setKeys(core,0u);
             for (unsigned frame=0;frame<8u;frame++) core->runFrame(core);
-            core->setKeys(core,1u<<5);
+            /* The source maps' north exits are not guaranteed to lie west
+             * of the initial lane. Test an eastward approach first; prior
+             * runs repeatedly hit the same blocked west-side boundary. */
+            core->setKeys(core,1u<<(lane & 1u ? 4u : 5u));
             for (unsigned frame=0;frame<18u;frame++) core->runFrame(core);
             core->setKeys(core,0u);
             for (unsigned frame=0;frame<8u;frame++) core->runFrame(core);
