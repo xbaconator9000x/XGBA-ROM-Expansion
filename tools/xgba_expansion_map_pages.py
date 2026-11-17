@@ -53,7 +53,7 @@ def source_layout(source: Path, target: str, name: str):
     return number, row, raw
 
 
-def indexed_gba_tiles(source: Path, relative: str, expected_tiles: int) -> bytes:
+def indexed_gba_tiles(source: Path, relative: str, expected_tiles: int, *, allow_partial: bool = False) -> bytes:
     from PIL import Image
     image_path = safe_source_path(source, relative)
     with Image.open(image_path) as image:
@@ -69,7 +69,7 @@ def indexed_gba_tiles(source: Path, relative: str, expected_tiles: int) -> bytes
                         if lo > 15 or hi > 15:
                             raise SourceAssetError("tileset palette index exceeds 4bpp")
                         result.append(lo | (hi << 4))
-        if len(result) != expected_tiles * 32:
+        if len(result) != expected_tiles * 32 and not (allow_partial and 0 < len(result) < expected_tiles * 32):
             raise SourceAssetError(
                 f"full tileset must contain exactly {expected_tiles} tiles, "
                 f"source has {len(result) // 32}; partial graphics would corrupt VRAM")
@@ -105,7 +105,7 @@ def build(source: Path, target: str, layout: str, output: Path,
         if candidate and (source / candidate).is_file():
             secondary_png = candidate
     if secondary_png:
-        pages.append(("s", indexed_gba_tiles(source, secondary_png, secondary_size)))
+        pages.append(("s", indexed_gba_tiles(source, secondary_png, secondary_size, allow_partial=True)))
     resources = []
     written = START
     with sidecar.open("wb") as handle:
