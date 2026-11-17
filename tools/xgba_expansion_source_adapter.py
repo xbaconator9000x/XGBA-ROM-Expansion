@@ -206,7 +206,7 @@ def patched_main(original: str, header: Path, probe: str, *, map_smoke: bool = F
                   .replace("__XGBA_PAGE_API__", page_api_name))
     text = _one(original,
                 "void AgbMain(void)\n{",
-                probe + "\nvoid AgbMain(void)\n{",
+                probe + "\nextern void XgbaExpansionGraphicsPoll(void);\nvoid AgbMain(void)\n{",
                 "game boot function")
     boot = ("    InitHeap(gHeap, XGBA_EXPANSION_HEAP_BYTES);\n"
             "    XgbaExpansionProbeBoot();")
@@ -220,7 +220,7 @@ def patched_main(original: str, header: Path, probe: str, *, map_smoke: bool = F
                 "    InitHeap(gHeap, HEAP_SIZE);",
                 boot,
                 "post-heap initialization")
-    tick = "    XgbaExpansionProbeTick();\n    ReadKeys();"
+    tick = "    XgbaExpansionProbeTick();\n    XgbaExpansionGraphicsPoll();\n    ReadKeys();"
     if overworld_play:
         # AgbMain continues configuring callbacks after InitHeap. Scheduling
         # CB2_NewGame there can be overwritten by subsequent boot setup.
