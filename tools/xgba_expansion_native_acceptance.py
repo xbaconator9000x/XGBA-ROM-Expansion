@@ -108,7 +108,7 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
                                        output / "private-source", primary_png=png)
                 page_manifest = sidecar.load_manifest(plan["private_manifest"])
                 for name, entry in page_manifest.resources.items():
-                    if not name.startswith(("rhh.m.", "rhh.p.")):
+                    if not re.fullmatch(r"rhh\.[mps]\.[0-9a-f]{4}\.[0-9a-f]{2}", name):
                         raise AssertionError("Unexpected RHH original external resource")
                     with page_manifest.data_path.open("rb") as original:
                         original.seek(entry.offset)
