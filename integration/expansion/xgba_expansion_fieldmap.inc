@@ -207,7 +207,7 @@ static bool8 XgbaExpansionTryTilesetCopy(const struct Tileset *tileset,
             break;
     if (slot == XGBA_GRAPHICS_LEASES)
         return FALSE; /* never overwrite a pending DMA source */
-    staging = Alloc(total);
+    staging = AllocUnchecked(total);
     if (!staging)
         return FALSE;
     for (start = 0; start < total; start += XGBA_FIELD_CHUNK)
