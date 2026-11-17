@@ -90,6 +90,20 @@ def build(source: Path, target: str, layout: str, output: Path,
     secondary_size = 1024 - primary_size
     if primary_png:
         pages.append(("p", indexed_gba_tiles(source, primary_png, primary_size)))
+    # The native fieldmap binds secondary pages for these source layouts.
+    # Resolve their exact pinned RHH tileset symbols, not a guessed layout name.
+    # Retain explicit --secondary-png for other source-authenticated layouts.
+    pinned_secondary = {
+        "gTileset_Petalburg": "data/tilesets/secondary/petalburg/tiles.png",
+        "gTileset_PalletTown": "data/tilesets/secondary/pallet_town_frlg/tiles.png",
+    }
+    if secondary_png is None and primary_png and layout in (
+        "LAYOUT_LITTLEROOT_TOWN", "LAYOUT_ROUTE101",
+        "LAYOUT_PALLET_TOWN", "LAYOUT_ROUTE1",
+    ):
+        candidate = pinned_secondary.get(row.get("secondary_tileset"))
+        if candidate and (source / candidate).is_file():
+            secondary_png = candidate
     if secondary_png:
         pages.append(("s", indexed_gba_tiles(source, secondary_png, secondary_size)))
     resources = []
