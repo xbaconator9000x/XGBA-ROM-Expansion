@@ -221,8 +221,11 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertEqual(bridge.count("if (copied == total)"), 1)
         # The graphics path now stages every page in owned heap memory
         # before handing the complete tileset to the upstream BG DMA API.
-        self.assertIn("CpuCopy16(page, staging + start, n);", bridge)
-        self.assertIn("if (start < total)", bridge)
+        self.assertIn("CpuCopy16(page, staging + start, resident);", bridge)
+        self.assertIn("resident = XgbaExpansionPageResidentBytes();", bridge)
+        self.assertIn("resident != n && tileset != sXgbaMapLayout->secondaryTileset", bridge)
+        self.assertIn("if (start < total && !partialSecondary)", bridge)
+        self.assertIn("if (partialSecondary)\n        total = start + resident;", bridge)
         self.assertIn("LoadBgTiles(2, staging, total, offset)", bridge)
         self.assertIn("IsDma3ManagerBusyWithBgCopy()", bridge)
         self.assertNotIn("REG_DISPCNT = originalDisplay", bridge.split("static bool8 XgbaExpansionTryTilesetCopy")[1].split("Explicit test-only")[0])
