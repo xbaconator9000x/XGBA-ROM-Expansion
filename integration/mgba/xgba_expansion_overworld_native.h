@@ -111,6 +111,26 @@ static void xgba_expansion_native_overworld(struct mCore *core,
     if (!moves || (x0==x1 && y0==y1))
         fail("RHH native physical D-pad did not move actual game player");
     rhh_overworld_screen(core,directory,target,"01-dpad-movement",enabled);
+    /* Pinned Littleroot map.json identifies its north connection at x=10/11.
+     * Return from the eastward movement probe to x=10 while still at y=4;
+     * previous lane search oscillated between x=7 and x=9, never entering
+     * the actual two-tile north connection. Keep physical D-pad and scripts. */
+    if (!strcmp(target, "emerald"))
+    {
+        core->setKeys(core,1u<<5);
+        for (unsigned frame=0;frame<32u;frame++) core->runFrame(core);
+        core->setKeys(core,0u);
+        for (unsigned frame=0;frame<12u;frame++) core->runFrame(core);
+        core->setKeys(core,1u<<6);
+        for (unsigned frame=0;frame<220u;frame++) core->runFrame(core);
+        core->setKeys(core,0u);
+        for (unsigned frame=0;frame<24u;frame++) core->runFrame(core);
+        fprintf(stderr,"RHH_SOURCE_EXIT target=%s layout=%u x=%u y=%u movements=%u\\n",
+            target,core->busRead32(core,probe+RHH_LIVE_LAYOUT),
+            core->busRead32(core,probe+RHH_LIVE_X),
+            core->busRead32(core,probe+RHH_LIVE_Y),
+            core->busRead32(core,probe+RHH_LIVE_MOVEMENTS));
+    }
     /* The first movement probe ends at the eastern side of each town.
      * Approach the central north exit from the walkable interior BEFORE
      * testing the northern border; lateral motion at y=1 can be blocked by
