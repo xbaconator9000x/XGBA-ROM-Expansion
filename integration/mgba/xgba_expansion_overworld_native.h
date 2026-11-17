@@ -228,6 +228,7 @@ xgba_route_complete:
      * legitimately retain the already-loaded tileset across a connection.
      * Require two authentic external map acquisitions, at least one original
      * primary acquisition, and successful host reads without rejection. */
+    fprintf(stderr, "RHH_LIFECYCLE_DIAG target=%s enabled=%d source_maps=%u primary=%u host_reads=%u host_failed=%u resource_reads=%u\\n", target, enabled, source_maps, source_primary, device->successful_reads, device->failed_reads, resource->reads);
     if ((enabled && (source_maps<2u || source_primary<1u ||
                      device->successful_reads<4u || device->failed_reads)) ||
         (!enabled && (source_maps || source_primary ||
