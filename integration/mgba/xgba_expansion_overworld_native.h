@@ -131,6 +131,27 @@ static void xgba_expansion_native_overworld(struct mCore *core,
             core->busRead32(core,probe+RHH_LIVE_Y),
             core->busRead32(core,probe+RHH_LIVE_MOVEMENTS));
     }
+    /* Preserve the source-directed north exit; do not immediately walk west. */
+    if (!strcmp(target, "emerald") &&
+        core->busRead32(core,probe+RHH_LIVE_LAYOUT) == start_id)
+    {
+        /* Littleroot's pinned source connection occupies x=10 and x=11. */
+        core->setKeys(core,1u<<4);
+        for (unsigned frame=0;frame<16u;frame++) core->runFrame(core);
+        core->setKeys(core,0u);
+        for (unsigned frame=0;frame<12u;frame++) core->runFrame(core);
+        core->setKeys(core,1u<<6);
+        for (unsigned frame=0;frame<180u;frame++) core->runFrame(core);
+        core->setKeys(core,0u);
+        for (unsigned frame=0;frame<24u;frame++) core->runFrame(core);
+        fprintf(stderr,"RHH_SOURCE_EXIT_ADJACENT target=%s layout=%u x=%u y=%u\\n",
+            target,core->busRead32(core,probe+RHH_LIVE_LAYOUT),
+            core->busRead32(core,probe+RHH_LIVE_X),
+            core->busRead32(core,probe+RHH_LIVE_Y));
+    }
+    if (!strcmp(target, "emerald") &&
+        core->busRead32(core,probe+RHH_LIVE_LAYOUT) == next_id)
+        goto xgba_route_complete;
     /* The first movement probe ends at the eastern side of each town.
      * Approach the central north exit from the walkable interior BEFORE
      * testing the northern border; lateral motion at y=1 can be blocked by
@@ -185,6 +206,7 @@ static void xgba_expansion_native_overworld(struct mCore *core,
                 core->busRead32(core,probe+RHH_LIVE_Y),
                 core->busRead32(core,probe+RHH_LIVE_MOVEMENTS));
     }
+xgba_route_complete:
     uint32_t final_map=core->busRead32(core,probe+RHH_LIVE_LAYOUT);
     uint32_t transitions=core->busRead32(core,probe+RHH_LIVE_TRANSITIONS);
     uint32_t source_maps=core->busRead32(core,probe+RHH_LIVE_MAP_READS);
