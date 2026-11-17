@@ -207,6 +207,7 @@ static void xgba_expansion_native_overworld(struct mCore *core,
                 core->busRead32(core,probe+RHH_LIVE_MOVEMENTS));
     }
 xgba_route_complete:
+    ; /* label must precede a statement, not a declaration */
     uint32_t final_map=core->busRead32(core,probe+RHH_LIVE_LAYOUT);
     uint32_t transitions=core->busRead32(core,probe+RHH_LIVE_TRANSITIONS);
     uint32_t source_maps=core->busRead32(core,probe+RHH_LIVE_MAP_READS);
