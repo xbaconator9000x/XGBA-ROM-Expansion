@@ -192,6 +192,7 @@ static bool8 XgbaExpansionTryTilesetCopy(const struct Tileset *tileset,
     u32 total = (u32)numTiles * 32u;
     u32 start, n, slot, resident;
     bool8 partialSecondary = FALSE;
+    u32 copied = 0u;
     char id[XGBA_FIELD_ID_SIZE];
     if (tileset && sXgbaMapLayout)
     {
@@ -202,6 +203,16 @@ static bool8 XgbaExpansionTryTilesetCopy(const struct Tileset *tileset,
     }
     if (!base || !numTiles || !total || (u32)offset + numTiles > NUM_TILES_TOTAL)
         return FALSE;
+    /* The pinned upstream compressed tile header supplies the exact
+     * decompressed byte count; MMIO requires an exact request length. */
+    if (tileset == sXgbaMapLayout->secondaryTileset && tileset->isCompressed)
+    {
+        const u8 *header = (const u8 *)tileset->tiles;
+        u32 size = (u32)header[1] | ((u32)header[2] << 8) | ((u32)header[3] << 16);
+        if (header[0] != 0x10u || !size || size > total || (size & 31u))
+            return FALSE;
+        total = size;
+    }
     XgbaExpansionGraphicsPoll();
     for (slot = 0; slot < XGBA_GRAPHICS_LEASES; ++slot)
         if (!sXgbaGraphicsLeases[slot].data)
@@ -222,7 +233,7 @@ static bool8 XgbaExpansionTryTilesetCopy(const struct Tileset *tileset,
          * allocation. A short provider page is the authentic end of data,
          * not a request to manufacture zero-filled graphics. Primary tiles
          * remain strictly full-sized. */
-        if (XgbaExpansionPageAcquire(id, 1u) == 0u)
+        if (XgbaExpansionPageAcquire(id, n) != n)
             break;
         resident = XgbaExpansionPageResidentBytes();
         page = XgbaExpansionPageData();
@@ -232,6 +243,7 @@ static bool8 XgbaExpansionTryTilesetCopy(const struct Tileset *tileset,
             break;
         CpuCopy16(page, staging + start, resident);
         XgbaExpansionPageRelease();
+        copied += resident;
         if (resident != n)
         {
             partialSecondary = TRUE;
@@ -239,13 +251,11 @@ static bool8 XgbaExpansionTryTilesetCopy(const struct Tileset *tileset,
         }
     }
     XgbaExpansionPageRelease();
-    if (start < total && !partialSecondary)
+    if (copied != total || partialSecondary)
     {
         Free(staging);
         return FALSE; /* original loader may safely use ROM assets */
     }
-    if (partialSecondary)
-        total = start + resident;
     /* A caller that already owns forced blank can complete the transfer
      * synchronously, including early boot before BG DMA initialization.
      * Active-display gameplay always delegates to the original BG loader. */
