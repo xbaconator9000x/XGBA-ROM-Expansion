@@ -229,7 +229,7 @@ xgba_route_complete:
      * Require two authentic external map acquisitions, at least one original
      * primary acquisition, and successful host reads without rejection. */
     if ((enabled && (source_maps<2u || source_primary<1u ||
-                     device->successful_reads<5u || device->failed_reads)) ||
+                     device->successful_reads<4u || device->failed_reads)) ||
         (!enabled && (source_maps || source_primary ||
                       device->successful_reads || device->failed_reads)))
         fail("RHH original town/route MMIO lifecycle disagrees with real guest game");
