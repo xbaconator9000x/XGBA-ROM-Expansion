@@ -190,7 +190,8 @@ static bool8 XgbaExpansionTryTilesetCopy(const struct Tileset *tileset,
     u8 *staging;
     const u8 *page;
     u32 total = (u32)numTiles * 32u;
-    u32 start, n, slot;
+    u32 start, n, slot, resident;
+    bool8 partialSecondary = FALSE;
     char id[XGBA_FIELD_ID_SIZE];
     if (tileset && sXgbaMapLayout)
     {
@@ -217,20 +218,34 @@ static bool8 XgbaExpansionTryTilesetCopy(const struct Tileset *tileset,
         n = total - start;
         if (n > XGBA_FIELD_CHUNK)
             n = XGBA_FIELD_CHUNK;
-        if (XgbaExpansionPageAcquire(id, n) != n)
+        /* Secondary source artwork can contain fewer tiles than the BG
+         * allocation. A short provider page is the authentic end of data,
+         * not a request to manufacture zero-filled graphics. Primary tiles
+         * remain strictly full-sized. */
+        if (XgbaExpansionPageAcquire(id, 1u) == 0u)
             break;
+        resident = XgbaExpansionPageResidentBytes();
         page = XgbaExpansionPageData();
-        if (!page)
+        if (!page || resident == 0u || resident > n || (resident & 31u))
             break;
-        CpuCopy16(page, staging + start, n);
+        if (resident != n && tileset != sXgbaMapLayout->secondaryTileset)
+            break;
+        CpuCopy16(page, staging + start, resident);
         XgbaExpansionPageRelease();
+        if (resident != n)
+        {
+            partialSecondary = TRUE;
+            break;
+        }
     }
     XgbaExpansionPageRelease();
-    if (start < total)
+    if (start < total && !partialSecondary)
     {
         Free(staging);
         return FALSE; /* original loader may safely use ROM assets */
     }
+    if (partialSecondary)
+        total = start + resident;
     /* A caller that already owns forced blank can complete the transfer
      * synchronously, including early boot before BG DMA initialization.
      * Active-display gameplay always delegates to the original BG loader. */
