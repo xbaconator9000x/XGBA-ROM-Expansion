@@ -147,6 +147,13 @@ def patched_overworld(original: str) -> str:
          * Do not disable map scripts or force the Route 1 transition. */
         ScriptGiveMon(SPECIES_BULBASAUR, 5, ITEM_NONE);
         FlagSet(FLAG_SYS_POKEMON_GET);
+        /* Pinned PalletTown_Frlg/map.json gates both north exit triggers
+         * on Oak scene 0, not FLAG_SYS_POKEMON_GET. Scene 1 is the
+         * original post-Oak escort state (PalletTown_Frlg/scripts.inc). */
+        VarSet(VAR_MAP_SCENE_PALLET_TOWN_OAK, 1);
+        FlagSet(FLAG_HIDE_OAK_IN_PALLET_TOWN);
+        VarSet(VAR_MAP_SCENE_PALLET_TOWN_PROFESSOR_OAKS_LAB, 4);
+        FlagSet(FLAG_BEAT_RIVAL_IN_OAKS_LAB);
         SetWarpDestination(MAP_GROUP(MAP_PALLET_TOWN),
                            MAP_NUM(MAP_PALLET_TOWN), WARP_ID_NONE, 11, 4);
     }
