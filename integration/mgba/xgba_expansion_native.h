@@ -78,8 +78,14 @@ static void xgba_expansion_native_field_load(struct mCore *core,
         fail("RHH real map loader produced a different copied map grid from verified source pages");
     if (enabled && actual_tiles!=expect_tiles)
         fail("RHH real primary tileset path loaded VRAM different from verified source tiles");
-    if ((enabled && (device->successful_reads!=1u+resource->extra_count ||
-                     resource->reads!=1u+resource->extra_count ||
+    /* The smoke entrypoint loads only the map and primary tileset.
+     * The manifest also contains secondary pages for gameplay, which must
+     * not be counted as reads by this isolated loader. Derive the exact
+     * number from the independently verified complete asset lengths. */
+    const uint32_t expected_reads=1u+(map_bytes+16383u)/16384u+
+                                      (tile_bytes+16383u)/16384u;
+    if ((enabled && (device->successful_reads!=expected_reads ||
+                     resource->reads!=expected_reads ||
                      device->failed_reads)) ||
         (!enabled && (device->successful_reads || resource->reads ||
                       device->failed_reads)))
