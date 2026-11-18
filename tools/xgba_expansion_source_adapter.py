@@ -141,8 +141,15 @@ def patched_overworld(original: str) -> str:
     /* RHH XGBA playable test: real new-game state, no intro or scripted truck.
      * Preserve all map events, NPCs, scripts and original map/tileset IDs. */
     if (IS_FRLG)
+    {
+        /* Test fixture: establish the starter prerequisite through the
+         * engine's normal scripted gift API before approaching Oak's exit.
+         * Do not disable map scripts or force the Route 1 transition. */
+        ScriptGiveMon(SPECIES_BULBASAUR, 5, ITEM_NONE);
+        FlagSet(FLAG_SYS_POKEMON_GET);
         SetWarpDestination(MAP_GROUP(MAP_PALLET_TOWN),
                            MAP_NUM(MAP_PALLET_TOWN), WARP_ID_NONE, 11, 4);
+    }
     else
     {
         VarSet(VAR_LITTLEROOT_TOWN_STATE, 4);
