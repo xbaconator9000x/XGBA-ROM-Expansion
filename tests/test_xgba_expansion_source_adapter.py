@@ -242,7 +242,7 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("actual_map!=expect_map", native)
         self.assertIn("enabled && actual_tiles!=expect_tiles", native)
         self.assertIn("used_map!=(enabled?1u:0u)", native)
-        self.assertIn("device->successful_reads!=1u+resource->extra_count", native)
+        self.assertIn("device->successful_reads!=expected_reads", native)
         probe = (adapter.ROOT / "integration/expansion/xgba_expansion_probe.inc").read_text()
         self.assertIn("map_smoke_map_hash", probe)
         self.assertIn("map_smoke_tiles_hash", probe)
