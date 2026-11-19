@@ -121,6 +121,43 @@ def patched_fieldmap(original: str) -> str:
     return text
 
 
+def patched_battle_graphics(original: str) -> str:
+    """Load raw trainer tiles into the existing battler-owned WRAM buffer."""
+    page_api = ROOT / "integration/expansion/xgba_expansion_page.h"
+    bridge = r'''
+#include "XGBA_BATTLE_PAGE_API"
+static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
+{
+    static const char hex[] = "0123456789abcdef";
+    char resource[] = "rhh.trainer.0000";
+    u32 bytes = GetDecompressedDataSize(original);
+    const u8 *page;
+    if (!dest || id > 0xffffu || !bytes || bytes > MON_PIC_SIZE
+        || bytes > XGBA_EXPANSION_PAGE_CAPACITY || (bytes & 3u))
+        return FALSE;
+    for (u32 i = 0; i < 4; ++i)
+        resource[15 - i] = hex[(id >> (4 * i)) & 15u];
+    if (XgbaExpansionPageAcquire(resource, bytes) != bytes)
+        return FALSE;
+    page = XgbaExpansionPageData();
+    if (!page || XgbaExpansionPageResidentBytes() != bytes)
+    {
+        XgbaExpansionPageRelease();
+        return FALSE;
+    }
+    CpuCopy32(page, dest, bytes);
+    XgbaExpansionPageRelease();
+    return TRUE;
+}
+'''.replace("XGBA_BATTLE_PAGE_API", page_api.resolve().as_posix())
+    signature = "void DecompressTrainerFrontPic(enum TrainerPicID trainerPicId, enum BattlerId battler)"
+    text = _one(original, signature, bridge + "\n" + signature, "trainer loader ABI")
+    call = "    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);"
+    return _one(text, call,
+                "    if (!XgbaExpansionTryTrainerPic(trainerPicId, GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]))\n    " + call,
+                "trainer graphics fallback")
+
+
 def patched_save_heap(original: str) -> str:
     """Keep the external page outside the original save-block heap reset.
 
@@ -270,6 +307,9 @@ def patched_source(source: Path, target: str, *, map_smoke: bool = False,
     fieldmap_path = source / "src/fieldmap.c"
     overworld_path = source / "src/overworld.c"
     save_heap_path = source / "src/load_save.c"
+    battle_path = source / "src/battle_gfx_sfx_util.c"
+    battle_before = battle_path.read_text(encoding="utf-8") if battle_path.is_file() else None
+    battle_after = patched_battle_graphics(battle_before) if battle_before is not None else None
     save_heap_before = save_heap_path.read_text(encoding="utf-8")
     before = path.read_text(encoding="utf-8")
     fieldmap_before = fieldmap_path.read_text(encoding="utf-8")
@@ -287,6 +327,8 @@ def patched_source(source: Path, target: str, *, map_smoke: bool = False,
         path.write_text(after, encoding="utf-8")
         fieldmap_path.write_text(fieldmap_after, encoding="utf-8")
         save_heap_path.write_text(save_heap_after, encoding="utf-8")
+        if battle_after is not None:
+            battle_path.write_text(battle_after, encoding="utf-8")
         if overworld_play:
             overworld_path.write_text(overworld_after, encoding="utf-8")
         yield report
@@ -294,6 +336,8 @@ def patched_source(source: Path, target: str, *, map_smoke: bool = False,
         path.write_text(before, encoding="utf-8")
         fieldmap_path.write_text(fieldmap_before, encoding="utf-8")
         save_heap_path.write_text(save_heap_before, encoding="utf-8")
+        if battle_before is not None:
+            battle_path.write_text(battle_before, encoding="utf-8")
         if overworld_play:
             overworld_path.write_text(overworld_before, encoding="utf-8")
 
