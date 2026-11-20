@@ -115,6 +115,24 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("if required_tag != VALIDATED_RELEASE:", source)
         self.assertIn("require_release_tag(source, required_tag)", source)
 
+    def test_trainer_page_never_aliases_engine_owned_sprite_destination(self):
+        # The 16-KiB lease is poisoned on release. A partial overlap
+        # (including a buffer starting before the page) must fall back.
+        original = (
+            "void DecompressTrainerFrontPic(enum TrainerPicID trainerPicId, enum BattlerId battler)\n"
+            "{\n"
+            "    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);\n"
+            "}\n"
+        )
+        patched = adapter.patched_battle_graphics(original)
+        self.assertIn("CpuCopy32(page, dest, bytes);", patched)
+        self.assertLess(patched.index("CpuCopy32(page, dest, bytes);"),
+                        patched.index("XgbaExpansionPageRelease();\n    XgbaExpansionTrainerTransfer"))
+        self.assertIn("(u32)dest + bytes > (u32)XGBA_EXPANSION_PAGE", patched)
+        self.assertIn("(u32)dest < (u32)XGBA_EXPANSION_PAGE + XGBA_EXPANSION_PAGE_CAPACITY", patched)
+        self.assertIn("if (!XgbaExpansionTryTrainerPic(", patched)
+        self.assertIn("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)", patched)
+
     def test_save_block_heap_reset_preserves_page_lease_and_restores_source(self):
         path = self.root / "src/load_save.c"
         before = path.read_text()
