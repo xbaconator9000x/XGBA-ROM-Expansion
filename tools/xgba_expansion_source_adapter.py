@@ -130,10 +130,16 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
 {
     static const char hex[] = "0123456789abcdef";
     char resource[] = "rhh.trainer.0000";
-    u32 bytes = GetDecompressedDataSize(original);
+    u32 bytes;
     const u8 *page;
-    if (!dest || id > 0xffffu || !bytes || bytes > MON_PIC_SIZE
-        || bytes > XGBA_EXPANSION_PAGE_CAPACITY || (bytes & 3u))
+    /* Only admit the source-verified 64x64 4bpp trainer resources.
+     * Other IDs must retain the original decompressor until their
+     * graphics bindings and dimensions have been independently verified. */
+    if (!original || !dest || (id != TRAINER_PIC_HIKER && id != TRAINER_PIC_HIKER_FRLG))
+        return FALSE;
+    bytes = GetDecompressedDataSize(original);
+    if (bytes != 64u * 64u / 2u || bytes > MON_PIC_SIZE
+        || bytes > XGBA_EXPANSION_PAGE_CAPACITY || ((u32)dest & 3u))
         return FALSE;
     for (u32 i = 0; i < 4; ++i)
         resource[15 - i] = hex[(id >> (4 * i)) & 15u];
