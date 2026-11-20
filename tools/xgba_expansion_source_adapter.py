@@ -142,8 +142,12 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
      * Refuse any destination overlapping the leased tail of gHeap, even if
      * the caller changes sprite-buffer ownership in a future RHH release. */
     bytes = GetDecompressedDataSize(original);
+    /* Trainer tiles must land entirely in engine-owned EWRAM, never VRAM,
+     * ROM, I/O or a transient page. Check the end without addition overflow. */
     if (bytes != 64u * 64u / 2u || bytes > MON_PIC_SIZE
-        || bytes > XGBA_EXPANSION_PAGE_CAPACITY || ((u32)dest & 3u))
+        || bytes > XGBA_EXPANSION_PAGE_CAPACITY || ((u32)dest & 3u)
+        || (u32)dest < 0x02000000u
+        || (u32)dest > 0x02040000u - bytes)
         return FALSE;
     for (u32 i = 0; i < 4; ++i)
         resource[sizeof(resource) - 2u - i] = hex[(id >> (4 * i)) & 15u];
