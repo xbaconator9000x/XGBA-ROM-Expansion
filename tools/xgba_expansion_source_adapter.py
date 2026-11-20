@@ -126,6 +126,7 @@ def patched_battle_graphics(original: str) -> str:
     page_api = ROOT / "integration/expansion/xgba_expansion_page.h"
     bridge = r'''
 #include "XGBA_BATTLE_PAGE_API"
+extern void XgbaExpansionTrainerTransfer(u32 id, const void *dest, u32 bytes);
 static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
 {
     static const char hex[] = "0123456789abcdef";
@@ -156,6 +157,7 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
     }
     CpuCopy32(page, dest, bytes);
     XgbaExpansionPageRelease();
+    XgbaExpansionTrainerTransfer(id, dest, bytes);
     return TRUE;
 }
 '''.replace("XGBA_BATTLE_PAGE_API", page_api.resolve().as_posix())
