@@ -138,6 +138,12 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
      * graphics bindings and dimensions have been independently verified. */
     if (!original || !dest || (id != TRAINER_PIC_HIKER && id != TRAINER_PIC_HIKER_FRLG))
         return FALSE;
+    /* The page lease is invalidated immediately after the synchronous copy.
+     * Refuse any destination overlapping the leased tail of gHeap, even if
+     * the caller changes sprite-buffer ownership in a future RHH release. */
+    if ((u32)dest >= (u32)XGBA_EXPANSION_PAGE
+        && (u32)dest < (u32)XGBA_EXPANSION_PAGE + XGBA_EXPANSION_PAGE_CAPACITY)
+        return FALSE;
     bytes = GetDecompressedDataSize(original);
     if (bytes != 64u * 64u / 2u || bytes > MON_PIC_SIZE
         || bytes > XGBA_EXPANSION_PAGE_CAPACITY || ((u32)dest & 3u))
