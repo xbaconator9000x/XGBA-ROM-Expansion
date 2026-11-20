@@ -125,6 +125,12 @@ class ExpansionSourceTests(unittest.TestCase):
             "}\n"
         )
         patched = adapter.patched_battle_graphics(original)
+        # A 2-KiB graphics copy may only target engine-owned EWRAM.
+        # This also excludes VRAM, I/O, ROM and destinations crossing 0x02040000.
+        self.assertIn("(u32)dest < 0x02000000u", patched)
+        self.assertIn("(u32)dest > 0x02040000u - bytes", patched)
+        self.assertLess(patched.index("(u32)dest > 0x02040000u - bytes"),
+                        patched.index("XgbaExpansionPageAcquire(resource, bytes)"))
         self.assertIn("CpuCopy32(page, dest, bytes);", patched)
         self.assertLess(patched.index("CpuCopy32(page, dest, bytes);"),
                         patched.index("XgbaExpansionPageRelease();\n    XgbaExpansionTrainerTransfer"))
