@@ -75,6 +75,13 @@ struct XgbaExpansionProof {
     volatile u32 live_map_bind_accepted;
     volatile u32 live_map_bind_rejected;
     volatile u32 live_tileset_blank_rejected;
+    volatile u32 battle_trainer_count;
+    volatile u32 battle_trainer_bytes;
+    volatile u32 battle_trainer_last_id;
+    volatile u32 battle_trainer_hash;
+    volatile u32 battle_trainer_generation;
+    volatile u32 battle_trainer_resident;
+
 };
 
 /* Small metadata only. The 16KiB payload itself resides inside the
@@ -215,6 +222,22 @@ void XgbaExpansionSourceTransfer(u32 kind, u32 bytes)
     else
         return;
     gXgbaExpansionProof.live_source_bytes += bytes;
+}
+
+/* Witness the engine-owned destination AFTER releasing the resource lease. */
+void XgbaExpansionTrainerTransfer(u32 id, const void *dest, u32 bytes)
+{
+    const u8 *data = dest;
+    u32 hash = 2166136261u;
+    u32 i;
+    for (i = 0; i < bytes; ++i)
+        hash = (hash ^ data[i]) * 16777619u;
+    ++gXgbaExpansionProof.battle_trainer_count;
+    gXgbaExpansionProof.battle_trainer_bytes += bytes;
+    gXgbaExpansionProof.battle_trainer_last_id = id;
+    gXgbaExpansionProof.battle_trainer_hash = hash;
+    gXgbaExpansionProof.battle_trainer_generation = XgbaExpansionPageGeneration();
+    gXgbaExpansionProof.battle_trainer_resident = XgbaExpansionPageResidentBytes();
 }
 
 static void XgbaExpansionProbeBoot(void)
