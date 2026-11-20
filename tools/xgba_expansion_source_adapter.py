@@ -145,9 +145,6 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
     if (bytes != 64u * 64u / 2u || bytes > MON_PIC_SIZE
         || bytes > XGBA_EXPANSION_PAGE_CAPACITY || ((u32)dest & 3u))
         return FALSE;
-    if ((u32)dest < (u32)XGBA_EXPANSION_PAGE + XGBA_EXPANSION_PAGE_CAPACITY
-        && (u32)dest + bytes > (u32)XGBA_EXPANSION_PAGE)
-        return FALSE;
     for (u32 i = 0; i < 4; ++i)
         resource[sizeof(resource) - 2u - i] = hex[(id >> (4 * i)) & 15u];
     if (XgbaExpansionPageAcquire(resource, bytes) != bytes)
@@ -157,6 +154,15 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
     }
     page = XgbaExpansionPageData();
     if (!page || XgbaExpansionPageResidentBytes() != bytes)
+    {
+        XgbaExpansionPageRelease();
+        return FALSE;
+    }
+    /* The leased page is available only after Acquire. Compare address
+     * intervals using subtraction to avoid wraparound in dest + bytes. */
+    if ((u32)dest >= (u32)page
+        ? (u32)dest - (u32)page < XGBA_EXPANSION_PAGE_CAPACITY
+        : (u32)page - (u32)dest < bytes)
     {
         XgbaExpansionPageRelease();
         return FALSE;
