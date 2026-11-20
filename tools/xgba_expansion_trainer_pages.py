@@ -11,6 +11,15 @@ from xgba_expansion_map_pages import (
     safe_source_path, indexed_gba_tiles,
 )
 
+def pinned_asset(source, relative):
+    """Reject modified worktree artwork or declarations even at the pinned HEAD."""
+    path = safe_source_path(source, relative)
+    original = subprocess.check_output(
+        ["git", "-C", str(source), "cat-file", "blob", f"{ROOT_TAG_SHA}:{relative}"])
+    if path.read_bytes() != original:
+        raise SourceAssetError(f"modified pinned trainer source: {relative}")
+    return path
+
 def build(source, target, output, base_manifest=None):
     source = Path(source).resolve()
     output = Path(output).resolve()
@@ -19,7 +28,7 @@ def build(source, target, output, base_manifest=None):
     head = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True).strip()
     if head != ROOT_TAG_SHA:
         raise SourceAssetError("wrong upstream source revision")
-    constants = safe_source_path(source, "include/constants/trainers.h").read_text()
+    constants = pinned_asset(source, "include/constants/trainers.h").read_text()
     enum = re.search(r"enum __attribute__\(\(packed\)\) TrainerPicID\s*\{([^}]+)\}", constants)
     if not enum:
         raise SourceAssetError("trainer enum ABI changed")
@@ -29,7 +38,7 @@ def build(source, target, output, base_manifest=None):
         ("NONE", "BRENDAN", "MAY", "RED", "LEAF", "RS_BRENDAN", "RS_MAY",
          "WALLY", "STEVEN", "POKEDUDE", "OLD_MAN", "HIKER")]:
         raise SourceAssetError("trainer picture numbering changed")
-    graphics = safe_source_path(source, "src/data/graphics/trainers.h").read_text()
+    graphics = pinned_asset(source, "src/data/graphics/trainers.h").read_text()
     # Both variants use distinct original picture IDs and artwork.
     pages = []
     for number, name, symbol, filename, palette in (
@@ -49,10 +58,12 @@ def build(source, target, output, base_manifest=None):
         if declaration not in graphics or not re.search(binding, graphics):
             raise SourceAssetError("trainer source graphics binding changed")
         from PIL import Image
-        with Image.open(safe_source_path(source, path)) as image:
+        with Image.open(pinned_asset(source, path)) as image:
             if image.size != (64, 64):
                 raise SourceAssetError("unexpected trainer sprite dimensions")
         raw = indexed_gba_tiles(source, path, 64)
+        if len(raw) != 2048:
+            raise SourceAssetError("unexpected trainer tile byte count")
         pages.append((f"rhh.trainer.{number:04x}", raw))
     rom = safe_source_path(source, f"poke{target}.gba")
     output.mkdir(parents=True, exist_ok=True)
