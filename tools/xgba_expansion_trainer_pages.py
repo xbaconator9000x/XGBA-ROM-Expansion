@@ -11,7 +11,7 @@ from xgba_expansion_map_pages import (
     safe_source_path, indexed_gba_tiles,
 )
 
-def build(source, target, output):
+def build(source, target, output, base_manifest=None):
     source = Path(source).resolve()
     output = Path(output).resolve()
     if target not in LAYOUT_VERSION:
@@ -58,18 +58,40 @@ def build(source, target, output):
     output.mkdir(parents=True, exist_ok=True)
     data = output / f"xgba-{target}-trainer-private.bin"
     manifest = output / f"xgba-{target}-trainer-private.json"
+    identity = {"id": f"rhh-{target}-expansion-1.17.2",
+                "sha256": hashlib.sha256(rom.read_bytes()).hexdigest()}
     resources = []
+    inherited = []
+    if base_manifest is not None:
+        base_manifest = Path(base_manifest).resolve()
+        base = json.loads(base_manifest.read_text())
+        if base.get("format") != "xgba-resource-manifest" or base.get("version") != 1 or base.get("source_identity") != identity:
+            raise SourceAssetError("base provider source identity mismatch")
+        base_data = safe_source_path(base_manifest.parent, base["data_file"])
+        if base_data == data or base_manifest == manifest:
+            raise SourceAssetError("base provider must not be overwritten")
+        seen = {identifier for identifier, _ in pages}
+        with base_data.open("rb") as handle:
+            for entry in base["resources"]:
+                identifier, offset, length = entry["id"], entry["offset"], entry["length"]
+                if identifier in seen or not isinstance(offset, int) or not isinstance(length, int) or offset < START or not 0 < length <= 16384:
+                    raise SourceAssetError("invalid or duplicate base resource")
+                seen.add(identifier)
+                handle.seek(offset)
+                raw = handle.read(length)
+                if len(raw) != length or hashlib.sha256(raw).hexdigest() != entry["sha256"]:
+                    raise SourceAssetError("base resource integrity mismatch")
+                inherited.append((identifier, raw))
     with data.open("wb") as handle:
         handle.seek(START)
-        for identifier, raw in pages:
+        for identifier, raw in inherited + pages:
             offset = handle.tell()
             handle.write(raw)
             resources.append({"id": identifier, "offset": offset,
                               "length": len(raw), "sha256": hashlib.sha256(raw).hexdigest()})
     record = {
         "format": "xgba-resource-manifest", "version": 1,
-        "source_identity": {"id": f"rhh-{target}-expansion-1.17.2",
-                            "sha256": hashlib.sha256(rom.read_bytes()).hexdigest()},
+        "source_identity": identity,
         "data_file": data.name,
         "resources": resources,
     }
@@ -81,5 +103,6 @@ if __name__ == "__main__":
     parser.add_argument("--source", required=True, type=Path)
     parser.add_argument("--target", required=True, choices=LAYOUT_VERSION)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--base-manifest", type=Path, help="Preserve verified map/tileset pages in the battle provider")
     args = parser.parse_args()
-    print(build(args.source, args.target, args.output))
+    print(build(args.source, args.target, args.output, args.base_manifest))
