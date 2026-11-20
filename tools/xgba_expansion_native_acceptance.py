@@ -22,6 +22,7 @@ sys.path[:0] = [str(ROOT / "tools"), str(ROOT / "integration/mgba"),
 
 import xgba_expansion_source_adapter as adapter
 import xgba_expansion_map_pages as map_pages
+import xgba_expansion_trainer_pages as trainer_pages
 import xgba_resource_integration_smoke as r6
 import xgba_resource_sidecar as sidecar
 import xgba_mgba_run as launcher
@@ -120,6 +121,26 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
                     page_entries.append({"id": name, "offset": offset,
                                          "length": entry.length,
                                          "sha256": entry.sha256})
+    # Supply genuine trainer pages during playable navigation as well as maps.
+    # Isolated field-loader smoke retains its exact original read contract.
+    if overworld_play:
+        trainer_manifest = sidecar.load_manifest(trainer_pages.build(
+            source, target, output / "private-source" / "trainers"))
+        seen = {entry["id"] for entry in page_entries}
+        with external.open("ab") as combined:
+            for name, entry in trainer_manifest.resources.items():
+                if name in seen or not re.fullmatch(r"rhh\.trainer\.[0-9a-f]{4}", name):
+                    raise AssertionError("Unexpected or duplicate trainer resource")
+                with trainer_manifest.data_path.open("rb") as original:
+                    original.seek(entry.offset)
+                    blob = original.read(entry.length)
+                if len(blob) != 2048 or hashlib.sha256(blob).hexdigest() != entry.sha256:
+                    raise AssertionError("Original trainer page integrity mismatch")
+                offset = combined.tell()
+                combined.write(blob)
+                page_entries.append({"id": name, "offset": offset,
+                                     "length": len(blob), "sha256": entry.sha256})
+                seen.add(name)
     manifest = output / "xgba-private-test-manifest.json"
     manifest.write_text(json.dumps({
         "format": sidecar.FORMAT,
@@ -190,7 +211,8 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
         "map_tileset_loader_source_native_verified": map_smoke or overworld_play,
         "player_controlled_overworld_verified": overworld_play,
         "original_town_to_route_native_acceptance": overworld_play,
-        "map_tileset_real_source_page_count": len(page_entries),
+        "map_tileset_real_source_page_count": sum(not e["id"].startswith("rhh.trainer.") for e in page_entries),
+        "trainer_provider_page_count": sum(e["id"].startswith("rhh.trainer.") for e in page_entries),
         "gameplay_map_rendering_verified": overworld_play,
         "heap_bytes_reserved_for_xgba_page": RESOURCE_SIZE,
         "real_expanded_guest_provider_reads_verified": True,
