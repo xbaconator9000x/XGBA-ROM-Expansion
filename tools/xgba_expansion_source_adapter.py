@@ -142,9 +142,12 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
         || bytes > XGBA_EXPANSION_PAGE_CAPACITY || ((u32)dest & 3u))
         return FALSE;
     for (u32 i = 0; i < 4; ++i)
-        resource[15 - i] = hex[(id >> (4 * i)) & 15u];
+        resource[sizeof(resource) - 2u - i] = hex[(id >> (4 * i)) & 15u];
     if (XgbaExpansionPageAcquire(resource, bytes) != bytes)
+    {
+        XgbaExpansionPageRelease();
         return FALSE;
+    }
     page = XgbaExpansionPageData();
     if (!page || XgbaExpansionPageResidentBytes() != bytes)
     {
