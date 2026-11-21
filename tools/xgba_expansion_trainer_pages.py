@@ -66,9 +66,18 @@ def build(source, target, output, base_manifest=None):
             raise SourceAssetError("unexpected trainer tile byte count")
         pages.append((f"rhh.trainer.{number:04x}", raw))
     rom = safe_source_path(source, f"poke{target}.gba")
-    output.mkdir(parents=True, exist_ok=True)
+    # Never overwrite the pinned source tree or a preexisting private pack.
+    # Reject symlinked parents before opening either destination for writing.
+    if output == source or source in output.parents:
+        raise SourceAssetError("private trainer output must be outside upstream source")
+    for parent in (output, *output.parents):
+        if parent.is_symlink():
+            raise SourceAssetError("symlinked private trainer output directory")
     data = output / f"xgba-{target}-trainer-private.bin"
     manifest = output / f"xgba-{target}-trainer-private.json"
+    if data.exists() or data.is_symlink() or manifest.exists() or manifest.is_symlink():
+        raise SourceAssetError("private trainer outputs already exist; choose a fresh directory")
+    output.mkdir(parents=True, exist_ok=True)
     identity = {"id": f"rhh-{target}-expansion-1.17.2",
                 "sha256": hashlib.sha256(rom.read_bytes()).hexdigest()}
     resources = []
