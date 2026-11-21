@@ -168,8 +168,13 @@ class ExpansionSourceTests(unittest.TestCase):
         copy = patched.index("CpuCopy32(page, dest, bytes);")
         post_copy_generation = patched.index("XgbaExpansionPageGeneration() != generation", copy)
         self.assertLess(copy, post_copy_generation)
-        self.assertLess(patched.index("XgbaExpansionPageGeneration() != generation"),
-                        patched.index("for (u32 i = 0; i < bytes; ++i)"))
+        # The first generation guard follows the pre-copy source hash;
+        # the second must follow the actual synchronous transfer.
+        source_hash = patched.index("sourceHash = (sourceHash ^ page[i])")
+        pre_copy_guard = patched.index("XgbaExpansionPageGeneration() != generation", source_hash)
+        self.assertLess(source_hash, pre_copy_guard)
+        self.assertLess(pre_copy_guard, copy)
+        self.assertLess(copy, post_copy_generation)
         self.assertIn("XgbaExpansionPageRelease();\n            return FALSE;", patched)
 
     def test_trainer_verification_rechecks_page_generation_before_success(self):
@@ -220,7 +225,7 @@ class ExpansionSourceTests(unittest.TestCase):
         # ship map-only integration while reporting battle support.
         battle = self.root / "src/battle_gfx_sfx_util.c"
         battle.unlink()
-        with self.assertRaisesRegex(adapter.ExpansionDrift, "battle graphics loader missing"):
+        with self.assertRaisesRegex(adapter.ExpansionDrift, "missing original battle graphics loader"):
             with adapter.patched_source(self.root, "emerald"):
                 self.fail("missing battle loader was accepted")
         self.assertEqual((self.root / "src/main.c").read_text(), MAIN)
