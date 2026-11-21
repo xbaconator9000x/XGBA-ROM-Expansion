@@ -185,8 +185,8 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
     /* A nested provider request must not replace this lease while the
      * destination is being populated. Reject a changed generation and let
      * the original compressed graphics path recover. */
+    u32 generation = XgbaExpansionPageGeneration();
     {
-        u32 generation = XgbaExpansionPageGeneration();
         CpuCopy32(page, dest, bytes);
         if (XgbaExpansionPageGeneration() != generation
             || XgbaExpansionPageData() != page
@@ -203,6 +203,15 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
             XgbaExpansionPageRelease();
             return FALSE;
         }
+    }
+    /* A provider callback can invalidate the lease during verification too.
+     * Check residency again before reporting a successful transfer. */
+    if (XgbaExpansionPageGeneration() != generation
+        || XgbaExpansionPageData() != page
+        || XgbaExpansionPageResidentBytes() != bytes)
+    {
+        XgbaExpansionPageRelease();
+        return FALSE;
     }
     XgbaExpansionPageRelease();
     XgbaExpansionTrainerTransfer(id, dest, bytes);
