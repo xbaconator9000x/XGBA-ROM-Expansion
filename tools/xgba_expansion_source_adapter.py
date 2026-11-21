@@ -64,6 +64,14 @@ def validate_source(source: Path, target: str) -> dict:
         if main.count(anchor) != 1:
             raise ExpansionDrift(f"expansion main ABI drift at {anchor!r}")
     fieldmap_path = source / "src/fieldmap.c"
+    battle_path = source / "src/battle_gfx_sfx_util.c"
+    if not battle_path.is_file():
+        raise ExpansionDrift("missing original battle graphics loader")
+    battle = battle_path.read_text(encoding="utf-8")
+    if battle.count("void DecompressTrainerFrontPic(enum TrainerPicID trainerPicId, enum BattlerId battler)") != 1 or battle.count("    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);") != 1:
+        raise ExpansionDrift("original trainer graphics loader ABI drift")
+    if "XgbaExpansionTryTrainerPic" in battle:
+        raise ExpansionDrift("upstream battle graphics loader already patched")
     if not (source / "src/load_save.c").is_file():
         raise ExpansionDrift("missing original save-block heap lifecycle")
     if not fieldmap_path.is_file():
