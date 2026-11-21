@@ -71,7 +71,8 @@ def write_private_pack(directory: Path, pack_path: Path, index_path: Path) -> di
         for entry in catalogue["entries"]
     }
     input_paths.update(
-        p.resolve(strict=True) for p in directory.glob("*.json") if p.is_file()
+        p.resolve(strict=True) for p in directory.glob("*.json")
+        if p.is_file() and p.resolve() != index_path.resolve()
     )
     if pack_path.resolve() in input_paths or index_path.resolve() in input_paths:
         raise ProviderPackError("private pack output would overwrite source input")
