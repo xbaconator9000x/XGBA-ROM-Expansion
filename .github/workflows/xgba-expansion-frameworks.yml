@@ -23,12 +23,14 @@ on:
       - 'tools/xgba_expansion_trainer_host_provider.py'
       - 'tools/xgba_expansion_trainer_provider_catalogue.py'
       - 'tools/xgba_expansion_trainer_mmio_manifest.py'
+      - 'tools/xgba_expansion_trainer_manifest_bridge.py'
       - 'tests/test_xgba_expansion_trainer_page_pack.py'
       - 'tests/test_xgba_expansion_trainer_host_pack.py'
       - 'tests/test_xgba_expansion_trainer_host_provider.py'
       - 'tests/test_xgba_expansion_trainer_provider_catalogue.py'
       - 'tests/test_xgba_expansion_trainer_provider_staging.py'
       - 'tests/test_xgba_expansion_trainer_mmio_manifest.py'
+      - 'tests/test_xgba_expansion_trainer_manifest_bridge.py'
   pull_request:
     paths:
       - 'integration/expansion/**'
@@ -48,12 +50,14 @@ on:
       - 'tools/xgba_expansion_trainer_host_provider.py'
       - 'tools/xgba_expansion_trainer_provider_catalogue.py'
       - 'tools/xgba_expansion_trainer_mmio_manifest.py'
+      - 'tools/xgba_expansion_trainer_manifest_bridge.py'
       - 'tests/test_xgba_expansion_trainer_page_pack.py'
       - 'tests/test_xgba_expansion_trainer_host_pack.py'
       - 'tests/test_xgba_expansion_trainer_host_provider.py'
       - 'tests/test_xgba_expansion_trainer_provider_catalogue.py'
       - 'tests/test_xgba_expansion_trainer_provider_staging.py'
       - 'tests/test_xgba_expansion_trainer_mmio_manifest.py'
+      - 'tests/test_xgba_expansion_trainer_manifest_bridge.py'
   workflow_dispatch:
 
 permissions:
@@ -74,6 +78,7 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_xgba_expansion_source_adapter.py' -v
           python3 -m unittest discover -s tests -p 'test_xgba_expansion_map_pages.py' -v
           python3 -m unittest discover -s tests -p 'test_xgba_expansion_trainer_*.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_expansion_trainer_manifest_bridge.py' -v
 
   upstream-arm-build:
     needs: adapter-tests
@@ -174,6 +179,17 @@ jobs:
           python3 tools/xgba_expansion_native_acceptance.py \
             --source upstream --mgba upstream-mgba \
             --target "${{ matrix.target }}" --output native-evidence --map-smoke
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          target = "${{ matrix.target }}"
+          proof = json.loads((Path("native-evidence") / f"{target}-proof.json").read_text())
+          assert proof["target"] == target
+          assert proof["map_tileset_loader_source_native_verified"] is True
+          assert proof["trainer_provider_page_count"] == 2, proof
+          assert proof["real_expanded_guest_provider_reads_verified"] is True
+          print("PASS_RHH_NATIVE_TRAINER_PROVIDER_PRESENT", target)
+          PY
           test ! -e native-evidence/xgba-private-test-sidecar.bin
           test ! -e native-evidence/xgba-private-test-manifest.json
       - name: Publish native LCD and non-ROM proof only
