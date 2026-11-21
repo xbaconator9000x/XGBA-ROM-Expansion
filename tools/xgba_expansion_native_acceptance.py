@@ -121,9 +121,10 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
                     page_entries.append({"id": name, "offset": offset,
                                          "length": entry.length,
                                          "sha256": entry.sha256})
-    # Supply genuine trainer pages during playable navigation as well as maps.
-    # Isolated field-loader smoke retains its exact original read contract.
-    if overworld_play:
+    # Supply authentic trainer pages for both native field-loader and playable
+    # navigation acceptance. They remain separate from the original map pages;
+    # the host provider can serve both through the existing 16-KiB lease.
+    if map_smoke or overworld_play:
         trainer_manifest = sidecar.load_manifest(trainer_pages.build(
             source, target, output / "private-source" / "trainers"))
         seen = {entry["id"] for entry in page_entries}
