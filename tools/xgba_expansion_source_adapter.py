@@ -182,7 +182,20 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
     /* Do not report external success until the engine-owned destination
      * contains the entire original-source page.  A failed verification
      * releases the lease and lets the original decompressor restore tiles. */
-    CpuCopy32(page, dest, bytes);
+    /* A nested provider request must not replace this lease while the
+     * destination is being populated. Reject a changed generation and let
+     * the original compressed graphics path recover. */
+    {
+        u32 generation = XgbaExpansionPageGeneration();
+        CpuCopy32(page, dest, bytes);
+        if (XgbaExpansionPageGeneration() != generation
+            || XgbaExpansionPageData() != page
+            || XgbaExpansionPageResidentBytes() != bytes)
+        {
+            XgbaExpansionPageRelease();
+            return FALSE;
+        }
+    }
     for (u32 i = 0; i < bytes; ++i)
     {
         if (((const u8 *)dest)[i] != page[i])
