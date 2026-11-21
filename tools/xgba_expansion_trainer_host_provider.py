@@ -73,3 +73,24 @@ class TrainerHostProvider:
             return None
         page = self._pages.get(resource_id)
         return bytes(page) if page is not None else None
+
+    def copy_into(self, resource_id: str, destination: bytearray | memoryview) -> bool:
+        """Synchronous host-provider transfer into a caller-owned staging buffer.
+
+        The caller must publish the buffer to MMIO only after success. A miss,
+        malformed destination, or length mismatch leaves destination unchanged.
+        No borrowed view of the immutable private pack escapes this method.
+        """
+        page = self.acquire(resource_id, PAGE_BYTES)
+        if page is None:
+            return False
+        try:
+            view = memoryview(destination)
+            if view.readonly or view.ndim != 1 or view.itemsize != 1 or len(view) != PAGE_BYTES:
+                return False
+            # Make the complete source snapshot before writing. The caller
+            # owns the destination and must not DMA from the private pack.
+            view[:] = page
+            return True
+        except (TypeError, ValueError, BufferError):
+            return False
