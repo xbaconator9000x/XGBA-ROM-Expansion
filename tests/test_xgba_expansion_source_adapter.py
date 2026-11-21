@@ -73,6 +73,7 @@ class ExpansionSourceTests(unittest.TestCase):
         (self.root / "Makefile").write_text(MAKEFILE)
         (self.root / "src/main.c").write_text(MAIN)
         (self.root / "src/fieldmap.c").write_text(FIELDMAP)
+        (self.root / "src/battle_gfx_sfx_util.c").write_text(\n            "void DecompressTrainerFrontPic(enum TrainerPicID trainerPicId, enum BattlerId battler)\\n"\n            "{\\n"\n            "    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);\\n"\n            "}\\n")
         (self.root / "src/load_save.c").write_text("void MoveSaveBlocks_ResetHeap(void)\n{\n    InitHeap(gHeap, HEAP_SIZE);\n}\n")
         (self.root / "src/overworld.c").write_text(OVERWORLD)
         (self.root / "include/global.h").write_text("/* RHH global ABI */\n")
@@ -150,6 +151,20 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertEqual(path.read_text(), before)
         with self.assertRaisesRegex(adapter.ExpansionDrift, "save relocation heap lease"):
             adapter.patched_save_heap(before.replace("HEAP_SIZE", "OTHER_HEAP_SIZE"))
+
+    def test_original_battle_loader_must_be_present_and_unmodified(self):
+        path = self.root / "src/battle_gfx_sfx_util.c"
+        original = path.read_text()
+        path.unlink()
+        with self.assertRaisesRegex(adapter.ExpansionDrift, "missing original battle graphics loader"):
+            adapter.validate_source(self.root, "emerald")
+        path.write_text(original.replace("DecompressTrainerFrontPic", "AlteredTrainerLoader"))
+        with self.assertRaisesRegex(adapter.ExpansionDrift, "trainer graphics loader ABI drift"):
+            adapter.validate_source(self.root, "firered")
+        path.write_text(original)
+        with adapter.patched_source(self.root, "leafgreen"):
+            self.assertIn("XgbaExpansionTryTrainerPic", path.read_text())
+        self.assertEqual(path.read_text(), original)
 
     def test_rejects_missing_game_target_or_build_matrix(self):
         with self.assertRaises(adapter.ExpansionDrift):
