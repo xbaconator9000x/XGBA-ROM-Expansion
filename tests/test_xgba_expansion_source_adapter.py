@@ -174,11 +174,11 @@ class ExpansionSourceTests(unittest.TestCase):
         # The original RHH battle entry loads the trainer palette after
         # decompressing tiles; external tiles must not skip that side effect.
         original = (
-            "void DecompressTrainerFrontPic(enum TrainerPicID trainerPicId, enum BattlerId battler)\\n"
-            "{\\n"
-            "    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);\\n"
-            "    LoadSpritePaletteWithTag(GetTrainerFrontPicPalette(trainerPicId), GetTrainerPicTag(trainerPicId, TRUE));\\n"
-            "}\\n"
+            "void DecompressTrainerFrontPic(enum TrainerPicID trainerPicId, enum BattlerId battler)\n"
+            "{\n"
+            "    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);\n"
+            "    LoadSpritePaletteWithTag(GetTrainerFrontPicPalette(trainerPicId), GetTrainerPicTag(trainerPicId, TRUE));\n"
+            "}\n"
         )
         patched = adapter.patched_battle_graphics(original)
         self.assertEqual(patched.count("LoadSpritePaletteWithTag("), 1)
