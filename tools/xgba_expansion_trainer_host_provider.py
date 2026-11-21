@@ -96,3 +96,34 @@ class TrainerHostProvider:
             return True
         except (TypeError, ValueError, BufferError):
             return False
+
+    def stage_mmio_page(self, resource_id: str, requested_bytes: int,
+                        staging: bytearray | memoryview) -> bool:
+        """Prepare a full 16-KiB MMIO provider window without borrowed pointers.
+
+        The guest requests precisely the 2-KiB verified trainer resource.
+        Copy to a private scratch window first, then publish synchronously
+        into the caller-owned 16-KiB buffer. Missing/malformed requests
+        leave the existing window untouched for the original GBA loader.
+        Zero the unused tail to avoid exposing previous resident pages.
+        This does not acquire or release the guest-side page lease.
+        """
+        if (not isinstance(requested_bytes, int) or isinstance(requested_bytes, bool)
+                or requested_bytes != PAGE_BYTES):
+            return False
+        try:
+            view = memoryview(staging)
+            if (view.readonly or view.ndim != 1 or view.itemsize != 1
+                    or view.format != "B" or not view.c_contiguous
+                    or len(view) != PAGE_CAPACITY):
+                return False
+        except (TypeError, ValueError, BufferError):
+            return False
+        scratch = bytearray(PAGE_CAPACITY)
+        if not self.copy_into(resource_id, memoryview(scratch)[:PAGE_BYTES]):
+            return False
+        try:
+            view[:] = scratch
+        except (TypeError, ValueError, BufferError):
+            return False
+        return True
