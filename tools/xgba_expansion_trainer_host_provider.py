@@ -16,7 +16,7 @@ from xgba_expansion_trainer_provider_catalogue import (
     PAGE_BYTES, PAGE_CAPACITY, PINNED_RHH, ProviderPackError,
 )
 
-RESOURCE = re.compile(r"rhh\\.trainer\\.[0-9a-f]{4}\\Z")
+RESOURCE = re.compile(r"rhh\.trainer\.[0-9a-f]{4}\Z")
 
 
 class TrainerHostProvider:
