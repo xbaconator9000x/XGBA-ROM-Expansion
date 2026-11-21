@@ -64,6 +64,17 @@ def write_private_pack(directory: Path, pack_path: Path, index_path: Path) -> di
         raise ProviderPackError("pack and index must remain in private staging directory")
     if pack_path == index_path or pack_path.is_symlink() or index_path.is_symlink():
         raise ProviderPackError("unsafe private pack destination")
+    # Never overwrite an original source page or provenance manifest.
+    catalogue = build_catalogue(directory)
+    input_paths = {
+        (directory / entry["filename"]).resolve(strict=True)
+        for entry in catalogue["entries"]
+    }
+    input_paths.update(
+        p.resolve(strict=True) for p in directory.glob("*.json") if p.is_file()
+    )
+    if pack_path.resolve() in input_paths or index_path.resolve() in input_paths:
+        raise ProviderPackError("private pack output would overwrite source input")
     packed, index = build_pack(directory)
     for destination, data in (
         (pack_path, packed),
