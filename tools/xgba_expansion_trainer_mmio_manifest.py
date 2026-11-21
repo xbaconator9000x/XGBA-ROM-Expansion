@@ -21,9 +21,9 @@ from xgba_expansion_trainer_provider_catalogue import PAGE_BYTES, PINNED_RHH, Pr
 _SHA = re.compile(r"[0-9a-f]{64}\Z")
 
 
-def export_manifest(pack_path: Path, index_path: Path, source_rom_sha256: str) -> dict:
+def export_manifest(pack_path: Path, index_path: Path, source_rom_sha256: str, target: str) -> dict:
     """Validate every pack byte before advertising its exact MMIO offsets."""
-    if not isinstance(source_rom_sha256, str) or _SHA.fullmatch(source_rom_sha256) is None:
+    if target not in ("emerald", "firered", "leafgreen"):\n        raise ProviderPackError("unsupported original RHH game target")\n    if not isinstance(source_rom_sha256, str) or _SHA.fullmatch(source_rom_sha256) is None:
         raise ProviderPackError("expected authentic source ROM SHA-256")
     if pack_path.is_symlink() or index_path.is_symlink() or not pack_path.is_file():
         raise ProviderPackError("unsafe private pack")
@@ -49,7 +49,7 @@ def export_manifest(pack_path: Path, index_path: Path, source_rom_sha256: str) -
         "format": "xgba-resource-manifest",
         "version": 1,
         "source_identity": {
-            "id": "rhh-expansion-1.17.2-" + PINNED_RHH[:12],
+            "id": f"rhh-{target}-expansion-1.17.2",
             "sha256": source_rom_sha256,
         },
         "data_file": pack_path.name,
@@ -64,7 +64,7 @@ def write_manifest(pack_path: Path, index_path: Path, output: Path,
         raise ProviderPackError("manifest must stay in private pack directory")
     if output.resolve() in (pack_path.resolve(), index_path.resolve()):
         raise ProviderPackError("manifest would overwrite a private pack input")
-    manifest = export_manifest(pack_path, index_path, source_rom_sha256)
+    manifest = export_manifest(pack_path, index_path, source_rom_sha256, target)
     fd, temporary = tempfile.mkstemp(prefix=".xgba-trainer-mmio-", dir=directory)
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as stream:
@@ -83,8 +83,8 @@ def main() -> None:
     parser.add_argument("--index", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--source-rom-sha256", required=True)
-    args = parser.parse_args()
-    result = write_manifest(args.pack, args.index, args.output, args.source_rom_sha256)
+    parser.add_argument("--target", choices=("emerald", "firered", "leafgreen"), required=True)\n    args = parser.parse_args()
+    result = write_manifest(args.pack, args.index, args.output, args.source_rom_sha256, args.target)
     print(f"Exported {len(result['resources'])} verified private MMIO resources")
 
 
