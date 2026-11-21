@@ -165,8 +165,9 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("XgbaExpansionPageGeneration() != generation", patched)
         self.assertIn("XgbaExpansionPageData() != page", patched)
         self.assertIn("XgbaExpansionPageResidentBytes() != bytes", patched)
-        self.assertLess(patched.index("CpuCopy32(page, dest, bytes);"),
-                        patched.index("XgbaExpansionPageGeneration() != generation"))
+        copy = patched.index("CpuCopy32(page, dest, bytes);")
+        post_copy_generation = patched.index("XgbaExpansionPageGeneration() != generation", copy)
+        self.assertLess(copy, post_copy_generation)
         self.assertLess(patched.index("XgbaExpansionPageGeneration() != generation"),
                         patched.index("for (u32 i = 0; i < bytes; ++i)"))
         self.assertIn("XgbaExpansionPageRelease();\n            return FALSE;", patched)
