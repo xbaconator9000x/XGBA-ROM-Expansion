@@ -354,7 +354,8 @@ class ExpansionSourceTests(unittest.TestCase):
         # A page can change its bytes without changing its pointer or
         # generation. Capture an independent source digest before copying,
         # and compare with the engine-owned destination after transfer.
-        patched = adapter.patched_battle_graphics(\n            (self.root / "src/battle_gfx_sfx_util.c").read_text())
+        patched = adapter.patched_battle_graphics(
+            (self.root / "src/battle_gfx_sfx_util.c").read_text())
         start = patched.index("static bool8 XgbaExpansionTryTrainerPic")
         end = patched.index("void DecompressTrainerFrontPic", start)
         transfer = patched[start:end]
@@ -366,7 +367,7 @@ class ExpansionSourceTests(unittest.TestCase):
                            transfer.index("CpuCopy32(page, dest, bytes)"))
         self.assertLess(transfer.index("if (destinationHash != sourceHash)"),
                         transfer.index("XgbaExpansionTrainerTransfer(id, dest, bytes)"))
-        self.assertIn("XgbaExpansionPageRelease();\\n        return FALSE;", transfer)
+        self.assertIn("XgbaExpansionPageRelease();\n        return FALSE;", transfer)
 
     def test_native_expansion_mode_owns_lcd_buffer_in_both_guards(self):
         # Regression: every expanded-engine variant previously segfaulted
