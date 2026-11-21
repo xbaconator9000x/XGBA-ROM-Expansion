@@ -22,7 +22,10 @@ def pinned_asset(source, relative):
 
 def build(source, target, output, base_manifest=None):
     source = Path(source).resolve()
-    output = Path(output).resolve()
+    raw_output = Path(output).absolute()
+    if any(parent.is_symlink() for parent in (raw_output, *raw_output.parents)):
+        raise SourceAssetError("symlinked private trainer output directory")
+    output = raw_output.resolve()
     if target not in LAYOUT_VERSION:
         raise SourceAssetError("unsupported target")
     head = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True).strip()
