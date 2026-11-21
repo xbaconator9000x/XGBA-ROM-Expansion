@@ -396,8 +396,10 @@ def patched_source(source: Path, target: str, *, map_smoke: bool = False,
     overworld_path = source / "src/overworld.c"
     save_heap_path = source / "src/load_save.c"
     battle_path = source / "src/battle_gfx_sfx_util.c"
-    battle_before = battle_path.read_text(encoding="utf-8") if battle_path.is_file() else None
-    battle_after = patched_battle_graphics(battle_before) if battle_before is not None else None
+    if not battle_path.is_file():
+        raise ExpansionDrift("pinned RHH battle graphics loader missing")
+    battle_before = battle_path.read_text(encoding="utf-8")
+    battle_after = patched_battle_graphics(battle_before)
     save_heap_before = save_heap_path.read_text(encoding="utf-8")
     before = path.read_text(encoding="utf-8")
     fieldmap_before = fieldmap_path.read_text(encoding="utf-8")
