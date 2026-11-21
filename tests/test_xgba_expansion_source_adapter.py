@@ -171,6 +171,21 @@ class ExpansionSourceTests(unittest.TestCase):
                         patched.index("for (u32 i = 0; i < bytes; ++i)"))
         self.assertIn("XgbaExpansionPageRelease();\n            return FALSE;", patched)
 
+    def test_trainer_verification_rechecks_page_generation_before_success(self):
+        original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
+        patched = adapter.patched_battle_graphics(original)
+        start = patched.index("for (u32 i = 0; i < bytes; ++i)")
+        final_check = patched.index("/* A provider callback can invalidate the lease", start)
+        transfer = patched.index("XgbaExpansionTrainerTransfer(id, dest, bytes);", final_check)
+        self.assertLess(start, final_check)
+        self.assertLess(final_check, transfer)
+        guard = patched[final_check:transfer]
+        self.assertIn("XgbaExpansionPageGeneration() != generation", guard)
+        self.assertIn("XgbaExpansionPageData() != page", guard)
+        self.assertIn("XgbaExpansionPageResidentBytes() != bytes", guard)
+        self.assertIn("XgbaExpansionPageRelease();", guard)
+        self.assertIn("return FALSE;", guard)
+
     def test_trainer_copy_integrity_precedes_success_and_releases_on_mismatch(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
         patched = adapter.patched_battle_graphics(original)
