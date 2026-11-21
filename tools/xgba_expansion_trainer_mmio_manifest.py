@@ -23,7 +23,9 @@ _SHA = re.compile(r"[0-9a-f]{64}\Z")
 
 def export_manifest(pack_path: Path, index_path: Path, source_rom_sha256: str, target: str) -> dict:
     """Validate every pack byte before advertising its exact MMIO offsets."""
-    if target not in ("emerald", "firered", "leafgreen"):\n        raise ProviderPackError("unsupported original RHH game target")\n    if not isinstance(source_rom_sha256, str) or _SHA.fullmatch(source_rom_sha256) is None:
+    if target not in ("emerald", "firered", "leafgreen"):
+        raise ProviderPackError("unsupported original RHH game target")
+    if not isinstance(source_rom_sha256, str) or _SHA.fullmatch(source_rom_sha256) is None:
         raise ProviderPackError("expected authentic source ROM SHA-256")
     if pack_path.is_symlink() or index_path.is_symlink() or not pack_path.is_file():
         raise ProviderPackError("unsafe private pack")
@@ -58,7 +60,7 @@ def export_manifest(pack_path: Path, index_path: Path, source_rom_sha256: str, t
 
 
 def write_manifest(pack_path: Path, index_path: Path, output: Path,
-                   source_rom_sha256: str) -> dict:
+                   source_rom_sha256: str, target: str) -> dict:
     directory = pack_path.parent.resolve(strict=True)
     if output.parent.resolve() != directory or output.is_symlink():
         raise ProviderPackError("manifest must stay in private pack directory")
@@ -83,7 +85,8 @@ def main() -> None:
     parser.add_argument("--index", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--source-rom-sha256", required=True)
-    parser.add_argument("--target", choices=("emerald", "firered", "leafgreen"), required=True)\n    args = parser.parse_args()
+    parser.add_argument("--target", choices=("emerald", "firered", "leafgreen"), required=True)
+    args = parser.parse_args()
     result = write_manifest(args.pack, args.index, args.output, args.source_rom_sha256, args.target)
     print(f"Exported {len(result['resources'])} verified private MMIO resources")
 
