@@ -354,7 +354,7 @@ class ExpansionSourceTests(unittest.TestCase):
         # A page can change its bytes without changing its pointer or
         # generation. Capture an independent source digest before copying,
         # and compare with the engine-owned destination after transfer.
-        patched = adapter.patched_battle_graphics(BATTLE)
+        patched = adapter.patched_battle_graphics(\n            (self.root / "src/battle_gfx_sfx_util.c").read_text())
         start = patched.index("static bool8 XgbaExpansionTryTrainerPic")
         end = patched.index("void DecompressTrainerFrontPic", start)
         transfer = patched[start:end]
