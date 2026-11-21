@@ -215,6 +215,17 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertLess(patched.index("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)"),
                         patched.index("LoadSpritePaletteWithTag("))
 
+    def test_patched_build_rejects_missing_battle_loader(self):
+        # A source build without the authentic loader must never silently
+        # ship map-only integration while reporting battle support.
+        battle = self.root / "src/battle_gfx_sfx_util.c"
+        battle.unlink()
+        with self.assertRaisesRegex(adapter.ExpansionDrift, "battle graphics loader missing"):
+            with adapter.patched_source(self.root, "emerald"):
+                self.fail("missing battle loader was accepted")
+        self.assertEqual((self.root / "src/main.c").read_text(), MAIN)
+        self.assertEqual((self.root / "src/fieldmap.c").read_text(), FIELDMAP)
+
     def test_original_battle_loader_must_be_present_and_unmodified(self):
         path = self.root / "src/battle_gfx_sfx_util.c"
         original = path.read_text()
