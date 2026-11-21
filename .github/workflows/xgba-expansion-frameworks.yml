@@ -18,6 +18,17 @@ on:
       - 'tools/xgba_expansion_map_pages.py'
       - 'tools/xgba_expansion_trainer_pages.py'
       - '.github/workflows/xgba-expansion-frameworks.yml'
+      - 'tools/xgba_expansion_trainer_page_pack.py'
+      - 'tools/xgba_expansion_trainer_host_pack.py'
+      - 'tools/xgba_expansion_trainer_host_provider.py'
+      - 'tools/xgba_expansion_trainer_provider_catalogue.py'
+      - 'tools/xgba_expansion_trainer_mmio_manifest.py'
+      - 'tests/test_xgba_expansion_trainer_page_pack.py'
+      - 'tests/test_xgba_expansion_trainer_host_pack.py'
+      - 'tests/test_xgba_expansion_trainer_host_provider.py'
+      - 'tests/test_xgba_expansion_trainer_provider_catalogue.py'
+      - 'tests/test_xgba_expansion_trainer_provider_staging.py'
+      - 'tests/test_xgba_expansion_trainer_mmio_manifest.py'
   pull_request:
     paths:
       - 'integration/expansion/**'
@@ -32,6 +43,17 @@ on:
       - 'tools/xgba_expansion_map_pages.py'
       - 'tools/xgba_expansion_trainer_pages.py'
       - '.github/workflows/xgba-expansion-frameworks.yml'
+      - 'tools/xgba_expansion_trainer_page_pack.py'
+      - 'tools/xgba_expansion_trainer_host_pack.py'
+      - 'tools/xgba_expansion_trainer_host_provider.py'
+      - 'tools/xgba_expansion_trainer_provider_catalogue.py'
+      - 'tools/xgba_expansion_trainer_mmio_manifest.py'
+      - 'tests/test_xgba_expansion_trainer_page_pack.py'
+      - 'tests/test_xgba_expansion_trainer_host_pack.py'
+      - 'tests/test_xgba_expansion_trainer_host_provider.py'
+      - 'tests/test_xgba_expansion_trainer_provider_catalogue.py'
+      - 'tests/test_xgba_expansion_trainer_provider_staging.py'
+      - 'tests/test_xgba_expansion_trainer_mmio_manifest.py'
   workflow_dispatch:
 
 permissions:
@@ -51,6 +73,7 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -p 'test_xgba_expansion_source_adapter.py' -v
           python3 -m unittest discover -s tests -p 'test_xgba_expansion_map_pages.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_expansion_trainer_*.py' -v
 
   upstream-arm-build:
     needs: adapter-tests
