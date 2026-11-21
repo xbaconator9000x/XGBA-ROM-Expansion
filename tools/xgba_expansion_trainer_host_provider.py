@@ -86,7 +86,9 @@ class TrainerHostProvider:
             return False
         try:
             view = memoryview(destination)
-            if view.readonly or view.ndim != 1 or view.itemsize != 1 or len(view) != PAGE_BYTES:
+            if (view.readonly or view.ndim != 1 or view.itemsize != 1
+                    or view.format != "B" or not view.c_contiguous
+                    or len(view) != PAGE_BYTES):
                 return False
             # Make the complete source snapshot before writing. The caller
             # owns the destination and must not DMA from the private pack.
