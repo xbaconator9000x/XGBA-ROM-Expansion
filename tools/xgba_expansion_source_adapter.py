@@ -186,6 +186,20 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
      * destination is being populated. Reject a changed generation and let
      * the original compressed graphics path recover. */
     u32 generation = XgbaExpansionPageGeneration();
+    u32 sourceHash = 2166136261u;
+    u32 destinationHash = 2166136261u;
+    /* Hash the leased source BEFORE the transfer. Comparing only against
+     * the page after copying can silently accept a provider that rewrites
+     * the page in place without incrementing its generation. */
+    for (u32 i = 0; i < bytes; ++i)
+        sourceHash = (sourceHash ^ page[i]) * 16777619u;
+    if (XgbaExpansionPageGeneration() != generation
+        || XgbaExpansionPageData() != page
+        || XgbaExpansionPageResidentBytes() != bytes)
+    {
+        XgbaExpansionPageRelease();
+        return FALSE;
+    }
     {
         CpuCopy32(page, dest, bytes);
         if (XgbaExpansionPageGeneration() != generation
@@ -198,11 +212,17 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
     }
     for (u32 i = 0; i < bytes; ++i)
     {
+        destinationHash = (destinationHash ^ ((const u8 *)dest)[i]) * 16777619u;
         if (((const u8 *)dest)[i] != page[i])
         {
             XgbaExpansionPageRelease();
             return FALSE;
         }
+    }
+    if (destinationHash != sourceHash)
+    {
+        XgbaExpansionPageRelease();
+        return FALSE;
     }
     /* A provider callback can invalidate the lease during verification too.
      * Check residency again before reporting a successful transfer. */
