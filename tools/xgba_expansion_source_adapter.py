@@ -179,7 +179,18 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
         XgbaExpansionPageRelease();
         return FALSE;
     }
+    /* Do not report external success until the engine-owned destination
+     * contains the entire original-source page.  A failed verification
+     * releases the lease and lets the original decompressor restore tiles. */
     CpuCopy32(page, dest, bytes);
+    for (u32 i = 0; i < bytes; ++i)
+    {
+        if (((const u8 *)dest)[i] != page[i])
+        {
+            XgbaExpansionPageRelease();
+            return FALSE;
+        }
+    }
     XgbaExpansionPageRelease();
     XgbaExpansionTrainerTransfer(id, dest, bytes);
     return TRUE;
