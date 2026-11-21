@@ -170,6 +170,22 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertLess(failure, success)
         self.assertIn("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)", patched)
 
+    def test_trainer_loader_preserves_original_palette_and_fallback(self):
+        # The original RHH battle entry loads the trainer palette after
+        # decompressing tiles; external tiles must not skip that side effect.
+        original = (
+            "void DecompressTrainerFrontPic(enum TrainerPicID trainerPicId, enum BattlerId battler)\\n"
+            "{\\n"
+            "    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);\\n"
+            "    LoadSpritePaletteWithTag(GetTrainerFrontPicPalette(trainerPicId), GetTrainerPicTag(trainerPicId, TRUE));\\n"
+            "}\\n"
+        )
+        patched = adapter.patched_battle_graphics(original)
+        self.assertEqual(patched.count("LoadSpritePaletteWithTag("), 1)
+        self.assertIn("if (!XgbaExpansionTryTrainerPic(", patched)
+        self.assertLess(patched.index("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)"),
+                        patched.index("LoadSpritePaletteWithTag("))
+
     def test_original_battle_loader_must_be_present_and_unmodified(self):
         path = self.root / "src/battle_gfx_sfx_util.c"
         original = path.read_text()
