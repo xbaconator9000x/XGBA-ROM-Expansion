@@ -18,7 +18,7 @@ from xgba_expansion_trainer_host_pack import HEADER
 from xgba_expansion_trainer_host_provider import TrainerHostProvider
 from xgba_expansion_trainer_provider_catalogue import PAGE_BYTES, PINNED_RHH, ProviderPackError
 
-_SHA = re.compile(r"[0-9a-f]{64}\\Z")
+_SHA = re.compile(r"[0-9a-f]{64}\Z")
 
 
 def export_manifest(pack_path: Path, index_path: Path, source_rom_sha256: str) -> dict:
@@ -69,7 +69,7 @@ def write_manifest(pack_path: Path, index_path: Path, output: Path,
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as stream:
             json.dump(manifest, stream, sort_keys=True, indent=2)
-            stream.write("\\n")
+            stream.write("\n")
         os.replace(temporary, output)
     finally:
         if os.path.exists(temporary):
