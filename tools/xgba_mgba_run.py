@@ -27,7 +27,9 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
            second_resource_id=None, extra_resource_ids=(), r10_dir=None, r11_perf=None,
            r12_dir=None, r13_dir=None, r14_dir=None,
            r15_dir=None, r15_savefile=None, r15_phase=None, r15_save_probe=0,
-           r16_emerald_dir=None, r17_emerald_map_dir=None,
+           r16_emerald_dir=None, expansion_dir=None, expansion_target=None,
+           expansion_overworld=False,
+           r17_emerald_map_dir=None,
            r18_dir=None, r18_savefile=None, r18_phase=None, r18_save_probe=0,
            r19_connected_dir=None, r19_route_offset=0, r19_route_length=0,
            r28_three_map_dir=None, r28_oldale_offset=0, r28_oldale_length=0,
@@ -162,6 +164,19 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
             cmd.append("--r24-firered")
         cmd.extend(["--r24-boundary-dir",str(directory),
                     "--r24-boundary-probe",hex(r24_boundary_probe)])
+    if (expansion_dir is None) != (expansion_target is None):
+        raise ValueError("RHH native proof requires both target and output directory")
+    if expansion_dir is not None:
+        directory=Path(expansion_dir).resolve()
+        if expansion_target not in ("emerald", "firered", "leafgreen") or not directory.is_dir():
+            raise ValueError("Invalid RHH expansion game target or screenshot directory")
+        if not 0x02000000<=probe_address<=0x02040000-28:
+            raise ValueError("RHH native XGBA proof address must be genuine EWRAM")
+        if r16_emerald_dir is not None or r15_dir is not None or r17_emerald_map_dir is not None:
+            raise ValueError("RHH and earlier game proof modes are exclusive")
+        cmd.extend(["--expansion-dir",str(directory),"--expansion-target",expansion_target])
+        if expansion_overworld:
+            cmd.append("--expansion-overworld")
     if r16_emerald_dir is not None:
         directory=Path(r16_emerald_dir).resolve()
         if not directory.is_dir():

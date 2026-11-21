@@ -179,6 +179,27 @@ def frames_to_gif(frames,output):
         raise AssertionError("R9 animated proof lacks distinct emulator frames")
 
 
+def nearest_lcd_2x(source):
+    """Expand authentic 240x160 LCD pixels without Pillow's unstable C resize.
+
+    Each source pixel is duplicated 2x2, without filtering or altering evidence.
+    """
+    if source.size != (240, 160):
+        raise AssertionError("native LCD source dimensions changed")
+    source = source.convert("RGB")
+    pixels = list(source.getdata())
+    doubled = []
+    for y in range(160):
+        row = []
+        for pixel in pixels[y * 240:(y + 1) * 240]:
+            row.extend((pixel, pixel))
+        doubled.extend(row)
+        doubled.extend(row)
+    output = Image.new("RGB", (480, 320))
+    output.putdata(doubled)
+    return output
+
+
 def write_triptych(screen_paths,destination):
     images=[png(p) for p in screen_paths]
     scale=2
@@ -189,7 +210,7 @@ def write_triptych(screen_paths,destination):
     labels=["PACK A — CRYSTAL","PACK B — MAGMA","EXTENSION OFF"]
     for i,(image,label) in enumerate(zip(images,labels)):
         x=sep+i*(240*scale+sep)
-        out.paste(image.resize((240*scale,160*scale),Image.Resampling.NEAREST),(x,46))
+        out.paste(nearest_lcd_2x(image),(x,46))
         draw.text((x,16),label,fill=(235,245,255))
     out.save(destination)
 
