@@ -350,6 +350,24 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("map_smoke_map_hash", probe)
         self.assertIn("map_smoke_tiles_hash", probe)
 
+    def test_trainer_transfer_detects_in_place_provider_mutation(self):
+        # A page can change its bytes without changing its pointer or
+        # generation. Capture an independent source digest before copying,
+        # and compare with the engine-owned destination after transfer.
+        patched = adapter.patched_battle_graphics(BATTLE)
+        start = patched.index("static bool8 XgbaExpansionTryTrainerPic")
+        end = patched.index("void DecompressTrainerFrontPic", start)
+        transfer = patched[start:end]
+        self.assertIn("u32 sourceHash = 2166136261u;", transfer)
+        self.assertIn("u32 destinationHash = 2166136261u;", transfer)
+        self.assertLess(transfer.index("sourceHash = (sourceHash ^ page[i])"),
+                        transfer.index("CpuCopy32(page, dest, bytes)"))
+        self.assertGreater(transfer.index("destinationHash = (destinationHash ^"),
+                           transfer.index("CpuCopy32(page, dest, bytes)"))
+        self.assertLess(transfer.index("if (destinationHash != sourceHash)"),
+                        transfer.index("XgbaExpansionTrainerTransfer(id, dest, bytes)"))
+        self.assertIn("XgbaExpansionPageRelease();\\n        return FALSE;", transfer)
+
     def test_native_expansion_mode_owns_lcd_buffer_in_both_guards(self):
         # Regression: every expanded-engine variant previously segfaulted
         # (signal 11) when native LCD capture had no allocated video buffer.
