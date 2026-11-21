@@ -53,5 +53,48 @@ class TrainerProviderStagingTests(unittest.TestCase):
             self.assertFalse(provider.copy_into("rhh.trainer.0001", memoryview(bytearray(PAGE_BYTES))[::2]))
 
 
+    def test_full_mmio_window_staging_is_atomic_and_clears_tail(self):
+        page = bytes((i * 29) % 256 for i in range(PAGE_BYTES))
+        packed = HEADER.pack(MAGIC, 1, PAGE_BYTES) + page
+        index = {
+            "format": "xgba-private-trainer-pack-v1",
+            "source_release_sha": PINNED_RHH,
+            "header_bytes": HEADER.size,
+            "payload_bytes": PAGE_BYTES,
+            "pack_sha256": hashlib.sha256(packed).hexdigest(),
+            "entries": [{
+                "resource_id": "rhh.trainer.0001",
+                "offset": 0,
+                "bytes": PAGE_BYTES,
+                "sha256": hashlib.sha256(page).hexdigest(),
+            }],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            pack = root / "private.bin"
+            manifest = root / "private.json"
+            pack.write_bytes(packed)
+            manifest.write_text(json.dumps(index), encoding="utf-8")
+            provider = TrainerHostProvider(pack, manifest)
+            capacity = 16 * 1024
+            window = bytearray([0xA5] * capacity)
+            self.assertFalse(provider.stage_mmio_page("rhh.trainer.0002", PAGE_BYTES, window))
+            self.assertEqual(window, bytes([0xA5]) * capacity)
+            self.assertFalse(provider.stage_mmio_page("rhh.trainer.0001", PAGE_BYTES - 1, window))
+            self.assertEqual(window, bytes([0xA5]) * capacity)
+            self.assertFalse(provider.stage_mmio_page("rhh.trainer.0001", True, window))
+            self.assertFalse(provider.stage_mmio_page("rhh.trainer.0001", PAGE_BYTES, window[:-1]))
+            self.assertEqual(window, bytes([0xA5]) * capacity)
+            self.assertFalse(provider.stage_mmio_page("rhh.trainer.0001", PAGE_BYTES, bytes(capacity)))
+            self.assertTrue(provider.stage_mmio_page("rhh.trainer.0001", PAGE_BYTES, window))
+            self.assertEqual(window[:PAGE_BYTES], page)
+            self.assertEqual(window[PAGE_BYTES:], bytes(capacity - PAGE_BYTES))
+            window[:] = bytes([0xA5]) * capacity
+            self.assertTrue(provider.stage_mmio_page(
+                "rhh.trainer.0001", PAGE_BYTES, memoryview(window)))
+            self.assertEqual(window[:PAGE_BYTES], page)
+            self.assertEqual(window[PAGE_BYTES:], bytes(capacity - PAGE_BYTES))
+
+
 if __name__ == "__main__":
     unittest.main()
