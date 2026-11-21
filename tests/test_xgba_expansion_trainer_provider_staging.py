@@ -40,13 +40,16 @@ class TrainerProviderStagingTests(unittest.TestCase):
             self.assertTrue(provider.copy_into("rhh.trainer.0001", destination))
             self.assertEqual(bytes(destination), page)
             for resource in ("rhh.trainer.0002", "invalid"):
-                destination[:] = b"\\x7a" * PAGE_BYTES
+                destination[:] = bytes([0x7a]) * PAGE_BYTES
                 self.assertFalse(provider.copy_into(resource, destination))
-                self.assertEqual(destination, b"\\x7a" * PAGE_BYTES)
+                self.assertEqual(destination, bytes([0x7a]) * PAGE_BYTES)
             short = bytearray(PAGE_BYTES - 1)
             self.assertFalse(provider.copy_into("rhh.trainer.0001", short))
             self.assertEqual(short, bytearray(PAGE_BYTES - 1))
             self.assertFalse(provider.copy_into("rhh.trainer.0001", bytes(PAGE_BYTES)))
+            # A non-byte writable view must never be accepted as a byte page.
+            words = memoryview(bytearray(PAGE_BYTES)).cast("I")
+            self.assertFalse(provider.copy_into("rhh.trainer.0001", words))
             self.assertFalse(provider.copy_into("rhh.trainer.0001", memoryview(bytearray(PAGE_BYTES))[::2]))
 
 
