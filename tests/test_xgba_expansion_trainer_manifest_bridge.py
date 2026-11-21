@@ -48,5 +48,34 @@ class ManifestBridgeTests(unittest.TestCase):
                 TrainerManifestBridge(manifest, index)
 
 
+    def test_symlinked_private_provider_ancestor_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            actual = root / "actual"
+            actual.mkdir()
+            alias = root / "alias"
+            try:
+                alias.symlink_to(actual, target_is_directory=True)
+            except (OSError, NotImplementedError):
+                self.skipTest("directory symlinks unavailable")
+            (actual / "manifest.json").write_text("{}", encoding="utf-8")
+            (actual / "index.json").write_text("{}", encoding="utf-8")
+            with self.assertRaisesRegex(ProviderPackError, "unsafe private trainer manifest path"):
+                TrainerManifestBridge(alias / "manifest.json", alias / "index.json")
+
+    def test_symlinked_manifest_leaf_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            real = root / "real.json"
+            real.write_text("{}", encoding="utf-8")
+            alias = root / "manifest.json"
+            try:
+                alias.symlink_to(real)
+            except (OSError, NotImplementedError):
+                self.skipTest("file symlinks unavailable")
+            with self.assertRaisesRegex(ProviderPackError, "unsafe private trainer manifest path"):
+                TrainerManifestBridge(alias, root / "index.json")
+
+
 if __name__ == "__main__":
     unittest.main()
