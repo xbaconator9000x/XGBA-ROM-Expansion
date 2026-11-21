@@ -169,7 +169,7 @@ class ExpansionSourceTests(unittest.TestCase):
                         patched.index("XgbaExpansionPageGeneration() != generation"))
         self.assertLess(patched.index("XgbaExpansionPageGeneration() != generation"),
                         patched.index("for (u32 i = 0; i < bytes; ++i)"))
-        self.assertIn("XgbaExpansionPageRelease();\\n            return FALSE;", patched)
+        self.assertIn("XgbaExpansionPageRelease();\n            return FALSE;", patched)
 
     def test_trainer_copy_integrity_precedes_success_and_releases_on_mismatch(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
