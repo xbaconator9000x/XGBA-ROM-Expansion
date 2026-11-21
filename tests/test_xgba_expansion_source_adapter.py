@@ -157,6 +157,23 @@ class ExpansionSourceTests(unittest.TestCase):
         with self.assertRaisesRegex(adapter.ExpansionDrift, "save relocation heap lease"):
             adapter.patched_save_heap(before.replace("HEAP_SIZE", "OTHER_HEAP_SIZE"))
 
+    def test_trainer_copy_integrity_precedes_success_and_releases_on_mismatch(self):
+        original = (
+            "void DecompressTrainerFrontPic(enum TrainerPicID trainerPicId, enum BattlerId battler)\\n"
+            "{\\n"
+            "    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);\\n"
+            "}\\n"
+        ).replace("\\\\n", "\\n")
+        patched = adapter.patched_battle_graphics(original)
+        copy = patched.index("CpuCopy32(page, dest, bytes);")
+        verify = patched.index("((const u8 *)dest)[i] != page[i]")
+        failure = patched.index("XgbaExpansionPageRelease();\\n            return FALSE;", verify)
+        success = patched.index("XgbaExpansionTrainerTransfer(id, dest, bytes);")
+        self.assertLess(copy, verify)
+        self.assertLess(verify, failure)
+        self.assertLess(failure, success)
+        self.assertIn("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)", patched)
+
     def test_original_battle_loader_must_be_present_and_unmodified(self):
         path = self.root / "src/battle_gfx_sfx_util.c"
         original = path.read_text()
