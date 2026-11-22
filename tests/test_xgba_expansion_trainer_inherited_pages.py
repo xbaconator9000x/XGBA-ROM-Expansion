@@ -43,6 +43,19 @@ class TrainerInheritedPageContract(unittest.TestCase):
         self.assertIn('isinstance(entry, dict)', source)
 
 
+    def test_written_graphics_verified_before_manifest_publication(self):
+        import inspect
+        source = inspect.getsource(trainer.build)
+        self.assertIn('with data.open("rb") as verify:', source)
+        self.assertIn('verify.seek(entry["offset"])', source)
+        self.assertIn('actual = verify.read(entry["length"])', source)
+        self.assertIn('hashlib.sha256(actual).hexdigest() != entry["sha256"]', source)
+        self.assertIn('raise SourceAssetError("private trainer provider write verification failed")', source)
+        self.assertLess(source.index('with data.open("rb") as verify:'),
+                        source.index('with manifest.open("x", encoding="utf-8")'))
+        self.assertLess(source.index('with data.open("xb") as handle:'),
+                        source.index('with data.open("rb") as verify:'))
+
     def test_private_pack_is_exclusively_created_and_failure_cleaned(self):
         import inspect
         source = inspect.getsource(trainer.build)
