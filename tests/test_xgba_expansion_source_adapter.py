@@ -225,6 +225,23 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertLess(release, success)
         self.assertIn("finalSourceHash = (finalSourceHash ^ page[i]) * 16777619u;", patched)
 
+    def test_trainer_rejects_invalid_heap_lease_geometry_before_provider(self):
+        original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
+        patched = adapter.patched_battle_graphics(original)
+        transfer = patched.split("static bool8 XgbaExpansionTryTrainerPic", 1)[1].split(
+            "void DecompressTrainerFrontPic", 1)[0]
+        geometry = transfer.index("leaseStart < 0x02000000u")
+        upper = transfer.index("leaseStart > 0x02040000u - XGBA_EXPANSION_PAGE_CAPACITY")
+        end = transfer.index("leaseEnd > 0x02040000u")
+        acquire = transfer.index("XgbaExpansionPageAcquire(resource, bytes)")
+        copy = transfer.index("CpuCopy32(page, dest, bytes);")
+        self.assertLess(geometry, upper)
+        self.assertLess(upper, end)
+        self.assertLess(end, acquire)
+        self.assertLess(acquire, copy)
+        self.assertIn("if (destStart < leaseEnd && leaseStart < destStart + bytes)", transfer)
+        self.assertIn("return FALSE;", transfer[geometry:acquire])
+
     def test_trainer_page_requires_exact_reserved_heap_tail(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
         patched = adapter.patched_battle_graphics(original)
