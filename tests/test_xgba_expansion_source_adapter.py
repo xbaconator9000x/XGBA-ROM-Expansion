@@ -163,6 +163,20 @@ class ExpansionSourceTests(unittest.TestCase):
         with self.assertRaisesRegex(adapter.ExpansionDrift, "save relocation heap lease"):
             adapter.patched_save_heap(before.replace("HEAP_SIZE", "OTHER_HEAP_SIZE"))
 
+    def test_trainer_destination_excludes_entire_reserved_heap_tail(self):
+        original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
+        patched = adapter.patched_battle_graphics(original)
+        lease = patched.index("u32 leaseStart = (u32)gHeap + HEAP_SIZE - XGBA_EXPANSION_PAGE_CAPACITY;")
+        end = patched.index("u32 leaseEnd = leaseStart + XGBA_EXPANSION_PAGE_CAPACITY;", lease)
+        overlap = patched.index("destStart < leaseEnd && leaseStart < destStart + bytes", end)
+        acquire = patched.index("XgbaExpansionPageAcquire(resource, bytes)")
+        copy = patched.index("CpuCopy32(page, dest, bytes);")
+        self.assertLess(lease, end)
+        self.assertLess(end, overlap)
+        self.assertLess(overlap, acquire)
+        self.assertLess(acquire, copy)
+        self.assertIn("if (destStart < leaseEnd && leaseStart < destStart + bytes)\\n            return FALSE;", patched)
+
     def test_trainer_copy_rejects_provider_generation_churn(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
         patched = adapter.patched_battle_graphics(original)
