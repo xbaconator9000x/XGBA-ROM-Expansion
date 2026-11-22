@@ -167,7 +167,8 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
         /* Reject an impossible allocator layout before touching provider MMIO.
          * This also prevents a wrapped leaseEnd from bypassing the overlap
          * check if the upstream heap geometry ever changes. */
-        if (leaseStart < 0x02000000u
+        if (HEAP_SIZE < XGBA_EXPANSION_PAGE_CAPACITY
+            || leaseStart < 0x02000000u
             || leaseStart > 0x02040000u - XGBA_EXPANSION_PAGE_CAPACITY
             || leaseEnd > 0x02040000u)
             return FALSE;
