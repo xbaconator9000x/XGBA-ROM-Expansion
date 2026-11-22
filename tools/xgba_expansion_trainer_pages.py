@@ -126,20 +126,32 @@ def build(source, target, output, base_manifest=None):
                 if len(raw) != length or hashlib.sha256(raw).hexdigest() != digest:
                     raise SourceAssetError("base resource integrity mismatch")
                 inherited.append((identifier, raw))
-    with data.open("wb") as handle:
-        handle.seek(START)
-        for identifier, raw in inherited + pages:
-            offset = handle.tell()
-            handle.write(raw)
-            resources.append({"id": identifier, "offset": offset,
-                              "length": len(raw), "sha256": hashlib.sha256(raw).hexdigest()})
-    record = {
-        "format": "xgba-resource-manifest", "version": 1,
-        "source_identity": identity,
-        "data_file": data.name,
-        "resources": resources,
-    }
-    manifest.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
+    # A provider is usable only when BOTH its data and manifest are complete.
+    # Exclusive creation prevents clobbering an output introduced between
+    # preflight and write. A failed write leaves no half-published provider.
+    try:
+        with data.open("xb") as handle:
+            handle.seek(START)
+            for identifier, raw in inherited + pages:
+                offset = handle.tell()
+                handle.write(raw)
+                resources.append({"id": identifier, "offset": offset,
+                                  "length": len(raw), "sha256": hashlib.sha256(raw).hexdigest()})
+            handle.flush()
+        record = {
+            "format": "xgba-resource-manifest", "version": 1,
+            "source_identity": identity,
+            "data_file": data.name,
+            "resources": resources,
+        }
+        with manifest.open("x", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, indent=2, sort_keys=True) + "\n")
+    except BaseException:
+        # Never delete a pre-existing file when exclusive creation failed.
+        # The manifest is published last, after the entire private data pack.
+        if data.exists() and not manifest.exists():
+            data.unlink()
+        raise
     return manifest
 
 if __name__ == "__main__":
