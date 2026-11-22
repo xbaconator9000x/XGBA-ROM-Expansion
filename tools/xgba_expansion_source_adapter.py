@@ -293,6 +293,11 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
         return FALSE;
     }
     XgbaExpansionPageRelease();
+    /* A release must advance the lease generation. Otherwise a stale
+     * resident pointer could be reused by a subsequent battle asset load.
+     * Keep the original decompressor as the safe recovery path. */
+    if (XgbaExpansionPageGeneration() == generation)
+        return FALSE;
     /* A successful copy must not leave the shared 16-KiB lease live into
      * battle rendering. A broken release is a failed external transfer,
      * even when the destination bytes themselves remain intact. */
