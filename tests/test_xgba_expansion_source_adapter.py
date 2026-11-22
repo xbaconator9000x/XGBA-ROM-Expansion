@@ -159,7 +159,7 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertLess(patched.index("((u32)page & 3u)"),
                         patched.index("CpuCopy32(page, dest, bytes);"))
         self.assertLess(patched.index("CpuCopy32(page, dest, bytes);"),
-                        patched.index("XgbaExpansionPageRelease();\n    /* Releasing the MMIO lease"))
+                        patched.index("XgbaExpansionPageRelease();\n    /* A successful copy must not leave"))
         self.assertIn("(u32)dest - (u32)page < XGBA_EXPANSION_PAGE_CAPACITY", patched)
         self.assertIn("(u32)page - (u32)dest < bytes", patched)
         self.assertIn("XgbaExpansionPageRelease();\n        return FALSE;\n    }", patched)
