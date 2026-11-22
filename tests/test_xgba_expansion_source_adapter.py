@@ -225,6 +225,18 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertLess(release, success)
         self.assertIn("finalSourceHash = (finalSourceHash ^ page[i]) * 16777619u;", patched)
 
+    def test_trainer_page_requires_exact_reserved_heap_tail(self):
+        original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
+        patched = adapter.patched_battle_graphics(original)
+        transfer = patched.split("static bool8 XgbaExpansionTryTrainerPic", 1)[1].split(
+            "void DecompressTrainerFrontPic", 1)[0]
+        exact = "(u32)page != (u32)gHeap + HEAP_SIZE - XGBA_EXPANSION_PAGE_CAPACITY"
+        self.assertIn(exact, transfer)
+        self.assertIn("(u32)page > 0x02040000u - XGBA_EXPANSION_PAGE_CAPACITY", transfer)
+        self.assertLess(transfer.index(exact), transfer.index("CpuCopy32(page, dest, bytes);"))
+        self.assertLess(transfer.index(exact), transfer.index("XgbaExpansionTrainerTransfer(id, dest, bytes);"))
+        self.assertIn("XgbaExpansionPageRelease();\\n        return FALSE;", transfer)
+
     def test_trainer_copy_integrity_precedes_success_and_releases_on_mismatch(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
         patched = adapter.patched_battle_graphics(original)
