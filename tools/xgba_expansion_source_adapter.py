@@ -177,9 +177,14 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
     page = XgbaExpansionPageData();
     /* CpuCopy32 requires a word-aligned resident source. Refuse malformed
      * provider addresses rather than copying through an unaligned pointer. */
+    /* The page API contract binds residency to the reserved heap tail.
+     * A stale or misdirected provider pointer must not be treated as an
+     * authenticated graphics page, even when it points to valid EWRAM.
+     * Never retain a source pointer after releasing this lease. */
     if (!page || ((u32)page & 3u)
+        || (u32)page != (u32)gHeap + HEAP_SIZE - XGBA_EXPANSION_PAGE_CAPACITY
         || (u32)page < 0x02000000u
-        || (u32)page > 0x02040000u - bytes
+        || (u32)page > 0x02040000u - XGBA_EXPANSION_PAGE_CAPACITY
         || XgbaExpansionPageResidentBytes() != bytes)
     {
         XgbaExpansionPageRelease();
