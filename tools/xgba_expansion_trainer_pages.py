@@ -130,6 +130,7 @@ def build(source, target, output, base_manifest=None):
     # Exclusive creation prevents clobbering an output introduced between
     # preflight and write. A failed write leaves no half-published provider.
     created_data = False
+    created_manifest = False
     try:
         with data.open("xb") as handle:
             created_data = True
@@ -147,10 +148,13 @@ def build(source, target, output, base_manifest=None):
             "resources": resources,
         }
         with manifest.open("x", encoding="utf-8") as handle:
+            created_manifest = True
             handle.write(json.dumps(record, indent=2, sort_keys=True) + "\n")
     except BaseException:
         # Never delete a pre-existing file when exclusive creation failed.
         # The manifest is published last, after the entire private data pack.
+        if created_manifest and manifest.exists():
+            manifest.unlink()
         if created_data and data.exists():
             data.unlink()
         raise
