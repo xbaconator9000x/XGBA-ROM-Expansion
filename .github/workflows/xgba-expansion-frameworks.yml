@@ -154,7 +154,7 @@ jobs:
           import xgba_resource_sidecar as sidecar
           base = sidecar.load_manifest(next(Path("private-source-pages").glob("*.json")))
           combined = sidecar.load_manifest(next(Path("private-battle-pages").glob("*.json")))
-          assert set(combined.resources) == set(base.resources) | {"rhh.trainer.000b", "rhh.trainer.0069"}
+          assert set(combined.resources) == set(base.resources) | {"rhh.trainer.0003", "rhh.trainer.0004", "rhh.trainer.000b", "rhh.trainer.0069"}
           for name, entry in combined.resources.items():
               with combined.data_path.open("rb") as f:
                   f.seek(entry.offset)
