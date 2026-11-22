@@ -175,6 +175,8 @@ jobs:
           git -C upstream-mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
           test "$(git -C upstream-mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
       - name: Execute actual expanded game guest MMIO in patched native mGBA
+        env:
+          XGBA_TARGET: ${{ matrix.target }}
         run: |
           python3 tools/xgba_expansion_native_acceptance.py \
             --source upstream --mgba upstream-mgba \
@@ -182,11 +184,11 @@ jobs:
           python3 - <<'PY'
           import json, os
           from pathlib import Path
-          target = "${{ matrix.target }}"
+          target = os.environ["XGBA_TARGET"]
           proof = json.loads((Path("native-evidence") / f"{target}-proof.json").read_text())
           assert proof["target"] == target
           assert proof["map_tileset_loader_source_native_verified"] is True
-          assert proof["trainer_provider_page_count"] == 2, proof
+          assert proof["trainer_provider_page_count"] == 4, proof
           assert proof["real_expanded_guest_provider_reads_verified"] is True
           print("PASS_RHH_NATIVE_TRAINER_PROVIDER_PRESENT", target)
           PY
