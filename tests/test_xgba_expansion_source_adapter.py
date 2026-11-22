@@ -287,6 +287,21 @@ class ExpansionSourceTests(unittest.TestCase):
                         transfer.index("XgbaExpansionPageAcquire(resource, bytes)"))
         self.assertIn("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)", patched)
 
+    def test_trainer_release_cannot_silently_corrupt_engine_sprite_buffer(self):
+        original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
+        patched = adapter.patched_battle_graphics(original)
+        transfer = patched.split("static bool8 XgbaExpansionTryTrainerPic", 1)[1].split(
+            "void DecompressTrainerFrontPic", 1)[0]
+        release = transfer.rindex("XgbaExpansionPageRelease();")
+        post_release = transfer.index("u32 releasedHash = 2166136261u;", release)
+        reject = transfer.index("if (releasedHash != destinationHash)", post_release)
+        witness = transfer.index("XgbaExpansionTrainerTransfer(id, dest, bytes);", reject)
+        self.assertLess(release, post_release)
+        self.assertLess(post_release, reject)
+        self.assertLess(reject, witness)
+        self.assertIn("if (releasedHash != destinationHash)\\n            return FALSE;", transfer)
+        self.assertIn("if (!XgbaExpansionTryTrainerPic(", patched)
+
     def test_trainer_page_requires_exact_reserved_heap_tail(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
         patched = adapter.patched_battle_graphics(original)
