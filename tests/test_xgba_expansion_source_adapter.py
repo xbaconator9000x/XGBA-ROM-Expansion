@@ -197,6 +197,20 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("XgbaExpansionPageRelease();", guard)
         self.assertIn("return FALSE;", guard)
 
+    def test_trainer_page_rehashed_after_engine_copy_before_success(self):
+        original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
+        patched = adapter.patched_battle_graphics(original)
+        copy = patched.index("CpuCopy32(page, dest, bytes);")
+        final_hash = patched.index("u32 finalSourceHash = 2166136261u;")
+        comparison = patched.index("if (finalSourceHash != sourceHash)")
+        release = patched.index("XgbaExpansionPageRelease();", comparison)
+        success = patched.index("XgbaExpansionTrainerTransfer(id, dest, bytes);")
+        self.assertLess(copy, final_hash)
+        self.assertLess(final_hash, comparison)
+        self.assertLess(comparison, release)
+        self.assertLess(release, success)
+        self.assertIn("finalSourceHash = (finalSourceHash ^ page[i]) * 16777619u;", patched)
+
     def test_trainer_copy_integrity_precedes_success_and_releases_on_mismatch(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
         patched = adapter.patched_battle_graphics(original)
