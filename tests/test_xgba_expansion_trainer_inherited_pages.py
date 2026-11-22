@@ -17,6 +17,23 @@ class TrainerInheritedPageContract(unittest.TestCase):
         self.assertLess(source.index("offset + length > file_size"),
                         source.index("handle.seek(offset)"))
 
+    def test_original_red_leaf_hiker_page_ids_and_source_bindings(self):
+        import inspect
+        source = inspect.getsource(trainer.build)
+        for number, name, symbol, filename in (
+            (3, "RED", "Red", "red.png"),
+            (4, "LEAF", "Leaf", "leaf.png"),
+            (11, "HIKER", "Hiker", "hiker.png"),
+            (105, "HIKER_FRLG", "HikerFrlg", "hiker_frlg.png"),
+        ):
+            self.assertIn(
+                f'({number}, "{name}", "{symbol}", "{filename}", "{symbol}")',
+                source)
+        self.assertIn('declaration not in graphics or not re.search(binding, graphics)', source)
+        self.assertIn('if image.size != (64, 64)', source)
+        self.assertIn('if len(raw) != 2048', source)
+        self.assertIn('pages.append((f"rhh.trainer.{number:04x}", raw))', source)
+
     def test_rejects_bool_offsets_and_malformed_entries(self):
         import inspect
         source = inspect.getsource(trainer.build)
