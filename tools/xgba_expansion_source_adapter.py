@@ -156,7 +156,16 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
     if ((u32)original < 0x08000000u || (u32)original > 0x0A000000u - 4u
         || ((const u8 *)original)[0] != 0x10u)
         return FALSE;
-    bytes = GetDecompressedDataSize(original);
+    /* Read the complete 24-bit LZ77 output size directly from the original
+     * ROM header before invoking any decompression helper. A valid 0x10
+     * marker alone is insufficient: malformed or oversized streams must
+     * never enter the external provider path. The original loader retains
+     * responsibility for every unsupported stream. */
+    bytes = ((const u8 *)original)[1]
+          | ((u32)((const u8 *)original)[2] << 8)
+          | ((u32)((const u8 *)original)[3] << 16);
+    if (bytes != 64u * 64u / 2u)
+        return FALSE;
     /* Trainer tiles must land entirely in engine-owned EWRAM, never VRAM,
      * ROM, I/O or a transient page. Check the end without addition overflow. */
     if (bytes != 64u * 64u / 2u || bytes > MON_PIC_SIZE
