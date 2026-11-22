@@ -157,6 +157,16 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
         || (u32)dest < 0x02000000u
         || (u32)dest > 0x02040000u - bytes)
         return FALSE;
+    /* gHeap's final 16 KiB is permanently reserved for the MMIO lease.
+     * Even a provider that returns a different resident page must never
+     * let a trainer destination corrupt the allocator's protected tail. */
+    {
+        u32 leaseStart = (u32)gHeap + HEAP_SIZE - XGBA_EXPANSION_PAGE_CAPACITY;
+        u32 leaseEnd = leaseStart + XGBA_EXPANSION_PAGE_CAPACITY;
+        u32 destStart = (u32)dest;
+        if (destStart < leaseEnd && leaseStart < destStart + bytes)
+            return FALSE;
+    }
     for (u32 i = 0; i < 4; ++i)
         resource[sizeof(resource) - 2u - i] = hex[(id >> (4 * i)) & 15u];
     if (XgbaExpansionPageAcquire(resource, bytes) != bytes)
