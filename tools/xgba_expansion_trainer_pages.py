@@ -94,15 +94,31 @@ def build(source, target, output, base_manifest=None):
         if base_data == data or base_manifest == manifest:
             raise SourceAssetError("base provider must not be overwritten")
         seen = {identifier for identifier, _ in pages}
+        intervals = []
+        file_size = base_data.stat().st_size
+        if not isinstance(base.get("resources"), list):
+            raise SourceAssetError("invalid base resource table")
         with base_data.open("rb") as handle:
             for entry in base["resources"]:
-                identifier, offset, length = entry["id"], entry["offset"], entry["length"]
-                if identifier in seen or not isinstance(offset, int) or not isinstance(length, int) or offset < START or not 0 < length <= 16384:
-                    raise SourceAssetError("invalid or duplicate base resource")
+                if not isinstance(entry, dict):
+                    raise SourceAssetError("invalid base resource entry")
+                try:
+                    identifier, offset, length = entry["id"], entry["offset"], entry["length"]
+                    digest = entry["sha256"]
+                except KeyError as exc:
+                    raise SourceAssetError("incomplete base resource entry") from exc
+                if (not isinstance(identifier, str) or not identifier
+                    or identifier in seen or type(offset) is not int
+                    or type(length) is not int or offset < START
+                    or not 0 < length <= 16384 or offset + length > file_size
+                    or not isinstance(digest, str)
+                    or any(offset < end and start < offset + length for start, end in intervals)):
+                    raise SourceAssetError("invalid, overlapping or duplicate base resource")
                 seen.add(identifier)
+                intervals.append((offset, offset + length))
                 handle.seek(offset)
                 raw = handle.read(length)
-                if len(raw) != length or hashlib.sha256(raw).hexdigest() != entry["sha256"]:
+                if len(raw) != length or hashlib.sha256(raw).hexdigest() != digest:
                     raise SourceAssetError("base resource integrity mismatch")
                 inherited.append((identifier, raw))
     with data.open("wb") as handle:
