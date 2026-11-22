@@ -159,7 +159,7 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertLess(patched.index("((u32)page & 3u)"),
                         patched.index("CpuCopy32(page, dest, bytes);"))
         self.assertLess(patched.index("CpuCopy32(page, dest, bytes);"),
-                        patched.index("XgbaExpansionPageRelease();\n    XgbaExpansionTrainerTransfer"))
+                        patched.index("XgbaExpansionPageRelease();\n    /* Releasing the MMIO lease"))
         self.assertIn("(u32)dest - (u32)page < XGBA_EXPANSION_PAGE_CAPACITY", patched)
         self.assertIn("(u32)page - (u32)dest < bytes", patched)
         self.assertIn("XgbaExpansionPageRelease();\n        return FALSE;\n    }", patched)
@@ -299,7 +299,7 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertLess(release, post_release)
         self.assertLess(post_release, reject)
         self.assertLess(reject, witness)
-        self.assertIn("if (releasedHash != destinationHash)\\n            return FALSE;", transfer)
+        self.assertIn("if (releasedHash != destinationHash)\n            return FALSE;", transfer)
         self.assertIn("if (!XgbaExpansionTryTrainerPic(", patched)
 
     def test_trainer_page_requires_exact_reserved_heap_tail(self):
