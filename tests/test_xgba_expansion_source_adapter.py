@@ -271,6 +271,18 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("if (!XgbaExpansionTryTrainerPic(", patched)
         self.assertIn("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)", patched)
 
+    def test_trainer_release_invalidates_generation_before_reporting_success(self):
+        original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
+        patched = adapter.patched_battle_graphics(original)
+        release = patched.index("XgbaExpansionPageRelease();\\n    /* A release must advance")
+        generation_guard = patched.index("XgbaExpansionPageGeneration() == generation", release)
+        residency_guard = patched.index("XgbaExpansionPageResidentBytes() != 0u", generation_guard)
+        transfer = patched.index("XgbaExpansionTrainerTransfer(id, dest, bytes);", residency_guard)
+        self.assertLess(release, generation_guard)
+        self.assertLess(generation_guard, residency_guard)
+        self.assertLess(residency_guard, transfer)
+        self.assertIn("return FALSE;", patched[generation_guard:residency_guard])
+
     def test_trainer_external_transfer_requires_original_rom_lz77_stream(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
         patched = adapter.patched_battle_graphics(original)
