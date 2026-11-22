@@ -140,7 +140,7 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("CpuCopy32(page, dest, bytes);", patched)
         self.assertIn("((u32)page & 3u)", patched)
         self.assertIn("(u32)page < 0x02000000u", patched)
-        self.assertIn("(u32)page > 0x02040000u - bytes", patched)
+        self.assertIn("(u32)page > 0x02040000u - XGBA_EXPANSION_PAGE_CAPACITY", patched)
         self.assertLess(patched.index("((u32)page & 3u)"),
                         patched.index("CpuCopy32(page, dest, bytes);"))
         self.assertLess(patched.index("CpuCopy32(page, dest, bytes);"),
