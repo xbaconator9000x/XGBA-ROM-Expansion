@@ -43,5 +43,20 @@ class TrainerInheritedPageContract(unittest.TestCase):
         self.assertIn('isinstance(entry, dict)', source)
 
 
+    def test_private_pack_is_exclusively_created_and_failure_cleaned(self):
+        import inspect
+        source = inspect.getsource(trainer.build)
+        self.assertIn('with data.open("xb") as handle:', source)
+        self.assertIn('with manifest.open("x", encoding="utf-8") as handle:', source)
+        self.assertIn("created_data = False", source)
+        self.assertIn("created_data = True", source)
+        self.assertIn("if created_data and data.exists():", source)
+        self.assertIn("data.unlink()", source)
+        self.assertLess(source.index('with data.open("xb")'),
+                        source.index('with manifest.open("x"'))
+        self.assertLess(source.index("handle.flush()"),
+                        source.index('with manifest.open("x"'))
+
+
 if __name__ == "__main__":
     unittest.main()
