@@ -229,6 +229,19 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
         XgbaExpansionPageRelease();
         return FALSE;
     }
+    /* Rehash the provider page after the transfer as well. A host that
+     * rewrites the leased bytes in place without advancing its generation
+     * must never turn a torn page into a successful battle graphics load. */
+    {
+        u32 finalSourceHash = 2166136261u;
+        for (u32 i = 0; i < bytes; ++i)
+            finalSourceHash = (finalSourceHash ^ page[i]) * 16777619u;
+        if (finalSourceHash != sourceHash)
+        {
+            XgbaExpansionPageRelease();
+            return FALSE;
+        }
+    }
     /* A provider callback can invalidate the lease during verification too.
      * Check residency again before reporting a successful transfer. */
     if (XgbaExpansionPageGeneration() != generation
