@@ -129,8 +129,10 @@ def build(source, target, output, base_manifest=None):
     # A provider is usable only when BOTH its data and manifest are complete.
     # Exclusive creation prevents clobbering an output introduced between
     # preflight and write. A failed write leaves no half-published provider.
+    created_data = False
     try:
         with data.open("xb") as handle:
+            created_data = True
             handle.seek(START)
             for identifier, raw in inherited + pages:
                 offset = handle.tell()
@@ -149,7 +151,7 @@ def build(source, target, output, base_manifest=None):
     except BaseException:
         # Never delete a pre-existing file when exclusive creation failed.
         # The manifest is published last, after the entire private data pack.
-        if data.exists() and not manifest.exists():
+        if created_data and data.exists():
             data.unlink()
         raise
     return manifest
