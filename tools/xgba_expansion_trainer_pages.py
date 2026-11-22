@@ -141,6 +141,16 @@ def build(source, target, output, base_manifest=None):
                 resources.append({"id": identifier, "offset": offset,
                                   "length": len(raw), "sha256": hashlib.sha256(raw).hexdigest()})
             handle.flush()
+        # Re-open the completed private pack before publishing its manifest.
+        # A short or corrupted write must never become an advertised MMIO
+        # resource; the original game graphics loader remains the fallback.
+        with data.open("rb") as verify:
+            for entry in resources:
+                verify.seek(entry["offset"])
+                actual = verify.read(entry["length"])
+                if (len(actual) != entry["length"]
+                    or hashlib.sha256(actual).hexdigest() != entry["sha256"]):
+                    raise SourceAssetError("private trainer provider write verification failed")
         record = {
             "format": "xgba-resource-manifest", "version": 1,
             "source_identity": identity,
