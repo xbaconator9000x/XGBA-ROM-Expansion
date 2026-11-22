@@ -164,6 +164,13 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
         u32 leaseStart = (u32)gHeap + HEAP_SIZE - XGBA_EXPANSION_PAGE_CAPACITY;
         u32 leaseEnd = leaseStart + XGBA_EXPANSION_PAGE_CAPACITY;
         u32 destStart = (u32)dest;
+        /* Reject an impossible allocator layout before touching provider MMIO.
+         * This also prevents a wrapped leaseEnd from bypassing the overlap
+         * check if the upstream heap geometry ever changes. */
+        if (leaseStart < 0x02000000u
+            || leaseStart > 0x02040000u - XGBA_EXPANSION_PAGE_CAPACITY
+            || leaseEnd > 0x02040000u)
+            return FALSE;
         if (destStart < leaseEnd && leaseStart < destStart + bytes)
             return FALSE;
     }
