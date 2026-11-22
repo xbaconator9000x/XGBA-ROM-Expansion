@@ -242,6 +242,17 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("if (destStart < leaseEnd && leaseStart < destStart + bytes)", transfer)
         self.assertIn("return FALSE;", transfer[geometry:acquire])
 
+    def test_trainer_lease_rejects_undersized_heap_before_acquisition(self):
+        original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
+        patched = adapter.patched_battle_graphics(original)
+        transfer = patched.split("static bool8 XgbaExpansionTryTrainerPic", 1)[1]
+        guard = "HEAP_SIZE < XGBA_EXPANSION_PAGE_CAPACITY"
+        self.assertIn(guard, transfer)
+        self.assertLess(transfer.index(guard),
+                        transfer.index("XgbaExpansionPageAcquire(resource, bytes)"))
+        self.assertIn("if (!XgbaExpansionTryTrainerPic(", patched)
+        self.assertIn("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)", patched)
+
     def test_trainer_page_requires_exact_reserved_heap_tail(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
         patched = adapter.patched_battle_graphics(original)
