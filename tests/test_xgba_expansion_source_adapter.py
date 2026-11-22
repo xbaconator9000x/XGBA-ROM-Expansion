@@ -235,7 +235,7 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("(u32)page > 0x02040000u - XGBA_EXPANSION_PAGE_CAPACITY", transfer)
         self.assertLess(transfer.index(exact), transfer.index("CpuCopy32(page, dest, bytes);"))
         self.assertLess(transfer.index(exact), transfer.index("XgbaExpansionTrainerTransfer(id, dest, bytes);"))
-        self.assertIn("XgbaExpansionPageRelease();\\n        return FALSE;", transfer)
+        self.assertIn("XgbaExpansionPageRelease();\n        return FALSE;", transfer)
 
     def test_trainer_copy_integrity_precedes_success_and_releases_on_mismatch(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
