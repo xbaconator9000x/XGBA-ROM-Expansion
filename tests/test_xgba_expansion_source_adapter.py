@@ -508,6 +508,23 @@ class ExpansionSourceTests(unittest.TestCase):
                         transfer.index("XgbaExpansionTrainerTransfer(id, dest, bytes)"))
         self.assertIn("XgbaExpansionPageRelease();\n        return FALSE;", transfer)
 
+    def test_trainer_transfer_requires_released_page_before_success(self):
+        # A provider that retains its lease after Release must not be
+        # considered a completed battle sprite transfer.
+        patched = adapter.patched_battle_graphics(
+            (self.root / "src/battle_gfx_sfx_util.c").read_text())
+        transfer = patched.split("static bool8 XgbaExpansionTryTrainerPic", 1)[1].split(
+            "void DecompressTrainerFrontPic", 1)[0]
+        release = transfer.rindex("    XgbaExpansionPageRelease();")
+        resident = transfer.index("if (XgbaExpansionPageResidentBytes() != 0u", release)
+        data = transfer.index("|| XgbaExpansionPageData() != NULL", resident)
+        integrity = transfer.index("u32 releasedHash = 2166136261u;", data)
+        witness = transfer.index("XgbaExpansionTrainerTransfer(id, dest, bytes);", integrity)
+        self.assertLess(release, resident)
+        self.assertLess(resident, data)
+        self.assertLess(data, integrity)
+        self.assertLess(integrity, witness)
+
     def test_native_expansion_mode_owns_lcd_buffer_in_both_guards(self):
         # Regression: every expanded-engine variant previously segfaulted
         # (signal 11) when native LCD capture had no allocated video buffer.
