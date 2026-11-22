@@ -283,7 +283,7 @@ class ExpansionSourceTests(unittest.TestCase):
         )
         for check in checks:
             self.assertIn(check, transfer)
-            self.assertLess(transfer.index(check), transfer.index("GetDecompressedDataSize(original)"))
+            self.assertLess(transfer.index(check), transfer.index("bytes = ((const u8 *)original)[1]"))
         self.assertLess(transfer.index("((const u8 *)original)[0] != 0x10u"),
                         transfer.index("bytes = ((const u8 *)original)[1]"))
         self.assertLess(transfer.index("bytes = ((const u8 *)original)[1]"),
