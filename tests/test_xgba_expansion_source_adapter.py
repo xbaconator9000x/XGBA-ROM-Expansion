@@ -175,7 +175,7 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertLess(end, overlap)
         self.assertLess(overlap, acquire)
         self.assertLess(acquire, copy)
-        self.assertIn("if (destStart < leaseEnd && leaseStart < destStart + bytes)\\n            return FALSE;", patched)
+        self.assertIn("if (destStart < leaseEnd && leaseStart < destStart + bytes)\n            return FALSE;", patched)
 
     def test_trainer_copy_rejects_provider_generation_churn(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
