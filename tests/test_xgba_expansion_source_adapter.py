@@ -131,7 +131,8 @@ class ExpansionSourceTests(unittest.TestCase):
         patched = adapter.patched_battle_graphics(original)
         for name in ("RED", "LEAF", "HIKER", "HIKER_FRLG"):
             self.assertIn("id != TRAINER_PIC_" + name, patched)
-        self.assertIn("GetDecompressedDataSize(original)", patched)
+        self.assertIn("bytes = ((const u8 *)original)[1]", patched)
+        self.assertIn("((u32)((const u8 *)original)[3] << 16)", patched)
         self.assertIn("bytes != 64u * 64u / 2u", patched)
         self.assertIn("CpuCopy32", patched)
         self.assertIn("DecompressDataWithHeaderWram", patched)
@@ -283,8 +284,13 @@ class ExpansionSourceTests(unittest.TestCase):
         for check in checks:
             self.assertIn(check, transfer)
             self.assertLess(transfer.index(check), transfer.index("GetDecompressedDataSize(original)"))
-        self.assertLess(transfer.index("GetDecompressedDataSize(original)"),
+        self.assertLess(transfer.index("((const u8 *)original)[0] != 0x10u"),
+                        transfer.index("bytes = ((const u8 *)original)[1]"))
+        self.assertLess(transfer.index("bytes = ((const u8 *)original)[1]"),
+                        transfer.index("if (bytes != 64u * 64u / 2u)"))
+        self.assertLess(transfer.index("if (bytes != 64u * 64u / 2u)"),
                         transfer.index("XgbaExpansionPageAcquire(resource, bytes)"))
+        self.assertNotIn("GetDecompressedDataSize(original)", transfer)
         self.assertIn("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)", patched)
 
     def test_trainer_release_cannot_silently_corrupt_engine_sprite_buffer(self):
