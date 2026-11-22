@@ -44,7 +44,12 @@ def build(source, target, output, base_manifest=None):
     graphics = pinned_asset(source, "src/data/graphics/trainers.h").read_text()
     # Both variants use distinct original picture IDs and artwork.
     pages = []
+    # Preserve original trainer IDs and source-bound palette pairings.
+    # Each 64x64 indexed image becomes a bounded 2-KiB graphics page;
+    # the engine retains ownership of the destination and palette loader.
     for number, name, symbol, filename, palette in (
+        (3, "RED", "Red", "red.png", "Red"),
+        (4, "LEAF", "Leaf", "leaf.png", "Leaf"),
         (11, "HIKER", "Hiker", "hiker.png", "Hiker"),
         (105, "HIKER_FRLG", "HikerFrlg", "hiker_frlg.png", "HikerFrlg"),
     ):
