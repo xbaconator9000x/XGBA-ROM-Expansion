@@ -270,6 +270,23 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("if (!XgbaExpansionTryTrainerPic(", patched)
         self.assertIn("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)", patched)
 
+    def test_trainer_external_transfer_requires_original_rom_lz77_stream(self):
+        original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
+        patched = adapter.patched_battle_graphics(original)
+        transfer = patched.split("static bool8 XgbaExpansionTryTrainerPic", 1)[1].split(
+            "void DecompressTrainerFrontPic", 1)[0]
+        checks = (
+            "(u32)original < 0x08000000u",
+            "(u32)original > 0x0A000000u - 4u",
+            "((const u8 *)original)[0] != 0x10u",
+        )
+        for check in checks:
+            self.assertIn(check, transfer)
+            self.assertLess(transfer.index(check), transfer.index("GetDecompressedDataSize(original)"))
+        self.assertLess(transfer.index("GetDecompressedDataSize(original)"),
+                        transfer.index("XgbaExpansionPageAcquire(resource, bytes)"))
+        self.assertIn("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)", patched)
+
     def test_trainer_page_requires_exact_reserved_heap_tail(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
         patched = adapter.patched_battle_graphics(original)
