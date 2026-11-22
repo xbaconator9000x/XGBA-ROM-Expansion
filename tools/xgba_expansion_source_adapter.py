@@ -144,7 +144,8 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
     /* Only admit the source-verified 64x64 4bpp trainer resources.
      * Other IDs must retain the original decompressor until their
      * graphics bindings and dimensions have been independently verified. */
-    if (!original || !dest || (id != TRAINER_PIC_HIKER && id != TRAINER_PIC_HIKER_FRLG))
+    if (!original || !dest || (id != TRAINER_PIC_RED && id != TRAINER_PIC_LEAF
+        && id != TRAINER_PIC_HIKER && id != TRAINER_PIC_HIKER_FRLG))
         return FALSE;
     /* The page lease is invalidated immediately after the synchronous copy.
      * Refuse any destination overlapping the leased tail of gHeap, even if
