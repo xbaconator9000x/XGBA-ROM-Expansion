@@ -165,7 +165,12 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
         return FALSE;
     }
     page = XgbaExpansionPageData();
-    if (!page || XgbaExpansionPageResidentBytes() != bytes)
+    /* CpuCopy32 requires a word-aligned resident source. Refuse malformed
+     * provider addresses rather than copying through an unaligned pointer. */
+    if (!page || ((u32)page & 3u)
+        || (u32)page < 0x02000000u
+        || (u32)page > 0x02040000u - bytes
+        || XgbaExpansionPageResidentBytes() != bytes)
     {
         XgbaExpansionPageRelease();
         return FALSE;
