@@ -121,6 +121,21 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("if required_tag != VALIDATED_RELEASE:", source)
         self.assertIn("require_release_tag(source, required_tag)", source)
 
+    def test_trainer_red_leaf_original_loader_allowlist(self):
+        original = (
+            "void DecompressTrainerFrontPic(enum TrainerPicID trainerPicId, enum BattlerId battler)\n"
+            "{\n"
+            "    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);\n"
+            "}\n"
+        )
+        patched = adapter.patched_battle_graphics(original)
+        for name in ("RED", "LEAF", "HIKER", "HIKER_FRLG"):
+            self.assertIn("id != TRAINER_PIC_" + name, patched)
+        self.assertIn("GetDecompressedDataSize(original)", patched)
+        self.assertIn("bytes != 64u * 64u / 2u", patched)
+        self.assertIn("CpuCopy32", patched)
+        self.assertIn("DecompressDataWithHeaderWram", patched)
+
     def test_trainer_page_never_aliases_engine_owned_sprite_destination(self):
         # The 16-KiB lease is poisoned on release. A partial overlap
         # (including a buffer starting before the page) must fall back.
