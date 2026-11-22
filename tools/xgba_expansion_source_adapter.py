@@ -150,6 +150,12 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
     /* The page lease is invalidated immediately after the synchronous copy.
      * Refuse any destination overlapping the leased tail of gHeap, even if
      * the caller changes sprite-buffer ownership in a future RHH release. */
+    /* The pinned trainer graphics table must resolve to a ROM-backed LZ77
+     * stream. Reject malformed headers before asking the decompressor for
+     * its output length; the original loader remains the fallback. */
+    if ((u32)original < 0x08000000u || (u32)original > 0x0A000000u - 4u
+        || ((const u8 *)original)[0] != 0x10u)
+        return FALSE;
     bytes = GetDecompressedDataSize(original);
     /* Trainer tiles must land entirely in engine-owned EWRAM, never VRAM,
      * ROM, I/O or a transient page. Check the end without addition overflow. */
