@@ -50,6 +50,9 @@ class TrainerInheritedPageContract(unittest.TestCase):
         self.assertIn('with manifest.open("x", encoding="utf-8") as handle:', source)
         self.assertIn("created_data = False", source)
         self.assertIn("created_data = True", source)
+        self.assertIn("created_manifest = True", source)
+        self.assertIn("if created_manifest and manifest.exists():", source)
+        self.assertIn("manifest.unlink()", source)
         self.assertIn("if created_data and data.exists():", source)
         self.assertIn("data.unlink()", source)
         self.assertLess(source.index('with data.open("xb")'),
