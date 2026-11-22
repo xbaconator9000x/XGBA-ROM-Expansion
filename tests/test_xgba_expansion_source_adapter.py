@@ -138,6 +138,11 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertLess(patched.index("(u32)dest > 0x02040000u - bytes"),
                         patched.index("XgbaExpansionPageAcquire(resource, bytes)"))
         self.assertIn("CpuCopy32(page, dest, bytes);", patched)
+        self.assertIn("((u32)page & 3u)", patched)
+        self.assertIn("(u32)page < 0x02000000u", patched)
+        self.assertIn("(u32)page > 0x02040000u - bytes", patched)
+        self.assertLess(patched.index("((u32)page & 3u)"),
+                        patched.index("CpuCopy32(page, dest, bytes);"))
         self.assertLess(patched.index("CpuCopy32(page, dest, bytes);"),
                         patched.index("XgbaExpansionPageRelease();\n    XgbaExpansionTrainerTransfer"))
         self.assertIn("(u32)dest - (u32)page < XGBA_EXPANSION_PAGE_CAPACITY", patched)
