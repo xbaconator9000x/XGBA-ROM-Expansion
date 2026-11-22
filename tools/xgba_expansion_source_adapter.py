@@ -284,6 +284,16 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
         return FALSE;
     }
     XgbaExpansionPageRelease();
+    /* Releasing the MMIO lease must not alter engine-owned sprite tiles.
+     * Check the destination again after release, before reporting success.
+     * On a corrupt or aliased destination, the original decompressor runs. */
+    {
+        u32 releasedHash = 2166136261u;
+        for (u32 i = 0; i < bytes; ++i)
+            releasedHash = (releasedHash ^ ((const u8 *)dest)[i]) * 16777619u;
+        if (releasedHash != destinationHash)
+            return FALSE;
+    }
     XgbaExpansionTrainerTransfer(id, dest, bytes);
     return TRUE;
 }
