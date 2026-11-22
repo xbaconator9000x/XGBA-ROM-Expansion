@@ -181,8 +181,8 @@ class ExpansionSourceTests(unittest.TestCase):
     def test_trainer_destination_excludes_entire_reserved_heap_tail(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
         patched = adapter.patched_battle_graphics(original)
-        lease = patched.index("u32 leaseStart = (u32)gHeap + HEAP_SIZE - XGBA_EXPANSION_PAGE_CAPACITY;")
-        end = patched.index("u32 leaseEnd = leaseStart + XGBA_EXPANSION_PAGE_CAPACITY;", lease)
+        lease = patched.index("leaseStart = (u32)gHeap + HEAP_SIZE - XGBA_EXPANSION_PAGE_CAPACITY;")
+        end = patched.index("leaseEnd = leaseStart + XGBA_EXPANSION_PAGE_CAPACITY;", lease)
         overlap = patched.index("destStart < leaseEnd && leaseStart < destStart + bytes", end)
         acquire = patched.index("XgbaExpansionPageAcquire(resource, bytes)")
         copy = patched.index("CpuCopy32(page, dest, bytes);")
@@ -247,7 +247,7 @@ class ExpansionSourceTests(unittest.TestCase):
             "void DecompressTrainerFrontPic", 1)[0]
         geometry = transfer.index("leaseStart < 0x02000000u")
         upper = transfer.index("leaseStart > 0x02040000u - XGBA_EXPANSION_PAGE_CAPACITY")
-        end = transfer.index("leaseEnd > 0x02040000u")
+        end = transfer.index("leaseEnd = leaseStart + XGBA_EXPANSION_PAGE_CAPACITY;")
         acquire = transfer.index("XgbaExpansionPageAcquire(resource, bytes)")
         copy = transfer.index("CpuCopy32(page, dest, bytes);")
         self.assertLess(geometry, upper)
@@ -263,6 +263,8 @@ class ExpansionSourceTests(unittest.TestCase):
         transfer = patched.split("static bool8 XgbaExpansionTryTrainerPic", 1)[1]
         guard = "HEAP_SIZE < XGBA_EXPANSION_PAGE_CAPACITY"
         self.assertIn(guard, transfer)
+        self.assertLess(transfer.index(guard),
+                        transfer.index("leaseStart = (u32)gHeap + HEAP_SIZE - XGBA_EXPANSION_PAGE_CAPACITY;"))
         self.assertLess(transfer.index(guard),
                         transfer.index("XgbaExpansionPageAcquire(resource, bytes)"))
         self.assertIn("if (!XgbaExpansionTryTrainerPic(", patched)
