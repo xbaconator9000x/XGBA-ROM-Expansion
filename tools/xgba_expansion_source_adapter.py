@@ -284,6 +284,12 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
         return FALSE;
     }
     XgbaExpansionPageRelease();
+    /* A successful copy must not leave the shared 16-KiB lease live into
+     * battle rendering. A broken release is a failed external transfer,
+     * even when the destination bytes themselves remain intact. */
+    if (XgbaExpansionPageResidentBytes() != 0u
+        || XgbaExpansionPageData() != NULL)
+        return FALSE;
     /* Releasing the MMIO lease must not alter engine-owned sprite tiles.
      * Check the destination again after release, before reporting success.
      * On a corrupt or aliased destination, the original decompressor runs. */
