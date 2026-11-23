@@ -153,18 +153,18 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("(u32)dest > 0x02040000u - bytes", patched)
         self.assertLess(patched.index("(u32)dest > 0x02040000u - bytes"),
                         patched.index("XgbaExpansionPageAcquire(resource, bytes)"))
-        self.assertIn("CpuCopy32(page, dest, bytes);", patched)
+        self.assertIn("CpuCopy32(page + offset, (u8 *)dest + offset, chunk);", patched)
         self.assertIn("((u32)page & 3u)", patched)
         self.assertIn("(u32)page < 0x02000000u", patched)
         self.assertIn("(u32)page > 0x02040000u - XGBA_EXPANSION_PAGE_CAPACITY", patched)
         self.assertLess(patched.index("((u32)page & 3u)"),
-                        patched.index("CpuCopy32(page, dest, bytes);"))
-        self.assertLess(patched.index("CpuCopy32(page, dest, bytes);"),
+                        patched.index("CpuCopy32(page + offset, (u8 *)dest + offset, chunk);"))
+        self.assertLess(patched.index("CpuCopy32(page + offset, (u8 *)dest + offset, chunk);"),
                         patched.index("XgbaExpansionPageRelease();\n    /* A release must advance"))
         self.assertIn("(u32)dest - (u32)page < XGBA_EXPANSION_PAGE_CAPACITY", patched)
         self.assertIn("(u32)page - (u32)dest < bytes", patched)
         self.assertIn("XgbaExpansionPageRelease();\n        return FALSE;\n    }", patched)
-        self.assertLess(patched.index("/* Do not report external success"), patched.index("CpuCopy32(page, dest, bytes);"))
+        self.assertLess(patched.index("/* Do not report external success"), patched.index("CpuCopy32(page + offset, (u8 *)dest + offset, chunk);"))
         self.assertNotIn("(u32)XGBA_EXPANSION_PAGE +", patched)
         self.assertIn("if (!XgbaExpansionTryTrainerPic(", patched)
         self.assertIn("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)", patched)
@@ -186,7 +186,7 @@ class ExpansionSourceTests(unittest.TestCase):
         end = patched.index("leaseEnd = leaseStart + XGBA_EXPANSION_PAGE_CAPACITY;", lease)
         overlap = patched.index("destStart < leaseEnd && leaseStart < destStart + bytes", end)
         acquire = patched.index("XgbaExpansionPageAcquire(resource, bytes)")
-        copy = patched.index("CpuCopy32(page, dest, bytes);")
+        copy = patched.index("CpuCopy32(page + offset, (u8 *)dest + offset, chunk);")
         self.assertLess(lease, end)
         self.assertLess(end, overlap)
         self.assertLess(overlap, acquire)
@@ -200,7 +200,7 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("XgbaExpansionPageGeneration() != generation", patched)
         self.assertIn("XgbaExpansionPageData() != page", patched)
         self.assertIn("XgbaExpansionPageResidentBytes() != bytes", patched)
-        copy = patched.index("CpuCopy32(page, dest, bytes);")
+        copy = patched.index("CpuCopy32(page + offset, (u8 *)dest + offset, chunk);")
         post_copy_generation = patched.index("XgbaExpansionPageGeneration() != generation", copy)
         self.assertLess(copy, post_copy_generation)
         # The first generation guard follows the pre-copy source hash;
@@ -230,7 +230,7 @@ class ExpansionSourceTests(unittest.TestCase):
     def test_trainer_page_rehashed_after_engine_copy_before_success(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
         patched = adapter.patched_battle_graphics(original)
-        copy = patched.index("CpuCopy32(page, dest, bytes);")
+        copy = patched.index("CpuCopy32(page + offset, (u8 *)dest + offset, chunk);")
         final_hash = patched.index("u32 finalSourceHash = 2166136261u;")
         comparison = patched.index("if (finalSourceHash != sourceHash)")
         release = patched.index("XgbaExpansionPageRelease();", comparison)
@@ -250,7 +250,7 @@ class ExpansionSourceTests(unittest.TestCase):
         upper = transfer.index("leaseStart > 0x02040000u - XGBA_EXPANSION_PAGE_CAPACITY")
         end = transfer.index("leaseEnd = leaseStart + XGBA_EXPANSION_PAGE_CAPACITY;")
         acquire = transfer.index("XgbaExpansionPageAcquire(resource, bytes)")
-        copy = transfer.index("CpuCopy32(page, dest, bytes);")
+        copy = transfer.index("CpuCopy32(page + offset, (u8 *)dest + offset, chunk);")
         self.assertLess(geometry, upper)
         self.assertLess(upper, end)
         self.assertLess(end, acquire)
@@ -349,14 +349,14 @@ class ExpansionSourceTests(unittest.TestCase):
         exact = "(u32)page != (u32)gHeap + HEAP_SIZE - XGBA_EXPANSION_PAGE_CAPACITY"
         self.assertIn(exact, transfer)
         self.assertIn("(u32)page > 0x02040000u - XGBA_EXPANSION_PAGE_CAPACITY", transfer)
-        self.assertLess(transfer.index(exact), transfer.index("CpuCopy32(page, dest, bytes);"))
+        self.assertLess(transfer.index(exact), transfer.index("CpuCopy32(page + offset, (u8 *)dest + offset, chunk);"))
         self.assertLess(transfer.index(exact), transfer.index("XgbaExpansionTrainerTransfer(id, dest, bytes);"))
         self.assertIn("XgbaExpansionPageRelease();\n        return FALSE;", transfer)
 
     def test_trainer_copy_integrity_precedes_success_and_releases_on_mismatch(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
         patched = adapter.patched_battle_graphics(original)
-        copy = patched.index("CpuCopy32(page, dest, bytes);")
+        copy = patched.index("CpuCopy32(page + offset, (u8 *)dest + offset, chunk);")
         verify = patched.index("((const u8 *)dest)[i] != page[i]")
         failure = patched.index("XgbaExpansionPageRelease();", verify)
         success = patched.index("XgbaExpansionTrainerTransfer(id, dest, bytes);")
@@ -540,9 +540,9 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("u32 sourceHash = 2166136261u;", transfer)
         self.assertIn("u32 destinationHash = 2166136261u;", transfer)
         self.assertLess(transfer.index("sourceHash = (sourceHash ^ page[i])"),
-                        transfer.index("CpuCopy32(page, dest, bytes)"))
+                        transfer.index("CpuCopy32(page + offset, (u8 *)dest + offset, chunk)"))
         self.assertGreater(transfer.index("destinationHash = (destinationHash ^"),
-                           transfer.index("CpuCopy32(page, dest, bytes)"))
+                           transfer.index("CpuCopy32(page + offset, (u8 *)dest + offset, chunk)"))
         self.assertLess(transfer.index("if (destinationHash != sourceHash)"),
                         transfer.index("XgbaExpansionTrainerTransfer(id, dest, bytes)"))
         self.assertIn("XgbaExpansionPageRelease();\n        return FALSE;", transfer)
