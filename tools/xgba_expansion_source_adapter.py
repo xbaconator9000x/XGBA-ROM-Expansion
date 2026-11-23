@@ -269,6 +269,18 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
                 return FALSE;
             }
             CpuCopy32(page + offset, (u8 *)dest + offset, chunk);
+            /* Check the completed chunk before proceeding to the next one.
+             * This catches an in-place page rewrite or torn destination at
+             * the first boundary, instead of copying further untrusted data.
+             * A failed chunk returns to the original RHH decompressor. */
+            for (u32 j = 0; j < chunk; ++j)
+            {
+                if (((const u8 *)dest)[offset + j] != page[offset + j])
+                {
+                    XgbaExpansionPageRelease();
+                    return FALSE;
+                }
+            }
             if (XgbaExpansionPageGeneration() != generation
                 || XgbaExpansionPageData() != page
                 || XgbaExpansionPageResidentBytes() != bytes)
