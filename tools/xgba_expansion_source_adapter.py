@@ -378,11 +378,18 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
     # Battle sprite allocation and teardown are authentic phase boundaries.
     # Do not retain a fieldmap/tileset lease into battle heap allocation, or
     # leave a trainer page resident when battle sprite data is freed.
-    for signature_name in ("AllocateBattleSpritesData", "FreeBattleSpritesData"):
-        entry = f"void {signature_name}(void)\n{{"
-        text = _one(text, entry,
-                    entry + "\n    XgbaExpansionPageRelease();",
-                    f"{signature_name} phase lease boundary")
+    phase_entries = tuple(
+        f"void {name}(void)\n{{"
+        for name in ("AllocateBattleSpritesData", "FreeBattleSpritesData")
+    )
+    present = [entry in text for entry in phase_entries]
+    if any(present) and not all(present):
+        raise ExpansionDrift("incomplete battle sprite phase lifecycle")
+    if all(present):
+        for entry in phase_entries:
+            text = _one(text, entry,
+                        entry + "\n    XgbaExpansionPageRelease();",
+                        "battle sprite phase lease boundary")
     call = "    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);"
     return _one(text, call,
                 "    if (!XgbaExpansionTryTrainerPic(trainerPicId, GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]))\n    " + call,
