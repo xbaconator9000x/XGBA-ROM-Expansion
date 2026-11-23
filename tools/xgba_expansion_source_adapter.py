@@ -252,13 +252,30 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
         return FALSE;
     }
     {
-        CpuCopy32(page, dest, bytes);
-        if (XgbaExpansionPageGeneration() != generation
-            || XgbaExpansionPageData() != page
-            || XgbaExpansionPageResidentBytes() != bytes)
+        /* Transfer in bounded synchronous chunks. An interrupt-driven page
+         * replacement between chunks must never allow tiles from two
+         * different provider generations into a successful sprite load.
+         * The original decompressor repairs the destination on failure. */
+        for (u32 offset = 0; offset < bytes; offset += 256u)
         {
-            XgbaExpansionPageRelease();
-            return FALSE;
+            u32 chunk = bytes - offset;
+            if (chunk > 256u)
+                chunk = 256u;
+            if (XgbaExpansionPageGeneration() != generation
+                || XgbaExpansionPageData() != page
+                || XgbaExpansionPageResidentBytes() != bytes)
+            {
+                XgbaExpansionPageRelease();
+                return FALSE;
+            }
+            CpuCopy32(page + offset, (u8 *)dest + offset, chunk);
+            if (XgbaExpansionPageGeneration() != generation
+                || XgbaExpansionPageData() != page
+                || XgbaExpansionPageResidentBytes() != bytes)
+            {
+                XgbaExpansionPageRelease();
+                return FALSE;
+            }
         }
     }
     for (u32 i = 0; i < bytes; ++i)
