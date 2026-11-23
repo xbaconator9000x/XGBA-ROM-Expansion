@@ -224,6 +224,24 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertLess(acquire, copy)
         self.assertIn("if (destStart < leaseEnd && leaseStart < destStart + bytes)\n            return FALSE;", patched)
 
+    def test_trainer_copy_revalidates_lease_before_reading_source_after_copy(self):
+        original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
+        patched = adapter.patched_battle_graphics(original)
+        copy = patched.index("CpuCopy32(page + offset, (u8 *)dest + offset, chunk);")
+        verify = patched.index("if (((const u8 *)dest)[offset + j] != page[offset + j])", copy)
+        between = patched[copy:verify]
+        # A provider may revoke or replace a page during the synchronous
+        # copy. Never dereference the invalidated source in verification.
+        for guard in ("XgbaExpansionPageGeneration() != generation",
+                      "XgbaExpansionPageData() != page",
+                      "XgbaExpansionPageResidentBytes() != bytes"):
+            self.assertIn(guard, between)
+        self.assertIn("XgbaExpansionPageRelease();\\n                return FALSE;", between)
+        self.assertLess(between.index("XgbaExpansionPageGeneration() != generation"),
+                        between.index("if (((const u8 *)dest)[offset + j]")
+                        if "if (((const u8 *)dest)[offset + j]" in between
+                        else len(between))
+
     def test_trainer_copy_rejects_provider_generation_churn(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
         patched = adapter.patched_battle_graphics(original)
