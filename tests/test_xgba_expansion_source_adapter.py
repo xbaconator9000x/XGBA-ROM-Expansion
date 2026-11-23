@@ -138,6 +138,9 @@ class ExpansionSourceTests(unittest.TestCase):
             "}\n"
         )
         patched = adapter.patched_battle_graphics(original)
+        self.assertIn("extern void XgbaExpansionPageRelease(void);", patched)
+        self.assertLess(patched.index("extern void XgbaExpansionPageRelease(void);"),
+                        patched.index("void AllocateBattleSpritesData(void)"))
         self.assertIn("void AllocateBattleSpritesData(void)\n{\n    XgbaExpansionPageRelease();", patched)
         self.assertIn("void FreeBattleSpritesData(void)\n{\n    XgbaExpansionPageRelease();", patched)
         self.assertLess(patched.index("void AllocateBattleSpritesData(void)"),
