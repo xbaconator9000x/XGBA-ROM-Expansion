@@ -121,6 +121,34 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("if required_tag != VALIDATED_RELEASE:", source)
         self.assertIn("require_release_tag(source, required_tag)", source)
 
+    def test_real_battle_sprite_lifecycle_releases_field_and_trainer_leases(self):
+        original = (
+            "void AllocateBattleSpritesData(void)\n"
+            "{\n"
+            "    gBattleSpritesDataPtr = AllocZeroed(sizeof(struct BattleSpriteData));\n"
+            "}\n"
+            "void FreeBattleSpritesData(void)\n"
+            "{\n"
+            "    if (gBattleSpritesDataPtr == NULL)\n"
+            "        return;\n"
+            "}\n"
+            "void DecompressTrainerFrontPic(enum TrainerPicID trainerPicId, enum BattlerId battler)\n"
+            "{\n"
+            "    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);\n"
+            "}\n"
+        )
+        patched = adapter.patched_battle_graphics(original)
+        self.assertIn("void AllocateBattleSpritesData(void)\n{\n    XgbaExpansionPageRelease();", patched)
+        self.assertIn("void FreeBattleSpritesData(void)\n{\n    XgbaExpansionPageRelease();", patched)
+        self.assertLess(patched.index("void AllocateBattleSpritesData(void)"),
+                        patched.index("gBattleSpritesDataPtr = AllocZeroed"))
+        self.assertLess(patched.index("void FreeBattleSpritesData(void)"),
+                        patched.index("if (gBattleSpritesDataPtr == NULL)"))
+        self.assertIn("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)", patched)
+        broken = original.replace("void FreeBattleSpritesData(void)", "void RenamedFreeBattleSpritesData(void)")
+        with self.assertRaisesRegex(adapter.ExpansionDrift, "incomplete battle sprite phase lifecycle"):
+            adapter.patched_battle_graphics(broken)
+
     def test_trainer_red_leaf_original_loader_allowlist(self):
         original = (
             "void DecompressTrainerFrontPic(enum TrainerPicID trainerPicId, enum BattlerId battler)\n"
