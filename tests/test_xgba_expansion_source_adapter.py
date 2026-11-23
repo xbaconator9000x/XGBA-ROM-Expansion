@@ -160,7 +160,7 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertLess(patched.index("((u32)page & 3u)"),
                         patched.index("CpuCopy32(page, dest, bytes);"))
         self.assertLess(patched.index("CpuCopy32(page, dest, bytes);"),
-                        patched.index("XgbaExpansionPageRelease();\n    /* A successful copy must not leave"))
+                        patched.index("XgbaExpansionPageRelease();\n    /* A release must advance"))
         self.assertIn("(u32)dest - (u32)page < XGBA_EXPANSION_PAGE_CAPACITY", patched)
         self.assertIn("(u32)page - (u32)dest < bytes", patched)
         self.assertIn("XgbaExpansionPageRelease();\n        return FALSE;\n    }", patched)
@@ -274,7 +274,7 @@ class ExpansionSourceTests(unittest.TestCase):
     def test_trainer_release_invalidates_generation_before_reporting_success(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
         patched = adapter.patched_battle_graphics(original)
-        release = patched.index("XgbaExpansionPageRelease();\\n    /* A release must advance")
+        release = patched.index("XgbaExpansionPageRelease();\n    /* A release must advance")
         generation_guard = patched.index("XgbaExpansionPageGeneration() == generation", release)
         residency_guard = patched.index("XgbaExpansionPageResidentBytes() != 0u", generation_guard)
         transfer = patched.index("XgbaExpansionTrainerTransfer(id, dest, bytes);", residency_guard)
