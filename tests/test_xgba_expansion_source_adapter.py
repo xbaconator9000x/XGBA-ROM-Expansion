@@ -693,7 +693,7 @@ class ExpansionSourceTests(unittest.TestCase):
         # A manifest must not advertise a partially buffered private provider.
         pack = (adapter.ROOT / "tools/xgba_expansion_trainer_pages.py").read_text()
         self.assertIn("import os", pack)
-        data = pack.index('with private_create(data, text=False) as handle:')
+        data = pack.index('with private_create(data) as handle:')
         data_flush = pack.index("os.fsync(handle.fileno())", data)
         verify = pack.index('with data.open("rb") as verify:', data_flush)
         manifest = pack.index('with private_create(manifest, text=True) as handle:', verify)
@@ -770,7 +770,7 @@ class ExpansionSourceTests(unittest.TestCase):
         guard = pack.index('identifier.startswith("rhh.trainer.")')
         overlap = pack.index('or identifier in seen', guard)
         read = pack.index('handle.read(length)', overlap)
-        publish = pack.index('with private_create(data, text=False) as handle:', read)
+        publish = pack.index('with private_create(data) as handle:', read)
         self.assertLess(guard, overlap)
         self.assertLess(overlap, read)
         self.assertLess(read, publish)
