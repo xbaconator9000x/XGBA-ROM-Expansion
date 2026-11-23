@@ -353,6 +353,22 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertLess(transfer.index(exact), transfer.index("XgbaExpansionTrainerTransfer(id, dest, bytes);"))
         self.assertIn("XgbaExpansionPageRelease();\n        return FALSE;", transfer)
 
+    def test_trainer_chunk_verification_precedes_next_copy_and_falls_back(self):
+        # Every 256-byte synchronous copy must be checked before the next
+        # chunk, and a torn chunk must release the page and use RHH fallback.
+        original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
+        patched = adapter.patched_battle_graphics(original)
+        copy = patched.index("CpuCopy32(page + offset, (u8 *)dest + offset, chunk);")
+        verify = patched.index("((const u8 *)dest)[offset + j] != page[offset + j]", copy)
+        release = patched.index("XgbaExpansionPageRelease();", verify)
+        next_guard = patched.index("XgbaExpansionPageGeneration() != generation", release)
+        self.assertLess(copy, verify)
+        self.assertLess(verify, release)
+        self.assertLess(release, next_guard)
+        self.assertIn("for (u32 j = 0; j < chunk; ++j)", patched[copy:verify])
+        self.assertIn("return FALSE;", patched[verify:next_guard])
+        self.assertIn("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)", patched)
+
     def test_trainer_copy_integrity_precedes_success_and_releases_on_mismatch(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
         patched = adapter.patched_battle_graphics(original)
