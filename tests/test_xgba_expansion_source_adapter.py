@@ -236,7 +236,7 @@ class ExpansionSourceTests(unittest.TestCase):
                       "XgbaExpansionPageData() != page",
                       "XgbaExpansionPageResidentBytes() != bytes"):
             self.assertIn(guard, between)
-        self.assertIn("XgbaExpansionPageRelease();\\n                return FALSE;", between)
+        self.assertRegex(between, r"XgbaExpansionPageRelease\(\);\s*return FALSE;")
         self.assertLess(between.index("XgbaExpansionPageGeneration() != generation"),
                         between.index("if (((const u8 *)dest)[offset + j]")
                         if "if (((const u8 *)dest)[offset + j]" in between
