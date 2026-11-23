@@ -52,15 +52,15 @@ class TrainerInheritedPageContract(unittest.TestCase):
         self.assertIn('hashlib.sha256(actual).hexdigest() != entry["sha256"]', source)
         self.assertIn('raise SourceAssetError("private trainer provider write verification failed")', source)
         self.assertLess(source.index('with data.open("rb") as verify:'),
-                        source.index('with manifest.open("x", encoding="utf-8")'))
-        self.assertLess(source.index('with data.open("xb") as handle:'),
+                        source.index('with private_create(manifest, text=True)'))
+        self.assertLess(source.index('with private_create(data) as handle:'),
                         source.index('with data.open("rb") as verify:'))
 
     def test_private_pack_is_exclusively_created_and_failure_cleaned(self):
         import inspect
         source = inspect.getsource(trainer.build)
-        self.assertIn('with data.open("xb") as handle:', source)
-        self.assertIn('with manifest.open("x", encoding="utf-8") as handle:', source)
+        self.assertIn('with private_create(data) as handle:', source)
+        self.assertIn('with private_create(manifest, text=True) as handle:', source)
         self.assertIn("created_data = False", source)
         self.assertIn("created_data = True", source)
         self.assertIn("created_manifest = True", source)
@@ -68,7 +68,7 @@ class TrainerInheritedPageContract(unittest.TestCase):
         self.assertIn("manifest.unlink()", source)
         self.assertIn("if created_data and data.exists():", source)
         self.assertIn("data.unlink()", source)
-        self.assertLess(source.index('with data.open("xb")'),
+        self.assertLess(source.index('with private_create(data)'),
                         source.index('with manifest.open("x"'))
         self.assertLess(source.index("handle.flush()"),
                         source.index('with manifest.open("x"'))
