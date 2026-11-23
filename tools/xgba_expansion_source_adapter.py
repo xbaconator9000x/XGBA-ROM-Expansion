@@ -386,6 +386,12 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
     if any(present) and not all(present):
         raise ExpansionDrift("incomplete battle sprite phase lifecycle")
     if all(present):
+        # These entry points precede the trainer bridge include in upstream RHH.
+        # Declare the page-release ABI before its first call, otherwise ARM GCC
+        # rejects an implicit declaration (and the later header conflicts).
+        text = _one(text, phase_entries[0],
+                    "extern void XgbaExpansionPageRelease(void);\n" + phase_entries[0],
+                    "battle lifecycle release declaration")
         for entry in phase_entries:
             text = _one(text, entry,
                         entry + "\n    XgbaExpansionPageRelease();",
