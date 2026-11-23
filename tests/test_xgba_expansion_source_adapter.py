@@ -763,5 +763,19 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)", patched)
 
 
+    def test_private_trainer_provider_rejects_inherited_trainer_namespace(self):
+        # A map/tileset base pack cannot inject arbitrary battle graphics,
+        # including IDs outside the four source-verified trainer pictures.
+        pack = (adapter.ROOT / "tools/xgba_expansion_trainer_pages.py").read_text()
+        guard = pack.index('identifier.startswith("rhh.trainer.")')
+        overlap = pack.index('or identifier in seen', guard)
+        read = pack.index('handle.read(length)', overlap)
+        publish = pack.index('with data.open("xb") as handle:', read)
+        self.assertLess(guard, overlap)
+        self.assertLess(overlap, read)
+        self.assertLess(read, publish)
+        self.assertIn('raise SourceAssetError("invalid, overlapping or duplicate base resource")', pack)
+
+
 if __name__ == "__main__":
     unittest.main()
