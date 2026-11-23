@@ -604,5 +604,22 @@ class ExpansionSourceTests(unittest.TestCase):
             adapter.patched_main(MAIN, Path('/bad/"quote.h'), probe)
 
 
+    def test_trainer_battle_entry_evicts_stale_field_page_even_on_fallback(self):
+        original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
+        patched = adapter.patched_battle_graphics(original)
+        transfer = patched.split("static bool8 XgbaExpansionTryTrainerPic", 1)[1].split(
+            "void DecompressTrainerFrontPic", 1)[0]
+        entry_release = transfer.index("XgbaExpansionPageRelease();")
+        allowlist = transfer.index("if (!original || !dest")
+        acquire = transfer.index("XgbaExpansionPageAcquire(resource, bytes)")
+        self.assertLess(entry_release, allowlist)
+        self.assertLess(allowlist, acquire)
+        self.assertIn("if (!XgbaExpansionTryTrainerPic(", patched)
+        self.assertIn(
+            "DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)",
+            patched,
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
