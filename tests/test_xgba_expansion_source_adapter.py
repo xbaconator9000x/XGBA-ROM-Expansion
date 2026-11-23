@@ -656,5 +656,24 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn('private trainer manifest verification failed', pack)
 
 
+    def test_trainer_witness_cannot_retain_page_or_corrupt_sprite_destination(self):
+        original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
+        patched = adapter.patched_battle_graphics(original)
+        transfer = patched.split("static bool8 XgbaExpansionTryTrainerPic", 1)[1].split(
+            "void DecompressTrainerFrontPic", 1)[0]
+        witness = transfer.index("XgbaExpansionTrainerTransfer(id, dest, bytes);")
+        post_residency = transfer.index("if (XgbaExpansionPageResidentBytes() != 0u", witness)
+        post_release = transfer.index("XgbaExpansionPageRelease();", post_residency)
+        post_hash = transfer.index("u32 witnessedHash = 2166136261u;", post_release)
+        fail_closed = transfer.index("if (witnessedHash != destinationHash)", post_hash)
+        success = transfer.index("return TRUE;", fail_closed)
+        self.assertLess(witness, post_residency)
+        self.assertLess(post_residency, post_release)
+        self.assertLess(post_release, post_hash)
+        self.assertLess(post_hash, fail_closed)
+        self.assertLess(fail_closed, success)
+        self.assertIn("if (!XgbaExpansionTryTrainerPic(", patched)
+
+
 if __name__ == "__main__":
     unittest.main()
