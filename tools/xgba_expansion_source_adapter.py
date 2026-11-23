@@ -141,6 +141,11 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
     char resource[] = "rhh.trainer.0000";
     u32 bytes;
     const u8 *page;
+    /* Battle graphics are a phase boundary: discard any stale field/map
+     * MMIO residency before examining the trainer source. This also covers
+     * unsupported trainer IDs and malformed source streams, which continue
+     * through the original decompressor without carrying a live page. */
+    XgbaExpansionPageRelease();
     /* Only admit the source-verified 64x64 4bpp trainer resources.
      * Other IDs must retain the original decompressor until their
      * graphics bindings and dimensions have been independently verified. */
