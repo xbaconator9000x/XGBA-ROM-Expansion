@@ -320,6 +320,22 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
             return FALSE;
     }
     XgbaExpansionTrainerTransfer(id, dest, bytes);
+    /* The transfer witness is observational, not a new owner of the shared
+     * MMIO page. A reentrant witness may acquire another page or alter the
+     * engine-owned destination; neither may escape into battle rendering. */
+    if (XgbaExpansionPageResidentBytes() != 0u
+        || XgbaExpansionPageData() != NULL)
+    {
+        XgbaExpansionPageRelease();
+        return FALSE;
+    }
+    {
+        u32 witnessedHash = 2166136261u;
+        for (u32 i = 0; i < bytes; ++i)
+            witnessedHash = (witnessedHash ^ ((const u8 *)dest)[i]) * 16777619u;
+        if (witnessedHash != destinationHash)
+            return FALSE;
+    }
     return TRUE;
 }
 '''.replace("XGBA_BATTLE_PAGE_API", page_api.resolve().as_posix())
