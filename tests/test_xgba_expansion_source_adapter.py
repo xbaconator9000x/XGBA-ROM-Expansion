@@ -320,6 +320,27 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("if (releasedHash != destinationHash)\n            return FALSE;", transfer)
         self.assertIn("if (!XgbaExpansionTryTrainerPic(", patched)
 
+    def test_trainer_witness_rejects_transient_page_reacquisition(self):
+        # A witness can acquire and release a page in one callback, leaving
+        # no resident pointer. The lease generation still must invalidate
+        # external success, with the original RHH decompressor as fallback.
+        original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
+        patched = adapter.patched_battle_graphics(original)
+        transfer = patched.split("static bool8 XgbaExpansionTryTrainerPic", 1)[1].split(
+            "void DecompressTrainerFrontPic", 1)[0]
+        capture = transfer.index("u32 releasedGeneration = XgbaExpansionPageGeneration();")
+        witness = transfer.index("XgbaExpansionTrainerTransfer(id, dest, bytes);", capture)
+        guard = transfer.index("XgbaExpansionPageGeneration() != releasedGeneration", witness)
+        hash_check = transfer.index("u32 witnessedHash = 2166136261u;", guard)
+        success = transfer.index("return TRUE;", hash_check)
+        self.assertLess(capture, witness)
+        self.assertLess(witness, guard)
+        self.assertLess(guard, hash_check)
+        self.assertLess(hash_check, success)
+        self.assertIn("XgbaExpansionPageRelease();", transfer[guard:hash_check])
+        self.assertIn("return FALSE;", transfer[guard:hash_check])
+        self.assertIn("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)", patched)
+
     def test_trainer_page_requires_exact_reserved_heap_tail(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
         patched = adapter.patched_battle_graphics(original)
