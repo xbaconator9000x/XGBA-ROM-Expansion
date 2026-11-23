@@ -21,6 +21,23 @@ def pinned_asset(source, relative):
         raise SourceAssetError(f"modified pinned trainer source: {relative}")
     return path
 
+def private_create(path, *, text=False):
+    """Exclusively create source-derived private assets with owner-only access.
+
+    The provider can contain original game artwork. Never rely on the host's
+    umask (which may permit group/world reads), and never follow a symlink
+    inserted after output preflight.
+    """
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    flags |= getattr(os, "O_NOFOLLOW", 0)
+    fd = os.open(path, flags, 0o600)
+    try:
+        return os.fdopen(fd, "w" if text else "wb", encoding="utf-8" if text else None)
+    except BaseException:
+        os.close(fd)
+        raise
+
+
 def build(source, target, output, base_manifest=None):
     source = Path(source).resolve()
     raw_output = Path(output).absolute()
@@ -86,7 +103,7 @@ def build(source, target, output, base_manifest=None):
     manifest = output / f"xgba-{target}-trainer-private.json"
     if data.exists() or data.is_symlink() or manifest.exists() or manifest.is_symlink():
         raise SourceAssetError("private trainer outputs already exist; choose a fresh directory")
-    output.mkdir(parents=True, exist_ok=True)
+    output.mkdir(parents=True, exist_ok=True, mode=0o700)
     identity = {"id": f"rhh-{target}-expansion-1.17.2",
                 "sha256": hashlib.sha256(rom.read_bytes()).hexdigest()}
     resources = []
@@ -136,7 +153,7 @@ def build(source, target, output, base_manifest=None):
     created_data = False
     created_manifest = False
     try:
-        with data.open("xb") as handle:
+        with private_create(data) as handle:
             created_data = True
             handle.seek(START)
             for identifier, raw in inherited + pages:
@@ -162,7 +179,7 @@ def build(source, target, output, base_manifest=None):
             "data_file": data.name,
             "resources": resources,
         }
-        with manifest.open("x", encoding="utf-8") as handle:
+        with private_create(manifest, text=True) as handle:
             created_manifest = True
             handle.write(json.dumps(record, indent=2, sort_keys=True) + "\n")
             handle.flush()
