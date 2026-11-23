@@ -696,5 +696,25 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("if (!XgbaExpansionTryTrainerPic(", patched)
 
 
+    def test_trainer_transfer_checks_lease_before_and_after_each_bounded_chunk(self):
+        original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
+        patched = adapter.patched_battle_graphics(original)
+        transfer = patched.split("static bool8 XgbaExpansionTryTrainerPic", 1)[1].split(
+            "void DecompressTrainerFrontPic", 1)[0]
+        loop = transfer.index("for (u32 offset = 0; offset < bytes; offset += 256u)")
+        before = transfer.index("XgbaExpansionPageGeneration() != generation", loop)
+        copy = transfer.index("CpuCopy32(page + offset, (u8 *)dest + offset, chunk);", before)
+        after = transfer.index("XgbaExpansionPageGeneration() != generation", copy)
+        verify = transfer.index("destinationHash = (destinationHash", after)
+        self.assertLess(loop, before)
+        self.assertLess(before, copy)
+        self.assertLess(copy, after)
+        self.assertLess(after, verify)
+        self.assertIn("if (chunk > 256u)", transfer[loop:copy])
+        self.assertIn("XgbaExpansionPageRelease();", transfer[before:copy])
+        self.assertIn("XgbaExpansionPageRelease();", transfer[after:verify])
+        self.assertIn("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)", patched)
+
+
 if __name__ == "__main__":
     unittest.main()
