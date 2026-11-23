@@ -164,6 +164,17 @@ def build(source, target, output, base_manifest=None):
             handle.write(json.dumps(record, indent=2, sort_keys=True) + "\n")
             handle.flush()
             os.fsync(handle.fileno())
+        # Verify metadata after publication, not just the data pages.
+        with manifest.open("r", encoding="utf-8") as verify_manifest:
+            if json.load(verify_manifest) != record:
+                raise SourceAssetError("private trainer manifest verification failed")
+        # File fsync alone does not persist newly created directory entries.
+        # Commit both private files' names before advertising the provider.
+        directory_fd = os.open(output, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
     except BaseException:
         # Never delete a pre-existing file when exclusive creation failed.
         # The manifest is published last, after the entire private data pack.
