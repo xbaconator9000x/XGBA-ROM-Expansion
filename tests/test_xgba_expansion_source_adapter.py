@@ -693,10 +693,10 @@ class ExpansionSourceTests(unittest.TestCase):
         # A manifest must not advertise a partially buffered private provider.
         pack = (adapter.ROOT / "tools/xgba_expansion_trainer_pages.py").read_text()
         self.assertIn("import os", pack)
-        data = pack.index('with data.open("xb") as handle:')
+        data = pack.index('with private_create(data, text=False) as handle:')
         data_flush = pack.index("os.fsync(handle.fileno())", data)
         verify = pack.index('with data.open("rb") as verify:', data_flush)
-        manifest = pack.index('with manifest.open("x", encoding="utf-8") as handle:', verify)
+        manifest = pack.index('with private_create(manifest, text=True) as handle:', verify)
         manifest_flush = pack.index("os.fsync(handle.fileno())", manifest)
         self.assertLess(data, data_flush)
         self.assertLess(data_flush, verify)
@@ -708,7 +708,7 @@ class ExpansionSourceTests(unittest.TestCase):
 
     def test_private_provider_verifies_manifest_and_syncs_directory(self):
         pack = (adapter.ROOT / "tools/xgba_expansion_trainer_pages.py").read_text()
-        publish = pack.index('with manifest.open("x", encoding="utf-8") as handle:')
+        publish = pack.index('with private_create(manifest, text=True) as handle:')
         metadata_verify = pack.index('with manifest.open("r", encoding="utf-8") as verify_manifest:', publish)
         integrity = pack.index('json.load(verify_manifest) != record', metadata_verify)
         directory_open = pack.index('directory_fd = os.open(output, os.O_RDONLY', integrity)
@@ -770,7 +770,7 @@ class ExpansionSourceTests(unittest.TestCase):
         guard = pack.index('identifier.startswith("rhh.trainer.")')
         overlap = pack.index('or identifier in seen', guard)
         read = pack.index('handle.read(length)', overlap)
-        publish = pack.index('with data.open("xb") as handle:', read)
+        publish = pack.index('with private_create(data, text=False) as handle:', read)
         self.assertLess(guard, overlap)
         self.assertLess(overlap, read)
         self.assertLess(read, publish)
