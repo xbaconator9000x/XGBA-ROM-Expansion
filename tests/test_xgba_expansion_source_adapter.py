@@ -621,5 +621,22 @@ class ExpansionSourceTests(unittest.TestCase):
         )
 
 
+    def test_private_trainer_pack_flushes_data_before_manifest_publish(self):
+        # A manifest must not advertise a partially buffered private provider.
+        pack = (adapter.ROOT / "tools/xgba_expansion_trainer_pages.py").read_text()
+        self.assertIn("import os", pack)
+        data = pack.index('with data.open("xb") as handle:')
+        data_flush = pack.index("os.fsync(handle.fileno())", data)
+        verify = pack.index('with data.open("rb") as verify:', data_flush)
+        manifest = pack.index('with manifest.open("x", encoding="utf-8") as handle:', verify)
+        manifest_flush = pack.index("os.fsync(handle.fileno())", manifest)
+        self.assertLess(data, data_flush)
+        self.assertLess(data_flush, verify)
+        self.assertLess(verify, manifest)
+        self.assertLess(manifest, manifest_flush)
+        self.assertIn("if created_manifest and manifest.exists():", pack)
+        self.assertIn("if created_data and data.exists():", pack)
+
+
 if __name__ == "__main__":
     unittest.main()
