@@ -638,5 +638,23 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertIn("if created_data and data.exists():", pack)
 
 
+    def test_private_provider_verifies_manifest_and_syncs_directory(self):
+        pack = (adapter.ROOT / "tools/xgba_expansion_trainer_pages.py").read_text()
+        publish = pack.index('with manifest.open("x", encoding="utf-8") as handle:')
+        metadata_verify = pack.index('with manifest.open("r", encoding="utf-8") as verify_manifest:', publish)
+        integrity = pack.index('json.load(verify_manifest) != record', metadata_verify)
+        directory_open = pack.index('directory_fd = os.open(output, os.O_RDONLY', integrity)
+        directory_sync = pack.index('os.fsync(directory_fd)', directory_open)
+        directory_close = pack.index('os.close(directory_fd)', directory_sync)
+        cleanup = pack.index('except BaseException:', directory_close)
+        self.assertLess(publish, metadata_verify)
+        self.assertLess(metadata_verify, integrity)
+        self.assertLess(integrity, directory_open)
+        self.assertLess(directory_open, directory_sync)
+        self.assertLess(directory_sync, directory_close)
+        self.assertLess(directory_close, cleanup)
+        self.assertIn('private trainer manifest verification failed', pack)
+
+
 if __name__ == "__main__":
     unittest.main()
