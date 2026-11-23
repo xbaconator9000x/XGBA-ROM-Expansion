@@ -373,6 +373,8 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
     return TRUE;
 }
 '''.replace("XGBA_BATTLE_PAGE_API", page_api.resolve().as_posix())
+    signature = "void DecompressTrainerFrontPic(enum TrainerPicID trainerPicId, enum BattlerId battler)"
+    text = _one(original, signature, bridge + "\n" + signature, "trainer loader ABI")
     # Battle sprite allocation and teardown are authentic phase boundaries.
     # Do not retain a fieldmap/tileset lease into battle heap allocation, or
     # leave a trainer page resident when battle sprite data is freed.
@@ -381,8 +383,6 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
         text = _one(text, entry,
                     entry + "\n    XgbaExpansionPageRelease();",
                     f"{signature_name} phase lease boundary")
-    signature = "void DecompressTrainerFrontPic(enum TrainerPicID trainerPicId, enum BattlerId battler)"
-    text = _one(original, signature, bridge + "\n" + signature, "trainer loader ABI")
     call = "    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);"
     return _one(text, call,
                 "    if (!XgbaExpansionTryTrainerPic(trainerPicId, GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]))\n    " + call,
