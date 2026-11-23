@@ -683,7 +683,7 @@ class ExpansionSourceTests(unittest.TestCase):
         transfer = patched.split("static bool8 XgbaExpansionTryTrainerPic", 1)[1].split(
             "void DecompressTrainerFrontPic", 1)[0]
         witness = transfer.index("XgbaExpansionTrainerTransfer(id, dest, bytes);")
-        post_residency = transfer.index("if (XgbaExpansionPageResidentBytes() != 0u", witness)
+        post_residency = transfer.index("|| XgbaExpansionPageResidentBytes() != 0u", witness)
         post_release = transfer.index("XgbaExpansionPageRelease();", post_residency)
         post_hash = transfer.index("u32 witnessedHash = 2166136261u;", post_release)
         fail_closed = transfer.index("if (witnessedHash != destinationHash)", post_hash)
