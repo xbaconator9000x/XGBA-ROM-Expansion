@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -141,6 +142,7 @@ def build(source, target, output, base_manifest=None):
                 resources.append({"id": identifier, "offset": offset,
                                   "length": len(raw), "sha256": hashlib.sha256(raw).hexdigest()})
             handle.flush()
+            os.fsync(handle.fileno())
         # Re-open the completed private pack before publishing its manifest.
         # A short or corrupted write must never become an advertised MMIO
         # resource; the original game graphics loader remains the fallback.
@@ -160,6 +162,8 @@ def build(source, target, output, base_manifest=None):
         with manifest.open("x", encoding="utf-8") as handle:
             created_manifest = True
             handle.write(json.dumps(record, indent=2, sort_keys=True) + "\n")
+            handle.flush()
+            os.fsync(handle.fileno())
     except BaseException:
         # Never delete a pre-existing file when exclusive creation failed.
         # The manifest is published last, after the entire private data pack.
