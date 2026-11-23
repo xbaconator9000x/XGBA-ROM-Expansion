@@ -269,6 +269,16 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
                 return FALSE;
             }
             CpuCopy32(page + offset, (u8 *)dest + offset, chunk);
+            /* A page replacement during CpuCopy32 invalidates the source
+             * pointer immediately. Check the lease BEFORE dereferencing it
+             * for chunk verification, not only after comparing bytes. */
+            if (XgbaExpansionPageGeneration() != generation
+                || XgbaExpansionPageData() != page
+                || XgbaExpansionPageResidentBytes() != bytes)
+            {
+                XgbaExpansionPageRelease();
+                return FALSE;
+            }
             /* Check the completed chunk before proceeding to the next one.
              * This catches an in-place page rewrite or torn destination at
              * the first boundary, instead of copying further untrusted data.
