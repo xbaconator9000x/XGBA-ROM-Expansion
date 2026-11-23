@@ -113,7 +113,10 @@ def build(source, target, output, base_manifest=None):
                     digest = entry["sha256"]
                 except KeyError as exc:
                     raise SourceAssetError("incomplete base resource entry") from exc
+                # Inherited pages must never impersonate trainer graphics.
+                # Only this pinned source generator may publish trainer IDs.
                 if (not isinstance(identifier, str) or not identifier
+                    or identifier.startswith("rhh.trainer.")
                     or identifier in seen or type(offset) is not int
                     or type(length) is not int or offset < START
                     or not 0 < length <= 16384 or offset + length > file_size
