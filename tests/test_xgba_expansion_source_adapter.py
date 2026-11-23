@@ -310,7 +310,7 @@ class ExpansionSourceTests(unittest.TestCase):
         patched = adapter.patched_battle_graphics(original)
         transfer = patched.split("static bool8 XgbaExpansionTryTrainerPic", 1)[1].split(
             "void DecompressTrainerFrontPic", 1)[0]
-        release = transfer.rindex("XgbaExpansionPageRelease();")
+        release = transfer.index("    XgbaExpansionPageRelease();\n    /* A release must advance")
         post_release = transfer.index("u32 releasedHash = 2166136261u;", release)
         reject = transfer.index("if (releasedHash != destinationHash)", post_release)
         witness = transfer.index("XgbaExpansionTrainerTransfer(id, dest, bytes);", reject)
@@ -533,7 +533,7 @@ class ExpansionSourceTests(unittest.TestCase):
             (self.root / "src/battle_gfx_sfx_util.c").read_text())
         transfer = patched.split("static bool8 XgbaExpansionTryTrainerPic", 1)[1].split(
             "void DecompressTrainerFrontPic", 1)[0]
-        release = transfer.rindex("    XgbaExpansionPageRelease();")
+        release = transfer.index("    XgbaExpansionPageRelease();\n    /* A release must advance")
         resident = transfer.index("if (XgbaExpansionPageResidentBytes() != 0u", release)
         data = transfer.index("|| XgbaExpansionPageData() != NULL", resident)
         integrity = transfer.index("u32 releasedHash = 2166136261u;", data)
