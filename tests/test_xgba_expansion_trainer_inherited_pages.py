@@ -69,9 +69,9 @@ class TrainerInheritedPageContract(unittest.TestCase):
         self.assertIn("if created_data and data.exists():", source)
         self.assertIn("data.unlink()", source)
         self.assertLess(source.index('with private_create(data)'),
-                        source.index('with manifest.open("x"'))
+                        source.index('with private_create(manifest, text=True)'))
         self.assertLess(source.index("handle.flush()"),
-                        source.index('with manifest.open("x"'))
+                        source.index('with private_create(manifest, text=True)'))
 
 
 if __name__ == "__main__":
