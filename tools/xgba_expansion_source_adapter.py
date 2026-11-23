@@ -319,11 +319,16 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
         if (releasedHash != destinationHash)
             return FALSE;
     }
+    /* A witness can acquire and release another page without leaving any
+     * resident bytes behind. Capture the released generation so even this
+     * transient reentry invalidates the completed graphics transfer. */
+    u32 releasedGeneration = XgbaExpansionPageGeneration();
     XgbaExpansionTrainerTransfer(id, dest, bytes);
     /* The transfer witness is observational, not a new owner of the shared
      * MMIO page. A reentrant witness may acquire another page or alter the
      * engine-owned destination; neither may escape into battle rendering. */
-    if (XgbaExpansionPageResidentBytes() != 0u
+    if (XgbaExpansionPageGeneration() != releasedGeneration
+        || XgbaExpansionPageResidentBytes() != 0u
         || XgbaExpansionPageData() != NULL)
     {
         XgbaExpansionPageRelease();
