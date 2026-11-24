@@ -10,6 +10,18 @@
 #define XGBA_EXPANSION_NATIVE_H
 
 
+enum {
+    RHH_TRAINER_COUNT = 140,
+    RHH_TRAINER_BYTES = 144,
+    RHH_TRAINER_LAST_ID = 148,
+    RHH_TRAINER_HASH = 152,
+    RHH_TRAINER_GENERATION = 156,
+    RHH_TRAINER_RESIDENT = 160,
+    RHH_TRAINER_ATTEMPTS = 164,
+    RHH_TRAINER_ATTEMPT_ID = 168,
+    RHH_TRAINER_PROOF_END = 172
+};
+
 static uint32_t xgba_expansion_source_hash(const struct ResourceFile *resource,
                                             const char *prefix,
                                             uint32_t expected_bytes)
@@ -214,5 +226,64 @@ static void xgba_expansion_native_run(struct mCore *core, uint32_t probe,
            "zero_disabled_reads=%d lcd=%s\n",
            target,enabled,device->successful_reads,used,ticks,
            !enabled?resource->reads==0:1,path);
+}
+
+/* Native acceptance for the original RHH trainer battle graphics loader.
+ * The guest alone reaches DecompressTrainerFrontPic; the host only observes
+ * guest witnesses, provider counters and the real LCD. */
+static void xgba_expansion_native_trainer_battle(struct mCore *core,
+        uint32_t probe, const char *target, const char *directory,
+        const struct XgbaGbaDevice *device,
+        const struct ResourceFile *resource, int enabled)
+{
+    if (!target || !directory || probe<0x02000000u ||
+        probe>0x02040000u-RHH_TRAINER_PROOF_END || (probe&3u))
+        fail("RHH trainer battle proof must be aligned actual game EWRAM");
+    if (core->busRead32(core,probe+RHH_TRAINER_ATTEMPTS)<1u)
+        fail("RHH guest never entered the original trainer battle graphics loader");
+    core->setKeys(core,0u);
+    for (unsigned i=0;i<120u;++i)
+        core->runFrame(core);
+    const uint32_t attempts=core->busRead32(core,probe+RHH_TRAINER_ATTEMPTS);
+    const uint32_t attempt_id=core->busRead32(core,probe+RHH_TRAINER_ATTEMPT_ID);
+    const uint32_t count=core->busRead32(core,probe+RHH_TRAINER_COUNT);
+    const uint32_t bytes=core->busRead32(core,probe+RHH_TRAINER_BYTES);
+    const uint32_t last_id=core->busRead32(core,probe+RHH_TRAINER_LAST_ID);
+    const uint32_t hash=core->busRead32(core,probe+RHH_TRAINER_HASH);
+    const uint32_t generation=core->busRead32(core,probe+RHH_TRAINER_GENERATION);
+    const uint32_t resident=core->busRead32(core,probe+RHH_TRAINER_RESIDENT);
+    if (device->failed_reads)
+        fail("RHH trainer battle provider reported a failed read");
+    if (enabled) {
+        char id[24];
+        if (count<1u || count>attempts || bytes!=count*2048u ||
+            (last_id!=3u && last_id!=4u && last_id!=11u && last_id!=105u) ||
+            resident!=0u || generation<1u)
+            fail("RHH trainer battle external transfer witness invalid");
+        if (snprintf(id,sizeof(id),"rhh.trainer.%04x",last_id)>=(int)sizeof(id))
+            fail("RHH trainer source ID format exceeds host space");
+        if (hash!=xgba_expansion_source_hash(resource,id,2048u))
+            fail("RHH trainer battle sprite differs from verified source page");
+        if (device->successful_reads<count || resource->reads<count)
+            fail("RHH trainer battle provider reads do not cover transfers");
+    } else if (count || bytes || hash || last_id || device->successful_reads ||
+               resource->reads || resource->lookups) {
+        fail("RHH disabled trainer battle used the external provider");
+    }
+    char path[1024];
+    if (snprintf(path,sizeof(path),"%s/rhh-%s-trainer-battle-%s.png",directory,
+                 target,enabled?"external":"fallback")>=(int)sizeof(path))
+        fail("RHH trainer battle screenshot path exceeds limit");
+    const void *pixels=NULL;
+    size_t stride=0u;
+    core->getPixels(core,&pixels,&stride);
+    if (!pixels || stride<240u)
+        fail("RHH trainer battle LCD framebuffer unattached");
+    save_native_frame(core,path);
+    printf("PASS_XGBA_RHH_NATIVE_TRAINER_BATTLE target=%s enabled=%d "
+           "attempts=%u attempt_id=%u transfers=%u trainer_bytes=%u "
+           "trainer_id=%u trainer_hash=%08x provider_reads=%u real_lcd=%s\n",
+           target,enabled,attempts,attempt_id,count,bytes,last_id,hash,
+           device->successful_reads,path);
 }
 #endif

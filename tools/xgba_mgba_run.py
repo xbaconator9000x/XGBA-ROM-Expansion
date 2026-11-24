@@ -28,7 +28,7 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
            r12_dir=None, r13_dir=None, r14_dir=None,
            r15_dir=None, r15_savefile=None, r15_phase=None, r15_save_probe=0,
            r16_emerald_dir=None, expansion_dir=None, expansion_target=None,
-           expansion_overworld=False,
+           expansion_overworld=False, expansion_trainer_battle=False,
            r17_emerald_map_dir=None,
            r18_dir=None, r18_savefile=None, r18_phase=None, r18_save_probe=0,
            r19_connected_dir=None, r19_route_offset=0, r19_route_length=0,
@@ -175,8 +175,12 @@ def launch(rom, manifest_path, resource_id, *, emulator, frames=600,
         if r16_emerald_dir is not None or r15_dir is not None or r17_emerald_map_dir is not None:
             raise ValueError("RHH and earlier game proof modes are exclusive")
         cmd.extend(["--expansion-dir",str(directory),"--expansion-target",expansion_target])
+        if expansion_overworld and expansion_trainer_battle:
+            raise ValueError("RHH overworld and trainer battle modes are exclusive")
         if expansion_overworld:
             cmd.append("--expansion-overworld")
+        if expansion_trainer_battle:
+            cmd.append("--expansion-trainer-battle")
     if r16_emerald_dir is not None:
         directory=Path(r16_emerald_dir).resolve()
         if not directory.is_dir():

@@ -81,7 +81,9 @@ struct XgbaExpansionProof {
     volatile u32 battle_trainer_hash;
     volatile u32 battle_trainer_generation;
     volatile u32 battle_trainer_resident;
-
+    /* Counts every entry of the original trainer-pic loader, enabled or not. */
+    volatile u32 battle_attempt_count;
+    volatile u32 battle_attempt_last_id;
 };
 
 /* Small metadata only. The 16KiB payload itself resides inside the
@@ -238,6 +240,12 @@ void XgbaExpansionTrainerTransfer(u32 id, const void *dest, u32 bytes)
     gXgbaExpansionProof.battle_trainer_hash = hash;
     gXgbaExpansionProof.battle_trainer_generation = XgbaExpansionPageGeneration();
     gXgbaExpansionProof.battle_trainer_resident = XgbaExpansionPageResidentBytes();
+}
+
+void XgbaExpansionTrainerAttempt(u32 id)
+{
+    ++gXgbaExpansionProof.battle_attempt_count;
+    gXgbaExpansionProof.battle_attempt_last_id = id;
 }
 
 static void XgbaExpansionProbeBoot(void)

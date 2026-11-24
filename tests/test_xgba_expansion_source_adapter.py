@@ -1,5 +1,6 @@
 """Source-safe regression tests for the RHH Emerald/FireRed/LeafGreen adapter."""
 import sys
+import re
 from pathlib import Path
 import tempfile
 import unittest
@@ -793,6 +794,54 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertLess(overlap, read)
         self.assertLess(read, publish)
         self.assertIn('raise SourceAssetError("invalid, overlapping or duplicate base resource")', pack)
+
+    def test_original_trainer_loader_reports_attempts_before_provider_or_fallback(self):
+        path = self.root / "src/battle_gfx_sfx_util.c"
+        original = path.read_text()
+        with adapter.patched_source(self.root, "firered"):
+            patched = path.read_text()
+        self.assertEqual(patched.count("XgbaExpansionTrainerAttempt(trainerPicId);"), 1)
+        self.assertLess(patched.index("XgbaExpansionTrainerAttempt(trainerPicId);"),
+                        patched.index("if (!XgbaExpansionTryTrainerPic(trainerPicId"))
+        self.assertLess(patched.index("if (!XgbaExpansionTryTrainerPic(trainerPicId"),
+                        patched.index("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)"))
+        self.assertEqual(path.read_text(), original)
+        probe = (adapter.ROOT / "integration/expansion/xgba_expansion_probe.inc").read_text()
+        self.assertIn("void XgbaExpansionTrainerAttempt(u32 id)", probe)
+        self.assertLess(probe.index("battle_trainer_resident;"), probe.index("battle_attempt_count;"))
+
+    def test_native_trainer_battle_harness_is_guest_driven_and_offsets_match_proof(self):
+        header = (adapter.ROOT / "integration/mgba/xgba_expansion_native.h").read_text()
+        headless = (adapter.ROOT / "integration/mgba/xgba_mgba_headless.c").read_text()
+        launcher = (adapter.ROOT / "tools/xgba_mgba_run.py").read_text()
+        acceptance = (adapter.ROOT / "tools/xgba_expansion_native_acceptance.py").read_text()
+        probe = (adapter.ROOT / "integration/expansion/xgba_expansion_probe.inc").read_text()
+        body = header.split("xgba_expansion_native_trainer_battle(", 1)[1]
+        for fragment in ("PASS_XGBA_RHH_NATIVE_TRAINER_BATTLE",
+                         "never entered the original trainer battle graphics loader",
+                         "resource->reads<count", "disabled trainer battle used the external provider",
+                         "xgba_expansion_source_hash(resource,id,2048u)"):
+            self.assertIn(fragment, body)
+        self.assertNotIn("busWrite", body)
+        fields = re.search(r"struct XgbaExpansionProof \{(.*?)\n\};", probe, re.S).group(1)
+        names = re.findall(r"volatile u32 (\w+);", fields)
+        for enum, name in (("RHH_TRAINER_COUNT", "battle_trainer_count"),
+                           ("RHH_TRAINER_HASH", "battle_trainer_hash"),
+                           ("RHH_TRAINER_RESIDENT", "battle_trainer_resident"),
+                           ("RHH_TRAINER_ATTEMPTS", "battle_attempt_count"),
+                           ("RHH_TRAINER_ATTEMPT_ID", "battle_attempt_last_id")):
+            offset = int(re.search(enum + r" = (\d+)", header).group(1))
+            self.assertEqual(offset, 4 * names.index(name))
+        self.assertIn("--expansion-trainer-battle", headless)
+        self.assertIn("--expansion-trainer-battle", launcher)
+        self.assertIn("trainer_battle=trainer_battle", acceptance.replace("expansion_", ""))
+        self.assertIn("PASS_XGBA_RHH_NATIVE_TRAINER_BATTLE", acceptance)
+
+    def test_trainer_battle_acceptance_is_exclusive_of_map_modes(self):
+        acceptance = (adapter.ROOT / "tools/xgba_expansion_native_acceptance.py").read_text()
+        guard = acceptance.index("if trainer_battle and (map_smoke or overworld_play):")
+        self.assertIn("exclusive", acceptance[guard:guard + 200])
+        self.assertLess(guard, acceptance.index("adapter.require_release_tag"))
 
 
 if __name__ == "__main__":

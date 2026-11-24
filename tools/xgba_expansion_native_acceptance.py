@@ -54,9 +54,12 @@ def verify_elf_probe(source: Path, target: str) -> tuple[Path, int]:
 
 
 def prove(source: Path, mgba: Path, target: str, output: Path, *,
-          map_smoke: bool = False, overworld_play: bool = False) -> dict:
+          map_smoke: bool = False, overworld_play: bool = False,
+          trainer_battle: bool = False) -> dict:
     if map_smoke and overworld_play:
         raise ValueError("Overworld play and isolated map smoke cannot run together")
+    if trainer_battle and (map_smoke or overworld_play):
+        raise ValueError("Trainer battle acceptance is exclusive of map and overworld modes")
     if target not in adapter.TARGETS:
         raise ValueError("Unrecognized expanded game variant")
     source = source.resolve()
@@ -124,7 +127,7 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
     # Supply authentic trainer pages for both native field-loader and playable
     # navigation acceptance. They remain separate from the original map pages;
     # the host provider can serve both through the existing 16-KiB lease.
-    if map_smoke or overworld_play:
+    if map_smoke or overworld_play or trainer_battle:
         trainer_manifest = sidecar.load_manifest(trainer_pages.build(
             source, target, output / "private-source" / "trainers"))
         seen = {entry["id"] for entry in page_entries}
@@ -162,11 +165,16 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
             frames=1200, probe_address=proof_address,
             expansion_dir=output, expansion_target=target,
             expansion_overworld=overworld_play,
+            expansion_trainer_battle=trainer_battle,
             disabled=not enabled,
             extra_resource_ids=tuple(entry["id"] for entry in page_entries))
         label = "enabled" if enabled else "disabled"
-        if overworld_play:
-            expected = (f"PASS_RHH_REAL_OVERWORLD_NATIVE "
+        if trainer_battle:
+            expected = (f"PASS_XGBA_RHH_NATIVE_TRAINER_BATTLE "
+                        f"target={target} enabled={int(enabled)}")
+            if expected not in proc.stdout:
+                raise AssertionError(f"native {target} {label} trainer battle acceptance failed")
+        elif overworld_play: = (f"PASS_RHH_REAL_OVERWORLD_NATIVE "
                         f"target={target} enabled={int(enabled)}")
             if expected not in proc.stdout:
                 raise AssertionError(f"native {target} {label} real player-controlled route acceptance failed")
@@ -180,7 +188,9 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
                         f"target={target} enabled={int(enabled)}")
             if expected not in proc.stdout or "page_intact_after_frames=1" not in proc.stdout:
                 raise AssertionError(f"native {target} {label} protected-page proof not accepted")
-        captures = ([output / f"rhh-{target}-{'external' if enabled else 'fallback'}-{stage}.png"
+        captures = ([output / f"rhh-{target}-trainer-battle-{'external' if enabled else 'fallback'}.png"]
+                    if trainer_battle else
+                    [output / f"rhh-{target}-{'external' if enabled else 'fallback'}-{stage}.png"
                      for stage in ("00-initial-real-town","01-dpad-movement","02-after-north")]
                     if overworld_play else [output / f"expansion-{target}-{label}.png"])
         from PIL import Image
@@ -222,7 +232,10 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
         "actual_lcd_frames": 6 if overworld_play else 2,
         "native_enabled": outputs["enabled"],
         "native_disabled": outputs["disabled"],
-        "not_proven": ("scripted NPC interactions, battles and Flash cold restart"
+        "native_trainer_battle_verified": trainer_battle,
+        "not_proven": ("native trainer battle graphics only; no scripted battle flow or Flash save"
+                       if trainer_battle else
+                       "scripted NPC interactions, battles and Flash cold restart"
                        if overworld_play else
                        "native playable map transition/render, NPCs, battle sprites or Flash save"),
     }
@@ -232,7 +245,7 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
     # generated private-style sidecar and manifest remain transient.
     external.unlink()
     manifest.unlink()
-    if map_smoke or overworld_play:
+    if map_smoke or overworld_play or trainer_battle:
         shutil.rmtree(output / "private-source")
     shutil.rmtree(build)
     return report
@@ -246,10 +259,12 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--map-smoke", action="store_true")
     parser.add_argument("--overworld-play", action="store_true")
+    parser.add_argument("--trainer-battle", action="store_true")
     args = parser.parse_args()
     report = prove(args.source, args.mgba, args.target, args.output,
                    map_smoke=args.map_smoke,
-                   overworld_play=args.overworld_play)
+                   overworld_play=args.overworld_play,
+                   trainer_battle=args.trainer_battle)
     print("PASS_XGBA_RHH_NATIVE_INTEGRATION",
           report["target"], report["upstream_sha"],
           report["native_mgba_sha"])

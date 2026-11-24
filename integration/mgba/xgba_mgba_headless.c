@@ -547,6 +547,7 @@ int main(int argc, char **argv)
     const char *expansion_dir = NULL;
     const char *expansion_target = NULL;
     int expansion_overworld = 0;
+    int expansion_trainer_battle = 0;
     const char *r24_dir = NULL;
     uint64_t r24_probe = 0;
     int r24_firered = 0;
@@ -618,6 +619,8 @@ int main(int argc, char **argv)
             expansion_target = argv[i];
         else if (!strcmp(argv[i], "--expansion-overworld") && !expansion_overworld)
             expansion_overworld = 1;
+        else if (!strcmp(argv[i], "--expansion-trainer-battle") && !expansion_trainer_battle)
+            expansion_trainer_battle = 1;
         else if (!strcmp(argv[i], "--r17-emerald-map-dir") && ++i < argc && !r17_dir)
             r17_dir = argv[i];
         else if (!strcmp(argv[i], "--r18-dir") && ++i < argc && !r18_dir)
@@ -803,7 +806,10 @@ int main(int argc, char **argv)
             core->busRead32(core,(uint32_t)probe+RHH_LIVE_STATE)==1u &&
             core->busRead32(core,(uint32_t)probe+RHH_LIVE_FRAMES)>35u)
             break;
-        if (expansion_dir && !expansion_overworld && probe &&
+        if (expansion_trainer_battle && probe &&
+            core->busRead32(core,(uint32_t)probe+RHH_TRAINER_ATTEMPTS)>0u)
+            break;
+        if (expansion_dir && !expansion_overworld && !expansion_trainer_battle && probe &&
             core->busRead32(core,(uint32_t)probe+
                 (resource.extra_count?44u:8u))==3u)
             break;
@@ -824,6 +830,8 @@ int main(int argc, char **argv)
     if (r24_dir && (!r24_probe || r24_probe>UINT32_MAX ||
          r16_dir || r17_dir || r19_dir || r19_battle_dir))
         fail("R24 requires bounded original Emerald ELF proof and exclusive mode");
+    if (expansion_trainer_battle && (!expansion_dir || expansion_overworld))
+        fail("RHH trainer battle mode needs the exclusive expansion native proof");
     if (expansion_dir && (!expansion_target || !probe || probe > UINT32_MAX ||
          r16_dir || r17_dir || r18_dir || r19_dir || r19_battle_dir ||
          r15_dir || r24_dir || r43_probe || r45_probe || r10_dir || r12_dir))
@@ -856,7 +864,10 @@ int main(int argc, char **argv)
         xgba_r24_boundary_run(core,r24_firered?0u:(uint32_t)probe,(uint32_t)r24_probe,
                               r24_dir,&device,&resource,enabled);
     } else if (expansion_dir) {
-        if (expansion_overworld)
+        if (expansion_trainer_battle)
+            xgba_expansion_native_trainer_battle(core,(uint32_t)probe,expansion_target,
+                                                 expansion_dir,&device,&resource,enabled);
+        else if (expansion_overworld)
             xgba_expansion_native_overworld(core,(uint32_t)probe,expansion_target,
                                             expansion_dir,&device,&resource,enabled);
         else
