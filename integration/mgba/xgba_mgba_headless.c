@@ -807,7 +807,9 @@ int main(int argc, char **argv)
             core->busRead32(core,(uint32_t)probe+RHH_LIVE_FRAMES)>35u)
             break;
         if (expansion_trainer_battle && probe &&
-            core->busRead32(core,(uint32_t)probe+RHH_TRAINER_ATTEMPTS)>0u)
+            core->busRead32(core,(uint32_t)probe+RHH_BATTLE_FLOW)==2u &&
+            core->busRead32(core,(uint32_t)probe+RHH_BATTLE_SPRITE_ARRIVED) &&
+            core->busRead32(core,(uint32_t)probe+RHH_BATTLE_SPRITE_VISIBLE))
             break;
         if (expansion_dir && !expansion_overworld && !expansion_trainer_battle && probe &&
             core->busRead32(core,(uint32_t)probe+

@@ -84,6 +84,17 @@ struct XgbaExpansionProof {
     /* Counts every entry of the original trainer-pic loader, enabled or not. */
     volatile u32 battle_attempt_count;
     volatile u32 battle_attempt_last_id;
+    /* Original-engine trainer battle witnesses (--trainer-battle only). */
+    volatile u32 battle_flow_state;       /* 1 original start called; 2 BattleMainCB2 running */
+    volatile u32 battle_opponent_id;      /* TRAINER_BATTLE_PARAM.opponentA at entry */
+    volatile u32 battle_main_frames;      /* frames spent in the real BattleMainCB2 */
+    volatile u32 battle_sprite_pic;       /* TrainerPicID of the live opponent sprite */
+    volatile u32 battle_sprite_arrived;   /* sprite finished its original slide-in */
+    volatile u32 battle_sprite_visible;   /* sprite is on screen this frame */
+    volatile u32 battle_fallback_count;   /* original decompressor ran for a trainer pic */
+    volatile u32 battle_fallback_hash;    /* FNV-1a over original-decompressed tiles */
+    volatile u32 battle_fallback_id;
+    volatile u32 battle_fallback_bytes;
 };
 
 /* Small metadata only. The 16KiB payload itself resides inside the
@@ -246,6 +257,20 @@ void XgbaExpansionTrainerAttempt(u32 id)
 {
     ++gXgbaExpansionProof.battle_attempt_count;
     gXgbaExpansionProof.battle_attempt_last_id = id;
+}
+
+/* Witness the tiles produced by the ORIGINAL decompressor (fallback path). */
+void XgbaExpansionTrainerFallback(u32 id, const void *dest, u32 bytes)
+{
+    const u8 *data = dest;
+    u32 hash = 2166136261u;
+    u32 i;
+    for (i = 0; i < bytes; ++i)
+        hash = (hash ^ data[i]) * 16777619u;
+    ++gXgbaExpansionProof.battle_fallback_count;
+    gXgbaExpansionProof.battle_fallback_id = id;
+    gXgbaExpansionProof.battle_fallback_bytes = bytes;
+    gXgbaExpansionProof.battle_fallback_hash = hash;
 }
 
 static void XgbaExpansionProbeBoot(void)

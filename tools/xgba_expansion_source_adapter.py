@@ -385,7 +385,24 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
 }
 '''.replace("XGBA_BATTLE_PAGE_API", page_api.resolve().as_posix())
     signature = "void DecompressTrainerFrontPic(enum TrainerPicID trainerPicId, enum BattlerId battler)"
-    text = _one(original, signature, bridge + "\n" + signature, "trainer loader ABI")
+    fallback_note = r'''
+extern void XgbaExpansionTrainerFallback(u32 id, const void *dest, u32 bytes);
+/* Observe what the ORIGINAL decompressor produced, so the disabled build is
+ * proven to emit the same authentic tiles as the external source. */
+static void XgbaExpansionNoteTrainerFallback(u32 id, const u32 *original, const void *dest)
+{
+    u32 bytes;
+    if (!original || !dest || (u32)original < 0x08000000u
+        || (u32)original > 0x0A000000u - 4u || ((const u8 *)original)[0] != 0x10u)
+        return;
+    bytes = ((const u8 *)original)[1]
+          | ((u32)((const u8 *)original)[2] << 8)
+          | ((u32)((const u8 *)original)[3] << 16);
+    if (bytes == 64u * 64u / 2u)
+        XgbaExpansionTrainerFallback(id, dest, bytes);
+}
+'''
+    text = _one(original, signature, bridge + fallback_note + "\n" + signature, "trainer loader ABI")
     # Battle sprite allocation and teardown are authentic phase boundaries.
     # Do not retain a fieldmap/tileset lease into battle heap allocation, or
     # leave a trainer page resident when battle sprite data is freed.
@@ -410,7 +427,10 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
     call = "    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);"
     return _one(text, call,
                 "    XgbaExpansionTrainerAttempt(trainerPicId);\n"
-                "    if (!XgbaExpansionTryTrainerPic(trainerPicId, GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]))\n    " + call,
+                "    if (!XgbaExpansionTryTrainerPic(trainerPicId, GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]))\n"
+                "    {\n    " + call + "\n"
+                "        XgbaExpansionNoteTrainerFallback(trainerPicId, GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);\n"
+                "    }",
                 "trainer graphics fallback")
 
 
@@ -426,7 +446,7 @@ def patched_save_heap(original: str) -> str:
                 "save relocation heap lease")
 
 
-def patched_overworld(original: str) -> str:
+def patched_overworld(original: str, trainer_battle: bool = False) -> str:
     """Test-only direct new-game entry followed by unmodified overworld input."""
     test_start = """    XgbaExpansionLiveStage(2u);
     NewGameInitData();
@@ -481,6 +501,7 @@ def patched_overworld(original: str) -> str:
                 "    XgbaExpansionGraphicsPoll();\n"
                 "    XgbaExpansionLiveTick(gMapHeader.mapLayoutId,\n"
                 "        gSaveBlock1Ptr->pos.x, gSaveBlock1Ptr->pos.y);\n"
+                + ("    XgbaExpansionTrainerBattleTick();\n" if trainer_battle else "") +
                 "    if (fading)\n",
                 "actual overworld movement callback")
     text = _one(text,
@@ -492,12 +513,15 @@ def patched_overworld(original: str) -> str:
                 "void CB2_Overworld(void)\n{",
                 "extern void XgbaExpansionGraphicsPoll(void);\n"
                 "extern void XgbaExpansionLiveTick(u32 layout, s32 x, s32 y);\n"
+                + ("extern void XgbaExpansionTrainerBattleTick(void);\n" if trainer_battle else "") +
                 "void CB2_Overworld(void)\n{",
                 "external witness declaration")
 
 
 def patched_main(original: str, header: Path, probe: str, *, map_smoke: bool = False,
-                 overworld_play: bool = False) -> str:
+                 overworld_play: bool = False, trainer_battle: bool = False) -> str:
+    if trainer_battle and (map_smoke or not overworld_play):
+        raise ExpansionDrift("trainer battle needs the original field flow and no map smoke")
     header_name = header.resolve().as_posix()
     if '"' in header_name or "\n" in header_name:
         raise ExpansionDrift("unsafe header path")
@@ -511,6 +535,11 @@ def patched_main(original: str, header: Path, probe: str, *, map_smoke: bool = F
         raise ExpansionDrift("unsafe page API header path")
     probe = (probe.replace("__XGBA_SHARED_GUEST__", header_name)
                   .replace("__XGBA_PAGE_API__", page_api_name))
+    if trainer_battle:
+        battle_inc = ROOT / "integration/expansion/xgba_expansion_trainer_battle.inc"
+        if not battle_inc.is_file():
+            raise ExpansionDrift("XGBA trainer battle entry source unavailable")
+        probe += "\n" + battle_inc.read_text(encoding="utf-8")
     text = _one(original,
                 "void AgbMain(void)\n{",
                 probe + "\nextern void XgbaExpansionGraphicsPoll(void);\nvoid AgbMain(void)\n{",
@@ -527,7 +556,10 @@ def patched_main(original: str, header: Path, probe: str, *, map_smoke: bool = F
                 "    InitHeap(gHeap, HEAP_SIZE);",
                 boot,
                 "post-heap initialization")
-    tick = "    XgbaExpansionProbeTick();\n    XgbaExpansionGraphicsPoll();\n    ReadKeys();"
+    tick = "    XgbaExpansionProbeTick();\n    XgbaExpansionGraphicsPoll();\n"
+    if trainer_battle:
+        tick += "    XgbaExpansionTrainerBattleWitness();\n"
+    tick += "    ReadKeys();"
     if overworld_play:
         # AgbMain continues configuring callbacks after InitHeap. Scheduling
         # CB2_NewGame there can be overwritten by subsequent boot setup.
@@ -554,10 +586,13 @@ def patched_main(original: str, header: Path, probe: str, *, map_smoke: bool = F
 
 @contextmanager
 def patched_source(source: Path, target: str, *, map_smoke: bool = False,
-                   overworld_play: bool = False):
+                   overworld_play: bool = False, trainer_battle: bool = False):
     """Apply only during build; reliably restore upstream source afterwards."""
     if map_smoke and overworld_play:
         raise ExpansionDrift("native map smoke and playable overworld are mutually exclusive")
+    if trainer_battle and (map_smoke or overworld_play):
+        raise ExpansionDrift("native trainer battle is exclusive of map smoke and overworld play")
+    field_flow = overworld_play or trainer_battle
     report = validate_source(source, target)
     path = source / "src/main.c"
     fieldmap_path = source / "src/fieldmap.c"
@@ -571,23 +606,25 @@ def patched_source(source: Path, target: str, *, map_smoke: bool = False,
     save_heap_before = save_heap_path.read_text(encoding="utf-8")
     before = path.read_text(encoding="utf-8")
     fieldmap_before = fieldmap_path.read_text(encoding="utf-8")
-    overworld_before = overworld_path.read_text(encoding="utf-8") if overworld_play else None
+    overworld_before = overworld_path.read_text(encoding="utf-8") if field_flow else None
     header = ROOT / "integration/fire_red/xgba_guest.h"
     probe_path = ROOT / "integration/expansion/xgba_expansion_probe.inc"
     if not header.is_file() or not probe_path.is_file():
         raise ExpansionDrift("XGBA shared ABI/probe source unavailable")
     after = patched_main(before, header, probe_path.read_text(encoding="utf-8"),
-                         map_smoke=map_smoke, overworld_play=overworld_play)
+                         map_smoke=map_smoke, overworld_play=field_flow,
+                         trainer_battle=trainer_battle)
     fieldmap_after = patched_fieldmap(fieldmap_before)
     save_heap_after = patched_save_heap(save_heap_before)
-    overworld_after = patched_overworld(overworld_before) if overworld_play else None
+    overworld_after = (patched_overworld(overworld_before, trainer_battle=trainer_battle)
+                       if field_flow else None)
     try:
         path.write_text(after, encoding="utf-8")
         fieldmap_path.write_text(fieldmap_after, encoding="utf-8")
         save_heap_path.write_text(save_heap_after, encoding="utf-8")
         if battle_after is not None:
             battle_path.write_text(battle_after, encoding="utf-8")
-        if overworld_play:
+        if field_flow:
             overworld_path.write_text(overworld_after, encoding="utf-8")
         yield report
     finally:
@@ -596,7 +633,7 @@ def patched_source(source: Path, target: str, *, map_smoke: bool = False,
         save_heap_path.write_text(save_heap_before, encoding="utf-8")
         if battle_before is not None:
             battle_path.write_text(battle_before, encoding="utf-8")
-        if overworld_play:
+        if field_flow:
             overworld_path.write_text(overworld_before, encoding="utf-8")
 
 
@@ -620,6 +657,8 @@ def main() -> int:
                    help="opt-in actual original map and tileset loader test at boot")
     p.add_argument("--overworld-play", action="store_true",
                    help="opt-in real game new-game callback and physical mGBA D-pad test")
+    p.add_argument("--trainer-battle", action="store_true",
+                   help="opt-in original-engine trainer battle entered from the real overworld")
     p.add_argument("--build", action="store_true",
                    help="build the temporary patched upstream source")
     p.add_argument("--require-tag", default=None,
@@ -638,9 +677,11 @@ def main() -> int:
         report["release_tag"] = required_tag
     report["map_smoke_requested"] = bool(args.map_smoke)
     report["overworld_play_requested"] = bool(args.overworld_play)
+    report["trainer_battle_requested"] = bool(args.trainer_battle)
     if args.build:
         with patched_source(source, args.target, map_smoke=args.map_smoke,
-                            overworld_play=args.overworld_play):
+                            overworld_play=args.overworld_play,
+                            trainer_battle=args.trainer_battle):
             subprocess.run(["make", args.target, "-j2"], cwd=source, check=True)
         report["source_build_passed"] = True
     else:

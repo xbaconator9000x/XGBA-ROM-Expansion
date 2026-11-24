@@ -818,9 +818,10 @@ class ExpansionSourceTests(unittest.TestCase):
         probe = (adapter.ROOT / "integration/expansion/xgba_expansion_probe.inc").read_text()
         body = header.split("xgba_expansion_native_trainer_battle(", 1)[1]
         for fragment in ("PASS_XGBA_RHH_NATIVE_TRAINER_BATTLE",
-                         "never entered the original trainer battle graphics loader",
-                         "resource->reads<count", "disabled trainer battle used the external provider",
-                         "xgba_expansion_source_hash(resource,id,2048u)"):
+                         "never rendered an original trainer battle opponent sprite",
+                         "resource->reads<=count", "disabled trainer battle used the external provider",
+                         "xgba_expansion_source_hash(resource,id,2048u)",
+                         "fallback_hash!=source_hash", "left the external page lease resident"):
             self.assertIn(fragment, body)
         self.assertNotIn("busWrite", body)
         fields = re.search(r"struct XgbaExpansionProof \{(.*?)\n\};", probe, re.S).group(1)
@@ -829,13 +830,69 @@ class ExpansionSourceTests(unittest.TestCase):
                            ("RHH_TRAINER_HASH", "battle_trainer_hash"),
                            ("RHH_TRAINER_RESIDENT", "battle_trainer_resident"),
                            ("RHH_TRAINER_ATTEMPTS", "battle_attempt_count"),
-                           ("RHH_TRAINER_ATTEMPT_ID", "battle_attempt_last_id")):
+                           ("RHH_TRAINER_ATTEMPT_ID", "battle_attempt_last_id"),
+                           ("RHH_PAGE_RESIDENT", "page_resident"),
+                           ("RHH_BATTLE_FLOW", "battle_flow_state"),
+                           ("RHH_BATTLE_OPPONENT", "battle_opponent_id"),
+                           ("RHH_BATTLE_MAIN_FRAMES", "battle_main_frames"),
+                           ("RHH_BATTLE_SPRITE_PIC", "battle_sprite_pic"),
+                           ("RHH_BATTLE_SPRITE_ARRIVED", "battle_sprite_arrived"),
+                           ("RHH_BATTLE_SPRITE_VISIBLE", "battle_sprite_visible"),
+                           ("RHH_BATTLE_FALLBACK_COUNT", "battle_fallback_count"),
+                           ("RHH_BATTLE_FALLBACK_HASH", "battle_fallback_hash"),
+                           ("RHH_BATTLE_FALLBACK_ID", "battle_fallback_id"),
+                           ("RHH_BATTLE_FALLBACK_BYTES", "battle_fallback_bytes")):
             offset = int(re.search(enum + r" = (\d+)", header).group(1))
             self.assertEqual(offset, 4 * names.index(name))
+        self.assertEqual(int(re.search(r"RHH_TRAINER_PROOF_END = (\d+)", header).group(1)),
+                         4 * len(names))
         self.assertIn("--expansion-trainer-battle", headless)
         self.assertIn("--expansion-trainer-battle", launcher)
         self.assertIn("trainer_battle=trainer_battle", acceptance.replace("expansion_", ""))
         self.assertIn("PASS_XGBA_RHH_NATIVE_TRAINER_BATTLE", acceptance)
+
+    def test_trainer_battle_build_uses_original_start_and_restores_source(self):
+        probe = (adapter.ROOT / "integration/expansion/xgba_expansion_probe.inc").read_text()
+        header = adapter.ROOT / "integration/fire_red/xgba_guest.h"
+        main = adapter.patched_main(MAIN, header, probe, overworld_play=True,
+                                    trainer_battle=True)
+        self.assertEqual(main.count("XgbaExpansionTrainerBattleWitness();"), 1)
+        self.assertIn("BattleSetup_StartTrainerBattle();", main)
+        self.assertIn("TRAINER_BATTLE_PARAM.opponentA = XGBA_TRAINER_BATTLE_OPPONENT;", main)
+        self.assertNotIn("CreateSprite", main)
+        plain = adapter.patched_main(MAIN, header, probe, overworld_play=True)
+        self.assertNotIn("XgbaExpansionTrainerBattle", plain)
+        with self.assertRaisesRegex(adapter.ExpansionDrift, "original field flow"):
+            adapter.patched_main(MAIN, header, probe, trainer_battle=True)
+        overworld = adapter.patched_overworld(OVERWORLD, trainer_battle=True)
+        self.assertEqual(overworld.count("XgbaExpansionTrainerBattleTick();"), 1)
+        self.assertLess(overworld.index("XgbaExpansionLiveTick(gMapHeader"),
+                        overworld.index("XgbaExpansionTrainerBattleTick();\n"))
+        self.assertNotIn("XgbaExpansionTrainerBattleTick", adapter.patched_overworld(OVERWORLD))
+        for target in adapter.TARGETS:
+            with self.subTest(target=target):
+                before = {name: (self.root / name).read_text() for name in
+                          ("src/main.c", "src/overworld.c", "src/battle_gfx_sfx_util.c")}
+                with adapter.patched_source(self.root, target, trainer_battle=True):
+                    self.assertIn("XgbaExpansionTrainerBattleTick();",
+                                  (self.root / "src/overworld.c").read_text())
+                    self.assertIn("XgbaExpansionTrainerBattleWitness();",
+                                  (self.root / "src/main.c").read_text())
+                for name, text in before.items():
+                    self.assertEqual((self.root / name).read_text(), text)
+        for kwargs in ({"map_smoke": True}, {"overworld_play": True}):
+            with self.assertRaisesRegex(adapter.ExpansionDrift, "exclusive"):
+                with adapter.patched_source(self.root, "emerald",
+                                            trainer_battle=True, **kwargs):
+                    pass
+
+    def test_original_fallback_decompress_is_witnessed_after_original_call(self):
+        patched = adapter.patched_battle_graphics(
+            (self.root / "src/battle_gfx_sfx_util.c").read_text())
+        call = patched.index("    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)")
+        note = patched.index("XgbaExpansionNoteTrainerFallback(trainerPicId")
+        self.assertLess(call, note)
+        self.assertGreater(call, patched.index("if (!XgbaExpansionTryTrainerPic(trainerPicId"))
 
     def test_trainer_battle_acceptance_is_exclusive_of_map_modes(self):
         acceptance = (adapter.ROOT / "tools/xgba_expansion_native_acceptance.py").read_text()

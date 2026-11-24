@@ -19,7 +19,18 @@ enum {
     RHH_TRAINER_RESIDENT = 160,
     RHH_TRAINER_ATTEMPTS = 164,
     RHH_TRAINER_ATTEMPT_ID = 168,
-    RHH_TRAINER_PROOF_END = 172
+    RHH_TRAINER_PROOF_END = 212,
+    RHH_PAGE_RESIDENT = 40,
+    RHH_BATTLE_FLOW = 172,
+    RHH_BATTLE_OPPONENT = 176,
+    RHH_BATTLE_MAIN_FRAMES = 180,
+    RHH_BATTLE_SPRITE_PIC = 184,
+    RHH_BATTLE_SPRITE_ARRIVED = 188,
+    RHH_BATTLE_SPRITE_VISIBLE = 192,
+    RHH_BATTLE_FALLBACK_COUNT = 196,
+    RHH_BATTLE_FALLBACK_HASH = 200,
+    RHH_BATTLE_FALLBACK_ID = 204,
+    RHH_BATTLE_FALLBACK_BYTES = 208
 };
 
 static uint32_t xgba_expansion_source_hash(const struct ResourceFile *resource,
@@ -239,11 +250,19 @@ static void xgba_expansion_native_trainer_battle(struct mCore *core,
     if (!target || !directory || probe<0x02000000u ||
         probe>0x02040000u-RHH_TRAINER_PROOF_END || (probe&3u))
         fail("RHH trainer battle proof must be aligned actual game EWRAM");
-    if (core->busRead32(core,probe+RHH_TRAINER_ATTEMPTS)<1u)
-        fail("RHH guest never entered the original trainer battle graphics loader");
+    /* The guest alone enters the original battle; wait (bounded by the
+     * launcher frame budget) until its own witnesses report the real
+     * trainer sprite on screen, then continue a few frames and re-check. */
+    if (core->busRead32(core,probe+RHH_BATTLE_FLOW)!=2u ||
+        !core->busRead32(core,probe+RHH_BATTLE_SPRITE_ARRIVED) ||
+        !core->busRead32(core,probe+RHH_BATTLE_SPRITE_VISIBLE))
+        fail("RHH guest never rendered an original trainer battle opponent sprite");
     core->setKeys(core,0u);
-    for (unsigned i=0;i<120u;++i)
+    for (unsigned i=0;i<8u;++i)
         core->runFrame(core);
+    if (core->busRead32(core,probe+RHH_BATTLE_FLOW)!=2u ||
+        !core->busRead32(core,probe+RHH_BATTLE_SPRITE_VISIBLE))
+        fail("RHH trainer battle opponent sprite not on screen at LCD capture");
     const uint32_t attempts=core->busRead32(core,probe+RHH_TRAINER_ATTEMPTS);
     const uint32_t attempt_id=core->busRead32(core,probe+RHH_TRAINER_ATTEMPT_ID);
     const uint32_t count=core->busRead32(core,probe+RHH_TRAINER_COUNT);
@@ -252,23 +271,40 @@ static void xgba_expansion_native_trainer_battle(struct mCore *core,
     const uint32_t hash=core->busRead32(core,probe+RHH_TRAINER_HASH);
     const uint32_t generation=core->busRead32(core,probe+RHH_TRAINER_GENERATION);
     const uint32_t resident=core->busRead32(core,probe+RHH_TRAINER_RESIDENT);
+    const uint32_t fallback_count=core->busRead32(core,probe+RHH_BATTLE_FALLBACK_COUNT);
+    const uint32_t fallback_hash=core->busRead32(core,probe+RHH_BATTLE_FALLBACK_HASH);
+    const uint32_t fallback_id=core->busRead32(core,probe+RHH_BATTLE_FALLBACK_ID);
+    const uint32_t fallback_bytes=core->busRead32(core,probe+RHH_BATTLE_FALLBACK_BYTES);
+    const uint32_t sprite_pic=core->busRead32(core,probe+RHH_BATTLE_SPRITE_PIC);
+    const uint32_t opponent=core->busRead32(core,probe+RHH_BATTLE_OPPONENT);
+    const uint32_t main_frames=core->busRead32(core,probe+RHH_BATTLE_MAIN_FRAMES);
+    /* TRAINER_SAWYER_1 uses the original Hiker pic (TRAINER_PIC_HIKER == 11). */
+    if (opponent!=1u || main_frames<1u || attempts<1u || attempt_id!=11u ||
+        sprite_pic!=11u)
+        fail("RHH trainer battle did not draw the original Hiker opponent");
+    if (core->busRead32(core,probe+RHH_PAGE_RESIDENT)!=0u)
+        fail("RHH trainer battle left the external page lease resident");
     if (device->failed_reads)
         fail("RHH trainer battle provider reported a failed read");
+    char id[24];
+    if (snprintf(id,sizeof(id),"rhh.trainer.%04x",attempt_id)>=(int)sizeof(id))
+        fail("RHH trainer source ID format exceeds host space");
+    const uint32_t source_hash=xgba_expansion_source_hash(resource,id,2048u);
     if (enabled) {
-        char id[24];
-        if (count<1u || count>attempts || bytes!=count*2048u ||
-            (last_id!=3u && last_id!=4u && last_id!=11u && last_id!=105u) ||
-            resident!=0u || generation<1u)
+        if (count<1u || count>attempts || bytes!=count*2048u || last_id!=11u ||
+            resident!=0u || generation<1u || fallback_count)
             fail("RHH trainer battle external transfer witness invalid");
-        if (snprintf(id,sizeof(id),"rhh.trainer.%04x",last_id)>=(int)sizeof(id))
-            fail("RHH trainer source ID format exceeds host space");
-        if (hash!=xgba_expansion_source_hash(resource,id,2048u))
+        if (hash!=source_hash)
             fail("RHH trainer battle sprite differs from verified source page");
-        if (device->successful_reads<count || resource->reads<count)
+        if (device->successful_reads<=count || resource->reads<=count)
             fail("RHH trainer battle provider reads do not cover transfers");
-    } else if (count || bytes || hash || last_id || device->successful_reads ||
-               resource->reads || resource->lookups) {
-        fail("RHH disabled trainer battle used the external provider");
+    } else {
+        if (count || bytes || hash || last_id || device->successful_reads ||
+            resource->reads || resource->lookups)
+            fail("RHH disabled trainer battle used the external provider");
+        if (fallback_count<1u || fallback_id!=11u || fallback_bytes!=2048u ||
+            fallback_hash!=source_hash)
+            fail("RHH original fallback decompressor differs from verified source sprite");
     }
     char path[1024];
     if (snprintf(path,sizeof(path),"%s/rhh-%s-trainer-battle-%s.png",directory,
@@ -282,8 +318,11 @@ static void xgba_expansion_native_trainer_battle(struct mCore *core,
     save_native_frame(core,path);
     printf("PASS_XGBA_RHH_NATIVE_TRAINER_BATTLE target=%s enabled=%d "
            "attempts=%u attempt_id=%u transfers=%u trainer_bytes=%u "
-           "trainer_id=%u trainer_hash=%08x provider_reads=%u real_lcd=%s\n",
-           target,enabled,attempts,attempt_id,count,bytes,last_id,hash,
+           "trainer_id=%u trainer_hash=%08x source_hash=%08x "
+           "fallback_decodes=%u battle_frames=%u provider_reads=%u "
+           "lease_released=1 real_lcd=%s\n",
+           target,enabled,attempts,attempt_id,count,bytes,last_id,
+           enabled?hash:fallback_hash,source_hash,fallback_count,main_frames,
            device->successful_reads,path);
 }
 #endif

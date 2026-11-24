@@ -34,7 +34,7 @@ PAGE_PAYLOAD = bytes(((i * 7 + 47) % 256 for i in range(16 * 1024)))
 RESOURCE_SIZE = len(PAGE_PAYLOAD)
 
 
-def verify_elf_probe(source: Path, target: str) -> tuple[Path, int]:
+def verify_elf_probe(source: Path, target: str, trainer_battle: bool = False) -> tuple[Path, int]:
     rom = source / f"poke{target}.gba"
     elf = source / f"poke{target}.elf"
     if not rom.is_file() or not elf.is_file():
@@ -47,6 +47,10 @@ def verify_elf_probe(source: Path, target: str) -> tuple[Path, int]:
         symbols, re.MULTILINE)
     if len(matches) != 1:
         raise AssertionError("RHH actual game EWRAM proof symbol missing")
+    if trainer_battle and not re.search(
+            r"^[0-9a-fA-F]{8}\s+[Tt]\s+XgbaExpansionTrainerBattleTick$",
+            symbols, re.MULTILINE):
+        raise AssertionError("RHH ROM was not built with --trainer-battle")
     address = int(matches[0], 16)
     if not 0x02000000 <= address <= 0x02040000 - 28:
         raise AssertionError("RHH source-built EWRAM proof outside 256 KiB")
@@ -71,7 +75,7 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
         raise AssertionError("Upstream source release identity drift")
     if r7.run(["git", "-C", source, "status", "--porcelain"]).stdout.strip():
         raise AssertionError("Source adapter left the upstream repository dirty")
-    rom, proof_address = verify_elf_probe(source, target)
+    rom, proof_address = verify_elf_probe(source, target, trainer_battle)
     game_bytes = rom.read_bytes()
     game_sha = hashlib.sha256(game_bytes).hexdigest()
     if PAGE_PAYLOAD in game_bytes:
@@ -98,7 +102,7 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
         file.seek(RESOURCE_OFFSET)
         file.write(PAGE_PAYLOAD)
     page_entries = []
-    if map_smoke or overworld_play:
+    if map_smoke or overworld_play or trainer_battle:
         first = ("LAYOUT_LITTLEROOT_TOWN" if target == "emerald"
                  else "LAYOUT_PALLET_TOWN")
         layouts = ([first, "LAYOUT_ROUTE101" if target == "emerald" else "LAYOUT_ROUTE1"]
@@ -162,7 +166,7 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
     for enabled in (True, False):
         proc = launcher.launch(
             rom, manifest, resource_id, emulator=executable,
-            frames=1200, probe_address=proof_address,
+            frames=3600 if trainer_battle else 1200, probe_address=proof_address,
             expansion_dir=output, expansion_target=target,
             expansion_overworld=overworld_play,
             expansion_trainer_battle=trainer_battle,
@@ -172,7 +176,7 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
         if trainer_battle:
             expected = (f"PASS_XGBA_RHH_NATIVE_TRAINER_BATTLE "
                         f"target={target} enabled={int(enabled)}")
-            if expected not in proc.stdout:
+            if expected not in proc.stdout or "lease_released=1" not in proc.stdout:
                 raise AssertionError(f"native {target} {label} trainer battle acceptance failed")
         elif overworld_play:
             expected = (f"PASS_RHH_REAL_OVERWORLD_NATIVE "
