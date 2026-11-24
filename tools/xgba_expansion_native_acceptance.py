@@ -174,7 +174,8 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
                         f"target={target} enabled={int(enabled)}")
             if expected not in proc.stdout:
                 raise AssertionError(f"native {target} {label} trainer battle acceptance failed")
-        elif overworld_play: = (f"PASS_RHH_REAL_OVERWORLD_NATIVE "
+        elif overworld_play:
+            expected = (f"PASS_RHH_REAL_OVERWORLD_NATIVE "
                         f"target={target} enabled={int(enabled)}")
             if expected not in proc.stdout:
                 raise AssertionError(f"native {target} {label} real player-controlled route acceptance failed")
