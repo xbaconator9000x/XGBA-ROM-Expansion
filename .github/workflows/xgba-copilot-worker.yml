@@ -1,0 +1,85 @@
+name: XGBA Copilot coding worker pilot
+on:
+  push:
+    branches: [integration/expansion-frameworks-20261115]
+    paths: ['.github/workflows/xgba-copilot-worker.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xgba-pr126-coding-worker
+  cancel-in-progress: false
+
+jobs:
+  code:
+    if: github.repository == 'xbaconator9000x/XGBA-ROM-Expansion' && github.ref == 'refs/heads/integration/expansion-frameworks-20261115'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install coding CLI
+        run: npm install -g @github/copilot
+      - name: Implement first native battle acceptance task
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.XGBA_COPILOT_AGENT_PAT }}
+          COPILOT_AUTO_UPDATE: 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$COPILOT_GITHUB_TOKEN" || { echo 'Missing agent credential'; exit 2; }
+          copilot --version
+          copilot -p "Implement real native trainer battle acceptance for RHH expansion/1.17.2 using existing trainer pages and original battle loader. Read the adapter, native runner and C harness first. Make a coherent functional source change toward a trainer battle driven by the native emulator, with enabled and disabled provider paths and explicit evidence; add focused regression tests. Preserve all old checks and do not claim native success without evidence. Do not modify workflow files, documentation, credentials, git state, or any other branch. Do not generate ROMs, saves or asset binaries. If full battle acceptance cannot be completed in this task, implement a functional native harness entrypoint and its tests. Only edit integration/expansion/, integration/mgba/xgba_expansion_native.h, integration/mgba/xgba_mgba_headless.c, tools/xgba_expansion_*.py, tools/xgba_mgba_run.py, and tests/test_xgba_expansion_*.py. Do not use network or remote tools. Do not commit; the controller will validate and commit." --no-ask-user --allow-tool='read,write,shell(git diff:*),shell(git status:*),shell(git log:*),shell(git show:*),shell(ls:*),shell(cat:*),shell(grep:*),shell(rg:*),shell(find:*)'
+      - name: Validate source-only changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib, re, subprocess
+          def git(*args):
+              return subprocess.check_output(['git', *args])
+          if git('diff', '--cached', '--name-only'):
+              raise SystemExit('Agent staged changes unexpectedly')
+          if git('rev-parse', 'HEAD').strip().decode() != __import__('os').environ['GITHUB_SHA']:
+              raise SystemExit('Agent modified HEAD')
+          paths = set(git('diff','--name-only','-z').decode().strip('\0').split('\0')) | set(git('ls-files','--others','--exclude-standard','-z').decode().strip('\0').split('\0'))
+          paths.discard('')
+          allowed = re.compile(r'(?:integration/expansion/[A-Za-z0-9_]+\.(?:c|h|inc)|integration/mgba/xgba_(?:expansion_native\.h|mgba_headless\.c)|tools/xgba_(?:expansion_[A-Za-z0-9_]+|mgba_run)\.py|tests/test_xgba_expansion_[A-Za-z0-9_]+\.py)')
+          if not paths or not any(p.startswith(('integration/', 'tools/')) for p in paths):
+              raise SystemExit('No functional source change')
+          for name in sorted(paths):
+              p = pathlib.Path(name)
+              if not allowed.fullmatch(name) or p.is_symlink() or not p.is_file() or p.stat().st_size > 500000:
+                  raise SystemExit('Rejected path: '+name)
+              data = p.read_bytes()
+              if b'\0' in data:
+                  raise SystemExit('Binary source rejected')
+              data.decode('utf-8')
+              subprocess.run(['git','add','--',name],check=True)
+          PY
+          git diff --cached --check
+          git diff --cached --stat
+      - name: Run focused source regression
+        run: |
+          python3 -m pip install --disable-pip-version-check Pillow==11.3.0
+          python3 -m unittest discover -s tests -p 'test_xgba_expansion_*.py' -v
+      - name: Commit and publish on PR 126 branch
+        env:
+          GH_TOKEN: ${{ secrets.XGBA_COPILOT_DISPATCH_PAT }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$GH_TOKEN" || { echo 'Missing dispatch credential'; exit 2; }
+          git diff --exit-code
+          git config user.name 'XGBA coding worker'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -c core.hooksPath=/dev/null commit -m 'Implement native RHH battle acceptance source slice'
+          gh auth setup-git
+          git push origin HEAD:refs/heads/integration/expansion-frameworks-20261115
+          git rev-parse HEAD
