@@ -15,8 +15,13 @@
 #include "constants/opponents.h"
 #include "constants/species.h"
 
-/* Original Hiker (TRAINER_PIC_HIKER) opponent present in all three targets. */
+/* Original Hiker per target: trainer id 1 is a Youngster in FRLG, so FRLG uses
+ * its own Hiker (TRAINER_PIC_HIKER_FRLG) and Emerald uses TRAINER_PIC_HIKER. */
+#if IS_FRLG
+#define XGBA_TRAINER_BATTLE_OPPONENT TRAINER_HIKER_MARCOS
+#else
 #define XGBA_TRAINER_BATTLE_OPPONENT TRAINER_SAWYER_1
+#endif
 #define XGBA_TRAINER_BATTLE_FIELD_FRAMES 40u
 
 void XgbaExpansionTrainerBattleTick(void)

@@ -281,7 +281,8 @@ static void xgba_expansion_native_trainer_battle(struct mCore *core,
     /* The pinned engine selects the version-specific original Hiker artwork. */
     const uint32_t expected_pic = strcmp(target,"emerald")==0 ? 11u : 105u;
     fprintf(stderr,"RHH battle witnesses: opponent=%u attempt=%u sprite=%u count=%u bytes=%u last=%u fallback=%u resident=%u generation=%u\n", opponent,attempt_id,sprite_pic,count,bytes,last_id,fallback_count,resident,generation);
-    if (opponent!=1u || main_frames<1u || attempts<1u || attempt_id!=expected_pic ||
+    const uint32_t expected_opponent = strcmp(target,"emerald")==0 ? 1u : 87u;
+    if (opponent!=expected_opponent || main_frames<1u || attempts<1u || attempt_id!=expected_pic ||
         sprite_pic!=expected_pic)
         fail("RHH trainer battle did not draw the original Hiker opponent");
     if (core->busRead32(core,probe+RHH_PAGE_RESIDENT)!=0u)

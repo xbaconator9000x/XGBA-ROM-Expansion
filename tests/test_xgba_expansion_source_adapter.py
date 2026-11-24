@@ -847,6 +847,9 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertEqual(int(re.search(r"RHH_TRAINER_PROOF_END = (\d+)", header).group(1)),
                          4 * len(names))
         self.assertIn("--expansion-trainer-battle", headless)
+        inc = (adapter.ROOT / "integration/expansion/xgba_expansion_trainer_battle.inc").read_text()
+        self.assertRegex(inc, r"#if IS_FRLG\s+#define XGBA_TRAINER_BATTLE_OPPONENT TRAINER_HIKER_MARCOS")
+        self.assertIn('strcmp(target,"emerald")==0 ? 1u : 87u', body)
         self.assertIn("--expansion-trainer-battle", launcher)
         self.assertIn("trainer_battle=trainer_battle", acceptance.replace("expansion_", ""))
         self.assertIn("PASS_XGBA_RHH_NATIVE_TRAINER_BATTLE", acceptance)
