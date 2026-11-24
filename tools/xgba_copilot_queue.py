@@ -139,6 +139,13 @@ def validate():
         if b"\0" in data:
             raise SystemExit("Binary source rejected")
         data.decode("utf-8")
+        # Normalize only redundant final empty lines in C-family files.
+        # Keep all interior whitespace and Python source untouched.
+        if p.suffix in (".c", ".h", ".inc") and data.endswith(b"\n\n"):
+            normalized = data.rstrip(b"\n") + b"\n"
+            if normalized != data:
+                p.write_bytes(normalized)
+                print("Removed redundant blank lines at EOF:", name)
         subprocess.run(["git", "add", "--", name], cwd=ROOT, check=True)
     subprocess.run(["git", "diff", "--cached", "--check"], cwd=ROOT, check=True)
     subprocess.run(["git", "diff", "--cached", "--stat"], cwd=ROOT, check=True)

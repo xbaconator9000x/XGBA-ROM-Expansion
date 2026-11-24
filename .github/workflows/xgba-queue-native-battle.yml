@@ -4,6 +4,9 @@ on:
     branches: [integration/expansion-frameworks-20261115]
     paths:
       - '.github/xgba-coding-state.json'
+      - 'tools/xgba_copilot_queue.py'
+      - '.github/workflows/xgba-copilot-worker.yml'
+      - '.github/workflows/xgba-queue-native-battle.yml'
   workflow_dispatch:
 
 permissions:

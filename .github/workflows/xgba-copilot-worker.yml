@@ -5,6 +5,8 @@ on:
     paths:
       - '.github/workflows/xgba-copilot-worker.yml'
       - '.github/xgba-coding-state.json'
+      - 'tools/xgba_copilot_queue.py'
+      - '.github/workflows/xgba-queue-native-battle.yml'
   workflow_dispatch:
 
 permissions:
