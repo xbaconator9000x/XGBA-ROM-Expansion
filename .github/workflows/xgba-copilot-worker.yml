@@ -84,8 +84,7 @@ jobs:
           copilot --version
           for attempt in 1 2; do
             copilot -p "$prompt" --no-ask-user --add-dir="$RUNNER_TEMP/rhh-reference" --deny-tool="write($RUNNER_TEMP/rhh-reference)" --allow-tool='read,write,shell(git diff:*),shell(git status:*),shell(git log:*),shell(git show:*),shell(ls:*),shell(cat:*),shell(grep:*),shell(rg:*),shell(find:*)'
-            env -u COPILOT_GITHUB_TOKEN python3 tools/xgba_copilot_queue.py validate
-            if (env -u COPILOT_GITHUB_TOKEN python3 -m compileall -q tools tests && env -u COPILOT_GITHUB_TOKEN python3 -m unittest discover -s tests -p 'test_xgba_expansion_*.py' -v) > "$RUNNER_TEMP/queue-tests.log" 2>&1; then
+            if (env -u COPILOT_GITHUB_TOKEN python3 tools/xgba_copilot_queue.py validate && env -u COPILOT_GITHUB_TOKEN python3 -m compileall -q tools tests && env -u COPILOT_GITHUB_TOKEN python3 -m unittest discover -s tests -p 'test_xgba_expansion_*.py' -v) > "$RUNNER_TEMP/queue-tests.log" 2>&1; then
               cat "$RUNNER_TEMP/queue-tests.log"
               exit 0
             fi
@@ -94,7 +93,7 @@ jobs:
             git reset --mixed HEAD
             prompt="$prompt
 
-          Repair this local test failure without weakening assertions. Diagnostics only:
+          Repair this local validation or test failure without weakening assertions. If no functional source change was produced, implement the selected task rather than reporting that an earlier task already exists. Diagnostics only:
           $(tail -c 12000 "$RUNNER_TEMP/queue-tests.log")"
           done
       - name: Preserve validated source patch
