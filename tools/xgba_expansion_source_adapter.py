@@ -388,11 +388,12 @@ static void XgbaExpansionNoteTrainerFallback(u32 id, const u32 *original, const 
 {
     u32 bytes;
     if (!original || !dest || (u32)original < 0x08000000u
-        || (u32)original > 0x0A000000u - 4u || ((const u8 *)original)[0] != 0x10u)
+        || (u32)original > 0x0A000000u - 8u || ((u32)original & 3u))
         return;
-    bytes = ((const u8 *)original)[1]
-          | ((u32)((const u8 *)original)[2] << 8)
-          | ((u32)((const u8 *)original)[3] << 16);
+    if (((const union CompressionHeader *)original)->smol.mode > ENCODE_BOTH_DELTA_SYMS
+        || !IsCompressedData(original))
+        return;
+    bytes = GetDecompressedDataSize(original);
     if (bytes == 64u * 64u / 2u)
         XgbaExpansionTrainerFallback(id, dest, bytes);
 }
