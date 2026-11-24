@@ -1,85 +1,90 @@
-name: XGBA Copilot coding worker pilot
+name: XGBA Copilot continuous coding queue
 on:
   push:
     branches: [integration/expansion-frameworks-20261115]
-    paths: ['.github/workflows/xgba-copilot-worker.yml']
+    paths:
+      - '.github/workflows/xgba-copilot-worker.yml'
+      - '.github/xgba-coding-state.json'
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: xgba-pr126-coding-worker
   cancel-in-progress: false
 
 jobs:
-  code:
+  select:
     if: github.repository == 'xbaconator9000x/XGBA-ROM-Expansion' && github.ref == 'refs/heads/integration/expansion-frameworks-20261115'
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 65
+    outputs:
+      proceed: ${{ steps.select.outputs.proceed }}
+      stage: ${{ steps.select.outputs.stage }}
+      attempt: ${{ steps.select.outputs.attempt }}
+      total: ${{ steps.select.outputs.total }}
+      prompt: ${{ steps.select.outputs.prompt }}
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Verify dispatch permission before consuming Copilot allowance
+      - name: Preflight publishing permissions and await exact-head CI
+        id: select
         env:
           GH_TOKEN: ${{ secrets.XGBA_COPILOT_DISPATCH_PAT }}
         shell: bash
         run: |
           set -euo pipefail
-          test -n "$GH_TOKEN" || { echo 'Missing dispatch credential'; exit 2; }
+          test -n "$GH_TOKEN"
           git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push --dry-run origin HEAD:refs/heads/integration/expansion-frameworks-20261115
+          python3 tools/xgba_copilot_queue.py select
+  code:
+    needs: select
+    if: needs.select.outputs.proceed == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install coding CLI
-        run: npm install -g @github/copilot
-      - name: Implement first native battle acceptance task
+      - name: Install tested coding CLI and source test dependencies
+        run: |
+          npm install -g @github/copilot@1.0.114
+          python3 -m pip install --disable-pip-version-check Pillow==11.3.0
+      - name: Implement queued task and repair local test failure once
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.XGBA_COPILOT_AGENT_PAT }}
           COPILOT_AUTO_UPDATE: 'false'
+          TASK_B64: ${{ needs.select.outputs.prompt }}
         shell: bash
         run: |
           set -euo pipefail
-          test -n "$COPILOT_GITHUB_TOKEN" || { echo 'Missing agent credential'; exit 2; }
+          test -n "$COPILOT_GITHUB_TOKEN"
+          prompt=$(printf '%s' "$TASK_B64" | base64 -d)
           copilot --version
-          copilot -p "Implement real native trainer battle acceptance for RHH expansion/1.17.2 using existing trainer pages and original battle loader. Read the adapter, native runner and C harness first. Make a coherent functional source change toward a trainer battle driven by the native emulator, with enabled and disabled provider paths and explicit evidence; add focused regression tests. Preserve all old checks and do not claim native success without evidence. Do not modify workflow files, documentation, credentials, git state, or any other branch. Do not generate ROMs, saves or asset binaries. If full battle acceptance cannot be completed in this task, implement a functional native harness entrypoint and its tests. Only edit integration/expansion/, integration/mgba/xgba_expansion_native.h, integration/mgba/xgba_mgba_headless.c, tools/xgba_expansion_*.py, tools/xgba_mgba_run.py, and tests/test_xgba_expansion_*.py. Do not use network or remote tools. Do not commit; the controller will validate and commit." --no-ask-user --allow-tool='read,write,shell(git diff:*),shell(git status:*),shell(git log:*),shell(git show:*),shell(ls:*),shell(cat:*),shell(grep:*),shell(rg:*),shell(find:*)'
-      - name: Validate source-only changes
-        shell: bash
+          for attempt in 1 2; do
+            copilot -p "$prompt" --no-ask-user --allow-tool='read,write,shell(git diff:*),shell(git status:*),shell(git log:*),shell(git show:*),shell(ls:*),shell(cat:*),shell(grep:*),shell(rg:*),shell(find:*)'
+            python3 tools/xgba_copilot_queue.py validate
+            if (python3 -m compileall -q tools tests && python3 -m unittest discover -s tests -p 'test_xgba_expansion_*.py' -v) > "$RUNNER_TEMP/queue-tests.log" 2>&1; then
+              cat "$RUNNER_TEMP/queue-tests.log"
+              exit 0
+            fi
+            cat "$RUNNER_TEMP/queue-tests.log"
+            if [ "$attempt" = 2 ]; then exit 1; fi
+            git reset --mixed HEAD
+            prompt="$prompt
+
+          Repair this local test failure without weakening assertions. Diagnostics only:
+          $(tail -c 12000 "$RUNNER_TEMP/queue-tests.log")"
+          done
+      - name: Preserve validated source patch
         run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import pathlib, re, subprocess
-          def git(*args):
-              return subprocess.check_output(['git', *args])
-          if git('diff', '--cached', '--name-only'):
-              raise SystemExit('Agent staged changes unexpectedly')
-          if git('rev-parse', 'HEAD').strip().decode() != __import__('os').environ['GITHUB_SHA']:
-              raise SystemExit('Agent modified HEAD')
-          paths = set(git('diff','--name-only','-z').decode().strip('\0').split('\0')) | set(git('ls-files','--others','--exclude-standard','-z').decode().strip('\0').split('\0'))
-          paths.discard('')
-          allowed = re.compile(r'(?:integration/expansion/[A-Za-z0-9_]+\.(?:c|h|inc)|integration/mgba/xgba_(?:expansion_native\.h|mgba_headless\.c)|tools/xgba_(?:expansion_[A-Za-z0-9_]+|mgba_run)\.py|tests/test_xgba_expansion_[A-Za-z0-9_]+\.py)')
-          if not paths or not any(p.startswith(('integration/', 'tools/')) for p in paths):
-              raise SystemExit('No functional source change')
-          for name in sorted(paths):
-              p = pathlib.Path(name)
-              if not allowed.fullmatch(name) or p.is_symlink() or not p.is_file() or p.stat().st_size > 500000:
-                  raise SystemExit('Rejected path: '+name)
-              data = p.read_bytes()
-              if b'\0' in data:
-                  raise SystemExit('Binary source rejected')
-              data.decode('utf-8')
-              subprocess.run(['git','add','--',name],check=True)
-          PY
-          git diff --cached --check
-          git diff --cached --stat
-      - name: Run focused source regression
-        run: |
-          python3 -m pip install --disable-pip-version-check Pillow==11.3.0
-          python3 -m unittest discover -s tests -p 'test_xgba_expansion_*.py' -v
-      - name: Preserve validated source patch for publishing recovery
-        run: |
-          git diff --cached --check
+          python3 tools/xgba_copilot_queue.py validate
           git diff --cached --no-ext-diff > "$RUNNER_TEMP/xgba-validated-source.patch"
       - uses: actions/upload-artifact@v4
         with:
@@ -87,17 +92,43 @@ jobs:
           path: ${{ runner.temp }}/xgba-validated-source.patch
           retention-days: 3
           if-no-files-found: error
-      - name: Commit and publish on PR 126 branch
+  publish:
+    needs: [select, code]
+    if: needs.select.outputs.proceed == 'true' && needs.code.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: xgba-validated-source-patch
+          path: ${{ runner.temp }}
+      - name: Validate clean-runner source patch and queue transition
+        env:
+          STAGE: ${{ needs.select.outputs.stage }}
+          ATTEMPT: ${{ needs.select.outputs.attempt }}
+          TOTAL: ${{ needs.select.outputs.total }}
+        run: |
+          set -euo pipefail
+          git apply --check "$RUNNER_TEMP/xgba-validated-source.patch"
+          git apply "$RUNNER_TEMP/xgba-validated-source.patch"
+          python3 tools/xgba_copilot_queue.py validate
+          python3 tools/xgba_copilot_queue.py advance "$STAGE" "$ATTEMPT" "$TOTAL"
+          git add .github/xgba-coding-state.json
+          git diff --cached --check
+      - name: Publish candidate and trigger next exact-head gate
         env:
           GH_TOKEN: ${{ secrets.XGBA_COPILOT_DISPATCH_PAT }}
+          STAGE: ${{ needs.select.outputs.stage }}
+          ATTEMPT: ${{ needs.select.outputs.attempt }}
         shell: bash
         run: |
           set -euo pipefail
-          test -n "$GH_TOKEN" || { echo 'Missing dispatch credential'; exit 2; }
-          git diff --exit-code
+          python3 tools/xgba_copilot_queue.py check-head
           git config user.name 'XGBA coding worker'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git -c core.hooksPath=/dev/null commit -m 'Implement native RHH battle acceptance source slice'
-          gh auth setup-git
-          git push origin HEAD:refs/heads/integration/expansion-frameworks-20261115
+          git -c core.hooksPath=/dev/null commit -m "XGBA queue stage $((STAGE+1)) candidate $ATTEMPT"
+          git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push origin HEAD:refs/heads/integration/expansion-frameworks-20261115
           git rev-parse HEAD
