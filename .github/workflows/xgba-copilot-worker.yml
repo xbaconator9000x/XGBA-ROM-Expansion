@@ -56,6 +56,16 @@ jobs:
         run: |
           npm install -g @github/copilot@1.0.114
           python3 -m pip install --disable-pip-version-check Pillow==11.3.0
+      - name: Prepare pinned original engine source reference for coding agent
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --quiet --depth 1 --branch expansion/1.17.2 https://github.com/rh-hideout/pokeemerald-expansion.git "$RUNNER_TEMP/rhh-checkout"
+          test "$(git -C "$RUNNER_TEMP/rhh-checkout" rev-parse HEAD)" = 79dd436920845ebc145577649de624f65298c209
+          mkdir "$RUNNER_TEMP/rhh-reference"
+          git -C "$RUNNER_TEMP/rhh-checkout" archive HEAD src include | tar -x -C "$RUNNER_TEMP/rhh-reference"
+          git -C "$RUNNER_TEMP/rhh-checkout" ls-tree -r --name-only HEAD > "$RUNNER_TEMP/rhh-reference/SOURCE_PATHS.txt"
+          chmod -R a-w "$RUNNER_TEMP/rhh-reference"
       - name: Implement queued task and repair local test failure once
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.XGBA_COPILOT_AGENT_PAT }}
@@ -66,11 +76,14 @@ jobs:
           set -euo pipefail
           test -n "$COPILOT_GITHUB_TOKEN"
           prompt=$(printf '%s' "$TASK_B64" | base64 -d)
+          prompt="$prompt
+
+          Pinned RHH original engine reference (read only): $RUNNER_TEMP/rhh-reference. Read the actual upstream functions and headers there; SOURCE_PATHS.txt gives original resource paths."
           copilot --version
           for attempt in 1 2; do
-            copilot -p "$prompt" --no-ask-user --allow-tool='read,write,shell(git diff:*),shell(git status:*),shell(git log:*),shell(git show:*),shell(ls:*),shell(cat:*),shell(grep:*),shell(rg:*),shell(find:*)'
-            python3 tools/xgba_copilot_queue.py validate
-            if (python3 -m compileall -q tools tests && python3 -m unittest discover -s tests -p 'test_xgba_expansion_*.py' -v) > "$RUNNER_TEMP/queue-tests.log" 2>&1; then
+            copilot -p "$prompt" --no-ask-user --add-dir="$RUNNER_TEMP/rhh-reference" --deny-tool="write($RUNNER_TEMP/rhh-reference)" --allow-tool='read,write,shell(git diff:*),shell(git status:*),shell(git log:*),shell(git show:*),shell(ls:*),shell(cat:*),shell(grep:*),shell(rg:*),shell(find:*)'
+            env -u COPILOT_GITHUB_TOKEN python3 tools/xgba_copilot_queue.py validate
+            if (env -u COPILOT_GITHUB_TOKEN python3 -m compileall -q tools tests && env -u COPILOT_GITHUB_TOKEN python3 -m unittest discover -s tests -p 'test_xgba_expansion_*.py' -v) > "$RUNNER_TEMP/queue-tests.log" 2>&1; then
               cat "$RUNNER_TEMP/queue-tests.log"
               exit 0
             fi
