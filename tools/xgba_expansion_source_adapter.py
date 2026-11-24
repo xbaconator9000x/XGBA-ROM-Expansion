@@ -70,7 +70,9 @@ def validate_source(source: Path, target: str) -> dict:
     battle = battle_path.read_text(encoding="utf-8")
     if battle.count("void DecompressTrainerFrontPic(enum TrainerPicID trainerPicId, enum BattlerId battler)") != 1 or battle.count("    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);") != 1:
         raise ExpansionDrift("original trainer graphics loader ABI drift")
-    if "XgbaExpansionTryTrainerPic" in battle:
+    if battle.count(POKEMON_LOAD_SIGNATURE) != 1 or battle.count(POKEMON_LOAD_CALL) != 1:
+        raise ExpansionDrift("original Pokemon battle sprite loader ABI drift")
+    if "XgbaExpansionTryTrainerPic" in battle or "XgbaExpansionTryMonPic" in battle:
         raise ExpansionDrift("upstream battle graphics loader already patched")
     if not (source / "src/load_save.c").is_file():
         raise ExpansionDrift("missing original save-block heap lifecycle")
@@ -127,6 +129,39 @@ def patched_fieldmap(original: str) -> str:
                     "        return;\n    if (tileset)",
                     signature)
     return text
+
+
+POKEMON_LOAD_SIGNATURE = "void BattleLoadMonSpriteGfx(struct Pokemon *mon, enum BattlerId battler)\n{"
+POKEMON_LOAD_CALL = (
+    "    HandleLoadSpecialPokePic(!IsOnPlayerSide(battler),\n"
+    "                             gMonSpritesGfxPtr->spritesGfx[position],\n"
+    "                             species, personalityValue);")
+
+
+def patched_pokemon_graphics(original: str) -> str:
+    """Route original species front/back tiles through the bounded page bridge.
+
+    The original HandleLoadSpecialPokePic stays as the fallback; the palette and
+    animation setup that follows it is untouched.
+    """
+    bridge_path = ROOT / "integration/expansion/xgba_expansion_pokemon_battle.inc"
+    page_api = ROOT / "integration/expansion/xgba_expansion_page.h"
+    if not bridge_path.is_file() or not page_api.is_file():
+        raise ExpansionDrift("XGBA Pokemon battle bridge source unavailable")
+    bridge = bridge_path.read_text(encoding="utf-8").replace(
+        "XGBA_BATTLE_PAGE_API", page_api.resolve().as_posix())
+    text = _one(original, POKEMON_LOAD_SIGNATURE, bridge + POKEMON_LOAD_SIGNATURE,
+                "Pokemon sprite loader ABI")
+    return _one(text, POKEMON_LOAD_CALL,
+                "    XgbaExpansionMonAttempt(!IsOnPlayerSide(battler), species);\n"
+                "    if (!XgbaExpansionTryMonPic(!IsOnPlayerSide(battler),\n"
+                "                                gMonSpritesGfxPtr->spritesGfx[position], species))\n"
+                "    {\n"
+                "    " + POKEMON_LOAD_CALL.replace("\n", "\n    ") + "\n"
+                "        XgbaExpansionNoteMonFallback(!IsOnPlayerSide(battler), species,\n"
+                "                                     gMonSpritesGfxPtr->spritesGfx[position]);\n"
+                "    }",
+                "Pokemon graphics fallback")
 
 
 def patched_battle_graphics(original: str) -> str:
@@ -555,6 +590,7 @@ def patched_main(original: str, header: Path, probe: str, *, map_smoke: bool = F
     tick = "    XgbaExpansionProbeTick();\n    XgbaExpansionGraphicsPoll();\n"
     if trainer_battle:
         tick += "    XgbaExpansionTrainerBattleWitness();\n"
+        tick += "    XgbaExpansionPokemonBattleWitness();\n"
     tick += "    ReadKeys();"
     if overworld_play:
         # AgbMain continues configuring callbacks after InitHeap. Scheduling
@@ -598,7 +634,7 @@ def patched_source(source: Path, target: str, *, map_smoke: bool = False,
     if not battle_path.is_file():
         raise ExpansionDrift("pinned RHH battle graphics loader missing")
     battle_before = battle_path.read_text(encoding="utf-8")
-    battle_after = patched_battle_graphics(battle_before)
+    battle_after = patched_pokemon_graphics(patched_battle_graphics(battle_before))
     save_heap_before = save_heap_path.read_text(encoding="utf-8")
     before = path.read_text(encoding="utf-8")
     fieldmap_before = fieldmap_path.read_text(encoding="utf-8")

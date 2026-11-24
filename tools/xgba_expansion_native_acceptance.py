@@ -23,6 +23,7 @@ sys.path[:0] = [str(ROOT / "tools"), str(ROOT / "integration/mgba"),
 import xgba_expansion_source_adapter as adapter
 import xgba_expansion_map_pages as map_pages
 import xgba_expansion_trainer_pages as trainer_pages
+import xgba_expansion_pokemon_pages as pokemon_pages
 import xgba_resource_integration_smoke as r6
 import xgba_resource_sidecar as sidecar
 import xgba_mgba_run as launcher
@@ -149,6 +150,30 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
                 page_entries.append({"id": name, "offset": offset,
                                      "length": len(blob), "sha256": entry.sha256})
                 seen.add(name)
+    # Original Pokemon battle sprite pages (opponent front, player back).
+    if trainer_battle:
+        pokemon_manifest = sidecar.load_manifest(pokemon_pages.build(
+            source, target, output / "private-source" / "pokemon"))
+        seen = {entry["id"] for entry in page_entries}
+        expected_sizes = {"f": 4096, "b": 2048}
+        with external.open("ab") as combined:
+            for name, entry in pokemon_manifest.resources.items():
+                if name in seen or not re.fullmatch(r"rhh\.mon\.[fb]\.[0-9a-f]{4}", name):
+                    raise AssertionError("Unexpected or duplicate Pokemon resource")
+                with pokemon_manifest.data_path.open("rb") as original:
+                    original.seek(entry.offset)
+                    blob = original.read(entry.length)
+                if (len(blob) != expected_sizes[name[8]]
+                        or hashlib.sha256(blob).hexdigest() != entry.sha256):
+                    raise AssertionError("Original Pokemon page integrity mismatch")
+                offset = combined.tell()
+                combined.write(blob)
+                page_entries.append({"id": name, "offset": offset,
+                                     "length": len(blob), "sha256": entry.sha256})
+                seen.add(name)
+        if {e["id"] for e in page_entries if e["id"].startswith("rhh.mon.")} != {
+                "rhh.mon.f.0001", "rhh.mon.f.004a", "rhh.mon.b.0001", "rhh.mon.b.004a"}:
+            raise AssertionError("Pokemon provider pages do not match the verified species")
     manifest = output / "xgba-private-test-manifest.json"
     manifest.write_text(json.dumps({
         "format": sidecar.FORMAT,
@@ -163,6 +188,7 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
     }), encoding="utf-8")
 
     outputs = {}
+    pokemon_tokens = {}
     for enabled in (True, False):
         proc = launcher.launch(
             rom, manifest, resource_id, emulator=executable,
@@ -178,6 +204,14 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
                         f"target={target} enabled={int(enabled)}")
             if expected not in proc.stdout or "lease_released=1" not in proc.stdout:
                 raise AssertionError(f"native {target} {label} trainer battle acceptance failed")
+            pokemon_line = next((line for line in proc.stdout.splitlines()
+                                 if line.startswith("PASS_XGBA_RHH_NATIVE_POKEMON_BATTLE "
+                                                    f"target={target} enabled={int(enabled)} ")), "")
+            if "lease_released=1" not in pokemon_line or "front_species=74 back_species=1 " not in pokemon_line:
+                raise AssertionError(f"native {target} {label} Pokemon battle acceptance failed")
+            pokemon_tokens[label] = {key: re.search(rf"\b{key}=(\S+)", pokemon_line).group(1)
+                                     for key in ("front_hash", "back_hash", "front_source_hash",
+                                                 "back_source_hash", "front_palette", "back_palette")}
         elif overworld_play:
             expected = (f"PASS_RHH_REAL_OVERWORLD_NATIVE "
                         f"target={target} enabled={int(enabled)}")
@@ -193,7 +227,8 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
                         f"target={target} enabled={int(enabled)}")
             if expected not in proc.stdout or "page_intact_after_frames=1" not in proc.stdout:
                 raise AssertionError(f"native {target} {label} protected-page proof not accepted")
-        captures = ([output / f"rhh-{target}-trainer-battle-{'external' if enabled else 'fallback'}.png"]
+        captures = ([output / f"rhh-{target}-trainer-battle-{'external' if enabled else 'fallback'}.png",
+                     output / f"rhh-{target}-pokemon-battle-{'external' if enabled else 'fallback'}.png"]
                     if trainer_battle else
                     [output / f"rhh-{target}-{'external' if enabled else 'fallback'}-{stage}.png"
                      for stage in ("00-initial-real-town","01-dpad-movement","02-after-north")]
@@ -208,6 +243,9 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
                 if len(set(image.convert("RGB").getdata())) <= 8:
                     raise AssertionError(f"RHH LCD image blank or monochrome: {filename.name}")
         outputs[label] = proc.stdout
+
+    if trainer_battle and pokemon_tokens["enabled"] != pokemon_tokens["disabled"]:
+        raise AssertionError("enabled and disabled Pokemon battle sprites/palettes differ")
 
     report = {
         "framework": "rh-hideout/pokeemerald-expansion",
@@ -227,8 +265,9 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
         "map_tileset_loader_source_native_verified": map_smoke or overworld_play,
         "player_controlled_overworld_verified": overworld_play,
         "original_town_to_route_native_acceptance": overworld_play,
-        "map_tileset_real_source_page_count": sum(not e["id"].startswith("rhh.trainer.") for e in page_entries),
+        "map_tileset_real_source_page_count": sum(not e["id"].startswith(("rhh.trainer.", "rhh.mon.")) for e in page_entries),
         "trainer_provider_page_count": sum(e["id"].startswith("rhh.trainer.") for e in page_entries),
+        "pokemon_provider_page_count": sum(e["id"].startswith("rhh.mon.") for e in page_entries),
         "gameplay_map_rendering_verified": overworld_play,
         "heap_bytes_reserved_for_xgba_page": RESOURCE_SIZE,
         "real_expanded_guest_provider_reads_verified": True,
@@ -238,7 +277,8 @@ def prove(source: Path, mgba: Path, target: str, output: Path, *,
         "native_enabled": outputs["enabled"],
         "native_disabled": outputs["disabled"],
         "native_trainer_battle_verified": trainer_battle,
-        "not_proven": ("native trainer battle graphics only; no scripted battle flow or Flash save"
+        "native_pokemon_battle_verified": trainer_battle,
+        "not_proven": ("native trainer and original Pokemon battle graphics only; no scripted battle flow or Flash save"
                        if trainer_battle else
                        "scripted NPC interactions, battles and Flash cold restart"
                        if overworld_play else

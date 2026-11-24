@@ -79,6 +79,14 @@ class ExpansionSourceTests(unittest.TestCase):
             "{\n"
             "    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);\n"
             "}\n"
+            "void BattleLoadMonSpriteGfx(struct Pokemon *mon, enum BattlerId battler)\n"
+            "{\n"
+            "    position = GetBattlerPosition(battler);\n"
+            "    HandleLoadSpecialPokePic(!IsOnPlayerSide(battler),\n"
+            "                             gMonSpritesGfxPtr->spritesGfx[position],\n"
+            "                             species, personalityValue);\n"
+            "    paletteOffset = OBJ_PLTT_ID(battler);\n"
+            "}\n"
         )
         (self.root / "src/load_save.c").write_text("void MoveSaveBlocks_ResetHeap(void)\n{\n    InitHeap(gHeap, HEAP_SIZE);\n}\n")
         (self.root / "src/overworld.c").write_text(OVERWORLD)
@@ -809,6 +817,79 @@ class ExpansionSourceTests(unittest.TestCase):
         probe = (adapter.ROOT / "integration/expansion/xgba_expansion_probe.inc").read_text()
         self.assertIn("void XgbaExpansionTrainerAttempt(u32 id)", probe)
         self.assertLess(probe.index("battle_trainer_resident;"), probe.index("battle_attempt_count;"))
+
+    def test_original_pokemon_loader_is_bridged_with_original_fallback_and_restores(self):
+        path = self.root / "src/battle_gfx_sfx_util.c"
+        original = path.read_text()
+        with adapter.patched_source(self.root, "emerald"):
+            patched = path.read_text()
+        attempt = patched.index("XgbaExpansionMonAttempt(!IsOnPlayerSide(battler), species);")
+        attempt_call = patched.index("if (!XgbaExpansionTryMonPic(!IsOnPlayerSide(battler),")
+        original_call = patched.index("HandleLoadSpecialPokePic(!IsOnPlayerSide(battler),", attempt_call)
+        note = patched.index("XgbaExpansionNoteMonFallback(!IsOnPlayerSide(battler), species,")
+        palette = patched.index("paletteOffset = OBJ_PLTT_ID(battler);")
+        self.assertLess(attempt, attempt_call)
+        self.assertLess(attempt_call, original_call)
+        self.assertLess(original_call, note)
+        self.assertLess(note, palette)
+        self.assertEqual(patched.count("XgbaExpansionTryMonPic("), 2)
+        self.assertEqual(path.read_text(), original)
+        bridge = (adapter.ROOT / "integration/expansion/xgba_expansion_pokemon_battle.inc").read_text()
+        for fragment in ("XgbaExpansionPageRelease();", "offset += 256u",
+                         "P_GBA_STYLE_SPECIES_GFX", "ShouldDrawSpotsOnSpecies",
+                         "frontPicFemale", "XgbaExpansionPageGeneration()",
+                         "(u32)page != leaseStart"):
+            self.assertIn(fragment, bridge)
+        self.assertNotIn("DecompressDataWithHeaderWram", bridge)
+
+    def test_pokemon_loader_validation_fails_closed_on_drift_or_double_patch(self):
+        path = self.root / "src/battle_gfx_sfx_util.c"
+        original = path.read_text()
+        path.write_text(original.replace("species, personalityValue);", "species, personalityValue, 0);"))
+        with self.assertRaises(adapter.ExpansionDrift):
+            adapter.validate_source(self.root, "emerald")
+        path.write_text(original + "static bool8 XgbaExpansionTryMonPic(void);\n")
+        with self.assertRaises(adapter.ExpansionDrift):
+            adapter.validate_source(self.root, "emerald")
+
+    def test_pokemon_proof_fields_match_native_blocks_and_acceptance(self):
+        header = (adapter.ROOT / "integration/mgba/xgba_expansion_native.h").read_text()
+        probe = (adapter.ROOT / "integration/expansion/xgba_expansion_probe.inc").read_text()
+        acceptance = (adapter.ROOT / "tools/xgba_expansion_native_acceptance.py").read_text()
+        fields = re.search(r"struct XgbaExpansionProof \{(.*?)\n\};", probe, re.S).group(1)
+        names = re.findall(r"volatile u32 (\w+);", fields)
+        suffixes = ["attempts", "attempt_species", "transfers", "transfer_species",
+                    "transfer_bytes", "transfer_hash", "transfer_generation",
+                    "transfer_resident", "fallback_count", "fallback_species",
+                    "fallback_bytes", "fallback_hash", "sprite_ok", "sprite_species",
+                    "sprite_tile", "palette_hash", "vram_frame", "sprite_live"]
+        front = 4 * names.index("mon_front_attempts")
+        back = 4 * names.index("mon_back_attempts")
+        self.assertEqual(front, int(re.search(r"F=(\d+)", header).group(1)))
+        self.assertEqual(back, int(re.search(r"B=(\d+)", header).group(1)))
+        for side in ("front", "back"):
+            start = names.index(f"mon_{side}_attempts")
+            self.assertEqual(names[start:start + 18], [f"mon_{side}_{s}" for s in suffixes])
+        self.assertEqual(names.index("mon_front_attempts"), names.index("battle_fallback_bytes") + 1)
+        for word, suffix in re.findall(r"(\w+)=(\d+)", re.search(r"enum \{ F=.*?\};", header, re.S).group(0))[2:]:
+            self.assertEqual(int(suffix), suffixes.index(self._native_suffix(word)))
+        self.assertIn("PASS_XGBA_RHH_NATIVE_POKEMON_BATTLE", header)
+        self.assertIn("PASS_XGBA_RHH_NATIVE_TRAINER_BATTLE", header)
+        self.assertIn('"native_pokemon_battle_verified": trainer_battle', acceptance)
+        self.assertIn('"native_trainer_battle_verified": trainer_battle', acceptance)
+        self.assertIn("pokemon-battle", acceptance)
+        trainer_body = header.split("xgba_expansion_native_trainer_battle(", 1)[1]
+        self.assertIn("xgba_expansion_native_pokemon_battle(core,probe", trainer_body)
+
+    @staticmethod
+    def _native_suffix(word):
+        return {"ATT": "attempts", "ATTS": "attempt_species", "TR": "transfers",
+                "TRS": "transfer_species", "TRB": "transfer_bytes", "TRH": "transfer_hash",
+                "TRG": "transfer_generation", "TRR": "transfer_resident",
+                "FBC": "fallback_count", "FBS": "fallback_species", "FBB": "fallback_bytes",
+                "FBH": "fallback_hash", "OK": "sprite_ok", "SPS": "sprite_species",
+                "TILE": "sprite_tile", "PAL": "palette_hash", "FRAME": "vram_frame",
+                "LIVE": "sprite_live"}[word]
 
     def test_native_trainer_battle_harness_is_guest_driven_and_offsets_match_proof(self):
         header = (adapter.ROOT / "integration/mgba/xgba_expansion_native.h").read_text()

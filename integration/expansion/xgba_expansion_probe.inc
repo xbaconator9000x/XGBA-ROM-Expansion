@@ -95,6 +95,44 @@ struct XgbaExpansionProof {
     volatile u32 battle_fallback_hash;    /* FNV-1a over original-decompressed tiles */
     volatile u32 battle_fallback_id;
     volatile u32 battle_fallback_bytes;
+    /* Original Pokemon battle sprite witnesses. Front is the opponent's pic,
+     * back is the player's pic. Appended: all legacy offsets stay stable. */
+    volatile u32 mon_front_attempts;
+    volatile u32 mon_front_attempt_species;
+    volatile u32 mon_front_transfers;
+    volatile u32 mon_front_transfer_species;
+    volatile u32 mon_front_transfer_bytes;
+    volatile u32 mon_front_transfer_hash;
+    volatile u32 mon_front_transfer_generation;
+    volatile u32 mon_front_transfer_resident;
+    volatile u32 mon_front_fallback_count;
+    volatile u32 mon_front_fallback_species;
+    volatile u32 mon_front_fallback_bytes;
+    volatile u32 mon_front_fallback_hash;
+    volatile u32 mon_front_sprite_ok;       /* latched: live sprite matches buffer, VRAM, palette */
+    volatile u32 mon_front_sprite_species;
+    volatile u32 mon_front_sprite_tile;
+    volatile u32 mon_front_palette_hash;
+    volatile u32 mon_front_vram_frame;      /* 1 + animation frame whose tiles are in OBJ VRAM */
+    volatile u32 mon_front_sprite_live;     /* sprite on screen this frame */
+    volatile u32 mon_back_attempts;
+    volatile u32 mon_back_attempt_species;
+    volatile u32 mon_back_transfers;
+    volatile u32 mon_back_transfer_species;
+    volatile u32 mon_back_transfer_bytes;
+    volatile u32 mon_back_transfer_hash;
+    volatile u32 mon_back_transfer_generation;
+    volatile u32 mon_back_transfer_resident;
+    volatile u32 mon_back_fallback_count;
+    volatile u32 mon_back_fallback_species;
+    volatile u32 mon_back_fallback_bytes;
+    volatile u32 mon_back_fallback_hash;
+    volatile u32 mon_back_sprite_ok;
+    volatile u32 mon_back_sprite_species;
+    volatile u32 mon_back_sprite_tile;
+    volatile u32 mon_back_palette_hash;
+    volatile u32 mon_back_vram_frame;
+    volatile u32 mon_back_sprite_live;
 };
 
 /* Small metadata only. The 16KiB payload itself resides inside the
@@ -271,6 +309,75 @@ void XgbaExpansionTrainerFallback(u32 id, const void *dest, u32 bytes)
     gXgbaExpansionProof.battle_fallback_id = id;
     gXgbaExpansionProof.battle_fallback_bytes = bytes;
     gXgbaExpansionProof.battle_fallback_hash = hash;
+}
+
+/* Original Pokemon battle sprite loader witnesses; the guest records them. */
+void XgbaExpansionMonAttempt(u32 isFront, u32 species)
+{
+    if (isFront)
+    {
+        ++gXgbaExpansionProof.mon_front_attempts;
+        gXgbaExpansionProof.mon_front_attempt_species = species;
+    }
+    else
+    {
+        ++gXgbaExpansionProof.mon_back_attempts;
+        gXgbaExpansionProof.mon_back_attempt_species = species;
+    }
+}
+
+static u32 XgbaExpansionMonWitnessHash(const void *dest, u32 bytes)
+{
+    const u8 *data = dest;
+    u32 hash = 2166136261u;
+    u32 i;
+    for (i = 0; i < bytes; ++i)
+        hash = (hash ^ data[i]) * 16777619u;
+    return hash;
+}
+
+void XgbaExpansionMonTransfer(u32 isFront, u32 species, const void *dest, u32 bytes)
+{
+    u32 hash = XgbaExpansionMonWitnessHash(dest, bytes);
+    u32 generation = XgbaExpansionPageGeneration();
+    u32 resident = XgbaExpansionPageResidentBytes();
+    if (isFront)
+    {
+        ++gXgbaExpansionProof.mon_front_transfers;
+        gXgbaExpansionProof.mon_front_transfer_species = species;
+        gXgbaExpansionProof.mon_front_transfer_bytes += bytes;
+        gXgbaExpansionProof.mon_front_transfer_hash = hash;
+        gXgbaExpansionProof.mon_front_transfer_generation = generation;
+        gXgbaExpansionProof.mon_front_transfer_resident = resident;
+    }
+    else
+    {
+        ++gXgbaExpansionProof.mon_back_transfers;
+        gXgbaExpansionProof.mon_back_transfer_species = species;
+        gXgbaExpansionProof.mon_back_transfer_bytes += bytes;
+        gXgbaExpansionProof.mon_back_transfer_hash = hash;
+        gXgbaExpansionProof.mon_back_transfer_generation = generation;
+        gXgbaExpansionProof.mon_back_transfer_resident = resident;
+    }
+}
+
+void XgbaExpansionMonFallback(u32 isFront, u32 species, const void *dest, u32 bytes)
+{
+    u32 hash = XgbaExpansionMonWitnessHash(dest, bytes);
+    if (isFront)
+    {
+        ++gXgbaExpansionProof.mon_front_fallback_count;
+        gXgbaExpansionProof.mon_front_fallback_species = species;
+        gXgbaExpansionProof.mon_front_fallback_bytes = bytes;
+        gXgbaExpansionProof.mon_front_fallback_hash = hash;
+    }
+    else
+    {
+        ++gXgbaExpansionProof.mon_back_fallback_count;
+        gXgbaExpansionProof.mon_back_fallback_species = species;
+        gXgbaExpansionProof.mon_back_fallback_bytes = bytes;
+        gXgbaExpansionProof.mon_back_fallback_hash = hash;
+    }
 }
 
 static void XgbaExpansionProbeBoot(void)

@@ -19,7 +19,7 @@ enum {
     RHH_TRAINER_RESIDENT = 160,
     RHH_TRAINER_ATTEMPTS = 164,
     RHH_TRAINER_ATTEMPT_ID = 168,
-    RHH_TRAINER_PROOF_END = 212,
+    RHH_TRAINER_PROOF_END = 356,
     RHH_PAGE_RESIDENT = 40,
     RHH_BATTLE_FLOW = 172,
     RHH_BATTLE_OPPONENT = 176,
@@ -239,6 +239,148 @@ static void xgba_expansion_native_run(struct mCore *core, uint32_t probe,
            !enabled?resource->reads==0:1,path);
 }
 
+/* Hash [start,start+length) of one exact source-owned extra resource. */
+static uint32_t xgba_expansion_resource_slice_hash(
+        const struct ResourceFile *resource, const char *id,
+        uint32_t expected_bytes, uint32_t start, uint32_t length)
+{
+    for (unsigned i=0;i<resource->extra_count;++i) {
+        const struct ExtraResourceFile *item=&resource->extra[i];
+        if (strcmp(item->id,id))
+            continue;
+        if (item->length!=expected_bytes || start>expected_bytes ||
+            length>expected_bytes-start || item->offset>INT64_MAX-start)
+            fail("RHH Pokemon source page has unexpected size");
+        FILE *file=fopen(resource->path,"rb");
+        if (!file || fseeko(file,(off_t)(item->offset+start),SEEK_SET))
+            fail("RHH Pokemon source page unavailable");
+        uint32_t hash=2166136261u;
+        for (uint32_t j=0;j<length;++j) {
+            int byte=fgetc(file);
+            if (byte==EOF) fail("RHH Pokemon source page truncated");
+            hash=(hash^(uint8_t)byte)*16777619u;
+        }
+        fclose(file);
+        return hash;
+    }
+    fail("RHH Pokemon source page not declared by the private manifest");
+    return 0u;
+}
+
+static uint32_t xgba_expansion_vram_hash(struct mCore *core, uint32_t tile)
+{
+    uint32_t hash=2166136261u;
+    for (uint32_t i=0;i<2048u;++i)
+        hash=(hash^core->busRead8(core,0x06010000u+tile*32u+i))*16777619u;
+    return hash;
+}
+
+/* Native acceptance for original Pokemon battle sprites. Runs after the
+ * trainer proof in the same battle: waits for the guest's own latches
+ * (buffer == VRAM == original palette), then asserts the front and back
+ * witnesses against provider-owned source hashes and the real LCD. */
+static void xgba_expansion_native_pokemon_battle(struct mCore *core,
+        uint32_t probe, const char *target, const char *directory,
+        const struct XgbaGbaDevice *device,
+        const struct ResourceFile *resource, int enabled)
+{
+    /* Word indices inside each 18-field side block of the guest proof. */
+    enum { F=212, B=284, ATT=0, ATTS=1, TR=2, TRS=3, TRB=4, TRH=5, TRG=6,
+           TRR=7, FBC=8, FBS=9, FBB=10, FBH=11, OK=12, SPS=13, TILE=14,
+           PAL=15, FRAME=16, LIVE=17 };
+    const uint32_t base[2]={F,B};
+    uint32_t v[2][18];
+    for (unsigned frames=0;frames<4000u;++frames) {
+        if (core->busRead32(core,probe+F+4u*OK) &&
+            core->busRead32(core,probe+B+4u*OK))
+            break;
+        /* Intro text auto-advances; tap A only if it unexpectedly stalls. */
+        core->setKeys(core,(frames>1500u && (frames%60u)<2u)?1u:0u);
+        core->runFrame(core);
+    }
+    core->setKeys(core,0u);
+    if (!core->busRead32(core,probe+F+4u*OK) ||
+        !core->busRead32(core,probe+B+4u*OK))
+        fail("RHH guest never latched original Pokemon battle sprites in VRAM");
+    for (unsigned i=0;i<8u;++i)
+        core->runFrame(core);
+    for (unsigned side=0;side<2u;++side)
+        for (unsigned i=0;i<18u;++i)
+            v[side][i]=core->busRead32(core,probe+base[side]+4u*i);
+    if (core->busRead32(core,probe+RHH_BATTLE_FLOW)!=2u ||
+        !v[0][LIVE] || !v[1][LIVE])
+        fail("RHH Pokemon battle sprites not on screen at LCD capture");
+    /* Original lead species are Bulbasaur (player) and Geodude (opponent). */
+    if (v[0][ATTS]!=74u || v[1][ATTS]!=1u || v[0][SPS]!=74u ||
+        v[1][SPS]!=1u || v[0][ATT]<1u || v[1][ATT]<1u)
+        fail("RHH Pokemon battle did not load the original Geodude/Bulbasaur sprites");
+    if (core->busRead32(core,probe+RHH_PAGE_RESIDENT)!=0u)
+        fail("RHH Pokemon battle left the external page lease resident");
+    if (device->failed_reads)
+        fail("RHH Pokemon battle provider reported a failed read");
+    if (!v[0][PAL] || !v[1][PAL] || !v[0][FRAME] || v[0][FRAME]>2u ||
+        v[1][FRAME]!=1u)
+        fail("RHH Pokemon battle palette or VRAM witness invalid");
+    const char *ids[2]={"rhh.mon.f.004a","rhh.mon.b.0001"};
+    const uint32_t sizes[2]={4096u,2048u};
+    uint32_t source_hash[2];
+    for (unsigned side=0;side<2u;++side)
+        source_hash[side]=xgba_expansion_resource_slice_hash(
+            resource,ids[side],sizes[side],0u,sizes[side]);
+    /* Host-side live VRAM check: tiles on the LCD equal an original frame. */
+    uint32_t vram=xgba_expansion_vram_hash(core,v[0][TILE]);
+    if (vram!=xgba_expansion_resource_slice_hash(resource,ids[0],4096u,0u,2048u) &&
+        vram!=xgba_expansion_resource_slice_hash(resource,ids[0],4096u,2048u,2048u))
+        fail("RHH opponent Pokemon VRAM tiles differ from the original source");
+    vram=xgba_expansion_vram_hash(core,v[1][TILE]);
+    if (vram!=xgba_expansion_resource_slice_hash(resource,ids[1],2048u,0u,2048u))
+        fail("RHH player Pokemon VRAM tiles differ from the original source");
+    if (enabled) {
+        for (unsigned side=0;side<2u;++side) {
+            if (v[side][TR]<1u || v[side][TR]>v[side][ATT] ||
+                v[side][TRB]!=v[side][TR]*sizes[side] ||
+                v[side][TRS]!=v[side][ATTS] || v[side][TRR]!=0u ||
+                v[side][TRG]<1u || v[side][FBC])
+                fail("RHH Pokemon battle external transfer witness invalid");
+            if (v[side][TRH]!=source_hash[side])
+                fail("RHH Pokemon battle sprite differs from verified source page");
+        }
+        if (device->successful_reads<=v[0][TR]+v[1][TR] ||
+            resource->reads<=v[0][TR]+v[1][TR])
+            fail("RHH Pokemon battle provider reads do not cover transfers");
+    } else {
+        if (device->successful_reads || resource->reads || resource->lookups)
+            fail("RHH disabled Pokemon battle used the external provider");
+        for (unsigned side=0;side<2u;++side) {
+            if (v[side][TR] || v[side][TRB] || v[side][TRH])
+                fail("RHH disabled Pokemon battle recorded an external transfer");
+            if (v[side][FBC]<1u || v[side][FBS]!=v[side][ATTS] ||
+                v[side][FBB]!=sizes[side] || v[side][FBH]!=source_hash[side])
+                fail("RHH original Pokemon decompressor differs from verified source sprite");
+        }
+    }
+    char path[1024];
+    if (snprintf(path,sizeof(path),"%s/rhh-%s-pokemon-battle-%s.png",directory,
+                 target,enabled?"external":"fallback")>=(int)sizeof(path))
+        fail("RHH Pokemon battle screenshot path exceeds limit");
+    const void *pixels=NULL;
+    size_t stride=0u;
+    core->getPixels(core,&pixels,&stride);
+    if (!pixels || stride<240u)
+        fail("RHH Pokemon battle LCD framebuffer unattached");
+    save_native_frame(core,path);
+    printf("PASS_XGBA_RHH_NATIVE_POKEMON_BATTLE target=%s enabled=%d "
+           "front_species=%u back_species=%u front_transfers=%u "
+           "back_transfers=%u front_hash=%08x back_hash=%08x "
+           "front_source_hash=%08x back_source_hash=%08x "
+           "front_fallbacks=%u back_fallbacks=%u front_palette=%08x "
+           "back_palette=%08x provider_reads=%u lease_released=1 real_lcd=%s\n",
+           target,enabled,v[0][SPS],v[1][SPS],v[0][TR],v[1][TR],
+           enabled?v[0][TRH]:v[0][FBH],enabled?v[1][TRH]:v[1][FBH],
+           source_hash[0],source_hash[1],v[0][FBC],v[1][FBC],
+           v[0][PAL],v[1][PAL],device->successful_reads,path);
+}
+
 /* Native acceptance for the original RHH trainer battle graphics loader.
  * The guest alone reaches DecompressTrainerFrontPic; the host only observes
  * guest witnesses, provider counters and the real LCD. */
@@ -327,5 +469,7 @@ static void xgba_expansion_native_trainer_battle(struct mCore *core,
            target,enabled,attempts,attempt_id,count,bytes,last_id,
            enabled?hash:fallback_hash,source_hash,fallback_count,main_frames,
            device->successful_reads,path);
+    xgba_expansion_native_pokemon_battle(core,probe,target,directory,device,
+                                         resource,enabled);
 }
 #endif

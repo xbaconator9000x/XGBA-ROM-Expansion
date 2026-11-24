@@ -9,6 +9,9 @@
  */
 #include "battle_main.h"
 #include "battle_setup.h"
+#include "battle.h"
+#include "palette.h"
+#include "pokemon.h"
 #include "script_pokemon_util.h"
 #include "sprite.h"
 #include "constants/items.h"
@@ -66,4 +69,88 @@ static void XgbaExpansionTrainerBattleWitness(void)
         gXgbaExpansionProof.battle_sprite_visible = 1u;
     if (sprite->x2 == 0 && x >= 140 && x <= 230)
         gXgbaExpansionProof.battle_sprite_arrived = 1u;
+}
+
+static u32 XgbaExpansionPokemonSliceHash(const void *data, u32 bytes)
+{
+    const u8 *p = data;
+    u32 hash = 2166136261u;
+    u32 i;
+    for (i = 0; i < bytes; ++i)
+        hash = (hash ^ p[i]) * 16777619u;
+    return hash;
+}
+
+/* Observe one battler's live sprite. A latch is set only once the sprite's
+ * OBJ VRAM tiles equal the engine-owned buffer and its OBJ palette equals the
+ * original species palette; sprite_live is refreshed every frame. */
+static void XgbaExpansionPokemonSideWitness(u32 isFront)
+{
+    enum BattlerId battler = GetBattlerAtPosition(isFront ? B_POSITION_OPPONENT_LEFT : B_POSITION_PLAYER_LEFT);
+    enum BattlerPosition position = GetBattlerPosition(battler);
+    volatile u32 *live = isFront ? &gXgbaExpansionProof.mon_front_sprite_live : &gXgbaExpansionProof.mon_back_sprite_live;
+    volatile u32 *ok = isFront ? &gXgbaExpansionProof.mon_front_sprite_ok : &gXgbaExpansionProof.mon_back_sprite_ok;
+    struct Sprite *sprite;
+    const u8 *buffer;
+    const u16 *palette;
+    u32 spriteId, tile, species, frame = 0u;
+    s32 x;
+
+    *live = 0u;
+    if (gMonSpritesGfxPtr == NULL || position >= MAX_BATTLERS_COUNT)
+        return;
+    species = gBattleMons[battler].species;
+    spriteId = gBattlerSpriteIds[battler];
+    if (species == SPECIES_NONE || spriteId >= MAX_SPRITES)
+        return;
+    sprite = &gSprites[spriteId];
+    x = sprite->x + sprite->x2;
+    if (!sprite->inUse || sprite->invisible || x < 16 || x > 224)
+        return;
+    *live = 1u;
+    if (*ok)
+        return;
+    tile = sprite->oam.tileNum;
+    if (tile > 1024u - 64u)
+        return;
+    buffer = gMonSpritesGfxPtr->spritesGfx[position];
+    if (XgbaExpansionPokemonSliceHash((const u8 *)OBJ_VRAM0 + tile * 32u, 2048u)
+        == XgbaExpansionPokemonSliceHash(buffer, 2048u))
+        frame = 1u;
+    else if (isFront && XgbaExpansionPokemonSliceHash((const u8 *)OBJ_VRAM0 + tile * 32u, 2048u)
+        == XgbaExpansionPokemonSliceHash(buffer + 2048u, 2048u))
+        frame = 2u;
+    if (frame == 0u)
+        return;
+    palette = GetMonFrontSpritePal(GetBattlerMon(battler));
+    if (palette == NULL
+        || XgbaExpansionPokemonSliceHash(&gPlttBufferUnfaded[OBJ_PLTT_ID(battler)], 32u)
+           != XgbaExpansionPokemonSliceHash(palette, 32u))
+        return;
+    if (isFront)
+    {
+        gXgbaExpansionProof.mon_front_sprite_species = species;
+        gXgbaExpansionProof.mon_front_sprite_tile = tile;
+        gXgbaExpansionProof.mon_front_palette_hash = XgbaExpansionPokemonSliceHash(palette, 32u);
+        gXgbaExpansionProof.mon_front_vram_frame = frame;
+    }
+    else
+    {
+        gXgbaExpansionProof.mon_back_sprite_species = species;
+        gXgbaExpansionProof.mon_back_sprite_tile = tile;
+        gXgbaExpansionProof.mon_back_palette_hash = XgbaExpansionPokemonSliceHash(palette, 32u);
+        gXgbaExpansionProof.mon_back_vram_frame = frame;
+    }
+    *ok = 1u;
+}
+
+static void XgbaExpansionPokemonBattleWitness(void)
+{
+    if (gXgbaExpansionProof.battle_flow_state == 0u
+        || !(gBattleTypeFlags & BATTLE_TYPE_TRAINER)
+        || gMain.callback2 != BattleMainCB2
+        || gBattleMainFunc == NULL || gBattleStruct == NULL)
+        return;
+    XgbaExpansionPokemonSideWitness(1u);
+    XgbaExpansionPokemonSideWitness(0u);
 }
