@@ -87,7 +87,7 @@ static u32 XgbaExpansionPokemonSliceHash(const void *data, u32 bytes)
 static void XgbaExpansionPokemonSideWitness(u32 isFront)
 {
     enum BattlerId battler = GetBattlerAtPosition(isFront ? B_POSITION_OPPONENT_LEFT : B_POSITION_PLAYER_LEFT);
-    enum BattlerPosition position = GetBattlerPosition(battler);
+    enum BattlerPosition position;
     volatile u32 *live = isFront ? &gXgbaExpansionProof.mon_front_sprite_live : &gXgbaExpansionProof.mon_back_sprite_live;
     volatile u32 *ok = isFront ? &gXgbaExpansionProof.mon_front_sprite_ok : &gXgbaExpansionProof.mon_back_sprite_ok;
     struct Sprite *sprite;
@@ -97,7 +97,10 @@ static void XgbaExpansionPokemonSideWitness(u32 isFront)
     s32 x;
 
     *live = 0u;
-    if (gMonSpritesGfxPtr == NULL || position >= MAX_BATTLERS_COUNT)
+    if (gMonSpritesGfxPtr == NULL || (u32)battler >= (u32)MAX_BATTLERS_COUNT)
+        return;
+    position = GetBattlerPosition(battler);
+    if ((u32)position >= (u32)MAX_BATTLERS_COUNT)
         return;
     species = gBattleMons[battler].species;
     spriteId = gBattlerSpriteIds[battler];
