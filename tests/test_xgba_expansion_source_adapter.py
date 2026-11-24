@@ -163,8 +163,8 @@ class ExpansionSourceTests(unittest.TestCase):
         patched = adapter.patched_battle_graphics(original)
         for name in ("RED", "LEAF", "HIKER", "HIKER_FRLG"):
             self.assertIn("id != TRAINER_PIC_" + name, patched)
-        self.assertIn("bytes = ((const u8 *)original)[1]", patched)
-        self.assertIn("((u32)((const u8 *)original)[3] << 16)", patched)
+        self.assertIn("bytes = GetDecompressedDataSize(original)", patched)
+        self.assertIn("!IsCompressedData(original)", patched)
         self.assertIn("bytes != 64u * 64u / 2u", patched)
         self.assertIn("CpuCopy32", patched)
         self.assertIn("DecompressDataWithHeaderWram", patched)
@@ -333,26 +333,26 @@ class ExpansionSourceTests(unittest.TestCase):
         self.assertLess(residency_guard, transfer)
         self.assertIn("return FALSE;", patched[generation_guard:residency_guard])
 
-    def test_trainer_external_transfer_requires_original_rom_lz77_stream(self):
+    def test_trainer_external_transfer_requires_original_rom_image_stream(self):
         original = (self.root / "src/battle_gfx_sfx_util.c").read_text()
         patched = adapter.patched_battle_graphics(original)
         transfer = patched.split("static bool8 XgbaExpansionTryTrainerPic", 1)[1].split(
             "void DecompressTrainerFrontPic", 1)[0]
         checks = (
             "(u32)original < 0x08000000u",
-            "(u32)original > 0x0A000000u - 4u",
-            "((const u8 *)original)[0] != 0x10u",
+            "(u32)original > 0x0A000000u - 8u",
+            "!IsCompressedData(original)",
         )
         for check in checks:
             self.assertIn(check, transfer)
-            self.assertLess(transfer.index(check), transfer.index("bytes = ((const u8 *)original)[1]"))
-        self.assertLess(transfer.index("((const u8 *)original)[0] != 0x10u"),
-                        transfer.index("bytes = ((const u8 *)original)[1]"))
-        self.assertLess(transfer.index("bytes = ((const u8 *)original)[1]"),
+            self.assertLess(transfer.index(check), transfer.index("bytes = GetDecompressedDataSize(original)"))
+        self.assertLess(transfer.index("!IsCompressedData(original)"),
+                        transfer.index("bytes = GetDecompressedDataSize(original)"))
+        self.assertLess(transfer.index("bytes = GetDecompressedDataSize(original)"),
                         transfer.index("if (bytes != 64u * 64u / 2u)"))
         self.assertLess(transfer.index("if (bytes != 64u * 64u / 2u)"),
                         transfer.index("XgbaExpansionPageAcquire(resource, bytes)"))
-        self.assertNotIn("GetDecompressedDataSize(original)", transfer)
+        self.assertIn("smol.mode > ENCODE_BOTH_DELTA_SYMS", transfer)
         self.assertIn("DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId)", patched)
 
     def test_trainer_release_cannot_silently_corrupt_engine_sprite_buffer(self):

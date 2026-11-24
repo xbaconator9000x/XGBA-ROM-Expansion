@@ -278,9 +278,11 @@ static void xgba_expansion_native_trainer_battle(struct mCore *core,
     const uint32_t sprite_pic=core->busRead32(core,probe+RHH_BATTLE_SPRITE_PIC);
     const uint32_t opponent=core->busRead32(core,probe+RHH_BATTLE_OPPONENT);
     const uint32_t main_frames=core->busRead32(core,probe+RHH_BATTLE_MAIN_FRAMES);
-    /* TRAINER_SAWYER_1 uses the original Hiker pic (TRAINER_PIC_HIKER == 11). */
-    if (opponent!=1u || main_frames<1u || attempts<1u || attempt_id!=11u ||
-        sprite_pic!=11u)
+    /* The pinned engine selects the version-specific original Hiker artwork. */
+    const uint32_t expected_pic = strcmp(target,"emerald")==0 ? 11u : 105u;
+    fprintf(stderr,"RHH battle witnesses: opponent=%u attempt=%u sprite=%u count=%u bytes=%u last=%u fallback=%u resident=%u generation=%u\n", opponent,attempt_id,sprite_pic,count,bytes,last_id,fallback_count,resident,generation);
+    if (opponent!=1u || main_frames<1u || attempts<1u || attempt_id!=expected_pic ||
+        sprite_pic!=expected_pic)
         fail("RHH trainer battle did not draw the original Hiker opponent");
     if (core->busRead32(core,probe+RHH_PAGE_RESIDENT)!=0u)
         fail("RHH trainer battle left the external page lease resident");
@@ -291,7 +293,7 @@ static void xgba_expansion_native_trainer_battle(struct mCore *core,
         fail("RHH trainer source ID format exceeds host space");
     const uint32_t source_hash=xgba_expansion_source_hash(resource,id,2048u);
     if (enabled) {
-        if (count<1u || count>attempts || bytes!=count*2048u || last_id!=11u ||
+        if (count<1u || count>attempts || bytes!=count*2048u || last_id!=expected_pic ||
             resident!=0u || generation<1u || fallback_count)
             fail("RHH trainer battle external transfer witness invalid");
         if (hash!=source_hash)
@@ -302,7 +304,7 @@ static void xgba_expansion_native_trainer_battle(struct mCore *core,
         if (count || bytes || hash || last_id || device->successful_reads ||
             resource->reads || resource->lookups)
             fail("RHH disabled trainer battle used the external provider");
-        if (fallback_count<1u || fallback_id!=11u || fallback_bytes!=2048u ||
+        if (fallback_count<1u || fallback_id!=expected_pic || fallback_bytes!=2048u ||
             fallback_hash!=source_hash)
             fail("RHH original fallback decompressor differs from verified source sprite");
     }

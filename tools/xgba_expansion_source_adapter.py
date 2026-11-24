@@ -156,20 +156,15 @@ static bool8 XgbaExpansionTryTrainerPic(u32 id, const u32 *original, void *dest)
     /* The page lease is invalidated immediately after the synchronous copy.
      * Refuse any destination overlapping the leased tail of gHeap, even if
      * the caller changes sprite-buffer ownership in a future RHH release. */
-    /* The pinned trainer graphics table must resolve to a ROM-backed LZ77
-     * stream. Reject malformed headers before asking the decompressor for
-     * its output length; the original loader remains the fallback. */
-    if ((u32)original < 0x08000000u || (u32)original > 0x0A000000u - 4u
-        || ((const u8 *)original)[0] != 0x10u)
+    /* RHH's pinned trainer pictures use SMOL, not just legacy LZ77.
+     * Admit only original ROM image streams; reject tilemaps and containers. */
+    if ((u32)original < 0x08000000u || (u32)original > 0x0A000000u - 8u
+        || ((u32)original & 3u))
         return FALSE;
-    /* Read the complete 24-bit LZ77 output size directly from the original
-     * ROM header before invoking any decompression helper. A valid 0x10
-     * marker alone is insufficient: malformed or oversized streams must
-     * never enter the external provider path. The original loader retains
-     * responsibility for every unsupported stream. */
-    bytes = ((const u8 *)original)[1]
-          | ((u32)((const u8 *)original)[2] << 8)
-          | ((u32)((const u8 *)original)[3] << 16);
+    if (((const union CompressionHeader *)original)->smol.mode > ENCODE_BOTH_DELTA_SYMS
+        || !IsCompressedData(original))
+        return FALSE;
+    bytes = GetDecompressedDataSize(original);
     if (bytes != 64u * 64u / 2u)
         return FALSE;
     /* Trainer tiles must land entirely in engine-owned EWRAM, never VRAM,
