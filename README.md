@@ -1,5 +1,7 @@
 # XGBA — Expanding GBA game resources
 
+> **Priority reset — 15 November 2026:** Development of the Emerald → Team Rocket → Heart & Soul three-ROM map test is **PAUSED**; draft [PR #123](https://github.com/xbaconator9000x/XGBA-ROM-Expansion/pull/123) is preserved unchanged. **Priority #1 is native infrastructure compatibility with RHH [pokeemerald-expansion](https://github.com/rh-hideout/pokeemerald-expansion)**, including the upstream **Emerald, FireRed and LeafGreen** build targets. A new separate source adapter and exact-upstream build gate are under development. **Do not claim framework runtime compatibility until actual patched-mGBA external resource fetches, LCD and cold-save tests pass.** See [the current acceptance contract](docs/EXPANSION_FRAMEWORK_COMPATIBILITY_2026-11-15.md).
+
 XGBA is an experimental project exploring how Game Boy Advance games can access substantially more content than fits inside a conventional cartridge ROM.
 
 The approach is to let an **XGBA-enabled game** request additional maps, graphics, scripts and other resources from external files through a **modified emulator**. The game still runs its original GBA engine and uses its actual working memory. The extra storage is not a larger block of directly addressable GBA ROM or RAM.

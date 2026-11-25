@@ -64,12 +64,33 @@ def assemble_gif(frames:list[Path], destination:Path):
     return Image.open(destination).n_frames
 
 
+def nearest_lcd_2x(source):
+    """Expand authentic 240x160 LCD pixels without Pillow's unstable C resize.
+
+    Each source pixel is duplicated 2x2, without filtering or altering evidence.
+    """
+    if source.size != (240, 160):
+        raise AssertionError("native LCD source dimensions changed")
+    source = source.convert("RGB")
+    pixels = list(source.getdata())
+    doubled = []
+    for y in range(160):
+        row = []
+        for pixel in pixels[y * 240:(y + 1) * 240]:
+            row.extend((pixel, pixel))
+        doubled.extend(row)
+        doubled.extend(row)
+    output = Image.new("RGB", (480, 320))
+    output.putdata(doubled)
+    return output
+
+
 def create_combined(pre:Path, post:Path, target:Path):
     a,b=png(pre),png(post)
     canvas=Image.new("RGB",(2*480+48,372),(19,28,37))
     draw=ImageDraw.Draw(canvas)
-    canvas.paste(a.resize((480,320),Image.Resampling.NEAREST),(16,36))
-    canvas.paste(b.resize((480,320),Image.Resampling.NEAREST),(512,36))
+    canvas.paste(nearest_lcd_2x(a),(16,36))
+    canvas.paste(nearest_lcd_2x(b),(512,36))
     draw.text((16,12),"CRYSTAL — PALLET TOWN BEFORE SELECT",fill=(145,235,255))
     draw.text((512,12),"MAGMA — SAME PALLET TOWN SESSION",fill=(255,202,123))
     canvas.save(target)

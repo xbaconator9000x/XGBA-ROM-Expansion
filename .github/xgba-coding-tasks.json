@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "max_attempts_per_stage": 3,
+  "max_published_candidates": 21,
+  "required_pr_workflows": [
+    "XGBA R10 real FireRed Pallet Town live Select resource swap",
+    "XGBA R11 real FireRed CPU-frame benchmark",
+    "XGBA R12 native FireRed savestate rollback",
+    "XGBA R13 native FireRed external map transitions",
+    "XGBA R14 native FireRed physical navigation and external tilesets",
+    "XGBA R15 native FireRed Flash save, cold restart and external tilesets",
+    "XGBA R16 native Emerald decomp resource bridge",
+    "XGBA R17 genuine Emerald external Littleroot tileset and map",
+    "XGBA R18 genuine Emerald Flash save and native cold continue",
+    "XGBA R19 Emerald connected native external maps",
+    "XGBA R19 genuine Emerald mixed-ROM and external Pokémon battle",
+    "XGBA R20 Emerald EWRAM phase ownership and real battle reentry",
+    "XGBA R21 original Emerald malloc fragmentation and battle reentry",
+    "XGBA R22 real Emerald 100+ connected-map transitions and EWRAM churn",
+    "XGBA R23 original Emerald forced phase eviction and extended allocator pressure",
+    "XGBA R24 original Emerald adversarial 16KiB resource boundary",
+    "XGBA R24 original FireRed adversarial 16KiB resource boundary",
+    "XGBA R30 genuine Emerald four-map source streaming",
+    "XGBA R40 native Emerald external script, genuine Flash and cold boot",
+    "XGBA R42 native two-source in-game dialogue, item rewards and genuine Flash",
+    "XGBA R43 real Android arm64 patched mGBA and original ARM7 expanded-storage probe",
+    "XGBA R45 native original Emerald Rocket HeartSoul three-map runtime",
+    "XGBA R48 original NPC scripts in real Emerald A-button engine bridge",
+    "XGBA R7 native mGBA core opt-in integration",
+    "XGBA R8 rendered external graphics proof",
+    "XGBA R9 real two-pack overworld GIF proof",
+    "XGBA RHH real town-to-route native gameplay acceptance",
+    "XGBA consolidated main source and native integration gate",
+    "XGBA expansion framework source and ARM builds",
+    "XGBA public repository privacy and README audit"
+  ],
+  "tasks": [
+    {
+      "title": "Native original trainer battle graphics",
+      "proof": [
+        "native_trainer_battle_verified"
+      ],
+      "instruction": "Implement the missing --trainer-battle build/bootstrap in tools/xgba_expansion_source_adapter.py using pinned upstream original engine battle entry and original DecompressTrainerFrontPic. The existing host acceptance mode is incomplete. A real trainer battle must be rendered on all three targets, enabled and disabled; verify authentic 2048-byte source sprite hashes, actual provider reads, released lease, original fallback and LCD. Do not synthesize counters, invoke a fake battle, or accept a title/overworld image. Preserve existing field tests. Use upstream source pinned 79dd436920845ebc145577649de624f65298c209."
+    },
+    {
+      "title": "Source-authentic Pokemon battle graphics",
+      "proof": [
+        "native_pokemon_battle_verified"
+      ],
+      "instruction": "Extend the original Pokemon front/back sprite loader using a bounded synchronous transfer into engine-owned buffers, original fallback, safe palette/animation handling and private source-authentic provider generation. Add native enabled/disabled battle assertions for original Pokemon graphics and real LCD. Preserve trainer acceptance."
+    },
+    {
+      "title": "Battle lifecycle and overworld reentry",
+      "proof": [
+        "native_battle_exit_reentry_verified"
+      ],
+      "instruction": "Use actual native battle entry, at least one real action and battle completion/exit, return to an original map and enter another battle. Assert field and battle lease ownership, real player control and no dangling DMA sources. Preserve enabled/disabled trainer and Pokemon sprite proof."
+    },
+    {
+      "title": "Dynamic EWRAM and graphics DMA lifecycle",
+      "proof": [
+        "native_battle_cache_churn_verified"
+      ],
+      "instruction": "Implement/verify safe phase ownership and dynamic resource lifecycle under repeated genuine battles/map transitions, peak allocator pressure, stale generations, cache churn and DMA completion. Native proof must show repeated actual battle/field transitions, no outstanding lease/DMA and correct original fallback. Do not expand physical GBA RAM or weaken original regression checks."
+    },
+    {
+      "title": "Original Flash save and cold continuation",
+      "proof": [
+        "native_flash_cold_restart_verified"
+      ],
+      "instruction": "Use genuine original game save flow and native Flash backend on each target after battle/map transitions. Cold restart a new emulator process from private Flash, verify original position/party/flags and resumed external resource access. No save or ROM artifacts; only hashes and screenshots. Preserve earlier native acceptance."
+    },
+    {
+      "title": "Separate pret and CFRU ABI assessment",
+      "proof": [],
+      "instruction": "Implement tools/xgba_expansion_abi_assessment.py as a conservative source/ABI checker, with CLI --source PATH --target TARGET --output FILE, and focused tests. Write JSON with separate pret_pokefirered and cfru objects, each with status (compatible, incompatible, or unverified), evidence and required ABI adaptations. Do not infer compatibility from RHH or claim to have built absent upstream sources. Distinguish physical memory and hardware from emulation. Keep existing native battle/Flash gates passing."
+    },
+    {
+      "title": "Integrated native acceptance and packaging",
+      "proof": [
+        "native_integrated_session_verified"
+      ],
+      "instruction": "Combine actual original overworld, trainer and Pokemon battles, battle exit, repeated resource swaps, Flash cold continue and fallback in a coherent native acceptance session on Emerald, FireRed and LeafGreen. Verify exact source identity, deterministic provider manifests, source restoration, no ROM/save/asset publication, and retained original map IDs. Add regression coverage for failed resource and corrupted provider paths. Keep proof fields from previous tasks and emit native_integrated_session_verified only after actual integration acceptance."
+    }
+  ]
+}

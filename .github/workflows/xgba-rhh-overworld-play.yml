@@ -1,0 +1,146 @@
+name: XGBA RHH real town-to-route native gameplay acceptance
+
+on:
+  push:
+    branches:
+      - main
+      - integration/expansion-frameworks-20261115
+    paths:
+      - 'integration/expansion/**'
+      - 'integration/fire_red/xgba_guest.h'
+      - 'tools/xgba_expansion_source_adapter.py'
+      - 'tools/xgba_expansion_native_acceptance.py'
+      - 'tools/xgba_mgba_run.py'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'integration/mgba/xgba_expansion_native.h'
+      - 'integration/mgba/xgba_expansion_overworld_native.h'
+      - 'tests/test_xgba_expansion_source_adapter.py'
+      - 'tests/test_xgba_expansion_map_pages.py'
+      - 'tools/xgba_expansion_map_pages.py'
+      - '.github/workflows/xgba-rhh-overworld-play.yml'
+  pull_request:
+    paths:
+      - 'integration/expansion/**'
+      - 'integration/fire_red/xgba_guest.h'
+      - 'tools/xgba_expansion_source_adapter.py'
+      - 'tools/xgba_expansion_native_acceptance.py'
+      - 'tools/xgba_mgba_run.py'
+      - 'integration/mgba/xgba_mgba_headless.c'
+      - 'integration/mgba/xgba_expansion_native.h'
+      - 'integration/mgba/xgba_expansion_overworld_native.h'
+      - 'tests/test_xgba_expansion_source_adapter.py'
+      - 'tests/test_xgba_expansion_map_pages.py'
+      - 'tools/xgba_expansion_map_pages.py'
+      - '.github/workflows/xgba-rhh-overworld-play.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  adapter-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install required indexed 4bpp PNG converter
+        run: python3 -m pip install --disable-pip-version-check Pillow==11.3.0
+      - name: Source safety and negative regression tests
+        run: |
+          python3 -m unittest discover -s tests -p 'test_xgba_expansion_source_adapter.py' -v
+          python3 -m unittest discover -s tests -p 'test_xgba_expansion_map_pages.py' -v
+
+  native-overworld-play:
+    needs: adapter-tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [emerald, firered, leafgreen]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install open ARM cross-compilation toolchain
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi \
+            build-essential cmake ninja-build pkg-config libpng-dev python3-pil
+      - name: Clone exact tagged upstream source
+        run: |
+          git clone --depth 1 --recurse-submodules --branch expansion/1.17.2 \
+            https://github.com/rh-hideout/pokeemerald-expansion.git upstream
+          git -C upstream rev-parse HEAD
+          git -C upstream tag --points-at HEAD
+      - name: Build source-integrated XGBA guest for ${{ matrix.target }}
+        run: |
+          python3 tools/xgba_expansion_source_adapter.py \
+            --source upstream --target "${{ matrix.target }}" \
+            --require-tag expansion/1.17.2 --build --overworld-play
+          git -C upstream diff --exit-code -- src/main.c
+          test -s "upstream/poke${{ matrix.target }}.gba"
+          test -s "upstream/poke${{ matrix.target }}.elf"
+          arm-none-eabi-nm "upstream/poke${{ matrix.target }}.elf" |
+            grep -F gXgbaExpansionProof
+      - name: Package authentic original map and full primary tileset as private external pages
+        run: |
+          if [ "${{ matrix.target }}" = emerald ]; then
+            layout=LAYOUT_LITTLEROOT_TOWN
+            tiles=data/tilesets/primary/general/tiles.png
+          else
+            layout=LAYOUT_PALLET_TOWN
+            tiles=data/tilesets/primary/general_frlg/tiles.png
+          fi
+          python3 tools/xgba_expansion_map_pages.py --source upstream \
+            --target "${{ matrix.target }}" --layout "$layout" \
+            --primary-png "$tiles" --output private-source-pages
+          python3 - <<'PY'
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, "tools")
+          import xgba_resource_sidecar as sidecar
+          files=list(Path("private-source-pages").glob("*.json"))
+          assert len(files)==1
+          manifest=sidecar.load_manifest(files[0])
+          names=list(manifest.resources)
+          assert any(n.startswith("rhh.m.") for n in names), names
+          assert any(n.startswith("rhh.p.") for n in names), names
+          for entry in manifest.resources.values():
+              with manifest.data_path.open("rb") as f:
+                  f.seek(entry.offset)
+                  assert __import__("hashlib").sha256(f.read(entry.length)).hexdigest()==entry.sha256
+          print("PASS_RHH_ORIGINAL_LAYOUT_AND_TILESET_SOURCE_PAGES",names)
+          PY
+          # Source artwork, externally packed binaries, and source-built ROMs
+          # remain on the runner; no private page is uploaded as an artifact.
+          rm -rf private-source-pages
+      - name: Clone pinned upstream native mGBA
+        run: |
+          mkdir -p upstream-mgba
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream-mgba
+          git -C upstream-mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream-mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Execute actual expanded game guest MMIO in patched native mGBA
+        run: |
+          python3 tools/xgba_expansion_native_acceptance.py \
+            --source upstream --mgba upstream-mgba \
+            --target "${{ matrix.target }}" --output native-evidence --overworld-play
+          test ! -e native-evidence/xgba-private-test-sidecar.bin
+          test ! -e native-evidence/xgba-private-test-manifest.json
+      - name: Publish native LCD and non-ROM proof only
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-rhh-${{ matrix.target }}-real-town-route-overworld
+          path: |
+            native-evidence/*.png
+            native-evidence/*-proof.json
+          retention-days: 30
+          if-no-files-found: error
+      - name: Disclosure
+        run: |
+          echo 'Pass only when genuine original source town and route pages render and physical D-pad crosses a real game-map boundary.'
+          echo 'Original NPC scripts/battles/Flash cold restart remain separate acceptance gates, never inferred from this route test.'
+          echo 'No generated ROM or copyrighted asset artifacts are uploaded.'

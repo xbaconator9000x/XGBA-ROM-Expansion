@@ -1,0 +1,79 @@
+name: XGBA queued native battle acceptance
+on:
+  push:
+    branches: [integration/expansion-frameworks-20261115]
+    paths:
+      - '.github/xgba-coding-state.json'
+      - 'tools/xgba_copilot_queue.py'
+      - '.github/workflows/xgba-copilot-worker.yml'
+      - '.github/workflows/xgba-queue-native-battle.yml'
+      - 'integration/expansion/**'
+      - 'integration/mgba/**'
+      - 'tools/xgba_expansion_*.py'
+      - 'tests/test_xgba_expansion_*.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-battle:
+    if: github.repository == 'xbaconator9000x/XGBA-ROM-Expansion' && github.ref == 'refs/heads/integration/expansion-frameworks-20261115'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [emerald, firered, leafgreen]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check whether an actual candidate has been published
+        id: candidate
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          state=json.loads(Path('.github/xgba-coding-state.json').read_text())
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write('ready='+('true' if state['attempt'] else 'false')+'\n')
+          if not state['attempt']:
+              print('Queue initialization only; no candidate or native evidence yet.')
+          PY
+      - name: Install pinned-pipeline toolchain
+        if: steps.candidate.outputs.ready == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential cmake ninja-build pkg-config libpng-dev python3-pil
+      - name: Clone exact RHH and mGBA pins
+        if: steps.candidate.outputs.ready == 'true'
+        run: |
+          git clone --depth 1 --recurse-submodules --branch expansion/1.17.2 https://github.com/rh-hideout/pokeemerald-expansion.git upstream
+          test "$(git -C upstream rev-parse HEAD)" = 79dd436920845ebc145577649de624f65298c209
+          git clone --quiet --filter=blob:none https://github.com/mgba-emu/mgba.git upstream-mgba
+          git -C upstream-mgba checkout --quiet --detach fd9dc5c2cbf234365068855851107e762fc6211b
+          test "$(git -C upstream-mgba rev-parse HEAD)" = fd9dc5c2cbf234365068855851107e762fc6211b
+      - name: Build genuine original engine trainer battle target
+        if: steps.candidate.outputs.ready == 'true'
+        run: |
+          python3 tools/xgba_expansion_source_adapter.py --source upstream --target "${{ matrix.target }}" --require-tag expansion/1.17.2 --build --trainer-battle
+          test -s "upstream/poke${{ matrix.target }}.gba"
+          test -s "upstream/poke${{ matrix.target }}.elf"
+          test -z "$(git -C upstream status --porcelain)"
+      - name: Execute native trainer battle and accumulated acceptance gates
+        if: steps.candidate.outputs.ready == 'true'
+        run: |
+          python3 tools/xgba_expansion_native_acceptance.py --source upstream --mgba upstream-mgba --target "${{ matrix.target }}" --output native-battle-evidence --trainer-battle
+          python3 tools/xgba_copilot_queue.py proof-gate "native-battle-evidence/${{ matrix.target }}-proof.json" "${{ matrix.target }}" upstream
+          test ! -e native-battle-evidence/xgba-private-test-sidecar.bin
+          test ! -e native-battle-evidence/xgba-private-test-manifest.json
+      - name: Publish only accepted LCD screenshots and JSON proof
+        if: success() && steps.candidate.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: xgba-queue-${{ matrix.target }}-native-battle
+          path: |
+            native-battle-evidence/*.png
+            native-battle-evidence/*-proof.json
+            native-battle-evidence/abi-assessment.json
+          retention-days: 7
+          if-no-files-found: error
