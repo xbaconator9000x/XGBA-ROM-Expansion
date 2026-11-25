@@ -455,6 +455,24 @@ static void XgbaExpansionNoteTrainerFallback(u32 id, const u32 *original, const 
             text = _one(text, entry,
                         entry + "\n    XgbaExpansionPageRelease();",
                         "battle sprite phase lease boundary")
+    # The actual tile buffer has its own lifetime, independent of the
+    # BattleSpriteData metadata. Invalidate the page before allocation/free,
+    # including null teardown and paths that free the two objects in reverse.
+    mon_entries = tuple(
+        f"void {name}(void)\n{{"
+        for name in ("AllocateMonSpritesGfx", "FreeMonSpritesGfx")
+    )
+    mon_present = [entry in text for entry in mon_entries]
+    if any(mon_present) and not all(mon_present):
+        raise ExpansionDrift("incomplete Pokemon sprite buffer lifecycle")
+    if all(mon_present):
+        text = _one(text, mon_entries[0],
+                    "extern void XgbaExpansionPageRelease(void);\n" + mon_entries[0],
+                    "Pokemon buffer lifecycle release declaration")
+        for entry in mon_entries:
+            text = _one(text, entry,
+                        entry + "\n    XgbaExpansionPageRelease();",
+                        "Pokemon sprite buffer lease boundary")
     call = "    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);"
     return _one(text, call,
                 "    XgbaExpansionTrainerAttempt(trainerPicId);\n"

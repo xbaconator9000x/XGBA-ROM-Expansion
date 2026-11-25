@@ -7,6 +7,10 @@ on:
       - 'tools/xgba_copilot_queue.py'
       - '.github/workflows/xgba-copilot-worker.yml'
       - '.github/workflows/xgba-queue-native-battle.yml'
+      - 'integration/expansion/**'
+      - 'integration/mgba/**'
+      - 'tools/xgba_expansion_*.py'
+      - 'tests/test_xgba_expansion_*.py'
   workflow_dispatch:
 
 permissions:

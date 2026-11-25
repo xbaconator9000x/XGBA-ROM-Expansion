@@ -65,6 +65,31 @@ static const u32 *XgbaExpansionMonSource(bool32 isFront, u32 rawSpecies, u32 *by
 #endif
 }
 
+/* The pinned allocator owns one contiguous block of MAX_BATTLERS_COUNT
+ * slots. A generic EWRAM address is not sufficient: reject interior,
+ * stale, aliased or out-of-slot destinations before copying provider data. */
+static bool8 XgbaExpansionMonDestinationOwned(const void *dest, u32 bytes)
+{
+    const u32 slotBytes = MON_PIC_SIZE * MAX_MON_PIC_FRAMES;
+    const u32 totalBytes = slotBytes * MAX_BATTLERS_COUNT;
+    u32 base;
+    if (!gMonSpritesGfxPtr || !gMonSpritesGfxPtr->firstDecompressed
+        || !dest || !bytes || bytes > slotBytes)
+        return FALSE;
+    base = (u32)gMonSpritesGfxPtr->firstDecompressed;
+    if ((base & 3u) || base < 0x02000000u
+        || base > 0x02040000u - totalBytes)
+        return FALSE;
+    for (u32 i = 0; i < MAX_BATTLERS_COUNT; ++i)
+    {
+        const u32 expected = base + i * slotBytes;
+        if ((u32)dest == expected
+            && (u32)gMonSpritesGfxPtr->spritesGfx[i] == expected)
+            return TRUE;
+    }
+    return FALSE;
+}
+
 static bool8 XgbaExpansionTryMonPic(bool32 isFront, void *dest, u32 species)
 {
     static const char hex[] = "0123456789abcdef";
@@ -81,7 +106,8 @@ static bool8 XgbaExpansionTryMonPic(bool32 isFront, void *dest, u32 species)
     /* Battle sprite loading is a phase boundary: never inherit a stale lease. */
     XgbaExpansionPageRelease();
     original = XgbaExpansionMonSource(isFront, species, &bytes);
-    if (!original || !dest || bytes > XGBA_EXPANSION_PAGE_CAPACITY
+    if (!original || !XgbaExpansionMonDestinationOwned(dest, bytes)
+        || bytes > XGBA_EXPANSION_PAGE_CAPACITY
         || (destStart & 3u) || destStart < 0x02000000u
         || destStart > 0x02040000u - bytes)
         return FALSE;

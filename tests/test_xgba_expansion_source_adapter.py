@@ -161,6 +161,75 @@ class ExpansionSourceTests(unittest.TestCase):
         with self.assertRaisesRegex(adapter.ExpansionDrift, "incomplete battle sprite phase lifecycle"):
             adapter.patched_battle_graphics(broken)
 
+    def test_mon_tile_buffer_lifecycle_releases_before_original_allocator(self):
+        original = (
+            "void AllocateMonSpritesGfx(void)\n{\n"
+            "    gMonSpritesGfxPtr = NULL;\n}\n"
+            "void FreeMonSpritesGfx(void)\n{\n"
+            "    if (gMonSpritesGfxPtr == NULL)\n        return;\n}\n"
+            "void DecompressTrainerFrontPic(enum TrainerPicID trainerPicId, enum BattlerId battler)\n{\n"
+            "    DecompressDataWithHeaderWram(GetTrainerFrontPicData(trainerPicId), gMonSpritesGfxPtr->spritesGfx[position]);\n}\n"
+        )
+        patched = adapter.patched_battle_graphics(original)
+        for name in ("AllocateMonSpritesGfx", "FreeMonSpritesGfx"):
+            self.assertIn(f"void {name}(void)\n{{\n    XgbaExpansionPageRelease();", patched)
+        self.assertLess(patched.index("extern void XgbaExpansionPageRelease(void);"),
+                        patched.index("void AllocateMonSpritesGfx(void)"))
+        with self.assertRaisesRegex(adapter.ExpansionDrift, "incomplete Pokemon sprite buffer lifecycle"):
+            adapter.patched_battle_graphics(original.replace("void FreeMonSpritesGfx", "void RenamedFreeMonSpritesGfx"))
+
+    def test_mon_destination_ownership_rejects_invalid_slots(self):
+        import shutil
+        import subprocess
+        cc = shutil.which("cc")
+        if not cc:
+            self.skipTest("host C compiler unavailable")
+        bridge = (adapter.ROOT / "integration/expansion/xgba_expansion_pokemon_battle.inc").read_text()
+        guard = bridge.split("static bool8 XgbaExpansionMonDestinationOwned", 1)[1].split(
+            "static bool8 XgbaExpansionTryMonPic", 1)[0]
+        code = """
+#include <assert.h>
+#include <stdint.h>
+#include <stddef.h>
+typedef uintptr_t u32;
+typedef int bool8;
+#define TRUE 1
+#define FALSE 0
+#define MON_PIC_SIZE 2048u
+#define MAX_MON_PIC_FRAMES 2u
+#define MAX_BATTLERS_COUNT 4u
+struct Mock { void *firstDecompressed; void *spritesGfx[4]; };
+static struct Mock *gMonSpritesGfxPtr;
+static bool8 XgbaExpansionMonDestinationOwned""" + guard + """
+int main(void) {
+    struct Mock m = { (void *)0x02001000u, { (void *)0x02001000u,
+        (void *)0x02002000u, (void *)0x02003000u, (void *)0x02004000u } };
+    assert(!XgbaExpansionMonDestinationOwned(m.spritesGfx[0], 2048));
+    gMonSpritesGfxPtr = &m;
+    for (unsigned i = 0; i < 4; ++i)
+        assert(XgbaExpansionMonDestinationOwned(m.spritesGfx[i], 4096));
+    assert(!XgbaExpansionMonDestinationOwned((void *)0x02001004u, 2048));
+    assert(!XgbaExpansionMonDestinationOwned((void *)0x02005000u, 2048));
+    assert(!XgbaExpansionMonDestinationOwned(m.spritesGfx[0], 4097));
+    assert(!XgbaExpansionMonDestinationOwned(m.spritesGfx[0], 0));
+    m.spritesGfx[0] = m.spritesGfx[1];
+    assert(!XgbaExpansionMonDestinationOwned((void *)0x02001000u, 2048));
+    m.firstDecompressed = (void *)0x0203f000u;
+    assert(!XgbaExpansionMonDestinationOwned(m.spritesGfx[1], 2048));
+    m.firstDecompressed = NULL;
+    assert(!XgbaExpansionMonDestinationOwned(m.spritesGfx[1], 2048));
+    return 0;
+}
+"""
+        source = self.root / "guard.c"
+        executable = self.root / "guard"
+        source.write_text(code)
+        subprocess.run([cc, "-std=c99", "-Wall", "-Wextra", "-Werror", str(source),
+                        "-o", str(executable)], check=True)
+        subprocess.run([str(executable)], check=True)
+        self.assertLess(bridge.index("!XgbaExpansionMonDestinationOwned(dest, bytes)"),
+                        bridge.index("XgbaExpansionPageAcquire(resource, bytes)"))
+
     def test_trainer_red_leaf_original_loader_allowlist(self):
         original = (
             "void DecompressTrainerFrontPic(enum TrainerPicID trainerPicId, enum BattlerId battler)\n"
